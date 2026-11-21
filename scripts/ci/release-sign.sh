@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # OPS69: sign the release manifest with Ed25519 (the update trust, owner decision 21 Nov).
-#   CRSP_UPDATE_SIGNING_KEY=<PKCS#8 PEM> bash scripts/ci/release-sign.sh dist/manifest.json dist/manifest.json.sig
+#   (the signing key is in the environment, see below) bash scripts/ci/release-sign.sh dist/manifest.json dist/manifest.json.sig
 # The signature is Ed25519 over the manifest file's bytes (openssl pkeyutl -sign -rawin), written as hex.
 # A missing key fails. The signature is checked with the public key derived from the private key and, when
 # internal/update/keys/release-ed25519.pub is committed, with that file too (a key that does not match fails).
