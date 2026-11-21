@@ -82,6 +82,8 @@ A retired word is not drawn as a label, button or message. The guard scans the s
 | Check now | Try again |
 | Recheck | Try again |
 | Erase | Delete |
+| Runner kind | Runner type |
+| Kind (for persistent or ephemeral) | Runner type; Type alone where the page or step is already about runners (LOOK50) |
 <!-- retired-words:end -->
 
 ## Wizard step names
@@ -137,6 +139,15 @@ A message is one or two short sentences in plain words. It names the thing, neve
 - Use the same word for the same thing every time.
 - Never blame the user.
 
+## Audit log words
+
+| Where | Word |
+|---|---|
+| Column heads | When, Who, What, On, Details, Result |
+| On | What the change acted on: its kind, a space, its name. "repository luis-mc/app". |
+| Details | The note of the change as plain text, with no key name before it. |
+| Export | The word Export, at the end of the toolbar. |
+
 ## Empty, failed and waiting states
 
 - **Empty:** say what will appear here, and offer the action that fills it. "No reports yet. Add a report to start."
@@ -149,7 +160,7 @@ A message is one or two short sentences in plain words. It names the thing, neve
 |---|---|---|
 | Date | Year-month-day. | 2026-11-02 |
 | Time | 24-hour, local time. | 14:30 |
-| Date and time | Date, a space, then time. | 2026-11-02 14:30 |
+| Date and time | Date, a space, then time. Always on one line (UX-78). | 2026-11-02 14:30 |
 | Short date and time | Day, month name, time; only where a cell is narrow (UX-72). The detail shows the full form above. | 18 Nov 13:28 |
 | Number | Digits, with a space for thousands. A dot for decimals. | 12 345.5 |
 | Count | A number before the noun. The noun agrees with the count. | 1 item, 3 items |
@@ -893,7 +904,7 @@ The words of the small update page the tray opens (tray R5.43, web-console R5.96
 | Running jobs are safe. | Line under the progress bar while the update works. |
 | Hide | Closes the window while the update goes on. It stops nothing. |
 | Downloading, Waiting for jobs, Installing, Restarting | The work steps, in the order the service goes through them. |
-| Downloading {n}%, Waiting for running jobs to end, Installing {n}%, Restarting the service | The live line of the current step. |
+| Downloading {n}%, Waiting for running jobs to end, Installing {n}%, Waiting for another installer, Restarting the service | The live line of the current step. |
 | The service is restarting. This page waits for it. | Note while the service is down for the install. |
 | Updated to {version}. | The Done message. |
 | Close | The primary on Done, and the left button after a failure. |
@@ -921,8 +932,10 @@ The words of the native update window on Windows (tray R5.46 to R5.49). The step
 | Cancel update | Stops the update while it downloads or waits for jobs. Busy word: Cancelling... |
 | Installing {version} | The heading while it installs; the bar shows {n}% when the service knows it. |
 | This cannot be cancelled. You can hide this window; the update goes on. | The note while it installs. |
-| Restarting the service | The heading while the service is replaced. |
-| The service is replaced and starts again. This window waits for it. | The note while the service is down. |
+| Waiting for another installer | The heading while another program holds Windows Installer (TRAY11). Indeterminate bar; the button is Hide. |
+| {name} is installing. Windows installs one program at a time; this update starts when it finishes. | The note under it. {name} is the other installer; without a name it reads `Another program`. |
+| Restarting the service | The heading while the service is replaced. It shows only once the installer has finished. |
+| The service is replaced and starts again. This window waits for it. | The note while the service is down after the installer finished. |
 | Updated | The heading on Done. |
 | Now running {version}. | The Done line, and the body of the toast after an automatic update. |
 | Close | The button on Done, Failed and Cancelled. |
@@ -1325,12 +1338,17 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | Word | Where and meaning |
 |---|---|
 | Help | The seventh area of the menu and the page title. |
-| How crsp runs your jobs, and what its words mean. | Lead of Help (LOOK47). |
+| One picture, then the questions people ask. Each card names its box. | Lead of Help (LOOK48; replaces *How crsp runs your jobs, and what its words mean.*). |
 | How a job gets run | Pane of the picture on Help and on the first-run Overview. |
 | On GitHub / In your pool | The two groups of the picture. |
-| 7 parts. Press a part to jump to its question. | Quiet line under the picture. |
+| 1 to 3 happen on GitHub. 4 to 7 happen in your pool. | Quiet line under the picture (LOOK48; replaces *7 parts. Press a part to jump to its question.*). |
+| 2 waiting / none waiting / {n} of {m} busy | Examples in the Queue and Slot boxes. The other boxes show a repository, `#{run}, {event}`, `{job} + labels`, a runner name and a machine name, or their short meaning when nothing is known. |
 | Repository, Run, Job, Queue, Slot, Runner, Machine | The seven parts. Their lines: a GitHub project; one start of a workflow; asks for a runner; waits for a slot; room for one job; does the work; your computer. |
-| Questions | Pane with every question card at once (no steps, no Back, Next or Start again since LOOK47). |
+| Questions, in the order a job meets them | Pane with every question card at once, ordered by box (no steps, no Back, Next or Start again since LOOK47; title since LOOK48). |
+| Box {n}: {Name} | Badge on every card, with the numbered circle; a link to that box in the picture (LOOK48). |
+| {n} of {m} slots busy | Text of the slots picture on the slot card. |
+| Memory {n}% of {b}% / CPU {n}% of {b}% | Text of the load budget picture; {b} is the machine's own budget. |
+| first one takes the free slot / Runner type. Linux or Windows is the OS. / the tray icon, bottom right of the PC | Words inside the card pictures. |
 | What does shared mean? / What are a run and a job? / What are labels? / What does Run elsewhere mean? | Cards about GitHub, first in the grid. |
 | Why is my job waiting? / What is a slot? / What is the load budget? / What is the queue? / What is a runner type? | Cards about the pool, second in the grid. |
 | What is the Doctor? / What is the tray app? / What are images and caches? | Cards about looking after the pool, last in the grid. |
@@ -1345,3 +1363,16 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | More about this in Help | The link in the ? answer. |
 | Open Pool size / Open Jobs / Open the Doctor / Open Images and caches | Links on the cards. |
 | Load budget | Fact row on the machine page: `memory {n}%, CPU {m}%`. |
+
+## Run follow-up words (CIX24, owner decision D27 of 21 Nov 2026)
+
+A run can start other runs when it ends (the Installers workflow after CI). The run is not finished while they are. `{workflow}` is the workflow's name, `{state}` the word of the status (*waiting*, *running*, *success*, *failure*, *cancelled*).
+
+| Where | Words |
+|---|---|
+| Run page and run details, fact | Started next: "{workflow}, {state}"; several are joined with "; " |
+| Run page, status line, and the Result column of the Done and All lists | follow-up running (a status, glyph and colour of *running*, beside the run's own result) |
+| Run details, fact while a follow-up runs | Still running: follow-up running |
+| Done and All lists, hover text of the Result | Started next: "{workflow}, {state}" |
+| Timeline, row | Waited for a runner: {project} {job} |
+| Timeline, note | follow-up run |

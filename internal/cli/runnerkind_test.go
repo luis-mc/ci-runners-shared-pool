@@ -21,7 +21,7 @@ func TestRepoPolicyRunnerKind(t *testing.T) { // github-integration R5.60
 		p["runner_kinds"], p["runner_kinds_set"] = "any_runner", true
 		writeJSON(w, 200, p)
 	})
-	if code, out, _ := f.run("repo", "policy", "luis-mc/open"); code != 0 || !strings.Contains(out, "Runner kind:     Ephemeral only (default)") {
+	if code, out, _ := f.run("repo", "policy", "luis-mc/open"); code != 0 || !strings.Contains(out, "Runner type:     Ephemeral only (default)") {
 		t.Fatalf("show: %d %q", code, out)
 	}
 	code, out, e := f.run("repo", "policy", "luis-mc/open", "--runner-kind", "any-runner")

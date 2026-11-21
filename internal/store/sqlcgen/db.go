@@ -375,6 +375,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getRepositoryProfileStmt, err = db.PrepareContext(ctx, getRepositoryProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query GetRepositoryProfile: %w", err)
 	}
+	if q.getRunFollowUpStmt, err = db.PrepareContext(ctx, getRunFollowUp); err != nil {
+		return nil, fmt.Errorf("error preparing query GetRunFollowUp: %w", err)
+	}
 	if q.getRunnerStmt, err = db.PrepareContext(ctx, getRunner); err != nil {
 		return nil, fmt.Errorf("error preparing query GetRunner: %w", err)
 	}
@@ -822,6 +825,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.pruneJobsStmt, err = db.PrepareContext(ctx, pruneJobs); err != nil {
 		return nil, fmt.Errorf("error preparing query PruneJobs: %w", err)
 	}
+	if q.pruneRunFollowUpsStmt, err = db.PrepareContext(ctx, pruneRunFollowUps); err != nil {
+		return nil, fmt.Errorf("error preparing query PruneRunFollowUps: %w", err)
+	}
 	if q.pruneRunsStmt, err = db.PrepareContext(ctx, pruneRuns); err != nil {
 		return nil, fmt.Errorf("error preparing query PruneRuns: %w", err)
 	}
@@ -956,6 +962,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.setRepositoryProfileStmt, err = db.PrepareContext(ctx, setRepositoryProfile); err != nil {
 		return nil, fmt.Errorf("error preparing query SetRepositoryProfile: %w", err)
+	}
+	if q.setRunFollowUpStmt, err = db.PrepareContext(ctx, setRunFollowUp); err != nil {
+		return nil, fmt.Errorf("error preparing query SetRunFollowUp: %w", err)
 	}
 	if q.setRunnerHygieneStmt, err = db.PrepareContext(ctx, setRunnerHygiene); err != nil {
 		return nil, fmt.Errorf("error preparing query SetRunnerHygiene: %w", err)
@@ -1730,6 +1739,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getRepositoryProfileStmt: %w", cerr)
 		}
 	}
+	if q.getRunFollowUpStmt != nil {
+		if cerr := q.getRunFollowUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getRunFollowUpStmt: %w", cerr)
+		}
+	}
 	if q.getRunnerStmt != nil {
 		if cerr := q.getRunnerStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getRunnerStmt: %w", cerr)
@@ -2475,6 +2489,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing pruneJobsStmt: %w", cerr)
 		}
 	}
+	if q.pruneRunFollowUpsStmt != nil {
+		if cerr := q.pruneRunFollowUpsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing pruneRunFollowUpsStmt: %w", cerr)
+		}
+	}
 	if q.pruneRunsStmt != nil {
 		if cerr := q.pruneRunsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing pruneRunsStmt: %w", cerr)
@@ -2698,6 +2717,11 @@ func (q *Queries) Close() error {
 	if q.setRepositoryProfileStmt != nil {
 		if cerr := q.setRepositoryProfileStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing setRepositoryProfileStmt: %w", cerr)
+		}
+	}
+	if q.setRunFollowUpStmt != nil {
+		if cerr := q.setRunFollowUpStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setRunFollowUpStmt: %w", cerr)
 		}
 	}
 	if q.setRunnerHygieneStmt != nil {
@@ -3161,6 +3185,7 @@ type Queries struct {
 	getRepositoryStmt                           *sql.Stmt
 	getRepositoryByNameStmt                     *sql.Stmt
 	getRepositoryProfileStmt                    *sql.Stmt
+	getRunFollowUpStmt                          *sql.Stmt
 	getRunnerStmt                               *sql.Stmt
 	getRunnerByServiceStmt                      *sql.Stmt
 	getRunsRowStmt                              *sql.Stmt
@@ -3310,6 +3335,7 @@ type Queries struct {
 	pruneJobStepsStmt                           *sql.Stmt
 	pruneJobStepsOfJobsStmt                     *sql.Stmt
 	pruneJobsStmt                               *sql.Stmt
+	pruneRunFollowUpsStmt                       *sql.Stmt
 	pruneRunsStmt                               *sql.Stmt
 	pruneWorkflowGraphsStmt                     *sql.Stmt
 	putPendingFactsStmt                         *sql.Stmt
@@ -3355,6 +3381,7 @@ type Queries struct {
 	setRegistryReplacePlanStateStmt             *sql.Stmt
 	setRepositoryPoolStmt                       *sql.Stmt
 	setRepositoryProfileStmt                    *sql.Stmt
+	setRunFollowUpStmt                          *sql.Stmt
 	setRunnerHygieneStmt                        *sql.Stmt
 	setRunnerRegistrationStmt                   *sql.Stmt
 	setRunnerStateStmt                          *sql.Stmt
@@ -3539,6 +3566,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getRepositoryStmt:                           q.getRepositoryStmt,
 		getRepositoryByNameStmt:                     q.getRepositoryByNameStmt,
 		getRepositoryProfileStmt:                    q.getRepositoryProfileStmt,
+		getRunFollowUpStmt:                          q.getRunFollowUpStmt,
 		getRunnerStmt:                               q.getRunnerStmt,
 		getRunnerByServiceStmt:                      q.getRunnerByServiceStmt,
 		getRunsRowStmt:                              q.getRunsRowStmt,
@@ -3688,6 +3716,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		pruneJobStepsStmt:                           q.pruneJobStepsStmt,
 		pruneJobStepsOfJobsStmt:                     q.pruneJobStepsOfJobsStmt,
 		pruneJobsStmt:                               q.pruneJobsStmt,
+		pruneRunFollowUpsStmt:                       q.pruneRunFollowUpsStmt,
 		pruneRunsStmt:                               q.pruneRunsStmt,
 		pruneWorkflowGraphsStmt:                     q.pruneWorkflowGraphsStmt,
 		putPendingFactsStmt:                         q.putPendingFactsStmt,
@@ -3733,6 +3762,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		setRegistryReplacePlanStateStmt:             q.setRegistryReplacePlanStateStmt,
 		setRepositoryPoolStmt:                       q.setRepositoryPoolStmt,
 		setRepositoryProfileStmt:                    q.setRepositoryProfileStmt,
+		setRunFollowUpStmt:                          q.setRunFollowUpStmt,
 		setRunnerHygieneStmt:                        q.setRunnerHygieneStmt,
 		setRunnerRegistrationStmt:                   q.setRunnerRegistrationStmt,
 		setRunnerStateStmt:                          q.setRunnerStateStmt,

@@ -93,6 +93,7 @@ The Machines screen and the Add machine wizard follow design system v1 ([ux-rule
 | Machines, empty | "No machines yet." and the **Add machine** action | UX-6, UX-4 |
 | Machine detail | Facts, backends with their reason when not usable, settings, running jobs, the install command again | UX-25, UX-22, UX-61 |
 | Machine detail, When it works | The mode (Automatic, Always, Paused), the Pause on battery switch, the CPU cap (25, 50, 75, 100%), the power source, and the reason when the machine takes no new job. Each control saves at once. A pause from the tray shows with its end and a Resume | UX-13, UX-22, UX-38, UX-58 |
+| Machine detail, Budget and slots | The four fields (Memory budget, CPU budget, Job slots, Time to finish running jobs) top-align in one row with their boxes on one line; the help of a field sits under its box, so a long name or help never moves the other boxes | UX-23, UX-78 |
 | Machines, list column Takes jobs | The word Taking jobs, Paused, On battery or Busy | UX-58 |
 | Add machine | Wizard: pick the OS, copy the command, wait for the machine to join, Done | UX-5, UX-29, UX-30, UX-54 |
 | Waiting for join | Names what it waits for and when the code expires | UX-29, UX-6 |

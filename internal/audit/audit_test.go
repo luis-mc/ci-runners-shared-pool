@@ -147,3 +147,13 @@ func TestRetentionWritesOwnRow(t *testing.T) {
 		t.Fatalf("recent rows must stay: %d", n)
 	}
 }
+
+// LOOK49: a note stored under "detail" shows as plain text, without "detail=".
+func TestSummaryShowsDetailWithoutItsKey(t *testing.T) {
+	if got := Summary(`{"detail":"not on the list"}`); got != "not on the list" {
+		t.Fatalf("got %q", got)
+	}
+	if got := Summary(`{"a":1,"detail":"x"}`); got != "a=1, detail=x" {
+		t.Fatalf("got %q", got)
+	}
+}

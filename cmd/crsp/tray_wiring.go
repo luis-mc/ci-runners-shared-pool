@@ -55,7 +55,7 @@ func stageInfo(s *update.Stage) *tray.StageInfo {
 	if s == nil {
 		return nil
 	}
-	return &tray.StageInfo{Name: s.Name, Percent: s.Percent, Version: s.Version, Error: s.Error, LogPath: s.LogPath, FailedAt: s.FailedAt, StartedBy: s.StartedBy}
+	return &tray.StageInfo{Name: s.Name, Percent: s.Percent, Version: s.Version, Error: s.Error, LogPath: s.LogPath, WaitingFor: s.WaitingFor, FailedAt: s.FailedAt, StartedBy: s.StartedBy}
 }
 
 // runnerProblems are the runner services of this machine that did not start

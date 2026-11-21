@@ -3,6 +3,7 @@ package update
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -139,6 +140,10 @@ func recoverMSI(dir, current string, now time.Time) (bool, Result) {
 	lb, _ := os.ReadFile(rec.Log) //nolint:gosec // our own log
 	code, ok := ParseMSILog(lb)
 	switch {
+	case ok && MSIBusyExit(code), !ok && MSILogBusy(lb) && now.Sub(rec.StartedAt) > msiExitGrace:
+		// Another installer held Windows Installer and the service restarted since: the drain is
+		// over, so the update does not start by itself; the person starts it again.
+		return done(Result{Error: fmt.Sprintf("another installer was running, so the update did not start. Still on %s. The log is %s", current, rec.Log)})
 	case ok && msiOK(code):
 		// The installer says it worked but the old version still runs: the service did not come back as the new build.
 		_ = RecordFailure(dir, rec.To, now, false)
@@ -146,6 +151,11 @@ func recoverMSI(dir, current string, now time.Time) (bool, Result) {
 	case ok:
 		_ = RecordFailure(dir, rec.To, now, false)
 		return done(Result{Error: fmt.Sprintf("the installer failed with exit code %d; the old version stays (Windows Installer rolled back). The log is %s", code, rec.Log)})
+	case staleMSILog(rec, now):
+		// The installer never started, or it ended without a result and left its log alone: a
+		// dead attempt, never "restarting" for ever (TRAY11).
+		_ = RecordFailure(dir, rec.To, now, false)
+		return done(Result{Error: "the installer did not run to its end and the old version still runs. The log is " + rec.Log})
 	case now.Sub(rec.StartedAt) > LockMaxAge:
 		_ = RecordFailure(dir, rec.To, now, false)
 		return done(Result{Error: "the installer left no result in its log. The log is " + rec.Log})
@@ -153,32 +163,144 @@ func recoverMSI(dir, current string, now time.Time) (bool, Result) {
 	return false, Result{}
 }
 
-// followMSILog writes the install percent into the stage file while the installer
-// runs and this service still lives (the upgrade stops it part way; the next
-// start settles the result). It ends when the log has its end line.
-func (m *Manager) followMSILog(version string) {
+type msiOutcome int
+
+const (
+	msiFinished msiOutcome = iota // msiexec ended with a success code
+	msiBusyNow                    // another installer holds Windows Installer
+	msiBroken                     // a real failure; reason says what
+)
+
+// superviseMSI runs the MSI install to its end (TRAY11). pid is the msiexec already started,
+// or 0 when another installer was busy at the start. While another installer runs it reports
+// waiting_installer and looks again every MSIBusyRetry, with no limit; the service stays on
+// the old version. A real MSI failure, or an msiexec that ended without replacing this
+// service, ends in failed with the log path.
+func (m *Manager) superviseMSI(p *pending, pid int) {
+	ctx := context.Background()
+	for {
+		if pid == 0 {
+			m.waitInstaller(p.version)
+			var err error
+			if pid, err = m.launchMSI(ctx, p); err != nil {
+				m.fail(err, p.version)
+				return
+			}
+		}
+		out, reason := m.followMSILog(p.version, pid)
+		switch out {
+		case msiBusyNow:
+			m.o.Logger.Info("another installer holds Windows Installer; the update waits", "version", p.version)
+			_ = os.Remove(filepath.Join(m.o.Dir, PendingMSIFile))
+			pid = 0
+		case msiBroken:
+			_ = os.Remove(filepath.Join(m.o.Dir, PendingMSIFile))
+			m.fail(errors.New(reason), p.version)
+			return
+		default:
+			m.awaitReplaced(p.version)
+			return
+		}
+	}
+}
+
+// waitInstaller returns when no other installer runs, reporting waiting_installer meanwhile.
+func (m *Manager) waitInstaller(version string) {
+	for {
+		busy, name := m.o.InstallerBusy()
+		if !busy {
+			return
+		}
+		m.stage(Stage{Name: StageWaitingInstaller, Percent: -1, Version: version, WaitingFor: name})
+		m.o.Sleep(MSIBusyRetry)
+	}
+}
+
+// followMSILog writes the install percent into the stage file while the installer runs and
+// this service still lives (the upgrade stops it part way; the next start settles the
+// result). It ends when the log has its end line, or when msiexec is gone without one.
+func (m *Manager) followMSILog(version string, pid int) (msiOutcome, string) {
 	logp := m.o.MSILog
 	if logp == "" {
 		logp = MSILogPath()
 	}
 	last := -1
+	var goneAt time.Time
 	deadline := m.o.Now().Add(LockMaxAge)
 	for m.o.Now().Before(deadline) {
-		time.Sleep(time.Second)
-		b, err := os.ReadFile(logp) //nolint:gosec // our own log
-		if err != nil {
+		m.o.Sleep(time.Second)
+		b, _ := os.ReadFile(logp) //nolint:gosec // our own log
+		if code, ok := ParseMSILog(b); ok {
+			switch {
+			case msiOK(code):
+				return msiFinished, ""
+			case MSIBusyExit(code):
+				return msiBusyNow, ""
+			}
+			return msiBroken, fmt.Sprintf("the installer failed with exit code %d; the old version stays (Windows Installer rolled back). The log is %s", code, logp)
+		}
+		if pid > 0 && !m.o.ProcessAlive(pid) {
+			// msiexec is gone and its log has no end line: give the log a moment, then settle.
+			if goneAt.IsZero() {
+				goneAt = m.o.Now()
+			}
+			if m.o.Now().Sub(goneAt) >= msiExitGrace {
+				if MSILogBusy(b) {
+					return msiBusyNow, ""
+				}
+				return msiBroken, "the installer ended without a result and the old version still runs. The log is " + logp
+			}
 			continue
 		}
-		pc := MSIPercent(b)
-		if pc != last {
+		if MSILogBusy(b) {
+			return msiBusyNow, ""
+		}
+		if pc := MSIPercent(b); pc != last && pc < 100 {
 			last = pc
-			if pc >= 100 {
-				m.stage(Stage{Name: StageRestarting, Percent: -1, Version: version})
-				return
-			}
 			m.stage(Stage{Name: StageInstalling, Percent: pc, Version: version, LogPath: logp})
 		}
 	}
+	return msiBroken, "the installer left no result in its log. The log is " + logp
+}
+
+// awaitReplaced runs after msiexec said it worked. Only now does the stage say restarting.
+// The upgrade stops this very process, so normally this never returns; if the old service
+// still runs after a grace period, the upgrade did not replace it, which is a failure.
+func (m *Manager) awaitReplaced(version string) {
+	m.mu.Lock()
+	m.state = StateRestarting
+	m.mu.Unlock()
+	m.stage(Stage{Name: StageRestarting, Percent: -1, Version: version})
+	m.o.Sleep(msiRestartGrace)
+	_ = os.Remove(filepath.Join(m.o.Dir, PendingMSIFile))
+	m.fail(fmt.Errorf("the installer finished but this is still version %s. The log is %s", m.o.Current, m.logPath()), version)
+}
+
+// settleStaleAttempt runs at start. An update that was installing, waiting for another
+// installer or restarting, whose version is not the one that runs, and that nothing works on
+// any more, is over: it is marked failed so the console can start it again (TRAY11). An MSI
+// that left a pending record is settled by RecoverMSI first.
+func (m *Manager) settleStaleAttempt() {
+	st, ok := ReadStage(m.o.Dir)
+	if !ok || st.Version == "" || st.Version == m.o.Current {
+		return
+	}
+	switch st.Name {
+	case StageInstalling, StageRestarting, StageWaitingInstaller:
+	default:
+		return
+	}
+	if _, err := os.Stat(filepath.Join(m.o.Dir, PendingMSIFile)); err == nil {
+		return
+	}
+	if lockLive(filepath.Join(m.o.Dir, LockFile), m.o.Now(), pidAlive) {
+		return // an install helper still works
+	}
+	now := m.o.Now()
+	msg := "the update to " + st.Version + " did not finish and the service restarted before it could. Still on " + m.o.Current + ". Start the update again"
+	_ = WriteResult(m.o.Dir, Result{Kind: "update", From: m.o.Current, To: st.Version, At: now, Error: msg, Attempt: st.Attempt})
+	_ = WriteStage(m.o.Dir, Stage{Name: StageFailed, Percent: -1, Version: st.Version, Error: msg, LogPath: m.logPath(), FailedAt: st.Name, StartedBy: st.StartedBy,
+		Attempt: st.Attempt, AttemptKind: st.AttemptKind, AttemptStarted: st.AttemptStarted, At: now})
 }
 
 func clearFailures(dir, version string) error {
@@ -186,4 +308,14 @@ func clearFailures(dir, version string) error {
 		return os.Remove(filepath.Join(dir, FailuresFile))
 	}
 	return nil
+}
+
+// staleMSILog says the install that left this record is dead: its log never appeared within
+// msiExitGrace of the start, or has not been written for msiRestartGrace.
+func staleMSILog(rec PendingMSI, now time.Time) bool {
+	fi, err := os.Stat(rec.Log)
+	if err != nil {
+		return now.Sub(rec.StartedAt) > msiExitGrace
+	}
+	return now.Sub(fi.ModTime()) > msiRestartGrace && now.Sub(rec.StartedAt) > msiRestartGrace
 }
