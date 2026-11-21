@@ -1222,6 +1222,78 @@ func (e JoinCodeState) Valid() bool {
 	}
 }
 
+// Defines values for LifecycleStatusPolicy.
+const (
+	LifecycleStatusPolicyAskFirst          LifecycleStatusPolicy = "ask_first"
+	LifecycleStatusPolicyAutomaticWhenIdle LifecycleStatusPolicy = "automatic_when_idle"
+)
+
+// Valid indicates whether the value is a known member of the LifecycleStatusPolicy enum.
+func (e LifecycleStatusPolicy) Valid() bool {
+	switch e {
+	case LifecycleStatusPolicyAskFirst:
+		return true
+	case LifecycleStatusPolicyAutomaticWhenIdle:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for LifecycleStatusState.
+const (
+	LifecycleStatusStateAvailable   LifecycleStatusState = "available"
+	LifecycleStatusStateDownloading LifecycleStatusState = "downloading"
+	LifecycleStatusStateInstalling  LifecycleStatusState = "installing"
+	LifecycleStatusStateRefused     LifecycleStatusState = "refused"
+	LifecycleStatusStateReview      LifecycleStatusState = "review"
+	LifecycleStatusStateRolledBack  LifecycleStatusState = "rolled_back"
+	LifecycleStatusStateRollingBack LifecycleStatusState = "rolling_back"
+	LifecycleStatusStateSkipped     LifecycleStatusState = "skipped"
+	LifecycleStatusStateTesting     LifecycleStatusState = "testing"
+	LifecycleStatusStateUnpaired    LifecycleStatusState = "unpaired"
+	LifecycleStatusStateUpToDate    LifecycleStatusState = "up_to_date"
+	LifecycleStatusStateUpdated     LifecycleStatusState = "updated"
+	LifecycleStatusStateVerifying   LifecycleStatusState = "verifying"
+	LifecycleStatusStateWaiting     LifecycleStatusState = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the LifecycleStatusState enum.
+func (e LifecycleStatusState) Valid() bool {
+	switch e {
+	case LifecycleStatusStateAvailable:
+		return true
+	case LifecycleStatusStateDownloading:
+		return true
+	case LifecycleStatusStateInstalling:
+		return true
+	case LifecycleStatusStateRefused:
+		return true
+	case LifecycleStatusStateReview:
+		return true
+	case LifecycleStatusStateRolledBack:
+		return true
+	case LifecycleStatusStateRollingBack:
+		return true
+	case LifecycleStatusStateSkipped:
+		return true
+	case LifecycleStatusStateTesting:
+		return true
+	case LifecycleStatusStateUnpaired:
+		return true
+	case LifecycleStatusStateUpToDate:
+		return true
+	case LifecycleStatusStateUpdated:
+		return true
+	case LifecycleStatusStateVerifying:
+		return true
+	case LifecycleStatusStateWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListenAddressCandidateId.
 const (
 	ListenAddressCandidateIdDocker ListenAddressCandidateId = "docker"
@@ -3184,6 +3256,48 @@ func (e UpdateAttemptKind) Valid() bool {
 	}
 }
 
+// Defines values for UpdateHistoryRowAction.
+const (
+	UpdateHistoryRowActionCheck    UpdateHistoryRowAction = "check"
+	UpdateHistoryRowActionInstall  UpdateHistoryRowAction = "install"
+	UpdateHistoryRowActionRemove   UpdateHistoryRowAction = "remove"
+	UpdateHistoryRowActionRollback UpdateHistoryRowAction = "rollback"
+)
+
+// Valid indicates whether the value is a known member of the UpdateHistoryRowAction enum.
+func (e UpdateHistoryRowAction) Valid() bool {
+	switch e {
+	case UpdateHistoryRowActionCheck:
+		return true
+	case UpdateHistoryRowActionInstall:
+		return true
+	case UpdateHistoryRowActionRemove:
+		return true
+	case UpdateHistoryRowActionRollback:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UpdatePolicyRequestPolicy.
+const (
+	UpdatePolicyRequestPolicyAskFirst          UpdatePolicyRequestPolicy = "ask_first"
+	UpdatePolicyRequestPolicyAutomaticWhenIdle UpdatePolicyRequestPolicy = "automatic_when_idle"
+)
+
+// Valid indicates whether the value is a known member of the UpdatePolicyRequestPolicy enum.
+func (e UpdatePolicyRequestPolicy) Valid() bool {
+	switch e {
+	case UpdatePolicyRequestPolicyAskFirst:
+		return true
+	case UpdatePolicyRequestPolicyAutomaticWhenIdle:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UpdateStageFailedAt.
 const (
 	UpdateStageFailedAtDownloading    UpdateStageFailedAt = "downloading"
@@ -4787,6 +4901,15 @@ type InstallCommands struct {
 	} `json:"items"`
 }
 
+// InstallUpdateRequest defines model for InstallUpdateRequest.
+type InstallUpdateRequest struct {
+	// MachineId Install on this machine instead of this one (a remote install).
+	MachineId *string `json:"machine_id,omitempty"`
+
+	// Version The version to install; it must be the one on offer.
+	Version *string `json:"version,omitempty"`
+}
+
 // Installation defines model for Installation.
 type Installation struct {
 	AccountLogin string                  `json:"account_login"`
@@ -5151,6 +5274,37 @@ type LayerNeededBy struct {
 	// Repositories Full names of the repositories.
 	Repositories []string `json:"repositories"`
 }
+
+// LifecycleStatus The update state by the lifecycle standard.
+type LifecycleStatus struct {
+	// Available The version on offer; null when none.
+	Available *string `json:"available"`
+	Current   string  `json:"current"`
+
+	// Failures The failed installs of the version on offer, or null.
+	Failures *struct {
+		Count   int        `json:"count"`
+		RetryAt *time.Time `json:"retry_at"`
+		Version string     `json:"version"`
+	} `json:"failures"`
+	NextCheckAt    *time.Time            `json:"next_check_at"`
+	Policy         LifecycleStatusPolicy `json:"policy"`
+	Required       bool                  `json:"required"`
+	State          LifecycleStatusState  `json:"state"`
+	WaitingForJobs bool                  `json:"waiting_for_jobs"`
+
+	// Window The daily install window in UTC, or null for any time.
+	Window *struct {
+		End   string `json:"end"`
+		Start string `json:"start"`
+	} `json:"window"`
+}
+
+// LifecycleStatusPolicy defines model for LifecycleStatus.Policy.
+type LifecycleStatusPolicy string
+
+// LifecycleStatusState defines model for LifecycleStatus.State.
+type LifecycleStatusState string
 
 // ListenAddress defines model for ListenAddress.
 type ListenAddress struct {
@@ -6438,6 +6592,15 @@ type RemoveRegistrationResult struct {
 	Removed bool   `json:"removed"`
 }
 
+// RemoveRequest defines model for RemoveRequest.
+type RemoveRequest struct {
+	// DeleteData Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default.
+	DeleteData *bool `json:"delete_data"`
+
+	// MachineId Remove from this machine instead of this one.
+	MachineId *string `json:"machine_id,omitempty"`
+}
+
 // RemoveRunnerLeftoversRequest defines model for RemoveRunnerLeftoversRequest.
 type RemoveRunnerLeftoversRequest struct {
 	Items []struct {
@@ -7362,6 +7525,26 @@ type UpdateAttempt struct {
 // UpdateAttemptKind defines model for UpdateAttempt.Kind.
 type UpdateAttemptKind string
 
+// UpdateFleetMachine defines model for UpdateFleetMachine.
+type UpdateFleetMachine struct {
+	MachineId string `json:"machine_id"`
+	Name      string `json:"name"`
+	State     string `json:"state"`
+	Version   string `json:"version"`
+}
+
+// UpdateHistoryRow defines model for UpdateHistoryRow.
+type UpdateHistoryRow struct {
+	Action  UpdateHistoryRowAction `json:"action"`
+	Actor   string                 `json:"actor"`
+	At      time.Time              `json:"at"`
+	Result  string                 `json:"result"`
+	Version string                 `json:"version"`
+}
+
+// UpdateHistoryRowAction defines model for UpdateHistoryRow.Action.
+type UpdateHistoryRowAction string
+
 // UpdateImageLayersRequest defines model for UpdateImageLayersRequest.
 type UpdateImageLayersRequest struct {
 	// EnabledLayers Ids of the layers that are on. Every other layer is off.
@@ -7375,6 +7558,17 @@ type UpdateJob struct {
 	RunId      int64   `json:"run_id"`
 	Workflow   *string `json:"workflow,omitempty"`
 }
+
+// UpdatePolicyRequest defines model for UpdatePolicyRequest.
+type UpdatePolicyRequest struct {
+	Policy UpdatePolicyRequestPolicy `json:"policy"`
+
+	// Window The daily install window in UTC, or null for any time.
+	Window *UpdateWindow `json:"window,omitempty"`
+}
+
+// UpdatePolicyRequestPolicy defines model for UpdatePolicyRequest.Policy.
+type UpdatePolicyRequestPolicy string
 
 // UpdateStage The live stage of the last or running update (TRAY4). It is kept in a file, so it survives the service restart.
 type UpdateStage struct {
@@ -7447,6 +7641,12 @@ type UpdateUserRoleRequest struct {
 	// Confirm Needed to hand over the owner role.
 	Confirm *bool `json:"confirm,omitempty"`
 	Role    Role  `json:"role"`
+}
+
+// UpdateWindow A daily install window, in UTC.
+type UpdateWindow struct {
+	End   string `json:"end"`
+	Start string `json:"start"`
 }
 
 // User defines model for User.
@@ -8208,6 +8408,9 @@ type CreateRegistryReplacePlanJSONRequestBody = RegistryReplacePlanInput
 // PutRegistryStoreSettingsJSONRequestBody defines body for PutRegistryStoreSettings for application/json ContentType.
 type PutRegistryStoreSettingsJSONRequestBody = RegistryStoreSettingsInput
 
+// RemoveCrspJSONRequestBody defines body for RemoveCrsp for application/json ContentType.
+type RemoveCrspJSONRequestBody = RemoveRequest
+
 // SetRepositoryExtraPackagesJSONRequestBody defines body for SetRepositoryExtraPackages for application/json ContentType.
 type SetRepositoryExtraPackagesJSONRequestBody = ExtraPackagesUpdate
 
@@ -8261,6 +8464,12 @@ type StartAppManifestJSONRequestBody = StartAppManifestRequest
 
 // RedeemSetupLinkJSONRequestBody defines body for RedeemSetupLink for application/json ContentType.
 type RedeemSetupLinkJSONRequestBody = RedeemSetupLinkRequest
+
+// InstallUpdateJSONRequestBody defines body for InstallUpdate for application/json ContentType.
+type InstallUpdateJSONRequestBody = InstallUpdateRequest
+
+// SetUpdatePolicyJSONRequestBody defines body for SetUpdatePolicy for application/json ContentType.
+type SetUpdatePolicyJSONRequestBody = UpdatePolicyRequest
 
 // AddUserJSONRequestBody defines body for AddUser for application/json ContentType.
 type AddUserJSONRequestBody = AddUserRequest
@@ -8645,6 +8854,9 @@ type ServerInterface interface {
 	// PutRegistryStoreSettings Change the folder, the days or the cleanup time
 	// (PUT /api/v1/registry/settings)
 	PutRegistryStoreSettings(w http.ResponseWriter, r *http.Request)
+	// RemoveCrsp Remove crsp from a machine, keeping or deleting its data
+	// (POST /api/v1/remove)
+	RemoveCrsp(w http.ResponseWriter, r *http.Request)
 	// GetRepository One repository with its policy and variable status
 	// (GET /api/v1/repositories/{repositoryId})
 	GetRepository(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId)
@@ -8786,6 +8998,21 @@ type ServerInterface interface {
 	// CheckForUpdate Look for a newer stable release now
 	// (POST /api/v1/update/check)
 	CheckForUpdate(w http.ResponseWriter, r *http.Request)
+	// ListUpdateFleet The version and update state of every machine
+	// (GET /api/v1/update/fleet)
+	ListUpdateFleet(w http.ResponseWriter, r *http.Request)
+	// ListUpdateHistory Every check, install, rollback and remove, newest first
+	// (GET /api/v1/update/history)
+	ListUpdateHistory(w http.ResponseWriter, r *http.Request)
+	// InstallUpdate Install the offered version now, here or on another machine
+	// (POST /api/v1/update/install)
+	InstallUpdate(w http.ResponseWriter, r *http.Request)
+	// SetUpdatePolicy Choose when updates install
+	// (POST /api/v1/update/policy)
+	SetUpdatePolicy(w http.ResponseWriter, r *http.Request)
+	// GetLifecycleStatus The update state of this machine, by the lifecycle states
+	// (GET /api/v1/update/status)
+	GetLifecycleStatus(w http.ResponseWriter, r *http.Request)
 	// ListUsers Users allowed to sign in, with their roles
 	// (GET /api/v1/users)
 	ListUsers(w http.ResponseWriter, r *http.Request)
@@ -12880,6 +13107,20 @@ func (siw *ServerInterfaceWrapper) PutRegistryStoreSettings(w http.ResponseWrite
 	handler.ServeHTTP(w, r)
 }
 
+// RemoveCrsp operation middleware
+func (siw *ServerInterfaceWrapper) RemoveCrsp(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RemoveCrsp(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetRepository operation middleware
 func (siw *ServerInterfaceWrapper) GetRepository(w http.ResponseWriter, r *http.Request) {
 
@@ -14124,6 +14365,76 @@ func (siw *ServerInterfaceWrapper) CheckForUpdate(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// ListUpdateFleet operation middleware
+func (siw *ServerInterfaceWrapper) ListUpdateFleet(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListUpdateFleet(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListUpdateHistory operation middleware
+func (siw *ServerInterfaceWrapper) ListUpdateHistory(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListUpdateHistory(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// InstallUpdate operation middleware
+func (siw *ServerInterfaceWrapper) InstallUpdate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.InstallUpdate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetUpdatePolicy operation middleware
+func (siw *ServerInterfaceWrapper) SetUpdatePolicy(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetUpdatePolicy(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetLifecycleStatus operation middleware
+func (siw *ServerInterfaceWrapper) GetLifecycleStatus(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetLifecycleStatus(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListUsers operation middleware
 func (siw *ServerInterfaceWrapper) ListUsers(w http.ResponseWriter, r *http.Request) {
 
@@ -14768,6 +15079,12 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/update", wrapper.GetUpdateStatus)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/update/check", wrapper.CheckForUpdate)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/update/apply", wrapper.ApplyUpdate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/update/status", wrapper.GetLifecycleStatus)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/update/policy", wrapper.SetUpdatePolicy)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/update/install", wrapper.InstallUpdate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/update/history", wrapper.ListUpdateHistory)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/update/fleet", wrapper.ListUpdateFleet)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/remove", wrapper.RemoveCrsp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/service/restart", wrapper.RestartService)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/audit", wrapper.ListAuditEvents)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/backups", wrapper.ListBackups)
@@ -19851,6 +20168,39 @@ func (response PutRegistryStoreSettingsdefaultJSONResponse) VisitPutRegistryStor
 	return err
 }
 
+type RemoveCrspRequestObject struct {
+	Body *RemoveCrspJSONRequestBody
+}
+
+type RemoveCrspResponseObject interface {
+	VisitRemoveCrspResponse(w http.ResponseWriter) error
+}
+
+type RemoveCrsp202Response struct {
+}
+
+func (response RemoveCrsp202Response) VisitRemoveCrspResponse(w http.ResponseWriter) error {
+	w.WriteHeader(202)
+	return nil
+}
+
+type RemoveCrspdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response RemoveCrspdefaultJSONResponse) VisitRemoveCrspResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetRepositoryRequestObject struct {
 	RepositoryId RepositoryId `json:"repositoryId"`
 }
@@ -21699,6 +22049,198 @@ func (response CheckForUpdatedefaultJSONResponse) VisitCheckForUpdateResponse(w 
 	return err
 }
 
+type ListUpdateFleetRequestObject struct {
+}
+
+type ListUpdateFleetResponseObject interface {
+	VisitListUpdateFleetResponse(w http.ResponseWriter) error
+}
+
+type ListUpdateFleet200JSONResponse []UpdateFleetMachine
+
+func (response ListUpdateFleet200JSONResponse) VisitListUpdateFleetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListUpdateFleetdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListUpdateFleetdefaultJSONResponse) VisitListUpdateFleetResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListUpdateHistoryRequestObject struct {
+}
+
+type ListUpdateHistoryResponseObject interface {
+	VisitListUpdateHistoryResponse(w http.ResponseWriter) error
+}
+
+type ListUpdateHistory200JSONResponse []UpdateHistoryRow
+
+func (response ListUpdateHistory200JSONResponse) VisitListUpdateHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListUpdateHistorydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListUpdateHistorydefaultJSONResponse) VisitListUpdateHistoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type InstallUpdateRequestObject struct {
+	Body *InstallUpdateJSONRequestBody
+}
+
+type InstallUpdateResponseObject interface {
+	VisitInstallUpdateResponse(w http.ResponseWriter) error
+}
+
+type InstallUpdate202JSONResponse LifecycleStatus
+
+func (response InstallUpdate202JSONResponse) VisitInstallUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type InstallUpdatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response InstallUpdatedefaultJSONResponse) VisitInstallUpdateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetUpdatePolicyRequestObject struct {
+	Body *SetUpdatePolicyJSONRequestBody
+}
+
+type SetUpdatePolicyResponseObject interface {
+	VisitSetUpdatePolicyResponse(w http.ResponseWriter) error
+}
+
+type SetUpdatePolicy200JSONResponse LifecycleStatus
+
+func (response SetUpdatePolicy200JSONResponse) VisitSetUpdatePolicyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetUpdatePolicydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response SetUpdatePolicydefaultJSONResponse) VisitSetUpdatePolicyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLifecycleStatusRequestObject struct {
+}
+
+type GetLifecycleStatusResponseObject interface {
+	VisitGetLifecycleStatusResponse(w http.ResponseWriter) error
+}
+
+type GetLifecycleStatus200JSONResponse LifecycleStatus
+
+func (response GetLifecycleStatus200JSONResponse) VisitGetLifecycleStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetLifecycleStatusdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetLifecycleStatusdefaultJSONResponse) VisitGetLifecycleStatusResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListUsersRequestObject struct {
 }
 
@@ -22472,6 +23014,9 @@ type StrictServerInterface interface {
 	// PutRegistryStoreSettings Change the folder, the days or the cleanup time
 	// (PUT /api/v1/registry/settings)
 	PutRegistryStoreSettings(ctx context.Context, request PutRegistryStoreSettingsRequestObject) (PutRegistryStoreSettingsResponseObject, error)
+	// RemoveCrsp Remove crsp from a machine, keeping or deleting its data
+	// (POST /api/v1/remove)
+	RemoveCrsp(ctx context.Context, request RemoveCrspRequestObject) (RemoveCrspResponseObject, error)
 	// GetRepository One repository with its policy and variable status
 	// (GET /api/v1/repositories/{repositoryId})
 	GetRepository(ctx context.Context, request GetRepositoryRequestObject) (GetRepositoryResponseObject, error)
@@ -22613,6 +23158,21 @@ type StrictServerInterface interface {
 	// CheckForUpdate Look for a newer stable release now
 	// (POST /api/v1/update/check)
 	CheckForUpdate(ctx context.Context, request CheckForUpdateRequestObject) (CheckForUpdateResponseObject, error)
+	// ListUpdateFleet The version and update state of every machine
+	// (GET /api/v1/update/fleet)
+	ListUpdateFleet(ctx context.Context, request ListUpdateFleetRequestObject) (ListUpdateFleetResponseObject, error)
+	// ListUpdateHistory Every check, install, rollback and remove, newest first
+	// (GET /api/v1/update/history)
+	ListUpdateHistory(ctx context.Context, request ListUpdateHistoryRequestObject) (ListUpdateHistoryResponseObject, error)
+	// InstallUpdate Install the offered version now, here or on another machine
+	// (POST /api/v1/update/install)
+	InstallUpdate(ctx context.Context, request InstallUpdateRequestObject) (InstallUpdateResponseObject, error)
+	// SetUpdatePolicy Choose when updates install
+	// (POST /api/v1/update/policy)
+	SetUpdatePolicy(ctx context.Context, request SetUpdatePolicyRequestObject) (SetUpdatePolicyResponseObject, error)
+	// GetLifecycleStatus The update state of this machine, by the lifecycle states
+	// (GET /api/v1/update/status)
+	GetLifecycleStatus(ctx context.Context, request GetLifecycleStatusRequestObject) (GetLifecycleStatusResponseObject, error)
 	// ListUsers Users allowed to sign in, with their roles
 	// (GET /api/v1/users)
 	ListUsers(ctx context.Context, request ListUsersRequestObject) (ListUsersResponseObject, error)
@@ -26033,6 +26593,37 @@ func (sh *strictHandler) PutRegistryStoreSettings(w http.ResponseWriter, r *http
 	}
 }
 
+// RemoveCrsp operation middleware
+func (sh *strictHandler) RemoveCrsp(w http.ResponseWriter, r *http.Request) {
+	var request RemoveCrspRequestObject
+
+	var body RemoveCrspJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RemoveCrsp(ctx, request.(RemoveCrspRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RemoveCrsp")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RemoveCrspResponseObject); ok {
+		if err := validResponse.VisitRemoveCrspResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // GetRepository operation middleware
 func (sh *strictHandler) GetRepository(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId) {
 	var request GetRepositoryRequestObject
@@ -27346,6 +27937,140 @@ func (sh *strictHandler) CheckForUpdate(w http.ResponseWriter, r *http.Request) 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CheckForUpdateResponseObject); ok {
 		if err := validResponse.VisitCheckForUpdateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListUpdateFleet operation middleware
+func (sh *strictHandler) ListUpdateFleet(w http.ResponseWriter, r *http.Request) {
+	var request ListUpdateFleetRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListUpdateFleet(ctx, request.(ListUpdateFleetRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListUpdateFleet")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListUpdateFleetResponseObject); ok {
+		if err := validResponse.VisitListUpdateFleetResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListUpdateHistory operation middleware
+func (sh *strictHandler) ListUpdateHistory(w http.ResponseWriter, r *http.Request) {
+	var request ListUpdateHistoryRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListUpdateHistory(ctx, request.(ListUpdateHistoryRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListUpdateHistory")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListUpdateHistoryResponseObject); ok {
+		if err := validResponse.VisitListUpdateHistoryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// InstallUpdate operation middleware
+func (sh *strictHandler) InstallUpdate(w http.ResponseWriter, r *http.Request) {
+	var request InstallUpdateRequestObject
+
+	var body InstallUpdateJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.InstallUpdate(ctx, request.(InstallUpdateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "InstallUpdate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(InstallUpdateResponseObject); ok {
+		if err := validResponse.VisitInstallUpdateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetUpdatePolicy operation middleware
+func (sh *strictHandler) SetUpdatePolicy(w http.ResponseWriter, r *http.Request) {
+	var request SetUpdatePolicyRequestObject
+
+	var body SetUpdatePolicyJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetUpdatePolicy(ctx, request.(SetUpdatePolicyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetUpdatePolicy")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetUpdatePolicyResponseObject); ok {
+		if err := validResponse.VisitSetUpdatePolicyResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetLifecycleStatus operation middleware
+func (sh *strictHandler) GetLifecycleStatus(w http.ResponseWriter, r *http.Request) {
+	var request GetLifecycleStatusRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetLifecycleStatus(ctx, request.(GetLifecycleStatusRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetLifecycleStatus")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetLifecycleStatusResponseObject); ok {
+		if err := validResponse.VisitGetLifecycleStatusResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

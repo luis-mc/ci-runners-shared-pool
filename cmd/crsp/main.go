@@ -182,7 +182,7 @@ func runController() error {
 	mr.Service.SetQueueSource(db)
 	go mr.Service.RunCompactLoop(ctx, compactEvery, func(err error) { logger.Warn("docker disk compact pass", "err", err) })
 
-	um := startUpdates(ctx, cfg, logger, mr, ops.Settings, idle)
+	um, lc := startUpdates(ctx, cfg, logger, mr, ops.Settings, idle, audit.New(db))
 	// A machine that is paused or on battery holds new jobs with
 	// that reason (scheduling R5.68, machines R5.62).
 	queue := scheduler.NewEngine(db, scheduler.WithLogger(logger), scheduler.WithAccepting(func(id string) (bool, string) {
@@ -209,7 +209,7 @@ func runController() error {
 	sec = secrets.Learn(sec, secretRedactor.Add)
 	ctl, err := buildController(ctx, controllerDeps{
 		Cfg: cfg, Logger: logger, DB: db, Secrets: sec, Ops: ops,
-		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, MachineSecrets: mr.Secrets,
+		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Lifecycle: lc, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, MachineSecrets: mr.Secrets,
 	})
 	if err != nil {
 		return err

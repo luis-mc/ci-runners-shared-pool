@@ -135,6 +135,15 @@ func (s *server) CheckForUpdate(ctx context.Context, _ gen.CheckForUpdateRequest
 		f := unavailable()
 		return gen.CheckForUpdatedefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
 	}
+	if s.opts.Lifecycle != nil {
+		// The old path is an alias of the lifecycle check: audited with its actor, and it follows the
+		// pairing rule. The look refreshes the release the old status shows.
+		if _, err := s.opts.Lifecycle.Check(ctx, audit.ActorFrom(ctx).Login); err != nil && !errors.Is(err, update.ErrNotPaired) {
+			f := s.updateError(err)
+			return gen.CheckForUpdatedefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
+		}
+		return gen.CheckForUpdate200JSONResponse(toGenUpdate(s.opts.Update.Status(ctx))), nil
+	}
 	st, err := s.opts.Update.Check(ctx)
 	if err != nil {
 		f := s.updateError(err)
@@ -158,6 +167,12 @@ func (s *server) applyKind(ctx context.Context, kind update.Kind, confirmed *boo
 
 // ApplyUpdate implements POST /api/v1/update/apply.
 func (s *server) ApplyUpdate(ctx context.Context, req gen.ApplyUpdateRequestObject) (gen.ApplyUpdateResponseObject, error) {
+	// A confirmed apply of the version on offer is an alias of POST /api/v1/update/install.
+	if s.opts.Lifecycle != nil && s.opts.Update != nil && req.Params.Confirmed != nil && *req.Params.Confirmed {
+		if _, err := s.opts.Lifecycle.Install(ctx, audit.ActorFrom(ctx).Login, remoteRequest(ctx), ""); err == nil {
+			return gen.ApplyUpdate202JSONResponse(toGenUpdate(s.opts.Update.Status(ctx))), nil
+		}
+	}
 	st, f := s.applyKind(ctx, update.KindUpdate, req.Params.Confirmed)
 	if f != nil {
 		return gen.ApplyUpdatedefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
