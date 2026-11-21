@@ -45,7 +45,7 @@ export const LIFECYCLE_WORDS = {
   'updates.next_check': 'Next check',
   'updates.locked_by': 'Set by {who}. You cannot change it here.',
   'history.title': 'Update history',
-  'history.empty': 'No updates yet.',
+  'history.empty': 'Nothing has been updated yet.',
   'history.when': 'When',
   'history.who': 'Who',
   'history.what': 'What',
@@ -84,7 +84,7 @@ export const LIFECYCLE_WORDS = {
   'fleet.updating': 'Updating',
   'fleet.failed': 'Update failed',
   'fleet.version': 'Version {version}',
-  'fleet.empty': 'No other machines are paired.',
+  'fleet.empty': 'This is the only machine.',
 } as const;
 
 export type LifecycleWord = keyof typeof LIFECYCLE_WORDS;
