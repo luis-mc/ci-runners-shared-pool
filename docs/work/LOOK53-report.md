@@ -19,6 +19,17 @@ Status: code done, CI run requested. Branch LOOK53-lifecycle-ui.
 - docs_check W1 on this report is expected: strip it before the join.
 
 ## Checks run
-- ui: typecheck, lint, vitest (254). web: typecheck, lint, vitest (682), bundle budget. Prettier. `scripts/design` vitest (128). e2e: updates-lifecycle (6) and design-layout (65) green. docs_check: only W1.
+- Full e2e gate green on the head (3399 passed). ui: typecheck, lint, vitest (254). web: typecheck, lint, vitest (682), bundle budget. Prettier. `scripts/design` vitest (128). e2e: updates-lifecycle (6) and design-layout (65) green. docs_check: only W1.
 
-CODE DONE (sha in the PR body)
+
+| ID | status | evidence |
+|---|---|---|
+| LC-22 | pass | every word from `lifecycleWords.ts`; words test (no banned word, no doubled punctuation, no codes); retired-word guard green |
+| LC-23 | pass | parts use only shared Pane, Button, Dialog, Status, Progress; no class, no `style=`; parts-tokens guard ok; spacing guard B ok |
+| LC-24 | pass | vitest renders every state of each part; e2e layout at 360, 393, 1300, 1800 px |
+| LC-30 | pass | UI side only: Remove disabled with its reason until a data choice; no modal beyond RemoveDialog; no fixed-size window |
+| Guard A | pass | `updates-lifecycle.spec.ts` layout (page, banner, dialog), design-layout spec, ux-routes |
+| Guard B | pass | one break in `components.css` fixed; apps/web and packages/ui clean |
+| Guard C | pass | clean with a scratch roles config (Stack, CardGrid, FieldGrid); the repo has no `layout-roles.json` yet |
+
+CODE DONE 82fc3981084a10ef27c756a7bb5674ee82cfe609
