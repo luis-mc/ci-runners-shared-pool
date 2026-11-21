@@ -22,7 +22,7 @@ Branch TRAY12-native-window-lifecycle. Areas: internal/updatewindow, internal/tr
 - `confirm_disabled_until` ("keep or purge chosen") is not shown: as a sentence it does not read well. Owner to pick wording.
 - Tab does not visit the radio choices; Up/Down/Left/Right choose, Tab goes over the buttons.
 
-CODE DONE (sha in the final commit)
+CODE DONE ece039c
 
 | ID | status | evidence |
 |---|---|---|
