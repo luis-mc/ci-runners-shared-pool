@@ -89,13 +89,12 @@ jobs:
           if [ -d packages/ui/src/components/lifecycle ]; then node $G/lifecycle/parts-tokens.mjs packages/ui/src/components/lifecycle; fi
       - name: Rendered layout guard A and lifecycle states (DS234)
         run: |
-          if ! ls docs/design-system/next-version/lifecycle-states/*.html >/dev/null 2>&1; then echo "no lifecycle state pages yet"; exit 0; fi
+          shopt -s nullglob
+          pages=(docs/design-system/next-version/lifecycle-states/*.html)
+          # Rendered pages: the lifecycle state pages that LOOK53 builds from the shared parts.
+          if [ ${#pages[@]} -eq 0 ]; then echo "no lifecycle state pages yet"; exit 0; fi
           pnpm exec playwright install --with-deps chromium
           export DS_NODE_MODULES="$PWD/node_modules/.pnpm/node_modules"
           G=scripts/design/guards
-          # Rendered pages: the lifecycle state pages that LOOK53 builds from the shared parts.
-          pages=$(ls docs/design-system/next-version/lifecycle-states/*.html 2>/dev/null || true)
-          if [ -n "$pages" ]; then
-            node $G/design-guards/rendered-layout.mjs $pages
-            node $G/lifecycle/states-render.mjs $pages
-          fi
+          node "$G/design-guards/rendered-layout.mjs" "${pages[@]}"
+          node "$G/lifecycle/states-render.mjs" "${pages[@]}"
