@@ -254,7 +254,7 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	if plan.WinePrefix != "" {
 		b.ensureWine(ctx, pool, plan)
 	}
-	startArgs := []string{"exec", "-i", "-u", JobUser, "-w", jobDir(r.Name)}
+	startArgs := []string{"exec", "-i", "-w", jobDir(r.Name)}
 	startArgs = append(startArgs, envArgs(plan.RunnerEnv)...)
 	startArgs = append(startArgs, pool, "sh", "-c", runnerScript)
 	steps := []struct {
@@ -262,7 +262,7 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 		args []string
 		in   string
 	}{
-		{"prepare", []string{"exec", "-u", JobUser, pool, "sh", "-c", `mkdir -p "$1" && cp -a "$2/." "$1/"`, "sh", jobDir(r.Name), RunnerDir}, ""},
+		{"prepare", []string{"exec", pool, "sh", "-c", `mkdir -p "$1" && cp -a "$2/." "$1/"`, "sh", jobDir(r.Name), RunnerDir}, ""},
 	}
 	rollback := func() {
 		// Do not leave a half-made folder, a config file or a login behind.

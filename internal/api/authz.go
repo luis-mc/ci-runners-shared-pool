@@ -5,10 +5,13 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 )
 
 // Authenticator says who a request acts as: a session cookie or a CLI bearer
@@ -136,7 +139,7 @@ func (z *authz) middleware() gen.StrictMiddlewareFunc {
 				p, err = z.authn.Authenticate(ctx, r)
 			}
 			if err == nil {
-				ctx = context.WithValue(ctx, keyPrincipal, p)
+				ctx = withPrincipal(ctx, p)
 			}
 			if known && need == authPublic {
 				// A browser change must come from the console's own page even
@@ -200,4 +203,30 @@ func originAllowed(r *http.Request, required bool) bool {
 		return !required
 	}
 	return strings.EqualFold(got, origin(r))
+}
+
+// withPrincipal puts the signed-in principal in ctx and names it as the actor
+// of every area that audits a change. The areas read the actor through three
+// keys (audit, machines, runners); setting only the principal left them
+// recording "unknown" or "system" for a change made in the console.
+func withPrincipal(ctx context.Context, p auth.Principal) context.Context {
+	ctx = context.WithValue(ctx, keyPrincipal, p)
+	if p.Login == "" {
+		return ctx
+	}
+	id := ""
+	if p.UserID != 0 {
+		id = strconv.FormatInt(p.UserID, 10)
+	}
+	// An actor a caller already named on ctx stays; only a missing one is filled in.
+	if audit.ActorFrom(ctx) == audit.System {
+		ctx = audit.WithActor(ctx, audit.Actor{Login: p.Login, ID: id, Source: p.Source})
+	}
+	if machines.ActorFrom(ctx) == "unknown" {
+		ctx = machines.WithActor(ctx, p.Login)
+	}
+	if actorFrom(ctx) == "unknown" {
+		ctx = ContextWithActor(ctx, p.Login)
+	}
+	return ctx
 }

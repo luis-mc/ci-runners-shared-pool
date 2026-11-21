@@ -5,7 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/github"
@@ -248,6 +250,9 @@ func (s *Service) syncVariables(ctx context.Context, actor auth.Principal, r Rep
 	for _, name := range namesToCheck(want, cur) {
 		val, ok := want[name]
 		got, exists := cur[name]
+		if ok {
+			s.clearAbsent(r, name)
+		}
 		if !ok {
 			if exists {
 				if yes, err := s.mayDelete(ctx, r, name); err != nil {
@@ -255,7 +260,11 @@ func (s *Service) syncVariables(ctx context.Context, actor auth.Principal, r Rep
 				} else if !yes {
 					continue
 				}
-				if err := s.deleteVariable(ctx, actor, r, name); err != nil {
+				yes, why := s.confirmDelete(ctx, r, pol, name)
+				if !yes {
+					continue
+				}
+				if err := s.deleteVariableWhy(ctx, actor, r, name, why); err != nil {
 					return err
 				}
 			}
@@ -278,15 +287,119 @@ func (s *Service) syncVariables(ctx context.Context, actor auth.Principal, r Rep
 	return nil
 }
 
+const (
+	// CapacitySettle is how long after a start the controller waits for the
+	// machines to report their facts before it trusts an absent OS: two report
+	// intervals (agents detect again every 10 minutes).
+	CapacitySettle = 20 * time.Minute
+	// DeleteHold is how long the capacity of an OS must stay absent, over two
+	// syncs at least this far apart, before its RUNS_ON variable is deleted.
+	DeleteHold = 15 * time.Minute
+)
+
+// varOS is the OS a managed or alias variable or size variable belongs to, "" for any other.
+func varOS(name string) string {
+	for _, v := range variableOrder {
+		if v.Var == name {
+			return v.OS
+		}
+	}
+	for _, a := range legacyAlias {
+		if a.Old == name {
+			return varOS(a.Var)
+		}
+	}
+	if os, _, ok := ParseSizeVariable(name); ok {
+		return os
+	}
+	return ""
+}
+
+// capacityKnown says whether an absent OS can be believed: every machine that
+// was online has reported facts since this start (FactsReported), or the settle
+// period has passed.
+func (s *Service) capacityKnown(ctx context.Context) bool {
+	if s.cfg.Now().Sub(s.started) >= CapacitySettle {
+		return true
+	}
+	if s.cfg.FactsReported == nil {
+		return false
+	}
+	ok, err := s.cfg.FactsReported(ctx)
+	return err == nil && ok
+}
+
+// confirmDelete says whether a variable that wants to go may be deleted now,
+// and why (R5.28). Capacity absence deletes only when capacity is known and
+// has been absent in two syncs at least DeleteHold apart; one missing reading
+// never deletes. A policy that turns the OS off deletes at once. reason fills
+// the audit entry.
+func (s *Service) confirmDelete(ctx context.Context, r Repository, pol Policy, name string) (yes bool, reason string) {
+	os := varOS(name)
+	if os == "" {
+		return true, ""
+	}
+	if len(osLabelsEnabled(pol)) > 0 && !osLabelsEnabled(pol)[os] {
+		return true, ""
+	}
+	capy, err := s.osCapacity(ctx)
+	key := r.FullName + "/" + name
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if err != nil {
+		return false, ""
+	}
+	if _, served := capy[os]; served {
+		delete(s.absent, key)
+		return true, ""
+	}
+	if !s.capacityKnown(ctx) {
+		delete(s.absent, key)
+		return false, ""
+	}
+	now := s.cfg.Now()
+	first, seen := s.absent[key]
+	if !seen {
+		s.absent[key] = now
+		return false, ""
+	}
+	if now.Sub(first) < DeleteHold {
+		return false, ""
+	}
+	return true, "no " + strings.ToUpper(os[:1]) + os[1:] + " runner for " + strconv.Itoa(int(now.Sub(first).Minutes())) + " min"
+}
+
+// clearAbsent forgets that the capacity for name was seen absent.
+func (s *Service) clearAbsent(r Repository, name string) {
+	s.mu.Lock()
+	delete(s.absent, r.FullName+"/"+name)
+	s.mu.Unlock()
+}
+
+func osLabelsEnabled(pol Policy) map[string]bool {
+	enabled := map[string]bool{}
+	for _, l := range pol.Labels {
+		if n := osName(strings.ToLower(l)); n != "" {
+			enabled[n] = true
+		}
+	}
+	return enabled
+}
+
 // deleteVariable removes one variable from GitHub and from the store.
 func (s *Service) deleteVariable(ctx context.Context, actor auth.Principal, r Repository, name string) error {
+	return s.deleteVariableWhy(ctx, actor, r, name, "")
+}
+
+// deleteVariableWhy is deleteVariable with the reason in the audit entry.
+func (s *Service) deleteVariableWhy(ctx context.Context, actor auth.Principal, r Repository, name, why string) error {
 	if err := s.cfg.GitHub.DeleteVariable(ctx, r.InstallationID, r.Owner, r.Name, name); err != nil {
 		return err
 	}
 	if err := s.cfg.Store.DeleteManagedVariable(ctx, r.ID, name); err != nil {
 		return err
 	}
-	s.cfg.Audit.Audit(ctx, actor, "variable.deleted", "repository", r.FullName, name)
+	s.cfg.Audit.Audit(ctx, actor, "variable.deleted", "repository", r.FullName, strings.TrimSpace(name+" "+why))
 	return nil
 }
 
@@ -372,6 +485,9 @@ func (s *Service) ReconcileVariables(ctx context.Context, repoID int64) error {
 	for _, name := range namesToCheck(want, cur) {
 		val, ok := want[name]
 		got, exists := cur[name]
+		if ok {
+			s.clearAbsent(r, name)
+		}
 		if !ok {
 			// No runner for this OS, or the pool is off for it: no variable.
 			if exists {
@@ -380,7 +496,11 @@ func (s *Service) ReconcileVariables(ctx context.Context, repoID int64) error {
 				} else if !yes {
 					continue
 				}
-				if err := s.deleteVariable(bg, System, r, name); err != nil {
+				yes, why := s.confirmDelete(bg, r, pol, name)
+				if !yes {
+					continue
+				}
+				if err := s.deleteVariableWhy(bg, System, r, name, why); err != nil {
 					return err
 				}
 			}

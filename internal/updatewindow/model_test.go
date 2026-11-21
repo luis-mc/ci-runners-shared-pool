@@ -25,6 +25,7 @@ func TestEveryStageMapsToItsView(t *testing.T) {
 		{"download", ModeLive, snap("downloading", 42), StateDownloading, "Downloading 0.1.13"},
 		{"waiting", ModeLive, snap("waiting_for_jobs", -1), StateWaiting, "Waiting for jobs"},
 		{"installing", ModeLive, snap("installing", 30), StateInstalling, "Installing 0.1.13"},
+		{"waiting for another installer", ModeLive, snap("waiting_installer", -1), StateWaitingInstaller, "Waiting for another installer"},
 		{"restarting", ModeLive, snap("restarting", -1), StateRestarting, "Restarting the service"},
 		{"done (reopened from the toast)", ModeLive, snap("done", 100), StateDone, "Updated"},
 		{"failed", ModeLive, snap("failed", -1), StateFailed, "The update failed"},
@@ -171,8 +172,8 @@ func TestDoneAfterTheRestart(t *testing.T) {
 	if m.State() != StateInstalling {
 		t.Fatal(m.State())
 	}
-	m.Observe(Snapshot{}) // the service is down
-	if m.State() != StateRestarting {
+	m.Observe(Snapshot{}) // the service is down while the installer replaces it: still installing
+	if m.State() != StateInstalling {
 		t.Fatalf("down: %s", m.State())
 	}
 	// the service is back with the new version but the stage file is still on restarting
@@ -319,5 +320,51 @@ func TestLeftoverDoneStageTable(t *testing.T) {
 	m.RequestReturned(nil)
 	if m.State() != StateDownloading {
 		t.Errorf("requested over leftover: %s", m.State())
+	}
+}
+
+// TRAY11: another installer holds Windows Installer; the window names it and keeps Hide only.
+func TestWaitingForAnotherInstaller(t *testing.T) {
+	m := NewModel("0.1.19", "0.1.20", ModeLive)
+	s := snap("waiting_installer", -1)
+	s.Stage.WaitingFor = "ComiclexHome-0.1.11712-x64"
+	m.Observe(s)
+	v := m.View()
+	want := "ComiclexHome-0.1.11712-x64 is installing. Windows installs one program at a time; this update starts when it finishes."
+	if v.State != StateWaitingInstaller || v.Heading != "Waiting for another installer" || len(v.Body) != 1 || v.Body[0] != want {
+		t.Fatalf("%+v", v)
+	}
+	if v.Bar != BarIndeterminate || len(v.Buttons) != 1 || v.Buttons[0].ID != BtnHide || v.Default != BtnHide || v.EscapeIs != BtnHide {
+		t.Fatalf("bar and buttons: %+v", v)
+	}
+	if CanCancel(StateWaitingInstaller) {
+		t.Fatal("no cancel while the installer is queued behind another")
+	}
+	// no name known: a generic one
+	s.Stage.WaitingFor = ""
+	m.Observe(s)
+	if b := m.View().Body[0]; !strings.HasPrefix(b, "Another program is installing.") {
+		t.Fatal(b)
+	}
+}
+
+// TRAY11: no stage claims progress that has not happened. Restarting shows only once the
+// service said the installer finished; a service that is down while installing is installing.
+func TestRestartingOnlyAfterTheInstallerFinished(t *testing.T) {
+	m := NewModel("0.1.19", "0.1.20", ModeLive)
+	m.Observe(snap("installing", -1))
+	m.Observe(Snapshot{})
+	if m.State() != StateInstalling {
+		t.Fatalf("down during install: %s", m.State())
+	}
+	m.Observe(snap("restarting", -1))
+	m.Observe(Snapshot{})
+	if m.State() != StateRestarting {
+		t.Fatalf("down after the installer finished: %s", m.State())
+	}
+	w := NewModel("0.1.19", "0.1.20", ModeLive)
+	w.Observe(snap("waiting_installer", -1))
+	if w.State() == StateRestarting || w.State() == StateInstalling {
+		t.Fatalf("waiting claims progress: %s", w.State())
 	}
 }

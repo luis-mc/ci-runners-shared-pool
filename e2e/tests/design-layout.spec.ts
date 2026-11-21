@@ -232,6 +232,17 @@ for (const screen of SCREENS) {
           summary: 'drained build-1',
           result: 'done',
         },
+        {
+          id: 2,
+          at: '2026-11-21T14:08:00Z',
+          actor: 'luis-mc',
+          source: 'web',
+          action: 'variable.restored',
+          target_type: 'repository',
+          target_id: 'luis-mc/ci-runners-shared-pool',
+          summary: 'restored the variable BUILD_CACHE_REGISTRY to its saved value',
+          result: 'done',
+        },
       ],
     });
     if (screen.signedOut)
@@ -482,4 +493,95 @@ for (const path of ['/pool', '/pool/machines', '/settings']) {
       expect(m.wrapped).toBe(0);
     });
   }
+}
+
+// LOOK49, UX-78: the audit log stays inside its pane, a date and time is one line, and Export is in the toolbar.
+for (const width of [1300, 393, 360]) {
+  test(`audit log: inside the pane, time on one line, Export in the toolbar at ${width} px`, async ({
+    page,
+  }) => {
+    const mock = jobsAndDoctor(signedIn()).on('GET', '/api/v1/audit', {
+      items: [
+        {
+          id: 2,
+          at: '2026-11-21T14:08:00Z',
+          actor: 'luis-mc',
+          source: 'web',
+          action: 'variable.restored',
+          target_type: 'repository',
+          target_id: 'luis-mc/ci-runners-shared-pool',
+          summary: 'restored the variable BUILD_CACHE_REGISTRY to its saved value',
+          result: 'done',
+        },
+      ],
+    });
+    await mock.install(page);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/settings/audit');
+    const table = page.getByRole('table', { name: 'Audit log' });
+    await expect(table).toBeVisible();
+    const m = await page.evaluate(() => {
+      const t = document.querySelector('table.ds-table');
+      const frame = t?.closest('.ds-table-frame')?.getBoundingClientRect();
+      const cells = Array.from(t?.querySelectorAll('td') ?? []).map(
+        (c) => c.getBoundingClientRect().right,
+      );
+      const time = document.querySelector('.ds-datetime');
+      const lines = time
+        ? new Set(
+            Array.from(
+              (() => {
+                const r = document.createRange();
+                r.selectNodeContents(time);
+                return r.getClientRects();
+              })(),
+            ).map((q) => Math.round(q.top)),
+          ).size
+        : 0;
+      const bar = document.querySelector('.ds-list-toolbar');
+      const exp = Array.from(document.querySelectorAll('button')).find(
+        (b) => b.textContent === 'Export',
+      );
+      return {
+        frameRight: frame?.right ?? 0,
+        cellRight: Math.max(0, ...cells),
+        lines,
+        exportInBar: Boolean(bar && exp && bar.contains(exp)),
+        details: t?.textContent ?? '',
+      };
+    });
+    expect(m.lines).toBe(1);
+    expect(m.cellRight).toBeLessThanOrEqual(m.frameRight + 1);
+    expect(m.exportInBar).toBe(true);
+    expect(m.details).not.toContain('detail=');
+    expect(m.details).toContain('luis-mc/ci-runners-shared-pool');
+    await expectDomLayout(page, 'settings audit log', { spaceVar: '--ds-space-' });
+  });
+}
+
+// LOOK49: the fields of Budget and slots top-align with their boxes on one line, however long a name or help is.
+for (const width of [1300, 393, 360]) {
+  test(`machine page: Budget and slots fields top-align at ${width} px`, async ({
+    page,
+  }) => {
+    const mock = jobsAndDoctor(signedIn());
+    await mock.install(page);
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/pool/machines/m1');
+    await expect(page.getByRole('heading', { level: 1, name: 'build-1' })).toBeVisible();
+    await expect(page.getByText('Time to finish running jobs')).toBeVisible();
+    const rows = await page.evaluate(() => {
+      const grid = document.querySelector('.ds-field-grid');
+      const fields = Array.from(grid?.querySelectorAll(':scope > .ds-field') ?? []);
+      return fields.map((f) => ({
+        top: Math.round(f.getBoundingClientRect().top),
+        box: Math.round(f.querySelector('.ds-number')?.getBoundingClientRect().top ?? -1),
+      }));
+    });
+    expect(rows.length).toBe(4);
+    const byTop = new Map<number, number[]>();
+    for (const r of rows) byTop.set(r.top, [...(byTop.get(r.top) ?? []), r.box]);
+    for (const boxes of byTop.values()) expect(new Set(boxes).size).toBe(1);
+    await expectDomLayout(page, 'machine detail', { spaceVar: '--ds-space-' });
+  });
 }

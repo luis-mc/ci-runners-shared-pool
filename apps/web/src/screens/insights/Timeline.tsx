@@ -1,6 +1,6 @@
 // Run insights, Timeline (idea 3, 16): one lane per runner, crsp runners and other runners by name. Each lane is a
 // table of its segments in time order (the text equivalent of the bars, UX-17, UX-41); idle time, "idle while a job
-// waited" and "after-merge work" are named in words. The range is 1 to 24 hours.
+// waited", "after-merge work" and the runner wait of a follow-up run are named in words. The range is 1 to 24 hours.
 import {
   Empty,
   Section,
@@ -53,15 +53,22 @@ const columns: Column<Segment>[] = [
   {
     id: 'what',
     header: 'What',
-    cell: (s) =>
-      s.kind === 'idle' ? 'Idle' : `${s.repository ?? ''} ${s.job_ident ?? ''}`.trim(),
+    cell: (s) => {
+      if (s.kind === 'idle') return 'Idle';
+      const job = `${s.repository ?? ''} ${s.job_ident ?? ''}`.trim();
+      return s.kind === 'wait' ? `Waited for a runner: ${job}` : job;
+    },
     kind: 'grow',
     grow: 2,
   },
   {
     id: 'note',
     header: 'Note',
-    cell: (s) => (s.markers ?? []).map((m) => MARKER_WORDS[m](s)).join(', ') || 'none',
+    cell: (s) =>
+      [
+        ...(s.follow_up ? ['follow-up run'] : []),
+        ...(s.markers ?? []).map((m) => MARKER_WORDS[m](s)),
+      ].join(', ') || 'none',
     kind: 'grow',
   },
 ];

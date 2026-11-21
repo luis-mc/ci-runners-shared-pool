@@ -126,6 +126,28 @@ func (q *Queries) GetPendingFacts(ctx context.Context, jobID int64) (string, err
 	return json, err
 }
 
+const getRunFollowUp = `-- name: GetRunFollowUp :one
+SELECT repository_id, run_id, parent_run_id, source, updated_at FROM run_follow_ups WHERE repository_id = ? AND run_id = ?
+`
+
+type GetRunFollowUpParams struct {
+	RepositoryID int64
+	RunID        int64
+}
+
+func (q *Queries) GetRunFollowUp(ctx context.Context, arg GetRunFollowUpParams) (RunFollowUp, error) {
+	row := q.queryRow(ctx, q.getRunFollowUpStmt, getRunFollowUp, arg.RepositoryID, arg.RunID)
+	var i RunFollowUp
+	err := row.Scan(
+		&i.RepositoryID,
+		&i.RunID,
+		&i.ParentRunID,
+		&i.Source,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const getRunsRow = `-- name: GetRunsRow :one
 SELECT repository_id, run_id, run_attempt, repository, workflow, workflow_name, event, head_branch, head_sha, pull_request, task_id, worktree, html_url, created_at, started_at, completed_at, conclusion, updated_at FROM runs WHERE repository_id = ? AND run_id = ? AND run_attempt = ?
 `
@@ -430,6 +452,18 @@ func (q *Queries) PruneJobs(ctx context.Context, completedAt string) (int64, err
 	return result.RowsAffected()
 }
 
+const pruneRunFollowUps = `-- name: PruneRunFollowUps :execrows
+DELETE FROM run_follow_ups WHERE NOT EXISTS (SELECT 1 FROM runs r WHERE r.repository_id = run_follow_ups.repository_id AND r.run_id = run_follow_ups.run_id)
+`
+
+func (q *Queries) PruneRunFollowUps(ctx context.Context) (int64, error) {
+	result, err := q.exec(ctx, q.pruneRunFollowUpsStmt, pruneRunFollowUps)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const pruneRuns = `-- name: PruneRuns :execrows
 DELETE FROM runs WHERE runs.created_at < ?
   AND NOT EXISTS (SELECT 1 FROM jobs j WHERE j.repository_id = runs.repository_id AND j.run_id = runs.run_id AND j.run_attempt = runs.run_attempt)
@@ -524,6 +558,31 @@ func (q *Queries) SetJobForecast(ctx context.Context, arg SetJobForecastParams) 
 		arg.FcSamples,
 		arg.UpdatedAt,
 		arg.ID,
+	)
+	return err
+}
+
+const setRunFollowUp = `-- name: SetRunFollowUp :exec
+INSERT INTO run_follow_ups (repository_id, run_id, parent_run_id, source, updated_at) VALUES (?, ?, ?, ?, ?)
+ON CONFLICT (repository_id, run_id) DO UPDATE SET parent_run_id = excluded.parent_run_id,
+    source = excluded.source, updated_at = excluded.updated_at
+`
+
+type SetRunFollowUpParams struct {
+	RepositoryID int64
+	RunID        int64
+	ParentRunID  int64
+	Source       string
+	UpdatedAt    string
+}
+
+func (q *Queries) SetRunFollowUp(ctx context.Context, arg SetRunFollowUpParams) error {
+	_, err := q.exec(ctx, q.setRunFollowUpStmt, setRunFollowUp,
+		arg.RepositoryID,
+		arg.RunID,
+		arg.ParentRunID,
+		arg.Source,
+		arg.UpdatedAt,
 	)
 	return err
 }

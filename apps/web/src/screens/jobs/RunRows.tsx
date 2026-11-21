@@ -2,6 +2,7 @@
 // Open run goes straight to the Run page (OPS43), as Open job goes to the Job page.
 import {
   CappedList,
+  Cluster,
   ShortText,
   Status,
   TextLink,
@@ -10,11 +11,13 @@ import {
 } from '@crsp/ui';
 import { runKey, type RunRow } from './runList';
 import {
+  FOLLOW_UP_RUNNING,
   etaOne,
   commitWords,
   eventWords,
   jobStatus,
   startRange,
+  startedNextWords,
   taskIdOf,
 } from './words';
 import { waitShort, waitWords, workflowFile } from './words';
@@ -44,6 +47,10 @@ export function BranchWords({
 export function runStatus(r: Pick<RunRow, 'state' | 'result'>) {
   return jobStatus(r);
 }
+
+/** A finished run with a follow-up still queued or running (CIX24): its own result stays, the run is not finished. */
+export const followUpRunning = (r: Pick<RunRow, 'overallState'>) =>
+  r.overallState === 'follow_up_running';
 
 export function runColumns(kind: RunKind, _now: number): Column<RunRow>[] {
   const repo: Column<RunRow> = {
@@ -104,8 +111,18 @@ export function runColumns(kind: RunKind, _now: number): Column<RunRow>[] {
     header: 'Result',
     cell: (r) => {
       const s = runStatus(r);
-      return <Status kind={s.kind} word={s.word} />;
+      return followUpRunning(r) ? (
+        <Cluster>
+          <Status kind={s.kind} word={s.word} />
+          <Status kind="running" word={FOLLOW_UP_RUNNING} />
+        </Cluster>
+      ) : (
+        <Status kind={s.kind} word={s.word} />
+      );
     },
+    // The follow-up is named in the hover text and in the details panel; a column of its own would not fit one line.
+    title: (r) =>
+      r.startedNext?.length ? `Started next: ${startedNextWords(r.startedNext)}` : '',
     sort: (r) => runStatus(r).word,
   };
   const doneOf: Column<RunRow> = {

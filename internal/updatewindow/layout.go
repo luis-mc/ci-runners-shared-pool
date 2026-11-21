@@ -189,6 +189,9 @@ func Clipped(m Metrics, l Layout) []string {
 		if !it.Rect.In(client) {
 			bad = append(bad, fmt.Sprintf("item %d (%d) %v is outside the client area %v", i, it.Kind, it.Rect, client))
 		}
+		if it.Kind != KindBand && it.Kind != KindDivider && it.Rect.Max.X > l.W-tenths(l.Unit, padUnits) {
+			bad = append(bad, fmt.Sprintf("item %d (%d) %v runs past the right margin %d", i, it.Kind, it.Rect, l.W-tenths(l.Unit, padUnits)))
+		}
 		switch it.Kind {
 		case KindHeading, KindBody, KindBarLabel:
 			lh := tenths(l.Unit, lineUnits)
@@ -199,7 +202,11 @@ func Clipped(m Metrics, l Layout) []string {
 				bad = append(bad, fmt.Sprintf("item %d: %d lines of %d px do not fit %d px", i, len(it.Lines), lh, it.Rect.Dy()))
 			}
 			for _, ln := range it.Lines {
-				if w := m.Measure(ln, it.Kind == KindHeading); w > it.Rect.Dx() {
+				w := m.Measure(ln, it.Kind == KindHeading)
+				if ln != "" && w <= 0 {
+					bad = append(bad, fmt.Sprintf("item %d: line %q measures %d px (the measure failed)", i, ln, w))
+				}
+				if w > it.Rect.Dx() {
 					bad = append(bad, fmt.Sprintf("item %d: line %q is %d px wide in %d px", i, ln, w, it.Rect.Dx()))
 				}
 			}
@@ -241,6 +248,9 @@ func SampleViews() []View {
 			snap.Stage = sampleStage("downloading", 42)
 		case StateWaiting:
 			snap.Stage = sampleStage("waiting_for_jobs", -1)
+		case StateWaitingInstaller:
+			snap.Stage = sampleStage("waiting_installer", -1)
+			snap.Stage.WaitingFor = "ComiclexHome-0.1.11712-x64-with-a-very-long-installer-file-name"
 		case StateInstalling:
 			snap.Stage = sampleStage("installing", 60)
 		case StateRestarting:

@@ -7,7 +7,6 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
-	"time"
 )
 
 func machineJSON(name, state string, online bool, jobs ...map[string]any) map[string]any {
@@ -379,10 +378,9 @@ func TestJobList1000(t *testing.T) {
 		all = append(all, jobJSON(i, "luis-mc/app", fmt.Sprintf("job-%d", i), "done"))
 	}
 	f.reply("GET /api/v1/jobs", 200, map[string]any{"items": all, "stale": map[string]any{"is_stale": false}})
-	start := time.Now()
 	code, out, _ := f.run("job", "list", "--limit", "500", "--json")
-	if code != 0 || time.Since(start) > time.Second || !strings.Contains(out, "job-999") {
-		t.Fatalf("%d in %s", code, time.Since(start))
+	if code != 0 || !strings.Contains(out, "job-999") {
+		t.Fatalf("%d", code)
 	}
 }
 

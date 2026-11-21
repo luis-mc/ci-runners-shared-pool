@@ -27,7 +27,15 @@ import { useRun } from './api';
 import { edgesOf, graphNodes, runRows } from './runViews';
 import { RUN_JOBS_ID, RunJobsTable } from './RunJobs';
 import { basisFor, graphSource } from './runBasis';
-import { etaWords, jobStatus, repoPath, sourceWords, taskOf } from './words';
+import {
+  FOLLOW_UP_RUNNING,
+  etaWords,
+  followUpWords,
+  jobStatus,
+  repoPath,
+  sourceWords,
+  taskOf,
+} from './words';
 
 type RunItem = Schemas['RunItem'];
 
@@ -87,6 +95,9 @@ function RunBody({ run, onAttempt }: { run: RunItem; onAttempt: (a: number) => v
       />
       <Cluster>
         <Status kind={kind} word={word} />
+        {run.overall_state === 'follow_up_running' ? (
+          <Status kind="running" word={FOLLOW_UP_RUNNING} />
+        ) : null}
         {run.attempts.length > 1 ? (
           <Badge>{`${run.attempts.length} attempts`}</Badge>
         ) : null}
@@ -120,6 +131,25 @@ function RunBody({ run, onAttempt }: { run: RunItem; onAttempt: (a: number) => v
                 value: run.pull_request ? `#${run.pull_request}` : 'none',
               },
               { name: 'Started', value: formatDateTime(run.created_at) },
+              ...(run.started_next.length > 0
+                ? [
+                    {
+                      name: 'Started next',
+                      value: (
+                        <Stack>
+                          {run.started_next.map((f) => (
+                            <Text key={f.run_id}>
+                              <TextLink to={`/jobs/run/${f.run_id}`}>
+                                {f.workflow_name}
+                              </TextLink>
+                              {followUpWords(f).slice(f.workflow_name.length)}
+                            </Text>
+                          ))}
+                        </Stack>
+                      ),
+                    },
+                  ]
+                : []),
               ...(run.eta
                 ? [
                     {

@@ -266,7 +266,8 @@ func (l *Log) List(ctx context.Context, f Filter) (Page, error) {
 }
 
 // Summary turns stored details into one short line: the "summary" key when
-// there is one, else "key=value" pairs in key order.
+// there is one, else the "detail" text alone (the auth area stores its note
+// under that key), else "key=value" pairs in key order.
 func Summary(detailJSON string) string {
 	var m map[string]any
 	if err := json.Unmarshal([]byte(detailJSON), &m); err != nil || len(m) == 0 {
@@ -274,6 +275,11 @@ func Summary(detailJSON string) string {
 	}
 	if s, ok := m["summary"].(string); ok && s != "" {
 		return s
+	}
+	if len(m) == 1 {
+		if d, ok := m["detail"].(string); ok {
+			return d
+		}
 	}
 	keys := make([]string, 0, len(m))
 	for k := range m {

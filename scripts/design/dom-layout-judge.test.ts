@@ -43,6 +43,13 @@ describe('dom layout judge', () => {
     ).toHaveLength(1);
     expect(domLayoutSource()).toContain("add('clipped-text'");
   });
+  it('judges the time-one-line rule like every other rule (LOOK49)', () => {
+    expect(
+      judgeLayout('audit', [{ width: 360, rule: 'time-one-line', text: 'x' }], [])
+        .unknown,
+    ).toHaveLength(1);
+    expect(domLayoutSource()).toContain("add('time-one-line'");
+  });
   it('builds a source that carries the options', () => {
     const src = domLayoutSource({ primary: '#go', spaceVar: '--s-' });
     expect(src).toContain('"#go"');

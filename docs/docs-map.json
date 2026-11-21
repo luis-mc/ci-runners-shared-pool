@@ -152,6 +152,9 @@
     "internal/install/**": [
       "docs/features/operations/spec.md"
     ],
+    "internal/jobsdata/followup*.go": [
+      "docs/features/ci-run-insights/spec.md"
+    ],
     "internal/jobsdata/reconcile/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
@@ -217,6 +220,9 @@
       "docs/features/registry/spec.md"
     ],
     "internal/store/insights*.go": [
+      "docs/features/ci-run-insights/spec.md"
+    ],
+    "internal/store/jobsdata_followups*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
     "internal/store/jobsizes.go": [

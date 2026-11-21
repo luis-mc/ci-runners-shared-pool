@@ -18,13 +18,21 @@ import (
 // every supported Windows.
 type fonts struct {
 	regular, bold uintptr
-	unit          int // the height of one line of text in pixels: the unit of the layout
-	dc            uintptr
+	unit          int     // the height of one line of text in pixels: the unit of the layout
+	avgW          int     // the average character width in pixels: the fallback of Measure
+	dc            uintptr // the measuring DC the fonts own for their whole life, freed in free()
 }
 
 const fontPoints = 10
 
-func newFonts(dc uintptr, dpi int) *fonts {
+// newFonts builds the faces of a DPI and a measuring DC of its own (compatible with the screen).
+// The window and the layout check both build fonts here, so the check measures what the window
+// measures. The fonts never keep a DC they do not own: a released DC makes
+// GetTextExtentPoint32 fail and every width 0 (TRAY10).
+func newFonts(dpi int) *fonts {
+	screen, _, _ := pGetDC.Call(0)
+	dc, _, _ := pCreateCompatibleDC.Call(screen)
+	_, _, _ = pReleaseDC.Call(0, screen)
 	mk := func(weight int) uintptr {
 		h := -mulDiv(fontPoints, dpi, 72)
 		f, _, _ := pCreateFont.Call(uintptr(int32(h)), 0, 0, 0, uintptr(weight), 0, 0, 0, 1 /*DEFAULT_CHARSET*/, 0, 0, 5 /*CLEARTYPE_QUALITY*/, 0x31 /*FIXED_PITCH|FF_MODERN*/, uintptr(unsafe.Pointer(wstr("Consolas"))))
@@ -39,12 +47,20 @@ func newFonts(dc uintptr, dpi int) *fonts {
 	if f.unit < 8 {
 		f.unit = 8
 	}
+	f.avgW = int(tm.AveCharWidth)
+	if f.avgW < 1 {
+		f.avgW = max(1, f.unit*6/10)
+	}
 	return f
 }
 
 func (f *fonts) free() {
 	_, _, _ = pDeleteObject.Call(f.regular)
 	_, _, _ = pDeleteObject.Call(f.bold)
+	if f.dc != 0 {
+		_, _, _ = pDeleteDC.Call(f.dc)
+		f.dc = 0
+	}
 }
 
 // metrics measures with the real faces, so the layout is the layout of the screen.
@@ -235,10 +251,6 @@ func renderDIB(f *fonts, pal Palette, l Layout, v View, ui uiState) *image.NRGBA
 // builds the window layout, off screen, for every state at 100, 150 and 200% (and 125%), with
 // the real fonts. It exits 1 when anything is clipped; --screenshots also writes PNG files.
 func layoutCheck(c Config, o Options) int {
-	screen, _, _ := pGetDC.Call(0)
-	defer func() { _, _, _ = pReleaseDC.Call(0, screen) }()
-	dc, _, _ := pCreateCompatibleDC.Call(screen)
-	defer func() { _, _, _ = pDeleteDC.Call(dc) }()
 	if c.Shots != "" {
 		if err := os.MkdirAll(c.Shots, 0o750); err != nil {
 			say(o.Stderr, "error: "+err.Error())
@@ -247,7 +259,7 @@ func layoutCheck(c Config, o Options) int {
 	}
 	bad := 0
 	for _, dpi := range []int{96, 120, 144, 192} {
-		f := newFonts(dc, dpi)
+		f := newFonts(dpi)
 		m := f.metrics()
 		for _, v := range SampleViews() {
 			l := Compute(m, v)

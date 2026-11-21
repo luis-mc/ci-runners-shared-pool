@@ -12,7 +12,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
 )
 
-// JobSizes is the database side of jobsize.Store (migration 00033, OPS67).
+// JobSizes is the database side of jobsize.Store (migration 00034, OPS67).
 func (s *Store) JobSizes() *JobSizeStore { return &JobSizeStore{s} }
 
 // JobSizeStore keeps the scan rows, the overrides and the measured sizes.
