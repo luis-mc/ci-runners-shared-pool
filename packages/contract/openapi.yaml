@@ -5119,15 +5119,38 @@ components:
         memory: { type: integer }
     JobSizeRow:
       type: object
-      required: [repository, job, class, source, weight, reasons, services, override_console, override_file, copy_line, reset_note]
+      required:
+        [
+          repository,
+          job,
+          class,
+          source,
+          weight,
+          reasons,
+          services,
+          override_console,
+          override_file,
+          copy_line,
+          reset_note,
+        ]
       properties:
         repository: { type: string }
-        job: { type: string, description: The job key, or the pattern of an override that matches no scanned job }
+        job:
+          {
+            type: string,
+            description: The job key,
+            or the pattern of an override that matches no scanned job,
+          }
         workflow: { type: string }
         class: { $ref: '#/components/schemas/JobSizeClass' }
         source: { $ref: '#/components/schemas/JobSizeSource' }
         weight: { $ref: '#/components/schemas/JobSizeUnits' }
-        confidence: { type: string, enum: [high, low], description: Of the scan guess; absent when no scan found the job }
+        confidence:
+          {
+            type: string,
+            enum: [high, low],
+            description: Of the scan guess; absent when no scan found the job,
+          }
         tests: { type: integer }
         est_seconds: { type: integer }
         reasons:
@@ -5137,9 +5160,15 @@ components:
           type: array
           items: { type: string }
         scanned_at: { type: string, format: date-time }
-        override_console: { type: string, description: The console override class; empty when none }
-        override_file: { type: string, description: The .crsp.yml override class; empty when none }
-        reset_note: { type: string, description: Set when the test count moved by more than 2x and the size went back to the scan guess }
+        override_console:
+          { type: string, description: The console override class; empty when none }
+        override_file:
+          { type: string, description: The .crsp.yml override class; empty when none }
+        reset_note:
+          {
+            type: string,
+            description: Set when the test count moved by more than 2x and the size went back to the scan guess,
+          }
         copy_line: { type: string, description: The YAML line for .crsp.yml }
     JobSizeCostRow:
       type: object
@@ -5165,7 +5194,11 @@ components:
         cost_table:
           type: array
           items: { $ref: '#/components/schemas/JobSizeCostRow' }
-        file_error: { type: string, description: Why .crsp.yml could not be read; empty when it could }
+        file_error:
+          {
+            type: string,
+            description: Why .crsp.yml could not be read; empty when it could,
+          }
     JobSizeOverrideInput:
       type: object
       required: [repository, pattern, class]
