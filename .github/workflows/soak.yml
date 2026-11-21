@@ -1,0 +1,27 @@
+name: soak
+
+# Soak measurements (not unit tests). Never runs on pull requests.
+on:
+  workflow_dispatch:
+    inputs:
+      window:
+        description: Measurement window, a Go duration
+        default: 60s
+  schedule:
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+
+jobs:
+  idle-agent:
+    name: idle agent cost (machines R6.5)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+      - name: Measure one idle agent
+        run: go run ./cmd/crsp-idle-soak -window "${{ inputs.window || '60s' }}"

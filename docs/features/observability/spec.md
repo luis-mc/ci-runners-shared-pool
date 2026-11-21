@@ -452,3 +452,10 @@ Planned files, in the globs of the front matter:
 - internal/logs/ (slog setup, redactor, rotation, crash files, agent buffer, logs.db, search, retention)
 
 Ported from dev-standards (cite in each ported file): `claude/plugins/delivery/scripts/ci_runs.py`, `claude/plugins/delivery/templates/shared/scripts/delivery/ci_watch.py`, `claude/plugins/delivery/tests/test_ci_runs.py`, `claude/plugins/delivery/scripts/load.py`.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-6, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58 `scripts/design/design-system-follow.test.ts`
+Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`

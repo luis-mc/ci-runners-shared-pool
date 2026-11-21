@@ -40,11 +40,10 @@ Each action has one word. The Never use column lists words that must not stand i
 | Turn off | Stop a repository using the pool. | Disable, Deactivate |
 | Copy | Copy a command or a value. It changes nothing. | Clipboard |
 | Look for updates | Ask GitHub for a newer stable release now. It only looks: it never installs by itself, with Automatic updates on or off. A newer release opens the update dialog, which asks first. | Check for updates, Refresh |
-| Update to N | Install release N after the running jobs end. N is the version. | Upgrade, Install |
+| Update to {version} | The main button of the update window and dialog, on the right. Installs the newer release after the running jobs end; it stops none. N or {version} is the version. | Update now, Install now, Upgrade, Install, Yes |
 | Restart the service | Stop and start the service after the running jobs end. | Reboot, Reset |
 | Automatic updates | The switch that lets the regular check install a newer stable release by itself after the running jobs end. A look a person asks for never installs by itself. | Auto-upgrade |
-| Install now | The main button of the update dialog, on the right. Installs the newer release after the running jobs end; it stops none. | Update now, Upgrade, Yes |
-| Later | The other button of the update dialog, on the left. Changes nothing. Closing the dialog is Later. | Not now, Skip, No |
+| Not now | The other button of the update window and dialog, on the left. Changes nothing. Closing the window is Not now. | Later, Skip, No |
 | What changed | The link of the update dialog to the release page of the new version. It changes nothing. | Release notes, Changelog |
 | Quit tray | Close the tray icon only. The service keeps running. | Exit, Close |
 | Export | Save every row of a table or list as a file, in the order shown (component 29). It changes nothing. | Download, Save as |
@@ -771,13 +770,13 @@ The words of the shared part that guides a missing App permission or repository 
 
 ## Update dialog words
 
-The dialog the tray opens when a newer stable release is found (tray R5.43, operations R5.87, CRSP147). It stays until answered. The buttons are Later and Install now, and the link is What changed (action vocabulary).
+The dialog the tray opens when a newer stable release is found (tray R5.43, operations R5.87, CRSP147). It stays until answered. The buttons are Not now and Update to {version}, and the link is What changed (action vocabulary).
 
 | Word | Where and meaning |
 |---|---|
 | Updated to {version} | Tray notice, once per version, after a successful update. |
 | CI Runners Shared Pool {version} is the newest stable release. | Tray notice when Look for updates finds nothing newer. |
-| Install now waits for the {n} running jobs to finish. It stops none. | Line of the dialog when jobs run; names how many. |
+| Update to {version} waits for the {n} running jobs to finish. It stops none. | Line of the dialog when jobs run; names how many. |
 
 ## GitHub error words
 
@@ -899,7 +898,7 @@ The words of the small update page the tray opens (tray R5.43, web-console R5.96
 | Updates | The Settings tab after Console (LOOK43). It holds the Updates pane; Console no longer does. |
 | Update | Title of the page and name of the wizard. |
 | Version {version} is ready. Running jobs finish first; the service restarts (about 1 min). | The Review line. It is also the text of the native fallback box. |
-| Update now | The primary on Review. Busy word: Updating. |
+| Update to {version} | The primary on Review. Busy word: Updating. |
 | Not now | The left button on Review: nothing starts. |
 | Running jobs are safe. | Line under the progress bar while the update works. |
 | Hide | Closes the window while the update goes on. It stops nothing. |
@@ -921,8 +920,8 @@ The words of the native update window on Windows (tray R5.46 to R5.49). The step
 | Update to {version} | The heading on Review. |
 | Version {version} is ready. You run {version}. | First line on Review. |
 | Running jobs finish first, then the service restarts (about 1 min). No job is stopped. | Second line on Review. |
-| Not now, Update now | The two buttons on Review. Update now is the main one and the default. |
-| Starting the update. | The line between pressing Update now and the first answer. |
+| Not now, Update to {version} | The two buttons on Review. Update to {version} is the main one and the default. |
+| Starting the update. | The line between pressing Update to {version} and the first answer. |
 | Downloading {version} | The heading while it downloads; the bar shows {n}%. |
 | The update is checked against its checksum and signature before it installs. | The line under the download bar. |
 | Waiting for jobs | The heading while the machine drains. |
@@ -1376,3 +1375,23 @@ A run can start other runs when it ends (the Installers workflow after CI). The 
 | Done and All lists, hover text of the Result | Started next: "{workflow}, {state}" |
 | Timeline, row | Waited for a runner: {project} {job} |
 | Timeline, note | follow-up run |
+
+## Lifecycle words
+
+The words of install, update and remove (UX-79 to UX-83, components 70 to 74). They come from `lifecycle.json`, `words.states`; a screen, the native window and the tray read that table and write no string of their own (LC-21). Banned: OK, Yes, No, Install now, Later, daemon, binary, payload, error codes, HTTP statuses, doubled punctuation. A date and time is shown by the shared `DateTime` part (UX-78).
+
+| Words | Used for |
+|---|---|
+| Look for updates | The tray menu item and the Updates card button. It only looks. |
+| Version {version} is ready. | Title when a newer version is found. |
+| Update to {version}, Not now | The primary and the secondary on Review. |
+| Version {version} is required and installs now. | Title when the update is required; there is no Not now. |
+| Downloading, Checking the download, Installing, Testing | The step names, in this order. |
+| Waiting for {n} running jobs to finish. The update starts when they end. | Title while the machine waits for its jobs, up to 60 minutes. |
+| Updated to version {version}. What's new | Title and link on Done. |
+| The update to {version} failed its test. Version {previous} is running again. We try again at {time}. | Title after a rollback. |
+| The download for {version} did not pass its signature check. Nothing changed. | Title when the signed manifest or the checksum fails. |
+| Crsp is up to date. Version {version}. | Title when nothing newer is out. |
+| Version {version} is skipped. We look again when a newer version is out. | Title after the third failure. |
+| Pair this machine first. Crsp looks for updates after that. | Title on an unpaired machine; no check runs. |
+| Remove {product}, Keep my data, Delete my data too ({size} GB in {path}), Cancel | The Remove question. The Remove button says `Remove {product}`, stays disabled until one choice is made, and its reason is `keep or purge chosen`. |

@@ -430,3 +430,12 @@ Source: .github/workflows/tray-smoke.yml
 Source: packaging/autostart/README.md
 
 Also: menu_open_windows.go and menu_open_other.go (is the menu open), autostart_windows.go, autostart_other.go, svcstate_darwin.go, svcstate_windows.go, notify_*.go and sni_other.go are the per-OS parts; internal/tray/testdata/snihost is the StatusNotifierWatcher stand-in for the Linux smoke.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: CORE-1, CORE-7, UX-1, UX-6, UX-18, UX-26, UX-29, UX-30, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-71 `scripts/design/action-bar.test.ts`

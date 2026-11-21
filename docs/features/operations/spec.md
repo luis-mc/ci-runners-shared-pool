@@ -540,3 +540,11 @@ Source: internal/backup/start.go
 Source: internal/api/handlers_ops.go
 Source: .github/workflows/release.yml
 Source: cmd/crsp/main.go
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: CORE-3, UX-5, UX-6, UX-26, UX-29, UX-30, UX-34, UX-44, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`

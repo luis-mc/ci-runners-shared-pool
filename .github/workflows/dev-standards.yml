@@ -7,7 +7,7 @@
 # luismc-docs builds docs that an older pin judges stale (G1). Keep it current
 # with `python3 <claude-setup>/assets/ci_pin.py --bump` (`--check` exits 1 when stale).
 #   luis-mc/dev-standards  the marketplace repository, as owner/name
-#   0b389c4529b37174ee58e6f30469f7efa9ac8912   a tag or full commit SHA (not a branch)
+#   89711a43d7eb101770b9e17317670bf2fec98a0d   a tag or full commit SHA (not a branch)
 #   claude/plugins/docs/scripts        path of the docs plugin scripts inside that checkout
 #   claude/plugins/docs/skills/spec-check/assets/spec_check.py          path of spec_check.py inside that checkout: claude/plugins/docs/skills/spec-check/assets/spec_check.py
 #   main      the repository's default branch (claude-setup reads it
@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: luis-mc/dev-standards
-          ref: 0b389c4529b37174ee58e6f30469f7efa9ac8912
+          ref: 89711a43d7eb101770b9e17317670bf2fec98a0d
           path: .dev-standards-tools
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
@@ -68,4 +68,34 @@ jobs:
           else
             npm ci
             npx vitest run scripts/design
+          fi
+      - name: Lifecycle contract and words (LC-1, LC-2, LC-31)
+        run: |
+          python3 "$TOOLS/claude/plugins/docs/scripts/lifecycle_check.py" validate docs/design-system/next-version/lifecycle.json
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+      - name: Words lint (Go)
+        run: go test -timeout 10s ./scripts/design/wordslint ./internal/lifecyclewords
+      - name: Design guards B to E, layout roles and lifecycle guards (DS234)
+        run: |
+          G=scripts/design/guards
+          node $G/design-guards/none-yet.mjs docs/design-system/next-version/ux-rules.md
+          node $G/design-guards/citation-test.mjs .
+          node $G/design-guards/layout-roles.mjs . --config scripts/design/layout-roles.json
+          node $G/design-guards/spacing-tokens.mjs packages/ui/src
+          node $G/design-guards/spacing-tokens.mjs apps/web/src
+          node $G/lifecycle/tray-modal.mjs internal
+          if [ -d packages/ui/src/components/lifecycle ]; then node $G/lifecycle/parts-tokens.mjs packages/ui/src/components/lifecycle; fi
+      - name: Rendered layout guard A and lifecycle states (DS234)
+        run: |
+          if ! ls docs/design-system/next-version/lifecycle-states/*.html >/dev/null 2>&1; then echo "no lifecycle state pages yet"; exit 0; fi
+          pnpm exec playwright install --with-deps chromium
+          export DS_NODE_MODULES="$PWD/node_modules/.pnpm/node_modules"
+          G=scripts/design/guards
+          # Rendered pages: the lifecycle state pages that LOOK53 builds from the shared parts.
+          pages=$(ls docs/design-system/next-version/lifecycle-states/*.html 2>/dev/null || true)
+          if [ -n "$pages" ]; then
+            node $G/design-guards/rendered-layout.mjs $pages
+            node $G/lifecycle/states-render.mjs $pages
           fi

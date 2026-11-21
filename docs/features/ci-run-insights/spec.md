@@ -501,3 +501,13 @@ Source: internal/store/migrations/00030_ci_insights.sql
 | Source: internal/api/handlers_insights.go |
 | Source: cmd/crsp/insights_wiring.go |
 | Planned: internal/github/rest_insights.go, internal/github/rest_insights_jobs.go, internal/doctor/checks/workflows.go, internal/agentlink/insights.go, internal/store/insights*.go, apps/web/src/screens/insights/. |
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: CORE-3, CORE-4, UX-3, UX-5, UX-6, UX-11, UX-14, UX-18, UX-19, UX-22, UX-25, UX-26, UX-28, UX-29, UX-30, UX-31, UX-33, UX-41, UX-52, UX-53, UX-54, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-4, UX-16, UX-17, UX-49 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-71 `scripts/design/action-bar.test.ts`
+Proof: UX-72 `e2e/tests/web-console/ux-jobs-rows.spec.ts`

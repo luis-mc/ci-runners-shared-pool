@@ -499,3 +499,13 @@ Ported from (dev-standards, read-only):
 - `claude/plugins/delivery/templates/shared/scripts/delivery/tools.json`
 - `claude/plugins/delivery/tests/test_dl115_ci_tool.py`, `test_dl194_pool_tool_cache.py`, `test_ds199_tool_fetch.py`, `test_dl189_ci_tool_file_name.py`
 - `claude/plugins/delivery/templates/runner-pool/Dockerfile` (`/ci-tools` made with mode 1777)
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: CORE-1, CORE-7, UX-6, UX-11, UX-18, UX-19, UX-22, UX-24, UX-25, UX-26, UX-28, UX-29, UX-34, UX-37, UX-41, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-4, UX-10, UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-57 `e2e/tests/web-console/ux-keyboard.spec.ts`

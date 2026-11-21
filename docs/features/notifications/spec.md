@@ -377,3 +377,11 @@ Source: internal/store/migrations/00010_notifications.sql
 Source: apps/web/src/screens/settings/Notifications.tsx
 
 Planned paths, NOT YET IMPLEMENTED: `internal/notify/webhook/`, `internal/mail/`, the tray notice stream and mode.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-6, UX-18, UX-20, UX-22, UX-24, UX-26, UX-27, UX-37, UX-52, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
