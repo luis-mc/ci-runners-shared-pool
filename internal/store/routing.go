@@ -18,62 +18,61 @@ type RoutingStore struct{ s *Store }
 
 var _ routing.Store = (*RoutingStore)(nil)
 
+// each runs a query and calls fn for every row; the rows are closed here.
+func (r *RoutingStore) each(ctx context.Context, q string, arg string, fn func(rows *sql.Rows) error) error {
+	rows, err := r.s.db.QueryContext(ctx, q, arg)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		if err := fn(rows); err != nil {
+			return err
+		}
+	}
+	return rows.Err()
+}
+
 // Load implements routing.Store.
 func (r *RoutingStore) Load(ctx context.Context, repository string) (routing.State, error) {
 	var st routing.State
-	db := r.s.db
-	rows, err := db.QueryContext(ctx, `SELECT job, var_name, label, class, os, value FROM routing_jobs WHERE repository = ? ORDER BY job`, repository)
-	if err != nil {
-		return st, err
-	}
-	for rows.Next() {
+	if err := r.each(ctx, `SELECT job, var_name, label, class, os, value FROM routing_jobs WHERE repository = ? ORDER BY job`, repository, func(rows *sql.Rows) error {
 		var j routing.JobState
 		if err := rows.Scan(&j.Key, &j.Var, &j.Label, &j.Class, &j.OS, &j.Value); err != nil {
-			_ = rows.Close()
-			return st, err
+			return err
 		}
 		st.Jobs = append(st.Jobs, j)
-	}
-	if err := closeRows(rows); err != nil {
+		return nil
+	}); err != nil {
 		return st, err
 	}
-	rows, err = db.QueryContext(ctx, `SELECT label, state, since, jobs FROM routing_labels WHERE repository = ? ORDER BY label`, repository)
-	if err != nil {
-		return st, err
-	}
-	for rows.Next() {
+	if err := r.each(ctx, `SELECT label, state, since, jobs FROM routing_labels WHERE repository = ? ORDER BY label`, repository, func(rows *sql.Rows) error {
 		var l routing.LabelState
 		var since, jobs string
 		if err := rows.Scan(&l.Label, &l.State, &since, &jobs); err != nil {
-			_ = rows.Close()
-			return st, err
+			return err
 		}
 		l.Since, _ = time.Parse(time.RFC3339Nano, since)
 		_ = json.Unmarshal([]byte(jobs), &l.Jobs)
 		st.Labels = append(st.Labels, l)
-	}
-	if err := closeRows(rows); err != nil {
+		return nil
+	}); err != nil {
 		return st, err
 	}
-	rows, err = db.QueryContext(ctx, `SELECT runner_id, github_id, label, scope_owner, scope_repo, scope_org FROM routing_runner_labels
-		WHERE repository = ? ORDER BY runner_id, label`, repository)
-	if err != nil {
-		return st, err
-	}
-	for rows.Next() {
+	if err := r.each(ctx, `SELECT runner_id, github_id, label, scope_owner, scope_repo, scope_org FROM routing_runner_labels
+		WHERE repository = ? ORDER BY runner_id, label`, repository, func(rows *sql.Rows) error {
 		l := routing.RunnerLabel{Repository: repository}
 		if err := rows.Scan(&l.RunnerID, &l.GitHubID, &l.Label, &l.ScopeOwner, &l.ScopeRepo, &l.ScopeOrg); err != nil {
-			_ = rows.Close()
-			return st, err
+			return err
 		}
 		st.Runners = append(st.Runners, l)
-	}
-	if err := closeRows(rows); err != nil {
+		return nil
+	}); err != nil {
 		return st, err
 	}
 	var pr routing.PRState
 	var at string
-	switch err := db.QueryRowContext(ctx, `SELECT number, url, opened_at FROM routing_prs WHERE repository = ?`, repository).Scan(&pr.Number, &pr.URL, &at); err {
+	switch err := r.s.db.QueryRowContext(ctx, `SELECT number, url, opened_at FROM routing_prs WHERE repository = ?`, repository).Scan(&pr.Number, &pr.URL, &at); err {
 	case nil:
 		pr.OpenedAt, _ = time.Parse(time.RFC3339Nano, at)
 		st.PR = &pr
@@ -82,14 +81,6 @@ func (r *RoutingStore) Load(ctx context.Context, repository string) (routing.Sta
 		return st, err
 	}
 	return st, nil
-}
-
-func closeRows(rows *sql.Rows) error {
-	err := rows.Err()
-	if cerr := rows.Close(); err == nil {
-		err = cerr
-	}
-	return err
 }
 
 // Save implements routing.Store: the repository's rows are replaced in one transaction.

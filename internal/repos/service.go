@@ -54,6 +54,11 @@ type Config struct {
 	// PublicRepositories reads the setting Public repositories (R5.54); nil
 	// means off. A read error refuses a public repository.
 	PublicRepositories func(ctx context.Context) (bool, error)
+	// OnPoolOn, when set, runs after the pool is turned on for a repository: the
+	// routing service scans the default branch and writes the per-job
+	// variables (R5.106). Its error never stops the opt-in; the next push or
+	// reconcile tries again.
+	OnPoolOn func(ctx context.Context, r Repository)
 	// OnProgress, when set, is called with the plan after each step and when
 	// the plan ends or is stopped (the plan.progress event).
 	OnProgress func(Plan)

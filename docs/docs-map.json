@@ -203,6 +203,9 @@
     "internal/repos/**": [
       "docs/features/github-integration/spec.md"
     ],
+    "internal/routing/**": [
+      "docs/features/github-integration/spec.md"
+    ],
     "internal/runnercache/**": [
       "docs/features/caches/spec.md",
       "docs/features/runners/spec.md"

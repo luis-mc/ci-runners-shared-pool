@@ -360,6 +360,7 @@ Repositories and workflows:
 | `repo.forks` | A public repository lets fork pull requests reach the pool | warn | Turn fork jobs off unless meant | no | 2 |
 | `workflow.labels` | A self-hosted `runs-on` label set no online runner carries, with file and line | fail | Add a runner with the labels, or change the workflow to `fromJSON(vars.RUNS_ON_<OS>)` | no | 1 |
 | `workflow.generic` | A self-hosted job with literal labels | warn | Use `${{ fromJSON(vars.RUNS_ON_<OS>) }}` | no | 1 |
+| `workflow.perjob` | A routed `runs-on` that still reads only `RUNS_ON_<OS>` instead of the per-job form `fromJSON(vars.CRSP_<JOB> || vars.RUNS_ON_<OS> || '"ubuntu-latest"')` (github-integration R5.107, R5.108) | info (ok when every routed job has it) | On the owner's repositories crsp opens one pull request; elsewhere copy or download the patch in the finding | no | 1 |
 | `workflow.unresolved` | A `runs-on` expression the doctor cannot resolve | info | None needed; it says it was not checked | no | 1 |
 | `workflow.timeout` | A job has no `timeout-minutes` or one over 30 | warn | Add `timeout-minutes: 30` or less to each job | no | 1 |
 | `workflow.retry` | A step retries tests | warn | Remove the retry; fix or quarantine the flaky test | no | 1 |
@@ -548,7 +549,7 @@ Rows that name a file without "planned" are built (CRSP23). Planned rows are NOT
 | R5.61 | internal/doctor/checks/machinereset_test.go TestMachineResetWarns; internal/store/controllerstate_test.go TestResetSigns |
 | R5.62 | internal/doctor/checks/checks_test.go TestLoadBudgetWarnsWhileJobsRun |
 | R5.63 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsSameWarnsForMissingTool, TestRunnerToolsSameOKWhenEqual, TestRunnerToolsSameSkipsWithoutProbe, TestRunnerToolsSameNeedsTwoRunners |
-| R5.64 | `internal/doctor/checks/poolmemory_test.go` TestPoolMemoryFinding, TestPoolMemoryOfflineMachineIsSkipped; `internal/doctor/wire/wire_test.go` (51 core checks) |
+| R5.64 | `internal/doctor/checks/poolmemory_test.go` TestPoolMemoryFinding, TestPoolMemoryOfflineMachineIsSkipped; `internal/doctor/wire/wire_test.go` (52 core checks) |
 
 ## 10. Decisions
 

@@ -31,7 +31,6 @@ type fakeGH struct {
 	scanned    []string
 	rows       []jobsize.ScanRow
 	files      map[string][]byte
-	prNumber   int
 	existingPR bool
 }
 
@@ -78,7 +77,9 @@ func (f *fakeGH) ScanRows(context.Context, string) ([]jobsize.ScanRow, error) { 
 func (f *fakeGH) WorkflowFiles(context.Context, routing.Repo) (map[string][]byte, error) {
 	return f.files, nil
 }
-func (f *fakeGH) OpenRunStarts(context.Context, routing.Repo) ([]time.Time, error) { return f.open, nil }
+func (f *fakeGH) OpenRunStarts(context.Context, routing.Repo) ([]time.Time, error) {
+	return f.open, nil
+}
 
 const wf = `jobs:
   e2e:

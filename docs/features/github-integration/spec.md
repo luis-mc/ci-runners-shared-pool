@@ -12,6 +12,7 @@ code:
   - internal/auth/**
   - internal/secrets/**
   - internal/repos/**
+  - internal/routing/**
   - internal/trial/**
   - internal/cli/auth/**
   - apps/web/src/features/setup/**
@@ -319,6 +320,26 @@ Findings show on the repository row and feed the doctor. (Source: runner-pool R5
 
 **R5.100** (OPS49; owner decision D110, 19 Nov 2026; runners R5.57, scheduling R5.65) — **`RUNS_ON_LIGHT` points at the normal labels.** Older versions wrote the repository variable `RUNS_ON_LIGHT` with the plain label `crsp-light` once a light runner was placed, so a workflow could say `runs-on: ${{ vars.RUNS_ON_LIGHT }}`. Light runners are gone, so nothing may wait for that label. The reconcile that restores the `RUNS_ON_*` variables every 10 minutes (and the policy save) rewrites a `RUNS_ON_LIGHT` that holds `crsp-light` to the pool's normal labels: the value of the first operating system (Linux, Windows, macOS) the repository has a `RUNS_ON_<OS>` variable for, the same JSON list a normal job type gets, hosted label and ephemeral label included. A copy that crsp wrote itself keeps following those labels; a value a person set by hand is left alone. The variable is never created and never deleted by crsp any more. A repository with no `RUNS_ON_<OS>` variable (no machine serves it) is left as it is. Each rewrite is audited as `variable.migrated`. A second pass changes nothing. The saved policy of an older version may still hold `LightRunner`; it is read and ignored. Built (OPS49).
 
+### 5.11 Per-job routing labels and variables (OPS73, job sizing wave 1; owner decisions of 21 Nov 2026, routing option A)
+
+Back end only. Admission (OPS74) and runner creation before assignment (wave 2) call into this section; the console screens come later.
+
+**R5.101** (OPS73, built) — **One label per job.** For each routed job of a repository crsp makes the label `crsp-<job>-<hash>`: the job key lowercased (letters and digits, other runs become one dash, at most 24 characters) and a 4-character hash of the repository and the job key, for example `crsp-e2e-7f3a`. A routed job is a job whose `runs-on` reads `RUNS_ON_<OS>` or a size variable. The label is a generic label (runners R5.36, R5.27 pool-name form), the same on every sync, and different in two repositories. `routing.JobLabel`.
+
+**R5.102** (OPS73, built) — **One variable per job.** Each routed job has the repository variable `CRSP_<JOB>` (for example `CRSP_E2E`); two keys that give the same name get the hash of the later key added. It holds the JSON list of labels the job asks for: the labels of `RUNS_ON_<OS>` (generic labels and the OS) without routing labels, then the job label. A job whose `RUNS_ON_<OS>` does not name the pool (the hosted fallback is on) or is not set gets no per-job variable. `RUNS_ON_<OS>` is never removed or changed by this. `routing.VarNames`, `routing.Service.Sync`.
+
+**R5.103** (OPS73, built) — **The label cap.** A runner carries at most 100 labels, read-only ones included; GitHub fails the 101st add with HTTP 500. crsp counts the labels a runner has (`Reserved`, default 10, plus the routing labels it added) before it plans. While the jobs fit it makes one label per job. Over the cap the jobs of one size class share one label `crsp-<class>-<hash>` (for example `crsp-large-4c1d`; light is small, normal is medium, heavy is large). When even the class labels do not fit, the largest classes go first and their jobs keep the fallback and are named in the result. A persistent runner never gets an add that would pass the cap (`ErrLabelCap`). `routing.MakePlan`, `routing.Service.Assign`.
+
+**R5.104** (OPS73, built) — **Which runners carry a label.** Only the runners crsp chose for the job: the runners of its OS whose pool room (CPUs and memory, machines R5.58) reaches the floor of its size class (`routing.Carriers`). An ephemeral runner gets the label at creation and it is read-only afterwards (`ServedLabels` lists the labels to give it). A persistent runner registers with `self-hosted` and the OS only; its routing labels are added and removed as custom labels through the runner labels API (`AddRunnerLabels`, `RemoveRunnerLabel`), and crsp keeps the runner, the label and the repository in `routing_runner_labels` (`Assign`, `Unassign`). A label is added once.
+
+**R5.105** (OPS73, built) — **Changing the choice.** A changed label goes into the variable (GitHub reads the variable once per run). crsp keeps serving the old label, on the runners and for new ephemeral runners, until no run created before the change is queued or running; then the sweep removes it from the runners (`Sweep`, run after each sync and by the 5-minute reconcile). A job with no variable, no scan row yet or no pool variable uses the fallback and counts 1/1; it is never blocked (`Label` says `ok = false`).
+
+**R5.106** (OPS73, built) — **When the variables are written.** At repository opt-in (after the pool is on and `RUNS_ON_*` are written, `Config.OnPoolOn`) crsp scans the default branch (jobsize, scheduling R5.80) and writes the variables. On each push webhook to the default branch it scans again and updates only what changed (`OnPush`); a push to another branch does nothing. A variable is written only when its value differs from the one GitHub holds. A job that left the workflows loses its variable and its label retires. The state is stored in `routing_jobs`, `routing_labels` and `routing_runner_labels` (migration 00036).
+
+**R5.107** (OPS73, built) — **The one workflow change.** Workflows read the variable with a fallback: `runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '"ubuntu-latest"') }}`. On a repository of the owner (`luis-mc/*`) crsp opens ONE pull request per repository that changes each routed `runs-on` to this form (`routing.MakePatch`, `Service.OpenPR`, `github.PullRequester`): the branch `crsp/per-job-runs-on`, one commit per file, a body that lists the jobs. A second call opens no second pull request and a repository with nothing to change gets none. A `runs-on` that is not on one line is left and named. A default the job already had stays the last fallback. Another owner's repository gets no pull request (`ErrNotOwned`). Tests open nothing: they use fakes and the fake GitHub server.
+
+**R5.108** (OPS73, built) — **The Doctor shows the patch; writes are throttled.** The check `workflow.perjob` (doctor) is info for a routed job that still reads only `RUNS_ON_<OS>`: on the owner's repositories it says crsp opens the pull request; on any other it carries the patch as a unified diff to copy or download as `crsp-per-job.patch`. The doctor reads the fallback form `fromJSON(vars.A || vars.B || '...')` (doctor R5.18, R5.19): the first variable that is set wins, then the default; a routing label is not checked against the pool's label sets. Writes to GitHub (variables, runner labels, the pull request) go through one shared throttle with a gap of one second (injected clock); a rate limit stops the bulk write, keeps what was written, holds the throttle until the reset and the next sync finishes the rest (OPS65).
+
 ## 6. Non-functional requirements
 
 **R6.1** (M1, built, CRSP106) — **Secrets only in the OS secret store.** The App private key, client secret, webhook secret, CLI tokens and any GitHub user refresh token live only in the OS secret store: Windows Credential Manager or DPAPI, macOS Keychain, Linux Secret Service, or a file with mode 0600 when no service exists. They never go to the database, config files, environment files, logs, crash files, API responses or the audit log.
@@ -505,6 +526,14 @@ Rows marked planned are not built yet; the others name the test files. The fake 
 | R5.98 | `internal/jobsdata/ingest/recorder_test.go` TestWorkflowReadOncePerSha, TestNeedsParsed, TestReadFailureFallsBack, TestRateLimitSkipsRead |
 | R5.99 | `internal/jobsdata/ingest/recorder_test.go` TestNothingSecretStored |
 | R5.100 | `internal/repos/lightvar_test.go` TestLightVariableRewrittenToNormalLabels, TestLightVariableNotCreated, TestLightVariableByHandIsKept, TestLightVariableLeftWhenNoOSServed, TestOldPolicyWithLightRunnerKeyStillLoads |
+| R5.101 | `internal/routing/routing_test.go` TestJobLabelShapeAndStability |
+| R5.102 | `internal/routing/routing_test.go` TestVarNames; `internal/routing/service_test.go` TestOptInWritesVariablesOnlyOnChange |
+| R5.103 | `internal/routing/routing_test.go` TestMakePlanCap; `internal/routing/service_test.go` TestAssignRefusesPastCap; `internal/github/routing_test.go` TestRunnerLabelCapIsAnError |
+| R5.104 | `internal/routing/routing_test.go` TestCarriersBySizeClassAndRoom; `internal/routing/service_test.go` TestChangedLabelRetiresOnlyWhenOldRunsAreDone; `internal/github/routing_test.go` TestRunnerLabelsAddAndRemove |
+| R5.105 | `internal/routing/service_test.go` TestChangedLabelRetiresOnlyWhenOldRunsAreDone, TestFirstRunJobIsNeverBlocked, TestGoneJobLosesVariable |
+| R5.106 | `internal/routing/service_test.go` TestOptInWritesVariablesOnlyOnChange, TestOnPush; `internal/repos/enable_test.go` TestEnableCallsRoutingHook; `internal/store/routing_test.go` TestIntegrationRoutingStateRoundTrip |
+| R5.107 | `internal/routing/patch_test.go` TestMakePatchRewritesRoutedRunsOn, TestPatchIgnoresBrokenAndUnroutedFiles; `internal/routing/service_test.go` TestOpenPROnceAndOnlyForOwner; `internal/github/routing_test.go` TestOpenPullRequestOnce |
+| R5.108 | `internal/routing/patch_test.go` TestPatchDiff; `internal/routing/routing_test.go` TestThrottleSpacesWrites; `internal/routing/service_test.go` TestRateLimitStopsBulkWrite; `internal/doctor/checks/checks_test.go` TestWorkflowPerJob; `internal/doctor/runson/runson_test.go` TestParseFallbackChain; `internal/repos/runson_test.go` TestCheckPerJobFallbackChain |
 
 ## 10. Decisions
 
@@ -554,6 +583,10 @@ Open checks for M1, each recorded as a fixture when built:
 - Source: internal/github/fake/server.go
 - Source: internal/auth/service.go
 - Source: internal/repos/service.go
+- Source: internal/routing/service.go
+- Source: internal/routing/patch.go
+- Source: internal/github/routing.go
+- Source: internal/store/routing.go
 - Source: internal/secrets/memory.go
 
 Code lives in `internal/github/` (with the fake in `internal/github/fake/`, not `githubfake`), `internal/auth/`, `internal/repos/`, `internal/secrets/` and `internal/logging/`. Planned and not built: `internal/cli/auth/` and the web features `apps/web/src/features/setup/`, `auth/`, `repositories/` and `users/`.
