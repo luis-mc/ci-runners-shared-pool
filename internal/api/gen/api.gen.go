@@ -1198,24 +1198,6 @@ func (e JobSizeClass) Valid() bool {
 	}
 }
 
-// Defines values for JobSizeCostRowKind.
-const (
-	JobSizeCostRowKindFramework JobSizeCostRowKind = "framework"
-	JobSizeCostRowKindService   JobSizeCostRowKind = "service"
-)
-
-// Valid indicates whether the value is a known member of the JobSizeCostRowKind enum.
-func (e JobSizeCostRowKind) Valid() bool {
-	switch e {
-	case JobSizeCostRowKindFramework:
-		return true
-	case JobSizeCostRowKindService:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for JobSizeRowConfidence.
 const (
 	High JobSizeRowConfidence = "high"
@@ -2736,22 +2718,22 @@ func (e RunnerKind) Valid() bool {
 
 // Defines values for RunnerLeftoverKind.
 const (
-	RunnerLeftoverKindAccount  RunnerLeftoverKind = "account"
-	RunnerLeftoverKindDownload RunnerLeftoverKind = "download"
-	RunnerLeftoverKindFolder   RunnerLeftoverKind = "folder"
-	RunnerLeftoverKindService  RunnerLeftoverKind = "service"
+	Account  RunnerLeftoverKind = "account"
+	Download RunnerLeftoverKind = "download"
+	Folder   RunnerLeftoverKind = "folder"
+	Service  RunnerLeftoverKind = "service"
 )
 
 // Valid indicates whether the value is a known member of the RunnerLeftoverKind enum.
 func (e RunnerLeftoverKind) Valid() bool {
 	switch e {
-	case RunnerLeftoverKindAccount:
+	case Account:
 		return true
-	case RunnerLeftoverKindDownload:
+	case Download:
 		return true
-	case RunnerLeftoverKindFolder:
+	case Folder:
 		return true
-	case RunnerLeftoverKindService:
+	case Service:
 		return true
 	default:
 		return false
@@ -5154,19 +5136,18 @@ type JobSizeClass string
 
 // JobSizeCostRow defines model for JobSizeCostRow.
 type JobSizeCostRow struct {
-	Assumption bool               `json:"assumption"`
-	Class      JobSizeClass       `json:"class"`
-	Cpu        float32            `json:"cpu"`
-	Gib        float32            `json:"gib"`
-	GibMin     *float32           `json:"gib_min,omitempty"`
-	Key        string             `json:"key"`
-	Kind       JobSizeCostRowKind `json:"kind"`
-	Note       *string            `json:"note,omitempty"`
-	SecPerTest *float32           `json:"sec_per_test,omitempty"`
-}
+	Assumption bool         `json:"assumption"`
+	Class      JobSizeClass `json:"class"`
+	Cpu        float32      `json:"cpu"`
+	Gib        float32      `json:"gib"`
+	GibMin     *float32     `json:"gib_min,omitempty"`
+	Key        string       `json:"key"`
 
-// JobSizeCostRowKind defines model for JobSizeCostRow.Kind.
-type JobSizeCostRowKind string
+	// Kind framework or service
+	Kind       string   `json:"kind"`
+	Note       *string  `json:"note,omitempty"`
+	SecPerTest *float32 `json:"sec_per_test,omitempty"`
+}
 
 // JobSizeList defines model for JobSizeList.
 type JobSizeList struct {

@@ -3282,8 +3282,8 @@ export interface components {
             copy_line: string;
         };
         JobSizeCostRow: {
-            /** @enum {string} */
-            kind: "framework" | "service";
+            /** @description framework or service */
+            kind: string;
             key: string;
             class: components["schemas"]["JobSizeClass"];
             cpu: number;

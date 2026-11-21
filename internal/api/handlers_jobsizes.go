@@ -59,7 +59,7 @@ func (s *server) ListJobSizes(ctx context.Context, req gen.ListJobSizesRequestOb
 		out.Items = append(out.Items, genJobSizeRow(v))
 	}
 	for _, r := range s.opts.JobSizes.CostTable(ctx).Rows() {
-		row := gen.JobSizeCostRow{Kind: gen.JobSizeCostRowKind(r.Kind), Key: r.Key, Class: gen.JobSizeClass(r.Class), Cpu: float32(r.CPU),
+		row := gen.JobSizeCostRow{Kind: r.Kind, Key: r.Key, Class: gen.JobSizeClass(r.Class), Cpu: float32(r.CPU),
 			Gib: float32(r.GiB), Assumption: r.Assumption}
 		if r.GiBMin > 0 {
 			v := float32(r.GiBMin)

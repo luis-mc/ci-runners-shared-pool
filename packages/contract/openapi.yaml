@@ -5174,7 +5174,7 @@ components:
       type: object
       required: [kind, key, class, cpu, gib, assumption]
       properties:
-        kind: { type: string, enum: [framework, service] }
+        kind: { type: string, description: framework or service }
         key: { type: string }
         class: { $ref: '#/components/schemas/JobSizeClass' }
         cpu: { type: number }
