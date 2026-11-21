@@ -118,10 +118,10 @@ func loop(o Options, smoke bool, hold time.Duration, updated bool) int {
 	}
 	opener := &Opener{
 		RepoURL: addrs.RepoPage(update.Repo),
-		Links:   client, Targets: client, Checker: client, Policy: client, Version: o.Version, Ask: AskUpdate, Installer: client,
+		Links:   client, Targets: client, Checker: client, Policy: client, Version: o.Version,
 		Browser: OSLauncher, Files: OSLauncher,
 		Window: AppWindowOpener{Lookup: OSBrowserLookup(), Fallback: OSLauncher}.Open,
-		Notify: DesktopNotice, Current: current, LogDir: LogDir,
+		Notify: DesktopNotice, Notices: &Notices{}, Current: current, LogDir: LogDir,
 		Native: OSNativeWindow(o.Exe, o.Version),
 	}
 	if updated && o.Version != "" && !smoke {

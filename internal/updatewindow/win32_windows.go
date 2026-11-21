@@ -106,6 +106,10 @@ const (
 	vkReturn       = 0x0D
 	vkEscape       = 0x1B
 	vkSpace        = 0x20
+	vkLeft         = 0x25
+	vkUp           = 0x26
+	vkRight        = 0x27
+	vkDown         = 0x28
 	vkShift        = 0x10
 	fwNormal       = 400
 	fwBold         = 700
@@ -224,4 +228,12 @@ func fillRectColor(dc uintptr, r rect, c RGB) {
 	br, _, _ := pCreateSolidBrush.Call(rgb(c))
 	_, _, _ = pFillRect.Call(dc, ptr(&r), br)
 	_, _, _ = pDeleteObject.Call(br)
+}
+
+// openURL opens a page with the default browser; it never blocks the window.
+func openURL(url string) {
+	if url == "" {
+		return
+	}
+	_ = windows.ShellExecute(0, wstr("open"), wstr(url), nil, nil, swShow)
 }

@@ -153,6 +153,8 @@ func drawLayout(dc uintptr, f *fonts, pal Palette, l Layout, v View, ui uiState)
 				}
 				fillRectColor(dc, toRect(image.Rect(inner.Min.X+pos, inner.Min.Y, inner.Min.X+pos+bw, inner.Max.Y)), pal.Primary)
 			}
+		case KindChoice:
+			drawChoice(dc, f, pal, it, px)
 		case KindDivider:
 			fillRectColor(dc, toRect(it.Rect), pal.Divider)
 		case KindButton:
@@ -171,6 +173,8 @@ func drawButton(dc uintptr, f *fonts, pal Palette, it Item, b Button, i int, ui 
 	r := it.Rect
 	fg, bg, edge := pal.Text, pal.Page, pal.Border
 	switch {
+	case b.Disabled:
+		fg, bg, edge = pal.TextMuted, pal.Page, pal.Divider
 	case busy:
 		fg, bg, edge = pal.TextMuted, pal.Page, pal.Divider
 	case b.Primary:
@@ -188,7 +192,7 @@ func drawButton(dc uintptr, f *fonts, pal Palette, it Item, b Button, i int, ui 
 	m := f.metrics()
 	tw := m.Measure(label, false)
 	text(dc, r.Min.X+(r.Dx()-tw)/2, r.Min.Y+(r.Dy()-f.unit)/2, label, fg, f.regular)
-	if ui.focus == i && !busy {
+	if ui.focus == i && !busy && !b.Disabled {
 		// the focus ring: the focus token, drawn just inside the button
 		ring := max(2, f.unit/5)
 		in := r.Inset(px + max(1, ring/2))
@@ -295,4 +299,22 @@ func indexOf(v View, id ButtonID) int {
 		}
 	}
 	return -1
+}
+
+// drawChoice draws one radio choice: a ring, a dot when chosen, and the wrapped text.
+func drawChoice(dc uintptr, f *fonts, pal Palette, it Item, px int) {
+	u := f.unit
+	d := tenths(u, radioUnits)
+	x0, y0 := it.Rect.Min.X, it.Rect.Min.Y+(tenths(u, lineUnits)-d)/2
+	ring := image.Rect(x0, y0, x0+d, y0+d)
+	fillRectColor(dc, toRect(ring), pal.Border)
+	fillRectColor(dc, toRect(ring.Inset(px)), pal.Surface)
+	if it.Chosen {
+		fillRectColor(dc, toRect(ring.Inset(max(px+1, d/4))), pal.Primary)
+	}
+	tx := x0 + d + tenths(u, sectionGap)
+	c := pal.Text
+	for i, ln := range it.Lines {
+		text(dc, tx, it.Rect.Min.Y+i*tenths(u, lineUnits), ln, c, f.regular)
+	}
 }

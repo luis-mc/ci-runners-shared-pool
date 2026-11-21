@@ -17,7 +17,7 @@ var dpiUnits = map[string]int{"100%": 15, "125%": 19, "150%": 23, "200%": 30}
 // D14: every state, at every DPI, nothing is clipped.
 func TestNothingIsClippedAtAnyDPI(t *testing.T) {
 	views := SampleViews()
-	if len(views) != len(AllStates) {
+	if len(views) != len(AllStates)+2 { // plus the remove question, nothing chosen and chosen
 		t.Fatalf("%d views", len(views))
 	}
 	for name, unit := range dpiUnits {
@@ -46,7 +46,7 @@ func TestLayoutScalesWithTheFontHeight(t *testing.T) {
 }
 
 func TestLongTextWrapsAndTheWindowGrowsTaller(t *testing.T) {
-	short := View{State: StateFailed, Heading: "The update failed", Body: []string{"Short."}, Buttons: []Button{{BtnClose, "Close", true}}}
+	short := View{State: StateFailed, Heading: "The update failed", Body: []string{"Short."}, Buttons: []Button{{ID: BtnClose, Label: "Close", Primary: true}}}
 	long := short
 	long.Body = []string{strings.Repeat("a long reason ", 30), `C:\ProgramData\crsp\logs\` + strings.Repeat("x", 120)}
 	m := fake(15)

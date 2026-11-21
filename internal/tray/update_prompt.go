@@ -2,94 +2,36 @@ package tray
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"sync"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
 )
 
-// UpdatePrompt is what the native update box says (CRSP147, TRAY4). The console page
-// is the normal way to ask; this box is the fallback when no browser can open. It stays on
-// screen until the person answers: Update now (primary, right) or Not now (left).
-type UpdatePrompt struct {
-	Current    string // the version that runs
-	Latest     string // the newer stable release
-	ReleaseURL string // the release page: the What changed link
-	Jobs       int    // jobs running now; an install waits for them (drain)
+// The tray only notifies (LC-22). A found update opens the console page, or the one native
+// window when the console cannot open; when neither can, the tray shows a notice. The tray never
+// asks a question of its own: no Yes/No box, no OK box.
+
+// ReadyNotice is the notice for a found update: one line from the lifecycle words table.
+func ReadyNotice(version string) (title, body string) {
+	return ProductName, Fill(WordAvailableTitle, "version", version)
 }
 
-// Dialog texts. Words the user sees; kept here so the OS dialogs and the tests share them.
-const (
-	PromptTitle      = "Update available"
-	PromptInstallNow = "Update now"
-	PromptLater      = "Not now"
-	PromptChanged    = "What changed"
-)
-
-// Body is the dialog text: the version, the drain and the restart, in the owner's words.
-func (p UpdatePrompt) Body() string {
-	return fmt.Sprintf("Version %s is ready. Running jobs finish first; the service restarts (about 1 min).", p.Latest)
-}
-
-// ErrNoDialog says this desktop has no program that can show the dialog.
-var ErrNoDialog = errors.New("no dialog program found")
-
-// Asker shows the dialog and returns true for Install now, false for Later. It
-// returns only after an answer. open opens the What changed link.
-type Asker func(p UpdatePrompt, open Launcher) (installNow bool, err error)
-
-// UpdateInstaller starts the install after Install now.
-type UpdateInstaller interface {
-	Install(ctx context.Context) (Status, error)
-}
-
-// Offer asks about the update: it opens the console page in a small window; when that
-// cannot open it shows the native dialog and acts on the answer: Update now
-// asks the service to install (it drains first), Not now changes nothing. Only the
-// person's answer installs; a check alone never does.
+// Offer opens the place where the person decides: the console page, or the native window.
+// Only the person's answer there installs; a check alone never does.
 func (o *Opener) Offer(ctx context.Context, st Status) error {
 	// Never offer a version that is not newer than the one that runs (TRAY8).
 	if !st.NewerFound() || !o.newerThanRunning(st.Update.Latest) {
-		o.notify("Up to date", ProductName+" "+o.Version+" is the newest stable release.")
+		o.notify(WordUpToDate, ProductName+" "+o.Version+" is the newest stable release.")
 		return nil
 	}
-	// The console page asks (and shows the progress) in the console theme. The native box is the fallback.
 	if o.OpenUpdate(ctx) == nil {
 		return nil
 	}
-	if o.Ask == nil || o.Installer == nil {
-		o.notify("Update "+st.Update.Latest+" available", "Open the console, Settings, Updates, to install it. Running jobs finish first.")
-		return nil
+	if o.Notices == nil || o.Notices.Allow("update-ready:"+st.Update.Latest) {
+		t, b := ReadyNotice(st.Update.Latest)
+		o.notify(t, b+" Open the console, Settings, Updates.")
 	}
-	if !o.asking.CompareAndSwap(false, true) {
-		return nil // a dialog is already open: bring nothing new (TRAY2)
-	}
-	defer o.asking.Store(false)
-	p := UpdatePrompt{Current: o.Version, Latest: st.Update.Latest, ReleaseURL: st.Update.ReleaseURL, Jobs: st.Update.Jobs}
-	now, err := o.Ask(p, o.Browser)
-	if err != nil {
-		o.notify("Update "+p.Latest+" available", "No window could be shown here. Open the console, Settings, Updates, to install it.")
-		return err
-	}
-	if !now {
-		return nil
-	}
-	got, err := o.Installer.Install(ctx)
-	if errors.Is(err, update.ErrNoUpdate) {
-		o.notify("Up to date", ProductName+" "+o.Version+" is the newest stable release.")
-		return nil
-	}
-	if err != nil {
-		o.notify("Could not start the update", err.Error()+". Check the status line, then try again.")
-		return err
-	}
-	body := "It installs now."
-	if got.Update.Jobs > 0 || p.Jobs > 0 {
-		body = "It installs when the running jobs have finished. No job is stopped."
-	}
-	o.notify("Updating to "+p.Latest, body)
-	return nil
+	return errNoWindow
 }
 
 // newerThanRunning says latest is newer than the version this tray runs with. An unknown
