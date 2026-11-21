@@ -172,6 +172,7 @@ type Server struct {
 	jitReqs    []JITRequest
 	requests   []Request
 	nextID     int64
+	routing    *routingState
 
 	// Rate: limit, remaining, reset (unix seconds) sent on every answer.
 	RateLimit, RateRemaining int

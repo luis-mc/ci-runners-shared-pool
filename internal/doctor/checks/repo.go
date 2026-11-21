@@ -174,6 +174,9 @@ func repoVars(ctx context.Context, env doctor.Env) []doctor.Finding {
 		for _, j := range wf.jobs {
 			if j.Kind == runson.Variable {
 				used[j.Var] = true
+				for _, v := range j.Vars {
+					used[v] = true
+				}
 			}
 		}
 		names := make([]string, 0, len(r.Expected))

@@ -89,6 +89,11 @@ func CapabilitiesFromWorkflow(file string, content []byte, vars map[string]strin
 			n.OS = osOfLabels(labels)
 		case rj.Kind == runson.Variable:
 			n.OS = osOfVariable(rj.Var)
+			for _, v := range rj.Vars { // fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || ...)
+				if n.OS == "" {
+					n.OS = osOfVariable(v)
+				}
+			}
 		}
 		if n.OS == "" {
 			n.Unknown = true
