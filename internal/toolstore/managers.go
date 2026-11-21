@@ -4,6 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 )
 
 // GOOS values the store serves. Linux keeps the image profiles and has no store.
@@ -60,12 +62,24 @@ func archSuffix(arch string) string {
 	return "amd64"
 }
 
+// Sources are the base addresses the recipes download from. DefaultSources gives the official ones from
+// internal/addresses; an owner's mirror replaces them. No base has a trailing slash.
+type Sources struct {
+	RustupDist, GoDownload, Adoptium, DotnetInstall, PnpmReleases string
+}
+
+// DefaultSources are the official download addresses.
+func DefaultSources() Sources {
+	return Sources{RustupDist: addresses.DefaultRustupDistURL, GoDownload: addresses.DefaultGoDownloadURL,
+		Adoptium: addresses.DefaultAdoptiumURL, DotnetInstall: addresses.DefaultDotnetInstallURL, PnpmReleases: addresses.DefaultPnpmReleaseURL}
+}
+
 // RecipeFor builds the install recipe of tool for goos and arch ("amd64" or "arm64") into dest, a staging
 // folder. It is pure: it reads and runs nothing. The managers are the tool's own (owner decision 21 Nov):
 // rustup, nvm (nvm-windows on Windows), pyenv (pyenv-win), SDKMAN on macOS, the official archive for Go,
 // the dotnet-install script for .NET, the official JDK archive on Windows, xcodes for Xcode on macOS. A
 // tool with no manager on an OS is unpacked from the official archive, checked where a checksum is published.
-func RecipeFor(goos, arch string, t Tool, dest string) (Recipe, error) {
+func RecipeFor(goos, arch string, src Sources, t Tool, dest string) (Recipe, error) {
 	if !ValidVersion(t.Version) {
 		return Recipe{}, fmt.Errorf("toolstore: %q is not a valid version", t.Version)
 	}
@@ -91,7 +105,7 @@ func RecipeFor(goos, arch string, t Tool, dest string) (Recipe, error) {
 			}
 		}
 		return Recipe{"rustup", []Step{
-			{Kind: StepDownload, URL: "https://static.rust-lang.org/rustup/dist/" + triple + "/rustup-init" + ext, ChecksumSuffix: ".sha256", To: exe},
+			{Kind: StepDownload, URL: src.RustupDist + "/" + triple + "/rustup-init" + ext, ChecksumSuffix: ".sha256", To: exe},
 			{Kind: StepRun, Argv: []string{j(exe), "-y", "--no-modify-path", "--profile", "minimal", "--default-toolchain", v}, Env: env},
 		}}, nil
 	case ToolNode:
@@ -110,7 +124,7 @@ func RecipeFor(goos, arch string, t Tool, dest string) (Recipe, error) {
 		return Recipe{"pyenv", []Step{{Kind: StepRun, Argv: []string{"pyenv", "install", v}, Env: env}}}, nil
 	case ToolJava:
 		if win {
-			url := "https://api.adoptium.net/v3/binary/version/jdk-" + v + "/windows/" + map[bool]string{true: "aarch64", false: "x64"}[arch == "arm64"] + "/jdk/hotspot/normal/eclipse"
+			url := src.Adoptium + "/jdk-" + v + "/windows/" + map[bool]string{true: "aarch64", false: "x64"}[arch == "arm64"] + "/jdk/hotspot/normal/eclipse"
 			return Recipe{"archive", []Step{
 				{Kind: StepDownload, URL: url, ChecksumSuffix: ".sha256.txt", To: "jdk.zip"},
 				{Kind: StepUnpack, File: "jdk.zip", StripDirs: 1},
@@ -125,25 +139,25 @@ func RecipeFor(goos, arch string, t Tool, dest string) (Recipe, error) {
 			file = name + ".zip"
 		}
 		return Recipe{"archive", []Step{
-			{Kind: StepDownload, URL: "https://go.dev/dl/" + file, ChecksumSuffix: ".sha256", To: file},
+			{Kind: StepDownload, URL: src.GoDownload + "/" + file, ChecksumSuffix: ".sha256", To: file},
 			{Kind: StepUnpack, File: file, StripDirs: 1},
 		}}, nil
 	case ToolDotnet:
 		if win {
 			return Recipe{"dotnet-install", []Step{
-				{Kind: StepDownload, URL: "https://dot.net/v1/dotnet-install.ps1", To: "dotnet-install.ps1"},
+				{Kind: StepDownload, URL: src.DotnetInstall + "/dotnet-install.ps1", To: "dotnet-install.ps1"},
 				{Kind: StepRun, Argv: []string{"powershell", "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", j("dotnet-install.ps1"), "-Version", v, "-InstallDir", j("dotnet"), "-NoPath"}},
 			}}, nil
 		}
 		return Recipe{"dotnet-install", []Step{
-			{Kind: StepDownload, URL: "https://dot.net/v1/dotnet-install.sh", To: "dotnet-install.sh"},
+			{Kind: StepDownload, URL: src.DotnetInstall + "/dotnet-install.sh", To: "dotnet-install.sh"},
 			{Kind: StepRun, Argv: []string{"/bin/bash", j("dotnet-install.sh"), "--version", v, "--install-dir", j("dotnet"), "--no-path"}},
 		}}, nil
 	case ToolPnpm:
 		// pnpm has no manager of its own here: the release binary, no checksum file published.
 		file := map[bool]string{true: "pnpm-win-x64.exe", false: "pnpm-macos-" + map[bool]string{true: "arm64", false: "x64"}[arch == "arm64"]}[win]
 		to := map[bool]string{true: "pnpm.exe", false: "pnpm"}[win]
-		return Recipe{"archive", []Step{{Kind: StepDownload, URL: "https://github.com/pnpm/pnpm/releases/download/v" + v + "/" + file, To: to}}}, nil
+		return Recipe{"archive", []Step{{Kind: StepDownload, URL: src.PnpmReleases + "/v" + v + "/" + file, To: to}}}, nil
 	case ToolXcode:
 		if !win {
 			return Recipe{"xcodes", []Step{{Kind: StepRun, Argv: []string{"xcodes", "install", v, "--directory", dest, "--no-superuser"}}}}, nil

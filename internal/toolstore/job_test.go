@@ -188,7 +188,7 @@ func TestLinkClonerSharesFiles(t *testing.T) {
 	src, dst := t.TempDir(), filepath.Join(t.TempDir(), "d")
 	_ = os.MkdirAll(filepath.Join(src, "a", "b"), 0o755)
 	_ = os.WriteFile(filepath.Join(src, "a", "b", "f"), []byte("data"), 0o644)
-	if err := DefaultCloner().Clone(context.Background(), src, dst); err != nil {
+	if err := (LinkCloner{}).Clone(context.Background(), src, dst); err != nil {
 		t.Fatal(err)
 	}
 	a, _ := os.Stat(filepath.Join(src, "a", "b", "f"))
@@ -219,7 +219,7 @@ func TestExecInstallerArchive(t *testing.T) {
 		f := &FakeFetcher{Files: map[string][]byte{url: archive}, Texts: map[string]string{url + ".sha256": sha + "  go1.24.0.zip\n"}}
 		return &ExecInstaller{Fetch: f, Run: &FakeRunner{}}, f
 	}
-	rec, _ := RecipeFor(Windows, "amd64", Tool{Tool: ToolGo, Version: "1.24.0"}, "x")
+	rec, _ := RecipeFor(Windows, "amd64", DefaultSources(), Tool{Tool: ToolGo, Version: "1.24.0"}, "x")
 	dest := t.TempDir()
 	in, _ := mk(sum(archive))
 	res, err := in.Install(context.Background(), rec, dest)
@@ -242,7 +242,7 @@ func TestExecInstallerArchive(t *testing.T) {
 func TestExecInstallerRunsManagerAndFlagsUnchecked(t *testing.T) {
 	f := &FakeFetcher{Files: map[string][]byte{"https://dot.net/v1/dotnet-install.sh": []byte("#!/bin/sh")}}
 	r := &FakeRunner{}
-	rec, _ := RecipeFor(Darwin, "arm64", Tool{Tool: ToolDotnet, Version: "8.0.100"}, "/s/x")
+	rec, _ := RecipeFor(Darwin, "arm64", DefaultSources(), Tool{Tool: ToolDotnet, Version: "8.0.100"}, "/s/x")
 	res, err := (&ExecInstaller{Fetch: f, Run: r}).Install(context.Background(), rec, t.TempDir())
 	if err != nil || len(res.Unchecked) != 1 || res.Unchecked[0] != "dotnet-install.sh" {
 		t.Fatalf("res %+v %v", res, err)

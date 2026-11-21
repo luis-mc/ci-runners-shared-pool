@@ -33,6 +33,14 @@ const (
 	// the upstream named docker.io (registry R5.63, R5.65).
 	DockerHubRegistryURL = "https://registry-1.docker.io"
 
+	// The download addresses of the tool store (runners R5.112, OPS75). Each is the base the install recipe
+	// appends its file name to; a mirror replaces them through toolstore.Sources.
+	DefaultRustupDistURL    = "https://static.rust-lang.org/rustup/dist"
+	DefaultGoDownloadURL    = "https://go.dev/dl"
+	DefaultAdoptiumURL      = "https://api.adoptium.net/v3/binary/version"
+	DefaultDotnetInstallURL = "https://dot.net/v1"
+	DefaultPnpmReleaseURL   = "https://github.com/pnpm/pnpm/releases/download"
+
 	// runnerReleasePath is where the GitHub Actions runner releases live under
 	// the GitHub address.
 	runnerReleasePath = "/actions/runner/releases/download"

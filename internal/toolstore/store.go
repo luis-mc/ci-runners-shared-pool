@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 	"sort"
 	"strings"
 	"sync"
@@ -26,13 +27,14 @@ const DefaultUnusedDays = 30
 const DefaultKeepXcode = 2
 
 const (
-	markerFile = ".crsp-installed"
+	markerDir  = ".installed"
 	usageDir   = ".usage"
 	stagingDir = ".staging"
 )
 
-// Marker is the file written inside a version folder when its install finished. A folder without it is a
-// failed install and is never used.
+// Marker is the file written, after the version folder is sealed and in place, to <root>/.installed/. It is
+// outside the version folder so that sealing never has to be undone to write or remove it (a sealed folder
+// cannot even be renamed on macOS). A folder without a marker is a failed install and is never used.
 type Marker struct {
 	Manager     string    `json:"manager"`
 	InstalledAt time.Time `json:"installed_at"`
@@ -56,6 +58,8 @@ type Store struct {
 	Root string
 	GOOS string
 	Arch string
+	// Sources are the download addresses; the zero value means DefaultSources.
+	Sources Sources
 	// Seal makes a folder read-only for every job identity; Unseal undoes it for housekeeping. Nil uses the
 	// OS default (seal_*.go).
 	Seal, Unseal func(dir string) error
@@ -84,8 +88,19 @@ func (s *Store) Has(t Tool) bool {
 	if !ValidVersion(t.Version) || CanonTool(t.Tool) != t.Tool {
 		return false
 	}
-	_, err := os.Stat(filepath.Join(s.Dir(t), markerFile))
+	_, err := os.Stat(s.markerPath(t))
 	return err == nil
+}
+
+func (s *Store) markerPath(t Tool) string {
+	return filepath.Join(s.Root, markerDir, t.Tool+"@"+t.Version)
+}
+
+func (s *Store) sources() Sources {
+	if s.Sources == (Sources{}) {
+		return DefaultSources()
+	}
+	return s.Sources
 }
 
 // Missing returns the tools of the plan that are not in the store (step 2 of the job flow).
@@ -137,7 +152,7 @@ func (s *Store) install(ctx context.Context, in Installer, t Tool) error {
 	if err := os.MkdirAll(stage, 0o755); err != nil {
 		return err
 	}
-	rec, err := RecipeFor(s.GOOS, s.Arch, t, stage)
+	rec, err := RecipeFor(s.GOOS, s.Arch, s.sources(), t, stage)
 	if err != nil {
 		_ = os.RemoveAll(stage)
 		return err
@@ -146,10 +161,6 @@ func (s *Store) install(ctx context.Context, in Installer, t Tool) error {
 	if err != nil {
 		_ = s.unsealAll(stage)
 		_ = os.RemoveAll(stage)
-		return err
-	}
-	mk, _ := json.Marshal(Marker{Manager: res.Manager, InstalledAt: s.now().UTC(), Unchecked: res.Unchecked})
-	if err := os.WriteFile(filepath.Join(stage, markerFile), mk, 0o644); err != nil {
 		return err
 	}
 	if s.Seal != nil {
@@ -161,7 +172,19 @@ func (s *Store) install(ctx context.Context, in Installer, t Tool) error {
 	if err := os.MkdirAll(filepath.Dir(dir), 0o755); err != nil {
 		return err
 	}
+	// Renaming a directory needs write access to the directory itself on macOS: open the top folder for the
+	// move and close it again. Everything below it stays sealed.
+	setDirMode(stage, 0o755)
 	if err := os.Rename(stage, dir); err != nil {
+		return err
+	}
+	setDirMode(dir, 0o555)
+	// The marker comes last: only now does Has say yes.
+	if err := os.MkdirAll(filepath.Dir(s.markerPath(t)), 0o755); err != nil {
+		return err
+	}
+	mk, _ := json.Marshal(Marker{Manager: res.Manager, InstalledAt: s.now().UTC(), Unchecked: res.Unchecked})
+	if err := os.WriteFile(s.markerPath(t), mk, 0o644); err != nil {
 		return err
 	}
 	return s.Touch(t)
@@ -218,7 +241,7 @@ func (s *Store) List() ([]Installed, error) {
 				continue
 			}
 			it := Installed{Tool: t}
-			if b, err := os.ReadFile(filepath.Join(s.Dir(t), markerFile)); err == nil {
+			if b, err := os.ReadFile(s.markerPath(t)); err == nil {
 				_ = json.Unmarshal(b, &it.Marker)
 			}
 			it.LastUsed = it.Marker.InstalledAt
@@ -307,16 +330,24 @@ func (s *Store) Prune(opt PruneOptions) ([]Tool, error) {
 func (s *Store) remove(t Tool) error {
 	dir := s.Dir(t)
 	// Take the marker away first, so a crash halfway leaves a folder no job treats as installed.
+	if err := os.Remove(s.markerPath(t)); err != nil {
+		return err
+	}
 	if s.Unseal != nil {
 		if err := s.Unseal(dir); err != nil {
 			return err
 		}
-	}
-	if err := os.Remove(filepath.Join(dir, markerFile)); err != nil {
-		return err
 	}
 	_ = os.Remove(filepath.Join(s.Root, usageDir, t.Tool+"@"+t.Version))
 	return os.RemoveAll(dir)
 }
 
 func sortStrings(s []string) { sort.Strings(s) }
+
+// setDirMode sets the mode bits of one folder on Unix; on Windows the ACL seal decides, and the read-only
+// attribute of a folder means nothing there.
+func setDirMode(dir string, m os.FileMode) {
+	if runtime.GOOS != "windows" {
+		_ = os.Chmod(dir, m)
+	}
+}
