@@ -22,6 +22,7 @@ import {
   SearchBar,
   Text,
   Stack,
+  Loading,
   Status,
   Tag,
   Table,
@@ -37,7 +38,7 @@ import {
   selectedStatus,
   EditBar,
 } from '@crsp/ui';
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { signInUrl } from '../../auth/session';
 import { ApiError, unwrap, useClient } from '../../api/api';
@@ -68,8 +69,12 @@ import {
 import { InstallAppButton } from './InstallApp';
 import { CiChecksPane, GuardrailsPane, JobSlotsPane } from '../insights/RepositoryPanes';
 import { MissingPermissionsGuide } from '../GrantGuide';
-import { JobSizesPane } from './JobSizes';
 import { OrgPools } from './OrgPools';
+
+// Job sizes is below the fold: it loads with the page, so the first JavaScript stays within its budget (R6.12).
+const JobSizesPane = lazy(() =>
+  import('./JobSizes').then((m) => ({ default: m.JobSizesPane })),
+);
 import { allRepositories, applyChanges, type Repository } from './plans';
 import {
   PUBLIC_OFF_REASON,
@@ -948,7 +953,9 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
       <CiChecksPane repositoryId={r.id} />
       <GuardrailsPane fullName={r.full_name} />
       <JobSlotsPane repositoryId={r.id} />
-      <JobSizesPane fullName={r.full_name} />
+      <Suspense fallback={<Loading what="Loading job sizes" />}>
+        <JobSizesPane fullName={r.full_name} />
+      </Suspense>
       {saved ? <Message tone="done">{saved}</Message> : null}
       {save.error ? <Message tone="problem">Could not save. {save.error}</Message> : null}
       <EditBar
