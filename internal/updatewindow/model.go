@@ -18,15 +18,17 @@ const (
 	StateDownloading State = "downloading"
 	StateWaiting     State = "waiting_for_jobs"
 	StateInstalling  State = "installing"
-	StateRestarting  State = "restarting"
-	StateDone        State = "done"
-	StateFailed      State = "failed"
-	StateCancelled   State = "cancelled"
-	StateUpToDate    State = "up_to_date" // the version offered is not newer than the one that runs (TRAY8)
+	// StateWaitingInstaller: another installer holds Windows Installer; the update starts when it ends (TRAY11).
+	StateWaitingInstaller State = "waiting_installer"
+	StateRestarting       State = "restarting"
+	StateDone             State = "done"
+	StateFailed           State = "failed"
+	StateCancelled        State = "cancelled"
+	StateUpToDate         State = "up_to_date" // the version offered is not newer than the one that runs (TRAY8)
 )
 
 // AllStates lists every state, in the order of an update.
-var AllStates = []State{StateReview, StateDownloading, StateWaiting, StateInstalling, StateRestarting, StateDone, StateFailed, StateCancelled, StateUpToDate}
+var AllStates = []State{StateReview, StateDownloading, StateWaiting, StateWaitingInstaller, StateInstalling, StateRestarting, StateDone, StateFailed, StateCancelled, StateUpToDate}
 
 // Mode is how the window was opened.
 type Mode string
@@ -124,6 +126,7 @@ type Model struct {
 	cancelled   bool
 	upToDate    bool // the service answered that this is already the newest release
 	seenInstall bool // installing or restarting was seen: the service goes down and comes back
+	seenRestart bool // restarting was seen: the installer has finished
 }
 
 // NewModel starts a model for the window.
@@ -135,11 +138,14 @@ func (m *Model) Observe(s Snapshot) {
 	if s.Stage != nil && (s.Stage.Name == "installing" || s.Stage.Name == "restarting") {
 		m.seenInstall = true
 	}
+	if s.Stage != nil && s.Stage.Name == "restarting" {
+		m.seenRestart = true // only the service says so, once msiexec has finished
+	}
 }
 
 // Requested says the person pressed Update now; the service has not answered yet.
 func (m *Model) Requested() {
-	m.requested, m.returned, m.startErr, m.cancelled, m.upToDate = true, false, "", false, false
+	m.requested, m.returned, m.startErr, m.cancelled, m.upToDate, m.seenRestart = true, false, "", false, false, false
 }
 
 // RequestReturned says the service answered the request: err nil means the update runs.
@@ -194,12 +200,11 @@ func (m *Model) State() State {
 			return StateDownloading
 		case "waiting_for_jobs":
 			return StateWaiting
+		case "waiting_installer":
+			return StateWaitingInstaller
 		case "installing", "restarting":
 			if m.last.ServiceUp && m.last.ServiceVersion != "" && m.last.ServiceVersion != m.From {
 				return StateDone // the new version answers; the stage file has not caught up
-			}
-			if !m.last.ServiceUp {
-				return StateRestarting
 			}
 			if st.Name == "installing" {
 				return StateInstalling
@@ -209,7 +214,12 @@ func (m *Model) State() State {
 	}
 	if m.seenInstall {
 		if !m.last.ServiceUp {
-			return StateRestarting // the service is down while it is replaced
+			// The service is down while it is replaced. It is a restart only once the
+			// service said the installer finished; before that the installer still works.
+			if m.seenRestart {
+				return StateRestarting
+			}
+			return StateInstalling
 		}
 		if m.last.ServiceVersion != "" && m.last.ServiceVersion != m.From {
 			return StateDone // back, and running the new version: Done after the restart
@@ -290,6 +300,12 @@ func (m *Model) View() View {
 		v.Body = []string{"This cannot be cancelled. You can hide this window; the update goes on."}
 		v.Buttons = []Button{{BtnHide, WordHide, false}}
 		v.Default, v.EscapeIs = BtnHide, BtnHide
+	case StateWaitingInstaller:
+		v.Heading = WordWaitingInstaller
+		v.Bar = BarIndeterminate
+		v.Body = []string{waitingInstallerLine(m.last.Stage)}
+		v.Buttons = []Button{{BtnHide, WordHide, false}}
+		v.Default, v.EscapeIs = BtnHide, BtnHide
 	case StateRestarting:
 		v.Heading = "Restarting the service"
 		v.Bar = BarIndeterminate
@@ -318,6 +334,14 @@ func (m *Model) View() View {
 		v.Default, v.EscapeIs = BtnClose, BtnClose
 	}
 	return v
+}
+
+func waitingInstallerLine(st *tray.StageInfo) string {
+	name := WordAnotherProgram
+	if st != nil && strings.TrimSpace(st.WaitingFor) != "" {
+		name = strings.TrimSpace(st.WaitingFor)
+	}
+	return fmt.Sprintf(WordWaitingInstallerBody, name)
 }
 
 func jobsLine(n int) string {

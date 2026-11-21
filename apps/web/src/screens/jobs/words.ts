@@ -78,6 +78,23 @@ export function jobStatus(j: {
   }
 }
 
+export type FollowUp = Schemas['RunFollowUp'];
+
+/** The word a run shows while a run it started next is queued or running (CIX24). */
+export const FOLLOW_UP_RUNNING = 'follow-up running';
+
+/** "Installers, running": a run that another run started, and where it stands. */
+export function followUpWords(
+  f: Pick<FollowUp, 'workflow_name' | 'state' | 'result'>,
+): string {
+  return `${f.workflow_name}, ${jobStatus({ state: f.state, result: f.result }).word}`;
+}
+
+/** The runs a run started next, one line: "Installers, running" or "Installers, success; Docs, running". */
+export function startedNextWords(list: readonly FollowUp[] | undefined): string {
+  return (list ?? []).map(followUpWords).join('; ');
+}
+
 /** The forecast of a job; a job the controller has not forecast yet counts as "not enough history yet". */
 export const NO_FORECAST_VALUE: Forecast = {
   p50: 0,

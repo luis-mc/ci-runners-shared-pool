@@ -5015,9 +5015,41 @@ export interface components {
             jobs_total: number;
             jobs_done: number;
             jobs_failed: number;
+            /**
+             * @description The state with follow-ups counted. It is the run's own state until the run is done, then follow_up_running while a run it started next (event workflow_run, such as Installers after CI) is queued or running. The own state and the result do not change.
+             * @enum {string}
+             */
+            overall_state: "queued" | "running" | "follow_up_running" | "done";
+            /** @description How many runs this run started next. */
+            follow_ups?: number;
+            /** @description How many of them are queued or running. */
+            follow_ups_open?: number;
+            /**
+             * Format: int64
+             * @description The run that started this one (event workflow_run), when it is known.
+             */
+            started_by?: number;
+            /** @description The runs this run started next, oldest first. */
+            started_next?: components["schemas"]["RunFollowUp"][];
             /** @description Wall time from created to completed, or to now while open. */
             total_seconds?: number;
             eta?: components["schemas"]["Eta"];
+        };
+        /** @description A run that another run started next (CIX24). */
+        RunFollowUp: {
+            workflow_name: string;
+            /** Format: int64 */
+            run_id: number;
+            attempt?: number;
+            /** @enum {string} */
+            state: "queued" | "running" | "done";
+            result?: components["schemas"]["JobResult"];
+            /** Format: date-time */
+            started_at?: string;
+            /** Format: date-time */
+            completed_at?: string;
+            /** @description The run on GitHub. */
+            link: string;
         };
         RunPage: {
             items: components["schemas"]["RunSummary"][];
@@ -5058,6 +5090,22 @@ export interface components {
             created_at: string;
             /** Format: date-time */
             completed_at?: string;
+            /**
+             * @description The state with follow-ups counted. It is the run's own state until the run is done, then follow_up_running while a run it started next (event workflow_run, such as Installers after CI) is queued or running. The own state and the result do not change.
+             * @enum {string}
+             */
+            overall_state: "queued" | "running" | "follow_up_running" | "done";
+            /** @description How many runs this run started next. */
+            follow_ups?: number;
+            /** @description How many of them are queued or running. */
+            follow_ups_open?: number;
+            /**
+             * Format: int64
+             * @description The run that started this one (event workflow_run), when it is known.
+             */
+            started_by?: number;
+            /** @description The runs this run started next, oldest first. */
+            started_next: components["schemas"]["RunFollowUp"][];
             jobs: components["schemas"]["Job"][];
             /** @description [a, b]: b needs a. Node ids. */
             edges: string[][];
@@ -5512,8 +5560,13 @@ export interface components {
         };
         /** @description The live stage of the last or running update (TRAY4). It is kept in a file, so it survives the service restart. */
         UpdateStage: {
-            /** @enum {string} */
-            name: "downloading" | "waiting_for_jobs" | "installing" | "restarting" | "done" | "failed";
+            /**
+             * @description waiting_installer means another installer holds Windows Installer; the update starts when it ends (TRAY11). restarting is set only once the installer has finished.
+             * @enum {string}
+             */
+            name: "downloading" | "waiting_for_jobs" | "installing" | "waiting_installer" | "restarting" | "done" | "failed";
+            /** @description waiting_installer only, the name of the other installer when it is known. */
+            waiting_for?: string;
             /** @description Only for downloading and installing; absent when the stage has no number. Installing is a rough guess from the installer log. */
             percent?: number;
             /** @description The version being installed; for done, the version that runs. */
@@ -5526,7 +5579,7 @@ export interface components {
              * @description failed only, the stage that failed.
              * @enum {string}
              */
-            failed_at?: "downloading" | "waiting_for_jobs" | "installing" | "restarting";
+            failed_at?: "downloading" | "waiting_for_jobs" | "installing" | "waiting_installer" | "restarting";
             /** Format: date-time */
             at: string;
         };
@@ -6459,14 +6512,21 @@ export interface components {
             rows: components["schemas"]["WaitSplitRow"][];
         };
         TimelineSegment: {
-            /** @enum {string} */
-            kind: "job" | "idle";
+            /**
+             * @description A wait is the time a follow-up job waited for its runner (CIX24).
+             * @enum {string}
+             */
+            kind: "job" | "idle" | "wait";
             /** Format: date-time */
             start: string;
             /** Format: date-time */
             end: string;
             /** Format: int64 */
             job_id?: number;
+            /** Format: int64 */
+            run_id?: number;
+            /** @description The job belongs to a run another run started (event workflow_run). */
+            follow_up?: boolean;
             repository?: string;
             job_ident?: string;
             event?: string;

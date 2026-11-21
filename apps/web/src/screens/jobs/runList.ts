@@ -2,7 +2,7 @@
 // one row; its jobs are the next level, its steps the one after. The runs list answers without the jobs of a run, so
 // the Queue and Running lists join the queued and running jobs they also read, by run and attempt.
 import type { Schemas } from '../../api/api';
-import type { Job } from './words';
+import type { FollowUp, Job } from './words';
 
 export type RunSummary = Schemas['RunSummary'];
 
@@ -26,6 +26,10 @@ export interface RunRow {
   jobsFailed?: number | undefined;
   totalSeconds?: number | undefined;
   eta?: Schemas['Eta'] | undefined;
+  /** The state with follow-ups counted: `follow_up_running` while a run this run started next is not finished. */
+  overallState?: Schemas['RunSummary']['overall_state'] | undefined;
+  /** The runs this run started next (event workflow_run, such as Installers after CI). */
+  startedNext?: readonly FollowUp[] | undefined;
   /** The run's queued jobs, in line order, and its running jobs (Queue and Running lists). */
   queued: Job[];
   running: Job[];
@@ -73,6 +77,8 @@ export function fromSummary(
     jobsFailed: r.jobs_failed,
     totalSeconds: r.total_seconds,
     eta: r.eta,
+    overallState: r.overall_state,
+    startedNext: r.started_next,
     queued: [...(queued.get(k) ?? [])].sort(byPlace),
     running: running.get(k) ?? [],
   };

@@ -174,8 +174,12 @@ func TestVariableSetAndDeletedPerOS(t *testing.T) { // R5.28
 	}
 	// The last Linux runner goes: its variable is deleted, not left unset-looking.
 	e.cap.m = map[string][]string{"Windows": {"X64"}}
-	if err := e.svc.RunnersChanged(ctx); err != nil {
-		t.Fatal(err)
+	e.advance(CapacitySettle)
+	for i := 0; i < 2; i++ { // two syncs, DeleteHold apart
+		if err := e.svc.RunnersChanged(ctx); err != nil {
+			t.Fatal(err)
+		}
+		e.advance(DeleteHold)
 	}
 	if got := varNames(e, "alice/secret"); got != "RUNS_ON_WINDOWS" {
 		t.Fatalf("runner removed: %s", got)
@@ -188,8 +192,11 @@ func TestVariableSetAndDeletedPerOS(t *testing.T) { // R5.28
 	}
 	// No runner at all: no variable, workflows fall back to GitHub-hosted.
 	e.cap.m = map[string][]string{}
-	if err := e.svc.RunnersChanged(ctx); err != nil {
-		t.Fatal(err)
+	for i := 0; i < 2; i++ {
+		if err := e.svc.RunnersChanged(ctx); err != nil {
+			t.Fatal(err)
+		}
+		e.advance(DeleteHold)
 	}
 	if got := varNames(e, "alice/secret"); got != "" {
 		t.Fatalf("no runner: %s", got)
@@ -364,5 +371,80 @@ func TestLegacyNamesWrittenAndRemovedWithSetting(t *testing.T) {
 	}
 	if got, _ := e.fake.Variable("alice/secret", "CI_RUNS_ON"); got != `["old-pool"]` {
 		t.Fatalf("not ours: %q", got)
+	}
+}
+
+func TestRestartWithNoFactsDeletesNothing(t *testing.T) { // R5.28
+	e := newEnv(t)
+	e.world()
+	e.turnOn(101)
+	ctx := context.Background()
+	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+		t.Fatalf("setup: %s", got)
+	}
+	// Restart: a new service, no machine has reported yet, so no capacity.
+	e.cap.m = map[string][]string{}
+	e.svc = New(Config{Store: e.store, GitHub: e.gh, Tokens: e.tokens, Audit: e.audit, Capacity: e.cap, Now: e.clock,
+		PublicRepositories: func(context.Context) (bool, error) { return true, nil }})
+	before := e.audit.count("variable.deleted")
+	for i := 0; i < 5; i++ { // many syncs inside the settle period
+		if err := e.svc.RunnersChanged(ctx); err != nil {
+			t.Fatal(err)
+		}
+		e.advance(CapacitySettle / 6)
+	}
+	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+		t.Fatalf("deleted before capacity was known: %q", got)
+	}
+	// Facts arrive late: nothing was deleted, so nothing is restored.
+	e.cap.m = map[string][]string{"Linux": {"X64", "docker", "crsp-home"}}
+	if err := e.svc.RunnersChanged(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if e.audit.count("variable.deleted") != before || e.audit.has("variable.restored") {
+		t.Fatalf("a delete or restore happened: %v", e.audit.events)
+	}
+	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+		t.Fatalf("after facts: %q", got)
+	}
+}
+
+func TestRealLossDeletesOnlyAfterHold(t *testing.T) { // R5.28
+	e := newEnv(t)
+	e.world()
+	e.turnOn(101)
+	ctx := context.Background()
+	e.advance(CapacitySettle)
+	e.cap.m = map[string][]string{}
+	sync := func() {
+		if err := e.svc.RunnersChanged(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	sync() // first missing reading
+	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+		t.Fatalf("one reading deleted: %q", got)
+	}
+	e.advance(DeleteHold - time.Minute)
+	sync()
+	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+		t.Fatalf("deleted before the hold: %q", got)
+	}
+	// The OS comes back for one reading: the count starts again.
+	e.cap.m = map[string][]string{"Linux": {"X64"}}
+	sync()
+	e.cap.m = map[string][]string{}
+	e.advance(DeleteHold)
+	sync()
+	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+		t.Fatalf("a flap deleted: %q", got)
+	}
+	e.advance(DeleteHold)
+	sync()
+	if got := varNames(e, "alice/secret"); got != "" {
+		t.Fatalf("a real loss was not deleted: %q", got)
+	}
+	if d := e.audit.detail("variable.deleted"); !strings.Contains(d, "no Linux runner for 15 min") {
+		t.Fatalf("the audit says why: %q", d)
 	}
 }

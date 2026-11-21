@@ -109,3 +109,45 @@ func TestWrapBreaksAPathThatIsTooWide(t *testing.T) {
 		}
 	}
 }
+
+// TRAY10: a line wider than its box is flagged, and so is a measure that answers 0 for text.
+func TestClippedFlagsALineWiderThanItsBoxAndAFailedMeasure(t *testing.T) {
+	m := fake(15)
+	l := Compute(m, View{State: StateInstalling, Heading: "Installing 0.1.20", Body: []string{"Short."}, Bar: BarDeterminate, Percent: 0,
+		Buttons: []Button{{BtnClose, "Hide", true}}})
+	if bad := Clipped(m, l); len(bad) > 0 {
+		t.Fatalf("clean layout flagged: %v", bad)
+	}
+	for i, it := range l.Items {
+		if it.Kind == KindBody {
+			l.Items[i].Lines = []string{strings.Repeat("w", 80)}
+			l.Items[i].Rect.Max.Y = l.Items[i].Rect.Min.Y + 100
+		}
+	}
+	if bad := Clipped(m, l); len(bad) == 0 {
+		t.Fatal("a line wider than its box was not flagged")
+	}
+	zero := Metrics{Unit: 15, Measure: func(string, bool) int { return 0 }}
+	if bad := Clipped(zero, Compute(m, View{State: StateInstalling, Heading: "H", Buttons: []Button{{BtnClose, "Hide", true}}})); len(bad) == 0 {
+		t.Fatal("a measure of 0 for text was not flagged")
+	}
+}
+
+// TRAY10: with the failing measure of the bug (0 for everything) the body line cannot wrap,
+// so the wrap test below must be run with a real measure; here the real measure wraps it.
+func TestInstallingBodyWrapsAtEveryDPI(t *testing.T) {
+	body := "This cannot be cancelled. You can hide this window; the update goes on."
+	for name, unit := range dpiUnits {
+		m := fake(unit)
+		l := Compute(m, View{State: StateInstalling, Heading: "Installing 0.1.20", Body: []string{body}, Bar: BarDeterminate, Percent: 0,
+			Buttons: []Button{{BtnClose, "Hide", true}}})
+		for _, it := range l.Items {
+			if it.Kind == KindBody && len(it.Lines) < 2 {
+				t.Errorf("%s: body did not wrap: %v", name, it.Lines)
+			}
+		}
+		if bad := Clipped(m, l); len(bad) > 0 {
+			t.Errorf("%s: %v", name, bad)
+		}
+	}
+}

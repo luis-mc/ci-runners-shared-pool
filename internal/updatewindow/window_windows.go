@@ -88,9 +88,7 @@ func runWindow(c Config, o Options) int {
 	mi.Size = uint32(unsafe.Sizeof(mi))
 	_, _, _ = pGetMonitorInfo.Call(mon, ptr(&mi))
 
-	sdc, _, _ := pGetDC.Call(0)
-	w.fonts = newFonts(sdc, w.dpi)
-	_, _, _ = pReleaseDC.Call(0, sdc)
+	w.fonts = newFonts(w.dpi)
 	w.relayout()
 	outerW, outerH := w.outerSize()
 	x := int(mi.Work.Left) + (int(mi.Work.Right-mi.Work.Left)-outerW)/2
@@ -341,9 +339,7 @@ func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 	case wmDPIChanged:
 		w.dpi = int(wp & 0xffff)
 		w.fonts.free()
-		sdc, _, _ := pGetDC.Call(0)
-		w.fonts = newFonts(sdc, w.dpi)
-		_, _, _ = pReleaseDC.Call(0, sdc)
+		w.fonts = newFonts(w.dpi)
 		r := (*rect)(*(*unsafe.Pointer)(unsafe.Pointer(&lp))) // lParam of WM_DPICHANGED points to the suggested rectangle
 		w.relayout()
 		ow, oh := w.outerSize()

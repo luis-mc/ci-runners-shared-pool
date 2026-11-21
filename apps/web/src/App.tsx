@@ -9,6 +9,7 @@ import {
   PageHeader,
 } from '@crsp/ui';
 import type { ApiClient } from '@crsp/contract';
+import { lazy, Suspense } from 'react';
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import { ApiProvider } from './api/api';
 import { SignInPage, NoAccess } from './auth/SignIn';
@@ -18,7 +19,6 @@ import type { EventSourceFactory } from './live/store';
 import { AppShell } from './shell/Shell';
 import { FaultBoundary } from './screens/common';
 import { DoctorScreen } from './screens/doctor/Doctor';
-import { HelpScreen } from './screens/help/Help';
 import { jobsRoutes } from './screens/jobs/routes';
 import { MOVED, MovedTo } from './screens/pool/redirects';
 import { PoolLayout } from './screens/pool/PoolLayout';
@@ -52,6 +52,11 @@ import {
 } from './screens/settings/Settings';
 import { UpdateCompactPage, UpdateReviewPage } from './screens/settings/Updates';
 import { SetupPage } from './screens/setup/Setup';
+
+// Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
+const HelpScreen = lazy(() =>
+  import('./screens/help/Help').then((m) => ({ default: m.HelpScreen })),
+);
 
 /** No valid session: every path but /sign-in and /setup goes to /sign-in and keeps the path (R5.8). */
 function Gate({ factory }: { factory: EventSourceFactory | undefined }) {
@@ -203,7 +208,21 @@ export function App({
                   <Route key={from} path={from} element={<MovedTo to={to} />} />
                 ))}
                 <Route path="doctor" element={<DoctorScreen />} />
-                <Route path="help" element={<HelpScreen />} />
+                <Route
+                  path="help"
+                  element={
+                    <Suspense
+                      fallback={
+                        <Page>
+                          <PageHeader title="Help" />
+                          <Loading what="Loading Help" />
+                        </Page>
+                      }
+                    >
+                      <HelpScreen />
+                    </Suspense>
+                  }
+                />
                 <Route path="settings/updates/review" element={<UpdateReviewPage />} />
                 <Route path="settings" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="access" replace />} />

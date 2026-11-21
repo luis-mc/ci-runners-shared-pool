@@ -70,6 +70,9 @@ type Run struct {
 	StartedAt    time.Time
 	CompletedAt  time.Time
 	Conclusion   Result // "" while open
+	// TriggeredBy is the run that started this one when the source names it (a workflow_run payload), else 0.
+	// The store infers the link for a workflow_run run when this is 0 (followup.go).
+	TriggeredBy int64
 }
 
 // Job is one job attempt: one GitHub job id.
@@ -206,6 +209,13 @@ type RunRow struct {
 	JobsFailed int
 	TotalMS    int64 // wall time from created to completed (or to now while open, computed by the caller)
 	SortKey    int64 // paging key
+	// FollowUps is how many runs this run started next, FollowUpsOpen how many of them are queued or running.
+	FollowUps     int
+	FollowUpsOpen int
+	// StartedNext lists the runs this run started, oldest first.
+	StartedNext []FollowUp
+	// ParentRunID is the run this one was started by, 0 when it is none.
+	ParentRunID int64
 }
 
 // RunDetail is a run with its jobs.

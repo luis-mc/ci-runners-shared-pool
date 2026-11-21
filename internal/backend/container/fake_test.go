@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 	"sync"
 	"time"
@@ -30,7 +31,8 @@ type fakeDocker struct {
 	wineLine    string // `wine --version` prints wine-<line>; empty: wine is not there
 	wineBoots   int
 	inspectFail string
-	engineDown  bool // `docker version` fails: the engine does not answer
+	chowned     []string // owner given to the volumes by a one-shot chown
+	engineDown  bool     // `docker version` fails: the engine does not answer
 	now         time.Time
 	// registry
 	pullFail    int      // the next n pulls fail
@@ -49,6 +51,17 @@ type fakeC struct {
 	image   string
 	files   map[string]string // path -> content ("" for a dir)
 	started []string          // JIT configs the start script read from stdin
+	owners  map[string]string // path -> uid:gid of the exec that wrote it
+}
+
+// user is the Config.User of the container: the --user of its run arguments.
+func (c *fakeC) user() string {
+	for i, x := range c.args {
+		if x == "--user" {
+			return c.args[i+1]
+		}
+	}
+	return ""
 }
 
 type fakeImg struct {
@@ -130,6 +143,9 @@ func (f *fakeDocker) handle(cmd sys.Command) sys.Result {
 		c, ok := f.containers[name]
 		if !ok {
 			return fail1("Error: No such object: " + name)
+		}
+		if strings.Contains(a[2], "Config.User") {
+			return sys.Result{Stdout: c.user() + " " + c.image + "\n"}
 		}
 		return sys.Result{Stdout: fmt.Sprintf("%t %s\n", c.running, c.key)}
 	case "network":
@@ -226,6 +242,10 @@ func (f *fakeDocker) run(a []string) sys.Result {
 			return fail1("docker: invalid reference format\nRun 'docker run --help' for more information")
 		}
 	}
+	if i := slices.Index(a, "chown"); i > 0 && i+1 < len(a) { // the one-shot volume owner
+		f.chowned = append(f.chowned, a[i+1])
+		return ok0()
+	}
 	c := &fakeC{args: a, running: true, files: map[string]string{}}
 	name := ""
 	for i, x := range a {
@@ -245,6 +265,9 @@ func (f *fakeDocker) run(a []string) sys.Result {
 		if x == "sleep" && i > 0 {
 			c.image = a[i-1]
 		}
+		if x == "sh" && i > 0 && i+1 < len(a) && a[i+1] == "-c" && c.image == "" {
+			c.image = a[i-1]
+		}
 	}
 	if c.image == f.failRunTag {
 		return fail1("Error response from daemon: cannot start")
@@ -259,13 +282,17 @@ func (f *fakeDocker) run(a []string) sys.Result {
 func (f *fakeDocker) exec(a []string, stdin string) sys.Result {
 	// docker exec [-i] [-d] [-u U] [-w W] pool cmd...
 	i := 1
+	user := ""
 	for i < len(a) {
 		switch a[i] {
 		case "-i":
 			i++
 		case "-d":
 			i++
-		case "-u", "-w", "-e":
+		case "-u":
+			user = a[i+1]
+			i += 2
+		case "-w", "-e":
 			i += 2
 		default:
 			goto found
@@ -280,6 +307,16 @@ found:
 		return fail1("Error response from daemon: container is not running")
 	}
 	rest := a[i+1:]
+	if user == "" {
+		user = c.user() // the engine's default: the container's Config.User
+	}
+	// A user that is not the container's cannot write what the container owns.
+	if user != c.user() && rest[0] == "sh" && strings.Contains(rest[2], "mkdir -p") {
+		return fail1("mkdir: cannot create directory '" + rest[4] + "': Permission denied")
+	}
+	if c.owners == nil {
+		c.owners = map[string]string{}
+	}
 	switch rest[0] {
 	case "pgrep":
 		f.busyChecks++
@@ -323,10 +360,14 @@ found:
 	case "sh":
 		script := rest[2]
 		switch {
+		case strings.HasPrefix(script, "mkdir -p") && strings.Contains(script, `cat >"$1.new"`):
+			c.files[rest[4]] = stdin
+			c.owners[rest[4]] = user
 		case strings.HasPrefix(script, "mkdir -p"):
 			c.files[rest[4]] = ""
 		case strings.HasPrefix(script, "umask 077 && cat >"), strings.HasPrefix(script, "cat >"):
 			c.files[rest[4]] = stdin
+			c.owners[rest[4]] = user
 		case strings.HasPrefix(script, "rm -rf"):
 			for _, p := range rest[4:] {
 				delete(c.files, p)

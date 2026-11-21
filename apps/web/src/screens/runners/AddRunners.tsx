@@ -381,7 +381,7 @@ export function AddRunnersWizard() {
         ) : null}
         {refusal ? <Message tone="problem">{refusal}</Message> : null}
         <ChoiceField
-          label="Kind"
+          label="Type"
           value={choice.kind}
           onChange={(v) => setKindPick(v as Kind)}
           choices={(['persistent', 'ephemeral'] as const).map((k) => ({
@@ -401,7 +401,7 @@ export function AddRunnersWizard() {
               </LinkButton>
             }
           >
-            The container backend decides which kinds this machine offers.
+            The container backend decides which runner types this machine offers.
           </Message>
         ) : null}
         {containerRunner && !containerOff && !ephemeral ? (

@@ -43,7 +43,8 @@ export type LayoutRule =
   | 'check-edge'
   | 'clipped-text'
   | 'section-gap'
-  | 'title-clear';
+  | 'title-clear'
+  | 'time-one-line';
 
 /** One known breach: the screen, the width it happens at ('*' for every width), the rule and the task that removes it. */
 export interface KnownLayoutBreach {
@@ -261,6 +262,14 @@ export function domLayoutSource(
           }
         }
       }
+    }
+
+    // 10. a date and time stays on one line (LOOK49, UX-78): no <time> and no .ds-datetime breaks across lines
+    for (const t of Array.from(document.querySelectorAll('time, .ds-datetime')).filter(visible)) {
+      const range = document.createRange();
+      range.selectNodeContents(t);
+      const tops = Array.from(range.getClientRects()).filter((q) => q.width > 0).map((q) => Math.round(q.top));
+      if (tops.length && Math.max(...tops) - Math.min(...tops) > 2) add('time-one-line', 'the date and time "' + (t.textContent || '').trim() + '" wraps onto ' + new Set(tops).size + ' lines in ' + name(t.parentElement || t));
     }
 
     // 9. top-level panes are one section gap apart; no pane title sits under the focus ring of a control above it (LOOK46)

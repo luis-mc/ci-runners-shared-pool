@@ -51,12 +51,16 @@ func TestLaneLockOneJobAtATime(t *testing.T) {
 func TestLaneWaitsForAFreeLane(t *testing.T) {
 	s := laneSet(t, "7", 1)
 	a, _ := s.Acquire("a")
-	go func() { _ = a.Release() }() // the waiter polls until the lane is free
+	released := make(chan error, 1)
+	go func() { released <- a.Release() }() // the waiter polls until the lane is free
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	b, err := s.AcquireWait(ctx, "b", 5*time.Millisecond)
 	if err != nil || b == nil {
 		t.Fatalf("waiting job: %v", err)
+	}
+	if err := <-released; err != nil {
+		t.Fatalf("release: %v", err)
 	}
 	ctx2, cancel2 := context.WithTimeout(context.Background(), 20*time.Millisecond)
 	defer cancel2()

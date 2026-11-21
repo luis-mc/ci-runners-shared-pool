@@ -7,7 +7,7 @@ status: proposed
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/insights/**", "internal/jobsdata/reconcile/**", "internal/agent/jobsample/**", "internal/github/rest_insights*.go", "internal/doctor/checks/workflows*.go", "internal/agentlink/insights*.go", "internal/agent/jobsample*.go", "cmd/crsp/insights*wiring.go", "internal/store/insights*.go", "internal/store/queries/insights_*.sql", "internal/store/migrations/00030_ci_insights.sql", "internal/store/migrations/00031_insight_dismiss.sql", "internal/tray/menu*.go", "apps/web/src/screens/settings/InsightsUpdate*", "internal/api/handlers_insights*.go", "apps/web/src/screens/insights/**"]
+code: ["internal/insights/**", "internal/jobsdata/reconcile/**", "internal/jobsdata/followup*.go", "internal/store/jobsdata_followups*.go", "internal/agent/jobsample/**", "internal/github/rest_insights*.go", "internal/doctor/checks/workflows*.go", "internal/agentlink/insights*.go", "internal/agent/jobsample*.go", "cmd/crsp/insights*wiring.go", "internal/store/insights*.go", "internal/store/queries/insights_*.sql", "internal/store/migrations/00030_ci_insights.sql", "internal/store/migrations/00031_insight_dismiss.sql", "internal/tray/menu*.go", "apps/web/src/screens/settings/InsightsUpdate*", "internal/api/handlers_insights*.go", "apps/web/src/screens/insights/**"]
 design_system: [UX-4, UX-6, UX-11, UX-14, UX-17, UX-18, UX-19, UX-25, UX-28, UX-29, UX-30, UX-33, UX-38, UX-41, UX-49, UX-52, UX-53, UX-54, UX-58, UX-62, UX-71, UX-72]
 last_verified: 2026-11-20
 artifact:
@@ -93,7 +93,7 @@ The Charts tab (web-console 4.6) gets a segment row (component 12) under its tit
 
 **Waits (idea 11).** A Trend chart (component 52) of wait, hold and run per day, stacked, with a table view (design system UX-17, UX-41); a table per repository and per job key: jobs, median and p95 of wait, hold and run, and holds over the cap with their reason in words (design system UX-29). Range 7, 14 or 30 days, named (design system UX-33).
 
-**Timeline (idea 3, 16).** One lane per runner (crsp runners and other runners by name), on one time axis like the Waterfall (component 50): a bar per job, labelled with the project; idle time in a lighter segment; a queued job for which a runner sat idle is marked "idle while {job} waited"; after-merge (push on the default branch) work that held a slot while a pull request job waited is marked "after-merge work". A range picker of 1 to 24 hours (date and time pickers, components 35, 36). The text equivalent is a table of every segment (design system UX-17, UX-41). Phone width: lanes stack, each lane a list (design system UX-16, UX-49).
+**Timeline (idea 3, 16).** One lane per runner (crsp runners and other runners by name), on one time axis like the Waterfall (component 50): a bar per job, labelled with the project; idle time in a lighter segment; a queued job for which a runner sat idle is marked "idle while {job} waited"; after-merge (push on the default branch) work that held a slot while a pull request job waited is marked "after-merge work"; the time a job of a follow-up run (event `workflow_run`, such as Installers after CI) waited for its runner is a row of its own, "Waited for a runner", noted "follow-up run" (R5.49). A range picker of 1 to 24 hours (date and time pickers, components 35, 36). The text equivalent is a table of every segment (design system UX-17, UX-41). Phone width: lanes stack, each lane a list (design system UX-16, UX-49).
 
 **Tests (ideas 7, 8).** Segments of one table each: Slowest, Flaky, Duplicated, No assertions. Columns: test, project, job, runs, median and p95 time, failures, last seen. A test over its G1 limit shows "over the {kind} limit of {n} s". A test name is shown as text (design system UX-3). Empty: "No test reports found. crsp reads JUnit, Playwright, vitest, go test, nextest and TRX reports your CI uploads." with a link to the guide (design system UX-6).
 
@@ -112,6 +112,8 @@ A Demand section above the machine rows: per label set, slots, utilisation, jobs
 New panes (component 8): **CI checks** lists the workflow file checks of the latest default-branch commit (status word, check, job, line, fix; design system UX-58) and **Guardrails** shows G1 to G7 for this project as on the Guardrails segment. **Job slots** shows the advice of R5.18 in words with *Review the change* as a normal button that opens the wizard (the page's one primary stays Save, design system UX-4, UX-71).
 
 ### 4.5 Run page (idea 4, 14, 15)
+
+**Started next (CIX24, owner decision D27).** The facts of the Run page gain *Started next* when the run started other runs: one line for each, "{workflow}, {state}" (for example "Installers, running"), the workflow a link to its Run page. While one of them is queued or running the status line adds the word *follow-up running* beside the run's own result, which does not change (design system UX-58, CORE-3, CORE-4). The Done and All lists show the same word in their Result column, with "Started next: {workflow}, {state}" as its hover text; the details panel of a row shows both as facts. The words come from `docs/design-system/next-version/content.md`; the parts are the shared Status, Facts, Cluster, Table and SearchTable.
 
 A **Savings** pane under the critical path: up to 3 lines "The run would end {n} min sooner if {change}." with the evidence (design system UX-41). When the run was superseded, ran twice for one commit or ran past its first failure, a Note message says so with the minutes (design system UX-26).
 
@@ -275,6 +277,16 @@ Requirement IDs are this spec's own. "Idea n" is the owner's list of 20 Nov 2026
 
 **R5.45** — **The analysis measures itself (owner decisions D18, D19).** Every pass is measured: the average CPU over the pass (percent of one core, the whole process, so an upper bound), the peak memory of the process during the pass, and the size on disk of the insights store (the CI data folder and the database file with its log). Over 5 percent CPU, 300 MB memory or 1 GB disk, the engine opens a pool-scope finding of kind `insights.cost` (area pool, 0 minutes) that names what is over and recommends a slower update period: after every 5th CI run, or once an hour; when the period is already once an hour, it recommends keeping less CI data or a bigger machine. The owner chooses the period in Settings (4.9); nothing changes by itself (R6.6). A pass back under all three limits resolves the finding.
 
+### Follow-up runs (CIX24, owner decision D27)
+
+**R5.46** — **Link a follow-up to its run.** A run started by another run's completion (event `workflow_run`, such as the Installers workflow after CI) is stored with the run that started it, in `run_follow_ups` (migration 00033): `payload` when the source names the triggering run, `inferred` otherwise. The inferred parent is the run of the same repository and head sha with a lower run id that finished last before the follow-up was created; a run whose finish crsp has not stored yet counts only when it is the single candidate. A run counts as finished when it has a conclusion or all its jobs are done. The link is recomputed after every run or job write of that head sha, so a follow-up that arrives before the parent's last job still ends up linked; a `payload` link is never replaced. Links of pruned runs are pruned with them.
+
+**R5.47** — **Run detail and summary.** `getRun` returns `started_next`, a list of `{workflow_name, run_id, attempt, state, result, started_at, completed_at, link}`, oldest first; a run summary (`listRuns`) carries the same list, the counts `follow_ups` and `follow_ups_open`, and `started_by` for a follow-up. A run summary and a run carry `overall_state`: the run's own state until it is done, then `follow_up_running` while any follow-up is queued or running, then `done`. `state` and `result` keep the run's own values.
+
+**R5.48** — **Console.** The Run page and the Done list say "Started next: {workflow}, {state}" and show *follow-up running* beside the run's own result while a follow-up is not finished (section 4.5).
+
+**R5.49** — **Timeline.** The run timeline includes follow-up runs: a job of a `workflow_run` run is marked as a follow-up on its lane, and when it waited a minute or more for its runner the wait is a segment of kind `wait` (`getPoolTimeline`), so a gap such as 06:51 to 06:57 shows.
+
 **R5.43** — **Doctor.** The doctor reads `workflow_checks` and shows the failing checks as findings in an area Workflows, one per repository and check ID (doctor feature, R5.2 shape).
 
 ## 6. Non-functional requirements
@@ -429,6 +441,10 @@ Every row is planned; the paths are where each test will live (wave CIX).
 | R5.43 | internal/doctor/checks/workflows_test.go TestWorkflowFindings, TestWorkflowFindingsWithoutSource |
 | R5.44 | internal/insights/engine_cost_test.go TestPeriodDue, TestFinishedRunStartsAPass, TestEveryNthRunWaitsForN, TestHourlyIgnoresFinishedRuns; internal/jobsdata/ingest/recorder_test.go TestOnJobCompletedCallsOnceAtDone; internal/settings/settings_test.go TestInsightsUpdatePeriod; cmd/crsp/insights_wiring_test.go TestBridgeForwardsFinishedRuns, TestPeriodOfSettings; apps/web/src/screens/settings/InsightsUpdate.test.tsx |
 | R5.45 | internal/insights/engine_cost_test.go TestCostWarningOpensAndResolves, TestCostAdviceFollowsThePeriod, TestProcessMeterMeasuresAPass; cmd/crsp/insights_wiring_test.go TestNewInsightsEngineMeasuresEachPass |
+| R5.46 | internal/jobsdata/followup_test.go TestInferParentPicksTheRunThatFinishedLastBeforeTheChild; internal/store/jobsdata_followups_test.go TestIntegrationFollowUpLinkedWhenTheChildArrivesFirst, TestIntegrationFollowUpPayloadParentWinsOverInference |
+| R5.47 | internal/jobsdata/followup_test.go TestOverallStateStaysRunningWhileAFollowUpIs; internal/api/handlers_jobsdata_test.go TestRunDetailAndListCarryTheFollowUps |
+| R5.48 | apps/web/src/screens/jobs/followUps.test.tsx |
+| R5.49 | internal/insights/timeline/timeline_test.go TestFollowUpRunnerWaitIsASegment; apps/web/src/screens/insights/Views.test.tsx |
 | R6.1 | internal/insights/collect/budget_test.go TestQuarterShareAndOrder, TestCollectorWaitsForTheShare; internal/github/rest_insights_test.go TestInsightsCallsAreBackground |
 | R6.2 | internal/insights/collect/retention_test.go TestDefaultsFloorsCeilings |
 | R6.3 | internal/insights/engine_bench_test.go BenchmarkPass20kJobs, internal/insights/engine_test.go TestRunSchedule |
@@ -448,6 +464,7 @@ Every row is planned; the paths are where each test will live (wave CIX).
 | D3 | Can a finding be dismissed? | Changed by owner decision D17 (20 Nov): an admin can hide it for 7 days and it comes back if it is still true; nothing closes or deletes it by hand (R5.8) | 2026-11-20 |
 | D8 | When do insights update, and what may they cost? | After each CI run and on a timer; a pass over 5% CPU, 300 MB or 1 GB shows a warning with a slower period to choose (owner decisions D18, D19; R5.44, R5.45) | 2026-11-20 |
 | D9 | When is the weekly digest written, and how long is the flaky window? | Monday 08:00 Europe/Lisbon, a draft file the tray links to; 14 days for flaky tests (owner decisions D18, D21; R5.38, R5.35) | 2026-11-20 |
+| D27 | Is a run finished while the run it started next is not? | No. A run linked to follow-ups (event `workflow_run`) shows *follow-up running* and "Started next" until they finish; its own result stays (owner decision D27 of 21 Nov, after run 44877168728 showed done while the Installers run 44877464364 still ran; R5.46 to R5.49) | 2026-11-21 |
 | D4 | May crsp change the pool to follow its advice? | Only as an action the owner reviews and an admin starts (Review, work, Done); no auto-resize, no auto-merge (owner) | 2026-11-20 |
 | D5 | Where does Do next live? | Jobs, Charts area; the Overview shows a count and a link (owner, UX-52) | 2026-11-20 |
 | D6 | How is the wait after a change estimated? | Allen-Cunneen G/G/c with Sakasegawa's waiting probability, shown as an estimate with its inputs | 2026-11-20 |
