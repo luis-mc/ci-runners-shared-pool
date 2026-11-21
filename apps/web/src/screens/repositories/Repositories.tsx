@@ -68,6 +68,7 @@ import {
 import { InstallAppButton } from './InstallApp';
 import { CiChecksPane, GuardrailsPane, JobSlotsPane } from '../insights/RepositoryPanes';
 import { MissingPermissionsGuide } from '../GrantGuide';
+import { JobSizesPane } from './JobSizes';
 import { OrgPools } from './OrgPools';
 import { allRepositories, applyChanges, type Repository } from './plans';
 import {
@@ -947,6 +948,7 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
       <CiChecksPane repositoryId={r.id} />
       <GuardrailsPane fullName={r.full_name} />
       <JobSlotsPane repositoryId={r.id} />
+      <JobSizesPane fullName={r.full_name} />
       {saved ? <Message tone="done">{saved}</Message> : null}
       {save.error ? <Message tone="problem">Could not save. {save.error}</Message> : null}
       <EditBar

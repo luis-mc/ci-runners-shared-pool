@@ -1177,6 +1177,69 @@ func (e JobResult) Valid() bool {
 	}
 }
 
+// Defines values for JobSizeClass.
+const (
+	JobSizeClassHeavy  JobSizeClass = "heavy"
+	JobSizeClassLight  JobSizeClass = "light"
+	JobSizeClassNormal JobSizeClass = "normal"
+)
+
+// Valid indicates whether the value is a known member of the JobSizeClass enum.
+func (e JobSizeClass) Valid() bool {
+	switch e {
+	case JobSizeClassHeavy:
+		return true
+	case JobSizeClassLight:
+		return true
+	case JobSizeClassNormal:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobSizeRowConfidence.
+const (
+	High JobSizeRowConfidence = "high"
+	Low  JobSizeRowConfidence = "low"
+)
+
+// Valid indicates whether the value is a known member of the JobSizeRowConfidence enum.
+func (e JobSizeRowConfidence) Valid() bool {
+	switch e {
+	case High:
+		return true
+	case Low:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobSizeSource.
+const (
+	JobSizeSourceDefault  JobSizeSource = "default"
+	JobSizeSourceMeasured JobSizeSource = "measured"
+	JobSizeSourceOverride JobSizeSource = "override"
+	JobSizeSourceScan     JobSizeSource = "scan"
+)
+
+// Valid indicates whether the value is a known member of the JobSizeSource enum.
+func (e JobSizeSource) Valid() bool {
+	switch e {
+	case JobSizeSourceDefault:
+		return true
+	case JobSizeSourceMeasured:
+		return true
+	case JobSizeSourceOverride:
+		return true
+	case JobSizeSourceScan:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -5183,6 +5246,95 @@ type JobResources struct {
 // JobResult defines model for JobResult.
 type JobResult string
 
+// JobSizeClass defines model for JobSizeClass.
+type JobSizeClass string
+
+// JobSizeCostRow defines model for JobSizeCostRow.
+type JobSizeCostRow struct {
+	Assumption bool         `json:"assumption"`
+	Class      JobSizeClass `json:"class"`
+	Cpu        float32      `json:"cpu"`
+	Gib        float32      `json:"gib"`
+	GibMin     *float32     `json:"gib_min,omitempty"`
+	Key        string       `json:"key"`
+
+	// Kind framework or service
+	Kind       string   `json:"kind"`
+	Note       *string  `json:"note,omitempty"`
+	SecPerTest *float32 `json:"sec_per_test,omitempty"`
+}
+
+// JobSizeList defines model for JobSizeList.
+type JobSizeList struct {
+	CostTable []JobSizeCostRow `json:"cost_table"`
+
+	// FileError Why .crsp.yml could not be read; empty when it could
+	FileError  string       `json:"file_error"`
+	Items      []JobSizeRow `json:"items"`
+	Repository string       `json:"repository"`
+}
+
+// JobSizeOverride defines model for JobSizeOverride.
+type JobSizeOverride struct {
+	Class      JobSizeClass `json:"class"`
+	CopyLine   string       `json:"copy_line"`
+	Pattern    string       `json:"pattern"`
+	Repository string       `json:"repository"`
+}
+
+// JobSizeOverrideInput defines model for JobSizeOverrideInput.
+type JobSizeOverrideInput struct {
+	Class JobSizeClass `json:"class"`
+
+	// Pattern A job name or a glob such as integration-*
+	Pattern    string `json:"pattern"`
+	Repository string `json:"repository"`
+}
+
+// JobSizeRow defines model for JobSizeRow.
+type JobSizeRow struct {
+	Class JobSizeClass `json:"class"`
+
+	// Confidence Of the scan guess; absent when no scan found the job
+	Confidence *JobSizeRowConfidence `json:"confidence,omitempty"`
+
+	// CopyLine The YAML line for .crsp.yml
+	CopyLine   string `json:"copy_line"`
+	EstSeconds *int   `json:"est_seconds,omitempty"`
+
+	// Job The job key
+	Job string `json:"job"`
+
+	// OverrideConsole The console override class; empty when none
+	OverrideConsole string `json:"override_console"`
+
+	// OverrideFile The .crsp.yml override class; empty when none
+	OverrideFile string   `json:"override_file"`
+	Reasons      []string `json:"reasons"`
+	Repository   string   `json:"repository"`
+
+	// ResetNote Set when the test count moved by more than 2x and the size went back to the scan guess
+	ResetNote string        `json:"reset_note"`
+	ScannedAt *time.Time    `json:"scanned_at,omitempty"`
+	Services  []string      `json:"services"`
+	Source    JobSizeSource `json:"source"`
+	Tests     *int          `json:"tests,omitempty"`
+	Weight    JobSizeUnits  `json:"weight"`
+	Workflow  *string       `json:"workflow,omitempty"`
+}
+
+// JobSizeRowConfidence Of the scan guess; absent when no scan found the job
+type JobSizeRowConfidence string
+
+// JobSizeSource defines model for JobSizeSource.
+type JobSizeSource string
+
+// JobSizeUnits defines model for JobSizeUnits.
+type JobSizeUnits struct {
+	Cpu    int `json:"cpu"`
+	Memory int `json:"memory"`
+}
+
 // JobStats defines model for JobStats.
 type JobStats struct {
 	Days           []DayStat       `json:"days"`
@@ -8063,6 +8215,18 @@ type GetWaitSplitParamsDays int
 // GetWaitSplitParamsGroup defines parameters for GetWaitSplit.
 type GetWaitSplitParamsGroup string
 
+// DeleteJobSizeOverrideParams defines parameters for DeleteJobSizeOverride.
+type DeleteJobSizeOverrideParams struct {
+	Repository *string `form:"repository,omitempty" json:"repository,omitempty"`
+	Pattern    *string `form:"pattern,omitempty" json:"pattern,omitempty"`
+}
+
+// ListJobSizesParams defines parameters for ListJobSizes.
+type ListJobSizesParams struct {
+	// Repository owner/name
+	Repository *string `form:"repository,omitempty" json:"repository,omitempty"`
+}
+
 // ListJobsParams defines parameters for ListJobs.
 type ListJobsParams struct {
 	State        *ListJobsParamsState `form:"state,omitempty" json:"state,omitempty"`
@@ -8329,6 +8493,9 @@ type SetOrgPoolJSONRequestBody = OrgPoolSet
 
 // UpdateImageLayersJSONRequestBody defines body for UpdateImageLayers for application/json ContentType.
 type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
+
+// PutJobSizeOverrideJSONRequestBody defines body for PutJobSizeOverride for application/json ContentType.
+type PutJobSizeOverrideJSONRequestBody = JobSizeOverrideInput
 
 // CreateJoinCodeJSONRequestBody defines body for CreateJoinCode for application/json ContentType.
 type CreateJoinCodeJSONRequestBody = CreateJoinCodeRequest
@@ -8632,6 +8799,15 @@ type ServerInterface interface {
 	// GetInstallCommand The install command per OS, without a join code
 	// (GET /api/v1/install-command)
 	GetInstallCommand(w http.ResponseWriter, r *http.Request)
+	// DeleteJobSizeOverride Remove the console size override of a job pattern
+	// (DELETE /api/v1/job-sizes)
+	DeleteJobSizeOverride(w http.ResponseWriter, r *http.Request, params DeleteJobSizeOverrideParams)
+	// ListJobSizes The size of each job of a repository and where it came from, with the cost table
+	// (GET /api/v1/job-sizes)
+	ListJobSizes(w http.ResponseWriter, r *http.Request, params ListJobSizesParams)
+	// PutJobSizeOverride Set the console size override of a job pattern
+	// (PUT /api/v1/job-sizes)
+	PutJobSizeOverride(w http.ResponseWriter, r *http.Request)
 	// ListJobs Queued, running and finished jobs, newest first
 	// (GET /api/v1/jobs)
 	ListJobs(w http.ResponseWriter, r *http.Request, params ListJobsParams)
@@ -11099,6 +11275,99 @@ func (siw *ServerInterfaceWrapper) GetInstallCommand(w http.ResponseWriter, r *h
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetInstallCommand(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// DeleteJobSizeOverride operation middleware
+func (siw *ServerInterfaceWrapper) DeleteJobSizeOverride(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params DeleteJobSizeOverrideParams
+
+	// ------------- Optional query parameter "repository" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "repository", r.URL.Query(), &params.Repository, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "repository"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repository", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "pattern" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "pattern", r.URL.Query(), &params.Pattern, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "pattern"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "pattern", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.DeleteJobSizeOverride(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListJobSizes operation middleware
+func (siw *ServerInterfaceWrapper) ListJobSizes(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListJobSizesParams
+
+	// ------------- Optional query parameter "repository" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "repository", r.URL.Query(), &params.Repository, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "repository"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repository", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListJobSizes(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutJobSizeOverride operation middleware
+func (siw *ServerInterfaceWrapper) PutJobSizeOverride(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutJobSizeOverride(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -14922,6 +15191,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/env-sets", wrapper.ListEnvSets)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/env-sets/{setName}", wrapper.DeleteEnvSet)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/env-sets/{setName}", wrapper.PutEnvSet)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.DeleteJobSizeOverride)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.ListJobSizes)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry", wrapper.GetRegistrySettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/registry/logins", wrapper.PutRegistryLogin)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/registry/logins/{kind}/{host}", wrapper.DeleteRegistryLogin)
@@ -17519,6 +17791,117 @@ type GetInstallCommanddefaultJSONResponse struct {
 }
 
 func (response GetInstallCommanddefaultJSONResponse) VisitGetInstallCommandResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type DeleteJobSizeOverrideRequestObject struct {
+	Params DeleteJobSizeOverrideParams
+}
+
+type DeleteJobSizeOverrideResponseObject interface {
+	VisitDeleteJobSizeOverrideResponse(w http.ResponseWriter) error
+}
+
+type DeleteJobSizeOverride204Response struct {
+}
+
+func (response DeleteJobSizeOverride204Response) VisitDeleteJobSizeOverrideResponse(w http.ResponseWriter) error {
+	w.WriteHeader(204)
+	return nil
+}
+
+type DeleteJobSizeOverridedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response DeleteJobSizeOverridedefaultJSONResponse) VisitDeleteJobSizeOverrideResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListJobSizesRequestObject struct {
+	Params ListJobSizesParams
+}
+
+type ListJobSizesResponseObject interface {
+	VisitListJobSizesResponse(w http.ResponseWriter) error
+}
+
+type ListJobSizes200JSONResponse JobSizeList
+
+func (response ListJobSizes200JSONResponse) VisitListJobSizesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListJobSizesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListJobSizesdefaultJSONResponse) VisitListJobSizesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJobSizeOverrideRequestObject struct {
+	Body *PutJobSizeOverrideJSONRequestBody
+}
+
+type PutJobSizeOverrideResponseObject interface {
+	VisitPutJobSizeOverrideResponse(w http.ResponseWriter) error
+}
+
+type PutJobSizeOverride200JSONResponse JobSizeOverride
+
+func (response PutJobSizeOverride200JSONResponse) VisitPutJobSizeOverrideResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutJobSizeOverridedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutJobSizeOverridedefaultJSONResponse) VisitPutJobSizeOverrideResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -22459,6 +22842,15 @@ type StrictServerInterface interface {
 	// GetInstallCommand The install command per OS, without a join code
 	// (GET /api/v1/install-command)
 	GetInstallCommand(ctx context.Context, request GetInstallCommandRequestObject) (GetInstallCommandResponseObject, error)
+	// DeleteJobSizeOverride Remove the console size override of a job pattern
+	// (DELETE /api/v1/job-sizes)
+	DeleteJobSizeOverride(ctx context.Context, request DeleteJobSizeOverrideRequestObject) (DeleteJobSizeOverrideResponseObject, error)
+	// ListJobSizes The size of each job of a repository and where it came from, with the cost table
+	// (GET /api/v1/job-sizes)
+	ListJobSizes(ctx context.Context, request ListJobSizesRequestObject) (ListJobSizesResponseObject, error)
+	// PutJobSizeOverride Set the console size override of a job pattern
+	// (PUT /api/v1/job-sizes)
+	PutJobSizeOverride(ctx context.Context, request PutJobSizeOverrideRequestObject) (PutJobSizeOverrideResponseObject, error)
 	// ListJobs Queued, running and finished jobs, newest first
 	// (GET /api/v1/jobs)
 	ListJobs(ctx context.Context, request ListJobsRequestObject) (ListJobsResponseObject, error)
@@ -24438,6 +24830,89 @@ func (sh *strictHandler) GetInstallCommand(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetInstallCommandResponseObject); ok {
 		if err := validResponse.VisitGetInstallCommandResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// DeleteJobSizeOverride operation middleware
+func (sh *strictHandler) DeleteJobSizeOverride(w http.ResponseWriter, r *http.Request, params DeleteJobSizeOverrideParams) {
+	var request DeleteJobSizeOverrideRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.DeleteJobSizeOverride(ctx, request.(DeleteJobSizeOverrideRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "DeleteJobSizeOverride")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(DeleteJobSizeOverrideResponseObject); ok {
+		if err := validResponse.VisitDeleteJobSizeOverrideResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListJobSizes operation middleware
+func (sh *strictHandler) ListJobSizes(w http.ResponseWriter, r *http.Request, params ListJobSizesParams) {
+	var request ListJobSizesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListJobSizes(ctx, request.(ListJobSizesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListJobSizes")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListJobSizesResponseObject); ok {
+		if err := validResponse.VisitListJobSizesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutJobSizeOverride operation middleware
+func (sh *strictHandler) PutJobSizeOverride(w http.ResponseWriter, r *http.Request) {
+	var request PutJobSizeOverrideRequestObject
+
+	var body PutJobSizeOverrideJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutJobSizeOverride(ctx, request.(PutJobSizeOverrideRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutJobSizeOverride")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutJobSizeOverrideResponseObject); ok {
+		if err := validResponse.VisitPutJobSizeOverrideResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

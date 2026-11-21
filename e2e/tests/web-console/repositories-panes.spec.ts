@@ -18,7 +18,14 @@ const SCREENS = [
   {
     name: 'detail',
     path: '/repositories/octo/app',
-    panes: ['State', 'Policy', 'Hosted fallback', 'Extra packages'],
+    panes: [
+      'State',
+      'Policy',
+      'Hosted fallback',
+      'Extra packages',
+      'Job sizes',
+      'Cost table',
+    ],
     primaries: ['Save'],
   },
   {

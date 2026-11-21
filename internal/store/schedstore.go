@@ -68,10 +68,17 @@ func (t *schedTx) Settings(machineID string) (slots.Settings, error) {
 	err := row.Scan(&s.BudgetMemoryPct, &s.BudgetCPUPct, &s.JobSlots, &s.LightSlots, &s.HeavySlots,
 		&s.SlotMaxAgeMin, &s.GateMaxWaitMin, &s.GatePollSec, &s.OnTimeout, &light, &heavy)
 	if errors.Is(err, sql.ErrNoRows) {
-		return slots.Defaults(), nil
-	}
-	if err != nil {
+		s = slots.Defaults()
+	} else if err != nil {
 		return s, fmt.Errorf("machine settings: %w", err)
+	}
+	// R5.97: the sizes of the scan, the measuring and the overrides. A read
+	// that fails leaves the name classes, so a job is never held for it.
+	if sizes, serr := loadSizes(t.ctx, t.tx); serr == nil {
+		s.Sizes = sizes
+	}
+	if errors.Is(err, sql.ErrNoRows) {
+		return s, nil
 	}
 	// An empty list column keeps the defaults of the list.
 	def := slots.Defaults()

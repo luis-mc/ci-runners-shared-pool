@@ -2419,6 +2419,80 @@ paths:
           description: Deleted.
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/job-sizes:
+    get:
+      operationId: listJobSizes
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The size of each job of a repository and where it came from, with the cost table
+      description: >-
+        scheduling R5.79 to R5.87. A size comes from an override, a measuring,
+        the scan or the default, strongest first. The console override wins
+        over the sizes: map of .crsp.yml.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: repository
+          in: query
+          required: false
+          schema: { type: string }
+          description: owner/name
+      responses:
+        '200':
+          description: The jobs and the cost table.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSizeList'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putJobSizeOverride
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Set the console size override of a job pattern
+      description: scheduling R5.86. It applies at once and wins over .crsp.yml.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobSizeOverrideInput'
+      responses:
+        '200':
+          description: Saved, with the YAML line to copy into .crsp.yml.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSizeOverride'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: deleteJobSizeOverride
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Remove the console size override of a job pattern
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - name: repository
+          in: query
+          required: false
+          schema: { type: string }
+        - name: pattern
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '204':
+          description: Removed.
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/registry:
     get:
       operationId: getRegistrySettings
@@ -5031,6 +5105,115 @@ components:
         vars:
           type: array
           items: { $ref: '#/components/schemas/EnvVar' }
+    JobSizeClass:
+      type: string
+      enum: [light, normal, heavy]
+    JobSizeSource:
+      type: string
+      enum: [override, measured, scan, default]
+    JobSizeUnits:
+      type: object
+      required: [cpu, memory]
+      properties:
+        cpu: { type: integer }
+        memory: { type: integer }
+    JobSizeRow:
+      type: object
+      required:
+        [
+          repository,
+          job,
+          class,
+          source,
+          weight,
+          reasons,
+          services,
+          override_console,
+          override_file,
+          copy_line,
+          reset_note,
+        ]
+      properties:
+        repository: { type: string }
+        job:
+          {
+            type: string,
+            description: The job key,
+            or the pattern of an override that matches no scanned job,
+          }
+        workflow: { type: string }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+        source: { $ref: '#/components/schemas/JobSizeSource' }
+        weight: { $ref: '#/components/schemas/JobSizeUnits' }
+        confidence:
+          {
+            type: string,
+            enum: [high, low],
+            description: Of the scan guess; absent when no scan found the job,
+          }
+        tests: { type: integer }
+        est_seconds: { type: integer }
+        reasons:
+          type: array
+          items: { type: string }
+        services:
+          type: array
+          items: { type: string }
+        scanned_at: { type: string, format: date-time }
+        override_console:
+          { type: string, description: The console override class; empty when none }
+        override_file:
+          { type: string, description: The .crsp.yml override class; empty when none }
+        reset_note:
+          {
+            type: string,
+            description: Set when the test count moved by more than 2x and the size went back to the scan guess,
+          }
+        copy_line: { type: string, description: The YAML line for .crsp.yml }
+    JobSizeCostRow:
+      type: object
+      required: [kind, key, class, cpu, gib, assumption]
+      properties:
+        kind: { type: string, description: framework or service }
+        key: { type: string }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+        cpu: { type: number }
+        gib_min: { type: number }
+        gib: { type: number }
+        sec_per_test: { type: number }
+        assumption: { type: boolean }
+        note: { type: string }
+    JobSizeList:
+      type: object
+      required: [repository, items, cost_table, file_error]
+      properties:
+        repository: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/JobSizeRow' }
+        cost_table:
+          type: array
+          items: { $ref: '#/components/schemas/JobSizeCostRow' }
+        file_error:
+          {
+            type: string,
+            description: Why .crsp.yml could not be read; empty when it could,
+          }
+    JobSizeOverrideInput:
+      type: object
+      required: [repository, pattern, class]
+      properties:
+        repository: { type: string }
+        pattern: { type: string, description: A job name or a glob such as integration-* }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+    JobSizeOverride:
+      type: object
+      required: [repository, pattern, class, copy_line]
+      properties:
+        repository: { type: string }
+        pattern: { type: string }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+        copy_line: { type: string }
     EnvSetList:
       type: object
       required: [items]

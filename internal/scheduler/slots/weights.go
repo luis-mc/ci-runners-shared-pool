@@ -31,6 +31,31 @@ func DefaultClasses() []JobClass {
 	}
 }
 
+// JobSize is the size of a job from the scan, a measuring or an override. Source
+// is "override", "measured" or "scan". Pattern is a job name or a glob.
+type JobSize struct {
+	Repository string
+	Pattern    string
+	Weight     Weight
+	Class      string
+	Source     string
+}
+
+// SizeOf finds the first size entry that matches the job.
+func (s Settings) SizeOf(j JobNames) (JobSize, bool) {
+	for _, e := range s.Sizes {
+		if e.Repository != "" && e.Repository != j.Repository {
+			continue
+		}
+		for _, n := range j.names() {
+			if matchGlob(e.Pattern, n) {
+				return e, true
+			}
+		}
+	}
+	return JobSize{}, false
+}
+
 // Capacity is the machine's budget in units: one unit of each kind per job slot.
 func (s Settings) Capacity() Weight {
 	return Weight{CPU: s.JobSlots, Memory: s.JobSlots}
@@ -50,13 +75,16 @@ func (s Settings) ClassOf(j JobNames) (name string, ok bool) {
 	return "", false
 }
 
-// WeightOf is the weight of a job: its class's, or DefaultWeight for an
-// unknown class. A weight below 1 counts as 1 and one above the machine's
+// WeightOf is the weight of a job: its size from the scan, a measuring or an
+// override when there is one (R5.87), else its name class's, or DefaultWeight
+// for an unknown class. A weight below 1 counts as 1 and one above the machine's
 // budget is cut to it, so a job can always run alone. class is "default" for
 // an unknown class.
 func (s Settings) WeightOf(j JobNames) (w Weight, class string) {
 	w, class = DefaultWeight, "default"
-	if name, ok := s.ClassOf(j); ok {
+	if e, ok := s.SizeOf(j); ok {
+		w, class = e.Weight, e.Class
+	} else if name, ok := s.ClassOf(j); ok {
 		class = name
 		for _, c := range s.Classes {
 			if c.Name == name {

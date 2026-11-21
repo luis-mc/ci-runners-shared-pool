@@ -50,3 +50,36 @@ func TestHeldWeightCountsCISlotsOnly(t *testing.T) {
 		t.Fatalf("got %+v", got)
 	}
 }
+
+// R5.87: a size from the scan, a measuring or an override feeds WeightOf; the
+// name classes stay as the fallback.
+func TestWeightOfUsesSizesThenNameClasses(t *testing.T) {
+	s := Defaults()
+	s.JobSlots = 4
+	s.Sizes = []JobSize{
+		{Repository: "o/r", Pattern: "integration-*", Weight: Weight{3, 2}, Class: "heavy", Source: "override"},
+		{Repository: "o/r", Pattern: "lint", Weight: Weight{1, 1}, Class: "light", Source: "scan"},
+		{Repository: "", Pattern: "e2e", Weight: Weight{9, 9}, Class: "heavy", Source: "scan"},
+	}
+	cases := []struct {
+		name  string
+		job   JobNames
+		want  Weight
+		class string
+	}{
+		{"override glob", JobNames{Repository: "o/r", Job: "integration-db"}, Weight{3, 2}, "heavy"},
+		{"other repository falls back to the name class", JobNames{Repository: "x/y", Job: "integration-db"}, DefaultWeight, "default"},
+		{"scan size beats the name class", JobNames{Repository: "o/r", Job: "lint"}, Weight{1, 1}, "light"},
+		{"a size is cut to the budget", JobNames{Repository: "any/repo", Job: "e2e"}, Weight{4, 4}, "heavy"},
+		{"no size: the name class", JobNames{Repository: "x/y", Job: "vm-a"}, Weight{2, 4}, "vm"},
+		{"no size, no class: 1/1", JobNames{Repository: "x/y", Job: "zzz"}, DefaultWeight, "default"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			w, class := s.WeightOf(c.job)
+			if w != c.want || class != c.class {
+				t.Fatalf("WeightOf = %v %q, want %v %q", w, class, c.want, c.class)
+			}
+		})
+	}
+}
