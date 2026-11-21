@@ -5,6 +5,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -43,7 +44,7 @@ func TestEnsureInstalledOnce(t *testing.T) {
 	if err != nil || info.Mode().Perm()&0o222 != 0 {
 		t.Fatalf("file mode %v %v: not sealed", info, err)
 	}
-	if d, _ := os.Stat(s.Dir(rust185)); d.Mode().Perm()&0o222 != 0 {
+	if d, _ := os.Stat(s.Dir(rust185)); runtime.GOOS != "windows" && d.Mode().Perm()&0o222 != 0 {
 		t.Fatal("folder not sealed")
 	}
 	if !strings.Contains(in.Dests[0], ".staging") {

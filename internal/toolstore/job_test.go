@@ -11,6 +11,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -53,7 +54,7 @@ func TestBuildJobHome(t *testing.T) {
 		t.Fatalf("tool variables = %v", e)
 	}
 	for _, d := range []string{jh.Home, jh.CargoHome, jh.Caches, jh.Temp} {
-		if fi, err := os.Stat(d); err != nil || fi.Mode().Perm() != 0o700 {
+		if fi, err := os.Stat(d); err != nil || (runtime.GOOS != "windows" && fi.Mode().Perm() != 0o700) {
 			t.Errorf("%s: %v %v", d, fi, err)
 		}
 	}
