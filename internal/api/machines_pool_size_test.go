@@ -138,7 +138,7 @@ func TestPoolSizeCheckSaysMeasuredOrMeasuring(t *testing.T) {
 	}
 	report(6, 0)
 	c := check(8, 4)
-	if c.Basis == nil || *c.Basis != gen.Measuring || c.HostSpanHours == nil || *c.HostSpanHours != 6 || c.HostP95Gib != nil ||
+	if c.Basis == nil || *c.Basis != gen.PoolSizeCheckBasisMeasuring || c.HostSpanHours == nil || *c.HostSpanHours != 6 || c.HostP95Gib != nil ||
 		c.RecommendedHalf.MemoryGib != 9 {
 		t.Fatalf("measuring keeps the fixed share: %+v", c)
 	}
@@ -146,13 +146,13 @@ func TestPoolSizeCheckSaysMeasuredOrMeasuring(t *testing.T) {
 	if err := svc.HandleLoad(context.Background(), id, &agentv1.LoadReport{MemoryPct: 25, MemoryKnown: true, HostUseReady: true, HostUseP95Bytes: 5 << 30, HostUseSpanSeconds: 3600}); err != nil {
 		t.Fatal(err)
 	}
-	if c := check(8, 4); *c.Basis != gen.Measuring {
+	if c := check(8, 4); *c.Basis != gen.PoolSizeCheckBasisMeasuring {
 		t.Fatalf("%+v", c)
 	}
 	// 32 GiB, budget 85%: 27.2 - 10 - 1 = 16.2 GiB room; live room is 19.2, so the presets use 16.2.
 	report(30, 10)
 	c = check(16, 4)
-	if *c.Basis != gen.Measured || c.HostP95Gib == nil || *c.HostP95Gib != 10 || c.MeasuredRoomGib == nil || *c.MeasuredRoomGib < 16.19 || *c.MeasuredRoomGib > 16.21 ||
+	if *c.Basis != gen.PoolSizeCheckBasisMeasured || c.HostP95Gib == nil || *c.HostP95Gib != 10 || c.MeasuredRoomGib == nil || *c.MeasuredRoomGib < 16.19 || *c.MeasuredRoomGib > 16.21 ||
 		c.RecommendedHalf.MemoryGib != 8 || c.LeavesLessThanHost == nil || *c.LeavesLessThanHost || !c.Ok {
 		t.Fatalf("measured: %+v", c)
 	}

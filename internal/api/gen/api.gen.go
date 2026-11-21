@@ -1890,16 +1890,16 @@ func (e PlanStepState) Valid() bool {
 
 // Defines values for PoolSizeCheckBasis.
 const (
-	Measured  PoolSizeCheckBasis = "measured"
-	Measuring PoolSizeCheckBasis = "measuring"
+	PoolSizeCheckBasisMeasured  PoolSizeCheckBasis = "measured"
+	PoolSizeCheckBasisMeasuring PoolSizeCheckBasis = "measuring"
 )
 
 // Valid indicates whether the value is a known member of the PoolSizeCheckBasis enum.
 func (e PoolSizeCheckBasis) Valid() bool {
 	switch e {
-	case Measured:
+	case PoolSizeCheckBasisMeasured:
 		return true
-	case Measuring:
+	case PoolSizeCheckBasisMeasuring:
 		return true
 	default:
 		return false

@@ -1638,12 +1638,12 @@ export interface paths {
         };
         /**
          * The size of each job of a repository and where it came from, with the cost table
-         * @description scheduling R5.79 to R5.87. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+         * @description scheduling R5.80 to R5.88. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
          */
         get: operations["listJobSizes"];
         /**
          * Set the console size override of a job pattern
-         * @description scheduling R5.86. It applies at once and wins over .crsp.yml.
+         * @description scheduling R5.87. It applies at once and wins over .crsp.yml.
          */
         put: operations["putJobSizeOverride"];
         post?: never;
