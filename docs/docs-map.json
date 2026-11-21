@@ -255,6 +255,9 @@
     "internal/tools/**": [
       "docs/features/caches/spec.md"
     ],
+    "internal/toolstore/**": [
+      "docs/features/runners/spec.md"
+    ],
     "internal/tray/**": [
       "docs/features/tray/spec.md"
     ],

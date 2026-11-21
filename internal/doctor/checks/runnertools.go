@@ -163,3 +163,47 @@ func toolNames(m map[string][]string) []string {
 	sort.Strings(ks)
 	return ks
 }
+
+// runnerToolsPlan is R5.65 (OPS75): the tool plan of the runner's workflows against the tool store of its
+// machine. A runner that lacks a version the plan names warns before a job fails on it. It reads only and
+// installs nothing; the agent installs a missing version at the first job that needs it (runners R5.111).
+func runnerToolsPlan(ctx context.Context, env doctor.Env) []doctor.Finding {
+	const id = "runner.tools.plan"
+	rs, ms, out := persistentRunners(ctx, env, id)
+	if out != nil {
+		return out
+	}
+	for _, r := range rs {
+		p, m := r.ToolPlan, ms[r.MachineID]
+		if p == nil || !isOnline(env, m) {
+			continue // no store on this OS, an older agent, or a machine the machine checks already report
+		}
+		sub := runnerSubject(r)
+		if p.Err != "" {
+			out = append(out, skip(id, sub, "The tool plan of "+r.Name+" was not compared", p.Err))
+			continue
+		}
+		var lacks, have []string
+		for _, it := range p.Items {
+			if it.Present {
+				have = append(have, it.Tool+" "+it.Version)
+			} else {
+				lacks = append(lacks, it.Tool+" "+it.Version)
+			}
+		}
+		if len(lacks) == 0 {
+			out = append(out, doctor.Finding{Check: id, Subject: sub, Severity: doctor.OK, Title: r.Name + " has every tool its workflows use"})
+			continue
+		}
+		f := doctor.Finding{Check: id, Subject: sub, Severity: doctor.Warn,
+			Title: r.Name + " lacks " + strings.Join(lacks, ", ") + ", which the workflow uses"}
+		f.Detail = "The tool store on " + m.Name + " has no " + strings.Join(lacks, ", ") + "."
+		if len(have) > 0 {
+			f.Detail += " It has " + strings.Join(have, ", ") + "."
+		}
+		f.Detail += " The next job that needs it installs it first, so that job starts late, and fails if the install fails."
+		f.Fix = doctor.Fix{Text: "Let the agent install it now by running a job of the repository, or change the version in the workflow, a version file or the tools: list of .crsp.yml.", Link: "/runners"}
+		out = append(out, f)
+	}
+	return out
+}
