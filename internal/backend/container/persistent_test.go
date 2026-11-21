@@ -163,3 +163,33 @@ func TestJobPoolExecsNeverNameTheUser(t *testing.T) {
 		}
 	}
 }
+
+// OPS70: the pool container's runners are listed as services, named by the
+// handle ref the record stores, so the view finds a runner by its record.
+func TestParsePersistentFoundNamesTheRecordsRef(t *testing.T) {
+	got := ParsePersistentFound("gameroompc-pool-1-r1|1\r\ngameroompc-pool-1-r2|0\n\nbad\n")
+	if len(got) != 2 {
+		t.Fatalf("found: %+v", got)
+	}
+	if got[0].ServiceName != PersistentPool+":gameroompc-pool-1-r1" || !got[0].Running || !got[0].Managed {
+		t.Errorf("first: %+v", got[0])
+	}
+	if got[1].Name != "gameroompc-pool-1-r2" || got[1].Running || got[1].Folder != StateDir+"/gameroompc-pool-1-r2" {
+		t.Errorf("second: %+v", got[1])
+	}
+}
+
+func TestFindPersistentReadsTheContainerAndToleratesNoContainer(t *testing.T) {
+	r := newPersistentRig(t, 64000)
+	if got, err := r.b.FindPersistent(ctx); err != nil || got != nil {
+		t.Fatalf("no container: %v %v", got, err)
+	}
+	if _, err := r.b.StartPersistent(ctx, persistentSpec(), backend.StartConfig{Registration: "reg-tok"}); err != nil {
+		t.Fatal(err)
+	}
+	r.f.containers[PersistentPool].files[StateDir+"/list.out"] = "p1|1\n"
+	got, err := r.b.FindPersistent(ctx)
+	if err != nil || len(got) != 1 || got[0].ServiceName != PersistentPool+":p1" || !got[0].Running {
+		t.Fatalf("found: %+v %v", got, err)
+	}
+}

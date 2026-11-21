@@ -199,12 +199,21 @@ func (s *Service) views(ctx context.Context, recs []Record) []View {
 						for _, x := range found {
 							m[x.ServiceName] = x
 						}
+						// A container runner is also found by name: the folder may
+						// carry a -r<repo id> suffix the record's ref does not (OPS70).
+						for _, x := range found {
+							if _, dup := m[nameKey(x.Name)]; !dup && x.Name != "" {
+								m[nameKey(x.Name)] = x
+							}
+						}
 					}
 					svc[r.MachineID] = m
 				}
 				if m != nil {
 					f.ServiceKnown = true
 					if x, ok := m[r.ServiceName]; ok && r.ServiceName != "" {
+						f.Service = &x
+					} else if x, ok := m[nameKey(r.Name)]; ok && isContainerRef(r.ServiceName) {
 						f.Service = &x
 					}
 				}
@@ -235,3 +244,7 @@ func (s *Service) githubList(ctx context.Context, sc Scope) ghList {
 	}
 	return ghList{ok: true, list: list}
 }
+
+// nameKey is the key of a runner's name in the service map; it never collides
+// with a service name or a container ref.
+func nameKey(name string) string { return "name\x00" + name }

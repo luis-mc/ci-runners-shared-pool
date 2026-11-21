@@ -315,3 +315,143 @@ func TestSupervisorRestartsADeadRunnerWithBackOffAndNeverEphemeral(t *testing.T)
 		t.Fatal("a persistent runner registers with --unattended --replace and never --ephemeral")
 	}
 }
+
+// OPS70: add-runner.sh is idempotent per runner name, and list.sh names what
+// the supervisor goes by.
+type addRig struct {
+	t                      *testing.T
+	state, run, src, calls string
+	add                    string
+}
+
+func newAddRig(t *testing.T, configBody string) *addRig {
+	t.Helper()
+	if runtime.GOOS != "linux" {
+		t.Skip("the container scripts run on Linux")
+	}
+	root := t.TempDir()
+	a := &addRig{t: t, state: filepath.Join(root, "state"), run: filepath.Join(root, "run"), src: filepath.Join(root, "src"), calls: filepath.Join(root, "calls")}
+	if err := os.MkdirAll(a.src, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(a.src, "config.sh"), []byte("#!/bin/sh\necho \"$@\" >>"+a.calls+"\n"+configBody+"\n"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	a.add = script(t, "add-runner.sh")
+	return a
+}
+
+func (a *addRig) do(name string, extra ...string) (string, error) {
+	cmd := exec.CommandContext(a.t.Context(), "sh", a.add, name, "https://github.com/o/r", "linux", "", "1")
+	cmd.Env = append(os.Environ(), "CRSP_STATE_DIR="+a.state, "CRSP_SUPERVISOR_RUN="+a.run, "CRSP_RUNNER_SRC="+a.src, "CRSP_ADD_WAIT=0")
+	cmd.Env = append(cmd.Env, extra...)
+	cmd.Stdin = strings.NewReader("tok\n")
+	out, err := cmd.CombinedOutput()
+	return string(out), err
+}
+
+func (a *addRig) entries() []string {
+	a.t.Helper()
+	m, _ := filepath.Glob(filepath.Join(a.state, "runners.d", "*.env"))
+	d, _ := filepath.Glob(filepath.Join(a.state, "*", "config.sh"))
+	return append(m, d...)
+}
+
+func TestAddRunnerTwiceLeavesOneFolderAndOneEntry(t *testing.T) {
+	a := newAddRig(t, "exit 0")
+	for i := 0; i < 2; i++ {
+		if out, err := a.do("pool-1-r7"); err != nil {
+			t.Fatal(err, out)
+		}
+	}
+	if got := a.entries(); len(got) != 2 {
+		t.Fatalf("one .env and one folder expected: %v", got)
+	}
+	b, _ := os.ReadFile(a.calls)
+	if n := strings.Count(string(b), "--replace"); n != 2 || strings.Count(string(b), "--name pool-1-r7") != 2 {
+		t.Fatalf("each add registers the one name with --replace: %s", b)
+	}
+}
+
+func TestAddRunnerRetryAfterFailureKeepsTheSetUpFolder(t *testing.T) {
+	a := newAddRig(t, `[ -f ../fail ] && exit 1; exit 0`)
+	if out, err := a.do("n1"); err != nil {
+		t.Fatal(err, out)
+	}
+	if err := os.WriteFile(filepath.Join(a.state, "fail"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := a.do("n1"); err == nil {
+		t.Fatal("the failing config must fail the add")
+	}
+	if _, err := os.Stat(filepath.Join(a.state, "n1", "config.sh")); err != nil {
+		t.Fatalf("a failed retry removed the folder of a set up runner: %v", err)
+	}
+	// a first add that fails leaves no folder behind
+	if _, err := a.do("n2"); err == nil {
+		t.Fatal("fail expected")
+	}
+	if _, err := os.Stat(filepath.Join(a.state, "n2")); err == nil {
+		t.Fatal("a failed first add left its folder")
+	}
+}
+
+func TestAddRunnerRefusesWhileTheListenerStillRuns(t *testing.T) {
+	a := newAddRig(t, "exit 0")
+	if out, err := a.do("n1"); err != nil {
+		t.Fatal(err, out)
+	}
+	// a live process stands for the running listener
+	cmd := exec.CommandContext(t.Context(), "sleep", "60")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = cmd.Process.Kill(); _ = cmd.Wait() })
+	if err := os.MkdirAll(a.run, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(a.run, "n1.pid"), []byte(strconv.Itoa(cmd.Process.Pid)), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := a.do("n1")
+	if err == nil || !strings.Contains(out, "still running") {
+		t.Fatalf("a second listener must not be registered over the first: %v %s", err, out)
+	}
+	if _, err := os.Stat(filepath.Join(a.state, "runners.d", "n1.env")); err == nil {
+		t.Fatal("the entry stays removed, so the supervisor ends the old listener")
+	}
+}
+
+func TestListScriptNamesEntriesAndWhetherTheyRun(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Linux scripts")
+	}
+	root := t.TempDir()
+	state, run := filepath.Join(root, "state"), filepath.Join(root, "run")
+	for _, f := range []string{"runners.d/up.env", "runners.d/held.env", "runners.d/held.stopped", "runners.d/dead.env"} {
+		p := filepath.Join(state, f)
+		if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(p, nil, 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := os.MkdirAll(run, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	for _, n := range []string{"up", "held"} {
+		if err := os.WriteFile(filepath.Join(run, n+".pid"), []byte(strconv.Itoa(os.Getpid())), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	cmd := exec.CommandContext(t.Context(), "sh", script(t, "list.sh"))
+	cmd.Env = append(os.Environ(), "CRSP_STATE_DIR="+state, "CRSP_SUPERVISOR_RUN="+run)
+	out, err := cmd.Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := string(out); got != "dead|0\nheld|0\nup|1\n" {
+		t.Fatalf("list: %q", got)
+	}
+}
