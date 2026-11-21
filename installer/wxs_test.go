@@ -232,3 +232,16 @@ func TestMSIRemoveAsksPassesPurgeAndUnregistersRunners(t *testing.T) {
 		t.Error("RemoveData must not run on an upgrade")
 	}
 }
+
+// An XML comment cannot hold two hyphens in a row (WiX error WIX0104): a command line flag in a comment broke the build.
+func TestMSIComments(t *testing.T) {
+	b, err := os.ReadFile("crsp.wxs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range regexp.MustCompile(`(?s)<!--(.*?)-->`).FindAllStringSubmatch(string(b), -1) {
+		if strings.Contains(m[1], "--") || strings.HasSuffix(m[1], "-") {
+			t.Errorf("an XML comment holds two hyphens in a row or ends in one: %.70q", m[1])
+		}
+	}
+}

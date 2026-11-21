@@ -161,12 +161,12 @@
     <!--
       Remove (OPS69). An interactive uninstall asks every time, with no default, through the native
       window `crsp lifecycle-window remove` (TRAY12): it exits 10 for Keep my data, 11 for Delete my
-      data too and 1 for Cancel. `crsp uninstall --ask-to FILE` calls it and writes the answer to FILE;
+      data too and 1 for Cancel. `crsp uninstall option ask-to FILE` calls it and writes the answer to FILE;
       a cancel ends the uninstall with nothing changed. Silently, `msiexec /x <msi> /qn` keeps the data;
       PURGE=1 deletes it (REMOVEDATA=1, the older name, is the same). A major upgrade never removes it
       (UPGRADINGPRODUCTCODE is set while the old version is removed).
       Keeping or deleting, the runners are unregistered from GitHub first, while the controller still
-      runs (UnregisterRunners, as the signed-in user), then `crsp uninstall --from-installer` stops what
+      runs (UnregisterRunners, as the signed-in user), then `crsp uninstall option from-installer` stops what
       is left, deletes everything crsp made when asked (settings, database, logs, caches, runner images,
       containers and the crsp WSL distro) and writes the audit row with actor and result. The program,
       the service and the other entries are removed by this package.
@@ -292,7 +292,7 @@
 
     <!--
       The window that asks "Keep my data" or "Delete my data too" (TRAY12 builds it, `crsp lifecycle-window
-      remove`; this runs it through `crsp uninstall --ask-to`). An interactive uninstall only: a silent
+      remove`; this runs it through `crsp uninstall option ask-to`). An interactive uninstall only: a silent
       one keeps the data, PURGE=1 deletes it. A cancel (exit 1) fails this action, so the uninstall ends
       with nothing changed.
     -->
