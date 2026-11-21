@@ -155,15 +155,15 @@ describe('UpdatesCard states', () => {
     expect(onWindow).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText(/Until/), { target: { value: '05:00' } });
     expect(onWindow).toHaveBeenCalledWith({ start: '01:00', end: '05:00' });
-    fireEvent.click(screen.getByRole('button', { name: 'Check' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Look for updates' }));
     expect(onCheck).toHaveBeenCalled();
   });
   it('locks the policy when an admin set it', () => {
     wrap(<UpdatesCard policy="ask_first" state="idle" current="1.4.0" lockedBy="IT" />);
     expect(screen.getAllByText(/Set by IT/).length).toBeGreaterThan(0);
-    expect(screen.getByRole('button', { name: 'Check' }).hasAttribute('disabled')).toBe(
-      true,
-    );
+    expect(
+      screen.getByRole('button', { name: 'Look for updates' }).hasAttribute('disabled'),
+    ).toBe(true);
   });
   it('shows Required and Check busy', () => {
     wrap(<UpdatesCard policy="ask_first" state="checking" current="1.4.0" required />);

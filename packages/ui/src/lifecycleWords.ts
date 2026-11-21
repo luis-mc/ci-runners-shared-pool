@@ -52,7 +52,6 @@ export const LIFECYCLE_WORDS = {
   'history.what': 'What',
   'history.version': 'Version',
   'history.result': 'Result',
-  'action.check': 'Check',
   'audit.check': 'Checked for updates',
   'audit.install': 'Installed',
   'audit.rollback': 'Rolled back',

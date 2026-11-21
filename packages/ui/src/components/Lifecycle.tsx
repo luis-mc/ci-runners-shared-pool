@@ -217,7 +217,7 @@ export function UpdatesCard(p: UpdatesCardProps) {
             busyLabel={lw('checking')}
             disabled={locked}
           >
-            {lw('action.check')}
+            {lw('check')}
           </Button>
         }
       >

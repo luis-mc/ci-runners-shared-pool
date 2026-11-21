@@ -80,7 +80,7 @@ describe('Settings > Updates (lifecycle)', () => {
   it('Check asks the controller to look', async () => {
     const a = api();
     renderApp(a, '/settings/updates');
-    fireEvent.click(await screen.findByRole('button', { name: 'Check' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Look for updates' }));
     await waitFor(() => expect(a.count('POST', '/api/update/check')).toBe(1));
   });
 

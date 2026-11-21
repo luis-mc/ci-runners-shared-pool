@@ -155,15 +155,14 @@ export function ConsoleTab() {
   );
 }
 
+/** No Save bar here: the Updates card saves each change at once (UX-22). */
 export function UpdatesTab() {
   return (
-    <TabForm>
-      <At id="updates">
-        <Suspense fallback={<Loading what="Loading the update status" />}>
-          <UpdatesSettings />
-        </Suspense>
-      </At>
-    </TabForm>
+    <At id="updates">
+      <Suspense fallback={<Loading what="Loading the update status" />}>
+        <UpdatesSettings />
+      </Suspense>
+    </At>
   );
 }
 
