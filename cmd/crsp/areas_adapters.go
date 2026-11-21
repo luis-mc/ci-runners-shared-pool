@@ -274,7 +274,7 @@ func (a linkAgent) Services(ctx context.Context, id string) ([]backend.Found, er
 	if !v.Machine.IsController {
 		return nil, errRemoteRunners
 	}
-	return a.local.Found(ctx)
+	return a.local.Services(ctx)
 }
 
 func (a linkAgent) AddRunner(ctx context.Context, id string, spec backend.RunnerSpec, cfg backend.StartConfig) (backend.Handle, error) {

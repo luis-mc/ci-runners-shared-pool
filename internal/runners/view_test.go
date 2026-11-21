@@ -86,3 +86,36 @@ func TestTruthShowsTheSessionWaitAsAWait(t *testing.T) {
 		t.Fatalf("past the window: %q %q", st, why)
 	}
 }
+
+// OPS70: a container runner whose record holds a handle ref is found in the
+// service list by that ref, and by its name when the list gives the runner
+// under another ref; a runner the list does not name is not on the machine.
+func TestContainerRunnerIsFoundByRecordOrName(t *testing.T) {
+	r := newRig(machine("linux", "x64", true))
+	ctx := context.Background()
+	rec := r.add(t)
+	const ref = "crsp-persistent-pool:"
+	if err := r.svc.Store.SetRunnerService(ctx, rec.ID, ref+rec.Name, ""); err != nil {
+		t.Fatal(err)
+	}
+	r.gh.runners = []github.Runner{{ID: 5, Name: rec.Name, Status: "online"}}
+	list := func(f ...backend.Found) {
+		r.svc.Services = func(context.Context, string) ([]backend.Found, error) { return f, nil }
+	}
+	cases := []struct {
+		name  string
+		found []backend.Found
+		want  State
+	}{
+		{"by the ref", []backend.Found{{ServiceName: ref + rec.Name, Name: rec.Name, Running: true}}, Idle},
+		{"by the name", []backend.Found{{ServiceName: ref + "other-ref", Name: rec.Name, Running: true}}, Idle},
+		{"not listed", []backend.Found{{ServiceName: ref + "someone", Name: "someone", Running: true}}, Stopped},
+		{"listed but not up", []backend.Found{{ServiceName: ref + rec.Name, Name: rec.Name}}, Stopped},
+	}
+	for _, c := range cases {
+		list(c.found...)
+		if g, err := r.svc.GetView(ctx, rec.ID); err != nil || g.State != c.want {
+			t.Errorf("%s: %s %v, want %s", c.name, g.State, err, c.want)
+		}
+	}
+}

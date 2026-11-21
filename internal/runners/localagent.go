@@ -151,3 +151,30 @@ func (l *LocalAgent) HealServices(ctx context.Context) ([]backend.ServiceHealth,
 	}
 	return h.HealServices(ctx)
 }
+
+// containerFinder is the container backend's list of its persistent runners.
+type containerFinder interface {
+	FindPersistent(ctx context.Context) ([]backend.Found, error)
+}
+
+// Services lists what the machine runs for the runner view: the OS services
+// and the persistent runners of the pool container, whose ServiceName is the
+// handle ref a record stores (runners R5.93, OPS70). A machine without a
+// persistent OS backend still answers with its container runners; a container
+// that cannot be read is an error, so the view claims no service fact.
+func (l *LocalAgent) Services(ctx context.Context) ([]backend.Found, error) {
+	out, err := l.Found(ctx)
+	b, cerr := l.container()
+	if cerr != nil {
+		return out, err
+	}
+	cf, ok := b.(containerFinder)
+	if !ok {
+		return out, err
+	}
+	got, ferr := cf.FindPersistent(ctx)
+	if ferr != nil {
+		return nil, ferr
+	}
+	return append(out, got...), nil
+}
