@@ -1126,6 +1126,7 @@ One word set for the button at the end of a table row. The guard reads this tabl
 | Replace | Button of an unmanaged runner (Runners): replaces it with one the pool manages, after a question. A press. Admin only (busy word: Replacing). |
 | Delete registration | Button of an offline managed runner (Runners): deletes its registration on GitHub, after a question. A press. Admin only (busy word: Deleting). |
 | Revoke | Row action of a live access for CI (Settings, Access): stops it working, after a question. A press. Admin only. |
+| Copy line | Row action of a job size (Repository page, Job sizes): copies the line for `.crsp.yml` and says what it copied. It changes nothing. A press. |
 | Copy | The button of a code block in a cell (Doctor, a finding's command): copies the text and says Copied. It changes nothing. A press. |
 | On, Off | The word of a switch in a cell (Repositories, the pool for a repository): it shows the state; pressing it changes the state. Admin only. |
 | Why, Details | Button inside a cell that has a long text, to read it whole. Not a row action. |
@@ -1345,3 +1346,28 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | More about this in Help | The link in the ? answer. |
 | Open Pool size / Open Jobs / Open the Doctor / Open Images and caches | Links on the cards. |
 | Load budget | Fact row on the machine page: `memory {n}%, CPU {m}%`. |
+
+## Job sizes words (OPS67, scheduling R5.79 to R5.87)
+
+The Job sizes and Cost table panes on a repository's page. A size is *Light*, *Normal* or *Heavy*. `{job}` is a job name, `{x}` the text of an error.
+
+| Where | Words |
+|---|---|
+| Panes | Job sizes, Cost table |
+| Job sizes, columns | Job, Size, CPU and memory units, Where the size came from, From .crsp.yml, Set here, Change the size here |
+| Size values | Light, Normal, Heavy; None when no override is set |
+| Units cell | CPU {n}, memory {m} |
+| Where the size came from | Override, Measured, Scan, Default; a scan that is not sure says "Scan, low confidence" |
+| Reset note | The server's sentence, shown under the source, for example: The test count moved more than twice, so the size went back to the scan guess. |
+| Override field | Name: Size of {job}. Choices: No override, Light, Normal, Heavy. Saved at once; No override removes it. Admin only: others see the two values and the reason the session gives (whyNot admin) |
+| Save failed | Could not save the size. {x} |
+| Row action | Copy line (Row action words). Name: {job} to .crsp.yml |
+| Copied | Copied the line for {job}. Paste it into .crsp.yml. |
+| Copy failed | Could not copy. Select the line and copy it yourself. |
+| File error | .crsp.yml could not be read: {x}. Sizes from the file are left out until it can be read. |
+| Empty | No jobs are known for this repository yet. They show here after crsp has read its workflows. |
+| Cost table, note | Every row is an assumption until measured sizes replace it. |
+| Cost table, columns | Kind, Name, Size, CPU units, Memory (GiB), Basis |
+| Cost table, kind values | Test framework, Service |
+| Cost table, basis values | Assumption, Measured |
+| Cost table, empty | The cost table is empty. |

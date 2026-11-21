@@ -249,6 +249,12 @@ export function signedIn(user: Schemas['User'] = owner): MockApi {
       enabled: false,
       public_on_pool: 0,
     })
+    .on('GET', '/api/v1/job-sizes', {
+      repository: '',
+      items: [],
+      cost_table: [],
+      file_error: '',
+    })
     .on('GET', '/api/v1/overview', overview())
     .on('GET', '/api/v1/machines', { items: [machine()] })
     .on('GET', '/api/v1/github/installations', {
