@@ -1,8 +1,10 @@
 package updatewindow
 
 import (
+	"os"
 	"strings"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/tray"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
 )
@@ -26,5 +28,10 @@ func releaseURL(version string) string {
 	if version == "" {
 		return ""
 	}
-	return "https://github.com/" + update.Repo + "/releases/tag/v" + strings.TrimPrefix(version, "v")
+	// The address comes from the settings (internal/addresses), never a literal.
+	a, err := addresses.Load(os.Getenv)
+	if err != nil {
+		a = addresses.Defaults()
+	}
+	return a.RepoPage(update.Repo + "/releases/tag/v" + strings.TrimPrefix(version, "v"))
 }
