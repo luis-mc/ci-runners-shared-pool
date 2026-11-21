@@ -212,6 +212,7 @@ export function UpdatesCard(p: UpdatesCardProps) {
         title={lw('updates.title')}
         actions={
           <Button
+            kind={p.state === 'available' && p.onInstall ? 'default' : 'primary'}
             onPress={p.onCheck}
             busy={p.checking === true || p.state === 'checking'}
             busyLabel={lw('checking')}
