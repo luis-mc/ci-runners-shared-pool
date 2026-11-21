@@ -60,7 +60,7 @@ export function UpdatesSettings() {
   });
 
   return (
-    <Stack>
+    <Stack gap="section">
       {[policy, check, install, remove].map((c, i) =>
         c.error ? (
           <Message tone="problem" key={i}>

@@ -180,6 +180,26 @@ export class Mock {
         body: `event: snapshot\nid: 1\ndata: ${JSON.stringify({ id: '1', type: 'snapshot', at: '2026-11-14T10:00:00Z', snapshot: overview() })}\n\n`,
       }),
     );
+    // The lifecycle endpoints (/api/update/*): idle and current, until a spec routes its own.
+    await page.route('**/api/update/**', (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (route.request().method() !== 'GET') return route.fulfill({ json: {} });
+      if (path.endsWith('/status'))
+        return route.fulfill({
+          json: {
+            state: 'idle',
+            current: '1.4.0',
+            available: null,
+            required: false,
+            policy: 'automatic_when_idle',
+            window: null,
+            next_check_at: null,
+            failures: null,
+            waiting_for_jobs: false,
+          },
+        });
+      return route.fulfill({ json: [] });
+    });
     await page.route('**/api/v1/**', (route) => this.answer(route));
   }
 

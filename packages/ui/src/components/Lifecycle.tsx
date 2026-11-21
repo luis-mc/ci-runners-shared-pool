@@ -223,7 +223,10 @@ export function UpdatesCard(p: UpdatesCardProps) {
         }
       >
         <Stack>
-          <Status kind={STATE_KIND[p.state]} word={updateStateLine(p)} />
+          <Status kind={STATE_KIND[p.state]} word={lw(`state.${p.state}`)} />
+          {updateStateLine(p) === lw(`state.${p.state}`) ? null : (
+            <Text>{updateStateLine(p)}</Text>
+          )}
           {p.required ? <Text>{lw('required')}</Text> : null}
           {p.state === 'available' && p.onInstall ? (
             <Button kind="primary" onPress={p.onInstall}>
