@@ -10681,3 +10681,42 @@ components:
         memory_p95_bytes: { type: integer, format: int64 }
         memory_peak_bytes: { type: integer, format: int64 }
         unknown_reason: { type: string }
+        measured:
+          $ref: '#/components/schemas/JobMeasured'
+    JobMeasured:
+      type: object
+      description: >-
+        OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key.
+        Absent while the job runs or when no agent reported it.
+      required:
+        [
+          peak_cpu_cores,
+          peak_memory_bytes,
+          sample_count,
+          duration_seconds,
+          oom_killed,
+          cut_short,
+          good,
+        ]
+      properties:
+        peak_cpu_cores:
+          { type: number, description: p95 over the sample windows, in cores }
+        peak_memory_bytes: { type: integer, format: int64 }
+        sample_count: { type: integer }
+        duration_seconds: { type: number }
+        oom_killed: { type: boolean }
+        cut_short: { type: boolean }
+        good: { type: boolean, description: Counts for the summary of the job key. }
+        source: { type: string, description: 'cgroup, process_tree or job_object' }
+        runner: { type: string }
+        key:
+          $ref: '#/components/schemas/JobKeyMeasured'
+    JobKeyMeasured:
+      type: object
+      description: The last 30 good runs of one job key (repository, workflow, job key).
+      required: [runs, measured]
+      properties:
+        runs: { type: integer, description: 'Good runs read, at most 30.' }
+        cpu_p90_cores: { type: number }
+        memory_p90_bytes: { type: integer, format: int64 }
+        measured: { type: boolean, description: 'True from 5 good runs on.' }

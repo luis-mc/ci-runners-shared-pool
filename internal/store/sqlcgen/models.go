@@ -463,6 +463,26 @@ type JobResourceSummary struct {
 	CompletedAt   string
 }
 
+type JobRunPeak struct {
+	JobID           int64
+	Repository      string
+	Workflow        string
+	JobIdent        string
+	Runner          string
+	MachineID       string
+	RunID           int64
+	Source          string
+	PeakCpuMillis   int64
+	PeakMemoryBytes int64
+	Samples         int64
+	DurationMs      int64
+	OomKilled       int64
+	CutShort        int64
+	Good            int64
+	UnknownReason   string
+	CompletedAt     string
+}
+
 type JobStep struct {
 	JobID       int64
 	Number      int64

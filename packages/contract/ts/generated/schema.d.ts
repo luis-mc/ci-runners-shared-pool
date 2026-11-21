@@ -6698,6 +6698,34 @@ export interface components {
             /** Format: int64 */
             memory_peak_bytes?: number;
             unknown_reason?: string;
+            measured?: components["schemas"]["JobMeasured"];
+        };
+        /** @description OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key. Absent while the job runs or when no agent reported it. */
+        JobMeasured: {
+            /** @description p95 over the sample windows */
+            peak_cpu_cores: number;
+            /** Format: int64 */
+            peak_memory_bytes: number;
+            sample_count: number;
+            duration_seconds: number;
+            oom_killed: boolean;
+            cut_short: boolean;
+            /** @description Counts for the summary of the job key. */
+            good: boolean;
+            /** @description cgroup, process_tree or job_object */
+            source?: string;
+            runner?: string;
+            key?: components["schemas"]["JobKeyMeasured"];
+        };
+        /** @description The last 30 good runs of one job key (repository, workflow, job key). */
+        JobKeyMeasured: {
+            /** @description Good runs read, at most 30. */
+            runs: number;
+            cpu_p90_cores?: number;
+            /** Format: int64 */
+            memory_p90_bytes?: number;
+            /** @description True from 5 good runs on. */
+            measured: boolean;
         };
     };
     responses: {

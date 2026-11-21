@@ -5121,6 +5121,40 @@ type JobGroupRow struct {
 	WaitP90 float32   `json:"wait_p90"`
 }
 
+// JobKeyMeasured The last 30 good runs of one job key (repository, workflow, job key).
+type JobKeyMeasured struct {
+	CpuP90Cores *float32 `json:"cpu_p90_cores,omitempty"`
+
+	// Measured True from 5 good runs on.
+	Measured       bool   `json:"measured"`
+	MemoryP90Bytes *int64 `json:"memory_p90_bytes,omitempty"`
+
+	// Runs Good runs read, at most 30.
+	Runs int `json:"runs"`
+}
+
+// JobMeasured OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key. Absent while the job runs or when no agent reported it.
+type JobMeasured struct {
+	CutShort        bool    `json:"cut_short"`
+	DurationSeconds float32 `json:"duration_seconds"`
+
+	// Good Counts for the summary of the job key.
+	Good bool `json:"good"`
+
+	// Key The last 30 good runs of one job key (repository, workflow, job key).
+	Key       *JobKeyMeasured `json:"key,omitempty"`
+	OomKilled bool            `json:"oom_killed"`
+
+	// PeakCpuCores p95 over the sample windows
+	PeakCpuCores    float32 `json:"peak_cpu_cores"`
+	PeakMemoryBytes int64   `json:"peak_memory_bytes"`
+	Runner          *string `json:"runner,omitempty"`
+	SampleCount     int     `json:"sample_count"`
+
+	// Source cgroup, process_tree or job_object
+	Source *string `json:"source,omitempty"`
+}
+
 // JobPage defines model for JobPage.
 type JobPage struct {
 	Items      []Job   `json:"items"`
@@ -5135,8 +5169,11 @@ type JobPage struct {
 
 // JobResources defines model for JobResources.
 type JobResources struct {
-	CpuP95Cores     *float32         `json:"cpu_p95_cores,omitempty"`
-	CpuPeakCores    *float32         `json:"cpu_peak_cores,omitempty"`
+	CpuP95Cores  *float32 `json:"cpu_p95_cores,omitempty"`
+	CpuPeakCores *float32 `json:"cpu_peak_cores,omitempty"`
+
+	// Measured OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key. Absent while the job runs or when no agent reported it.
+	Measured        *JobMeasured     `json:"measured,omitempty"`
 	MemoryP95Bytes  *int64           `json:"memory_p95_bytes,omitempty"`
 	MemoryPeakBytes *int64           `json:"memory_peak_bytes,omitempty"`
 	Samples         []ResourceSample `json:"samples"`

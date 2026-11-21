@@ -299,6 +299,8 @@ Source paths are in github.com/luis-mc/dev-standards, under `claude/plugins/deli
 
 **R5.78** (OPS58) — **A load warning clears only after a steady period under budget.** The warning clears when every load report for `machines.LoadClearAfter` (60 s, about four reports at the 15 s step of R5.43) is at or under the budget; one report over the budget restarts the period. The hold of R5.76 is not delayed by this: starts resume at the first poll under budget, only the warning waits. Built (OPS58). Tests use a fake clock and no sleeps.
 
+**R5.79** (OPS66, owner decisions of 21 Nov 2026 on job sizing; **NOT BUILT YET, specification of a later task**) — **Measured size replaces the scan's guess.** Today a job is admitted by the declared weight of its class (R5.69, `slots.DefaultClasses`) or the size the stack scan guessed. Observability R5.60 to R5.65 now measure the peak CPU and peak memory of every job run and keep a summary per job key (repository, workflow, job key): the p90 of the peaks of its last 30 good runs, `measured` from 5 good runs on, the same 5-run rule as the time forecast (observability R5.41). When this requirement is built, a job key that is `measured` is admitted with its measured size (p90 peak CPU in cores, p90 peak memory in bytes, rounded up to the weight units of R5.69), and a job key that is not measured keeps the class weight or the scan's guess, as today. A run killed for memory or cut short never lowers the size. Nothing in the scheduler reads the measured peaks yet: the gate, the placement and the slot queue are unchanged by OPS66. Source (planned): `internal/jobsize` `Summarise`, read through `store.ResourcesStore.Peaks`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — With a free slot and a machine under budget, the job-started hook returns within 2 s. No measurement sleeps. M1. Built. Source: `load.py` `measure_now`.
@@ -479,6 +481,7 @@ A test with a path in backticks exists; one marked planned is NOT YET IMPLEMENTE
 | R5.76 | `internal/scheduler/gate_test.go` TestOverBudgetHoldsNewStartWhileAJobRuns; `internal/agent/gate_test.go` (budget reason) | new |
 | R5.77 | `internal/doctor/checks/checks_test.go` TestLoadBudgetWarnsWhileJobsRun | new |
 | R5.78 | `internal/machines/loadwatch_test.go` TestLoadWatchRaisesAndClearsWithoutFlapping, TestOverBudgetIsStrictAndIgnoresUnknown | new |
+| R5.79 | planned, not built: no test yet (OPS66 only measures; `internal/store/insights_peaks_test.go` TestPeaksStoreRunAndKeySummary proves the summary it will read) |
 | R6.1 | `internal/hooks/hooks_test.go` TestQuietGateUnderTwoSeconds | `test_load.py` Cache `test_no_sleep_and_delta_from_saved_raw` |
 | R6.2 | `internal/scheduler/gate_test.go` TestTwoTakersNeverShareASlot | `test_machine.py` Slots `test_race_two_processes_never_share_one_slot` |
 | R6.3 | `internal/scheduler/guard_test.go` TestQueriesHaveDeadline | new |

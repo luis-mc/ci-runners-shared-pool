@@ -329,6 +329,22 @@ export const mockResources = (): S['JobResources'] => ({
   cpu_peak_cores: 2.5,
   memory_p95_bytes: 2_000_000_000,
   memory_peak_bytes: 2_000_000_000,
+  measured: {
+    peak_cpu_cores: 2.4,
+    peak_memory_bytes: 1_900_000_000,
+    sample_count: 240,
+    duration_seconds: 240,
+    oom_killed: false,
+    cut_short: false,
+    good: true,
+    source: 'cgroup',
+    key: {
+      runs: 12,
+      cpu_p90_cores: 2.6,
+      memory_p90_bytes: 2_100_000_000,
+      measured: true,
+    },
+  },
 });
 
 export const mockChecks = (): S['WorkflowCheckList'] => ({

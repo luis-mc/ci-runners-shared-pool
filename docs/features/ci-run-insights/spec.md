@@ -194,7 +194,7 @@ Requirement IDs are this spec's own. "Idea n" is the owner's list of 20 Nov 2026
 
 ### CPU and memory per job (idea 9)
 
-**R5.19** — **Sampling on the agent.** While a job runs on a crsp runner, the agent samples every 5 s the CPU (cores used) and memory (resident bytes) of the job: the container's cgroup for a container or VM backend, the runner process tree for a persistent runner. It sends a `JobResourceSamples` batch about every 15 s and a final one at the end (agent link protocol version 4). An agent that cannot read a value sends `known = false` with the reason.
+**R5.19** — **Sampling on the agent.** While a job runs on a crsp runner, the agent samples every 1 s (every 5 s for the process-tree reader; observability R5.64) the CPU (cores used) and memory (resident bytes) of the job: the container's cgroup for a container or VM backend, the runner process tree for a persistent runner. It sends a `JobResourceSamples` batch about every 15 s and a final one at the end (agent link protocol version 4). An agent that cannot read a value sends `known = false` with the reason.
 
 **R5.20** — **Storage and use.** The controller stores the samples (`job_resource_samples`) and, at the job's end, a summary (`job_resource_summary`: samples, CPU p50, p95 and peak, memory p50, p95 and peak). The summaries per job key feed R5.17 and R5.18 (slot sizing: the p95 memory of the jobs a slot takes). `getJobResources` returns both; the Job page draws them (4.6).
 
@@ -309,7 +309,7 @@ Whichever of a time or a size limit is reached first applies; the oldest goes fi
 
 **R6.3** — **CPU cost of analysis.** Analysers run after each CI run and every 15 min (R5.44), one at a time, on the last window only (incremental where the kind allows). On a controller with 20,000 jobs a week the analysis uses under 2 percent of one CPU core averaged over an hour, and one pass of any analyser ends within 30 s; a pass over that is logged and shown to the doctor. Parsers stream: under 64 MiB of memory per file. The analysis never runs inside a scheduler transaction and never delays a slot.
 
-**R6.4** — **Agent cost.** Sampling (R5.19) uses under 0.5 percent of one CPU core per machine and under 1 KiB/s on the agent link per running job.
+**R6.4** — **Agent cost.** Sampling (R5.19) uses under 1 percent of one CPU core per machine (OPS66, measured in observability R5.64; it was 0.5 percent before the 1 s cgroup and Job Object readers) and under 1 KiB/s on the agent link per running job.
 
 **R6.5** — **Privacy.** As R5.4 and observability R5.38 (reworded by CIX7) and R6.5 to R6.7: every stored log and report passes the redactor; the redaction test (observability R6.6) covers the CI data sink; no insights package makes a network call other than to GitHub through `internal/github` and the agent link.
 

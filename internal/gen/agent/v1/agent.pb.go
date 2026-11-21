@@ -8235,8 +8235,15 @@ type JobResourceSamples struct {
 	Final bool `protobuf:"varint,5,opt,name=final,proto3" json:"final,omitempty"`
 	// Why a value could not be read; samples then have known = false.
 	UnknownReason string `protobuf:"bytes,6,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// OPS66: the job was killed for memory (cgroup oom_kill, or the Job Object memory limit).
+	OomKilled bool `protobuf:"varint,7,opt,name=oom_killed,json=oomKilled,proto3" json:"oom_killed,omitempty"`
+	// OPS66: the job ended before the agent could read it to the end (agent stop, runner gone, link lost).
+	CutShort bool `protobuf:"varint,8,opt,name=cut_short,json=cutShort,proto3" json:"cut_short,omitempty"`
+	// OPS66: the peak memory the system itself kept for the whole job (cgroup memory.peak, Job Object
+	// PeakJobMemoryUsed); 0 when the system keeps none and the largest sample counts.
+	MemoryPeakBytes int64 `protobuf:"varint,9,opt,name=memory_peak_bytes,json=memoryPeakBytes,proto3" json:"memory_peak_bytes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *JobResourceSamples) Reset() {
@@ -8309,6 +8316,27 @@ func (x *JobResourceSamples) GetUnknownReason() string {
 		return x.UnknownReason
 	}
 	return ""
+}
+
+func (x *JobResourceSamples) GetOomKilled() bool {
+	if x != nil {
+		return x.OomKilled
+	}
+	return false
+}
+
+func (x *JobResourceSamples) GetCutShort() bool {
+	if x != nil {
+		return x.CutShort
+	}
+	return false
+}
+
+func (x *JobResourceSamples) GetMemoryPeakBytes() int64 {
+	if x != nil {
+		return x.MemoryPeakBytes
+	}
+	return 0
 }
 
 // JobResourceSample is one reading.
@@ -9297,14 +9325,18 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x18STATE_WAITING_CONTROLLER\x10\x02\x12\x0e\n" +
 	"\n" +
 	"STATE_DONE\x10\x03\x12\x10\n" +
-	"\fSTATE_FAILED\x10\x04\"\xe1\x01\n" +
+	"\fSTATE_FAILED\x10\x04\"\xc9\x02\n" +
 	"\x12JobResourceSamples\x12\x1b\n" +
 	"\trunner_id\x18\x01 \x01(\tR\brunnerId\x12\"\n" +
 	"\x03job\x18\x02 \x01(\v2\x10.agent.v1.JobRefR\x03job\x12\x16\n" +
 	"\x06source\x18\x03 \x01(\tR\x06source\x125\n" +
 	"\asamples\x18\x04 \x03(\v2\x1b.agent.v1.JobResourceSampleR\asamples\x12\x14\n" +
 	"\x05final\x18\x05 \x01(\bR\x05final\x12%\n" +
-	"\x0eunknown_reason\x18\x06 \x01(\tR\runknownReason\"\x89\x01\n" +
+	"\x0eunknown_reason\x18\x06 \x01(\tR\runknownReason\x12\x1d\n" +
+	"\n" +
+	"oom_killed\x18\a \x01(\bR\toomKilled\x12\x1b\n" +
+	"\tcut_short\x18\b \x01(\bR\bcutShort\x12*\n" +
+	"\x11memory_peak_bytes\x18\t \x01(\x03R\x0fmemoryPeakBytes\"\x89\x01\n" +
 	"\x11JobResourceSample\x12\x1c\n" +
 	"\n" +
 	"at_unix_ms\x18\x01 \x01(\x03R\batUnixMs\x12\x1d\n" +

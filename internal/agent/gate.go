@@ -37,6 +37,9 @@ type Gate struct {
 	// floor is the free-disk floor before a job or VM starts (runners R5.83); nil means none.
 	floor *runnercache.Floor
 
+	// obs sees every job that starts and ends (OPS66 R5.62); nil sees none.
+	obs JobObserver
+
 	// The machine policy (CRSP75, R5.61 to R5.64): the power source and the clock.
 	power power.Reader
 	now   func() time.Time
@@ -78,6 +81,20 @@ func (g *Gate) Settings() (machines.Settings, bool) {
 	return g.settings, g.have
 }
 
+// JobObserver sees the jobs of the gate. Both calls must be quick and never call back into the gate. cut
+// says the job did not end by itself: the agent stopped, or the runner went away.
+type JobObserver interface {
+	JobStarted(key string, job machines.JobRef, backend string)
+	JobFinished(key string, job machines.JobRef, cut bool)
+}
+
+// SetObserver sets the observer of started and finished jobs; nil removes it.
+func (g *Gate) SetObserver(o JobObserver) {
+	g.mu.Lock()
+	g.obs = o
+	g.mu.Unlock()
+}
+
 // Decision is the gate's answer.
 type Decision struct {
 	Go      bool
@@ -87,11 +104,19 @@ type Decision struct {
 // Start asks to start a job on a backend. When it answers Go the job counts as
 // running until Finish.
 func (g *Gate) Start(key string, job machines.JobRef, backend string) Decision {
+	d, started, obs := g.start(key, job, backend)
+	if d.Go && obs != nil {
+		obs.JobStarted(key, started, backend)
+	}
+	return d
+}
+
+func (g *Gate) start(key string, job machines.JobRef, backend string) (Decision, machines.JobRef, JobObserver) {
 	ps := g.currentPower()
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	if !g.have {
-		return Decision{Reasons: []string{"settings not received yet"}}
+		return Decision{Reasons: []string{"settings not received yet"}}, job, nil
 	}
 	var why []string
 	if g.state != machines.StateActive {
@@ -125,20 +150,41 @@ func (g *Gate) Start(key string, job machines.JobRef, backend string) Decision {
 		why = append(why, reasons...)
 	}
 	if len(why) > 0 {
-		return Decision{Reasons: why}
+		return Decision{Reasons: why}, job, nil
 	}
 	if job.StartedAt.IsZero() {
 		job.StartedAt = time.Now().UTC()
 	}
 	g.running[key] = job
-	return Decision{Go: true}
+	return Decision{Go: true}, job, g.obs
 }
 
 // Finish records that a job ended.
-func (g *Gate) Finish(key string) {
+func (g *Gate) Finish(key string) { g.finish(key, false) }
+
+// FinishCut records that a job ended without ending by itself: the agent stops or the runner is gone.
+func (g *Gate) FinishCut(key string) { g.finish(key, true) }
+
+func (g *Gate) finish(key string, cut bool) {
 	g.mu.Lock()
+	job, was := g.running[key]
 	delete(g.running, key)
+	obs := g.obs
 	g.mu.Unlock()
+	if was && obs != nil {
+		obs.JobFinished(key, job, cut)
+	}
+}
+
+// RunningKeys lists the keys of the running jobs.
+func (g *Gate) RunningKeys() []string {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	out := make([]string, 0, len(g.running))
+	for k := range g.running {
+		out = append(out, k)
+	}
+	return out
 }
 
 // Running lists the running jobs.

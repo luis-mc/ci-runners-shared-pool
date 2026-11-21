@@ -49,3 +49,31 @@ func TestResourceSinkDropsUnmatched(t *testing.T) {
 		t.Fatal("stored a batch with no job id")
 	}
 }
+
+type fakeBatches struct{ got []capacity.Batch }
+
+func (f *fakeBatches) AddBatch(_ context.Context, b capacity.Batch) error {
+	f.got = append(f.got, b)
+	return nil
+}
+
+// OPS66: with a batch store the whole batch goes through, flags and job identity included.
+func TestResourceSinkBatchesCarryFlags(t *testing.T) {
+	f := &fakeBatches{}
+	ResourceSink{Batches: f}.JobSamples(context.Background(), "m1", &agentv1.JobResourceSamples{
+		RunnerId: "r1", Source: "job_object", Final: true, OomKilled: true, CutShort: true, MemoryPeakBytes: 99,
+		Job: &agentv1.JobRef{GithubJobId: 42, Repository: "o/r", Job: "build", RunId: 7},
+	})
+	if len(f.got) != 1 {
+		t.Fatalf("%d batches", len(f.got))
+	}
+	b := f.got[0]
+	if b.JobID != 42 || b.MachineID != "m1" || b.Repository != "o/r" || b.Job != "build" || b.RunID != 7 || b.Source != "job_object" ||
+		!b.Final || !b.OOMKilled || !b.CutShort || b.MemoryPeakBytes != 99 {
+		t.Fatalf("%+v", b)
+	}
+	ResourceSink{Batches: f}.JobSamples(context.Background(), "m1", &agentv1.JobResourceSamples{RunnerId: "r1"}) // no job id: dropped
+	if len(f.got) != 1 {
+		t.Fatal("a batch with no job id was stored")
+	}
+}

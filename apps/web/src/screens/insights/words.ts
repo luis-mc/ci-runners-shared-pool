@@ -66,3 +66,24 @@ export const HOLD_REASON_WORDS: Record<string, string> = {
 
 export const BACKLOG_WORDS = (jobs: number, until: string | undefined): string =>
   `Waiting for GitHub's hourly limit${until ? ` until ${new Date(until).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}` : ''}; ${jobs} jobs not read yet.`;
+
+/** The measured block of the Job page (OPS66; content.md, "Measured peak words"). */
+export const MEASURED_WORDS = {
+  title: 'Measured on this run',
+  cpu: 'Measured peak CPU',
+  memory: 'Measured peak memory',
+  samples: 'Samples',
+  duration: 'Measured for',
+  oom: 'This job was killed for memory. A run like this is not used for sizing.',
+  cutShort: 'This run was cut short. A run like this is not used for sizing.',
+  noGoodRun: 'No good run yet.',
+} as const;
+
+/** The job-key line: the typical peak once 5 good runs are read, else how far it is. */
+export function keyLine(k: Schemas['JobKeyMeasured']): string {
+  if (k.measured)
+    return `Typical peak of this job, p90 of the last ${k.runs} runs: ${(k.cpu_p90_cores ?? 0).toFixed(1)} cores, ${((k.memory_p90_bytes ?? 0) / 1_000_000_000).toFixed(1)} GB`;
+  return k.runs === 0
+    ? MEASURED_WORDS.noGoodRun
+    : `Not measured yet: ${k.runs} of 5 good runs.`;
+}

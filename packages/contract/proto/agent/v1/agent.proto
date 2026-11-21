@@ -1272,6 +1272,13 @@ message JobResourceSamples {
   bool final = 5;
   // Why a value could not be read; samples then have known = false.
   string unknown_reason = 6;
+  // OPS66: the job was killed for memory (cgroup oom_kill, or the Job Object memory limit).
+  bool oom_killed = 7;
+  // OPS66: the job ended before the agent could read it to the end (agent stop, runner gone, link lost).
+  bool cut_short = 8;
+  // OPS66: the peak memory the system itself kept for the whole job (cgroup memory.peak, Job Object
+  // PeakJobMemoryUsed); 0 when the system keeps none and the largest sample counts.
+  int64 memory_peak_bytes = 9;
 }
 
 // JobResourceSample is one reading.

@@ -13,9 +13,11 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/actions"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/capacity"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/timeline"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/waits"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsdata"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsize"
 )
 
 type fakeFindings struct {
@@ -265,5 +267,65 @@ func TestDismissRoute(t *testing.T) {
 	}
 	if rec := do(insightsMux(auth.RoleAdmin, &InsightsArea{}), "POST", "/api/v1/insights/findings/7/dismiss", ""); rec.Code != 501 {
 		t.Errorf("not wired: %d", rec.Code)
+	}
+}
+
+type fakeResources struct {
+	run   capacity.RunPeak
+	key   jobsize.Summary
+	found bool
+}
+
+func (f *fakeResources) Add(context.Context, int64, string, string, []capacity.ResourceSample, bool, string) error {
+	return nil
+}
+
+func (f *fakeResources) Job(context.Context, int64) ([]capacity.ResourceSample, capacity.ResourceSummary, error) {
+	return []capacity.ResourceSample{{At: time.Date(2026, 11, 21, 8, 0, 0, 0, time.UTC), CPUMillis: 1500, MemoryBytes: 1 << 20, Known: true}},
+		capacity.ResourceSummary{JobID: 5, Samples: 1, CPUP95Millis: 1500, CPUPeakMillis: 1500, MemP95: 1 << 20, MemPeak: 1 << 20}, nil
+}
+
+func (f *fakeResources) Peaks(context.Context, int64) (capacity.RunPeak, jobsize.Summary, bool, error) {
+	return f.run, f.key, f.found, nil
+}
+
+// OPS66 R5.60, R5.63: getJobResources carries the measured peaks, the flags and the summary of the job key;
+// below 5 good runs measured is false and the p90 are still the numbers of the runs there are; a job with no
+// final batch has no measured object; a controller with no peak reader leaves the field out.
+func TestJobResourcesMeasured(t *testing.T) {
+	f := &fakeResources{found: true,
+		run: capacity.RunPeak{JobID: 5, Runner: "box-1", Source: "cgroup", PeakCPUMillis: 2500, PeakMemoryBytes: 3 << 30, Samples: 40, DurationMS: 41000, OOMKilled: true, Good: false},
+		key: jobsize.Summary{Runs: 3, CPUP90Millis: 2000, MemoryP90Bytes: 2 << 30}}
+	area := &InsightsArea{Resources: f, Peaks: f}
+	mux := insightsMux(auth.RoleViewer, area)
+	rec := do(mux, "GET", "/api/v1/jobs/5/resources", "")
+	if rec.Code != 200 {
+		t.Fatalf("%d %s", rec.Code, rec.Body)
+	}
+	m, ok := insightBody(t, rec)["measured"].(map[string]any)
+	if !ok {
+		t.Fatalf("no measured: %s", rec.Body)
+	}
+	key := m["key"].(map[string]any)
+	if m["peak_cpu_cores"] != 2.5 || m["peak_memory_bytes"] != float64(3<<30) || m["sample_count"] != float64(40) || m["duration_seconds"] != 41.0 ||
+		m["oom_killed"] != true || m["cut_short"] != false || m["good"] != false || m["source"] != "cgroup" || m["runner"] != "box-1" {
+		t.Errorf("measured %v", m)
+	}
+	if key["runs"] != float64(3) || key["measured"] != false || key["cpu_p90_cores"] != 2.0 || key["memory_p90_bytes"] != float64(2<<30) {
+		t.Errorf("key %v", key)
+	}
+	f.key.Runs, f.key.Measured = 5, true
+	key = insightBody(t, do(mux, "GET", "/api/v1/jobs/5/resources", ""))["measured"].(map[string]any)["key"].(map[string]any)
+	if key["measured"] != true {
+		t.Errorf("measured from 5 runs: %v", key)
+	}
+	f.found = false
+	if _, has := insightBody(t, do(mux, "GET", "/api/v1/jobs/5/resources", ""))["measured"]; has {
+		t.Error("a running job has no measured object")
+	}
+	area.Peaks = nil
+	f.found = true
+	if _, has := insightBody(t, do(mux, "GET", "/api/v1/jobs/5/resources", ""))["measured"]; has {
+		t.Error("no peak reader, no measured field")
 	}
 }

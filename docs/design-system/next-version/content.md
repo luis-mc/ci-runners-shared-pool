@@ -1331,6 +1331,20 @@ Run insights is a tab of Jobs, placed before Charts. Estimates always say *estim
 | Do next, cost warning, title | Analysing CI runs costs more than it should: {what is over, such as CPU 6.2% (limit 5%), memory 320 MB (limit 300 MB), disk 1.10 GB (limit 1 GB)} |
 | Do next, cost warning, fix | Choose a slower update period in Settings: analyse after every 5th CI run, or once an hour. (After every few CI runs: once an hour. Already once an hour: Lower the days or the size of the CI data kept in Settings, or ask for a bigger machine.) |
 
+## Measured peak words (OPS66, observability R5.60 to R5.63)
+
+The measured block of the Job page, in the CPU and memory pane. `{n}` is a number, `{x}` a value, `{runs}` the good runs read (at most 30).
+
+| Where | Words |
+|---|---|
+| Job page, measured block, title | Measured on this run |
+| Job page, measured block, facts | Measured peak CPU ("{x} cores", 1 decimal); Measured peak memory ("{x} GB", 1 decimal); Samples ({n}); Measured for ({duration}) |
+| Job page, measured block, killed for memory (Needs you) | This job was killed for memory. A run like this is not used for sizing. |
+| Job page, measured block, cut short (Note) | This run was cut short. A run like this is not used for sizing. |
+| Job page, job key, measured | Typical peak of this job, p90 of the last {runs} runs: {x} cores, {x} GB |
+| Job page, job key, not measured | Not measured yet: {runs} of 5 good runs. |
+| Job page, job key, no good run | No good run yet. |
+
 ## Help words
 
 The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 20 Nov, D57). English only. *Slot* is a shown word. *Runner type* is the word for persistent or ephemeral; Linux or Windows is the system, never the type.
