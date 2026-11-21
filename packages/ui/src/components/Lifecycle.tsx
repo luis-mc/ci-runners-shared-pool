@@ -61,7 +61,9 @@ export function UpdateBanner(p: UpdateBannerProps) {
     );
   } else if (p.state === 'done') {
     body = lw('updated.title', { version: p.version });
-    action = p.onWhatsNew ? <Button onPress={p.onWhatsNew}>{lw('updated.action')}</Button> : null;
+    action = p.onWhatsNew ? (
+      <Button onPress={p.onWhatsNew}>{lw('updated.action')}</Button>
+    ) : null;
   } else {
     body = p.reason ?? lw('banner.failed');
     action = (
@@ -75,7 +77,12 @@ export function UpdateBanner(p: UpdateBannerProps) {
   }
   return (
     <div data-lifecycle="update-banner" data-state={p.state}>
-      <Message tone={tone} action={action} dismissible={false} id={`update-${p.state}-${p.version}`}>
+      <Message
+        tone={tone}
+        action={action}
+        dismissible={false}
+        id={`update-${p.state}-${p.version}`}
+      >
         {body}
       </Message>
     </div>
@@ -147,7 +154,9 @@ const STATE_KIND: Record<UpdateState, StatusKind> = {
 };
 
 /** The state of the update in one sentence (the retry and failure text included). */
-export function updateStateLine(p: Pick<UpdatesCardProps, 'state' | 'current' | 'available' | 'failure'>): string {
+export function updateStateLine(
+  p: Pick<UpdatesCardProps, 'state' | 'current' | 'available' | 'failure'>,
+): string {
   const version = p.available ?? p.current;
   switch (p.state) {
     case 'idle':
@@ -170,7 +179,11 @@ export function updateStateLine(p: Pick<UpdatesCardProps, 'state' | 'current' | 
     case 'rolled_back':
       return p.failure && p.failure.retryAt === ''
         ? lw('rolled_back.skipped', { version, previous: p.current })
-        : lw('rolled_back.title', { version, previous: p.current, time: p.failure?.retryAt ?? '' });
+        : lw('rolled_back.title', {
+            version,
+            previous: p.current,
+            time: p.failure?.retryAt ?? '',
+          });
     case 'refused':
       return lw('refused.title', { version });
     case 'failed':
@@ -183,13 +196,18 @@ export function UpdatesCard(p: UpdatesCardProps) {
   const locked = Boolean(p.lockedBy);
   const [start, setStart] = useState(p.window?.start ?? '');
   const [end, setEnd] = useState(p.window?.end ?? '');
-  const bad = (v: string) => (v !== '' && !TIME.test(v) ? lw('policy.window_help') : undefined);
+  const bad = (v: string) =>
+    v !== '' && !TIME.test(v) ? lw('policy.window_help') : undefined;
   const commit = (s: string, e: string) => {
     if (s === '' && e === '') p.onWindow?.(null);
     else if (TIME.test(s) && TIME.test(e)) p.onWindow?.({ start: s, end: e });
   };
   return (
-    <div data-lifecycle="updates-card" data-state={p.state} data-locked={locked || undefined}>
+    <div
+      data-lifecycle="updates-card"
+      data-state={p.state}
+      data-locked={locked || undefined}
+    >
       <Pane
         title={lw('updates.title')}
         actions={
@@ -220,7 +238,9 @@ export function UpdatesCard(p: UpdatesCardProps) {
               value: k,
               label: lw(`policy.${k}`),
               description: lw(`policy.${k}.detail`),
-              disabledReason: locked ? lw('updates.locked_by', { who: p.lockedBy ?? '' }) : undefined,
+              disabledReason: locked
+                ? lw('updates.locked_by', { who: p.lockedBy ?? '' })
+                : undefined,
             }))}
           />
           {p.policy === 'automatic_when_idle' ? (
@@ -282,11 +302,18 @@ export function UpdateHistory({ events }: { events: readonly AuditEvent[] }) {
     { id: 'at', header: lw('history.when'), cell: (e) => e.at, sort: (e) => e.at },
     { id: 'actor', header: lw('history.who'), cell: (e) => e.actor },
     { id: 'action', header: lw('history.what'), cell: (e) => lw(`audit.${e.action}`) },
-    { id: 'version', header: lw('history.version'), cell: (e) => e.version, secondary: true },
+    {
+      id: 'version',
+      header: lw('history.version'),
+      cell: (e) => e.version,
+      secondary: true,
+    },
     {
       id: 'result',
       header: lw('history.result'),
-      cell: (e) => <Status kind={RESULT_KIND[e.result]} word={lw(`result.${e.result}`)} />,
+      cell: (e) => (
+        <Status kind={RESULT_KIND[e.result]} word={lw(`result.${e.result}`)} />
+      ),
     },
   ];
   return (
@@ -330,8 +357,12 @@ export function RemoteUpdate(p: RemoteUpdateProps) {
           {p.state === 'running' ? (
             <Progress label={lw('remote.running', name)} value={p.percent} max={100} />
           ) : null}
-          {p.state === 'done' ? <Status kind="ok" word={lw('remote.done', name)} /> : null}
-          {p.state === 'failed' ? <Status kind="failed" word={lw('remote.failed', name)} /> : null}
+          {p.state === 'done' ? (
+            <Status kind="ok" word={lw('remote.done', name)} />
+          ) : null}
+          {p.state === 'failed' ? (
+            <Status kind="failed" word={lw('remote.failed', name)} />
+          ) : null}
           {p.state === 'ready' || p.state === 'failed' ? (
             <Button kind="primary" onPress={p.onStart}>
               {p.state === 'failed' ? lw('action.retry') : lw('remote.start', name)}
@@ -349,10 +380,10 @@ export type RemoveChoice = 'keep' | 'purge';
 
 export interface RemoveDialogProps {
   product: string;
-  /** Size of the user's data, already formatted (for example `1.4 GB`). */
-  size: string;
-  /** Where the data lives. */
-  path: string;
+  /** Size of the user's data, already formatted (for example `1.4 GB`). Left out when the controller did not say. */
+  size?: string | undefined;
+  /** Where the data lives. Left out when the controller did not say. */
+  path?: string | undefined;
   /** The request is open: Remove locks and says so. */
   busy?: boolean | undefined;
   onRemove: (choice: RemoveChoice) => void;
@@ -362,7 +393,8 @@ export interface RemoveDialogProps {
 /** Remove asks every time with no default: Remove stays disabled until a choice is made. */
 export function RemoveDialog(p: RemoveDialogProps) {
   const [choice, setChoice] = useState<RemoveChoice | ''>('');
-  const name = { product: p.product, size: p.size, path: p.path };
+  const name = { product: p.product, size: p.size ?? '', path: p.path ?? '' };
+  const known = p.size !== undefined && p.path !== undefined;
   return (
     <Dialog
       title={lw('remove.title', name)}
@@ -388,7 +420,10 @@ export function RemoveDialog(p: RemoveDialogProps) {
           onChange={(v) => setChoice(v as RemoveChoice)}
           choices={(['keep', 'purge'] as const).map((k) => ({
             value: k,
-            label: lw(`remove.${k}`, name),
+            label:
+              k === 'purge' && !known
+                ? lw('remove.purge_short')
+                : lw(`remove.${k}`, name),
             description: lw(`remove.${k}.detail`),
           }))}
         />
@@ -425,7 +460,12 @@ export function FleetRows({
   action?: ((row: FleetRow) => ReactNode) | undefined;
 }) {
   const columns: Column<FleetRow>[] = [
-    { id: 'machine', header: lw('fleet.title'), cell: (r) => r.machine, sort: (r) => r.machine },
+    {
+      id: 'machine',
+      header: lw('fleet.title'),
+      cell: (r) => r.machine,
+      sort: (r) => r.machine,
+    },
     { id: 'version', header: lw('updates.current'), cell: (r) => r.version },
     {
       id: 'state',
@@ -441,7 +481,13 @@ export function FleetRows({
           <Text>{lw('fleet.empty')}</Text>
         </Pane>
       ) : (
-        <Table caption={lw('fleet.title')} title={lw('fleet.title')} columns={columns} rows={rows} rowKey={(r) => r.id} />
+        <Table
+          caption={lw('fleet.title')}
+          title={lw('fleet.title')}
+          columns={columns}
+          rows={rows}
+          rowKey={(r) => r.id}
+        />
       )}
     </div>
   );

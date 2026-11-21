@@ -2,8 +2,8 @@
 // nowhere else; a part calls `lw(key, values)`. Source: the dev-standards lifecycle words table
 // (design-system/lifecycle/words.json). Banned: OK, Yes, No, Install now, Later, daemon, binary, payload.
 export const LIFECYCLE_WORDS = {
-  'check': 'Look for updates',
-  'checking': 'Looking for updates',
+  check: 'Look for updates',
+  checking: 'Looking for updates',
   'available.title': 'Version {version} is ready.',
   'available.primary': 'Update to version {version}',
   'available.secondary': 'Not now',
@@ -17,11 +17,12 @@ export const LIFECYCLE_WORDS = {
     'The update to {version} failed its test. Version {previous} is running again. We try again at {time}.',
   'rolled_back.skipped':
     'The update to {version} failed its test three times. Version {previous} keeps running until a newer version is out.',
-  'refused.title': 'The download for {version} did not pass its signature check. Nothing changed.',
+  'refused.title':
+    'The download for {version} did not pass its signature check. Nothing changed.',
   'waiting.title': 'Version {version} waits for running work to finish.',
-  'up_to_date': 'Up to date. Version {version} is the newest.',
-  'not_looked': 'Not looked for yet.',
-  'required': 'This update is required. It installs even when you choose Ask first.',
+  up_to_date: 'Up to date. Version {version} is the newest.',
+  not_looked: 'Not looked for yet.',
+  required: 'This update is required. It installs even when you choose Ask first.',
   'banner.ready': 'Update ready',
   'banner.running': 'Updating',
   'banner.done': 'Updated',
@@ -68,14 +69,17 @@ export const LIFECYCLE_WORDS = {
   'remove.title': 'Remove {product}',
   'remove.choose': 'Choose what happens to your data.',
   'remove.keep': 'Keep my data',
-  'remove.keep.detail': 'Removes the program and the service. Your settings and data stay.',
+  'remove.keep.detail':
+    'Removes the program and the service. Your settings and data stay.',
   'remove.purge': 'Delete my data too ({size} in {path})',
+  'remove.purge_short': 'Delete my data too',
   'remove.purge.detail':
     'Also deletes your settings, database, logs, caches, runner images, containers and the crsp WSL distro.',
   'remove.cancel': 'Cancel',
   'remove.confirm': 'Remove {product}',
   'remove.confirm_disabled_until': 'Keep my data or Delete my data too is chosen',
   'remove.busy': 'Removing',
+  'remove.started': 'Removing {product}. This page stops working when it is done.',
   'remove.runners': 'Both choices unregister the runners from GitHub.',
   'fleet.title': 'Machines',
   'fleet.up_to_date': 'Up to date',
@@ -102,7 +106,10 @@ export const BANNED_WORDS = [
 ] as const;
 
 /** A lifecycle word with its `{values}` filled in. */
-export function lw(key: LifecycleWord, values: Readonly<Record<string, string | number>> = {}): string {
+export function lw(
+  key: LifecycleWord,
+  values: Readonly<Record<string, string | number>> = {},
+): string {
   return LIFECYCLE_WORDS[key].replace(/\{(\w+)\}/g, (m, k: string) =>
     k in values ? String(values[k]) : m,
   );

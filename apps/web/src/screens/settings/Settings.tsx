@@ -12,6 +12,7 @@ import {
   FieldGrid,
   FileField,
   FormActions,
+  Loading,
   Message,
   NumberField,
   Page,
@@ -33,7 +34,7 @@ import {
   savedThemeName,
   type Column,
 } from '@crsp/ui';
-import { useEffect, useState, type ReactNode } from 'react';
+import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
@@ -48,7 +49,9 @@ import { BudgetsSettings } from './Budgets';
 import { NotificationsSettings } from './Notifications';
 import { PublicRepositoriesSettings } from './PublicRepositoriesSettings';
 import { NetworkSettings } from './ListenAddress';
-import { UpdatesSettings } from './Updates';
+const UpdatesSettings = lazy(() =>
+  import('./UpdatesLifecycle').then((m) => ({ default: m.UpdatesSettings })),
+);
 import { WebhooksSettings } from './Webhooks';
 
 type User = Schemas['User'];
@@ -156,7 +159,9 @@ export function UpdatesTab() {
   return (
     <TabForm>
       <At id="updates">
-        <UpdatesSettings />
+        <Suspense fallback={<Loading what="Loading the update status" />}>
+          <UpdatesSettings />
+        </Suspense>
       </At>
     </TabForm>
   );

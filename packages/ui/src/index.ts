@@ -46,5 +46,3 @@ export * from './components/SearchTable';
 export * from './components/StatTile';
 export * from './components/BarList';
 export * from './components/FindingList';
-export * from './lifecycleWords';
-export * from './components/Lifecycle';
