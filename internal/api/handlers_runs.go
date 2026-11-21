@@ -53,12 +53,45 @@ func toRunSummary(r jobsdata.RunRow, now func() int64) gen.RunSummary {
 		Trigger: r.Event, HtmlUrl: r.HTMLURL, State: gen.RunSummaryState(r.State), Result: jobResult(string(r.Conclusion)),
 		CreatedAt: r.CreatedAt, CompletedAt: tptr(r.CompletedAt), JobsTotal: r.JobsTotal, JobsDone: r.JobsDone, JobsFailed: r.JobsFailed,
 	}
+	out.OverallState = gen.RunSummaryOverallState(jobsdata.OverallOf(r.State, followUpsOf(r)))
+	out.FollowUps, out.FollowUpsOpen = ptr(r.FollowUps), ptr(r.FollowUpsOpen)
+	sn := toStartedNext(r.StartedNext)
+	out.StartedNext = &sn
+	if r.ParentRunID != 0 {
+		out.StartedBy = ptr(r.ParentRunID)
+	}
 	if r.TotalMS > 0 {
 		out.TotalSeconds = ptr(int(r.TotalMS / 1000))
 	} else if r.State != jobsdata.Done && !r.CreatedAt.IsZero() {
 		if n := now() - r.CreatedAt.Unix(); n > 0 {
 			out.TotalSeconds = ptr(int(n))
 		}
+	}
+	return out
+}
+
+// followUpsOf gives OverallOf the follow-ups of a row; a row from a test or a reader that only counts has stubs.
+func followUpsOf(r jobsdata.RunRow) []jobsdata.FollowUp {
+	if len(r.StartedNext) > 0 {
+		return r.StartedNext
+	}
+	out := make([]jobsdata.FollowUp, 0, r.FollowUps)
+	for i := 0; i < r.FollowUps; i++ {
+		st := jobsdata.Done
+		if i < r.FollowUpsOpen {
+			st = jobsdata.Running
+		}
+		out = append(out, jobsdata.FollowUp{State: st})
+	}
+	return out
+}
+
+func toStartedNext(list []jobsdata.FollowUp) []gen.RunFollowUp {
+	out := make([]gen.RunFollowUp, 0, len(list))
+	for _, f := range list {
+		out = append(out, gen.RunFollowUp{WorkflowName: f.WorkflowName, RunId: f.RunID, Attempt: ptr(f.Attempt),
+			State: gen.RunFollowUpState(f.State), Result: jobResult(string(f.Result)), StartedAt: tptr(f.StartedAt),
+			CompletedAt: tptr(f.CompletedAt), Link: f.HTMLURL})
 	}
 	return out
 }
@@ -161,6 +194,8 @@ func (s *server) GetRun(ctx context.Context, req gen.GetRunRequestObject) (gen.G
 		Id: sum.Id, Attempt: sum.Attempt, Attempts: attempts, Repository: sum.Repository, RepositoryId: sum.RepositoryId, Workflow: sum.Workflow,
 		Branch: sum.Branch, HeadSha: sum.HeadSha, PullRequest: sum.PullRequest, TaskId: sum.TaskId, Worktree: sum.Worktree, Trigger: sum.Trigger,
 		HtmlUrl: sum.HtmlUrl, State: gen.RunItemState(sum.State), Result: sum.Result, CreatedAt: sum.CreatedAt, CompletedAt: sum.CompletedAt,
+		OverallState: gen.RunItemOverallState(sum.OverallState), FollowUps: sum.FollowUps, FollowUpsOpen: sum.FollowUpsOpen,
+		StartedBy: sum.StartedBy, StartedNext: toStartedNext(d.StartedNext),
 		Jobs: v.Jobs, Edges: v.Edges, CriticalPath: v.CriticalPath, Eta: v.Eta, Graph: v.Graph,
 	}), nil
 }

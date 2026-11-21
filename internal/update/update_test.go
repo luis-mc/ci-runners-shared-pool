@@ -614,9 +614,9 @@ func TestRecoverMSIReportsAndBacksOff(t *testing.T) {
 
 	// A new Manager shows the failure.
 	pendingFor(t, dir, log, now)
-	_ = os.WriteFile(log, []byte("MainEngineThread is returning 1618\n"), 0o600)
+	_ = os.WriteFile(log, []byte("MainEngineThread is returning 1603\n"), 0o600)
 	m := New(Options{Current: "1.4.0", Dir: dir, GOOS: "windows", Exe: filepath.Join(dir, "crsp.exe")})
-	if st := m.Status(context.Background()); st.State != StateFailed || !strings.Contains(st.Error, "1618") {
+	if st := m.Status(context.Background()); st.State != StateFailed || !strings.Contains(st.Error, "1603") {
 		t.Fatalf("%+v", st)
 	}
 }

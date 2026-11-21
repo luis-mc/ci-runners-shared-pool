@@ -47,6 +47,10 @@ type Config struct {
 	// opted-in repository falls back; 0 means DefaultFallbackGrace.
 	FallbackGrace func() time.Duration
 	Now           func() time.Time
+	// FactsReported says whether every machine that was online has reported its
+	// facts since this start; nil means unknown, so only the settle period
+	// (CapacitySettle) makes capacity known.
+	FactsReported func(ctx context.Context) (bool, error)
 	// PublicRepositories reads the setting Public repositories (R5.54); nil
 	// means off. A read error refuses a public repository.
 	PublicRepositories func(ctx context.Context) (bool, error)
@@ -67,6 +71,9 @@ type Service struct {
 
 	fb fallbackState
 
+	started time.Time
+	absent  map[string]time.Time // repository/variable -> first sync that saw its OS capacity absent
+
 	stopMu  sync.Mutex
 	stops   map[string]bool // plan id -> a stop was asked while it applies
 	running map[string]bool // plan id -> ApplyPlan is running it in this process
@@ -81,7 +88,7 @@ func New(cfg Config) *Service {
 		cfg.Addresses = addresses.Defaults()
 	}
 	return &Service{cfg: cfg, admin: map[int64]map[int64]bool{}, synced: map[int64]time.Time{},
-		etags: map[int64]map[string]string{}, cache: map[int64]map[string][]byte{}, stops: map[string]bool{}, running: map[string]bool{}, fb: newFallbackState()}
+		etags: map[int64]map[string]string{}, cache: map[int64]map[string][]byte{}, stops: map[string]bool{}, running: map[string]bool{}, fb: newFallbackState(), started: cfg.Now(), absent: map[string]time.Time{}}
 }
 
 // SetRegistrar sets who keeps the registrations of the pool runners. The

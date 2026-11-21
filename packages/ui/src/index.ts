@@ -5,6 +5,7 @@ export type { TimePickerLabels, TimePickerProps, QuickPick } from './pickers/Tim
 export { NumberKeypad, DEFAULT_NUMBER_KEYPAD_LABELS } from './pickers/NumberKeypad';
 export type { NumberKeypadLabels, NumberKeypadProps } from './pickers/NumberKeypad';
 export * from './components/format';
+export * from './components/DateTime';
 export { ClockProvider, useNow } from './components/Clock';
 export * from './components/layout';
 export * from './components/Button';
@@ -27,6 +28,7 @@ export * from './components/Grant';
 export * from './components/KeyHints';
 export * from './components/Popover';
 export * from './components/Help';
+export * from './components/HelpPictures';
 export * from './components/Shell';
 export * from './components/ActionBar';
 export * from './components/EditBar';

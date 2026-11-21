@@ -152,3 +152,14 @@ DELETE FROM job_daily WHERE day < ?;
 
 -- name: PruneWorkflowGraphs :execrows
 DELETE FROM workflow_graphs WHERE fetched_at < ?;
+
+-- name: GetRunFollowUp :one
+SELECT * FROM run_follow_ups WHERE repository_id = ? AND run_id = ?;
+
+-- name: SetRunFollowUp :exec
+INSERT INTO run_follow_ups (repository_id, run_id, parent_run_id, source, updated_at) VALUES (?, ?, ?, ?, ?)
+ON CONFLICT (repository_id, run_id) DO UPDATE SET parent_run_id = excluded.parent_run_id,
+    source = excluded.source, updated_at = excluded.updated_at;
+
+-- name: PruneRunFollowUps :execrows
+DELETE FROM run_follow_ups WHERE NOT EXISTS (SELECT 1 FROM runs r WHERE r.repository_id = run_follow_ups.repository_id AND r.run_id = run_follow_ups.run_id);

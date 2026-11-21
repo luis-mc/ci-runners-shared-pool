@@ -1,5 +1,5 @@
-// LOOK44, LOOK47: the Help page (layout G, D58). The job path is on top, every question card is shown at once below it,
-// nothing is locked, a ? beside a term opens a short answer that links to the same card, and Down, Up, j and k move
+// LOOK44, LOOK47, LOOK48: the Help page (layout G, D58). The job path is on top, every question card is shown at once
+// below it in the order of its box, with a badge and a small picture, nothing is locked, a ? beside a term opens a short answer that links to the same card, and Down, Up, j and k move
 // between the controls. Layout at
 // 360, 393 and 1300 px is checked for every route by ux-routes.spec.ts; this file checks the behaviour.
 import { expect, test } from '@playwright/test';
@@ -34,7 +34,9 @@ test('Help is the seventh item of the menu and shows the picture and every card'
     await expect(page.getByRole('button', { name })).toHaveCount(0);
   }
   const picture = page.getByRole('region', { name: 'How a job gets run' });
-  const questions = page.getByRole('region', { name: 'Questions' });
+  const questions = page.getByRole('region', {
+    name: 'Questions, in the order a job meets them',
+  });
   await expect(picture).toBeVisible();
   // The cards of all three parts are in the page together, in the grid below the picture.
   for (const title of [
@@ -57,21 +59,69 @@ test('pressing a part of the picture brings its card into view', async ({ page }
   await signedIn().install(page);
   await page.setViewportSize({ width: 1300, height: 700 });
   await page.goto('/help');
-  await page.getByRole('button', { name: /Slot\s*room for one job/ }).click();
+  await page.getByRole('button', { name: /^Slot/ }).click();
   await expect(page.getByRole('heading', { name: 'What is a slot?' })).toBeInViewport();
 });
 
-test('the cards show the real slots and load budget of each machine', async ({
+test('the pictures show the real slots and load budget of the machine', async ({
   page,
 }) => {
   await signedIn()
     .on('GET', '/api/v1/machines', { items: [real] })
     .install(page);
   await page.goto('/help#q-slot');
-  await expect(page.getByText('1 of 3 slots in use')).toBeVisible();
+  await expect(page.getByText('1 of 3 slots busy')).toBeVisible();
   await expect(page.getByText(/Pool size makes slots/)).toBeVisible();
-  await expect(page.getByText('memory 70%, CPU 55%')).toBeVisible();
+  await expect(page.getByText(/^Memory \d+% of 70%$/)).toBeAttached();
+  await expect(page.getByText(/^CPU \d+% of 55%$/)).toBeAttached();
   await expect(page.getByText(/85%/)).toHaveCount(0);
+});
+
+test('the intro, the note and each card badge are there, and a badge lights its box', async ({
+  page,
+}) => {
+  await signedIn().install(page);
+  await page.setViewportSize({ width: 1300, height: 900 });
+  await page.goto('/help');
+  await expect(
+    page.getByText(
+      'One picture, then the questions people ask. Each card names its box.',
+    ),
+  ).toBeVisible();
+  await expect(
+    page.getByText('1 to 3 happen on GitHub. 4 to 7 happen in your pool.'),
+  ).toBeVisible();
+  const card = page.getByRole('region', { name: 'What is a slot?' });
+  await expect(card.getByRole('link', { name: 'Box 5: Slot' })).toBeVisible();
+  await expect(card.getByRole('img')).toBeVisible();
+  await card.getByRole('link', { name: 'Box 5: Slot' }).click();
+  await expect(page.getByRole('button', { name: /^Slot/ })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
+});
+
+test('the cards sit in four columns at 1300 px, two on a tablet and one on a phone', async ({
+  page,
+}) => {
+  await signedIn().install(page);
+  const columns = async (): Promise<number> => {
+    const tops = await page
+      .locator('.ds-card-grid > *')
+      .evaluateAll((els) => els.map((c) => Math.round(c.getBoundingClientRect().top)));
+    return tops.filter((t) => t === tops[0]).length;
+  };
+  for (const [width, expected] of [
+    [1300, 4],
+    [768, 2],
+    [393, 1],
+    [360, 1],
+  ] as const) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/help');
+    await expect(page.getByRole('heading', { name: 'What is a slot?' })).toBeVisible();
+    expect(await columns()).toBe(expected);
+  }
 });
 
 test('the ? beside Slots opens a short answer that links to its Help card', async ({
@@ -101,18 +151,15 @@ test('Down and j reach the boxes of the picture, Up and k come back', async ({
 }) => {
   await signedIn().install(page);
   await page.goto('/help');
-  const repo = page.getByRole('button', { name: /Repository/ });
+  const repo = page.getByRole('button', { name: /^Repository/ });
   await repo.focus();
   await page.keyboard.press('j');
-  await expect(
-    page
-      .getByRole('button', { name: /^2\s*Run/ })
-      .or(page.getByRole('button', { name: /Run\s*one start/ })),
-  ).toBeFocused();
+  const run = page.getByRole('button', { name: /^Run(?!ner)/ });
+  await expect(run).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('button', { name: /Job\s*asks/ })).toBeFocused();
+  await expect(page.getByRole('button', { name: /^Job/ })).toBeFocused();
   await page.keyboard.press('k');
-  await expect(page.getByRole('button', { name: /Run\s*one start/ })).toBeFocused();
+  await expect(run).toBeFocused();
 });
 
 test('the first-run Overview shows the picture and Open Help', async ({ page }) => {

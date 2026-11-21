@@ -27,6 +27,15 @@ describe('the insight views', () => {
     expect(screen.getByText(/idle while a job waited/)).toBeTruthy();
   });
 
+  it('Timeline: the runner wait of a follow-up run is a row of its own', async () => {
+    renderApp(jobsApi(), '/jobs/insights/timeline');
+    await screen.findByRole('region', { name: 'crsp-linuxbox-1' });
+    expect(
+      screen.getByText('Waited for a runner: octo/app installers.yml / msi'),
+    ).toBeTruthy();
+    expect(screen.getAllByText('follow-up run')).toHaveLength(2);
+  });
+
   it('Tests: shows the limit in words and switches the view', async () => {
     renderApp(jobsApi(), '/jobs/insights/tests');
     expect((await screen.findAllByText(/over the unit limit of 10 s/)).length).toBe(2);

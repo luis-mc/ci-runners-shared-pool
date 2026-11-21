@@ -39,12 +39,13 @@ describe('theme cards (LOOK6)', () => {
 });
 
 describe('field rows (LOOK6)', () => {
-  it('equal auto-fill columns of 200 px, one baseline, one-line labels', () => {
+  it('equal auto-fill columns of 200 px, top-aligned, boxes on one line, one-line labels', () => {
     const i = css.indexOf('.ds-field-grid {');
     const b = css.slice(i, css.indexOf('}', i));
     expect(b).toContain('auto-fill');
     expect(b).toContain('12.5rem');
-    expect(b).toContain('align-items: end');
+    expect(b).toContain('align-items: start');
+    expect(css).toContain('grid-template-rows: subgrid');
     expect(css).toContain('.ds-field-grid .ds-field__label');
   });
 });

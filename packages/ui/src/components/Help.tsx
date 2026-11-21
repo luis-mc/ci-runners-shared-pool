@@ -3,6 +3,7 @@
 // data only (UX-2, UX-54).
 import { useId, useState, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
+import { Card } from './Card';
 import { usePopoverDismiss } from './Popover';
 
 export interface JobPathPart {
@@ -13,6 +14,8 @@ export interface JobPathPart {
   line: string;
   /** The group frame the part sits in. */
   group: string;
+  /** A live example of the part, from real data when there is some: octo/app. It stands in for `line` (LOOK48). */
+  example?: string | undefined;
 }
 
 export interface JobPathGroup {
@@ -54,12 +57,23 @@ export function JobPath({
                       {n}
                     </span>
                     <span className="ds-jobpath__title">{p.title}</span>
-                    <span className="ds-jobpath__line">{p.line}</span>
+                    {p.example === undefined ? (
+                      <span className="ds-jobpath__line">{p.line}</span>
+                    ) : (
+                      <span className="ds-jobpath__line" data-example title={p.example}>
+                        {p.example}
+                      </span>
+                    )}
                   </>
                 );
                 const on = lit?.includes(p.id) || undefined;
                 return (
-                  <li key={p.id} className="ds-jobpath__part" data-lit={on}>
+                  <li
+                    key={p.id}
+                    id={`box-${p.id}`}
+                    className="ds-jobpath__part"
+                    data-lit={on}
+                  >
                     {onSelect ? (
                       <button
                         type="button"
@@ -133,5 +147,49 @@ export function TermHelp({
         </div>
       ) : null}
     </span>
+  );
+}
+
+/**
+ * Component 69. A question card of the Help page: the card (component 8) with a badge that names the diagram box
+ * the question is about (`Box 5: Slot`, with the numbered circle), then the answer and one small picture. The badge
+ * is a link to the box in the job path (component 64) and the page lights that box. The page passes data only.
+ */
+export function HelpQuestionCard({
+  id,
+  title,
+  box,
+  onBox,
+  picture,
+  children,
+}: {
+  id: string;
+  title: string;
+  /** The box the card explains: its number in the job path and its name. */
+  box: { id: string; n: number; name: string };
+  /** Called when the badge is pressed; the page lights the box. */
+  onBox: (id: string) => void;
+  /** One small picture of component 69 (`PictureSlots` and the others), or nothing. */
+  picture?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card id={id} title={title}>
+      <a
+        className="ds-boxbadge"
+        href={`#box-${box.id}`}
+        onClick={(e) => {
+          e.preventDefault();
+          onBox(box.id);
+        }}
+      >
+        <span className="ds-boxbadge__n" aria-hidden="true">
+          {box.n}
+        </span>
+        <span>{`Box ${box.n}: ${box.name}`}</span>
+      </a>
+      {children}
+      {picture ? <div className="ds-helppic-frame">{picture}</div> : null}
+    </Card>
   );
 }

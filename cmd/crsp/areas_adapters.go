@@ -7,6 +7,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backend"
@@ -538,4 +539,25 @@ func waitingOSes(rt repos.Routing) []string {
 		return rt.OSes
 	}
 	return nil
+}
+
+// factsReported says whether every machine that is online has reported its
+// facts since started: nothing is believed absent before that (R5.28).
+func factsReported(d controllerDeps, started time.Time) func(context.Context) (bool, error) {
+	return func(ctx context.Context) (bool, error) {
+		views, err := d.Machines.List(ctx)
+		if err != nil {
+			return false, err
+		}
+		for _, v := range views {
+			m := v.Machine
+			if !m.RemovedAt.IsZero() || m.State == "removed" || !m.Online {
+				continue
+			}
+			if m.Facts.DetectedAt.Before(started) {
+				return false, nil
+			}
+		}
+		return true, nil
+	}
 }

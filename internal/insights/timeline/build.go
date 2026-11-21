@@ -11,6 +11,9 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights"
 )
 
+// MinFollowUpWait is the shortest runner wait of a follow-up job the timeline draws as a segment of its own.
+const MinFollowUpWait = time.Minute
+
 // MaxRange is the longest window getPoolTimeline answers (R5.21).
 const MaxRange = 24 * time.Hour
 
@@ -27,6 +30,9 @@ type RunnerIdle struct {
 type RunnerStates interface {
 	IdleSpans(ctx context.Context, w insights.Window) ([]RunnerIdle, error)
 }
+
+// followUpEvent is the event of a run that another run's completion started.
+const followUpEvent = "workflow_run"
 
 type builder struct {
 	jobs   insights.JobSource
@@ -147,8 +153,15 @@ func (b builder) Timeline(ctx context.Context, w insights.Window) ([]Lane, error
 		if len(l.Labels) == 0 {
 			l.Labels = j.RunnerLabels
 		}
-		seg := Segment{Kind: SegmentJob, Start: j.StartedAt, End: end, JobID: j.ID, Repository: j.Repository,
-			JobIdent: j.JobIdent, Event: j.Event}
+		seg := Segment{Kind: SegmentJob, Start: j.StartedAt, End: end, JobID: j.ID, RunID: j.RunID, Repository: j.Repository,
+			JobIdent: j.JobIdent, Event: j.Event, FollowUp: j.Event == followUpEvent}
+		if seg.FollowUp {
+			// the runner wait of a follow-up run (the Installers wait after CI) is part of the run's timeline
+			if ws, we, ok := waitSpan(j, w.To); ok && we.Sub(ws) >= MinFollowUpWait && overlap(ws, we, w.From, w.To) > 0 {
+				l.Segments = append(l.Segments, Segment{Kind: SegmentWait, Start: ws, End: we, JobID: j.ID, RunID: j.RunID,
+					FollowUp: true, Repository: j.Repository, JobIdent: j.JobIdent, Event: j.Event})
+			}
+		}
 		if j.Origin == insights.OriginCrsp && j.Event == "push" && j.DefaultBranch {
 			for _, o := range waiting {
 				if o.Event != "pull_request" || o.ID == j.ID {

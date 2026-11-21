@@ -195,6 +195,8 @@ export function jobsAndDoctor(
     })
     .on('GET', '/api/v1/runs/:id', (_call: Call, params: Record<string, string>) => ({
       ...runOf(Number(params.id) || 1),
+      overall_state: 'done',
+      started_next: [],
       jobs: [doneJob(Number(params.id) || 1)],
       edges: [],
       critical_path: ['test-1'],

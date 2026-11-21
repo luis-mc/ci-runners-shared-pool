@@ -244,7 +244,7 @@ export function RepositoriesList() {
     },
     {
       id: 'runnerKind',
-      header: 'Runner kind',
+      header: 'Runner type',
       cell: (r) => (
         <Stack gap="tight">
           <Text>{runnerKindText(r.policy)}</Text>
@@ -815,7 +815,7 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
             ...(poolOffWhy(r) ? [{ name: 'Why it is off', value: poolOffWhy(r) }] : []),
             { name: 'Variables', value: <Status kind={vs.kind} word={vs.word} /> },
             { name: 'Jobs go to', value: <WhereJobsGo r={r} /> },
-            { name: 'Runner kind', value: runnerKindText(r.policy) },
+            { name: 'Runner type', value: runnerKindText(r.policy) },
             { name: 'Why', value: routingWhy(r) },
             ...(r.pool_on
               ? [
@@ -893,7 +893,7 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
                 onChange={setForks}
               />
               <ChoiceField
-                label="Runner kind"
+                label="Runner type"
                 help="Which runners take this repository's jobs."
                 value={kinds}
                 changed={diff.kinds}

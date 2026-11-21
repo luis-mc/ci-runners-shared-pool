@@ -51,10 +51,18 @@ import {
   type RunRow,
 } from './runList';
 import { GroupTab, type GroupBy } from './Groups';
-import { BranchWords, runColumns, runPath, runStatus, runWhen } from './RunRows';
+import {
+  BranchWords,
+  followUpRunning,
+  runColumns,
+  runPath,
+  runStatus,
+  runWhen,
+} from './RunRows';
 import {
   RETENTION_WORDS,
   commitWords,
+  FOLLOW_UP_RUNNING,
   eventWords,
   forecastOf,
   forecastOne,
@@ -62,6 +70,7 @@ import {
   ranSeconds,
   secondsOrNone,
   startRange,
+  startedNextWords,
   waitShort,
   waitWords,
   waitedSeconds,
@@ -546,6 +555,17 @@ function RunDetail({ r }: { r: RunRow }) {
           { name: 'Commit', value: commitWords(r) },
           { name: 'Event', value: eventWords(r) },
           { name: 'State', value: <Status kind={s.kind} word={s.word} /> },
+          ...(followUpRunning(r)
+            ? [
+                {
+                  name: 'Still running',
+                  value: <Status kind="running" word={FOLLOW_UP_RUNNING} />,
+                },
+              ]
+            : []),
+          ...(r.startedNext?.length
+            ? [{ name: 'Started next', value: startedNextWords(r.startedNext) }]
+            : []),
           {
             name: 'Jobs done',
             value:

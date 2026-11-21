@@ -20,9 +20,11 @@ const (
 	StageDownloading    = "downloading"
 	StageWaitingForJobs = "waiting_for_jobs"
 	StageInstalling     = "installing"
-	StageRestarting     = "restarting"
-	StageDone           = "done"
-	StageFailed         = "failed"
+	// StageWaitingInstaller: another installer holds Windows Installer; the update starts when it ends (TRAY11).
+	StageWaitingInstaller = "waiting_installer"
+	StageRestarting       = "restarting"
+	StageDone             = "done"
+	StageFailed           = "failed"
 )
 
 // Stage is where the running update stands. Percent is 0 to 100 and is only
@@ -33,6 +35,8 @@ type Stage struct {
 	Version string `json:"version,omitempty"` // the version being installed (done: the version that runs)
 	Error   string `json:"error,omitempty"`   // failed: what went wrong
 	LogPath string `json:"log_path,omitempty"`
+	// WaitingFor names the other installer (waiting_installer only); empty when it is not known.
+	WaitingFor string `json:"waiting_for,omitempty"`
 	// FailedAt is the stage that failed (failed only), so the page can mark the step.
 	FailedAt string `json:"failed_at,omitempty"`
 	// StartedBy says who started this update: auto (nobody clicked), tray (the update window

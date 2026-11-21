@@ -1678,17 +1678,42 @@ legend > .ds-field__changed {
   min-inline-size: 0;
 }
 
-/* a form's fields in a row: equal columns, labels on one line, inputs on one baseline (component 43, LOOK6) */
+/* a date and time stays on one line (LOOK49, UX-78) */
+.ds-datetime {
+  white-space: nowrap;
+}
+
+/* a form's fields in a row: equal columns, fields top-aligned, the inputs of a row on one line (component 43, LOOK49).
+   Each field takes four rows of the grid (name, box, help, mistake) so a long name or help never moves a box. */
 .ds-field-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 12.5rem), 1fr));
-  align-items: end;
-  gap: var(--ds-space-4);
+  align-items: start;
+  column-gap: var(--ds-space-4);
+  row-gap: 0;
   min-inline-size: 0;
 }
 .ds-field-grid > .ds-field {
   max-inline-size: none;
-  align-content: end;
+  padding-block-end: var(--ds-space-4);
+  grid-row: span 4;
+  grid-template-rows: subgrid;
+  row-gap: 0;
+}
+.ds-field-grid > .ds-field > .ds-field__head {
+  grid-row: 1;
+  padding-block-end: var(--ds-space-1);
+}
+.ds-field-grid > .ds-field > :not(.ds-field__head, .ds-field__help, .ds-field__error) {
+  grid-row: 2;
+}
+.ds-field-grid > .ds-field > .ds-field__help {
+  grid-row: 3;
+  padding-block-start: var(--ds-space-1);
+}
+.ds-field-grid > .ds-field > .ds-field__error {
+  grid-row: 4;
+  padding-block-start: var(--ds-space-1);
 }
 /* CRSP208: a field name is shown whole (UX-72): it wraps at a word, or anywhere for a very long one, and the
    input under it stays on the row's bottom edge. It is never cut by an ellipsis. */
@@ -2718,7 +2743,7 @@ button.ds-jobgraph__node:hover {
   align-content: start;
   min-block-size: var(--ds-target-min);
   box-sizing: border-box;
-  padding: var(--ds-space-3);
+  padding: var(--ds-space-3) var(--ds-space-2);
   font: inherit;
   text-align: start;
   color: var(--ds-color-text);
@@ -2750,6 +2775,13 @@ button.ds-jobpath__box {
 .ds-jobpath__line {
   color: var(--ds-color-text-muted);
 }
+/* A live example is a name that may be long (crsp-linux-1): it stays on one line, what does not fit is cut with … and its full text is the hover text (LOOK48). */
+.ds-jobpath__line[data-example] {
+  min-inline-size: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
 @media (max-width: 600px) {
   .ds-jobpath {
     grid-template-columns: minmax(0, 1fr);
@@ -2766,6 +2798,98 @@ button.ds-jobpath__box {
     block-size: var(--ds-space-4);
     transform: none;
   }
+}
+/* component 69 (LOOK48): the box badge and the small pictures of the Help question cards; four columns on Help. */
+.ds-card-grid[data-columns='4'] {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+@media (max-width: 1099px) {
+  .ds-card-grid[data-columns='4'] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .ds-card-grid[data-columns='4'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+.ds-boxbadge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  min-block-size: var(--ds-target-min);
+  color: var(--ds-color-text-muted);
+  text-decoration: none;
+}
+.ds-boxbadge:hover {
+  color: var(--ds-color-text);
+  text-decoration: underline;
+}
+.ds-boxbadge__n {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  inline-size: var(--ds-space-5);
+  block-size: var(--ds-space-5);
+  border-radius: 50%;
+  color: var(--ds-color-on-primary);
+  background: var(--ds-color-primary);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-helppic-frame {
+  min-inline-size: 0;
+  max-inline-size: 20rem;
+}
+.ds-helppic {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+}
+.ds-helppic__box {
+  fill: var(--ds-color-surface);
+  stroke: var(--ds-color-border);
+  stroke-width: 2;
+}
+.ds-helppic__box[data-pool] {
+  stroke: var(--ds-color-primary);
+  stroke-width: 3;
+}
+.ds-helppic__box[data-wait] {
+  fill: var(--ds-color-needs-you-tint);
+  stroke: var(--ds-color-needs-you);
+}
+.ds-helppic__title {
+  fill: var(--ds-color-text);
+  font-family: var(--ds-font-body);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-helppic__muted {
+  fill: var(--ds-color-text-muted);
+  font-family: var(--ds-font-body);
+}
+.ds-helppic__arrow {
+  fill: none;
+  stroke: var(--ds-color-primary);
+  stroke-width: 2;
+}
+.ds-helppic__arrow[data-dashed] {
+  stroke-dasharray: 5 4;
+}
+.ds-helppic__head {
+  fill: var(--ds-color-primary);
+}
+.ds-helppic__busy {
+  fill: var(--ds-color-primary);
+  stroke: var(--ds-color-primary);
+}
+.ds-helppic__free {
+  fill: none;
+  stroke: var(--ds-color-primary);
+  stroke-width: 2;
+}
+.ds-helppic__tick {
+  stroke: var(--ds-color-needs-you);
+  stroke-width: 3;
 }
 .ds-termhelp {
   position: relative;

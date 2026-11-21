@@ -244,7 +244,7 @@ func (b *Backend) provisionDB(ctx context.Context, db Database, pool, owner, rep
 		return fmt.Errorf("database: %s", b.redact(err.Error()))
 	}
 	b.learn(acc.Password)
-	args := []string{"exec", "-i", "-u", JobUser, pool, "sh", "-c", `umask 077 && cat > "$1"`, "sh", jobDir(r.Name) + "/" + DBEnvFileName}
+	args := []string{"exec", "-i", pool, "sh", "-c", `umask 077 && cat > "$1"`, "sh", jobDir(r.Name) + "/" + DBEnvFileName}
 	return b.step(ctx, "write db.env", args, acc.DBEnvFile())
 }
 
@@ -256,7 +256,7 @@ type containerCmd struct {
 }
 
 func (c containerCmd) Run(ctx context.Context, cmd sys.Command) (sys.Result, error) {
-	args := []string{"exec", "-u", JobUser}
+	args := []string{"exec"}
 	args = append(args, envArgs(cmd.Env)...)
 	argv := cmd.Args
 	if cmd.Name == "runuser" && len(argv) >= 2 && argv[0] == "-u" {
@@ -282,7 +282,7 @@ type containerFS struct {
 }
 
 func (f containerFS) exec(stdin string, argv ...string) (sys.Result, error) {
-	args := append([]string{"exec", "-i", "-u", JobUser, f.pool}, argv...)
+	args := append([]string{"exec", "-i", f.pool}, argv...)
 	c, err := f.b.eng.Command(args...)
 	if err != nil {
 		return sys.Result{}, err
