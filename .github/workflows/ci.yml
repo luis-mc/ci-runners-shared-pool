@@ -335,6 +335,16 @@ jobs:
           reg add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' //t REG_DWORD //f //v AllowDevelopmentWithoutDevLicense //d 1
           go test -timeout 10s -count=1 -v -run '^TestProbeSymlinkReal$' ./internal/agent/
 
+  # OPS69: the Windows MSI lifecycle lanes (x64 on windows-latest, arm64 on windows-11-arm) and the
+  # release check. A release pull request fails unless every target lane passed.
+  lifecycle:
+    name: lifecycle
+    needs: decide
+    if: ${{ always() && needs.decide.outputs.release == 'true' && needs.decide.outputs.skip != 'true' }}
+    uses: ./.github/workflows/lifecycle.yml
+    with:
+      release: true
+
   build:
     name: build
     needs: decide

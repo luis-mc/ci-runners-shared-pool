@@ -30,11 +30,16 @@ target="${os}-${arch}"
 work="$(mktemp -d)"
 trap 'rm -rf "$work"' EXIT INT TERM
 
-# The archive carries the release version in its name (crsp-<os>-<arch>_<version>.tar.gz,
-# OPS40). SHA256SUMS has a fixed name and lists it, so it says which file to fetch.
-# A release up to 0.1.14 lists the plain crsp-<os>-<arch>.tar.gz.
+# The archive is named Crsp-<version>-<os>-<arch>.tar.gz (OPS69: os linux or macos, arch x64 or arm64).
+# SHA256SUMS has a fixed name and lists it, so it says which file to fetch. For one transition release the
+# older names are tried second: crsp-<os>-<arch>_<version>.tar.gz and, up to 0.1.14, crsp-<os>-<arch>.tar.gz.
+case "$os" in darwin) new_os=macos ;; *) new_os="$os" ;; esac
+case "$arch" in amd64) new_arch=x64 ;; *) new_arch="$arch" ;; esac
 curl -fsSL "${BASE}/SHA256SUMS" -o "${work}/SHA256SUMS" || fail "download of SHA256SUMS failed"
-name="$(awk -v t="$target" '{ f = $2; sub(/^\*/, "", f) } f ~ ("^crsp-" t "(_[0-9A-Za-z.+-]+)?[.]tar[.]gz$") { print f; exit }' "${work}/SHA256SUMS")"
+name="$(awk -v t="${new_os}-${new_arch}" '{ f = $2; sub(/^\*/, "", f) } f ~ ("^Crsp-[0-9A-Za-z.+-]+-" t "[.]tar[.]gz$") { print f; exit }' "${work}/SHA256SUMS")"
+if [ -z "$name" ]; then
+  name="$(awk -v t="$target" '{ f = $2; sub(/^\*/, "", f) } f ~ ("^crsp-" t "(_[0-9A-Za-z.+-]+)?[.]tar[.]gz$") { print f; exit }' "${work}/SHA256SUMS")"
+fi
 [ -n "$name" ] || fail "no archive for ${target} is in SHA256SUMS"
 curl -fsSL "${BASE}/${name}" -o "${work}/${name}" || fail "download of ${name} failed"
 

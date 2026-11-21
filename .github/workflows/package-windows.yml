@@ -6,10 +6,8 @@ name: Package Windows
 #   - artifact-prune.yml holds `windows-installer` while the newest run of this workflow has not
 #     succeeded (artifact_prune.py --hold windows-installer --hold-workflow package-windows.yml);
 #   - the token request retries a 5xx answer after 1, 2 and 4 seconds (publish_token.py).
-# Release assets carry the version in the file name (DL-96): `<installer_name>_<version>.msi`, and the
-# same names in SHA256SUMS. `release_assets.versioned_names: false` in .delivery/config.json keeps the
-# plain names. The CI build artifact `windows-installer` keeps its stable name (DL-22).
-# See claude/plugins/delivery/references/release-asset-names.md.
+# Release assets are named Crsp-<version>-win-<arch>.msi (OPS69), and the
+# same names in SHA256SUMS. The CI build artifact `windows-installer` keeps its stable name (DL-22).
 # PRODUCT: fill the build and publish commands. Re-running failed jobs then finds the installer.
 # CRSP145: not run on tag pushes. release.yml builds, signs and publishes the MSI for every tag;
 # this template's build step is a placeholder and produced no build/*.msi there.
@@ -58,19 +56,18 @@ jobs:
         run: gh run download "$GITHUB_RUN_ID" --name windows-installer
         env:
           GH_TOKEN: ${{ github.token }}
-      # DL-96: the release asset is `<installer_name>_<version>.msi`; the version is the tag without `v`.
-      # PRODUCT: set INSTALLER_NAME (for example crsp-windows-amd64).
+      # OPS69: the release asset is Crsp-<version>-win-<arch>.msi (scripts/ci/release-names.sh); the version
+      # is the tag without `v`, the arch x64 or arm64.
       - name: Name the release assets
         env:
-          INSTALLER_NAME: crsp-windows-amd64
           REF_NAME: ${{ github.ref_name }}
+          ASSET_ARCH: x64
         run: |
+          source scripts/ci/release-names.sh
           mkdir -p release
           version="${REF_NAME#v}"
-          versioned=$(python3 -c "import json,os;c=json.load(open('.delivery/config.json')) if os.path.exists('.delivery/config.json') else {};print(str(c.get('release_assets',{}).get('versioned_names',True)).lower())")
           for f in *.msi; do
-            if [ "$versioned" = "true" ]; then name="${INSTALLER_NAME}_${version}.msi"; else name="${INSTALLER_NAME}.msi"; fi
-            cp "$f" "release/$name"
+            cp "$f" "release/$(asset_name "$version" win "$ASSET_ARCH" msi)"
           done
           (cd release && sha256sum -- * > SHA256SUMS)
       - name: Get the publish token (retries 5xx)

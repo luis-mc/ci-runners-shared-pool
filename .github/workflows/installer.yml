@@ -113,14 +113,19 @@ jobs:
         run: |
           $prev = 'installer/out/previous'
           New-Item -ItemType Directory -Force -Path $prev | Out-Null
+          # OPS69: the new release name first (Crsp-<version>-win-x64.msi), the old one second, for one transition release.
           foreach ($tag in 'v0.1.1', 'v0.1.2') {
-            gh release download $tag --repo $env:GITHUB_REPOSITORY --pattern 'crsp-windows-amd64.msi' --dir $prev --clobber
-            if ($LASTEXITCODE -eq 0 -and (Test-Path "$prev/crsp-windows-amd64.msi")) { Write-Host "previous release: $tag"; break }
+            foreach ($pattern in 'Crsp-*-win-x64.msi', 'crsp-windows-amd64*.msi') {
+              gh release download $tag --repo $env:GITHUB_REPOSITORY --pattern $pattern --dir $prev --clobber
+              if ($LASTEXITCODE -eq 0 -and (Get-ChildItem $prev -Filter '*.msi')) { break }
+            }
+            if (Get-ChildItem $prev -Filter '*.msi') { Write-Host "previous release: $tag"; break }
           }
-          if (-not (Test-Path "$prev/crsp-windows-amd64.msi")) { throw 'no previous release MSI could be downloaded' }
+          $prevMsi = Get-ChildItem $prev -Filter '*.msi' | Select-Object -First 1
+          if (-not $prevMsi) { throw 'no previous release MSI could be downloaded' }
           ./installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.9.0 -Out installer/out/v0.9.0
           ./installer/upgrade-test.ps1 `
-            -PreviousMsi "$prev/crsp-windows-amd64.msi" `
+            -PreviousMsi $prevMsi.FullName `
             -NewMsi installer/out/v0.9.0/crsp-windows-amd64.msi `
             -MaxSeconds 60 `
             -LogDir installer/out/logs

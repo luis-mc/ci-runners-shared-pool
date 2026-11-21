@@ -1,0 +1,28 @@
+{
+  "product": "CI Runners Shared Pool",
+  "targets": [
+    { "os": "windows", "arch": "x64", "package": "msi" },
+    { "os": "windows", "arch": "arm64", "package": "msi" }
+  ],
+  "paths": {
+    "service": "crsp",
+    "console_port": 8460,
+    "listen_ports": [8460, 8461],
+    "install": "C:\\Program Files\\crsp",
+    "config": "C:\\ProgramData\\crsp\\config.toml",
+    "data": "C:\\ProgramData\\crsp\\ca",
+    "logs": "C:\\ProgramData\\crsp\\logs",
+    "data_roots": ["C:\\ProgramData"],
+    "legacy_data": []
+  },
+  "keep_on_remove": [
+    "C:\\ProgramData\\crsp\\config.toml",
+    "C:\\ProgramData\\crsp\\ca",
+    "C:\\ProgramData\\crsp\\logs"
+  ],
+  "test_interface": {
+    "selftest": "\"C:\\Program Files\\crsp\\crsp.exe\" lifecycle-test selftest",
+    "pair": "\"C:\\Program Files\\crsp\\crsp.exe\" lifecycle-test pair",
+    "tray_start": "\"C:\\Program Files\\crsp\\crsp.exe\" tray"
+  }
+}
