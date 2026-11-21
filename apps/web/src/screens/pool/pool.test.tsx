@@ -86,6 +86,15 @@ describe('the seven areas and the old addresses (D24)', () => {
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Machines' }),
     ).toBeTruthy();
+    // Choosing a tab redraws the row; focus is back on the chosen tab a frame later (keepFocus), so wait for it.
+    await waitFor(() =>
+      expect(document.activeElement).toBe(
+        within(screen.getByRole('tablist', { name: 'Shared Pool sections' })).getByRole(
+          'tab',
+          { name: 'Machines' },
+        ),
+      ),
+    );
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'End' });
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Size and backends' }),
