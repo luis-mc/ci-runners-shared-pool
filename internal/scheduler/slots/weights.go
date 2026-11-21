@@ -76,7 +76,7 @@ func (s Settings) ClassOf(j JobNames) (name string, ok bool) {
 }
 
 // WeightOf is the weight of a job: its size from the scan, a measuring or an
-// override when there is one (R5.97), else its name class's, or DefaultWeight
+// override when there is one (R5.87), else its name class's, or DefaultWeight
 // for an unknown class. A weight below 1 counts as 1 and one above the machine's
 // budget is cut to it, so a job can always run alone. class is "default" for
 // an unknown class.

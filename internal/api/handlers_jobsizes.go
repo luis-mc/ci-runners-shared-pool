@@ -9,7 +9,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsize"
 )
 
-// JobSizeService is what the job size routes need (scheduling R5.89 to R5.97).
+// JobSizeService is what the job size routes need (scheduling R5.79 to R5.87).
 // *jobsize.Service implements it.
 type JobSizeService interface {
 	Views(ctx context.Context, repository string) ([]jobsize.View, string, error)

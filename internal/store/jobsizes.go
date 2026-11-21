@@ -207,7 +207,7 @@ func strs(l []string) []string {
 	return l
 }
 
-// loadSizes builds the precedence list the scheduler reads (R5.97): console
+// loadSizes builds the precedence list the scheduler reads (R5.87): console
 // rules, file rules, then one entry per scanned or measured job.
 func loadSizes(ctx context.Context, q sqlQuerier) ([]slots.JobSize, error) {
 	rules, err := readRules(ctx, q, "")

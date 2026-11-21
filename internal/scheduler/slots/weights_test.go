@@ -51,7 +51,7 @@ func TestHeldWeightCountsCISlotsOnly(t *testing.T) {
 	}
 }
 
-// R5.97: a size from the scan, a measuring or an override feeds WeightOf; the
+// R5.87: a size from the scan, a measuring or an override feeds WeightOf; the
 // name classes stay as the fallback.
 func TestWeightOfUsesSizesThenNameClasses(t *testing.T) {
 	s := Defaults()

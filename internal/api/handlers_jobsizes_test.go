@@ -37,7 +37,7 @@ func sizeMux(t *testing.T, role auth.Role, f JobSizeService) *http.ServeMux {
 	return mux
 }
 
-// The contract of the job size routes (scheduling R5.89 to R5.97): the list
+// The contract of the job size routes (scheduling R5.79 to R5.87): the list
 // carries the source, both override values, the copy line and the cost table;
 // only an admin writes; an empty or bad request is a 400, never a 500.
 func TestJobSizeRoutesContract(t *testing.T) {

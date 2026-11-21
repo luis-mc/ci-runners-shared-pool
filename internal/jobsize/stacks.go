@@ -6,7 +6,7 @@ import (
 )
 
 // Stack is one test framework family, as a table row. A new stack is a new
-// row in Stacks, with no new code (scheduling R5.90).
+// row in Stacks, with no new code (scheduling R5.80).
 type Stack struct {
 	// Key is the CostTable.Frameworks key.
 	Key string

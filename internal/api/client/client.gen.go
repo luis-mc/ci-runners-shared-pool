@@ -9048,14 +9048,14 @@ type ClientInterface interface {
 
 	// ListJobSizes The size of each job of a repository and where it came from, with the cost table
 	//
-	// scheduling R5.89 to R5.97. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+	// scheduling R5.79 to R5.87. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
 	//
 	// Corresponds with GET /api/v1/job-sizes (the `ListJobSizes` operationId).
 	ListJobSizes(ctx context.Context, params *ListJobSizesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutJobSizeOverrideWithBody Set the console size override of a job pattern
 	//
-	// scheduling R5.95. It applies at once and wins over .crsp.yml.
+	// scheduling R5.86. It applies at once and wins over .crsp.yml.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -9064,7 +9064,7 @@ type ClientInterface interface {
 
 	// PutJobSizeOverride Set the console size override of a job pattern
 	//
-	// scheduling R5.95. It applies at once and wins over .crsp.yml.
+	// scheduling R5.86. It applies at once and wins over .crsp.yml.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -11556,7 +11556,7 @@ func (c *Client) DeleteJobSizeOverride(ctx context.Context, params *DeleteJobSiz
 
 // ListJobSizes The size of each job of a repository and where it came from, with the cost table
 //
-// scheduling R5.89 to R5.97. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+// scheduling R5.79 to R5.87. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
 //
 // Corresponds with GET /api/v1/job-sizes (the `ListJobSizes` operationId).
 func (c *Client) ListJobSizes(ctx context.Context, params *ListJobSizesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -11573,7 +11573,7 @@ func (c *Client) ListJobSizes(ctx context.Context, params *ListJobSizesParams, r
 
 // PutJobSizeOverrideWithBody Set the console size override of a job pattern
 //
-// scheduling R5.95. It applies at once and wins over .crsp.yml.
+// scheduling R5.86. It applies at once and wins over .crsp.yml.
 //
 // Takes any type of body and a specified content type.
 //
@@ -11592,7 +11592,7 @@ func (c *Client) PutJobSizeOverrideWithBody(ctx context.Context, contentType str
 
 // PutJobSizeOverride Set the console size override of a job pattern
 //
-// scheduling R5.95. It applies at once and wins over .crsp.yml.
+// scheduling R5.86. It applies at once and wins over .crsp.yml.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -23879,7 +23879,7 @@ type ClientWithResponsesInterface interface {
 
 	// ListJobSizesWithResponse The size of each job of a repository and where it came from, with the cost table
 	//
-	// scheduling R5.89 to R5.97. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+	// scheduling R5.79 to R5.87. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -23888,7 +23888,7 @@ type ClientWithResponsesInterface interface {
 
 	// PutJobSizeOverrideWithBodyWithResponse Set the console size override of a job pattern
 	//
-	// scheduling R5.95. It applies at once and wins over .crsp.yml.
+	// scheduling R5.86. It applies at once and wins over .crsp.yml.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -23897,7 +23897,7 @@ type ClientWithResponsesInterface interface {
 
 	// PutJobSizeOverrideWithResponse Set the console size override of a job pattern
 	//
-	// scheduling R5.95. It applies at once and wins over .crsp.yml.
+	// scheduling R5.86. It applies at once and wins over .crsp.yml.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -35218,7 +35218,7 @@ func (c *ClientWithResponses) DeleteJobSizeOverrideWithResponse(ctx context.Cont
 
 // ListJobSizesWithResponse The size of each job of a repository and where it came from, with the cost table
 //
-// scheduling R5.89 to R5.97. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+// scheduling R5.79 to R5.87. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -35233,7 +35233,7 @@ func (c *ClientWithResponses) ListJobSizesWithResponse(ctx context.Context, para
 
 // PutJobSizeOverrideWithBodyWithResponse Set the console size override of a job pattern
 //
-// scheduling R5.95. It applies at once and wins over .crsp.yml.
+// scheduling R5.86. It applies at once and wins over .crsp.yml.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -35248,7 +35248,7 @@ func (c *ClientWithResponses) PutJobSizeOverrideWithBodyWithResponse(ctx context
 
 // PutJobSizeOverrideWithResponse Set the console size override of a job pattern
 //
-// scheduling R5.95. It applies at once and wins over .crsp.yml.
+// scheduling R5.86. It applies at once and wins over .crsp.yml.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //

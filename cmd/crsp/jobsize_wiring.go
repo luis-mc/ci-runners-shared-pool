@@ -10,7 +10,7 @@ import (
 )
 
 // sizeTrigger starts a job size scan when a job event brings a commit not seen
-// yet (scheduling R5.93). It never blocks the webhook and never holds a job:
+// yet (scheduling R5.83). It never blocks the webhook and never holds a job:
 // one scan per repository runs at a time, the newest commit waits for it, and
 // a scan that fails leaves the sizes as they were.
 type sizeTrigger struct {

@@ -14,7 +14,7 @@ import (
 )
 
 // The trigger scans a new commit once, never blocks the webhook, and a failed
-// scan changes nothing (scheduling R5.93, R5.96).
+// scan changes nothing (scheduling R5.83, R5.85).
 func TestSizeTriggerScansEachCommitOnce(t *testing.T) {
 	var mu sync.Mutex
 	var got []string
