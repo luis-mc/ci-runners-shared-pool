@@ -7,7 +7,7 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/scheduler/**", "internal/hooks/**", "internal/api/handlers_jobs.go", "internal/store/schedstore.go"]
+code: ["internal/scheduler/**", "internal/hooks/**", "internal/api/handlers_jobs.go", "internal/store/schedstore.go", "internal/jobsize/**", "internal/api/handlers_jobsizes.go", "internal/store/jobsizes.go"]
 design_system: [UX-6, UX-14, UX-17, UX-19, UX-29, UX-34, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62, components 15, components 16, components 17, components 19]
 last_verified: 2026-11-18
 artifact:
@@ -85,6 +85,26 @@ The steps in words:
 Short jobs (smoke tests, cleanup) can use a separate light slot, so they do not wait behind long builds. Heavy jobs (integration or end-to-end tests) can be limited to one at a time with a heavy slot.
 
 With more machines (M3), the controller picks the machine before a runner starts: first the machines whose labels match, then the one with the most free capacity, then the one that ran this repository last.
+
+### How a job gets its size (R5.80 to R5.88)
+
+```mermaid
+flowchart TD
+  push[A job event brings a new commit] --> scan[Scan: list the commit's files once, read workflows and test configs]
+  scan --> guess[Guess per job: tests x projects / shards, workers, services]
+  guess --> keep[Keep the guess; a test count that moved more than 2x resets to it]
+  job[Job asks for a slot] --> ov{Console override?}
+  ov -- yes --> use[Weight of the class]
+  ov -- no --> fo{.crsp.yml override?}
+  fo -- yes --> use
+  fo -- no --> me{Measured, 5 runs or more?}
+  me -- yes --> use2[Measured weight]
+  me -- no --> sc{Scan guess?}
+  sc -- yes --> use3[Guessed weight]
+  sc -- no --> nm{Name class?}
+  nm -- yes --> use4[Class weight, R5.69]
+  nm -- no --> d[1 CPU, 1 memory unit]
+```
 
 ## 4. Screens and states
 
@@ -299,6 +319,42 @@ Source paths are in github.com/luis-mc/dev-standards, under `claude/plugins/deli
 
 **R5.78** (OPS58) — **A load warning clears only after a steady period under budget.** The warning clears when every load report for `machines.LoadClearAfter` (60 s, about four reports at the 15 s step of R5.43) is at or under the budget; one report over the budget restarts the period. The hold of R5.76 is not delayed by this: starts resume at the first poll under budget, only the warning waits. Built (OPS58). Tests use a fake clock and no sleeps.
 
+**R5.79** (OPS66, owner decisions of 21 Nov 2026 on job sizing; **NOT BUILT YET, specification of a later task**) — **Measured size replaces the scan's guess.** Today a job is admitted by the declared weight of its class (R5.69, `slots.DefaultClasses`) or the size the stack scan guessed. Observability R5.60 to R5.65 now measure the peak CPU and peak memory of every job run and keep a summary per job key (repository, workflow, job key): the p90 of the peaks of its last 30 good runs, `measured` from 5 good runs on, the same 5-run rule as the time forecast (observability R5.41). When this requirement is built, a job key that is `measured` is admitted with its measured size (p90 peak CPU in cores, p90 peak memory in bytes, rounded up to the weight units of R5.69), and a job key that is not measured keeps the class weight or the scan's guess, as today. A run killed for memory or cut short never lowers the size. Nothing in the scheduler reads the measured peaks yet: the gate, the placement and the slot queue are unchanged by OPS66. Source (planned): `internal/jobsize` `Summarise`, read through `store.ResourcesStore.Peaks`.
+
+### 5.13 Job sizes by scan and count (OPS67)
+
+**R5.80** (OPS67, owner decisions of 21 Nov: job sizing, build plan T4; built) — **A job's size comes from a fixed order of sources.** The order is: the console override, the `.crsp.yml` override, the measured size, the scan guess, the name classes of R5.69, then the default of 1 CPU unit and 1 memory unit. The first source that knows the job wins, and the console shows which one it was: Override, Measured, Scan or Default. A measured size counts after `jobsize.MeasuredAfter` (5) runs; the measuring itself is OPS66, this task only reads its table (`job_size_measured`). Built: `jobsize.Resolve`, `jobsize.Service.Views`.
+
+**R5.81** (OPS67; built for Playwright, Vitest and Jest, Go, JVM, .NET, pytest and Rust) — **The scan counts tests and reads each tool's config.** For each stack it counts the test files and the tests (a marker count over at most 120 files per stack, scaled up for the rest) and reads the tool's config: Playwright `workers`, `projects`, `fullyParallel`, `--shard`; Vitest and Jest `maxWorkers`, `pool` options, `--runInBand`; Go `-p` and `-parallel`; pytest `-n` (xdist) and `addopts`; Rust `--test-threads` and nextest `test-threads`; JVM `maxParallelForks`, `forkCount`, `-T`; .NET `maxParallelThreads`, `MaxCpuCount`. A stack is one row of `jobsize.Stacks`, so another stack is a new row, not new code. It also spots the services a job starts: GitHub Actions `services:` images, `docker compose up` (the compose files' images), `testcontainers` in a manifest, SQL Server, Kafka, Elasticsearch and other database images, emulators and simulators, `/dev/kvm` and GPUs. Built.
+
+**R5.82** (OPS67; built) — **The scan reads the workflow files too.** For each job it reads the steps, `strategy.matrix`, `strategy.max-parallel`, `timeout-minutes` and `services:`. An `npm`, `pnpm` or `yarn` script is read through `package.json`. A step such as `run: ./ci.sh` hides what runs: the guess then comes from the job name and the repository's tests and is marked **low confidence** (`confidence: low`); a job with no test tool and no service is not guessed at all. `.crsp.yml` is read in the same pass (R5.87). The stack hash of the registry is unchanged: workflows are still not stack files (registry R5.73).
+
+**R5.83** (OPS67; built) — **One editable cost table, with defaults in code.** `jobsize.DefaultCostTable` holds a class (light, normal or heavy), CPU and GiB per worker for each framework and each service; the controller keeps edits as a JSON patch in its settings (key `job_cost_table`) and a bad row is dropped. Every default is an assumption and the table says so (`assumption: true`); measured values replace it later (OPS66). The rules: `units = tests x projects / shards`; `parallel = min(workers, units)` (for Playwright without `fullyParallel`, a file is the unit); `peak = parallel x cost of one worker + fixed costs of the services`. The peak is rounded up to whole units (1 unit = 1 CPU or 1 GiB) and cut to the machine's budget by `WeightOf`. The class of a guess is light up to 1 CPU and 1 GiB, normal up to 2 and 2, heavy above. The starting values:
+
+| Row | Class | CPU | GiB | Note |
+|---|---|---|---|---|
+| playwright | normal | 1 per worker | 0.5 to 1 | 10 s per test run |
+| vitest (and Jest) | light | 1 per worker | 0.3 to 0.5 | |
+| go | light | 1 per package test | 0.25 to 0.5 | the memory is a guess |
+| rust | normal | 1 per job | 1 to 2 | the compile |
+| pytest | light | 1 per worker | 0.2 to 0.5 | |
+| jvm, dotnet | normal | 1 per worker | 1 to 2, 0.5 to 1 | guesses |
+| sqlserver, kafka, elasticsearch | heavy | 1 | 2.5 | over 2 GiB |
+| postgres, mysql, mongo, rabbitmq | normal | 0.5 | 0.5 | guesses |
+| redis | light | 0.25 | 0.25 | guess |
+| testcontainers | normal | 1 | 1 | |
+| emulator, kvm, gpu | heavy | 2 | 4 | |
+
+**R5.84** (OPS67; built) — **When the scan runs.** The scan reads a commit's files once and only the files it needs (`stackscan.Reader`: one tree listing, then single file reads at the commit) and never clones and never runs code. It runs when a job event brings a commit it has not scanned (`sizeTrigger`: one scan per repository at a time, the newest commit waits), which is the first job of every push and of the first run after a repository opts in; only repositories with the pool on can be read. A scanned commit is not scanned again. A scan that fails or is delayed by the GitHub rate budget changes nothing. Built, except that the opt-in itself starts no scan: the first job event after it does.
+
+**R5.85** (OPS67; built) — **A test count that moves by more than 2x resets the size.** When the test count of a job is more than twice, or less than half, of its count at the last scan, the size goes back to the scan guess: the measured size is dropped and the job's row carries the note "Tests went from X to Y, so the size went back to the scan guess.", which the console shows. A console or `.crsp.yml` override is not reset: it is the owner's word. Built: `jobsize.Reconcile`.
+
+**R5.86** (OPS67; built) — **Sizing never blocks or holds a job.** A new job with no history uses the scan guess; when the scan finds nothing, it weighs 1 CPU unit and 1 memory unit (R5.69). The sizes are read together with the settings; a read that fails leaves the name classes, and a failed or slow scan is only logged. No gate waits for a scan.
+
+**R5.87** (OPS67; built) — **The override.** `.crsp.yml` in the repository may hold `sizes: { 'integration-*': heavy }` (a job name or glob and light, normal or heavy). The console may save an override of its own for a job pattern; it applies at once and wins over the file. The console shows both values and where each job's size came from, and "Copy to .crsp.yml" copies the YAML line (`sizes: { "integration-*": heavy }`) to the clipboard. API: `GET /api/v1/job-sizes?repository=`, `PUT` and `DELETE /api/v1/job-sizes` (admin). A class stands for a weight: light 1/1, normal 2/2, heavy 4/4 units, cut to the machine's budget. A bad class in the file is shown as a file error and the scan's other results are kept.
+
+**R5.88** (OPS67; built) — **The size feeds admission.** `slots.Settings.Sizes` carries the sources in the order of R5.80 (console rules, file rules, then one entry per scanned or measured job, each with the repository) and `WeightOf` takes the first entry that matches the job's key or shard before it looks at the name classes of R5.69; the name classes stay as the fallback. The class named in a wait line (R5.69) is the size's class. Built: `schedTx.Settings` fills `Sizes` from migration `00035_job_sizes.sql`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — With a free slot and a machine under budget, the job-started hook returns within 2 s. No measurement sleeps. M1. Built. Source: `load.py` `measure_now`.
@@ -479,6 +535,7 @@ A test with a path in backticks exists; one marked planned is NOT YET IMPLEMENTE
 | R5.76 | `internal/scheduler/gate_test.go` TestOverBudgetHoldsNewStartWhileAJobRuns; `internal/agent/gate_test.go` (budget reason) | new |
 | R5.77 | `internal/doctor/checks/checks_test.go` TestLoadBudgetWarnsWhileJobsRun | new |
 | R5.78 | `internal/machines/loadwatch_test.go` TestLoadWatchRaisesAndClearsWithoutFlapping, TestOverBudgetIsStrictAndIgnoresUnknown | new |
+| R5.79 | planned, not built: no test yet (OPS66 only measures; `internal/store/insights_peaks_test.go` TestPeaksStoreRunAndKeySummary proves the summary it will read) |
 | R6.1 | `internal/hooks/hooks_test.go` TestQuietGateUnderTwoSeconds | `test_load.py` Cache `test_no_sleep_and_delta_from_saved_raw` |
 | R6.2 | `internal/scheduler/gate_test.go` TestTwoTakersNeverShareASlot | `test_machine.py` Slots `test_race_two_processes_never_share_one_slot` |
 | R6.3 | `internal/scheduler/guard_test.go` TestQueriesHaveDeadline | new |
@@ -487,6 +544,15 @@ A test with a path in backticks exists; one marked planned is NOT YET IMPLEMENTE
 | R6.6 | `internal/hooks/hooks_test.go` TestFailOpen | `test_machine.py` Gate `test_unmeasurable_load_does_not_hold_the_job`; JobDone `test_main_never_fails`; `test_load.py` Cache `test_unwritable_cache_still_works` |
 | R6.7 | planned: internal/scheduler/load/platform_test.go TestBuildsWithoutCgo (CI matrix) | new |
 | R6.8 | `internal/scheduler/slots/slots_test.go` TestBadValuesKeepDefaults | `test_machine.py` Config `test_defaults_roundtrip_and_bad_values` |
+| R5.80 | `internal/jobsize/resolve_test.go` TestResolvePrecedence, TestViewsShowBothOverridesAndSource; `internal/store/jobsizes_test.go` TestIntegrationJobSizesFeedSettings | new |
+| R5.81 | `internal/jobsize/scan_test.go` TestScanStacks (19 fixture repositories: Playwright, Vitest, Jest, Go, pytest, Rust, JVM, .NET, services), TestScanFindsNothing | new |
+| R5.82 | `internal/jobsize/scan_test.go` TestScanWorkflowFields, TestScanStacks (opaque script), TestParseSizes | new |
+| R5.83 | `internal/jobsize/resolve_test.go` TestCostTableEdits; `internal/jobsize/scan_test.go` TestScanStacks; `internal/api/handlers_jobsizes_test.go` TestJobSizeRoutesContract | new |
+| R5.84 | `cmd/crsp/jobsize_wiring_test.go` TestSizeTriggerScansEachCommitOnce; `internal/jobsize/resolve_test.go` TestScanRepoResetDropsMeasured | new |
+| R5.85 | `internal/jobsize/resolve_test.go` TestReconcileTwoTimes, TestScanRepoResetDropsMeasured | new |
+| R5.86 | `internal/jobsize/resolve_test.go` TestNewJobNeverBlocks; `internal/scheduler/slots/weights_test.go` TestWeightOfUsesSizesThenNameClasses | new |
+| R5.87 | `internal/jobsize/resolve_test.go` TestViewsShowBothOverridesAndSource, TestSetOverrideValidates, TestCopyLine, TestScanReadsCrspFile; `internal/api/handlers_jobsizes_test.go` TestJobSizeRoutesContract, TestJobSizeRoutesRolesAndUnbuilt; console tests in `apps/web/src/screens` (job sizes) | new |
+| R5.88 | `internal/scheduler/slots/weights_test.go` TestWeightOfUsesSizesThenNameClasses; `internal/store/jobsizes_test.go` TestIntegrationJobSizesFeedSettings | new |
 
 ### Ported tests not in the table above
 
@@ -543,6 +609,7 @@ Source: `internal/scheduler/slots/config.go`, `internal/scheduler/slots/order.go
 - `internal/hooks`: the `crsp hook` commands, the gate loop, the job-completed hook, the agent socket protocol and the wrappers.
 - `internal/store/schedstore.go`: the SQLite side of `Store`, and the jobs reads.
 - `internal/api/handlers_jobs.go`: listJobs, getJob, listSlots, freeStaleSlots.
+- `internal/jobsize`: the scan, the stack and cost tables, the precedence and the 2x reset (OPS67); `internal/store/jobsizes.go` keeps its rows; `internal/api/handlers_jobsizes.go` serves them; `cmd/crsp/jobsize_wiring.go` starts the scan from job events.
 
 Planned, not built: `demand.go`, `windows.go` (M2 and M3); placement across machines (R5.48, R5.49). Built in CRSP50: `placement.go` (one machine). The tables are those of `internal/store/migrations/00006_scheduling.sql`.
 

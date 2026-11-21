@@ -117,7 +117,9 @@ func (s *Service) HandleLoad(ctx context.Context, machineID string, r *agentv1.L
 		MemoryPct: r.GetMemoryPct(), MemoryKnown: r.GetMemoryKnown(), CPUPct: r.GetCpuPct(), CPUKnown: r.GetCpuKnown(),
 		UnknownReason: r.GetUnknownReason(), SlotsUsed: int(r.GetSlotsUsed()), ReceivedAt: now,
 		WSLVMBytes: r.GetWslVmBytes(), ContainersBytes: r.GetContainersBytes(),
-		SampledAt: time.UnixMilli(r.GetSampledAtUnixMs()).UTC(),
+		HostUseP95Bytes: r.GetHostUseP95Bytes(), HostUseReady: r.GetHostUseReady(),
+		HostUseSpan: time.Duration(r.GetHostUseSpanSeconds()) * time.Second,
+		SampledAt:   time.UnixMilli(r.GetSampledAtUnixMs()).UTC(),
 	}
 	if r.GetSampledAtUnixMs() == 0 {
 		l.SampledAt = now

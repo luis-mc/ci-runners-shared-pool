@@ -1,8 +1,11 @@
 package capacity
 
 import (
+	"context"
 	"sort"
 	"time"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsize"
 )
 
 // Summarise is the summary of one job's samples (R5.20), written when the job ends. Only samples with
@@ -40,4 +43,42 @@ func pct(v []int64, p int) int64 {
 		i = 0
 	}
 	return s[i]
+}
+
+// RunPeak is the measured peaks of one job run (OPS66, observability R5.60): CPU in cores x 1000 (p95 over
+// the sample windows), memory in bytes (the largest reading or the peak the system kept).
+type RunPeak struct {
+	JobID                     int64
+	Repository, Workflow      string
+	JobKey, Runner, MachineID string
+	RunID                     int64
+	Source                    string
+	PeakCPUMillis             int64
+	PeakMemoryBytes           int64
+	Samples                   int
+	DurationMS                int64
+	OOMKilled, CutShort, Good bool
+	UnknownReason             string
+	CompletedAt               time.Time
+}
+
+// Batch is one JobResourceSamples message of the agent, as the store takes it (OPS66). Repository, Job and
+// RunID come from the agent when the jobs table does not know the job yet.
+type Batch struct {
+	JobID               int64
+	MachineID, RunnerID string
+	Repository, Job     string
+	RunID               int64
+	Source              string
+	Samples             []ResourceSample
+	Final               bool
+	UnknownReason       string
+	OOMKilled, CutShort bool
+	MemoryPeakBytes     int64
+}
+
+// PeakReader reads the peaks of a job run and the summary of its job key (OPS66, R5.60, R5.63). found is
+// false while the run has no final batch.
+type PeakReader interface {
+	Peaks(ctx context.Context, jobID int64) (run RunPeak, key jobsize.Summary, found bool, err error)
 }

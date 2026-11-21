@@ -12,7 +12,34 @@ const (
 	GiBPerCPU    = 1.5
 	DefaultMemPc = 85
 	DefaultCPUPc = 60
+	// SafetyMarginGiB is kept free on top of the host's own p95 use when the
+	// room is sized from the measured figure (OPS61, machines R5.68).
+	SafetyMarginGiB = 1.0
+	// MeasuredMinHours is how many hours of samples the p95 needs before it
+	// replaces the fixed share.
+	MeasuredMinHours = 24
 )
+
+// Basis of a recommendation: the measured p95 of the host's own use, or the
+// fixed share of the free room while the samples are fewer than 24 h.
+const (
+	BasisMeasured  = "measured"
+	BasisMeasuring = "measuring"
+)
+
+// MeasuredRoom is the room for the pool when the host's own use is measured:
+// total memory x memory budget, less the host's p95 use and the safety margin,
+// never below 0 (OPS61).
+func MeasuredRoom(totalGiB float64, memPct int, hostP95GiB float64) float64 {
+	if memPct <= 0 {
+		memPct = DefaultMemPc
+	}
+	room := totalGiB*float64(memPct)/100 - hostP95GiB - SafetyMarginGiB
+	if room < 0 {
+		return 0
+	}
+	return room
+}
 
 // Inputs are the figures the check reads. All memory is in bytes.
 type Inputs struct {
@@ -28,6 +55,15 @@ type Inputs struct {
 	DockerCeilingBytes int64
 	BudgetMemPct       int
 	BudgetCPUPct       int
+	// HostP95Bytes is the rolling 7-day p95 of memory the PC uses without the
+	// pool; HostReady is true when the samples cover 24 h, HostSpanHours is how
+	// long they cover (OPS61).
+	HostP95Bytes  int64
+	HostReady     bool
+	HostSpanHours float64
+	// WSLPool is true when the pool runs in WSL2; the declared cap is
+	// DockerCeilingBytes (0: `.wslconfig` sets none).
+	WSLPool bool
 }
 
 // Request is the owner's pool size and what it replaces.
@@ -61,6 +97,27 @@ type Result struct {
 	// Half and ThreeQuarters are the recommended sizes (LOOK22): that share
 	// of the room. Set whenever the sizing inputs are.
 	Half, ThreeQuarters Recommended
+
+	// Basis says what the recommended sizes rest on: BasisMeasured or
+	// BasisMeasuring. HostP95GiB and HostSpanHours are the measured basis;
+	// MeasuredRoomGiB is total x budget less the p95 and SafetyMarginGiB, set
+	// only when measured. PresetRoomGiB is the room the recommended sizes take
+	// a share of: the smaller of the measured room and the room right now.
+	Basis           string
+	HostP95GiB      float64
+	HostSpanHours   float64
+	MeasuredRoomGiB float64
+	PresetRoomGiB   float64
+	// LeavesGiB is what the size leaves for the PC; LeavesLessThanHost is the
+	// warning (not a block) when that is below the host's p95.
+	LeavesGiB          float64
+	LeavesLessThanHost bool
+	// WSLPool, WSLCapGiB and WSLCapSet describe the WSL2 memory cap: the pool
+	// runs in WSL2, the cap `.wslconfig` declares, and whether it sets one.
+	WSLPool    bool
+	WSLCapGiB  float64
+	WSLCapSet  bool
+	CapAbovePC bool
 }
 
 // Recommended is one recommended pool size.
@@ -124,8 +181,22 @@ func Check(in Inputs, r Request) Result {
 		res.RoomGiB = 0
 	}
 	res.CPUBudget = in.TotalCPUs * cpuPct / 100
-	res.Half = Recommend(res.RoomGiB, res.CPUBudget, 0.5)
-	res.ThreeQuarters = Recommend(res.RoomGiB, res.CPUBudget, 0.75)
+	res.Basis, res.HostSpanHours = BasisMeasuring, in.HostSpanHours
+	res.PresetRoomGiB = res.RoomGiB
+	if in.HostReady {
+		res.Basis = BasisMeasured
+		res.HostP95GiB = gib(in.HostP95Bytes)
+		res.MeasuredRoomGiB = MeasuredRoom(res.TotalGiB, memPct, res.HostP95GiB)
+		if res.MeasuredRoomGiB < res.PresetRoomGiB {
+			res.PresetRoomGiB = res.MeasuredRoomGiB
+		}
+		res.LeavesGiB = res.TotalGiB - r.MemGiB
+		res.LeavesLessThanHost = r.MemGiB > 0 && res.LeavesGiB < res.HostP95GiB
+		res.CapAbovePC = in.DockerCeilingBytes > 0 && res.DockerCeilingGiB > res.TotalGiB-res.HostP95GiB
+	}
+	res.WSLPool, res.WSLCapSet, res.WSLCapGiB = in.WSLPool, in.DockerCeilingBytes > 0, res.DockerCeilingGiB
+	res.Half = Recommend(res.PresetRoomGiB, res.CPUBudget, 0.5)
+	res.ThreeQuarters = Recommend(res.PresetRoomGiB, res.CPUBudget, 0.75)
 	maxCPUsForMem := int(math.Floor(r.MemGiB/GiBPerCPU + 1e-9))
 	refuse := func(short, decided, reason string, nearest ...string) Result {
 		res.Short, res.Decided, res.Reason, res.Nearest = short, decided, reason, nearest

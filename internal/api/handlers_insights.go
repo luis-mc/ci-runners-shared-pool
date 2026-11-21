@@ -52,6 +52,9 @@ type InsightsArea struct {
 	Runs       runs.Reader
 	Workflows  workflows.Store
 	Resources  capacity.Resources
+	// Peaks reads the measured peaks of a job run and the summary of its job key (OPS66); nil leaves the
+	// peak fields of getJobResources absent.
+	Peaks capacity.PeakReader
 	// HoldCap is the hold cap setting (R5.14); nil or 0 uses 120 s.
 	HoldCap func(ctx context.Context) time.Duration
 	// Backlog is how many jobs wait for the GitHub hourly limit and until when (R6.1); nil says nothing.
@@ -919,6 +922,30 @@ func (s *server) GetJobResources(ctx context.Context, req gen.GetJobResourcesReq
 		out.CpuPeakCores = ptr(float32(sum.CPUPeakMillis) / 1000)
 		out.MemoryP95Bytes = ptr(sum.MemP95)
 		out.MemoryPeakBytes = ptr(sum.MemPeak)
+	}
+	if a.Peaks != nil {
+		run, key, found, err := a.Peaks.Peaks(ctx, req.JobId)
+		if err != nil {
+			return fail(s.insightErr("getJobResources", err))
+		}
+		if found && run.Samples > 0 {
+			m := gen.JobMeasured{
+				PeakCpuCores: float32(run.PeakCPUMillis) / 1000, PeakMemoryBytes: run.PeakMemoryBytes, SampleCount: run.Samples,
+				DurationSeconds: float32(run.DurationMS) / 1000, OomKilled: run.OOMKilled, CutShort: run.CutShort, Good: run.Good,
+				Key: &gen.JobKeyMeasured{Runs: key.Runs, Measured: key.Measured},
+			}
+			if run.Source != "" {
+				m.Source = ptr(run.Source)
+			}
+			if run.Runner != "" {
+				m.Runner = ptr(run.Runner)
+			}
+			if key.Runs > 0 {
+				m.Key.CpuP90Cores = ptr(float32(key.CPUP90Millis) / 1000)
+				m.Key.MemoryP90Bytes = ptr(key.MemoryP90Bytes)
+			}
+			out.Measured = &m
+		}
 	}
 	return gen.GetJobResources200JSONResponse(out), nil
 }

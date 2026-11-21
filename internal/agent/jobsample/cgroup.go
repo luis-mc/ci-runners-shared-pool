@@ -17,8 +17,9 @@ type FileReader func(path string) ([]byte, error)
 type CgroupSampler struct {
 	Read FileReader
 
-	mu   sync.Mutex
-	prev map[string]cpuMark
+	mu      sync.Mutex
+	prev    map[string]cpuMark
+	oomBase map[string]int64 // oom_kill count at the first sample of a job
 }
 
 type cpuMark struct {
@@ -28,11 +29,14 @@ type cpuMark struct {
 
 // NewCgroupSampler returns a sampler over read.
 func NewCgroupSampler(read FileReader) *CgroupSampler {
-	return &CgroupSampler{Read: read, prev: map[string]cpuMark{}}
+	return &CgroupSampler{Read: read, prev: map[string]cpuMark{}, oomBase: map[string]int64{}}
 }
 
 // Source implements Sampler.
 func (*CgroupSampler) Source() Source { return Cgroup }
+
+// Interval implements Sampler: four small file reads a second cost far under 0.1 percent of a core.
+func (*CgroupSampler) Interval() time.Duration { return Interval }
 
 // Sample implements Sampler. The first sample of a job has CPUMillis 0: there is no earlier reading.
 func (c *CgroupSampler) Sample(ctx context.Context, t Target, now time.Time) (Sample, string, error) {
@@ -67,13 +71,33 @@ func (c *CgroupSampler) Sample(ctx context.Context, t Target, now time.Time) (Sa
 	if had {
 		s.CPUMillis = cpuMillis(usec-p.usec, now.Sub(p.at))
 	}
+	// memory.peak needs kernel 5.19; memory.events is old. A missing file leaves the value 0 (no peak, no OOM).
+	if raw, err := c.Read(t.CgroupPath + "/memory.peak"); err == nil {
+		if peak, err := strconv.ParseInt(string(bytes.TrimSpace(raw)), 10, 64); err == nil {
+			s.MemPeakBytes = peak
+		}
+	}
+	if raw, err := c.Read(t.CgroupPath + "/memory.events"); err == nil {
+		if kills, ok := fieldInt(raw, "oom_kill"); ok {
+			c.mu.Lock()
+			base, seen := c.oomBase[key]
+			if !seen {
+				c.oomBase[key] = kills
+				base = kills
+			}
+			c.mu.Unlock()
+			s.OOMKilled = kills > base
+		}
+	}
 	return s, "", nil
 }
 
 // Forget drops the state of a job that ended.
 func (c *CgroupSampler) Forget(t Target) {
 	c.mu.Lock()
-	delete(c.prev, t.RunnerID+"/"+strconv.FormatInt(t.JobID, 10)+"/"+t.CgroupPath)
+	k := t.RunnerID + "/" + strconv.FormatInt(t.JobID, 10) + "/" + t.CgroupPath
+	delete(c.prev, k)
+	delete(c.oomBase, k)
 	c.mu.Unlock()
 }
 

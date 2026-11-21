@@ -2419,6 +2419,80 @@ paths:
           description: Deleted.
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/job-sizes:
+    get:
+      operationId: listJobSizes
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The size of each job of a repository and where it came from, with the cost table
+      description: >-
+        scheduling R5.80 to R5.88. A size comes from an override, a measuring,
+        the scan or the default, strongest first. The console override wins
+        over the sizes: map of .crsp.yml.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: repository
+          in: query
+          required: false
+          schema: { type: string }
+          description: owner/name
+      responses:
+        '200':
+          description: The jobs and the cost table.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSizeList'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putJobSizeOverride
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Set the console size override of a job pattern
+      description: scheduling R5.87. It applies at once and wins over .crsp.yml.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobSizeOverrideInput'
+      responses:
+        '200':
+          description: Saved, with the YAML line to copy into .crsp.yml.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobSizeOverride'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: deleteJobSizeOverride
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Remove the console size override of a job pattern
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - name: repository
+          in: query
+          required: false
+          schema: { type: string }
+        - name: pattern
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        '204':
+          description: Removed.
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/registry:
     get:
       operationId: getRegistrySettings
@@ -5031,6 +5105,115 @@ components:
         vars:
           type: array
           items: { $ref: '#/components/schemas/EnvVar' }
+    JobSizeClass:
+      type: string
+      enum: [light, normal, heavy]
+    JobSizeSource:
+      type: string
+      enum: [override, measured, scan, default]
+    JobSizeUnits:
+      type: object
+      required: [cpu, memory]
+      properties:
+        cpu: { type: integer }
+        memory: { type: integer }
+    JobSizeRow:
+      type: object
+      required:
+        [
+          repository,
+          job,
+          class,
+          source,
+          weight,
+          reasons,
+          services,
+          override_console,
+          override_file,
+          copy_line,
+          reset_note,
+        ]
+      properties:
+        repository: { type: string }
+        job:
+          {
+            type: string,
+            description: The job key,
+            or the pattern of an override that matches no scanned job,
+          }
+        workflow: { type: string }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+        source: { $ref: '#/components/schemas/JobSizeSource' }
+        weight: { $ref: '#/components/schemas/JobSizeUnits' }
+        confidence:
+          {
+            type: string,
+            enum: [high, low],
+            description: Of the scan guess; absent when no scan found the job,
+          }
+        tests: { type: integer }
+        est_seconds: { type: integer }
+        reasons:
+          type: array
+          items: { type: string }
+        services:
+          type: array
+          items: { type: string }
+        scanned_at: { type: string, format: date-time }
+        override_console:
+          { type: string, description: The console override class; empty when none }
+        override_file:
+          { type: string, description: The .crsp.yml override class; empty when none }
+        reset_note:
+          {
+            type: string,
+            description: Set when the test count moved by more than 2x and the size went back to the scan guess,
+          }
+        copy_line: { type: string, description: The YAML line for .crsp.yml }
+    JobSizeCostRow:
+      type: object
+      required: [kind, key, class, cpu, gib, assumption]
+      properties:
+        kind: { type: string, description: framework or service }
+        key: { type: string }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+        cpu: { type: number }
+        gib_min: { type: number }
+        gib: { type: number }
+        sec_per_test: { type: number }
+        assumption: { type: boolean }
+        note: { type: string }
+    JobSizeList:
+      type: object
+      required: [repository, items, cost_table, file_error]
+      properties:
+        repository: { type: string }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/JobSizeRow' }
+        cost_table:
+          type: array
+          items: { $ref: '#/components/schemas/JobSizeCostRow' }
+        file_error:
+          {
+            type: string,
+            description: Why .crsp.yml could not be read; empty when it could,
+          }
+    JobSizeOverrideInput:
+      type: object
+      required: [repository, pattern, class]
+      properties:
+        repository: { type: string }
+        pattern: { type: string, description: A job name or a glob such as integration-* }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+    JobSizeOverride:
+      type: object
+      required: [repository, pattern, class, copy_line]
+      properties:
+        repository: { type: string }
+        pattern: { type: string }
+        class: { $ref: '#/components/schemas/JobSizeClass' }
+        copy_line: { type: string }
     EnvSetList:
       type: object
       required: [items]
@@ -7005,6 +7188,48 @@ components:
           $ref: '#/components/schemas/PoolSizeRecommended'
         recommended_three_quarters:
           $ref: '#/components/schemas/PoolSizeRecommended'
+        basis:
+          type: string
+          enum: [measured, measuring]
+          description: What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+        host_p95_gib:
+          type: number
+          format: double
+          description: The rolling 7-day p95 of the memory the PC uses without the pool. Set when `basis` is `measured`.
+        host_span_hours:
+          type: number
+          format: double
+          description: How many hours the samples cover.
+        measured_room_gib:
+          type: number
+          format: double
+          description: Total memory times the memory budget, less the p95 and the safety margin. Set when `basis` is `measured`.
+        preset_room_gib:
+          type: number
+          format: double
+          description: The room the recommended sizes take a share of.
+        safety_margin_gib:
+          type: number
+          format: double
+        leaves_gib:
+          type: number
+          format: double
+          description: What the checked size leaves for the PC. Set when `basis` is `measured`.
+        leaves_less_than_host:
+          type: boolean
+          description: A warning, not a block. The checked size leaves the PC less than its own p95.
+        wsl_pool:
+          type: boolean
+          description: The pool runs in WSL2, so `.wslconfig` caps its memory.
+        wsl_cap_gib:
+          type: number
+          format: double
+          description: The memory cap `.wslconfig` declares. Set when `wsl_cap_set`.
+        wsl_cap_set:
+          type: boolean
+        wsl_cap_above_pc:
+          type: boolean
+          description: The declared cap is above the total memory less the p95.
         current_memory_gib:
           type: number
           format: double
@@ -10681,3 +10906,42 @@ components:
         memory_p95_bytes: { type: integer, format: int64 }
         memory_peak_bytes: { type: integer, format: int64 }
         unknown_reason: { type: string }
+        measured:
+          $ref: '#/components/schemas/JobMeasured'
+    JobMeasured:
+      type: object
+      description: >-
+        OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key.
+        Absent while the job runs or when no agent reported it.
+      required:
+        [
+          peak_cpu_cores,
+          peak_memory_bytes,
+          sample_count,
+          duration_seconds,
+          oom_killed,
+          cut_short,
+          good,
+        ]
+      properties:
+        peak_cpu_cores:
+          { type: number, description: p95 over the sample windows, in cores }
+        peak_memory_bytes: { type: integer, format: int64 }
+        sample_count: { type: integer }
+        duration_seconds: { type: number }
+        oom_killed: { type: boolean }
+        cut_short: { type: boolean }
+        good: { type: boolean, description: Counts for the summary of the job key. }
+        source: { type: string, description: 'cgroup, process_tree or job_object' }
+        runner: { type: string }
+        key:
+          $ref: '#/components/schemas/JobKeyMeasured'
+    JobKeyMeasured:
+      type: object
+      description: The last 30 good runs of one job key (repository, workflow, job key).
+      required: [runs, measured]
+      properties:
+        runs: { type: integer, description: 'Good runs read, at most 30.' }
+        cpu_p90_cores: { type: number }
+        memory_p90_bytes: { type: integer, format: int64 }
+        measured: { type: boolean, description: 'True from 5 good runs on.' }

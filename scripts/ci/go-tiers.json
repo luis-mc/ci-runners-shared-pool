@@ -6,6 +6,7 @@
     "./images",
     "./internal/addresses",
     "./internal/audit",
+    "./internal/backend/windows/hostcheck",
     "./internal/backup",
     "./internal/cli",
     "./internal/github",

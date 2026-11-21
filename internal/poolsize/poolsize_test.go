@@ -202,3 +202,96 @@ func TestCheckFillsRecommendedSizes(t *testing.T) {
 		t.Fatalf("refused: %+v", r)
 	}
 }
+
+// machines R5.68, OPS61: room = total x budget - host p95 - safety margin.
+func TestMeasuredRoomTable(t *testing.T) {
+	for _, c := range []struct {
+		name      string
+		total     float64
+		pct       int
+		p95, want float64
+	}{
+		{"idle 32 GiB PC", 32, 85, 3, 32*0.85 - 3 - SafetyMarginGiB},
+		{"busy 32 GiB PC", 32, 85, 10.2, 32*0.85 - 10.2 - SafetyMarginGiB},
+		{"16 GiB PC", 16, 85, 6, 16*0.85 - 6 - SafetyMarginGiB},
+		{"budget 70", 32, 70, 4, 32*0.70 - 4 - SafetyMarginGiB},
+		{"zero budget uses the default", 32, 0, 4, 32*0.85 - 4 - SafetyMarginGiB},
+		{"p95 eats the budget", 16, 85, 13, 0},
+		{"p95 above the machine", 16, 85, 20, 0},
+		{"no host use", 64, 85, 0, 64*0.85 - SafetyMarginGiB},
+	} {
+		if got := MeasuredRoom(c.total, c.pct, c.p95); got < c.want-1e-9 || got > c.want+1e-9 {
+			t.Errorf("%s: room %.3f, want %.3f", c.name, got, c.want)
+		}
+	}
+}
+
+// The recommended sizes take a share of the measured room when 24 h are
+// measured and of today's fixed room before that; the room right now is never
+// exceeded (the hard check is unchanged).
+func TestRecommendedBasisTable(t *testing.T) {
+	for _, c := range []struct {
+		name      string
+		in        func(Inputs) Inputs
+		basis     string
+		presetGiB float64
+		half      int
+	}{
+		{"measuring keeps today's fixed share", func(i Inputs) Inputs { i.HostSpanHours = 10; return i }, BasisMeasuring, 21.2, 10},
+		{"idle PC measured gets more than fixed", func(i Inputs) Inputs {
+			i.HostReady, i.HostP95Bytes = true, 2*GiB
+			i.UsedOutsideBytes = 2 * GiB
+			return i
+		}, BasisMeasured, 24.2, 12},
+		{"busy PC measured gets less than fixed", func(i Inputs) Inputs { i.HostReady, i.HostP95Bytes = true, 12*GiB; return i }, BasisMeasured, 14.2, 7},
+		{"a spike now caps the preset at the live room", func(i Inputs) Inputs { i.HostReady, i.HostP95Bytes = true, 2*GiB; return i }, BasisMeasured, 21.2, 10},
+		{"p95 above the budget leaves the floor", func(i Inputs) Inputs { i.HostReady, i.HostP95Bytes = true, 30*GiB; return i }, BasisMeasured, 0, MinGiB},
+	} {
+		res := Check(c.in(box()), Request{MemGiB: 8, CPUs: 4})
+		if res.Basis != c.basis || res.PresetRoomGiB < c.presetGiB-1e-9 || res.PresetRoomGiB > c.presetGiB+1e-9 || res.Half.MemGiB != c.half {
+			t.Errorf("%s: basis %s preset %.2f half %d", c.name, res.Basis, res.PresetRoomGiB, res.Half.MemGiB)
+		}
+	}
+}
+
+// Custom is checked against the measured figure: leaving the PC less than its
+// own p95 is a warning, never a block.
+func TestLeavesLessThanHostIsAWarningNotABlock(t *testing.T) {
+	in := box()
+	in.HostReady, in.HostP95Bytes, in.UsedOutsideBytes = true, 12*GiB, 2*GiB
+	// 32 GiB machine, 12 GiB host p95: a 21 GiB pool leaves 11 GiB, under the p95, yet the live room (27.2-2) allows it.
+	res := Check(in, Request{MemGiB: 21, CPUs: 8})
+	if !res.OK || !res.LeavesLessThanHost || res.LeavesGiB != 11 || res.HostP95GiB != 12 {
+		t.Fatalf("%+v", res)
+	}
+	if res := Check(in, Request{MemGiB: 18, CPUs: 8}); !res.OK || res.LeavesLessThanHost {
+		t.Fatalf("a pool that leaves 14 GiB must not warn: %+v", res)
+	}
+	// Still blocked above the live room.
+	if res := Check(in, Request{MemGiB: 26, CPUs: 8}); res.OK || res.Short != "memory" {
+		t.Fatalf("%+v", res)
+	}
+	// While measuring there is no warning to give.
+	in.HostReady = false
+	if res := Check(in, Request{MemGiB: 21, CPUs: 8}); res.LeavesLessThanHost || res.Basis != BasisMeasuring {
+		t.Fatalf("%+v", res)
+	}
+}
+
+func TestWSLCapIsShown(t *testing.T) {
+	in := box()
+	in.WSLPool, in.DockerCeilingBytes = true, 28*GiB
+	in.HostReady, in.HostP95Bytes = true, 8*GiB
+	res := Check(in, Request{MemGiB: 8, CPUs: 4})
+	if !res.WSLPool || !res.WSLCapSet || res.WSLCapGiB != 28 || !res.CapAbovePC {
+		t.Fatalf("%+v", res)
+	}
+	in.DockerCeilingBytes = 20 * GiB
+	if res := Check(in, Request{MemGiB: 8, CPUs: 4}); res.CapAbovePC {
+		t.Fatalf("a cap of 20 GiB fits 32 - 8: %+v", res)
+	}
+	in.DockerCeilingBytes = 0
+	if res := Check(in, Request{MemGiB: 8, CPUs: 4}); res.WSLCapSet || res.CapAbovePC {
+		t.Fatalf("no cap set: %+v", res)
+	}
+}

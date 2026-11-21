@@ -1,7 +1,7 @@
-// Reads of the insights API for the screens. Until CIX21 joins they answer from mock.ts; the join swaps each body
+// Reads of the insights API for the screens. Until CIX21 joins they answer from mock.ts (except useJobResources, which calls the API since OPS66); the join swaps each body
 // for a call of the generated client and deletes mock.ts. Every hook has the shape of the Jobs hooks.
 import { useLoad, type Loaded } from '../../api/hooks';
-import type { Schemas } from '../../api/api';
+import { unwrap, useClient, type Schemas } from '../../api/api';
 import * as mock from './mock';
 
 type Hook<T> = { result: Loaded<T>; reload: () => void };
@@ -50,8 +50,17 @@ export const useGuardrails = (): Hook<S['GuardrailStatusList']> =>
 export const useRunSavings = (runId: number): Hook<S['RunSavings']> =>
   useLoad(() => Promise.resolve(mock.mockSavings()), [runId]);
 
-export const useJobResources = (jobId: number): Hook<S['JobResources']> =>
-  useLoad(() => Promise.resolve(mock.mockResources()), [jobId]);
+/** CPU and memory of one job, with its measured peaks (OPS66): the real client, not the mock. */
+export function useJobResources(jobId: number): Hook<S['JobResources']> {
+  const client = useClient();
+  return useLoad(
+    () =>
+      unwrap(
+        client.GET('/api/v1/jobs/{jobId}/resources', { params: { path: { jobId } } }),
+      ),
+    [jobId],
+  );
+}
 
 export const useWorkflowChecks = (repositoryId: number): Hook<S['WorkflowCheckList']> =>
   useLoad(() => Promise.resolve(mock.mockChecks()), [repositoryId]);

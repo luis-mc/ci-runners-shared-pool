@@ -67,6 +67,9 @@
     "internal/api/handlers_jobs.go": [
       "docs/features/scheduling/spec.md"
     ],
+    "internal/api/handlers_jobsizes.go": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/api/handlers_registry*.go": [
       "docs/features/registry/spec.md"
     ],
@@ -155,6 +158,9 @@
     "internal/jobsdata/reconcile/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
+    "internal/jobsize/**": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/load/**": [
       "docs/features/machines/spec.md"
     ],
@@ -218,6 +224,9 @@
     ],
     "internal/store/jobsdata_followups*.go": [
       "docs/features/ci-run-insights/spec.md"
+    ],
+    "internal/store/jobsizes.go": [
+      "docs/features/scheduling/spec.md"
     ],
     "internal/store/migrations/00019_registry.sql": [
       "docs/features/registry/spec.md"

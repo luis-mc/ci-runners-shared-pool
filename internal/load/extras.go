@@ -19,12 +19,18 @@ func (s *Sampler) Refresh() {
 		cont := ContainerUse(s.p)
 		e.containers = int64(cont.Pool + cont.Other)
 		e.dockerNote = cont.Note
+		e.ownBytes = ownUse(s.p)
 	case "darwin":
 		if res, ok := s.p.Run([]string{"top", "-l", "2", "-n", "0", "-s", "1"}); ok && res.Code == 0 {
 			if v, err := ParseTopCPU(res.Out); err == nil {
 				e.macCPU, e.macCPUKnown = v, true
 			}
 		}
+		e.poolContainers = int64(ContainerUse(s.p).Pool)
+		e.ownBytes = ownUse(s.p)
+	default:
+		e.poolContainers = int64(ContainerUse(s.p).Pool)
+		e.ownBytes = ownUse(s.p)
 	}
 	s.mu.Lock()
 	s.extras = e

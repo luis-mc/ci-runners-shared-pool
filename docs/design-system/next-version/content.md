@@ -386,6 +386,14 @@ The words of the Pool size section on a machine's page (machines R5.58, LOOK22).
 | Too big, room note | The room moves with what else runs on this PC. |
 | Cannot check | The size cannot be checked yet. {why} Try again when the agent has reported. |
 | Reasons beside the page's Save | Reading the budget. The size cannot be checked yet. This size does not fit. Change the pool size. Tick the box to confirm lowering the pool size. |
+| Measured basis (fact, Windows) | What the PC uses: Windows and your apps use up to {memory} (p95, 7 days) |
+| Measured basis (fact, Linux and macOS) | What the PC uses: This PC and its programs use up to {memory} (p95, 7 days) |
+| Measuring (fact) | What the PC uses: measuring, {n} h of 24 (n is the whole hours measured, at most 23) |
+| How the room is sized (line under the choices) | Room for the pool: {total} of memory, times the budget, less what the PC uses ({p95}) and {margin} to spare. While measuring: Until 24 h are measured, the room is the budget less what the PC uses now. |
+| Check line, leaves the PC less than it uses (needs you; a warning, not a block) | This size fits the budget, but leaves {left} for this PC, less than the {p95} it uses (p95, 7 days). (On a lower size this is a note under the lowering line.) |
+| WSL cap (shown only when the pool runs in WSL2) | Fact names: WSL memory cap now, Recommended WSL memory cap. Cap now: {memory}, or not set (WSL takes half of the PC). Code block label: Recommended .wslconfig lines, with the button Copy. |
+| WSL cap, note | Copy these lines into .wslconfig in your user folder. crsp does not change that file. WSL must restart for a change to apply: run wsl --shutdown, with no job running. |
+| WSL cap, warning (needs you) | The WSL memory cap ({cap}) is more than the PC can spare after what it uses ({p95}). |
 | Changed while editing | The pool size changed to {size} while you edited. Nothing was saved. |
 | Not saved | The pool size was not saved. {why} Try again. |
 
@@ -1138,6 +1146,7 @@ One word set for the button at the end of a table row. The guard reads this tabl
 | Replace | Button of an unmanaged runner (Runners): replaces it with one the pool manages, after a question. A press. Admin only (busy word: Replacing). |
 | Delete registration | Button of an offline managed runner (Runners): deletes its registration on GitHub, after a question. A press. Admin only (busy word: Deleting). |
 | Revoke | Row action of a live access for CI (Settings, Access): stops it working, after a question. A press. Admin only. |
+| Copy line | Row action of a job size (Repository page, Job sizes): copies the line for `.crsp.yml` and says what it copied. It changes nothing. A press. |
 | Copy | The button of a code block in a cell (Doctor, a finding's command): copies the text and says Copied. It changes nothing. A press. |
 | On, Off | The word of a switch in a cell (Repositories, the pool for a repository): it shows the state; pressing it changes the state. Admin only. |
 | Why, Details | Button inside a cell that has a long text, to read it whole. Not a row action. |
@@ -1330,6 +1339,20 @@ Run insights is a tab of Jobs, placed before Charts. Estimates always say *estim
 | Do next, cost warning, title | Analysing CI runs costs more than it should: {what is over, such as CPU 6.2% (limit 5%), memory 320 MB (limit 300 MB), disk 1.10 GB (limit 1 GB)} |
 | Do next, cost warning, fix | Choose a slower update period in Settings: analyse after every 5th CI run, or once an hour. (After every few CI runs: once an hour. Already once an hour: Lower the days or the size of the CI data kept in Settings, or ask for a bigger machine.) |
 
+## Measured peak words (OPS66, observability R5.60 to R5.63)
+
+The measured block of the Job page, in the CPU and memory pane. `{n}` is a number, `{x}` a value, `{runs}` the good runs read (at most 30).
+
+| Where | Words |
+|---|---|
+| Job page, measured block, title | Measured on this run |
+| Job page, measured block, facts | Measured peak CPU ("{x} cores", 1 decimal); Measured peak memory ("{x} GB", 1 decimal); Samples ({n}); Measured for ({duration}) |
+| Job page, measured block, killed for memory (Needs you) | This job was killed for memory. A run like this is not used for sizing. |
+| Job page, measured block, cut short (Note) | This run was cut short. A run like this is not used for sizing. |
+| Job page, job key, measured | Typical peak of this job, p90 of the last {runs} runs: {x} cores, {x} GB |
+| Job page, job key, not measured | Not measured yet: {runs} of 5 good runs. |
+| Job page, job key, no good run | No good run yet. |
+
 ## Help words
 
 The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 20 Nov, D57). English only. *Slot* is a shown word. *Runner type* is the word for persistent or ephemeral; Linux or Windows is the system, never the type.
@@ -1375,6 +1398,31 @@ A run can start other runs when it ends (the Installers workflow after CI). The 
 | Done and All lists, hover text of the Result | Started next: "{workflow}, {state}" |
 | Timeline, row | Waited for a runner: {project} {job} |
 | Timeline, note | follow-up run |
+
+## Job sizes words (OPS67, scheduling R5.80 to R5.88)
+
+The Job sizes and Cost table panes on a repository's page. A size is *Light*, *Normal* or *Heavy*. `{job}` is a job name, `{x}` the text of an error.
+
+| Where | Words |
+|---|---|
+| Panes | Job sizes, Cost table |
+| Job sizes, columns | Job, Size, CPU and memory units, Where the size came from, From .crsp.yml, Set here, Change the size here |
+| Size values | Light, Normal, Heavy; None when no override is set |
+| Units cell | CPU {n}, memory {m} |
+| Where the size came from | Override, Measured, Scan, Default; a scan that is not sure says "Scan, low confidence" |
+| Reset note | The server's sentence, shown under the source, for example: The test count moved more than twice, so the size went back to the scan guess. |
+| Override field | Name: Size of {job}. Choices: No override, Light, Normal, Heavy. Saved at once; No override removes it. Admin only: others see the two values and the reason the session gives (whyNot admin) |
+| Save failed | Could not save the size. {x} |
+| Row action | Copy line (Row action words). Name: {job} to .crsp.yml |
+| Copied | Copied the line for {job}. Paste it into .crsp.yml. |
+| Copy failed | Could not copy. Select the line and copy it yourself. |
+| File error | .crsp.yml could not be read: {x}. Sizes from the file are left out until it can be read. |
+| Empty | No jobs are known for this repository yet. They show here after crsp has read its workflows. |
+| Cost table, note | Every row is an assumption until measured sizes replace it. |
+| Cost table, columns | Kind, Name, Size, CPU units, Memory (GiB), Basis |
+| Cost table, kind values | Test framework, Service |
+| Cost table, basis values | Assumption, Measured |
+| Cost table, empty | The cost table is empty. |
 
 ## Lifecycle words
 

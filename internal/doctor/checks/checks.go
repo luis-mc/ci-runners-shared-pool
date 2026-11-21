@@ -33,6 +33,7 @@ func Register(reg *doctor.Registry) {
 		doctor.NewCheck("machine.disk", doctor.GroupMachine, M1, false, machineDisk),
 		doctor.NewCheck("machine.guard.disk", doctor.GroupMachine, M1, false, machineDiskGuard),
 		doctor.NewCheck("machine.docker.compact", doctor.GroupMachine, M1, false, machineDockerCompact),
+		doctor.NewCheck("machine.pool.memory", doctor.GroupMachine, M1, false, machinePoolMemory),
 		doctor.NewCheck("machine.runner_leftovers", doctor.GroupMachine, M1, false, machineRunnerLeftovers),
 		doctor.NewCheck("cache.cap", doctor.GroupMachine, M1, false, cacheCap),
 		doctor.NewCheck("machine.floor.disk", doctor.GroupMachine, M1, false, machineDiskFloor),

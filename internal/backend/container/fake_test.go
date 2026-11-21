@@ -358,6 +358,9 @@ found:
 		}
 		return ok0()
 	case "sh":
+		if len(rest) == 2 && rest[1] == StateDir+"/bin/list.sh" {
+			return sys.Result{Stdout: c.files[StateDir+"/list.out"]}
+		}
 		script := rest[2]
 		switch {
 		case strings.HasPrefix(script, "mkdir -p") && strings.Contains(script, `cat >"$1.new"`):

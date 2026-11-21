@@ -15,6 +15,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/events"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/github"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsize"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/profiles"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/registry"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/registry/builds"
@@ -217,6 +218,12 @@ func wireRegistry(ctx context.Context, d controllerDeps, c *controller, gh *gith
 		return r.InstallationID, nil
 	}}
 	w.Stacks = stackscan.New(reader)
+
+	// OPS67: the job size scan reads the same commit files; the sizes feed the
+	// scheduler through the store and the console through the API.
+	sizeSvc := &jobsize.Service{Store: db.JobSizes(), Scanner: &jobsize.Scanner{R: reader}, Now: d.Now}
+	c.Options.JobSizes = sizeSvc
+	c.sizes.set(sizeSvc.ScanRepo)
 	w.Keyer = &keys.Keyer{Profiles: &profiles.Resolver{Store: db.Profiles()}, Stacks: w.Stacks}
 
 	// The source label of an image names the GitHub of this controller.

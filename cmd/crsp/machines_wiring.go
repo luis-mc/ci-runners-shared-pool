@@ -139,7 +139,9 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	svc.SetHooks(machines.Hooks{ControllerVersion: version,
 		// Protocol version 3, the registry path, is offered only when a registry core can open (REG11).
 		Registry: registryAvailable(),
-		OnHello:  func(ctx context.Context, id string, h *agentv1.Hello) { cs.OnHello(ctx, id, h); lk.OnHello(id) },
+		// Protocol version 4: the agents send the CPU and memory of each job (OPS66, ci-run-insights R5.19).
+		OnJobSamples: agentlink.ResourceSink{Batches: db.Resources()}.JobSamples,
+		OnHello:      func(ctx context.Context, id string, h *agentv1.Hello) { cs.OnHello(ctx, id, h); lk.OnHello(id) },
 		OnMessage: func(ctx context.Context, id string, m *agentv1.SessionRequest, reply func(*agentv1.SessionResponse)) bool {
 			return lk.OnMessage(id, m) || cs.OnMessage(ctx, id, m, reply)
 		}})

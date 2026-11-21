@@ -1,6 +1,7 @@
 // Fixtures of the Jobs section for the component tests: jobs, runs, groups and chart data in the wire shape of the
 // Jobs API, and a mocked API that answers them with the filters the real API takes.
 import type { Schemas } from '../api/api';
+import { mockResources } from '../screens/insights/mock';
 import { signedIn, type MockApi } from './mock';
 
 export type Job = Schemas['Job'];
@@ -224,6 +225,7 @@ export function jobsApi(data: JobsData = {}): MockApi {
       ],
       stale: STALE,
     })
+    .on('GET', '/api/v1/jobs/:jobId/resources', () => mockResources())
     .on('GET', '/api/v1/jobs/:jobId', () => data.detail ?? jobDetail())
     .on('GET', '/api/v1/runs/:runId', () => data.run ?? runItem())
     .on('GET', '/api/v1/jobs', (c) => {

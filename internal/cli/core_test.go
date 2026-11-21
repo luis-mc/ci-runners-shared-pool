@@ -216,17 +216,18 @@ func TestJSONErrorEnvelopeOnStderr(t *testing.T) {
 
 func TestCallTimeout(t *testing.T) {
 	f := newFixture(t)
-	seen := make(chan struct{})
+	// The server never answers: the handler waits on a channel the test owns
+	// and is released only at cleanup. Returning when the request context ends
+	// would send an empty 200 that can reach the client before its deadline.
+	release := make(chan struct{})
+	t.Cleanup(func() { close(release) }) // runs before the server closes
 	f.handle("GET /api/v1/machines", func(w http.ResponseWriter, r *http.Request) {
-		// Hold the answer until the client gives up; no wall-clock bound.
-		<-r.Context().Done()
-		close(seen)
+		<-release
 	})
 	code, _, errOut := f.run("machine", "list", "--timeout", "100ms")
-	if code != ExitUnreachable {
+	if code != ExitUnreachable || !strings.Contains(errOut, "Could not reach the controller") {
 		t.Fatalf("%d: %q", code, errOut)
 	}
-	<-seen // the server saw the request end
 }
 
 func TestNoColor(t *testing.T) {

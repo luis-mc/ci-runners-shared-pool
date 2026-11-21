@@ -18,6 +18,7 @@ import (
 	"syscall"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/agent"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/agent/jobsample"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/logging"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/runnercache"
 )
@@ -98,6 +99,8 @@ func agentRun(args []string, stderr io.Writer) error {
 	}
 	rec := &agentRecoverer{}
 	cfg.Recoverer = rec
+	// The per-job CPU and memory peaks (OPS66): the reader of this operating system, sampled while a job runs.
+	cfg.JobSampling = agent.NewJobSampling(jobsample.NewPlatform(), nil)
 	cfg.UpdaterFor = func(g *agent.Gate) agent.Updater {
 		u := newAgentUpdater(cfg, g, logger)
 		rec.set(u)

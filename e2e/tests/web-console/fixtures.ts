@@ -325,6 +325,42 @@ function signedInBase(user: unknown): Mock {
     .on('GET', '/api/v1/machines', { items: [machine()] })
     .on('GET', '/api/v1/machines/:id', machine())
     .on('GET', '/api/v1/repositories/:id', repository())
+    .on('GET', '/api/v1/job-sizes', {
+      repository: 'octo/app',
+      file_error: '',
+      items: [
+        ['build', 'normal', 'default', ''],
+        ['integration-tests-with-a-long-name', 'heavy', 'override', 'heavy'],
+        ['lint', 'light', 'measured', ''],
+        ['e2e', 'heavy', 'scan', ''],
+      ].map(([job, cls, source, over]) => ({
+        repository: 'octo/app',
+        job,
+        class: cls,
+        source,
+        weight: { cpu: 2, memory: 4 },
+        confidence: source === 'scan' ? 'low' : undefined,
+        reasons: [],
+        services: [],
+        override_console: over,
+        override_file: job === 'lint' ? 'light' : '',
+        reset_note:
+          job === 'e2e'
+            ? 'The test count moved more than twice, so the size went back to the scan guess.'
+            : '',
+        copy_line: `${job}: ${cls}`,
+      })),
+      cost_table: [
+        {
+          kind: 'framework',
+          key: 'playwright',
+          class: 'heavy',
+          cpu: 4,
+          gib: 8,
+          assumption: true,
+        },
+      ],
+    })
     .on('GET', '/api/v1/runners', { items: [runner()] })
     .on('GET', '/api/v1/runners/:id', runner())
     .on('GET', '/api/v1/images', { items: [image()] })
