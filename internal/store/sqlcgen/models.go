@@ -463,6 +463,47 @@ type JobResourceSummary struct {
 	CompletedAt   string
 }
 
+type JobSizeFile struct {
+	Repository string
+	Error      string
+}
+
+type JobSizeMeasured struct {
+	Repository string
+	Job        string
+	CpuUnits   int64
+	MemUnits   int64
+	Runs       int64
+}
+
+type JobSizeRule struct {
+	Repository string
+	Pattern    string
+	Origin     string
+	Class      string
+}
+
+type JobSizeScan struct {
+	Repository string
+	Job        string
+	Name       string
+	Workflow   string
+	CpuUnits   int64
+	MemUnits   int64
+	Cpu        float64
+	Gib        float64
+	Class      string
+	Confidence string
+	Tests      int64
+	PrevTests  int64
+	EstSec     int64
+	Reasons    string
+	Services   string
+	CommitSha  string
+	ScannedAt  string
+	ResetNote  string
+}
+
 type JobStep struct {
 	JobID       int64
 	Number      int64
