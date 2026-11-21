@@ -1,0 +1,5 @@
+# PLACEHOLDER. The orchestrator commits the real release key here (OPS68, owner decision 2026-11-21).
+# It is the public half of the Actions secret CRSP_UPDATE_SIGNING_KEY (PKCS#8 PEM from
+# `openssl genpkey -algorithm ed25519`), written as PEM: `openssl pkey -pubout`.
+# Until a PEM block follows this comment, the updater has no key and refuses every update
+# (a missing key is a missing signature). Tests generate their own keys.

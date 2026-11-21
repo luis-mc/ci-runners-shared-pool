@@ -6,6 +6,7 @@ package lifecycletest
 
 import (
 	"crypto/ed25519"
+	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
@@ -38,7 +39,17 @@ func (e *env) Get(url string) ([]byte, error) {
 	return io.ReadAll(r.Body)
 }
 
-func (e *env) Install(lifecycle.Manifest, []byte) (bool, error) {
+// Package downloads the package from the fake server and returns its SHA-256.
+func (e *env) Package(m lifecycle.Manifest) (string, error) {
+	b, err := e.Get(m.URL)
+	if err != nil {
+		return "", err
+	}
+	sum := sha256.Sum256(b)
+	return hex.EncodeToString(sum[:]), nil
+}
+
+func (e *env) Install(lifecycle.Manifest, string, bool) (bool, error) {
 	if e.pass {
 		return true, nil
 	}

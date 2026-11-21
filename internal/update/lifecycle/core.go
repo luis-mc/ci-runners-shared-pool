@@ -7,8 +7,7 @@ package lifecycle
 
 import (
 	"crypto/ed25519"
-	"crypto/sha256"
-	"encoding/hex"
+	"errors"
 	"math/rand"
 	"strconv"
 	"strings"
@@ -32,12 +31,15 @@ const (
 
 // Env is what the updater needs from the machine. Tests give a fake server; the service gives GitHub.
 type Env interface {
-	// Get fetches a URL (the manifest or the package). A non-200 reply is an error.
+	// Get fetches the signed manifest. A non-200 reply is an error.
 	Get(url string) ([]byte, error)
-	// Install runs the install of a verified package and its self-test. done false means the
+	// Package downloads the package of m and returns its SHA-256 (hex). The service also runs
+	// its own checks here (SHA256SUMS, build provenance); a failure is a refusal.
+	Package(m Manifest) (sha256 string, err error)
+	// Install runs the install of the verified package and its self-test. done false means the
 	// install was handed to a helper that restarts the service; Resume reports the outcome after.
 	// A non-nil error with done true is a failed install or self-test: the old version is back.
-	Install(m Manifest, pkg []byte) (done bool, err error)
+	Install(m Manifest, actor string, remote bool) (done bool, err error)
 }
 
 // Sink receives every audit row. A nil Sink drops them.
@@ -94,6 +96,7 @@ type Updater struct {
 	backoffStep int
 	waitingFrom *float64
 
+	actor         string
 	pendingActor  string
 	pendingRemote bool
 }
@@ -121,6 +124,13 @@ func (u *Updater) row(kind, result, actor, detail string, remote bool) {
 	if u.Sink != nil {
 		u.Sink.Audit(r)
 	}
+}
+
+func (u *Updater) who() string {
+	if u.actor != "" {
+		return u.actor
+	}
+	return "updater"
 }
 
 func (u *Updater) result(s string) { u.LastResult = &s }
@@ -153,11 +163,16 @@ func (u *Updater) SetPaired(p bool) {
 }
 
 // Check runs one check now. It reports false when unpaired (LC-28).
-func (u *Updater) Check() bool {
+func (u *Updater) Check() bool { return u.CheckAs("updater") }
+
+// CheckAs is Check by a named actor (the console, the tray, the CLI); the audit row names it.
+func (u *Updater) CheckAs(actor string) bool {
 	if !u.Paired {
 		return false
 	}
+	u.actor = actor
 	u.doCheck()
+	u.actor = ""
 	return true
 }
 
@@ -226,7 +241,11 @@ func (u *Updater) Tick(target float64) {
 			u.doCheck()
 		case "retry":
 			u.RetryAt = nil
-			u.decide()
+			if u.Offered != nil && u.Offered.URL == "" {
+				u.doCheck() // restored after a restart: fetch the manifest again first
+			} else {
+				u.decide()
+			}
 		default:
 			u.decide()
 		}
@@ -246,12 +265,12 @@ func (u *Updater) doCheck() {
 		u.NextCheckAt = ptr(u.Now + backoff[step])
 		u.backoffStep++
 		u.result("failed")
-		u.row("check", "failed", "updater", "", false)
+		u.row("check", "failed", u.who(), "", false)
 		return
 	}
 	u.backoffStep = 0
 	u.NextCheckAt = ptr(u.Now + 21600*(0.8+0.4*u.rng.Float64()))
-	u.row("check", "ok", "updater", "", false)
+	u.row("check", "ok", u.who(), "", false)
 	m, bad := ParseManifest(raw, u.Pub, u.Product, u.Now, u.Version)
 	if bad != "" {
 		u.refuse(bad)
@@ -327,19 +346,23 @@ func (u *Updater) Install(actor string, remote, click bool) {
 func (u *Updater) download(actor string, remote bool) {
 	m := u.Offered
 	u.go_("downloading")
-	data, err := u.Env.Get(m.URL)
+	sum, err := u.Env.Package(*m)
 	if err != nil {
-		u.refuse("download_failed")
+		reason := "download_failed"
+		var r interface{ Refusal() string }
+		if errors.As(err, &r) {
+			reason = r.Refusal()
+		}
+		u.refuse(reason)
 		return
 	}
 	u.go_("verifying")
-	sum := sha256.Sum256(data)
-	if hex.EncodeToString(sum[:]) != strings.ToLower(m.SHA256) {
+	if strings.ToLower(sum) != strings.ToLower(m.SHA256) {
 		u.refuse("bad_hash")
 		return
 	}
 	u.go_("installing")
-	done, err := u.Env.Install(*m, data)
+	done, err := u.Env.Install(*m, actor, remote)
 	if !done {
 		u.pendingActor, u.pendingRemote = actor, remote
 		return // the helper restarts the service; Resume reports the outcome
@@ -378,4 +401,27 @@ func (u *Updater) finish(actor string, remote, ok bool) {
 		return
 	}
 	u.RetryAt = ptr(u.Now + retries[u.Failures-1])
+}
+
+// Restore puts the state back after a restart that ended an install: updated (ok) or, after a
+// failed self-test, rolled_back with the failure count of version, or skipped after the third.
+// failedAt is the epoch second of the failure. It writes no audit row.
+func (u *Updater) Restore(version string, ok bool, failures int, failedAt float64) {
+	if ok {
+		u.History = append(u.History, Move{u.State, "updated", u.Now})
+		u.State = "updated"
+		u.result("updated")
+		return
+	}
+	u.Offered = &Manifest{Version: version}
+	u.Failures = failures
+	u.result("rolled_back")
+	if failures >= len(retries)+1 {
+		u.History = append(u.History, Move{u.State, "skipped", u.Now})
+		u.State = "skipped"
+		return
+	}
+	u.History = append(u.History, Move{u.State, "rolled_back", u.Now})
+	u.State = "rolled_back"
+	u.RetryAt = ptr(failedAt + retries[failures-1])
 }

@@ -12,6 +12,7 @@ package update
 
 import (
 	"context"
+	"crypto/ed25519"
 	"errors"
 	"fmt"
 	"io"
@@ -143,6 +144,11 @@ type Options struct {
 	Logger         *slog.Logger
 	Now            func() time.Time
 
+	// Key is the Ed25519 key of the release manifest (ReleaseKey). With RequireManifest every
+	// update needs a manifest asset signed with it; a missing key or signature refuses the update.
+	Key             ed25519.PublicKey
+	RequireManifest bool
+
 	// Seams for tests.
 	AllowURL  func(string) bool
 	Fetch     func(ctx context.Context, url, dst string) error
@@ -184,7 +190,11 @@ type Manager struct {
 	errAttempt string
 	// started is when this process started: a restart is over once it is later than the attempt's yes.
 	started time.Time
+	// prepared is the download that PrepareVersion verified; begin installs it without a second download.
+	prepared *preparedFile
 }
+
+type preparedFile struct{ version, file string }
 
 type pending struct {
 	kind    Kind
@@ -482,7 +492,7 @@ func (m *Manager) begin(ctx context.Context, kind Kind, actor string) (Status, e
 		m.mu.Lock()
 		m.cancelDL = stop
 		m.mu.Unlock()
-		file, err := m.prepare(dctx, rel)
+		file, err := m.prepareOrCached(dctx, rel)
 		stop()
 		m.mu.Lock()
 		m.cancelDL = nil
@@ -650,6 +660,9 @@ func (m *Manager) prepare(ctx context.Context, rel Release) (string, error) {
 		return "", err
 	}
 	if err := Verify(ctx, file, asset, sums, m.o.Attester); err != nil {
+		return "", err
+	}
+	if err := m.verifyManifest(ctx, rel, asset, file); err != nil {
 		return "", err
 	}
 	if m.o.InstallKind != KindTarball {
