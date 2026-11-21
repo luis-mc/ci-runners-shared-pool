@@ -4586,6 +4586,50 @@ export interface components {
             decided?: string;
             recommended_half?: components["schemas"]["PoolSizeRecommended"];
             recommended_three_quarters?: components["schemas"]["PoolSizeRecommended"];
+            /**
+             * @description What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+             * @enum {string}
+             */
+            basis?: "measured" | "measuring";
+            /**
+             * Format: double
+             * @description The rolling 7-day p95 of the memory the PC uses without the pool. Set when `basis` is `measured`.
+             */
+            host_p95_gib?: number;
+            /**
+             * Format: double
+             * @description How many hours the samples cover.
+             */
+            host_span_hours?: number;
+            /**
+             * Format: double
+             * @description Total memory times the memory budget, less the p95 and the safety margin. Set when `basis` is `measured`.
+             */
+            measured_room_gib?: number;
+            /**
+             * Format: double
+             * @description The room the recommended sizes take a share of.
+             */
+            preset_room_gib?: number;
+            /** Format: double */
+            safety_margin_gib?: number;
+            /**
+             * Format: double
+             * @description What the checked size leaves for the PC. Set when `basis` is `measured`.
+             */
+            leaves_gib?: number;
+            /** @description A warning, not a block. The checked size leaves the PC less than its own p95. */
+            leaves_less_than_host?: boolean;
+            /** @description The pool runs in WSL2, so `.wslconfig` caps its memory. */
+            wsl_pool?: boolean;
+            /**
+             * Format: double
+             * @description The memory cap `.wslconfig` declares. Set when `wsl_cap_set`.
+             */
+            wsl_cap_gib?: number;
+            wsl_cap_set?: boolean;
+            /** @description The declared cap is above the total memory less the p95. */
+            wsl_cap_above_pc?: boolean;
             /** Format: double */
             current_memory_gib: number;
             current_cpus: number;

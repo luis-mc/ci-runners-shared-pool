@@ -1889,6 +1889,24 @@ func (e PlanStepState) Valid() bool {
 	}
 }
 
+// Defines values for PoolSizeCheckBasis.
+const (
+	Measured  PoolSizeCheckBasis = "measured"
+	Measuring PoolSizeCheckBasis = "measuring"
+)
+
+// Valid indicates whether the value is a known member of the PoolSizeCheckBasis enum.
+func (e PoolSizeCheckBasis) Valid() bool {
+	switch e {
+	case Measured:
+		return true
+	case Measuring:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PoolSizeCheckShort.
 const (
 	PoolSizeCheckShortCpu    PoolSizeCheckShort = "cpu"
@@ -6048,16 +6066,33 @@ type PoolSettings struct {
 
 // PoolSizeCheck defines model for PoolSizeCheck.
 type PoolSizeCheck struct {
-	CpuBudget        *int    `json:"cpu_budget,omitempty"`
-	CurrentCpus      int     `json:"current_cpus"`
-	CurrentMemoryGib float64 `json:"current_memory_gib"`
+	// Basis What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+	Basis            *PoolSizeCheckBasis `json:"basis,omitempty"`
+	CpuBudget        *int                `json:"cpu_budget,omitempty"`
+	CurrentCpus      int                 `json:"current_cpus"`
+	CurrentMemoryGib float64             `json:"current_memory_gib"`
 
 	// Decided The figure that decided.
 	Decided          *string  `json:"decided,omitempty"`
 	DockerCeilingGib *float64 `json:"docker_ceiling_gib,omitempty"`
 
+	// HostP95Gib The rolling 7-day p95 of the memory the PC uses without the pool. Set when `basis` is `measured`.
+	HostP95Gib *float64 `json:"host_p95_gib,omitempty"`
+
+	// HostSpanHours How many hours the samples cover.
+	HostSpanHours *float64 `json:"host_span_hours,omitempty"`
+
 	// Known False when the controller lacks the machine figures to check; `why` says what is missing.
-	Known           bool     `json:"known"`
+	Known bool `json:"known"`
+
+	// LeavesGib What the checked size leaves for the PC. Set when `basis` is `measured`.
+	LeavesGib *float64 `json:"leaves_gib,omitempty"`
+
+	// LeavesLessThanHost A warning, not a block. The checked size leaves the PC less than its own p95.
+	LeavesLessThanHost *bool `json:"leaves_less_than_host,omitempty"`
+
+	// MeasuredRoomGib Total memory times the memory budget, less the p95 and the safety margin. Set when `basis` is `measured`.
+	MeasuredRoomGib *float64 `json:"measured_room_gib,omitempty"`
 	MemoryBudgetGib *float64 `json:"memory_budget_gib,omitempty"`
 
 	// Nearest Sizes that pass, as sentences.
@@ -6069,6 +6104,9 @@ type PoolSizeCheck struct {
 	// Ok The size fits and, when it is a shrink, needs only the explicit yes.
 	Ok bool `json:"ok"`
 
+	// PresetRoomGib The room the recommended sizes take a share of.
+	PresetRoomGib *float64 `json:"preset_room_gib,omitempty"`
+
 	// Reason Why it is refused, naming the budget that is short.
 	Reason *string `json:"reason,omitempty"`
 
@@ -6078,11 +6116,25 @@ type PoolSizeCheck struct {
 	// RecommendedThreeQuarters A recommended pool size. Memory is a share of the room rounded down to whole GiB, at least the floor; CPUs are the same share of the CPU budget, at most memory / 1.5, at least the floor.
 	RecommendedThreeQuarters *PoolSizeRecommended `json:"recommended_three_quarters,omitempty"`
 	RoomGib                  *float64             `json:"room_gib,omitempty"`
+	SafetyMarginGib          *float64             `json:"safety_margin_gib,omitempty"`
 	Short                    *PoolSizeCheckShort  `json:"short,omitempty"`
 	TotalGib                 *float64             `json:"total_gib,omitempty"`
 	UsedOutsideGib           *float64             `json:"used_outside_gib,omitempty"`
 	Why                      *string              `json:"why,omitempty"`
+
+	// WslCapAbovePc The declared cap is above the total memory less the p95.
+	WslCapAbovePc *bool `json:"wsl_cap_above_pc,omitempty"`
+
+	// WslCapGib The memory cap `.wslconfig` declares. Set when `wsl_cap_set`.
+	WslCapGib *float64 `json:"wsl_cap_gib,omitempty"`
+	WslCapSet *bool    `json:"wsl_cap_set,omitempty"`
+
+	// WslPool The pool runs in WSL2, so `.wslconfig` caps its memory.
+	WslPool *bool `json:"wsl_pool,omitempty"`
 }
+
+// PoolSizeCheckBasis What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+type PoolSizeCheckBasis string
 
 // PoolSizeCheckShort defines model for PoolSizeCheck.Short.
 type PoolSizeCheckShort string

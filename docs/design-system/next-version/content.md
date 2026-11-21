@@ -387,6 +387,14 @@ The words of the Pool size section on a machine's page (machines R5.58, LOOK22).
 | Too big, room note | The room moves with what else runs on this PC. |
 | Cannot check | The size cannot be checked yet. {why} Try again when the agent has reported. |
 | Reasons beside the page's Save | Reading the budget. The size cannot be checked yet. This size does not fit. Change the pool size. Tick the box to confirm lowering the pool size. |
+| Measured basis (fact, Windows) | What the PC uses: Windows and your apps use up to {memory} (p95, 7 days) |
+| Measured basis (fact, Linux and macOS) | What the PC uses: This PC and its programs use up to {memory} (p95, 7 days) |
+| Measuring (fact) | What the PC uses: measuring, {n} h of 24 (n is the whole hours measured, at most 23) |
+| How the room is sized (line under the choices) | Room for the pool: {total} of memory, times the budget, less what the PC uses ({p95}) and {margin} to spare. While measuring: Until 24 h are measured, the room is the budget less what the PC uses now. |
+| Check line, leaves the PC less than it uses (needs you; a warning, not a block) | This size fits the budget, but leaves {left} for this PC, less than the {p95} it uses (p95, 7 days). (On a lower size this is a note under the lowering line.) |
+| WSL cap (shown only when the pool runs in WSL2) | Fact names: WSL memory cap now, Recommended WSL memory cap. Cap now: {memory}, or not set (WSL takes half of the PC). Code block label: Recommended .wslconfig lines, with the button Copy. |
+| WSL cap, note | Copy these lines into .wslconfig in your user folder. crsp does not change that file. WSL must restart for a change to apply: run wsl --shutdown, with no job running. |
+| WSL cap, warning (needs you) | The WSL memory cap ({cap}) is more than the PC can spare after what it uses ({p95}). |
 | Changed while editing | The pool size changed to {size} while you edited. Nothing was saved. |
 | Not saved | The pool size was not saved. {why} Try again. |
 

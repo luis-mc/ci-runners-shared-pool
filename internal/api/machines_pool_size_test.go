@@ -113,3 +113,52 @@ func TestPoolSizeCheckDryRun(t *testing.T) {
 		t.Fatalf("memory without CPUs is refused: %d", rec.Code)
 	}
 }
+
+// machines R5.68, OPS61: before 24 h of host-use samples the check says it is
+// measuring and keeps today's fixed share; with them it recommends from the
+// p95 and warns, never blocks, when a Custom size leaves the PC less than that.
+func TestPoolSizeCheckSaysMeasuredOrMeasuring(t *testing.T) {
+	svc, mux, id := poolSvcMux(t)
+	check := func(mem float64, cpus int) gen.PoolSizeCheck {
+		t.Helper()
+		rec := doM(t, mux, "POST", "/api/v1/machines/"+id+"/pool-size-check", map[string]any{"pool_memory_gib": mem, "pool_cpus": cpus})
+		if rec.Code != 200 {
+			t.Fatalf("%d %s", rec.Code, rec.Body)
+		}
+		var c gen.PoolSizeCheck
+		_ = json.Unmarshal(rec.Body.Bytes(), &c)
+		return c
+	}
+	report := func(spanH int64, p95GiB int64) {
+		t.Helper()
+		if err := svc.HandleLoad(context.Background(), id, &agentv1.LoadReport{MemoryPct: 25, MemoryKnown: true,
+			HostUseReady: spanH >= 24, HostUseP95Bytes: p95GiB << 30, HostUseSpanSeconds: spanH * 3600}); err != nil {
+			t.Fatal(err)
+		}
+	}
+	report(6, 0)
+	c := check(8, 4)
+	if c.Basis == nil || *c.Basis != gen.Measuring || c.HostSpanHours == nil || *c.HostSpanHours != 6 || c.HostP95Gib != nil ||
+		c.RecommendedHalf.MemoryGib != 9 {
+		t.Fatalf("measuring keeps the fixed share: %+v", c)
+	}
+	// Ready flag set but under 24 h: still measuring (the controller does not trust a short span).
+	if err := svc.HandleLoad(context.Background(), id, &agentv1.LoadReport{MemoryPct: 25, MemoryKnown: true, HostUseReady: true, HostUseP95Bytes: 5 << 30, HostUseSpanSeconds: 3600}); err != nil {
+		t.Fatal(err)
+	}
+	if c := check(8, 4); *c.Basis != gen.Measuring {
+		t.Fatalf("%+v", c)
+	}
+	// 32 GiB, budget 85%: 27.2 - 10 - 1 = 16.2 GiB room; live room is 19.2, so the presets use 16.2.
+	report(30, 10)
+	c = check(16, 4)
+	if *c.Basis != gen.Measured || c.HostP95Gib == nil || *c.HostP95Gib != 10 || c.MeasuredRoomGib == nil || *c.MeasuredRoomGib < 16.19 || *c.MeasuredRoomGib > 16.21 ||
+		c.RecommendedHalf.MemoryGib != 8 || c.LeavesLessThanHost == nil || *c.LeavesLessThanHost || !c.Ok {
+		t.Fatalf("measured: %+v", c)
+	}
+	// 19 GiB fits the live room (19.2) and leaves 13 GiB, above the p95 of 10: no warning. With a p95 of 14 it warns and still fits.
+	report(30, 14)
+	if c := check(19, 4); !c.Ok || c.LeavesLessThanHost == nil || !*c.LeavesLessThanHost || *c.LeavesGib != 13 {
+		t.Fatalf("a warning is not a block: %+v", c)
+	}
+}

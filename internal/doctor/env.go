@@ -171,10 +171,27 @@ type Machine struct {
 	// DockerCompact is the Docker disk compact policy and what the agent
 	// reported; nil when the machine has no Docker disk file to compact.
 	DockerCompact *DockerCompact
+	// PoolMemory is the pool size and the memory of the machine, against what
+	// the PC itself uses (machine.pool.memory, OPS61); zero when not known.
+	PoolMemory PoolMemory
 	// ResetSigns say why the machine's settings or runners may have gone back
 	// to the defaults: a rejoin, default settings after chosen ones, runner
 	// records of a machine that is not in the pool (machine.reset, R5.61).
 	ResetSigns []string
+}
+
+// PoolMemory is what the machine.pool.memory check reads (machines R5.68).
+type PoolMemory struct {
+	// TotalBytes is the memory of the machine.
+	TotalBytes int64
+	// PoolGiB is the configured pool memory; 0 when none is set.
+	PoolGiB float64
+	// WSLCapBytes is the `.wslconfig` memory cap; 0 when the file sets none.
+	WSLCapBytes int64
+	// HostP95Bytes is the 7-day p95 of the memory the PC uses without the pool.
+	// HostReady is true once the agent has 24 hours of samples.
+	HostP95Bytes int64
+	HostReady    bool
 }
 
 // DockerCompact is what the machine.docker.compact check reads (caches R5.51 to R5.54).

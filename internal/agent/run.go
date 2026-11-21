@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -309,7 +310,19 @@ func joinFirst(ctx context.Context, cfg Config) error {
 	return nil
 }
 
+// hostUseSaveEvery is how many samples pass between saves of the host-use
+// samples: 60 at 5 s is every 5 minutes, the step the tracker keeps (OPS61).
+const hostUseSaveEvery = 60
+
 func sampleLoop(ctx context.Context, cfg Config) {
+	usePath := ""
+	if cfg.DataDir != "" {
+		usePath = filepath.Join(cfg.DataDir, "hostuse.json")
+		if err := cfg.Sampler.HostUse().Restore(usePath, time.Now()); err != nil {
+			cfg.Logger.Warn("the saved host use could not be read; measuring again", "err", err)
+		}
+		defer func() { _ = cfg.Sampler.HostUse().Save(usePath) }()
+	}
 	cfg.Sampler.Refresh()
 	cfg.Sampler.Sample()
 	t := time.NewTicker(cfg.SampleEvery)
@@ -325,6 +338,11 @@ func sampleLoop(ctx context.Context, cfg Config) {
 				go cfg.Sampler.Refresh()
 			}
 			cfg.Sampler.Sample()
+			if usePath != "" && n%hostUseSaveEvery == 0 {
+				if err := cfg.Sampler.HostUse().Save(usePath); err != nil {
+					cfg.Logger.Warn("the host use could not be saved", "err", err)
+				}
+			}
 		}
 	}
 }
@@ -351,6 +369,7 @@ func loadToProto(r load.Report, slots int) *agentv1.LoadReport {
 		SampledAtUnixMs: r.SampledAt.UnixMilli(), MemoryPct: r.MemoryPct, MemoryKnown: r.MemoryKnown, CpuPct: r.CPUPct, CpuKnown: r.CPUKnown,
 		UnknownReason: r.UnknownReason, WslVmBytes: r.WSLVMBytes, ContainersBytes: r.ContainersBytes,
 		SlotsUsed: int32(slots), CgroupLimited: r.CgroupLimited, //nolint:gosec // small
+		HostUseP95Bytes: r.HostUseP95Bytes, HostUseReady: r.HostUseReady, HostUseSpanSeconds: int64(r.HostUseSpan.Seconds()),
 	}
 }
 

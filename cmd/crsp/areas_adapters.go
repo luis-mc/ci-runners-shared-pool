@@ -367,7 +367,10 @@ func (f doctorFleet) Machines(ctx context.Context) ([]doctor.Machine, error) {
 		if m.State == "" {
 			m.State = v.Machine.State
 		}
+		m.PoolMemory = doctor.PoolMemory{TotalBytes: v.Machine.Facts.MemoryBytes, PoolGiB: v.Settings.PoolMemoryGiB, WSLCapBytes: v.Machine.Facts.WSL.MemoryBytes}
 		if v.Load != nil {
+			m.PoolMemory.HostP95Bytes = v.Load.HostUseP95Bytes
+			m.PoolMemory.HostReady = v.Load.HostMeasured()
 			m.Load = &doctor.Load{MemoryPct: v.Load.MemoryPct, CPUPct: v.Load.CPUPct,
 				MemoryKnown: v.Load.MemoryKnown, CPUKnown: v.Load.CPUKnown, SampledAt: v.Load.SampledAt}
 		}

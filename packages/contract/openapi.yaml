@@ -7188,6 +7188,48 @@ components:
           $ref: '#/components/schemas/PoolSizeRecommended'
         recommended_three_quarters:
           $ref: '#/components/schemas/PoolSizeRecommended'
+        basis:
+          type: string
+          enum: [measured, measuring]
+          description: What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+        host_p95_gib:
+          type: number
+          format: double
+          description: The rolling 7-day p95 of the memory the PC uses without the pool. Set when `basis` is `measured`.
+        host_span_hours:
+          type: number
+          format: double
+          description: How many hours the samples cover.
+        measured_room_gib:
+          type: number
+          format: double
+          description: Total memory times the memory budget, less the p95 and the safety margin. Set when `basis` is `measured`.
+        preset_room_gib:
+          type: number
+          format: double
+          description: The room the recommended sizes take a share of.
+        safety_margin_gib:
+          type: number
+          format: double
+        leaves_gib:
+          type: number
+          format: double
+          description: What the checked size leaves for the PC. Set when `basis` is `measured`.
+        leaves_less_than_host:
+          type: boolean
+          description: A warning, not a block. The checked size leaves the PC less than its own p95.
+        wsl_pool:
+          type: boolean
+          description: The pool runs in WSL2, so `.wslconfig` caps its memory.
+        wsl_cap_gib:
+          type: number
+          format: double
+          description: The memory cap `.wslconfig` declares. Set when `wsl_cap_set`.
+        wsl_cap_set:
+          type: boolean
+        wsl_cap_above_pc:
+          type: boolean
+          description: The declared cap is above the total memory less the p95.
         current_memory_gib:
           type: number
           format: double

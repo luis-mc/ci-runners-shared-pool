@@ -45,7 +45,7 @@ func TestNewLiveSharesOneHubAndStartsWithASnapshot(t *testing.T) {
 
 func TestNewDoctorRegistersCoreChecksAndRuns(t *testing.T) {
 	eng, svc := NewDoctor(DoctorDeps{Fleet: noFleet{}, Store: doctor.NewMemStore()})
-	if got := len(eng.Registry.All()); got != 50 {
+	if got := len(eng.Registry.All()); got != 51 {
 		t.Fatalf("registered %d checks", got)
 	}
 	run, err := eng.Run(context.Background(), doctor.Scope{}, doctor.TriggerSystem, "system")
@@ -57,11 +57,11 @@ func TestNewDoctorRegistersCoreChecksAndRuns(t *testing.T) {
 	}
 }
 
-// The live doctor adds the two KVM checks the agent report feeds: 50 core
-// checks and 2 more are 52 (doctor R5.32).
+// The live doctor adds the two KVM checks the agent report feeds: 51 core
+// checks and 2 more are 53 (doctor R5.32).
 func TestNewDoctorWithReportedKVMChecksRegistersFortyOne(t *testing.T) {
 	eng, _ := NewDoctor(DoctorDeps{Fleet: noFleet{}, Store: doctor.NewMemStore(), Extra: checks.KVMReportedChecks()})
-	if got := len(eng.Registry.All()); got != 52 {
+	if got := len(eng.Registry.All()); got != 53 {
 		t.Fatalf("registered %d checks", got)
 	}
 }

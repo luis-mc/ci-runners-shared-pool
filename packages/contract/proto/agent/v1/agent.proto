@@ -267,6 +267,12 @@ message LoadReport {
   // True when an agent in a container decided on the worse of host and
   // container (R5.19).
   bool cgroup_limited = 12;
+  // The host's own memory use, without crsp's pool (OPS61): the rolling p95 of
+  // the last 7 days, valid when host_use_ready, and how many seconds the
+  // samples cover.
+  int64 host_use_p95_bytes = 13;
+  bool host_use_ready = 14;
+  int64 host_use_span_seconds = 15;
 }
 
 // ---------------------------------------------------------------- runners
