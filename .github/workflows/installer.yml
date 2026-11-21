@@ -86,12 +86,6 @@ jobs:
             -FailingMsi installer/out/v0.1.2/crsp-windows-amd64.msi `
             -LogDir installer/out/logs
 
-      # Drives the "Also delete my data" dialog with UI Automation on the runner's desktop.
-      - name: Uninstall dialog
-        if: ${{ !cancelled() && matrix.arch == 'x64' }}
-        timeout-minutes: 6
-        run: ./installer/ui-test.ps1 -Msi installer/out/v0.1.0/crsp-windows-amd64.msi -LogDir installer/out/logs
-
       - name: Administrative extract (no install)
         if: ${{ !cancelled() }}
         run: |

@@ -162,5 +162,18 @@ Check 'uninstall with REMOVEDATA=1 exits 0' ($rc -eq 0) "exit $rc"
 Check 'no leftovers' ((Leftovers).Count -eq 0) ((Leftovers) -join ', ')
 Check 'data folder removed' (-not (Test-Path $dataDir)) 'still there'
 
+# OPS69: PURGE=1 is the name the lifecycle standard uses; REMOVEDATA=1 above is the older alias.
+Write-Host "== reinstall, then uninstall with PURGE=1"
+$rc = Msiexec @('/i', "`"$Msi`"") (Join-Path $LogDir 'reinstall-purge.log')
+Check 'reinstall exits 0' ($rc -eq 0) "exit $rc"
+Check 'service running after reinstall' (WaitRunning)
+New-Item -ItemType Directory -Force -Path $dataDir | Out-Null
+Set-Content -Path (Join-Path $dataDir 'keep-me.txt') -Value 'x'
+$rc = Msiexec @('/x', "`"$Msi`"", 'PURGE=1') (Join-Path $LogDir 'uninstall-purge.log')
+Check 'uninstall with PURGE=1 exits 0' ($rc -eq 0) "exit $rc"
+Check 'no leftovers after PURGE=1' ((Leftovers).Count -eq 0) ((Leftovers) -join ', ')
+Check 'data folder removed by PURGE=1' (-not (Test-Path $dataDir)) 'still there'
+Check 'remove audit row is in the Application event log' (@(Get-WinEvent -FilterHashtable @{ LogName = 'Application'; ProviderName = 'crsp' } -MaxEvents 20 -ErrorAction SilentlyContinue | Where-Object { $_.Message -match '"action":"remove"' }).Count -gt 0) 'no event'
+
 if ($script:failures) { Write-Host "`n$($script:failures) check(s) FAILED"; exit 1 }
 Write-Host "`nAll checks passed"

@@ -194,3 +194,41 @@ func TestMSINeverRemovesTheDataFolderOnUpgrade(t *testing.T) {
 		t.Error("RemoveData must not run on an upgrade: it needs NOT UPGRADINGPRODUCTCODE")
 	}
 }
+
+// OPS69: remove asks through the native window, passes PURGE through, unregisters the runners and audits.
+func TestMSIRemoveAsksPassesPurgeAndUnregistersRunners(t *testing.T) {
+	s := wxs(t)
+	for _, want := range []string{
+		// the question is the native window, through the CLI; a cancel (exit 1) fails the action
+		`uninstall --ask-to`,
+		`Id="AskRemove"`,
+		// interactive only: a silent uninstall keeps the data
+		`UILevel&gt;=4`,
+		// PURGE reaches the CLI as --delete-data
+		`<Property Id="PURGE"`,
+		`Value="--delete-data "`,
+		`[PURGEARG]--actor`,
+		// the runners are unregistered while the controller still runs
+		`uninstall --runners-only`,
+		`<Custom Action="UnregisterRunners" Before="CloseTray"`,
+		// the older name keeps working
+		`Condition="REMOVEDATA=&quot;1&quot;"`,
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("crsp.wxs lacks %s", want)
+		}
+	}
+	if strings.Contains(s, "RemoveDataDlg") || strings.Contains(s, `Type="CheckBox"`) {
+		t.Error("the check box dialog is replaced by the native remove window")
+	}
+	// A cancel must stop the uninstall: the ask action returns "check", never "ignore".
+	i := strings.Index(s, `Id="AskRemove"`)
+	if i < 0 || !strings.Contains(s[i:i+400], `Return="check"`) {
+		t.Error("AskRemove must be Return=check so Cancel ends the uninstall")
+	}
+	// The remove step never runs on an upgrade.
+	i = strings.Index(s, `<Custom Action="RemoveData"`)
+	if i < 0 || !strings.Contains(s[i:i+250], "NOT UPGRADINGPRODUCTCODE") {
+		t.Error("RemoveData must not run on an upgrade")
+	}
+}
