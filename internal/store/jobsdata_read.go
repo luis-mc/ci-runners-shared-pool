@@ -143,6 +143,9 @@ func (s *JobsStore) ListRuns(ctx context.Context, f jobsdata.RunFilter) ([]jobsd
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("list runs: %w", err)
 	}
+	if err := s.fillFollowUps(ctx, out); err != nil {
+		return nil, 0, err
+	}
 	return out, total, nil
 }
 
@@ -208,6 +211,11 @@ func (s *JobsStore) GetRun(ctx context.Context, runID int64, attempt int) (jobsd
 		return d, false, fmt.Errorf("run jobs: %w", err)
 	}
 	d.State = runState(r.Conclusion, running, d.JobsDone)
+	one := []jobsdata.RunRow{d.RunRow}
+	if err := s.fillFollowUps(ctx, one); err != nil {
+		return d, false, err
+	}
+	d.StartedNext, d.FollowUps, d.FollowUpsOpen, d.ParentRunID = one[0].StartedNext, one[0].FollowUps, one[0].FollowUpsOpen, one[0].ParentRunID
 	if run.Workflow != "" {
 		g, ok, err := s.GetGraph(ctx, run.RepositoryID, run.Workflow, run.HeadSHA)
 		if err != nil {

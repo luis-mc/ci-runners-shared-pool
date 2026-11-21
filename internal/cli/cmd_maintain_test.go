@@ -2,6 +2,7 @@ package cli
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -130,8 +131,11 @@ func TestMaintainReleasesWhenTheControllerRefusesTheCommand(t *testing.T) {
 func TestMaintainReleasesWhenCancelledWhileDraining(t *testing.T) {
 	f := maintainFixture(t, execOK(nil))
 	job := jobJSON(7, "luis-mc/app", "test", "running")
-	f.handle("GET /api/v1/machines/m_build-01/changes/c1", func(w http.ResponseWriter, _ *http.Request) {
+	f.handle("GET /api/v1/machines/m_build-01/changes/c1", func(w http.ResponseWriter, r *http.Request) {
 		f.cancel() // Ctrl-C
+		// Answer only after the client has dropped the request, so it can
+		// never see the answer before the cancel.
+		<-r.Context().Done()
 		writeJSON(w, 200, change("waiting", job))
 	})
 	code, _, errOut := f.run("machine", "maintain", "build-01", "--yes", "--", "compact")
@@ -150,8 +154,13 @@ func TestMaintainReleasesWhenCancelledWhileDraining(t *testing.T) {
 // command may still run on the machine.
 func TestMaintainReleasesWhenCancelledWhileRunning(t *testing.T) {
 	var f *fixture
-	f = maintainFixture(t, func(w http.ResponseWriter, _ *http.Request) {
-		f.cancel() // Ctrl-C, before the answer below is sent
+	f = maintainFixture(t, func(w http.ResponseWriter, r *http.Request) {
+		f.cancel() // Ctrl-C
+		// Answer only after the client has dropped the request, so it can
+		// never see the answer before the cancel. The server notices the
+		// drop only once the request body is read.
+		_, _ = io.Copy(io.Discard, r.Body)
+		<-r.Context().Done()
 		writeJSON(w, 200, map[string]any{"ok": true, "exit_code": 0, "output": ""})
 	})
 	code, _, errOut := f.run("machine", "maintain", "build-01", "--yes", "--", "compact")

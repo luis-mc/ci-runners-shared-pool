@@ -52,6 +52,40 @@ describe('Audit log', () => {
       items: [row(2, 'machine.drain'), row(1, 'settings.update', { result: 'refused' })],
     });
 
+  it('shows what each change acted on, a plain detail and the time on one line (LOOK49)', async () => {
+    renderApp(
+      signedIn().on('GET', '/api/v1/audit', {
+        items: [
+          row(2, 'variable.restored', {
+            target_type: 'repository',
+            target_id: 'luis-mc/app',
+            summary: 'not on the list',
+          }),
+          row(1, 'variable.restored', {
+            target_type: 'repository',
+            target_id: 'luis-mc/web',
+          }),
+        ],
+      }),
+      '/settings/audit',
+    );
+    const table = await screen.findByRole('table', { name: 'Audit log' });
+    expect(within(table).getByRole('columnheader', { name: 'On' })).toBeTruthy();
+    expect(within(table).getByText('repository luis-mc/app')).toBeTruthy();
+    expect(within(table).getByText('repository luis-mc/web')).toBeTruthy();
+    expect(table.textContent).not.toContain('detail=');
+    const times = table.querySelectorAll('time.ds-datetime');
+    expect(times).toHaveLength(2);
+    expect(times[0]?.getAttribute('datetime')).toBe('2026-11-14T10:00:00.000Z');
+  });
+
+  it('puts Export in the list toolbar, not over the rows (LOOK49)', async () => {
+    renderApp(api(), '/settings/audit');
+    await screen.findByRole('table', { name: 'Audit log' });
+    const bar = screen.getByRole('group', { name: 'Audit log toolbar' });
+    expect(within(bar).getByRole('button', { name: /Export/ })).toBeTruthy();
+  });
+
   it('lists the changes newest first, with who, what and the result', async () => {
     renderApp(api(), '/settings/audit');
     const table = await screen.findByRole('table', { name: 'Audit log' });

@@ -151,7 +151,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
 		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
-		FallbackGrace: fallbackGrace(d), PublicRepositories: publicRepositories(d), Now: d.Now})
+		FallbackGrace: fallbackGrace(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
 	// An App made without a webhook has no webhook secret in the store (R5.3):
 	// no delivery can arrive, so polling finding a job is not a missed delivery.
 	health.HooksOn = func() bool {

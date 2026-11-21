@@ -13,4 +13,9 @@ const (
 	WordClose    = "Close"
 	WordStarted  = "Starting the update."
 	WordUpToDate = "Up to date"
+
+	// Another installer holds Windows Installer (TRAY11). %s is its name.
+	WordWaitingInstaller     = "Waiting for another installer"
+	WordWaitingInstallerBody = "%s is installing. Windows installs one program at a time; this update starts when it finishes."
+	WordAnotherProgram       = "Another program"
 )

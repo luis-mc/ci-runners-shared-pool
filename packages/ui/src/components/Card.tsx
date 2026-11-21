@@ -2,9 +2,16 @@
 import type { ReactNode } from 'react';
 import { Pane } from './Pane';
 
-export function CardGrid({ children }: { children: ReactNode }) {
+/** `columns={4}` is the Help grid: 4 columns on a wide screen, 2 on a tablet, 1 on a phone (LOOK48). */
+export function CardGrid({
+  children,
+  columns,
+}: {
+  children: ReactNode;
+  columns?: 4 | undefined;
+}) {
   return (
-    <div className="ds-card-grid" data-layout-group>
+    <div className="ds-card-grid" data-columns={columns} data-layout-group>
       {children}
     </div>
   );

@@ -80,3 +80,34 @@ func TestRangeOver24HoursRejected(t *testing.T) {
 		t.Fatal("empty range accepted")
 	}
 }
+
+// The Installers run starts after CI and waited about 6 minutes for a runner: the wait is a segment on the lane of
+// the runner that took the job, marked as a follow-up, so the gap after CI shows on the timeline.
+func TestFollowUpRunnerWaitIsASegment(t *testing.T) {
+	jobs := []insights.JobFact{
+		{ID: 1, RunID: 100, Repository: "o/r", JobIdent: "msi", Event: "workflow_run", Origin: insights.OriginCrsp,
+			RunnerName: "crsp-1", CreatedAt: at(1), StartedAt: at(7.5), CompletedAt: at(20)},
+		{ID: 2, RunID: 101, Repository: "o/r", JobIdent: "short", Event: "workflow_run", Origin: insights.OriginCrsp,
+			RunnerName: "crsp-1", CreatedAt: at(30), StartedAt: at(30.5), CompletedAt: at(31)},
+		{ID: 3, RunID: 102, Repository: "o/r", JobIdent: "lint", Event: "push", Origin: insights.OriginCrsp,
+			RunnerName: "crsp-1", CreatedAt: at(40), StartedAt: at(50), CompletedAt: at(55)},
+	}
+	lanes, err := NewBuilder(fakeSource{jobs}, fakeStates{}).Timeline(context.Background(), day)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var waits, followUps int
+	for _, s := range lanes[0].Segments {
+		switch {
+		case s.Kind == SegmentWait && s.JobID == 1 && s.RunID == 100 && s.FollowUp && s.Start.Equal(at(1)) && s.End.Equal(at(7.5)):
+			waits++
+		case s.Kind == SegmentWait:
+			t.Errorf("unexpected wait: %+v", s)
+		case s.Kind == SegmentJob && s.FollowUp:
+			followUps++
+		}
+	}
+	if waits != 1 || followUps != 2 {
+		t.Fatalf("waits %d follow-up jobs %d, segments %+v", waits, followUps, lanes[0].Segments)
+	}
+}
