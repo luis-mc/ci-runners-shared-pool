@@ -266,6 +266,15 @@ jobs:
         env:
           CGO_ENABLED: '1'
         run: bash scripts/ci/go-test.sh -race
+      # OPS68: the updater passes the lifecycle conformance runner (LC-3 to LC-7, LC-25, LC-26, LC-28).
+      # The test interface is its own command, built only here and never shipped.
+      - name: Lifecycle conformance (updater)
+        run: |
+          CGO_ENABLED=0 go build -o "$RUNNER_TEMP/crsp-lifecycle-test" ./cmd/crsp-lifecycle-test
+          "$RUNNER_TEMP/crsp-lifecycle-test" --addr 127.0.0.1:7391 &
+          pid=$!
+          trap 'kill "$pid"' EXIT
+          python3 scripts/delivery/lifecycle_conformance.py --url http://127.0.0.1:7391
       # CRSP201: go-test.sh logs only failures and a summary; the JSON keeps every
       # test's time. The name is stable, so artifact-prune keeps the newest of each.
       - name: Upload Go test times

@@ -339,6 +339,39 @@ Not built: a copyable reinstall command with a one-time token in the console, an
 
 **R5.123** (OPS59) — **An update keeps the owner's data.** The MSI never removes the data folder on an upgrade: it authors no `RemoveFolder` or `RemoveFile`, and the only deletion, `RemoveData`, needs `REMOVEDATA=1` and `NOT UPGRADINGPRODUCTCODE`, which the automatic update never sets. What the owner chose (machines, settings, keys, runners) is in the database in that folder (machines R5.68, runners R5.99), which an upgrade keeps. If the controller's own agent still loses its key, it joins again as the same machine (machines R5.70) and the doctor says so (doctor R5.61).
 
+**R5.124** (OPS68) — **The update follows the lifecycle contract.** Code: `internal/update/lifecycle` (the state machine), `internal/update/service.go` (the real clock, policy, audit), `internal/lifecycletest` and `cmd/crsp-lifecycle-test` (the test interface, never in a release build). The states are `unpaired`, `up_to_date`, `available`, `review`, `waiting`, `downloading`, `verifying`, `refused`, `installing`, `testing`, `updated`, `rolling_back`, `rolled_back`, `skipped`.
+- No check runs before this machine has joined the pool (LC-28). A check by hand before that says so.
+- The first check comes 1 to 10 minutes after start, then every 6 hours plus or minus 20 percent. A failed check waits 1 min, 5 min, 30 min, then 2 h (LC-5).
+- Policies (LC-6): `automatic_when_idle` (the default) installs when no job runs on this machine, inside the daily window when one is set, and waits otherwise; `ask_first` installs only after the owner's click. A required update installs under both.
+- After a failed self-test the old version runs again, and the retry comes after 1 h, then 4 h. The third failure ends in `skipped` until a newer version is offered (LC-7).
+- The manifest is signed with Ed25519 (key committed as `internal/update/keys/release-ed25519.pub`, PEM). A missing key, a missing or bad signature, an expired manifest, an older version or a SHA-256 that does not match each end in `refused` and the installed version stays (LC-4). This is in addition to SHA256SUMS and the build provenance of R5.34. The MSI stays unsigned.
+- Release assets are `Crsp-<version>-<os>-<arch>.<ext>` (for example `Crsp-0.1.22-win-x64.msi`) and their signed manifest `<asset>.manifest.json`. The updater looks for that name first, then `crsp-<os>-<arch>_<version>.<ext>`, then the plain name, for one transition release.
+- Every check, install, refusal, rollback and skip is an audit row `update.<kind>.<result>` with its actor; an install that the signed-in owner started from another device has `remote` true (LC-25). Settings show policy, window, channel, last check and last result (LC-26).
+- API (kept under `/api/v1`; the old paths stay as aliases for one release): `GET /api/v1/update/status`, `POST /api/v1/update/policy`, `POST /api/v1/update/check`, `POST /api/v1/update/install`, `GET /api/v1/update/history`, `GET /api/v1/update/fleet`, `POST /api/v1/remove` (`delete_data` required, no default). `update/check` and a confirmed `update/apply` call the same code.
+
+```mermaid
+stateDiagram-v2
+  [*] --> unpaired
+  unpaired --> up_to_date: joined the pool
+  up_to_date --> available: newer, signed version
+  available --> review: ask_first
+  available --> waiting: busy or outside the window
+  available --> downloading: idle, or required
+  waiting --> downloading
+  review --> downloading: owner clicks
+  downloading --> verifying
+  verifying --> installing
+  installing --> testing
+  testing --> updated
+  testing --> rolling_back: self-test fails
+  rolling_back --> rolled_back
+  rolled_back --> downloading: retry after 1 h, then 4 h
+  rolled_back --> skipped: third failure
+  downloading --> refused
+  verifying --> refused
+  refused --> up_to_date
+```
+
 ## 6. Non-functional requirements
 
 **R6.1** (M3) — An update never stops a running job. A controller restart never stops a job on any machine; agents reconnect with backoff.
@@ -487,6 +520,7 @@ All tests are planned; none exists yet. Paths are where each test will live.
 | R5.121 | built (TRAY8): internal/update/prune_test.go TestPruneVersionsKeepsCurrentAndPrevious, TestManagerPrunesAfterASuccessfulUpdate |
 | R5.122 | built (CRSP205): internal/update/attempt_test.go TestRestartHasItsOwnAttemptApartFromAnOldFailedUpdate, TestFailedRestartCarriesItsAttempt; apps/web/src/screens/settings/Updates.test.tsx (Restart the service judges its own attempt) |
 | R5.123 | installer/wxs_test.go TestMSINeverRemovesTheDataFolderOnUpgrade; internal/store/controllerstate_test.go TestMachinesSurviveRestart | built (OPS59) |
+| R5.124 | built (OPS68): scripts/delivery/lifecycle_conformance.py against cmd/crsp-lifecycle-test (LC-3 to LC-7, LC-25, LC-26, LC-28; CI step Lifecycle conformance); internal/update/lifecycle/core_test.go TestFailedInstallsRetryAt1hThen4hThenSkip, TestManifestRefusals, TestWindowOpensTheInstall; internal/update/service_test.go TestServiceNoCheckWhileUnpaired, TestServiceAutomaticInstallWhenIdle, TestServiceRestoreAfterFailedInstall; internal/update/assetname_test.go TestReleaseNameAndPick; internal/api/handlers_lifecycle_test.go TestRemoveNeedsAChoice |
 
 ## 10. Decisions
 

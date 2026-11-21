@@ -357,7 +357,7 @@ func (u *Updater) download(actor string, remote bool) {
 		return
 	}
 	u.go_("verifying")
-	if strings.ToLower(sum) != strings.ToLower(m.SHA256) {
+	if !strings.EqualFold(sum, m.SHA256) {
 		u.refuse("bad_hash")
 		return
 	}

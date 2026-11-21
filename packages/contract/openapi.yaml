@@ -8971,11 +8971,38 @@ components:
     LifecycleStatus:
       type: object
       description: The update state by the lifecycle standard.
-      required: [state, current, available, required, policy, window, next_check_at, failures, waiting_for_jobs]
+      required:
+        [
+          state,
+          current,
+          available,
+          required,
+          policy,
+          window,
+          next_check_at,
+          failures,
+          waiting_for_jobs,
+        ]
       properties:
         state:
           type: string
-          enum: [unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped]
+          enum:
+            [
+              unpaired,
+              up_to_date,
+              available,
+              review,
+              waiting,
+              downloading,
+              verifying,
+              refused,
+              installing,
+              testing,
+              updated,
+              rolling_back,
+              rolled_back,
+              skipped,
+            ]
         current:
           type: string
           example: 0.1.21
