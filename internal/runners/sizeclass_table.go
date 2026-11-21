@@ -1,6 +1,7 @@
 package runners
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -250,5 +251,36 @@ func CheckSave(prev, next ClassSizes, runners map[string]SizeClass, pools map[st
 	if !confirm && len(LoweredInUse(prev, next, inUse)) > 0 {
 		return ErrConfirmLowering
 	}
+	return nil
+}
+
+type classJSON struct {
+	CPUs      int `json:"cpus"`
+	MemoryGiB int `json:"memory_gib"`
+}
+
+// MarshalJSON writes {"small":{"cpus":2,"memory_gib":4},...}.
+func (c ClassSizes) MarshalJSON() ([]byte, error) {
+	m := map[string]classJSON{}
+	for _, s := range c.List() {
+		m[string(s.Class)] = classJSON{s.CPUs, s.MemoryGiB}
+	}
+	return json.Marshal(m)
+}
+
+// UnmarshalJSON reads what MarshalJSON writes; a class that is missing keeps
+// the built-in size.
+func (c *ClassSizes) UnmarshalJSON(b []byte) error {
+	m := map[string]classJSON{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return err
+	}
+	out := TableSizes()
+	for _, p := range []*SizeSpec{&out.Small, &out.Medium, &out.Large, &out.XL} {
+		if v, ok := m[string(p.Class)]; ok {
+			p.CPUs, p.MemoryGiB = v.CPUs, v.MemoryGiB
+		}
+	}
+	*c = out
 	return nil
 }

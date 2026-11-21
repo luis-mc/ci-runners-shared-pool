@@ -30,6 +30,10 @@ type Engine struct {
 	// them when a real job needs the budget (scheduling R5.66). Both nil: no warm pool.
 	warm        func(machineID string) []WarmRunner
 	warmRelease func(machineID string, names []string)
+	// runnerClass, forecastEnd and zone feed admission (scheduling R5.90 to R5.94).
+	runnerClass func(machineID, runnerName string) string
+	forecastEnd func(machineID string, job slots.Job, start time.Time) (time.Time, bool)
+	zone        *time.Location
 	// factsState reports job facts to the Jobs section (SetFacts).
 	factsState
 }
@@ -227,6 +231,9 @@ func (e *Engine) staleSlots(tx slots.Tx, machine string, now time.Time) ([]Freed
 			return nil, err
 		} else if ok {
 			freed = append(freed, e.droppedRow(tx, t, reason, now))
+			if err := tx.DropPasses(t.ID); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return freed, nil
