@@ -885,6 +885,14 @@ type Run struct {
 	UpdatedAt    string
 }
 
+type RunFollowUp struct {
+	RepositoryID int64
+	RunID        int64
+	ParentRunID  int64
+	Source       string
+	UpdatedAt    string
+}
+
 type Runner struct {
 	ID                   string
 	Name                 string

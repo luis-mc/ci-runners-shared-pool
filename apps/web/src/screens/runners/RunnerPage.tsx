@@ -109,7 +109,7 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
       <Section title="Runner">
         <Facts
           items={[
-            { name: 'Kind', value: KIND_NAMES[r.kind] },
+            { name: 'Type', value: KIND_NAMES[r.kind] },
             { name: 'State', value: r.state },
             {
               name: 'Machine',

@@ -2,8 +2,8 @@
 // what, newest first, and exports every row that matches the filters. Config export downloads the configuration
 // without any secret; a secret is named only as set or not set.
 import {
-  ActionBar,
   Button,
+  DateTime,
   Empty,
   ExportButton,
   Section,
@@ -13,8 +13,8 @@ import {
   Status,
   Table,
   Text,
-  formatDateTime,
   type Column,
+  formatDateTime,
 } from '@crsp/ui';
 import { useEffect, useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
@@ -28,16 +28,30 @@ type Event = Schemas['AuditEvent'];
 
 const PAGE = 100;
 
+/** The thing a change acted on in plain words: "repository luis-mc/app", or the type alone when it has no id. */
+function targetOf(e: Event): string {
+  return [e.target_type, e.target_id].filter(Boolean).join(' ');
+}
+
 const cols: Column<Event>[] = [
   {
     id: 'at',
     header: 'When',
-    cell: (e) => formatDateTime(e.at),
+    cell: (e) => <DateTime value={e.at} />,
+    title: (e) => formatDateTime(e.at),
     sort: (e) => e.at,
   },
   { id: 'actor', header: 'Who', cell: (e) => e.actor, sort: (e) => e.actor },
   { id: 'action', header: 'What', cell: (e) => e.action, sort: (e) => e.action },
-  { id: 'summary', header: 'Details', cell: (e) => e.summary },
+  // What the change acted on, so two rows of one action in a minute can be told apart (LOOK49).
+  {
+    id: 'target',
+    header: 'On',
+    cell: (e) => targetOf(e),
+    sort: (e) => targetOf(e),
+    grow: 1,
+  },
+  { id: 'summary', header: 'Details', cell: (e) => e.summary, grow: 2 },
   {
     id: 'result',
     header: 'Result',
@@ -101,60 +115,57 @@ export function AuditLogSettings() {
     );
 
   return (
-    <>
-      <Section title="Audit log">
-        <Stack>
-          <Text>Who changed what, and when. The newest change is first.</Text>
-          <ListToolbar
-            label="Audit log"
-            search={
-              <>
-                <SearchBar label="Search who" value={actor} onChange={setActor} />
-                <SearchBar label="Search what" value={action} onChange={setAction} />
-              </>
-            }
-          />
-          <Load
-            result={result.state === 'ready' ? { ...result, data: rows } : result}
-            what="the audit log"
-            reload={() => setTick((t) => t + 1)}
-          >
-            {(items) =>
-              items.length === 0 ? (
-                <Empty
-                  title={
-                    actor || action
-                      ? 'No change matches the search. Clear it to see every change.'
-                      : 'Nothing has been changed yet.'
-                  }
+    <Section title="Audit log">
+      <Stack>
+        <Text>Who changed what, and when. The newest change is first.</Text>
+        <ListToolbar
+          label="Audit log"
+          search={
+            <>
+              <SearchBar label="Search who" value={actor} onChange={setActor} />
+              <SearchBar label="Search what" value={action} onChange={setAction} />
+            </>
+          }
+          actions={<ExportButton primary what="the audit log" onExport={exportAll} />}
+        />
+        <Load
+          result={result.state === 'ready' ? { ...result, data: rows } : result}
+          what="the audit log"
+          reload={() => setTick((t) => t + 1)}
+        >
+          {(items) =>
+            items.length === 0 ? (
+              <Empty
+                title={
+                  actor || action
+                    ? 'No change matches the search. Clear it to see every change.'
+                    : 'Nothing has been changed yet.'
+                }
+              />
+            ) : (
+              <Stack>
+                <Table
+                  caption="Audit log"
+                  columns={cols}
+                  rows={items}
+                  rowKey={(e) => String(e.id)}
+                  oneLine
                 />
-              ) : (
-                <Stack>
-                  <Table
-                    caption="Audit log"
-                    columns={cols}
-                    rows={items}
-                    rowKey={(e) => String(e.id)}
-                  />
-                  {next ? (
-                    <Button
-                      onPress={() => void more.run()}
-                      busy={more.busy}
-                      busyLabel="Loading more"
-                    >
-                      Load more
-                    </Button>
-                  ) : null}
-                </Stack>
-              )
-            }
-          </Load>
-        </Stack>
-      </Section>
-      <ActionBar
-        primary={<ExportButton primary what="the audit log" onExport={exportAll} />}
-      />
-    </>
+                {next ? (
+                  <Button
+                    onPress={() => void more.run()}
+                    busy={more.busy}
+                    busyLabel="Loading more"
+                  >
+                    Load more
+                  </Button>
+                ) : null}
+              </Stack>
+            )
+          }
+        </Load>
+      </Stack>
+    </Section>
   );
 }
 

@@ -167,8 +167,9 @@ func (s *Store) inTx(ctx context.Context, fn func(ctx context.Context, tx *sql.T
 // UpsertRun inserts or updates an attempt. A field the update leaves empty keeps its stored value, so a finished
 // attempt is never reopened.
 func (s *JobsStore) UpsertRun(ctx context.Context, r jobsdata.Run) error {
-	return s.inTx(ctx, func(ctx context.Context, _ *sql.Tx, q *sqlcgen.Queries) error {
-		row := runToRow(r, time.Now())
+	return s.inTx(ctx, func(ctx context.Context, tx *sql.Tx, q *sqlcgen.Queries) error {
+		now := time.Now()
+		row := runToRow(r, now)
 		old, err := q.GetRunsRow(ctx, sqlcgen.GetRunsRowParams{RepositoryID: r.RepositoryID, RunID: r.RunID, RunAttempt: int64(r.Attempt)})
 		switch {
 		case err == nil:
@@ -185,7 +186,13 @@ func (s *JobsStore) UpsertRun(ctx context.Context, r jobsdata.Run) error {
 		if err := q.UpsertRunsRow(ctx, sqlcgen.UpsertRunsRowParams(row)); err != nil {
 			return fmt.Errorf("upsert run: %w", err)
 		}
-		return nil
+		if r.TriggeredBy != 0 {
+			if err := q.SetRunFollowUp(ctx, sqlcgen.SetRunFollowUpParams{RepositoryID: r.RepositoryID, RunID: r.RunID,
+				ParentRunID: r.TriggeredBy, Source: jobsdata.LinkPayload, UpdatedAt: fmtTime(now)}); err != nil {
+				return fmt.Errorf("link run: %w", err)
+			}
+		}
+		return relink(ctx, tx, q, r.RepositoryID, row.HeadSha, now)
 	})
 }
 
@@ -193,7 +200,7 @@ func (s *JobsStore) UpsertRun(ctx context.Context, r jobsdata.Run) error {
 // stored value (so crsp facts stay), and facts parked for the job are merged and dropped. Light is kept true once
 // stored, because a GitHub update cannot say it.
 func (s *JobsStore) UpsertJob(ctx context.Context, j jobsdata.Job) error {
-	return s.inTx(ctx, func(ctx context.Context, _ *sql.Tx, q *sqlcgen.Queries) error {
+	return s.inTx(ctx, func(ctx context.Context, tx *sql.Tx, q *sqlcgen.Queries) error {
 		now := time.Now()
 		row := jobToRow(j, now)
 		old, err := q.GetJobsRow(ctx, j.ID)
@@ -223,6 +230,10 @@ func (s *JobsStore) UpsertJob(ctx context.Context, j jobsdata.Job) error {
 		out := jobToRow(merged, now)
 		if err := q.UpsertJobsRow(ctx, sqlcgen.UpsertJobsRowParams(out)); err != nil {
 			return fmt.Errorf("upsert job: %w", err)
+		}
+		if out.State == string(jobsdata.Done) {
+			// a finished job can finish its run, and with it the parent of a follow-up that arrived first
+			return relink(ctx, tx, q, out.RepositoryID, out.HeadSha, now)
 		}
 		return nil
 	})
@@ -488,6 +499,11 @@ func (s *JobsStore) Prune(ctx context.Context, now time.Time, r jobsdata.Retenti
 		count(&out.Jobs, n, e)
 		n, e = q.PruneRuns(ctx, jobsCut)
 		count(&out.Runs, n, e)
+		n, e = q.PruneRunFollowUps(ctx)
+		_ = n
+		if err == nil && e != nil {
+			err = e
+		}
 		n, e = q.PruneDailySummaries(ctx, now.Add(-r.Summaries).UTC().Format("2006-01-02"))
 		count(&out.Summaries, n, e)
 		n, e = q.PruneWorkflowGraphs(ctx, jobsCut)

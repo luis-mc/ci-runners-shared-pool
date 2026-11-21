@@ -79,6 +79,8 @@ export function runSummary(over: Over<RunSummary> = {}): RunSummary {
     jobs_done: 3,
     jobs_failed: 0,
     total_seconds: 480,
+    overall_state: 'done',
+    started_next: [],
     ...over,
   } as RunSummary;
 }
@@ -101,6 +103,8 @@ export function runItem(over: Over<RunItem> = {}): RunItem {
     result: 'success',
     created_at: '2026-11-18T09:00:00Z',
     completed_at: '2026-11-18T09:08:00Z',
+    overall_state: 'done',
+    started_next: [],
     jobs: [
       job({
         id: 11,

@@ -152,6 +152,12 @@ type Options struct {
 	// StartMSI starts msiexec detached (Windows update); MSILog is its log path (default %ProgramData%\crsp\logs).
 	StartMSI func(ctx context.Context, msi, log string) (int, error)
 	MSILog   string
+	// InstallerBusy says another installer holds Windows Installer, and names it when it can
+	// (TRAY11). ProcessAlive says the msiexec this controller started still runs. Sleep waits;
+	// tests give all three a fake clock.
+	InstallerBusy func() (busy bool, name string)
+	ProcessAlive  func(pid int) bool
+	Sleep         func(time.Duration)
 	// AfterInstall runs once at the first start after an update that succeeded, with the new
 	// version. On Windows it starts the tray for each signed-in user (CRSP147).
 	AfterInstall func(version string)
@@ -233,6 +239,15 @@ func New(o Options) *Manager {
 	if o.StartMSI == nil {
 		o.StartMSI = StartMSIDetached
 	}
+	if o.InstallerBusy == nil {
+		o.InstallerBusy = InstallerBusy
+	}
+	if o.ProcessAlive == nil {
+		o.ProcessAlive = pidAlive
+	}
+	if o.Sleep == nil {
+		o.Sleep = time.Sleep
+	}
 	if o.Pid == nil {
 		o.Pid = os.Getpid
 	}
@@ -248,6 +263,7 @@ func New(o Options) *Manager {
 		// The update worked: keep the folders of the version that runs and the one before it (TRAY8).
 		PruneVersions(o.Dir, r.To, r.From)
 	}
+	m.settleStaleAttempt()
 	if r, ok := ReadResult(o.Dir); ok && !r.OK && r.To != o.Current {
 		m.state, m.errText, m.errAttempt = StateFailed, "The last update to "+r.To+" failed: "+r.Error, r.Attempt
 		if m.errAttempt == "" {
@@ -722,27 +738,39 @@ func (m *Manager) OnIdle(ctx context.Context, kind Kind) error {
 	return nil
 }
 
-// onIdleMSI starts the MSI from the controller itself and ends this path: the
-// upgrade stops this process, and the next start reads the log (msi.go).
+// onIdleMSI starts the MSI from the controller itself. When another installer holds Windows
+// Installer it waits and retries (TRAY11, superviseMSI). The upgrade stops this process, and
+// the next start reads the log (msi.go).
 func (m *Manager) onIdleMSI(ctx context.Context, p *pending) error {
 	m.mu.Lock()
-	m.state = StateInstalling
-	lock := m.lock
+	m.state, m.pending = StateInstalling, nil
 	m.mu.Unlock()
+	pid := 0
+	if busy, _ := m.o.InstallerBusy(); !busy {
+		var err error
+		if pid, err = m.launchMSI(ctx, p); err != nil {
+			m.fail(err, p.version)
+			return err
+		}
+	}
+	go m.superviseMSI(p, pid)
+	return nil
+}
+
+// launchMSI starts msiexec now and hands the update lock to it.
+func (m *Manager) launchMSI(ctx context.Context, p *pending) (int, error) {
 	m.stage(Stage{Name: StageInstalling, Percent: 0, Version: p.version})
 	pid, err := m.startMSI(ctx, p)
 	if err != nil {
-		m.fail(err, p.version)
-		return err
+		return 0, err
 	}
+	m.mu.Lock()
+	lock := m.lock
+	m.mu.Unlock()
 	if pid > 0 && lock != nil {
 		_ = lock.HandOver(pid, m.o.Now())
 	}
-	m.mu.Lock()
-	m.state, m.pending = StateRestarting, nil
-	m.mu.Unlock()
-	go m.followMSILog(p.version)
-	return nil
+	return pid, nil
 }
 
 // Run checks at start (after a minute) and then every interval, until ctx ends.

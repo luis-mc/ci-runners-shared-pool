@@ -541,6 +541,12 @@ func timelineSegment(sg timeline.Segment) gen.TimelineSegment {
 	if sg.JobID != 0 {
 		out.JobId = ptr(sg.JobID)
 	}
+	if sg.RunID != 0 {
+		out.RunId = ptr(sg.RunID)
+	}
+	if sg.FollowUp {
+		out.FollowUp = ptr(true)
+	}
 	if sg.Repository != "" {
 		out.Repository = ptr(sg.Repository)
 	}

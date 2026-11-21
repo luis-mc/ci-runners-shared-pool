@@ -128,7 +128,7 @@ func (b *Backend) StartPersistent(ctx context.Context, r backend.RunnerSpec, cfg
 	if !r.KeepDependencies {
 		keep = "0"
 	}
-	if err := b.step(ctx, "register", []string{"exec", "-i", "-u", JobUser, PersistentPool, "sh", StateDir + "/bin/add-runner.sh",
+	if err := b.step(ctx, "register", []string{"exec", "-i", PersistentPool, "sh", StateDir + "/bin/add-runner.sh",
 		r.Name, r.GitHubURL, strings.Join(r.Labels, ","), r.Group, keep}, cfg.Registration+"\n"); err != nil {
 		return h, err
 	}
@@ -161,6 +161,11 @@ func (b *Backend) ensurePersistentPool(ctx context.Context, r backend.RunnerSpec
 			return err
 		}
 	}
+	if exists {
+		if err := b.repairPersistentVolumes(ctx); err != nil {
+			return err
+		}
+	}
 	if !exists {
 		tag, key, err := b.persistentImage(ctx, r)
 		if err != nil {
@@ -190,6 +195,32 @@ func (b *Backend) ensurePersistentPool(ctx context.Context, r backend.RunnerSpec
 	return b.writePersistentFiles(ctx)
 }
 
+// repairPersistentVolumes gives the two volumes of an existing pool to the uid
+// the container was made with (its Config.User), the user every exec runs as.
+// A volume left with another owner is repaired here, never left broken (OPS62).
+func (b *Backend) repairPersistentVolumes(ctx context.Context) error {
+	res, err := b.run(ctx, "inspect", "--format", "{{.Config.User}} {{.Config.Image}}", PersistentPool)
+	if err != nil {
+		return err
+	}
+	if res.ExitCode != 0 {
+		return fmt.Errorf("inspect %s: %s", PersistentPool, b.redact(strings.TrimSpace(res.Stderr)))
+	}
+	f := strings.Fields(res.Stdout)
+	if len(f) != 2 {
+		return nil // no user or image to go by: nothing to repair
+	}
+	uidText, _, _ := strings.Cut(f[0], ":")
+	uid, err := strconv.Atoi(uidText)
+	if err != nil || uid <= 0 {
+		return nil
+	}
+	if err := ValidateImageRef(f[1]); err != nil {
+		return nil
+	}
+	return b.step(ctx, "pool volumes", ownVolumesArgs(f[1], uid), "")
+}
+
 // persistentImage is the base image of the machine (the same one as a job
 // pool's, runners R5.49).
 func (b *Backend) persistentImage(ctx context.Context, r backend.RunnerSpec) (tag, key string, err error) {
@@ -203,6 +234,10 @@ func (b *Backend) persistentImage(ctx context.Context, r backend.RunnerSpec) (ta
 	return plan.Pool.ImageTag, plan.Pool.ImageKey, nil
 }
 
+// Every exec into a pool omits -u: the engine then runs it as the container's
+// Config.User, the uid:gid the pool was created with (identity(), runners
+// R5.72), never as the image's `runner` user (uid 1001) (OPS62).
+
 // writePersistentFiles puts the scripts into the state volume, each time the
 // container is used, so a new crsp release brings its newer scripts.
 func (b *Backend) writePersistentFiles(ctx context.Context) error {
@@ -211,7 +246,7 @@ func (b *Backend) writePersistentFiles(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if err := b.step(ctx, "pool files", []string{"exec", "-i", "-u", JobUser, PersistentPool, "sh", "-c",
+		if err := b.step(ctx, "pool files", []string{"exec", "-i", PersistentPool, "sh", "-c",
 			`mkdir -p "$(dirname "$1")" && cat >"$1.new" && chmod 0755 "$1.new" && mv -f "$1.new" "$1"`, "sh", StateDir + "/bin/" + n}, string(body)); err != nil {
 			return err
 		}
@@ -223,13 +258,13 @@ func (b *Backend) writePersistentFiles(ctx context.Context) error {
 // again until the marker is removed. A job that runs is never cut; callers
 // drain first (runners R6.4).
 func (b *Backend) stopPersistent(ctx context.Context, name string) error {
-	return b.step(ctx, "stop", []string{"exec", "-u", JobUser, PersistentPool, "sh", "-c", `: >"$1"`, "sh", StateDir + "/runners.d/" + name + ".stopped"}, "")
+	return b.step(ctx, "stop", []string{"exec", PersistentPool, "sh", "-c", `: >"$1"`, "sh", StateDir + "/runners.d/" + name + ".stopped"}, "")
 }
 
 // cleanUpPersistent removes the runner's entry, its folder and its dependency
 // folder; safe to call twice (runners R5.10).
 func (b *Backend) cleanUpPersistent(ctx context.Context, name string) error {
-	res, err := b.run(ctx, "exec", "-u", JobUser, PersistentPool, "sh", "-c",
+	res, err := b.run(ctx, "exec", PersistentPool, "sh", "-c",
 		`rm -f "$1/runners.d/$2.env" "$1/runners.d/$2.stopped"; sleep 6; rm -rf -- "$1/$2" "$3/$2"`, "sh", StateDir, name, DepsDir)
 	if err != nil {
 		return err
@@ -250,7 +285,7 @@ func (b *Backend) Deregister(ctx context.Context, h backend.Handle, removeToken 
 	if err := b.stopPersistent(ctx, name); err != nil {
 		return err
 	}
-	return b.step(ctx, "deregister", []string{"exec", "-i", "-u", JobUser, PersistentPool, "sh", "-c",
+	return b.step(ctx, "deregister", []string{"exec", "-i", PersistentPool, "sh", "-c",
 		`IFS= read -r ACTIONS_RUNNER_INPUT_TOKEN && export ACTIONS_RUNNER_INPUT_TOKEN && cd "$1/$2" && ./config.sh remove`, "sh", StateDir, name}, removeToken+"\n")
 }
 
@@ -265,7 +300,7 @@ type PersistentState struct {
 // persistent runner of the container (runners R5.90, R5.91). A container that
 // is not there has none.
 func (b *Backend) PersistentStates(ctx context.Context) ([]PersistentState, error) {
-	res, err := b.run(ctx, "exec", "-u", JobUser, PersistentPool, "sh", StateDir+"/bin/report.sh")
+	res, err := b.run(ctx, "exec", PersistentPool, "sh", StateDir+"/bin/report.sh")
 	if err != nil {
 		return nil, err
 	}
@@ -297,9 +332,9 @@ func ParsePersistentStates(out string) []PersistentState {
 // runner is idle (runners R5.90).
 func (b *Backend) ApplyHygiene(ctx context.Context, name string, keep, clear bool) error {
 	script := `printf '%s\n' "$3" >"$1/$2/crsp-hygiene.env"`
-	args := []string{"exec", "-u", JobUser, PersistentPool, "sh", "-c", script, "sh", StateDir, name, strings.TrimSpace(hygiene.SettingsText(keep))}
+	args := []string{"exec", PersistentPool, "sh", "-c", script, "sh", StateDir, name, strings.TrimSpace(hygiene.SettingsText(keep))}
 	if clear {
-		args = []string{"exec", "-u", JobUser, PersistentPool, "sh", "-c", script + `; for e in "$4/$2"/* "$4/$2"/.[!.]*; do rm -rf -- "$e"; done`,
+		args = []string{"exec", PersistentPool, "sh", "-c", script + `; for e in "$4/$2"/* "$4/$2"/.[!.]*; do rm -rf -- "$e"; done`,
 			"sh", StateDir, name, strings.TrimSpace(hygiene.SettingsText(keep)), DepsDir}
 	}
 	return b.step(ctx, "hygiene", args, "")

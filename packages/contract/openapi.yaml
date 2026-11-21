@@ -7905,6 +7905,7 @@ components:
           jobs_total,
           jobs_done,
           jobs_failed,
+          overall_state,
         ]
       properties:
         id:
@@ -7955,11 +7956,59 @@ components:
           type: integer
         jobs_failed:
           type: integer
+        overall_state:
+          type: string
+          enum: [queued, running, follow_up_running, done]
+          description: >-
+            The state with follow-ups counted. It is the run's own state until the run is done, then
+            follow_up_running while a run it started next (event workflow_run, such as Installers after CI) is queued or
+            running. The own state and the result do not change.
+        follow_ups:
+          type: integer
+          description: How many runs this run started next.
+        follow_ups_open:
+          type: integer
+          description: How many of them are queued or running.
+        started_by:
+          type: integer
+          format: int64
+          description: The run that started this one (event workflow_run), when it is known.
+        started_next:
+          type: array
+          description: The runs this run started next, oldest first.
+          items:
+            $ref: '#/components/schemas/RunFollowUp'
         total_seconds:
           type: integer
           description: Wall time from created to completed, or to now while open.
         eta:
           $ref: '#/components/schemas/Eta'
+    RunFollowUp:
+      type: object
+      description: A run that another run started next (CIX24).
+      required: [workflow_name, run_id, state, link]
+      properties:
+        workflow_name:
+          type: string
+        run_id:
+          type: integer
+          format: int64
+        attempt:
+          type: integer
+        state:
+          type: string
+          enum: [queued, running, done]
+        result:
+          $ref: '#/components/schemas/JobResult'
+        started_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        link:
+          type: string
+          description: The run on GitHub.
     RunPage:
       type: object
       required: [items, total, stale]
@@ -8010,6 +8059,8 @@ components:
           edges,
           critical_path,
           graph,
+          overall_state,
+          started_next,
         ]
       properties:
         id:
@@ -8053,6 +8104,28 @@ components:
         completed_at:
           type: string
           format: date-time
+        overall_state:
+          type: string
+          enum: [queued, running, follow_up_running, done]
+          description: >-
+            The state with follow-ups counted. It is the run's own state until the run is done, then
+            follow_up_running while a run it started next (event workflow_run, such as Installers after CI) is queued or
+            running. The own state and the result do not change.
+        follow_ups:
+          type: integer
+          description: How many runs this run started next.
+        follow_ups_open:
+          type: integer
+          description: How many of them are queued or running.
+        started_by:
+          type: integer
+          format: int64
+          description: The run that started this one (event workflow_run), when it is known.
+        started_next:
+          type: array
+          description: The runs this run started next, oldest first.
+          items:
+            $ref: '#/components/schemas/RunFollowUp'
         jobs:
           type: array
           items:
@@ -8924,7 +8997,20 @@ components:
       properties:
         name:
           type: string
-          enum: [downloading, waiting_for_jobs, installing, restarting, done, failed]
+          enum:
+            [
+              downloading,
+              waiting_for_jobs,
+              installing,
+              waiting_installer,
+              restarting,
+              done,
+              failed,
+            ]
+          description: waiting_installer means another installer holds Windows Installer; the update starts when it ends (TRAY11). restarting is set only once the installer has finished.
+        waiting_for:
+          type: string
+          description: waiting_installer only, the name of the other installer when it is known.
         percent:
           type: integer
           minimum: 0
@@ -8941,7 +9027,7 @@ components:
           description: failed only, the log that has the detail.
         failed_at:
           type: string
-          enum: [downloading, waiting_for_jobs, installing, restarting]
+          enum: [downloading, waiting_for_jobs, installing, waiting_installer, restarting]
           description: failed only, the stage that failed.
         at:
           type: string
@@ -10322,10 +10408,15 @@ components:
       properties:
         kind:
           type: string
-          enum: [job, idle]
+          enum: [job, idle, wait]
+          description: A wait is the time a follow-up job waited for its runner (CIX24).
         start: { type: string, format: date-time }
         end: { type: string, format: date-time }
         job_id: { type: integer, format: int64 }
+        run_id: { type: integer, format: int64 }
+        follow_up:
+          type: boolean
+          description: The job belongs to a run another run started (event workflow_run).
         repository: { type: string }
         job_ident: { type: string }
         event: { type: string }

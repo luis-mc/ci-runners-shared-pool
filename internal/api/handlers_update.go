@@ -79,6 +79,10 @@ func toGenUpdate(st update.Status) gen.UpdateStatus {
 			l := sg.LogPath
 			g.LogPath = &l
 		}
+		if sg.WaitingFor != "" {
+			w := sg.WaitingFor
+			g.WaitingFor = &w
+		}
 		if sg.FailedAt != "" {
 			f := gen.UpdateStageFailedAt(sg.FailedAt)
 			g.FailedAt = &f

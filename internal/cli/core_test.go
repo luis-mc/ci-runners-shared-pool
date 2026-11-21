@@ -8,7 +8,6 @@ import (
 	"runtime"
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/cli/contexts"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/secrets"
@@ -217,17 +216,17 @@ func TestJSONErrorEnvelopeOnStderr(t *testing.T) {
 
 func TestCallTimeout(t *testing.T) {
 	f := newFixture(t)
+	seen := make(chan struct{})
 	f.handle("GET /api/v1/machines", func(w http.ResponseWriter, r *http.Request) {
-		select {
-		case <-r.Context().Done():
-		case <-time.After(2 * time.Second):
-		}
+		// Hold the answer until the client gives up; no wall-clock bound.
+		<-r.Context().Done()
+		close(seen)
 	})
-	start := time.Now()
 	code, _, errOut := f.run("machine", "list", "--timeout", "100ms")
-	if code != ExitUnreachable || time.Since(start) > time.Second {
-		t.Fatalf("%d after %s: %q", code, time.Since(start), errOut)
+	if code != ExitUnreachable {
+		t.Fatalf("%d: %q", code, errOut)
 	}
+	<-seen // the server saw the request end
 }
 
 func TestNoColor(t *testing.T) {

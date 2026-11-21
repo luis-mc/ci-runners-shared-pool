@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"crypto/x509"
 	"encoding/pem"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -166,4 +167,31 @@ func (e *env) setPublic(on bool) {
 	e.mu.Lock()
 	e.public = on
 	e.mu.Unlock()
+}
+
+// count is how many audit events start with action.
+func (a *fakeAudit) count(action string) int {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	n := 0
+	for _, e := range a.events {
+		if strings.HasPrefix(e, action) {
+			n++
+		}
+	}
+	return n
+}
+
+// detail is the detail of the last event that starts with action.
+func (a *fakeAudit) detail(action string) string {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	out := ""
+	for _, e := range a.events {
+		if strings.HasPrefix(e, action) {
+			parts := strings.SplitN(e, "|", 4)
+			out = parts[len(parts)-1]
+		}
+	}
+	return out
 }

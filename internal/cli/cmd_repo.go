@@ -338,7 +338,7 @@ func (c *call) repoPolicy(args []string) error {
 	if c.g.json {
 		return output.JSON(c.env.Stdout, policy)
 	}
-	_, _ = fmt.Fprintf(c.env.Stdout, "Repository:      %s\nLabels:          %s\nMax parallel:    %d\nPriority:        %d\nFork PRs:        %s\nRunner kind:     %s\n",
+	_, _ = fmt.Fprintf(c.env.Stdout, "Repository:      %s\nLabels:          %s\nMax parallel:    %d\nPriority:        %d\nFork PRs:        %s\nRunner type:     %s\n",
 		repo.FullName, strings.Join(policy.Labels, ", "), policy.MaxParallelJobs, policy.Priority, onOff(policy.AllowForkPullRequests), repoKindText(policy))
 	if changed {
 		_, _ = fmt.Fprintln(c.env.Stderr, "Policy saved.")

@@ -19,17 +19,19 @@ const (
 	StateDownloading State = "downloading"
 	StateWaiting     State = "waiting_for_jobs"
 	StateInstalling  State = "installing"
-	StateRestarting  State = "restarting"
-	StateDone        State = "done"
-	StateFailed      State = "failed"
-	StateCancelled   State = "cancelled"
-	StateUpToDate    State = "up_to_date" // the version offered is not newer than the one that runs (TRAY8)
-	StateVerifying   State = "verifying"  // the download is checked: SHA-256, signature
-	StateTesting     State = "testing"    // the new version runs its self-test
-	StateRollingBack State = "rolling_back"
-	StateRolledBack  State = "rolled_back" // the test failed; the old version runs again
-	StateRefused     State = "refused"     // the download did not pass its signature check; nothing changed
-	StateSkipped     State = "skipped"     // three failures: no new try until a newer version
+	// StateWaitingInstaller: another installer holds Windows Installer; the update starts when it ends (TRAY11).
+	StateWaitingInstaller State = "waiting_installer"
+	StateRestarting       State = "restarting"
+	StateDone             State = "done"
+	StateFailed           State = "failed"
+	StateCancelled        State = "cancelled"
+	StateUpToDate         State = "up_to_date" // the version offered is not newer than the one that runs (TRAY8)
+	StateVerifying        State = "verifying"  // the download is checked: SHA-256, signature
+	StateTesting          State = "testing"    // the new version runs its self-test
+	StateRollingBack      State = "rolling_back"
+	StateRolledBack       State = "rolled_back" // the test failed; the old version runs again
+	StateRefused          State = "refused"     // the download did not pass its signature check; nothing changed
+	StateSkipped          State = "skipped"     // three failures: no new try until a newer version
 )
 
 // AllStates lists every state, in the order of an update.
@@ -156,6 +158,7 @@ type Model struct {
 	cancelled   bool
 	upToDate    bool // the service answered that this is already the newest release
 	seenInstall bool // installing or restarting was seen: the service goes down and comes back
+	seenRestart bool // restarting was seen: the installer has finished
 }
 
 // NewModel starts a model for the window.
@@ -167,11 +170,14 @@ func (m *Model) Observe(s Snapshot) {
 	if s.Stage != nil && (s.Stage.Name == "installing" || s.Stage.Name == "restarting") {
 		m.seenInstall = true
 	}
+	if s.Stage != nil && s.Stage.Name == "restarting" {
+		m.seenRestart = true // only the service says so, once msiexec has finished
+	}
 }
 
 // Requested says the person pressed Update now; the service has not answered yet.
 func (m *Model) Requested() {
-	m.requested, m.returned, m.startErr, m.cancelled, m.upToDate = true, false, "", false, false
+	m.requested, m.returned, m.startErr, m.cancelled, m.upToDate, m.seenRestart = true, false, "", false, false, false
 }
 
 // RequestReturned says the service answered the request: err nil means the update runs.
@@ -244,12 +250,11 @@ func (m *Model) State() State {
 			if trust {
 				return StateSkipped
 			}
+		case "waiting_installer":
+			return StateWaitingInstaller
 		case "installing", "restarting":
 			if m.last.ServiceUp && m.last.ServiceVersion != "" && m.last.ServiceVersion != m.From {
 				return StateDone // the new version answers; the stage file has not caught up
-			}
-			if !m.last.ServiceUp {
-				return StateRestarting
 			}
 			if st.Name == "installing" {
 				return StateInstalling
@@ -259,7 +264,12 @@ func (m *Model) State() State {
 	}
 	if m.seenInstall {
 		if !m.last.ServiceUp {
-			return StateRestarting // the service is down while it is replaced
+			// The service is down while it is replaced. It is a restart only once the
+			// service said the installer finished; before that the installer still works.
+			if m.seenRestart {
+				return StateRestarting
+			}
+			return StateInstalling
 		}
 		if m.last.ServiceVersion != "" && m.last.ServiceVersion != m.From {
 			return StateDone // back, and running the new version: Done after the restart
@@ -346,6 +356,8 @@ func (m *Model) View() View {
 		if st := m.last.Stage; st != nil && st.Name == "installing" && st.Percent >= 0 {
 			v.Bar, v.Percent = BarDeterminate, min(st.Percent, 100)
 		}
+	case StateWaitingInstaller:
+		working(WordWaitingInstaller, waitingInstallerLine(m.last.Stage))
 	case StateRestarting:
 		working(tray.WordRestarting, version)
 	case StateTesting:
@@ -394,6 +406,14 @@ func (m *Model) rolledBackTitle() string {
 		tpl = tray.WordRolledBackFinal
 	}
 	return tray.Fill(tpl, "version", m.version(), "previous", m.previous(), "time", t)
+}
+
+func waitingInstallerLine(st *tray.StageInfo) string {
+	name := WordAnotherProgram
+	if st != nil && strings.TrimSpace(st.WaitingFor) != "" {
+		name = strings.TrimSpace(st.WaitingFor)
+	}
+	return fmt.Sprintf(WordWaitingInstallerBody, name)
 }
 
 func jobsLine(n int) string {

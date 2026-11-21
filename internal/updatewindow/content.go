@@ -21,6 +21,11 @@ const (
 	WordClose    = tray.WordClose
 	WordStarted  = tray.WordStarted
 	WordUpToDate = tray.WordUpToDate
+
+	// Another installer holds Windows Installer (TRAY11). %s is its name.
+	WordWaitingInstaller     = "Waiting for another installer"
+	WordWaitingInstallerBody = "%s is installing. Windows installs one program at a time; this update starts when it finishes."
+	WordAnotherProgram       = "Another program"
 )
 
 // releaseURL is the release notes page of a version (What's new).

@@ -73,13 +73,26 @@ func (l *Lane) Release() error {
 	if l == nil || l.lock == "" {
 		return nil
 	}
-	err := os.Remove(l.lock)
-	l.lock = ""
-	if errors.Is(err, os.ErrNotExist) {
-		return nil
+	// On Windows a file another process has open (a waiter reading the
+	// holder, a scanner) cannot be removed: the remove fails for a moment.
+	// Retry, and keep the lock path on failure so a later Release can try
+	// again instead of leaving the lane taken for ever.
+	var err error
+	for i := 0; i < releaseTries; i++ {
+		err = os.Remove(l.lock)
+		if err == nil || errors.Is(err, os.ErrNotExist) {
+			l.lock = ""
+			return nil
+		}
+		time.Sleep(releaseBackoff)
 	}
 	return err
 }
+
+const (
+	releaseTries   = 50
+	releaseBackoff = 10 * time.Millisecond
+)
 
 // LaneSet says how lanes are taken. Alive says whether the holder written in a
 // lock still runs; a lock whose holder is gone is taken over, so a crashed job
@@ -160,8 +173,11 @@ func (s LaneSet) take(lock, holder string) bool {
 		if !errors.Is(err, os.ErrExist) {
 			return false
 		}
+		if s.Alive == nil {
+			return false // every holder is alive: do not open the lock file
+		}
 		b, rerr := os.ReadFile(lock)
-		if rerr != nil || s.Alive == nil || s.Alive(strings.TrimSpace(string(b))) {
+		if rerr != nil || s.Alive(strings.TrimSpace(string(b))) {
 			return false
 		}
 		// The holder is gone: take the lane over once.
@@ -208,11 +224,15 @@ func SweepLane(fsys FS, d LaneDirs, q Quota, busy bool) (SweepResult, error) {
 // LaneHeld says whether a lane has a live lock.
 func (s LaneSet) laneHeld(n int) bool {
 	lock := filepath.Join(LaneFor(s.CacheRoot, s.RepoID, n).Root, laneLockName)
+	if s.Alive == nil {
+		_, err := os.Stat(lock)
+		return err == nil
+	}
 	b, err := os.ReadFile(lock)
 	if err != nil {
 		return false
 	}
-	return s.Alive == nil || s.Alive(strings.TrimSpace(string(b)))
+	return s.Alive(strings.TrimSpace(string(b)))
 }
 
 // LanesOnDisk counts the lane folders a repository has now.

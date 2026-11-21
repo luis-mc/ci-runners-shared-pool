@@ -584,3 +584,32 @@ func TestJobDetailBodyMatchesTheContract(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestRunDetailAndListCarryTheFollowUps(t *testing.T) {
+	d := fileRun()
+	d.FollowUps, d.FollowUpsOpen = 1, 1
+	d.StartedNext = []jobsdata.FollowUp{{RunID: 900, Attempt: 1, WorkflowName: "Installers", State: jobsdata.Running,
+		StartedAt: testNow.Add(-time.Minute), HTMLURL: "https://github.com/o/r/actions/runs/900"}}
+	fd := &fakeData{runInfo: map[int64]jobsdata.RunDetail{500: d}, runs: []jobsdata.RunRow{d.RunRow}}
+	mux := dataMux(fd, auth.RoleViewer, nil)
+	run := decode[gen.RunItem](t, get(t, mux, "/api/v1/runs/500"))
+	// the run's own state and result are unchanged; the overall state says a follow-up still runs
+	if run.State != gen.RunItemStateDone || run.Result == nil || *run.Result != gen.JobResultSuccess || run.OverallState != gen.RunItemOverallStateFollowUpRunning {
+		t.Fatalf("states: %s %v %s", run.State, run.Result, run.OverallState)
+	}
+	if len(run.StartedNext) != 1 || run.StartedNext[0].WorkflowName != "Installers" || run.StartedNext[0].RunId != 900 ||
+		run.StartedNext[0].State != gen.RunFollowUpStateRunning || run.StartedNext[0].CompletedAt != nil || run.StartedNext[0].Link == "" {
+		t.Fatalf("started next: %+v", run.StartedNext)
+	}
+	page := decode[gen.RunPage](t, get(t, mux, "/api/v1/runs"))
+	if got := page.Items[0]; got.OverallState != gen.RunSummaryOverallStateFollowUpRunning || got.State != gen.RunSummaryStateDone || *got.FollowUpsOpen != 1 {
+		t.Fatalf("summary: %+v", got)
+	}
+	// finished follow-up: overall done again
+	d.FollowUpsOpen = 0
+	d.StartedNext = []jobsdata.FollowUp{{RunID: 900, WorkflowName: "Installers", State: jobsdata.Done, CompletedAt: testNow, HTMLURL: "https://github.com/o/r/actions/runs/900"}}
+	fd.runInfo[500], fd.runs[0] = d, d.RunRow
+	if run = decode[gen.RunItem](t, get(t, mux, "/api/v1/runs/500")); run.OverallState != gen.RunItemOverallStateDone {
+		t.Fatalf("overall after follow-up: %s", run.OverallState)
+	}
+}

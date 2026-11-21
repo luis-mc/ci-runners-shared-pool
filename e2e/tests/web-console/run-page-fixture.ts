@@ -22,6 +22,8 @@ export const RUN = {
   result: 'success',
   created_at: '2026-11-13T09:00:00Z',
   completed_at: '2026-11-13T09:08:00Z',
+  overall_state: 'done',
+  started_next: [],
   jobs: [
     job(1, 'lint', []),
     job(2, 'unit tests of the web console and the shared parts', ['lint']),
