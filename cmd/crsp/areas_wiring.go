@@ -92,7 +92,9 @@ type controller struct {
 	Hub       *events.MemHub
 	// Registry is the registry join (REG11); never nil in a built controller.
 	Registry *registryWiring
-	closers  []func()
+	// sizes starts the job size scan from job events (scheduling R5.93).
+	sizes   *sizeTrigger
+	closers []func()
 }
 
 // Close stops what buildController started.
@@ -166,6 +168,8 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	// The Jobs section: every job event ends in one recorder (observability R5.7 to R5.12).
 	jobsIngest := newJobsWiring(ctx, logger, d.DB.Jobs(), gh, repoStore, d.Now)
 	c.closers = append(c.closers, jobsIngest.Close)
+	sizes := newSizeTrigger(ctx, logger)
+	c.sizes = sizes
 	hook := &github.WebhookHandler{
 		Verifier: func() (github.WebhookVerifier, error) {
 			app := gh.AppID()
@@ -179,7 +183,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			return github.NewWebhookVerifier(b), nil
 		},
 		FirstDelivery: newDeliveryLog(4096).first,
-		Events:        webhookEvents{ctx: ctx, logger: logger, repos: rsvc, appGone: appHealth.Gone, jobs: jobsIngest},
+		Events:        webhookEvents{ctx: ctx, logger: logger, repos: rsvc, appGone: appHealth.Gone, jobs: jobsIngest, sizes: sizes},
 		OnDelivery: func(repo string, jobID int64, used bool) {
 			if used {
 				health.Delivered(repo, jobID)
@@ -558,6 +562,8 @@ type webhookEvents struct {
 	appGone func() bool
 	// jobs records the job and its steps for the Jobs section; nil records nothing.
 	jobs jobSink
+	// sizes starts the job size scan for a new commit; nil does nothing.
+	sizes *sizeTrigger
 }
 
 // jobSink takes job events without blocking.
@@ -571,6 +577,7 @@ func (w webhookEvents) Job(j github.Job) {
 	if w.jobs != nil {
 		w.jobs.Job(j)
 	}
+	w.sizes.Job(j)
 }
 
 // JobDetail gets the steps and run fields of the same event, after Job.

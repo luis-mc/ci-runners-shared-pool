@@ -43,6 +43,10 @@ type Settings struct {
 	// Classes is the table of job classes and their weights (R5.69). It is
 	// not a stored setting: every machine starts from DefaultClasses.
 	Classes []JobClass
+	// Sizes are the job sizes the scan, the measuring and the overrides gave
+	// (R5.89 to R5.97), in precedence order: the first entry that matches a job
+	// wins. Not a stored setting: the store fills it for every read.
+	Sizes []JobSize
 }
 
 // Defaults returns the dev-standards defaults (R5.1; machine_slots.py DEFAULT_CONFIG).

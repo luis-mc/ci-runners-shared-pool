@@ -1629,6 +1629,31 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/job-sizes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The size of each job of a repository and where it came from, with the cost table
+         * @description scheduling R5.89 to R5.97. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+         */
+        get: operations["listJobSizes"];
+        /**
+         * Set the console size override of a job pattern
+         * @description scheduling R5.95. It applies at once and wins over .crsp.yml.
+         */
+        put: operations["putJobSizeOverride"];
+        post?: never;
+        /** Remove the console size override of a job pattern */
+        delete: operations["deleteJobSizeOverride"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/registry": {
         parameters: {
             query?: never;
@@ -3219,6 +3244,73 @@ export interface components {
         EnvSet: {
             name: string;
             vars: components["schemas"]["EnvVar"][];
+        };
+        /** @enum {string} */
+        JobSizeClass: "light" | "normal" | "heavy";
+        /** @enum {string} */
+        JobSizeSource: "override" | "measured" | "scan" | "default";
+        JobSizeUnits: {
+            cpu: number;
+            memory: number;
+        };
+        JobSizeRow: {
+            repository: string;
+            /** @description The job key */
+            job: string;
+            workflow?: string;
+            class: components["schemas"]["JobSizeClass"];
+            source: components["schemas"]["JobSizeSource"];
+            weight: components["schemas"]["JobSizeUnits"];
+            /**
+             * @description Of the scan guess; absent when no scan found the job
+             * @enum {string}
+             */
+            confidence?: "high" | "low";
+            tests?: number;
+            est_seconds?: number;
+            reasons: string[];
+            services: string[];
+            /** Format: date-time */
+            scanned_at?: string;
+            /** @description The console override class; empty when none */
+            override_console: string;
+            /** @description The .crsp.yml override class; empty when none */
+            override_file: string;
+            /** @description Set when the test count moved by more than 2x and the size went back to the scan guess */
+            reset_note: string;
+            /** @description The YAML line for .crsp.yml */
+            copy_line: string;
+        };
+        JobSizeCostRow: {
+            /** @enum {string} */
+            kind: "framework" | "service";
+            key: string;
+            class: components["schemas"]["JobSizeClass"];
+            cpu: number;
+            gib_min?: number;
+            gib: number;
+            sec_per_test?: number;
+            assumption: boolean;
+            note?: string;
+        };
+        JobSizeList: {
+            repository: string;
+            items: components["schemas"]["JobSizeRow"][];
+            cost_table: components["schemas"]["JobSizeCostRow"][];
+            /** @description Why .crsp.yml could not be read; empty when it could */
+            file_error: string;
+        };
+        JobSizeOverrideInput: {
+            repository: string;
+            /** @description A job name or a glob such as integration-* */
+            pattern: string;
+            class: components["schemas"]["JobSizeClass"];
+        };
+        JobSizeOverride: {
+            repository: string;
+            pattern: string;
+            class: components["schemas"]["JobSizeClass"];
+            copy_line: string;
         };
         EnvSetList: {
             items: components["schemas"]["EnvSet"][];
@@ -9022,6 +9114,77 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Deleted. */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listJobSizes: {
+        parameters: {
+            query?: {
+                /** @description owner/name */
+                repository?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The jobs and the cost table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSizeList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putJobSizeOverride: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["JobSizeOverrideInput"];
+            };
+        };
+        responses: {
+            /** @description Saved, with the YAML line to copy into .crsp.yml. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobSizeOverride"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    deleteJobSizeOverride: {
+        parameters: {
+            query?: {
+                repository?: string;
+                pattern?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Removed. */
             204: {
                 headers: {
                     [name: string]: unknown;
