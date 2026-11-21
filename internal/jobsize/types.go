@@ -1,5 +1,5 @@
 // Package jobsize gives each CI job a first size guess by scan and count
-// (scheduling R5.79 to R5.87, registry R5.77). It reads the workflow files and
+// (scheduling R5.80 to R5.88, registry R5.77). It reads the workflow files and
 // the test tool configs of a repository at a commit through the stackscan
 // reader: it lists the commit's files once, reads only the files it needs,
 // never clones and never runs code. The guess feeds slots.Settings.WeightOf;

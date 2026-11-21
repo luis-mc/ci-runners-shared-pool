@@ -1,5 +1,5 @@
 -- +goose Up
--- OPS67: the size of a CI job by scan and count (scheduling R5.79 to R5.87).
+-- OPS67: the size of a CI job by scan and count (scheduling R5.80 to R5.88).
 -- job_size_scans: the scan guess of each job of a repository at its last scan.
 -- job_size_rules: overrides; origin 'console' is the console setting, 'file'
 -- is the sizes: map of .crsp.yml read by the scan. job_size_measured is for

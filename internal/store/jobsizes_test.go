@@ -10,7 +10,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
 )
 
-// scheduling R5.79 to R5.87: the scan rows, the overrides and the measured
+// scheduling R5.80 to R5.88: the scan rows, the overrides and the measured
 // sizes round-trip, and the scheduler's settings carry them in precedence order.
 func TestIntegrationJobSizesFeedSettings(t *testing.T) {
 	s := openTemp(t)

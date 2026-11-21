@@ -1400,7 +1400,7 @@ A run can start other runs when it ends (the Installers workflow after CI). The 
 | Timeline, row | Waited for a runner: {project} {job} |
 | Timeline, note | follow-up run |
 
-## Job sizes words (OPS67, scheduling R5.79 to R5.87)
+## Job sizes words (OPS67, scheduling R5.80 to R5.88)
 
 The Job sizes and Cost table panes on a repository's page. A size is *Light*, *Normal* or *Heavy*. `{job}` is a job name, `{x}` the text of an error.
 
