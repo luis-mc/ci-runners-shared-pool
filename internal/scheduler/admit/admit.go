@@ -37,7 +37,7 @@ type Held struct {
 
 // Free is the pool less what the held jobs take. It never goes below 0.
 func Free(p Pool, held []Held) Req {
-	f := Req{p.CPUs, p.MemoryGiB}
+	f := Req(p)
 	for _, h := range held {
 		f.CPUs -= h.Req.CPUs
 		f.MemoryGiB -= h.Req.MemoryGiB
