@@ -52,7 +52,9 @@ func Free(p Pool, held []Held) Req {
 }
 
 // Fits is true when need is within room in both kinds.
-func (need Req) Fits(room Req) bool { return need.CPUs <= room.CPUs && need.MemoryGiB <= room.MemoryGiB }
+func (need Req) Fits(room Req) bool {
+	return need.CPUs <= room.CPUs && need.MemoryGiB <= room.MemoryGiB
+}
 
 // Why is the reason a job does not start.
 type Why string

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsdata"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsize"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
@@ -206,5 +207,18 @@ func TestReservationEndsWhenItsTicketIsCancelled(t *testing.T) {
 func TestOverMemoryNeverLowersTheMeasuredSize(t *testing.T) {
 	if scheduler.CountsForMeasured(true) || !scheduler.CountsForMeasured(false) {
 		t.Fatal("a run killed for memory must not count")
+	}
+}
+
+func TestOverMemoryIsMarkedAndNamesTheClassToRaise(t *testing.T) {
+	e := poolEnv(t)
+	var got jobsdata.Facts
+	e.eng.SetFacts(func(_ scheduler.JobRef, f jobsdata.Facts) { got = f })
+	e.eng.ReportOverMemory(m1, job("o/r", 1, "big"), "large", 16, "xl")
+	if got.WaitReason != "over_memory" || !strings.Contains(got.WaitText, "Raise the class of this runner to xl") {
+		t.Fatalf("facts %+v", got)
+	}
+	if w := scheduler.WaitWords(scheduler.WaitOverMemory, got.WaitText); !strings.HasPrefix(w, "Stopped over memory.") {
+		t.Fatal(w)
 	}
 }

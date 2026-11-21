@@ -2493,6 +2493,58 @@ paths:
           description: Removed.
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/runner-classes:
+    get:
+      operationId: getRunnerClasses
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: The size classes of runners and the reservation numbers
+      description: >-
+        scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with
+        CPUs and GiB of memory. A runner's class is the ceiling of the jobs it
+        takes and the hard memory cap of each job. Hints never block; a size
+        that no pool holds is listed in `unheld`.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerClasses'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putRunnerClasses
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: Save the size classes or the reservation numbers
+      description: >-
+        scheduling R5.91, R5.92. The save is refused with a 400 whose message is
+        in the owner's words when a number is not a whole number above 0, when
+        sizes do not grow from small to xl, or when a runner's class no longer
+        fits its machine's pool. Lowering a size that runners use answers 409
+        needs_confirmation until `confirm_lowering` is true.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunnerClassesInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerClasses'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/registry:
     get:
       operationId: getRegistrySettings
@@ -5214,6 +5266,52 @@ components:
         pattern: { type: string }
         class: { $ref: '#/components/schemas/JobSizeClass' }
         copy_line: { type: string }
+    RunnerClassSize:
+      type: object
+      required: [class, cpus, memory_gib]
+      properties:
+        class: { type: string, enum: [small, medium, large, xl] }
+        cpus: { type: integer, minimum: 1 }
+        memory_gib: { type: integer, minimum: 1 }
+    RunnerClasses:
+      type: object
+      required: [preset, presets, classes, hints, unheld, reserve_after_passes, reserve_after_minutes]
+      properties:
+        preset:
+          type: string
+          description: The preset the table equals, or custom.
+        presets:
+          type: array
+          items: { type: string, enum: [standard, compact, memory-heavy, custom] }
+        classes:
+          type: array
+          description: small, medium, large, xl.
+          items: { $ref: '#/components/schemas/RunnerClassSize' }
+        hints:
+          type: array
+          description: Notes that never block a save.
+          items: { type: string }
+        unheld:
+          type: array
+          description: Classes no machine's pool can hold. A note, not an error.
+          items: { type: string }
+        reserve_after_passes: { type: integer, minimum: 1, description: Default 3. }
+        reserve_after_minutes: { type: integer, minimum: 1, description: Default 10. }
+    RunnerClassesInput:
+      type: object
+      properties:
+        preset:
+          type: string
+          enum: [standard, compact, memory-heavy, custom]
+          description: Sets the table to that preset. Ignored when `classes` is given.
+        classes:
+          type: array
+          items: { $ref: '#/components/schemas/RunnerClassSize' }
+        reserve_after_passes: { type: integer }
+        reserve_after_minutes: { type: integer }
+        confirm_lowering:
+          type: boolean
+          description: Needed when a size that runners use gets smaller.
     EnvSetList:
       type: object
       required: [items]
@@ -5393,6 +5491,7 @@ components:
           load_not_measured,
           paused,
           on_battery,
+          over_memory,
           unknown,
         ]
     Severity:

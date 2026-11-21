@@ -67,6 +67,13 @@ func WithAccepting(f func(machineID string) (ok bool, reason string)) Option {
 // no new job (runners R5.91). The runner registry answers it.
 func (e *Engine) SetUncleanLookup(f func(machineID, runnerName string) string) { e.unclean = f }
 
+// SetRunnerClass sets where the gate reads a runner's size class after the
+// engine was built (the runner registry is made later). See WithRunnerClass.
+func (e *Engine) SetRunnerClass(f func(machineID, runnerName string) string) { e.runnerClass = f }
+
+// SetZone sets the zone of the times in wait lines (see WithZone).
+func (e *Engine) SetZone(z *time.Location) { e.zone = z }
+
 // NewEngine returns the slot queue over a store.
 func NewEngine(store slots.Store, opts ...Option) *Engine {
 	e := &Engine{store: store, now: func() time.Time { return time.Now().UTC() }, log: slog.Default(), wake: newWaker()}

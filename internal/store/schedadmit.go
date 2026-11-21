@@ -170,7 +170,6 @@ func (s *Store) Reservations(ctx context.Context) ([]slots.Reservation, error) {
 	return out, rows.Err()
 }
 
-
 // SetPoolForTests sets the pool size of a machine that already has settings.
 func (s *Store) SetPoolForTests(ctx context.Context, machineID string, cpus, gib int) error {
 	ctx, cancel := withDeadline(ctx)

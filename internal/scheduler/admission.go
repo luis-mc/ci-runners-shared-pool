@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsdata"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/memcap"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/admit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
 )
@@ -234,3 +236,17 @@ func settleAdmission(tx slots.Tx, machineID, ticketID string, a admitted) error 
 // CountsForMeasured says whether a finished run may feed the measured size of
 // its job. A run killed for memory never lowers it (scheduling R5.79, R5.96).
 func CountsForMeasured(overMemory bool) bool { return !overMemory }
+
+// WaitOverMemory is the reason of a job that was stopped for going over its
+// memory cap (R5.96). It is written as the job's wait and end reason; the job's
+// result stays what GitHub reports.
+const WaitOverMemory WaitReason = "over_memory"
+
+// ReportOverMemory records that a job was stopped over its memory cap: the job
+// record carries the reason "over_memory" and a text that names the class to
+// raise (R5.96). next is the class after the runner's, "" for xl. The agent
+// calls it when its memcap guard says Exceeded.
+func (e *Engine) ReportOverMemory(machineID string, job JobRef, class string, limitGiB int, next string) {
+	text := memcap.OverMemoryText(class, limitGiB, next)
+	e.emit(job, "over_memory", text, jobsdata.Facts{MachineID: machineID, WaitReason: string(WaitOverMemory), WaitText: text})
+}
