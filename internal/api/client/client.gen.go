@@ -1178,6 +1178,69 @@ func (e JobResult) Valid() bool {
 	}
 }
 
+// Defines values for JobSizeClass.
+const (
+	JobSizeClassHeavy  JobSizeClass = "heavy"
+	JobSizeClassLight  JobSizeClass = "light"
+	JobSizeClassNormal JobSizeClass = "normal"
+)
+
+// Valid indicates whether the value is a known member of the JobSizeClass enum.
+func (e JobSizeClass) Valid() bool {
+	switch e {
+	case JobSizeClassHeavy:
+		return true
+	case JobSizeClassLight:
+		return true
+	case JobSizeClassNormal:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobSizeRowConfidence.
+const (
+	High JobSizeRowConfidence = "high"
+	Low  JobSizeRowConfidence = "low"
+)
+
+// Valid indicates whether the value is a known member of the JobSizeRowConfidence enum.
+func (e JobSizeRowConfidence) Valid() bool {
+	switch e {
+	case High:
+		return true
+	case Low:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobSizeSource.
+const (
+	JobSizeSourceDefault  JobSizeSource = "default"
+	JobSizeSourceMeasured JobSizeSource = "measured"
+	JobSizeSourceOverride JobSizeSource = "override"
+	JobSizeSourceScan     JobSizeSource = "scan"
+)
+
+// Valid indicates whether the value is a known member of the JobSizeSource enum.
+func (e JobSizeSource) Valid() bool {
+	switch e {
+	case JobSizeSourceDefault:
+		return true
+	case JobSizeSourceMeasured:
+		return true
+	case JobSizeSourceOverride:
+		return true
+	case JobSizeSourceScan:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -1820,6 +1883,24 @@ func (e PlanStepState) Valid() bool {
 	case PlanStepStateSkipped:
 		return true
 	case PlanStepStateWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolSizeCheckBasis.
+const (
+	PoolSizeCheckBasisMeasured  PoolSizeCheckBasis = "measured"
+	PoolSizeCheckBasisMeasuring PoolSizeCheckBasis = "measuring"
+)
+
+// Valid indicates whether the value is a known member of the PoolSizeCheckBasis enum.
+func (e PoolSizeCheckBasis) Valid() bool {
+	switch e {
+	case PoolSizeCheckBasisMeasured:
+		return true
+	case PoolSizeCheckBasisMeasuring:
 		return true
 	default:
 		return false
@@ -5122,6 +5203,40 @@ type JobGroupRow struct {
 	WaitP90 float32   `json:"wait_p90"`
 }
 
+// JobKeyMeasured The last 30 good runs of one job key (repository, workflow, job key).
+type JobKeyMeasured struct {
+	CpuP90Cores *float32 `json:"cpu_p90_cores,omitempty"`
+
+	// Measured True from 5 good runs on.
+	Measured       bool   `json:"measured"`
+	MemoryP90Bytes *int64 `json:"memory_p90_bytes,omitempty"`
+
+	// Runs Good runs read, at most 30.
+	Runs int `json:"runs"`
+}
+
+// JobMeasured OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key. Absent while the job runs or when no agent reported it.
+type JobMeasured struct {
+	CutShort        bool    `json:"cut_short"`
+	DurationSeconds float32 `json:"duration_seconds"`
+
+	// Good Counts for the summary of the job key.
+	Good bool `json:"good"`
+
+	// Key The last 30 good runs of one job key (repository, workflow, job key).
+	Key       *JobKeyMeasured `json:"key,omitempty"`
+	OomKilled bool            `json:"oom_killed"`
+
+	// PeakCpuCores p95 over the sample windows
+	PeakCpuCores    float32 `json:"peak_cpu_cores"`
+	PeakMemoryBytes int64   `json:"peak_memory_bytes"`
+	Runner          *string `json:"runner,omitempty"`
+	SampleCount     int     `json:"sample_count"`
+
+	// Source cgroup, process_tree or job_object
+	Source *string `json:"source,omitempty"`
+}
+
 // JobPage defines model for JobPage.
 type JobPage struct {
 	Items      []Job   `json:"items"`
@@ -5136,8 +5251,11 @@ type JobPage struct {
 
 // JobResources defines model for JobResources.
 type JobResources struct {
-	CpuP95Cores     *float32         `json:"cpu_p95_cores,omitempty"`
-	CpuPeakCores    *float32         `json:"cpu_peak_cores,omitempty"`
+	CpuP95Cores  *float32 `json:"cpu_p95_cores,omitempty"`
+	CpuPeakCores *float32 `json:"cpu_peak_cores,omitempty"`
+
+	// Measured OPS66, observability R5.60 to R5.63. The measured peaks of this job run and the summary of its job key. Absent while the job runs or when no agent reported it.
+	Measured        *JobMeasured     `json:"measured,omitempty"`
 	MemoryP95Bytes  *int64           `json:"memory_p95_bytes,omitempty"`
 	MemoryPeakBytes *int64           `json:"memory_peak_bytes,omitempty"`
 	Samples         []ResourceSample `json:"samples"`
@@ -5146,6 +5264,95 @@ type JobResources struct {
 
 // JobResult defines model for JobResult.
 type JobResult string
+
+// JobSizeClass defines model for JobSizeClass.
+type JobSizeClass string
+
+// JobSizeCostRow defines model for JobSizeCostRow.
+type JobSizeCostRow struct {
+	Assumption bool         `json:"assumption"`
+	Class      JobSizeClass `json:"class"`
+	Cpu        float32      `json:"cpu"`
+	Gib        float32      `json:"gib"`
+	GibMin     *float32     `json:"gib_min,omitempty"`
+	Key        string       `json:"key"`
+
+	// Kind framework or service
+	Kind       string   `json:"kind"`
+	Note       *string  `json:"note,omitempty"`
+	SecPerTest *float32 `json:"sec_per_test,omitempty"`
+}
+
+// JobSizeList defines model for JobSizeList.
+type JobSizeList struct {
+	CostTable []JobSizeCostRow `json:"cost_table"`
+
+	// FileError Why .crsp.yml could not be read; empty when it could
+	FileError  string       `json:"file_error"`
+	Items      []JobSizeRow `json:"items"`
+	Repository string       `json:"repository"`
+}
+
+// JobSizeOverride defines model for JobSizeOverride.
+type JobSizeOverride struct {
+	Class      JobSizeClass `json:"class"`
+	CopyLine   string       `json:"copy_line"`
+	Pattern    string       `json:"pattern"`
+	Repository string       `json:"repository"`
+}
+
+// JobSizeOverrideInput defines model for JobSizeOverrideInput.
+type JobSizeOverrideInput struct {
+	Class JobSizeClass `json:"class"`
+
+	// Pattern A job name or a glob such as integration-*
+	Pattern    string `json:"pattern"`
+	Repository string `json:"repository"`
+}
+
+// JobSizeRow defines model for JobSizeRow.
+type JobSizeRow struct {
+	Class JobSizeClass `json:"class"`
+
+	// Confidence Of the scan guess; absent when no scan found the job
+	Confidence *JobSizeRowConfidence `json:"confidence,omitempty"`
+
+	// CopyLine The YAML line for .crsp.yml
+	CopyLine   string `json:"copy_line"`
+	EstSeconds *int   `json:"est_seconds,omitempty"`
+
+	// Job The job key
+	Job string `json:"job"`
+
+	// OverrideConsole The console override class; empty when none
+	OverrideConsole string `json:"override_console"`
+
+	// OverrideFile The .crsp.yml override class; empty when none
+	OverrideFile string   `json:"override_file"`
+	Reasons      []string `json:"reasons"`
+	Repository   string   `json:"repository"`
+
+	// ResetNote Set when the test count moved by more than 2x and the size went back to the scan guess
+	ResetNote string        `json:"reset_note"`
+	ScannedAt *time.Time    `json:"scanned_at,omitempty"`
+	Services  []string      `json:"services"`
+	Source    JobSizeSource `json:"source"`
+	Tests     *int          `json:"tests,omitempty"`
+	Weight    JobSizeUnits  `json:"weight"`
+	Workflow  *string       `json:"workflow,omitempty"`
+}
+
+// JobSizeRowConfidence Of the scan guess; absent when no scan found the job
+type JobSizeRowConfidence string
+
+// JobSizeSource defines model for JobSizeSource.
+type JobSizeSource string
+
+// JobSizeUnits defines model for JobSizeUnits.
+type JobSizeUnits struct {
+	Cpu    int `json:"cpu"`
+	Memory int `json:"memory"`
+}
 
 // JobStats defines model for JobStats.
 type JobStats struct {
@@ -5859,16 +6066,33 @@ type PoolSettings struct {
 
 // PoolSizeCheck defines model for PoolSizeCheck.
 type PoolSizeCheck struct {
-	CpuBudget        *int    `json:"cpu_budget,omitempty"`
-	CurrentCpus      int     `json:"current_cpus"`
-	CurrentMemoryGib float64 `json:"current_memory_gib"`
+	// Basis What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+	Basis            *PoolSizeCheckBasis `json:"basis,omitempty"`
+	CpuBudget        *int                `json:"cpu_budget,omitempty"`
+	CurrentCpus      int                 `json:"current_cpus"`
+	CurrentMemoryGib float64             `json:"current_memory_gib"`
 
 	// Decided The figure that decided.
 	Decided          *string  `json:"decided,omitempty"`
 	DockerCeilingGib *float64 `json:"docker_ceiling_gib,omitempty"`
 
+	// HostP95Gib The rolling 7-day p95 of the memory the PC uses without the pool. Set when `basis` is `measured`.
+	HostP95Gib *float64 `json:"host_p95_gib,omitempty"`
+
+	// HostSpanHours How many hours the samples cover.
+	HostSpanHours *float64 `json:"host_span_hours,omitempty"`
+
 	// Known False when the controller lacks the machine figures to check; `why` says what is missing.
-	Known           bool     `json:"known"`
+	Known bool `json:"known"`
+
+	// LeavesGib What the checked size leaves for the PC. Set when `basis` is `measured`.
+	LeavesGib *float64 `json:"leaves_gib,omitempty"`
+
+	// LeavesLessThanHost A warning, not a block. The checked size leaves the PC less than its own p95.
+	LeavesLessThanHost *bool `json:"leaves_less_than_host,omitempty"`
+
+	// MeasuredRoomGib Total memory times the memory budget, less the p95 and the safety margin. Set when `basis` is `measured`.
+	MeasuredRoomGib *float64 `json:"measured_room_gib,omitempty"`
 	MemoryBudgetGib *float64 `json:"memory_budget_gib,omitempty"`
 
 	// Nearest Sizes that pass, as sentences.
@@ -5880,6 +6104,9 @@ type PoolSizeCheck struct {
 	// Ok The size fits and, when it is a shrink, needs only the explicit yes.
 	Ok bool `json:"ok"`
 
+	// PresetRoomGib The room the recommended sizes take a share of.
+	PresetRoomGib *float64 `json:"preset_room_gib,omitempty"`
+
 	// Reason Why it is refused, naming the budget that is short.
 	Reason *string `json:"reason,omitempty"`
 
@@ -5889,11 +6116,25 @@ type PoolSizeCheck struct {
 	// RecommendedThreeQuarters A recommended pool size. Memory is a share of the room rounded down to whole GiB, at least the floor; CPUs are the same share of the CPU budget, at most memory / 1.5, at least the floor.
 	RecommendedThreeQuarters *PoolSizeRecommended `json:"recommended_three_quarters,omitempty"`
 	RoomGib                  *float64             `json:"room_gib,omitempty"`
+	SafetyMarginGib          *float64             `json:"safety_margin_gib,omitempty"`
 	Short                    *PoolSizeCheckShort  `json:"short,omitempty"`
 	TotalGib                 *float64             `json:"total_gib,omitempty"`
 	UsedOutsideGib           *float64             `json:"used_outside_gib,omitempty"`
 	Why                      *string              `json:"why,omitempty"`
+
+	// WslCapAbovePc The declared cap is above the total memory less the p95.
+	WslCapAbovePc *bool `json:"wsl_cap_above_pc,omitempty"`
+
+	// WslCapGib The memory cap `.wslconfig` declares. Set when `wsl_cap_set`.
+	WslCapGib *float64 `json:"wsl_cap_gib,omitempty"`
+	WslCapSet *bool    `json:"wsl_cap_set,omitempty"`
+
+	// WslPool The pool runs in WSL2, so `.wslconfig` caps its memory.
+	WslPool *bool `json:"wsl_pool,omitempty"`
 }
+
+// PoolSizeCheckBasis What the recommended sizes rest on. `measured` is the 7-day p95 of what the PC itself uses; `measuring` is the fixed share of the free room, used until the agent has 24 hours of samples (machines R5.68).
+type PoolSizeCheckBasis string
 
 // PoolSizeCheckShort defines model for PoolSizeCheck.Short.
 type PoolSizeCheckShort string
@@ -8027,6 +8268,18 @@ type GetWaitSplitParamsDays int
 // GetWaitSplitParamsGroup defines parameters for GetWaitSplit.
 type GetWaitSplitParamsGroup string
 
+// DeleteJobSizeOverrideParams defines parameters for DeleteJobSizeOverride.
+type DeleteJobSizeOverrideParams struct {
+	Repository *string `form:"repository,omitempty" json:"repository,omitempty"`
+	Pattern    *string `form:"pattern,omitempty" json:"pattern,omitempty"`
+}
+
+// ListJobSizesParams defines parameters for ListJobSizes.
+type ListJobSizesParams struct {
+	// Repository owner/name
+	Repository *string `form:"repository,omitempty" json:"repository,omitempty"`
+}
+
 // ListJobsParams defines parameters for ListJobs.
 type ListJobsParams struct {
 	State        *ListJobsParamsState `form:"state,omitempty" json:"state,omitempty"`
@@ -8293,6 +8546,9 @@ type SetOrgPoolJSONRequestBody = OrgPoolSet
 
 // UpdateImageLayersJSONRequestBody defines body for UpdateImageLayers for application/json ContentType.
 type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
+
+// PutJobSizeOverrideJSONRequestBody defines body for PutJobSizeOverride for application/json ContentType.
+type PutJobSizeOverrideJSONRequestBody = JobSizeOverrideInput
 
 // CreateJoinCodeJSONRequestBody defines body for CreateJoinCode for application/json ContentType.
 type CreateJoinCodeJSONRequestBody = CreateJoinCodeRequest
@@ -8996,6 +9252,36 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/install-command (the `GetInstallCommand` operationId).
 	GetInstallCommand(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// DeleteJobSizeOverride Remove the console size override of a job pattern
+	//
+	// Corresponds with DELETE /api/v1/job-sizes (the `DeleteJobSizeOverride` operationId).
+	DeleteJobSizeOverride(ctx context.Context, params *DeleteJobSizeOverrideParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListJobSizes The size of each job of a repository and where it came from, with the cost table
+	//
+	// scheduling R5.80 to R5.88. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+	//
+	// Corresponds with GET /api/v1/job-sizes (the `ListJobSizes` operationId).
+	ListJobSizes(ctx context.Context, params *ListJobSizesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutJobSizeOverrideWithBody Set the console size override of a job pattern
+	//
+	// scheduling R5.87. It applies at once and wins over .crsp.yml.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+	PutJobSizeOverrideWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutJobSizeOverride Set the console size override of a job pattern
+	//
+	// scheduling R5.87. It applies at once and wins over .crsp.yml.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+	PutJobSizeOverride(ctx context.Context, body PutJobSizeOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListJobs Queued, running and finished jobs, newest first
 	//
@@ -11455,6 +11741,76 @@ func (c *Client) GetWaitSplit(ctx context.Context, params *GetWaitSplitParams, r
 // Corresponds with GET /api/v1/install-command (the `GetInstallCommand` operationId).
 func (c *Client) GetInstallCommand(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetInstallCommandRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// DeleteJobSizeOverride Remove the console size override of a job pattern
+//
+// Corresponds with DELETE /api/v1/job-sizes (the `DeleteJobSizeOverride` operationId).
+func (c *Client) DeleteJobSizeOverride(ctx context.Context, params *DeleteJobSizeOverrideParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewDeleteJobSizeOverrideRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListJobSizes The size of each job of a repository and where it came from, with the cost table
+//
+// scheduling R5.80 to R5.88. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+//
+// Corresponds with GET /api/v1/job-sizes (the `ListJobSizes` operationId).
+func (c *Client) ListJobSizes(ctx context.Context, params *ListJobSizesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListJobSizesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutJobSizeOverrideWithBody Set the console size override of a job pattern
+//
+// scheduling R5.87. It applies at once and wins over .crsp.yml.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+func (c *Client) PutJobSizeOverrideWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutJobSizeOverrideRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutJobSizeOverride Set the console size override of a job pattern
+//
+// scheduling R5.87. It applies at once and wins over .crsp.yml.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+func (c *Client) PutJobSizeOverride(ctx context.Context, body PutJobSizeOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutJobSizeOverrideRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -17380,6 +17736,166 @@ func NewGetInstallCommandRequest(server string) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewDeleteJobSizeOverrideRequest constructs an http.Request for the DeleteJobSizeOverride method
+func NewDeleteJobSizeOverrideRequest(server string, params *DeleteJobSizeOverrideParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/job-sizes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Repository != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "repository", *params.Repository, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Pattern != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "pattern", *params.Pattern, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListJobSizesRequest constructs an http.Request for the ListJobSizes method
+func NewListJobSizesRequest(server string, params *ListJobSizesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/job-sizes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Repository != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "repository", *params.Repository, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutJobSizeOverrideRequest calls the generic PutJobSizeOverride builder with application/json body
+func NewPutJobSizeOverrideRequest(server string, body PutJobSizeOverrideJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutJobSizeOverrideRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutJobSizeOverrideRequestWithBody constructs an http.Request for the PutJobSizeOverride method, with any body, and a specified content type
+func NewPutJobSizeOverrideRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/job-sizes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -23566,6 +24082,40 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/install-command (the `GetInstallCommand` operationId).
 	GetInstallCommandWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetInstallCommandResponse, error)
 
+	// DeleteJobSizeOverrideWithResponse Remove the console size override of a job pattern
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /api/v1/job-sizes (the `DeleteJobSizeOverride` operationId).
+	DeleteJobSizeOverrideWithResponse(ctx context.Context, params *DeleteJobSizeOverrideParams, reqEditors ...RequestEditorFn) (*DeleteJobSizeOverrideResponse, error)
+
+	// ListJobSizesWithResponse The size of each job of a repository and where it came from, with the cost table
+	//
+	// scheduling R5.80 to R5.88. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/job-sizes (the `ListJobSizes` operationId).
+	ListJobSizesWithResponse(ctx context.Context, params *ListJobSizesParams, reqEditors ...RequestEditorFn) (*ListJobSizesResponse, error)
+
+	// PutJobSizeOverrideWithBodyWithResponse Set the console size override of a job pattern
+	//
+	// scheduling R5.87. It applies at once and wins over .crsp.yml.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+	PutJobSizeOverrideWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutJobSizeOverrideResponse, error)
+
+	// PutJobSizeOverrideWithResponse Set the console size override of a job pattern
+	//
+	// scheduling R5.87. It applies at once and wins over .crsp.yml.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+	PutJobSizeOverrideWithResponse(ctx context.Context, body PutJobSizeOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*PutJobSizeOverrideResponse, error)
+
 	// ListJobsWithResponse Queued, running and finished jobs, newest first
 	//
 	// observability R5.1, R5.5, R5.7 to R5.11; scheduling R5.6. Queued jobs carry their wait reason.
@@ -27880,6 +28430,143 @@ func (r GetInstallCommandResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetInstallCommandResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type DeleteJobSizeOverrideResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r DeleteJobSizeOverrideResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r DeleteJobSizeOverrideResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r DeleteJobSizeOverrideResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r DeleteJobSizeOverrideResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r DeleteJobSizeOverrideResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListJobSizesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobSizeList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListJobSizesResponse) GetJSON200() *JobSizeList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListJobSizesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListJobSizesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListJobSizesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListJobSizesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListJobSizesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutJobSizeOverrideResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobSizeOverride
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutJobSizeOverrideResponse) GetJSON200() *JobSizeOverride {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutJobSizeOverrideResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutJobSizeOverrideResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutJobSizeOverrideResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutJobSizeOverrideResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutJobSizeOverrideResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -34728,6 +35415,64 @@ func (c *ClientWithResponses) GetInstallCommandWithResponse(ctx context.Context,
 	return ParseGetInstallCommandResponse(rsp)
 }
 
+// DeleteJobSizeOverrideWithResponse Remove the console size override of a job pattern
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /api/v1/job-sizes (the `DeleteJobSizeOverride` operationId).
+func (c *ClientWithResponses) DeleteJobSizeOverrideWithResponse(ctx context.Context, params *DeleteJobSizeOverrideParams, reqEditors ...RequestEditorFn) (*DeleteJobSizeOverrideResponse, error) {
+	rsp, err := c.DeleteJobSizeOverride(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseDeleteJobSizeOverrideResponse(rsp)
+}
+
+// ListJobSizesWithResponse The size of each job of a repository and where it came from, with the cost table
+//
+// scheduling R5.80 to R5.88. A size comes from an override, a measuring, the scan or the default, strongest first. The console override wins over the sizes: map of .crsp.yml.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/job-sizes (the `ListJobSizes` operationId).
+func (c *ClientWithResponses) ListJobSizesWithResponse(ctx context.Context, params *ListJobSizesParams, reqEditors ...RequestEditorFn) (*ListJobSizesResponse, error) {
+	rsp, err := c.ListJobSizes(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListJobSizesResponse(rsp)
+}
+
+// PutJobSizeOverrideWithBodyWithResponse Set the console size override of a job pattern
+//
+// scheduling R5.87. It applies at once and wins over .crsp.yml.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+func (c *ClientWithResponses) PutJobSizeOverrideWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutJobSizeOverrideResponse, error) {
+	rsp, err := c.PutJobSizeOverrideWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutJobSizeOverrideResponse(rsp)
+}
+
+// PutJobSizeOverrideWithResponse Set the console size override of a job pattern
+//
+// scheduling R5.87. It applies at once and wins over .crsp.yml.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/job-sizes (the `PutJobSizeOverride` operationId).
+func (c *ClientWithResponses) PutJobSizeOverrideWithResponse(ctx context.Context, body PutJobSizeOverrideJSONRequestBody, reqEditors ...RequestEditorFn) (*PutJobSizeOverrideResponse, error) {
+	rsp, err := c.PutJobSizeOverride(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutJobSizeOverrideResponse(rsp)
+}
+
 // ListJobsWithResponse Queued, running and finished jobs, newest first
 //
 // observability R5.1, R5.5, R5.7 to R5.11; scheduling R5.6. Queued jobs carry their wait reason.
@@ -39153,6 +39898,101 @@ func ParseGetInstallCommandResponse(rsp *http.Response) (*GetInstallCommandRespo
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest InstallCommands
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseDeleteJobSizeOverrideResponse parses an HTTP response from a DeleteJobSizeOverrideWithResponse call
+func ParseDeleteJobSizeOverrideResponse(rsp *http.Response) (*DeleteJobSizeOverrideResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &DeleteJobSizeOverrideResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 204:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListJobSizesResponse parses an HTTP response from a ListJobSizesWithResponse call
+func ParseListJobSizesResponse(rsp *http.Response) (*ListJobSizesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListJobSizesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobSizeList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutJobSizeOverrideResponse parses an HTTP response from a PutJobSizeOverrideWithResponse call
+func ParsePutJobSizeOverrideResponse(rsp *http.Response) (*PutJobSizeOverrideResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutJobSizeOverrideResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobSizeOverride
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

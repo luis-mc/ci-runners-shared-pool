@@ -32,6 +32,9 @@ func (s *Service) poolSizeInputs(id string, f Facts, set Settings) (poolsize.Inp
 		UsedOutsideBytes: outside, WSLVMBytes: l.WSLVMBytes,
 		DockerCeilingBytes: f.WSL.MemoryBytes,
 		BudgetMemPct:       set.BudgetMemoryPct, BudgetCPUPct: set.BudgetCPUPct,
+		HostP95Bytes: l.HostUseP95Bytes, HostReady: l.HostMeasured(),
+		HostSpanHours: l.HostUseSpan.Hours(),
+		WSLPool:       f.WSL.ConfigPresent || l.WSLVMBytes > 0,
 	}, ""
 }
 

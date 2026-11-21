@@ -21,7 +21,15 @@ type JobSampleSink interface {
 // matched to a job and is dropped.
 type ResourceSink struct {
 	Resources capacity.Resources
-	Timeout   time.Duration
+	// Batches, when set, takes the whole batch with the OPS66 flags (OOM kill, cut short, the system's peak
+	// memory) and writes the run's peaks at the final batch; Resources is then not used.
+	Batches BatchStore
+	Timeout time.Duration
+}
+
+// BatchStore stores a batch with its flags (store.ResourcesStore).
+type BatchStore interface {
+	AddBatch(ctx context.Context, b capacity.Batch) error
 }
 
 var _ JobSampleSink = ResourceSink{}
@@ -29,7 +37,7 @@ var _ JobSampleSink = ResourceSink{}
 // JobSamples implements JobSampleSink.
 func (r ResourceSink) JobSamples(ctx context.Context, machineID string, m *agentv1.JobResourceSamples) {
 	id := m.GetJob().GetGithubJobId()
-	if r.Resources == nil || id == 0 {
+	if (r.Resources == nil && r.Batches == nil) || id == 0 {
 		return
 	}
 	to := r.Timeout
@@ -43,6 +51,15 @@ func (r ResourceSink) JobSamples(ctx context.Context, machineID string, m *agent
 		samples = append(samples, capacity.ResourceSample{
 			At: time.UnixMilli(s.GetAtUnixMs()).UTC(), CPUMillis: s.GetCpuMillis(), MemoryBytes: s.GetMemoryBytes(), Known: s.GetKnown(),
 		})
+	}
+	if r.Batches != nil {
+		_ = r.Batches.AddBatch(ctx, capacity.Batch{
+			JobID: id, MachineID: machineID, RunnerID: m.GetRunnerId(), Repository: m.GetJob().GetRepository(),
+			Job: m.GetJob().GetJob(), RunID: m.GetJob().GetRunId(), Source: m.GetSource(), Samples: samples,
+			Final: m.GetFinal(), UnknownReason: m.GetUnknownReason(), OOMKilled: m.GetOomKilled(),
+			CutShort: m.GetCutShort(), MemoryPeakBytes: m.GetMemoryPeakBytes(),
+		})
+		return
 	}
 	_ = r.Resources.Add(ctx, id, machineID, m.GetRunnerId(), samples, m.GetFinal(), m.GetUnknownReason())
 }

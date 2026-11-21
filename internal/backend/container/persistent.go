@@ -90,7 +90,7 @@ func ownVolumesArgs(image string, uid int) []string {
 }
 
 // persistentFiles are the scripts written into the state volume.
-var persistentFiles = []string{"clean.sh", "job-started.sh", "job-completed.sh", "pool-supervisor.sh", "add-runner.sh", "report.sh"}
+var persistentFiles = []string{"clean.sh", "job-started.sh", "job-completed.sh", "pool-supervisor.sh", "add-runner.sh", "report.sh", "list.sh"}
 
 // IsPersistentPool tells the persistent pool's ref from a job pool's.
 func IsPersistentPool(pool string) bool { return pool == PersistentPool }
@@ -311,6 +311,38 @@ func (b *Backend) PersistentStates(ctx context.Context) ([]PersistentState, erro
 		return nil, fmt.Errorf("persistent report: %s", b.redact(strings.TrimSpace(res.Stderr)))
 	}
 	return ParsePersistentStates(res.Stdout), nil
+}
+
+// FindPersistent lists the persistent runners of the pool container as Found
+// entries, so the controller sees them as services of the machine (runners
+// R5.93, OPS70). ServiceName is the handle Ref the record stores
+// (`crsp-persistent-pool:<name>`); a container that is not there has none.
+func (b *Backend) FindPersistent(ctx context.Context) ([]backend.Found, error) {
+	res, err := b.run(ctx, "exec", PersistentPool, "sh", StateDir+"/bin/list.sh")
+	if err != nil {
+		return nil, err
+	}
+	if res.ExitCode != 0 {
+		if noSuchContainer(res.Stderr) || strings.Contains(strings.ToLower(res.Stderr), "is not running") {
+			return nil, nil
+		}
+		return nil, fmt.Errorf("persistent list: %s", b.redact(strings.TrimSpace(res.Stderr)))
+	}
+	return ParsePersistentFound(res.Stdout), nil
+}
+
+// ParsePersistentFound reads the lines of list.sh: NAME|RUNNING.
+func ParsePersistentFound(out string) []backend.Found {
+	var res []backend.Found
+	for _, ln := range strings.Split(strings.ReplaceAll(out, "\r\n", "\n"), "\n") {
+		n, up, ok := strings.Cut(strings.TrimSpace(ln), "|")
+		if !ok || n == "" {
+			continue
+		}
+		res = append(res, backend.Found{ServiceName: PersistentPool + ":" + n, Name: n, Folder: StateDir + "/" + n,
+			Running: up == "1", Managed: true})
+	}
+	return res
 }
 
 // ParsePersistentStates reads the lines of report.sh: NAME|BYTES|REASON.

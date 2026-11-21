@@ -10,6 +10,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/leftovers"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/poolsize"
 )
 
 // MachinesService is what the machines routes need (machines R5.50 to R5.52,
@@ -533,6 +534,16 @@ func (s *server) CheckMachinePoolSize(ctx context.Context, r gen.CheckMachinePoo
 	if c.Known && res.TotalGiB > 0 {
 		out.RecommendedHalf = &gen.PoolSizeRecommended{MemoryGib: res.Half.MemGiB, Cpus: res.Half.CPUs}
 		out.RecommendedThreeQuarters = &gen.PoolSizeRecommended{MemoryGib: res.ThreeQuarters.MemGiB, Cpus: res.ThreeQuarters.CPUs}
+		measured := gen.PoolSizeCheckBasis(res.Basis)
+		margin, wslPool, wslSet := poolsize.SafetyMarginGiB, res.WSLPool, res.WSLCapSet
+		out.Basis, out.HostSpanHours, out.PresetRoomGib, out.SafetyMarginGib = &measured, &res.HostSpanHours, &res.PresetRoomGiB, &margin
+		out.WslPool, out.WslCapSet = &wslPool, &wslSet
+		if res.WSLCapSet {
+			out.WslCapGib, out.WslCapAbovePc = &res.WSLCapGiB, &res.CapAbovePC
+		}
+		if res.Basis == poolsize.BasisMeasured {
+			out.HostP95Gib, out.MeasuredRoomGib, out.LeavesGib, out.LeavesLessThanHost = &res.HostP95GiB, &res.MeasuredRoomGiB, &res.LeavesGiB, &res.LeavesLessThanHost
+		}
 	}
 	return gen.CheckMachinePoolSize200JSONResponse(out), nil
 }

@@ -102,6 +102,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteJobResourceSummaryBeforeStmt, err = db.PrepareContext(ctx, deleteJobResourceSummaryBefore); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteJobResourceSummaryBefore: %w", err)
 	}
+	if q.deleteJobRunPeaksBeforeStmt, err = db.PrepareContext(ctx, deleteJobRunPeaksBefore); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteJobRunPeaksBefore: %w", err)
+	}
 	if q.deleteJobStepsStmt, err = db.PrepareContext(ctx, deleteJobSteps); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteJobSteps: %w", err)
 	}
@@ -276,8 +279,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getJobHistoryStmt, err = db.PrepareContext(ctx, getJobHistory); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobHistory: %w", err)
 	}
+	if q.getJobIdentityStmt, err = db.PrepareContext(ctx, getJobIdentity); err != nil {
+		return nil, fmt.Errorf("error preparing query GetJobIdentity: %w", err)
+	}
 	if q.getJobResourceSummaryStmt, err = db.PrepareContext(ctx, getJobResourceSummary); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobResourceSummary: %w", err)
+	}
+	if q.getJobRunPeakStmt, err = db.PrepareContext(ctx, getJobRunPeak); err != nil {
+		return nil, fmt.Errorf("error preparing query GetJobRunPeak: %w", err)
 	}
 	if q.getJobsRowStmt, err = db.PrepareContext(ctx, getJobsRow); err != nil {
 		return nil, fmt.Errorf("error preparing query GetJobsRow: %w", err)
@@ -593,6 +602,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.listExpiredTicketsStmt, err = db.PrepareContext(ctx, listExpiredTickets); err != nil {
 		return nil, fmt.Errorf("error preparing query ListExpiredTickets: %w", err)
+	}
+	if q.listGoodJobRunPeaksForKeyStmt, err = db.PrepareContext(ctx, listGoodJobRunPeaksForKey); err != nil {
+		return nil, fmt.Errorf("error preparing query ListGoodJobRunPeaksForKey: %w", err)
 	}
 	if q.listGuardrailReportsSinceStmt, err = db.PrepareContext(ctx, listGuardrailReportsSince); err != nil {
 		return nil, fmt.Errorf("error preparing query ListGuardrailReportsSince: %w", err)
@@ -1101,6 +1113,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.upsertJobResourceSummaryStmt, err = db.PrepareContext(ctx, upsertJobResourceSummary); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertJobResourceSummary: %w", err)
 	}
+	if q.upsertJobRunPeakStmt, err = db.PrepareContext(ctx, upsertJobRunPeak); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertJobRunPeak: %w", err)
+	}
 	if q.upsertJobsRowStmt, err = db.PrepareContext(ctx, upsertJobsRow); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertJobsRow: %w", err)
 	}
@@ -1282,6 +1297,11 @@ func (q *Queries) Close() error {
 	if q.deleteJobResourceSummaryBeforeStmt != nil {
 		if cerr := q.deleteJobResourceSummaryBeforeStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteJobResourceSummaryBeforeStmt: %w", cerr)
+		}
+	}
+	if q.deleteJobRunPeaksBeforeStmt != nil {
+		if cerr := q.deleteJobRunPeaksBeforeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteJobRunPeaksBeforeStmt: %w", cerr)
 		}
 	}
 	if q.deleteJobStepsStmt != nil {
@@ -1574,9 +1594,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getJobHistoryStmt: %w", cerr)
 		}
 	}
+	if q.getJobIdentityStmt != nil {
+		if cerr := q.getJobIdentityStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getJobIdentityStmt: %w", cerr)
+		}
+	}
 	if q.getJobResourceSummaryStmt != nil {
 		if cerr := q.getJobResourceSummaryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getJobResourceSummaryStmt: %w", cerr)
+		}
+	}
+	if q.getJobRunPeakStmt != nil {
+		if cerr := q.getJobRunPeakStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getJobRunPeakStmt: %w", cerr)
 		}
 	}
 	if q.getJobsRowStmt != nil {
@@ -2102,6 +2132,11 @@ func (q *Queries) Close() error {
 	if q.listExpiredTicketsStmt != nil {
 		if cerr := q.listExpiredTicketsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listExpiredTicketsStmt: %w", cerr)
+		}
+	}
+	if q.listGoodJobRunPeaksForKeyStmt != nil {
+		if cerr := q.listGoodJobRunPeaksForKeyStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listGoodJobRunPeaksForKeyStmt: %w", cerr)
 		}
 	}
 	if q.listGuardrailReportsSinceStmt != nil {
@@ -2949,6 +2984,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing upsertJobResourceSummaryStmt: %w", cerr)
 		}
 	}
+	if q.upsertJobRunPeakStmt != nil {
+		if cerr := q.upsertJobRunPeakStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertJobRunPeakStmt: %w", cerr)
+		}
+	}
 	if q.upsertJobsRowStmt != nil {
 		if cerr := q.upsertJobsRowStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertJobsRowStmt: %w", cerr)
@@ -3094,6 +3134,7 @@ type Queries struct {
 	deleteJobHistoryBeforeStmt                  *sql.Stmt
 	deleteJobResourceSamplesBeforeStmt          *sql.Stmt
 	deleteJobResourceSummaryBeforeStmt          *sql.Stmt
+	deleteJobRunPeaksBeforeStmt                 *sql.Stmt
 	deleteJobStepsStmt                          *sql.Stmt
 	deleteJobTicketsStmt                        *sql.Stmt
 	deleteMachineLoadBeforeStmt                 *sql.Stmt
@@ -3152,7 +3193,9 @@ type Queries struct {
 	getInsightFindingStmt                       *sql.Stmt
 	getInsightPlanStmt                          *sql.Stmt
 	getJobHistoryStmt                           *sql.Stmt
+	getJobIdentityStmt                          *sql.Stmt
 	getJobResourceSummaryStmt                   *sql.Stmt
+	getJobRunPeakStmt                           *sql.Stmt
 	getJobsRowStmt                              *sql.Stmt
 	getJoinCodeStmt                             *sql.Stmt
 	getMachineStmt                              *sql.Stmt
@@ -3258,6 +3301,7 @@ type Queries struct {
 	listExpiredCIReportFilesStmt                *sql.Stmt
 	listExpiredSlotsStmt                        *sql.Stmt
 	listExpiredTicketsStmt                      *sql.Stmt
+	listGoodJobRunPeaksForKeyStmt               *sql.Stmt
 	listGuardrailReportsSinceStmt               *sql.Stmt
 	listGuardrailStatusRowsStmt                 *sql.Stmt
 	listImageBuildsStmt                         *sql.Stmt
@@ -3427,6 +3471,7 @@ type Queries struct {
 	upsertInstallationStmt                      *sql.Stmt
 	upsertJobHistoryStmt                        *sql.Stmt
 	upsertJobResourceSummaryStmt                *sql.Stmt
+	upsertJobRunPeakStmt                        *sql.Stmt
 	upsertJobsRowStmt                           *sql.Stmt
 	upsertManagedVariableStmt                   *sql.Stmt
 	upsertRegistryLayerStmt                     *sql.Stmt
@@ -3475,6 +3520,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteJobHistoryBeforeStmt:                  q.deleteJobHistoryBeforeStmt,
 		deleteJobResourceSamplesBeforeStmt:          q.deleteJobResourceSamplesBeforeStmt,
 		deleteJobResourceSummaryBeforeStmt:          q.deleteJobResourceSummaryBeforeStmt,
+		deleteJobRunPeaksBeforeStmt:                 q.deleteJobRunPeaksBeforeStmt,
 		deleteJobStepsStmt:                          q.deleteJobStepsStmt,
 		deleteJobTicketsStmt:                        q.deleteJobTicketsStmt,
 		deleteMachineLoadBeforeStmt:                 q.deleteMachineLoadBeforeStmt,
@@ -3533,7 +3579,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getInsightFindingStmt:                       q.getInsightFindingStmt,
 		getInsightPlanStmt:                          q.getInsightPlanStmt,
 		getJobHistoryStmt:                           q.getJobHistoryStmt,
+		getJobIdentityStmt:                          q.getJobIdentityStmt,
 		getJobResourceSummaryStmt:                   q.getJobResourceSummaryStmt,
+		getJobRunPeakStmt:                           q.getJobRunPeakStmt,
 		getJobsRowStmt:                              q.getJobsRowStmt,
 		getJoinCodeStmt:                             q.getJoinCodeStmt,
 		getMachineStmt:                              q.getMachineStmt,
@@ -3639,6 +3687,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listExpiredCIReportFilesStmt:                q.listExpiredCIReportFilesStmt,
 		listExpiredSlotsStmt:                        q.listExpiredSlotsStmt,
 		listExpiredTicketsStmt:                      q.listExpiredTicketsStmt,
+		listGoodJobRunPeaksForKeyStmt:               q.listGoodJobRunPeaksForKeyStmt,
 		listGuardrailReportsSinceStmt:               q.listGuardrailReportsSinceStmt,
 		listGuardrailStatusRowsStmt:                 q.listGuardrailStatusRowsStmt,
 		listImageBuildsStmt:                         q.listImageBuildsStmt,
@@ -3808,6 +3857,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		upsertInstallationStmt:                      q.upsertInstallationStmt,
 		upsertJobHistoryStmt:                        q.upsertJobHistoryStmt,
 		upsertJobResourceSummaryStmt:                q.upsertJobResourceSummaryStmt,
+		upsertJobRunPeakStmt:                        q.upsertJobRunPeakStmt,
 		upsertJobsRowStmt:                           q.upsertJobsRowStmt,
 		upsertManagedVariableStmt:                   q.upsertManagedVariableStmt,
 		upsertRegistryLayerStmt:                     q.upsertRegistryLayerStmt,

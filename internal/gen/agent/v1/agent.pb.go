@@ -2349,8 +2349,14 @@ type LoadReport struct {
 	// True when an agent in a container decided on the worse of host and
 	// container (R5.19).
 	CgroupLimited bool `protobuf:"varint,12,opt,name=cgroup_limited,json=cgroupLimited,proto3" json:"cgroup_limited,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// The host's own memory use, without crsp's pool (OPS61): the rolling p95 of
+	// the last 7 days, valid when host_use_ready, and how many seconds the
+	// samples cover.
+	HostUseP95Bytes    int64 `protobuf:"varint,13,opt,name=host_use_p95_bytes,json=hostUseP95Bytes,proto3" json:"host_use_p95_bytes,omitempty"`
+	HostUseReady       bool  `protobuf:"varint,14,opt,name=host_use_ready,json=hostUseReady,proto3" json:"host_use_ready,omitempty"`
+	HostUseSpanSeconds int64 `protobuf:"varint,15,opt,name=host_use_span_seconds,json=hostUseSpanSeconds,proto3" json:"host_use_span_seconds,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *LoadReport) Reset() {
@@ -2465,6 +2471,27 @@ func (x *LoadReport) GetCgroupLimited() bool {
 		return x.CgroupLimited
 	}
 	return false
+}
+
+func (x *LoadReport) GetHostUseP95Bytes() int64 {
+	if x != nil {
+		return x.HostUseP95Bytes
+	}
+	return 0
+}
+
+func (x *LoadReport) GetHostUseReady() bool {
+	if x != nil {
+		return x.HostUseReady
+	}
+	return false
+}
+
+func (x *LoadReport) GetHostUseSpanSeconds() int64 {
+	if x != nil {
+		return x.HostUseSpanSeconds
+	}
+	return 0
 }
 
 // RunnerStates is the full list of runners the agent sees, sent on change and
@@ -8235,8 +8262,15 @@ type JobResourceSamples struct {
 	Final bool `protobuf:"varint,5,opt,name=final,proto3" json:"final,omitempty"`
 	// Why a value could not be read; samples then have known = false.
 	UnknownReason string `protobuf:"bytes,6,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	// OPS66: the job was killed for memory (cgroup oom_kill, or the Job Object memory limit).
+	OomKilled bool `protobuf:"varint,7,opt,name=oom_killed,json=oomKilled,proto3" json:"oom_killed,omitempty"`
+	// OPS66: the job ended before the agent could read it to the end (agent stop, runner gone, link lost).
+	CutShort bool `protobuf:"varint,8,opt,name=cut_short,json=cutShort,proto3" json:"cut_short,omitempty"`
+	// OPS66: the peak memory the system itself kept for the whole job (cgroup memory.peak, Job Object
+	// PeakJobMemoryUsed); 0 when the system keeps none and the largest sample counts.
+	MemoryPeakBytes int64 `protobuf:"varint,9,opt,name=memory_peak_bytes,json=memoryPeakBytes,proto3" json:"memory_peak_bytes,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *JobResourceSamples) Reset() {
@@ -8309,6 +8343,27 @@ func (x *JobResourceSamples) GetUnknownReason() string {
 		return x.UnknownReason
 	}
 	return ""
+}
+
+func (x *JobResourceSamples) GetOomKilled() bool {
+	if x != nil {
+		return x.OomKilled
+	}
+	return false
+}
+
+func (x *JobResourceSamples) GetCutShort() bool {
+	if x != nil {
+		return x.CutShort
+	}
+	return false
+}
+
+func (x *JobResourceSamples) GetMemoryPeakBytes() int64 {
+	if x != nil {
+		return x.MemoryPeakBytes
+	}
+	return 0
 }
 
 // JobResourceSample is one reading.
@@ -8689,7 +8744,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x06usable\x18\x03 \x01(\bR\x06usable\x12\x18\n" +
 	"\aversion\x18\x04 \x01(\tR\aversion\x12\x16\n" +
 	"\x06reason\x18\x05 \x01(\tR\x06reason\x12\x1a\n" +
-	"\brootless\x18\x06 \x01(\bR\brootless\"\xbf\x03\n" +
+	"\brootless\x18\x06 \x01(\bR\brootless\"\xc5\x04\n" +
 	"\n" +
 	"LoadReport\x12+\n" +
 	"\x12sampled_at_unix_ms\x18\x01 \x01(\x03R\x0fsampledAtUnixMs\x12\x1d\n" +
@@ -8707,7 +8762,10 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x10light_slots_used\x18\n" +
 	" \x01(\x05R\x0elightSlotsUsed\x12(\n" +
 	"\x10heavy_slots_used\x18\v \x01(\x05R\x0eheavySlotsUsed\x12%\n" +
-	"\x0ecgroup_limited\x18\f \x01(\bR\rcgroupLimited\"@\n" +
+	"\x0ecgroup_limited\x18\f \x01(\bR\rcgroupLimited\x12+\n" +
+	"\x12host_use_p95_bytes\x18\r \x01(\x03R\x0fhostUseP95Bytes\x12$\n" +
+	"\x0ehost_use_ready\x18\x0e \x01(\bR\fhostUseReady\x121\n" +
+	"\x15host_use_span_seconds\x18\x0f \x01(\x03R\x12hostUseSpanSeconds\"@\n" +
 	"\fRunnerStates\x120\n" +
 	"\arunners\x18\x01 \x03(\v2\x16.agent.v1.RunnerStatusR\arunners\"\x94\x03\n" +
 	"\fRunnerStatus\x12\x1b\n" +
@@ -9297,14 +9355,18 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x18STATE_WAITING_CONTROLLER\x10\x02\x12\x0e\n" +
 	"\n" +
 	"STATE_DONE\x10\x03\x12\x10\n" +
-	"\fSTATE_FAILED\x10\x04\"\xe1\x01\n" +
+	"\fSTATE_FAILED\x10\x04\"\xc9\x02\n" +
 	"\x12JobResourceSamples\x12\x1b\n" +
 	"\trunner_id\x18\x01 \x01(\tR\brunnerId\x12\"\n" +
 	"\x03job\x18\x02 \x01(\v2\x10.agent.v1.JobRefR\x03job\x12\x16\n" +
 	"\x06source\x18\x03 \x01(\tR\x06source\x125\n" +
 	"\asamples\x18\x04 \x03(\v2\x1b.agent.v1.JobResourceSampleR\asamples\x12\x14\n" +
 	"\x05final\x18\x05 \x01(\bR\x05final\x12%\n" +
-	"\x0eunknown_reason\x18\x06 \x01(\tR\runknownReason\"\x89\x01\n" +
+	"\x0eunknown_reason\x18\x06 \x01(\tR\runknownReason\x12\x1d\n" +
+	"\n" +
+	"oom_killed\x18\a \x01(\bR\toomKilled\x12\x1b\n" +
+	"\tcut_short\x18\b \x01(\bR\bcutShort\x12*\n" +
+	"\x11memory_peak_bytes\x18\t \x01(\x03R\x0fmemoryPeakBytes\"\x89\x01\n" +
 	"\x11JobResourceSample\x12\x1c\n" +
 	"\n" +
 	"at_unix_ms\x18\x01 \x01(\x03R\batUnixMs\x12\x1d\n" +

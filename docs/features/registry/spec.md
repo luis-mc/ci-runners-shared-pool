@@ -296,6 +296,8 @@ Built (REG9): the mirror is served only through a token `Guard` that REG1 passes
 
 **R5.76** (built, IMG2) — A file larger than the cap is hashed by its blob SHA and listed as too large. Built: the cap is 1 MiB; the file is not read, its stack content is `git-blob-sha1:<sha>`, and its finding has `TooLarge`.
 
+**R5.83** (OPS67; built) — **The job size scan reuses this fetch.** The scheduler's job size scan (scheduling R5.80 to R5.88) reads the same commit through the same `stackscan.Reader` (one tree listing, single file reads, never a clone, never code run), and in addition reads the workflow files, test tool configs and test files it needs to count tests and spot services. These files do not enter the stack hash: workflows are still not stack files (R5.73), and the image key is unchanged. `.crsp.yml` is read once, for its `sizes:` map.
+
 ### IMG3: image profiles (R5.77 to R5.80)
 
 **R5.77** — A profile is base, layers, toolchains, services and the labels that pick it (RES19 B1). **BUILT (IMG3).** The tables `image_profiles` and `repository_profiles` (migration 00021) hold them; `profiles.Defaults` seeds the standard ones (`node-web`, `rust-cross`, `go`, `python`, `base`) and never overwrites an edit; `profiles.ListViews` is the read side of the console. Stacks map to a profile through `profiles.DetectStacks` and `ProfileForStack`.
@@ -402,6 +404,7 @@ Rows for R5.13 to R5.20 (agent ensure-image), R5.21 and R5.22 (key), R5.59 to R5
 | R5.73 to R5.76 | `internal/stackscan/scan_test.go` (built: recorded tree in internal/stackscan/testdata/tree.json); `internal/github/webhook_steps_test.go` (built: TestRESTListBlobsAt, TestRESTListBlobsAtHeldBackOnLowBudget) |
 | R5.77 to R5.80 | `internal/profiles/profiles_test.go` (built: defaults, mapping, precedence, ref, views, older generation); `internal/store/profilestore_test.go` (built: tables) |
 | R5.82 | `internal/backend/container/linuxcrsp_test.go` (built: TestCheckLinuxBinary, TestLinuxCrspFetchedOnceAndKept, TestLinuxCrspRefusals, TestLinuxCrspOwnBinaryOnSameArchLinuxHost, TestStageRefusesWindowsBinary, TestStageUsesLinuxCrspHook) |
+| R5.83 | `internal/jobsize/scan_test.go` TestScanStacks (reads the commit through the stack scan's reader); `internal/stackscan/scan_test.go` (the stack hash does not change) | new |
 | R6.1 | internal/store/no_secrets_test.go (registry tables); internal/registry/core/token_test.go (no token in logs) |
 
 ## 10. Decisions

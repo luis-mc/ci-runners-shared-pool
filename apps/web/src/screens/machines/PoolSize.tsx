@@ -12,6 +12,7 @@ import {
   Stack,
   Text,
   Button,
+  CodeBlock,
   type Tone,
 } from '@crsp/ui';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -47,7 +48,56 @@ export const choiceLabel = (
 
 /** How a recommended size was computed, in the words of the owner (D39). */
 export const choiceHow = (kind: 'half' | 'three', c: Check): string =>
-  `${kind === 'half' ? 'Half' : 'Three quarters'} of the ${gib(c.room_gib ?? 0)} free for the pool, rounded down to whole GiB. CPUs: the same share of the CPU budget (${c.cpu_budget ?? 0}), at most one per ${GIB_PER_CPU} GiB.`;
+  `${kind === 'half' ? 'Half' : 'Three quarters'} of the ${gib(c.preset_room_gib ?? c.room_gib ?? 0)} free for the pool, rounded down to whole GiB. CPUs: the same share of the CPU budget (${c.cpu_budget ?? 0}), at most one per ${GIB_PER_CPU} GiB.`;
+
+/** Hours of samples the p95 needs (machines R5.68). */
+export const MEASURE_HOURS = 24;
+
+/** What the PC itself uses, as the Pool size block shows it: the measured p95, or how far the measuring has come (OPS61). */
+export function measuredBasis(c: Check, os: string): string | undefined {
+  if (c.basis === 'measured' && c.host_p95_gib !== undefined)
+    return `${os === 'windows' ? 'Windows and your apps' : 'This PC and its programs'} use up to ${gib(c.host_p95_gib)} (p95, 7 days)`;
+  if (c.basis === 'measuring')
+    return `measuring, ${Math.min(Math.floor(c.host_span_hours ?? 0), MEASURE_HOURS - 1)} h of ${MEASURE_HOURS}`;
+  return undefined;
+}
+
+/** How the room was sized, in one line under the facts (OPS61). */
+export function roomHow(c: Check): string | undefined {
+  if (c.basis === 'measured' && c.measured_room_gib !== undefined)
+    return `Room for the pool: ${gib(c.total_gib ?? 0)} of memory, times the budget, less what the PC uses (${gib(c.host_p95_gib ?? 0)}) and ${gib(c.safety_margin_gib ?? 1)} to spare.`;
+  if (c.basis === 'measuring')
+    return 'Until 24 h are measured, the room is the budget less what the PC uses now.';
+  return undefined;
+}
+
+/** The `.wslconfig` lines that match a pool memory of `mem` GiB. */
+export const wslLines = (mem: number): string =>
+  `[wsl2]\nmemory=${Number(mem.toFixed(1))}GB`;
+
+export interface WslAdvice {
+  capNow: string;
+  recommended: string;
+  lines: string;
+  warning?: string | undefined;
+}
+
+/** The WSL memory cap block: what the file allows now, the cap that matches the pool, and the lines to copy (OPS61). */
+export function wslAdvice(c: Check, poolMem: number): WslAdvice | undefined {
+  if (!c.wsl_pool || poolMem <= 0) return undefined;
+  const capNow = c.wsl_cap_set
+    ? gib(c.wsl_cap_gib ?? 0)
+    : 'not set (WSL takes half of the PC)';
+  return {
+    capNow,
+    recommended: gib(poolMem),
+    lines: wslLines(poolMem),
+    warning:
+      c.wsl_cap_above_pc && c.wsl_cap_set
+        ? `The WSL memory cap (${gib(c.wsl_cap_gib ?? 0)}) is more than the PC can spare${c.host_p95_gib !== undefined ? ` after what it uses (${gib(c.host_p95_gib)})` : ''}.`
+        : undefined,
+  };
+}
 
 /** The size the controller would fit when the memory asked for is more than the room. */
 export function fitSize(c: Check): { mem: number; cpus: number } | undefined {
@@ -127,12 +177,18 @@ export function liveLine(
     };
   }
   const shrinks = c.needs_shrink_confirm || mem < curMem || cpus < curCpus;
+  // Custom is checked against the measured figure: less than the PC's own p95 left for it is a warning, never a block.
+  const hostWarn =
+    c.leaves_less_than_host && c.host_p95_gib !== undefined
+      ? `This size fits the budget, but leaves ${gib(Math.max(c.leaves_gib ?? 0, 0))} for this PC, less than the ${gib(c.host_p95_gib)} it uses (p95, 7 days).`
+      : undefined;
   if (shrinks)
     return {
       tone: 'needs-you',
       text: 'This lowers the pool size. Jobs that need more than the new size wait or fail to start.',
-      notes: [],
+      notes: hostWarn ? [hostWarn] : [],
     };
+  if (hostWarn) return { tone: 'needs-you', text: hostWarn, notes: [] };
   const left = (c.room_gib ?? Infinity) - mem;
   if (left < LEFT_WARNING_GIB)
     return {
@@ -338,10 +394,19 @@ export function usePoolSize(m: Machine, onChanged: () => void): PoolSizeForm {
     room?.known && room.recommended_half && room.recommended_three_quarters,
   );
   const unknown = 'The budget is not known yet.';
+  const basis = room?.known ? measuredBasis(room, m.os) : undefined;
+  const wslMem = changed ? mem : curMem || room?.recommended_half?.memory_gib || 0;
+  const wsl = room?.known ? wslAdvice(room, wslMem) : undefined;
   const roomFacts = room?.known
     ? [
-        ...(room.room_gib !== undefined
-          ? [{ name: 'Room for the pool', value: gib(room.room_gib) }]
+        ...(basis ? [{ name: 'What the PC uses', value: basis }] : []),
+        ...((room.preset_room_gib ?? room.room_gib) !== undefined
+          ? [
+              {
+                name: 'Room for the pool',
+                value: gib((room.preset_room_gib ?? room.room_gib) as number),
+              },
+            ]
           : []),
         ...(room.cpu_budget !== undefined
           ? [{ name: 'CPU budget', value: cpuWord(room.cpu_budget) }]
@@ -464,6 +529,24 @@ export function usePoolSize(m: Machine, onChanged: () => void): PoolSizeForm {
           <CheckRow label="Yes, lower the pool size" checked={yes} onChange={setYes} />
         ) : null}
         {problem ? <Message tone="problem">{problem}</Message> : null}
+        {room?.known && roomHow(room) ? <Text tone="muted">{roomHow(room)}</Text> : null}
+        {wsl ? (
+          <Stack gap="tight">
+            <Facts
+              items={[
+                { name: 'WSL memory cap now', value: wsl.capNow },
+                { name: 'Recommended WSL memory cap', value: wsl.recommended },
+              ]}
+            />
+            {wsl.warning ? <Message tone="needs-you">{wsl.warning}</Message> : null}
+            <CodeBlock text={wsl.lines} label="Recommended .wslconfig lines" />
+            <Text tone="muted">
+              Copy these lines into .wslconfig in your user folder. crsp does not change
+              that file. WSL must restart for a change to apply: run wsl --shutdown, with
+              no job running.
+            </Text>
+          </Stack>
+        ) : null}
       </Stack>
     </Section>
   );

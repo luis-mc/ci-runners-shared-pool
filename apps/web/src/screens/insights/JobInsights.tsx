@@ -9,11 +9,13 @@ import {
   Text,
   TrendChart,
   formatAgo,
+  formatDuration,
   formatNumber,
 } from '@crsp/ui';
 import { Load } from '../common';
 import { useJobResources, useRunSavings } from './api';
 import type { Schemas } from '../../api/api';
+import { MEASURED_WORDS, keyLine } from './words';
 
 type Job = Schemas['Job'];
 
@@ -72,6 +74,40 @@ export const runsOnFact = (j: Parameters<typeof runsOnWords>[0]) => ({
 
 const gb = (b: number): number => b / 1_000_000_000;
 
+/** The measured peaks of one job run, the flags that keep a run out of sizing, and the job-key line (R5.60 to R5.63). */
+function MeasuredBlock({ m }: { m: NonNullable<Schemas['JobResources']['measured']> }) {
+  return (
+    <Stack>
+      <Text>{MEASURED_WORDS.title}</Text>
+      <Facts
+        items={[
+          {
+            name: MEASURED_WORDS.cpu,
+            value: `${formatNumber(m.peak_cpu_cores, 1)} cores`,
+          },
+          {
+            name: MEASURED_WORDS.memory,
+            value: `${formatNumber(gb(m.peak_memory_bytes), 1)} GB`,
+          },
+          { name: MEASURED_WORDS.samples, value: formatNumber(m.sample_count, 0) },
+          { name: MEASURED_WORDS.duration, value: formatDuration(m.duration_seconds) },
+        ]}
+      />
+      {m.oom_killed ? (
+        <Message tone="needs-you" dismissible={false}>
+          {MEASURED_WORDS.oom}
+        </Message>
+      ) : null}
+      {m.cut_short ? (
+        <Message tone="note" dismissible={false}>
+          {MEASURED_WORDS.cutShort}
+        </Message>
+      ) : null}
+      {m.key ? <Text tone="muted">{keyLine(m.key)}</Text> : null}
+    </Stack>
+  );
+}
+
 /** CPU and memory of a job a crsp runner ran: two trend charts and the peak and p95 as text (UX-17). */
 export function ResourcesPane({ jobId }: { jobId: number }) {
   const { result, reload } = useJobResources(jobId);
@@ -79,62 +115,67 @@ export function ResourcesPane({ jobId }: { jobId: number }) {
     <Load result={result} what="CPU and memory" reload={reload}>
       {(r) => (
         <Section title="CPU and memory">
-          {r.samples.length === 0 ? (
+          {r.samples.length === 0 && !r.measured ? (
             <Empty
               title={r.unknown_reason ?? 'No CPU and memory were measured for this job.'}
             />
           ) : (
             <Stack>
-              <Facts
-                items={[
-                  {
-                    name: 'CPU, peak',
-                    value: `${formatNumber(r.cpu_peak_cores ?? 0, 1)} cores`,
-                  },
-                  {
-                    name: 'CPU, slow end (p95)',
-                    value: `${formatNumber(r.cpu_p95_cores ?? 0, 1)} cores`,
-                  },
-                  {
-                    name: 'Memory, peak',
-                    value: `${formatNumber(gb(r.memory_peak_bytes ?? 0), 1)} GB`,
-                  },
-                  {
-                    name: 'Memory, slow end (p95)',
-                    value: `${formatNumber(gb(r.memory_p95_bytes ?? 0), 1)} GB`,
-                  },
-                ]}
-              />
-              <TrendChart
-                label="CPU cores over the job"
-                unit="count"
-                emptyText="No samples."
-                series={[
-                  {
-                    id: 'cpu',
-                    label: 'CPU cores',
-                    points: r.samples.map((s) => ({
-                      x: Date.parse(s.at),
-                      y: s.cpu_cores,
-                    })),
-                  },
-                ]}
-              />
-              <TrendChart
-                label="Memory in GB over the job"
-                unit="count"
-                emptyText="No samples."
-                series={[
-                  {
-                    id: 'mem',
-                    label: 'Memory in GB',
-                    points: r.samples.map((s) => ({
-                      x: Date.parse(s.at),
-                      y: gb(s.memory_bytes),
-                    })),
-                  },
-                ]}
-              />
+              {r.measured ? <MeasuredBlock m={r.measured} /> : null}
+              {r.samples.length === 0 ? null : (
+                <>
+                  <Facts
+                    items={[
+                      {
+                        name: 'CPU, peak',
+                        value: `${formatNumber(r.cpu_peak_cores ?? 0, 1)} cores`,
+                      },
+                      {
+                        name: 'CPU, slow end (p95)',
+                        value: `${formatNumber(r.cpu_p95_cores ?? 0, 1)} cores`,
+                      },
+                      {
+                        name: 'Memory, peak',
+                        value: `${formatNumber(gb(r.memory_peak_bytes ?? 0), 1)} GB`,
+                      },
+                      {
+                        name: 'Memory, slow end (p95)',
+                        value: `${formatNumber(gb(r.memory_p95_bytes ?? 0), 1)} GB`,
+                      },
+                    ]}
+                  />
+                  <TrendChart
+                    label="CPU cores over the job"
+                    unit="count"
+                    emptyText="No samples."
+                    series={[
+                      {
+                        id: 'cpu',
+                        label: 'CPU cores',
+                        points: r.samples.map((s) => ({
+                          x: Date.parse(s.at),
+                          y: s.cpu_cores,
+                        })),
+                      },
+                    ]}
+                  />
+                  <TrendChart
+                    label="Memory in GB over the job"
+                    unit="count"
+                    emptyText="No samples."
+                    series={[
+                      {
+                        id: 'mem',
+                        label: 'Memory in GB',
+                        points: r.samples.map((s) => ({
+                          x: Date.parse(s.at),
+                          y: gb(s.memory_bytes),
+                        })),
+                      },
+                    ]}
+                  />
+                </>
+              )}
             </Stack>
           )}
         </Section>

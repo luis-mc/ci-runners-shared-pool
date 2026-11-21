@@ -12,15 +12,30 @@ SRC=${CRSP_RUNNER_SRC:-/opt/actions-runner}
 case "$name" in *[!A-Za-z0-9._-]* | "" | .*) echo "runner name $name cannot be used" >&2; exit 2 ;; esac
 IFS= read -r ACTIONS_RUNNER_INPUT_TOKEN || exit 1
 [ -n "$ACTIONS_RUNNER_INPUT_TOKEN" ] || exit 1
+RUN=${CRSP_SUPERVISOR_RUN:-/tmp/crsp-supervisor}
 dir=$STATE/$name
 mkdir -p "$STATE/runners.d" "$STATE/busy" || exit 1
+# One instance per runner name (OPS70): a second add of the same name ends the
+# running listener first (the supervisor ends a runner whose entry file is gone),
+# so two listeners never hold one name and a retry never starts a second one.
+rm -f "$STATE/runners.d/$name.env"
+i=0
+while [ -f "$RUN/$name.pid" ] && kill -0 "$(cat "$RUN/$name.pid" 2>/dev/null)" 2>/dev/null; do
+  i=$((i + 1))
+  [ "$i" -gt "${CRSP_ADD_WAIT:-30}" ] && { echo "runner $name is still running" >&2; exit 1; }
+  sleep 1
+done
+fresh=0
 if [ ! -x "$dir/config.sh" ]; then
+  fresh=1
   mkdir -p "$dir" && cp -a "$SRC/." "$dir/" || { rm -rf "$dir"; exit 1; }
 fi
 set -- --unattended --replace --url "$url" --name "$name" --labels "$labels" --disableupdate --work _work
 [ -n "$group" ] && set -- "$@" --runnergroup "$group"
 if ! (export ACTIONS_RUNNER_INPUT_TOKEN && cd "$dir" && ./config.sh "$@"); then
-  rm -rf "$dir"
+  # only a folder this call made is removed: a failed retry never deletes a
+  # runner that was already set up
+  [ "$fresh" = 1 ] && rm -rf "$dir"
   exit 1
 fi
 if [ "$keep" = 0 ]; then k=0; else k=1; fi

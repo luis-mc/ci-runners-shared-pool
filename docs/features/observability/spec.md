@@ -182,6 +182,20 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.46** (OPS34) — **Steps and needs may be missing.** A job without stored steps or needs edges is shown without them and says why (older than the step retention, not reported, workflow file not read); no number is invented.
 
+### Measured job peaks (OPS66)
+
+**R5.60** (OPS66, owner decisions of 21 Nov 2026 on job sizing, build plan T3) — **Measure each job's peaks.** While a job runs on a crsp runner the agent measures its CPU and memory and reports, per job run: the **peak CPU** (cores; the 95th percentile over the sample windows, one window per sample, so a 1 s window for the cgroup and Job Object readers; the largest window is one noisy reading and is not the peak), the **peak memory** (the largest reading, or the peak the system kept for the whole job when it keeps one: cgroup `memory.peak`, Job Object `PeakJobMemoryUsed`), the **sample count** and the **duration**. All three operating systems are built together. A job the agent cannot read ends with a final batch that says why, and shows "not measured" with the reason, never a zero. Built (OPS66). Source: `internal/jobsize/jobsize.go` `Measure`.
+
+**R5.61** (OPS66) — **Flags.** A run carries `oom_killed` (the system killed it for memory: a cgroup `oom_kill` count above the count at the first sample, or a Job Object that ended a process for a limit) and `cut_short` (it ended before the agent could read it to the end: the agent stopped, the runner went away, the link was lost). A run with either flag, or with fewer than 2 known samples, is not good: it is stored and shown, and counts for no summary (R5.63). Built (OPS66). Source: `internal/jobsize/jobsize.go` `Measurement.Good`; `internal/agent/jobsample_run.go`.
+
+**R5.62** (OPS66) — **One reader per system behind one interface.** The agent's `jobsample.Sampler` has one reader per system: Linux reads the job's cgroup v2 (`cpu.stat` `usage_usec`, `memory.current`, `memory.peak`, `memory.events` `oom_kill`) for a container or VM job, and the `/proc` process tree for a persistent runner; Windows puts the runner's process into a named Job Object and reads `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION` (user and kernel time, terminated processes) and `JOBOBJECT_EXTENDED_LIMIT_INFORMATION.PeakJobMemoryUsed`; macOS lists the process tree with `ps` (`proc_pid_rusage` needs cgo, and the agent is built without it). A Job Object keeps no current memory, only its peak, so its memory samples are the peak so far. The agent attaches at the job-started and job-completed points of its gate (`Gate.Start`, `Gate.Finish`, `Gate.FinishCut`) through the `JobObserver` seam, and sends `JobResourceSamples` over the agent link (protocol version 4; fields `oom_killed`, `cut_short`, `memory_peak_bytes`). Built (OPS66); **open:** the lookup of the runner's process id or cgroup for a started job (`JobSampling.Locate`) has no production implementation yet, so until it lands a job is reported "not measured" with the reason "no runner process for this job" (see section 11). Source: `internal/agent/jobsample/`, `internal/agent/jobsample_run.go`, `internal/agent/gate.go`.
+
+**R5.63** (OPS66) — **Per job key summary.** The controller stores one row per job run (`job_run_peaks`, migration 00034), keyed by repository, workflow, job key and runner, written when the final batch arrives. The summary of a job key (repository, workflow, job key) reads its **last 30 good runs** and gives the **p90** of their peak CPU and of their peak memory, and `measured` is true from **5 good runs** on, the same 5-run rule as the time forecast (R5.41). Under 5 runs the console says "Not measured yet: {n} of 5 good runs" and later sizing work must not use the number. Built (OPS66). Source: `internal/jobsize/jobsize.go` `Summarise`; `internal/store/insights_peaks.go`.
+
+**R5.64** (OPS66) — **Cost and interval.** Sampling stays under 1 percent of one CPU core (R6.4 of ci-run-insights). The readers that cost one or two small reads (cgroup files, a Job Object query) sample every **1 s**: `BenchmarkRealReaders` measures 6 us for the four cgroup files, 0.0006 percent of a core. The process-tree reader lists every process, about 5 us each, so about 2.5 ms on a 500-process machine and once per running job: at 1 s with 8 jobs that would be 2 percent of a core, so it samples every **5 s** (0.4 percent). A batch goes out every 15 s. Built (OPS66). Source: `internal/agent/jobsample/jobsample.go`.
+
+**R5.65** (OPS66) — **Read and show.** `GET /api/v1/jobs/{jobId}/resources` (`getJobResources`, viewer role) carries an optional `measured` object (`JobMeasured`: peak CPU, peak memory, sample count, duration, flags, source, runner, and `key`, the summary of R5.63). The job detail page shows "Measured peak CPU" and "Measured peak memory" with the shared UI parts only (design system v4), the OOM and cut-short flags, and the job key line. Built (OPS66). Source: `internal/api/handlers_insights.go` `GetJobResources`; `apps/web/src/screens/insights/JobInsights.tsx`.
+
 ### Minutes saved
 
 **R5.15** — (M1) Minutes saved counts every job that ran on the pool. Each job counts its run time rounded up to the next whole minute, the way GitHub bills hosted jobs. The Overview shows today's minutes saved, split by OS.
@@ -258,6 +272,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 | Job history rows (jobs, runs, attempts, forecast log) | 90 days | 7 days | 400 days, and at most 1,000,000 rows |
 | Job step rows | 30 days | 7 days | 90 days |
 | Job daily summaries | 400 days | 90 days | 400 days |
+| Measured peaks per job run (`job_run_peaks`, R5.63) | 400 days | 90 days | 400 days |
 | Runner setup and agent logs (controller) | 14 days and 512 MiB per machine | 1 day, 64 MiB | 90 days, 10 GiB per machine |
 | Agent disk buffer while offline | 64 MiB | 8 MiB | 1 GiB |
 | Audit log | 400 days | 90 days | 5 years |
@@ -386,6 +401,12 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.44 | internal/forecast/forecast_test.go TestForecastLogHitRate; internal/api/handlers_jobsdata_test.go TestGetJobStatsForecastPoints |
 | R5.45 | internal/api/handlers_jobsdata_test.go TestExportJobsCSV, TestExportDailyCSV |
 | R5.46 | internal/api/handlers_jobsdata_test.go TestJobWithoutStepsSaysWhy; apps/web/src/screens/jobs/JobPage.test.tsx |
+| R5.60 | internal/jobsize/jobsize_test.go TestMeasurePeaks, TestMeasureSystemPeak; internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary |
+| R5.61 | internal/jobsize/jobsize_test.go TestMeasureFlags; internal/agent/jobsample/readers_test.go TestCgroupPeakAndOOM, TestJobObjectSampler, TestCollectorIntervalAndOutcome; internal/agent/jobsample_link_test.go TestJobSampleSenderOutcomeOnFinal; internal/agent/jobsample_run_test.go TestJobSamplingStartSampleFinish |
+| R5.62 | internal/agent/jobsample/readers_test.go TestPSTableAndTree, TestParsePSTimeRejects, TestJobObjectSampler, TestCollectorPicksJobObject; internal/agent/jobsample/platform_linux_test.go, platform_darwin_test.go, platform_windows_test.go; internal/agent/jobsample_run_test.go TestJobSamplingUnreadableJob, TestJobSamplingOldController; internal/agent/jobsample_gate_test.go TestGateObserver; internal/agentlink/insights_test.go TestResourceSinkBatchesCarryFlags |
+| R5.63 | internal/jobsize/jobsize_test.go TestSummaryMeasuredAtFive, TestSummaryKeepsNewest30; internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary, TestMigrationJobRunPeaks |
+| R5.64 | internal/agent/jobsample/sampler_bench_test.go BenchmarkSample, BenchmarkRealReaders |
+| R5.65 | internal/api/handlers_insights_test.go TestJobResourcesMeasured; apps/web/src/screens/insights/JobInsights.test.tsx |
 | R6.1 | planned: internal/events/latency_test.go TestP95UnderTwoSeconds |
 | R6.2 | internal/events/hub_test.go TestLoadThrottlePerMachine (the median of three is the machines feature) |
 | R6.3 | internal/events/hub_test.go TestSSEFormatAndServe (heartbeat), TestSlowSubscriberIsClosedAndNeverBlocksPublisher, TestStreamCap; internal/api/handlers_live_test.go TestStreamEventsTooManyStreams |
@@ -428,6 +449,7 @@ Everything. The seams that change when it is built:
 - `packages/contract/proto/agent/v1/agent.proto` gains load samples and log-line messages.
 - The main database gains `job_history`, `load_minute` and `audit_log` migrations; `logs.db` gets its own migrations.
 - The scheduling feature publishes to the event hub and records slot times.
+- OPS66 (measured job peaks): the lookup that tells the agent where a started job's processes live (the runner's process id, or the cgroup of a container or VM job: `JobSampling.Locate`) has no production implementation, and the machine-side job-started path does not call `Gate.Start` yet (the gate is the machine's own library, R5.23), so the readers are built and tested but a real job is "not measured" until that lookup lands. The retention of `job_run_peaks` (R6.8) is not wired into the hourly job. Windows reports an out-of-memory kill only through a Job Object limit, which crsp does not set, so `oom_killed` there stays false unless the system ended a process for a limit. The controller's HelloAck offers protocol version 4 only with the registry path (`machines.Hooks.Registry`), so a controller without a registry core gets no samples.
 
 ## 12. Code map
 
@@ -450,5 +472,7 @@ Planned files, in the globs of the front matter:
 - internal/history/ (store, timing, savings, rates.json)
 - internal/audit/ (chain)
 - internal/logs/ (slog setup, redactor, rotation, crash files, agent buffer, logs.db, search, retention)
+
+Built (OPS66): `internal/jobsize/` (the shared peak and summary logic), `internal/agent/jobsample/` (the readers and the collector), `internal/agent/jobsample_run.go` and `internal/agent/gate.go` (the attach points), `internal/store/insights_peaks.go` and migration 00034 (the stored runs and the job key summary), `internal/agentlink/insights.go` (the sink), `internal/api/handlers_insights.go` (the field).
 
 Ported from dev-standards (cite in each ported file): `claude/plugins/delivery/scripts/ci_runs.py`, `claude/plugins/delivery/templates/shared/scripts/delivery/ci_watch.py`, `claude/plugins/delivery/tests/test_ci_runs.py`, `claude/plugins/delivery/scripts/load.py`.

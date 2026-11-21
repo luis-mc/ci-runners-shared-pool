@@ -36,6 +36,11 @@ type Report struct {
 	ContainersBytes int64
 	// CgroupLimited is true when the figure is the worse of host and container (R5.19).
 	CgroupLimited bool
+	// HostUseP95Bytes is the rolling p95 of the host's own use over 7 days, set
+	// when HostUseReady. HostUseSpan is how long the samples cover (OPS61).
+	HostUseP95Bytes int64
+	HostUseReady    bool
+	HostUseSpan     time.Duration
 }
 
 type raw struct {
@@ -63,15 +68,19 @@ type Sampler struct {
 	extras    extras
 	cgPrev    cgSample
 	cgPrevSet bool
+	use       HostUse
 }
 
 type extras struct {
 	wsBytes, privBytes int64
 	containers         int64
-	dockerNote         string
-	macCPU             float64
-	macCPUKnown        bool
-	at                 time.Time
+	// poolContainers is the memory of the pool's containers (Linux, macOS) and
+	// ownBytes that of crsp's own processes; both leave the host's own use.
+	poolContainers, ownBytes int64
+	dockerNote               string
+	macCPU                   float64
+	macCPUKnown              bool
+	at                       time.Time
 }
 
 // NewSampler returns a sampler over p.
@@ -119,6 +128,9 @@ func (s *Sampler) Sample() Report {
 				r.cpuPct, r.cpuKnown = s.cpuFrom(c, now)
 			}
 		}
+	}
+	if own, ok := s.hostOwnBytes(); ok {
+		s.use.Add(now, own)
 	}
 	cg := s.cgroup(now)
 	s.ring = append(s.ring, r)
@@ -225,6 +237,8 @@ func (s *Sampler) decide(now time.Time, cg cgSample) Report {
 		rep.WSLVMBytes = wslVM(s.extras.wsBytes, s.extras.privBytes, s.extras.containers)
 		rep.ContainersBytes = s.extras.containers
 	}
+	st := s.use.Stats(now)
+	rep.HostUseReady, rep.HostUseP95Bytes, rep.HostUseSpan = st.Ready, st.P95Bytes, st.Span
 	switch {
 	case !rep.MemoryKnown:
 		rep.UnknownReason = "memory cannot be measured on this machine"

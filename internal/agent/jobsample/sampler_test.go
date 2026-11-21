@@ -135,18 +135,18 @@ func TestCollectorBatchesAndFinal(t *testing.T) {
 	tg := Target{RunnerID: "r", CgroupPath: "/cg"}
 	c.Start(tg, t0)
 	for i := 1; i <= 7; i++ { // ticks at 5..35 s
-		c.Tick(ctx, t0.Add(time.Duration(i)*Interval))
+		c.Tick(ctx, t0.Add(time.Duration(i)*TreeInterval))
 	}
 	// batches at 15 s (3 samples) and 30 s (3 samples); 1 left
 	if len(snd.calls) != 2 || snd.calls[0].n != 3 || snd.calls[1].n != 3 {
 		t.Fatalf("calls %+v", snd.calls)
 	}
-	c.Finish(ctx, tg, t0.Add(37*time.Second))
+	c.Finish(ctx, tg, t0.Add(37*time.Second), false)
 	last := snd.calls[len(snd.calls)-1]
 	if len(snd.calls) != 3 || !last.final || last.n != 2 || forgot != 1 {
 		t.Fatalf("final %+v forgot %d", snd.calls, forgot)
 	}
-	c.Finish(ctx, tg, t0.Add(40*time.Second)) // unknown job: nothing
+	c.Finish(ctx, tg, t0.Add(40*time.Second), false) // unknown job: nothing
 	if len(snd.calls) != 3 {
 		t.Fatal("finish of unknown job sent")
 	}
@@ -159,7 +159,7 @@ func TestCollectorDisabledSendsNothing(t *testing.T) {
 	tg := Target{RunnerID: "r", RootPID: 1}
 	c.Start(tg, t0)
 	c.Tick(ctx, t0.Add(20*time.Second))
-	c.Finish(ctx, tg, t0.Add(25*time.Second))
+	c.Finish(ctx, tg, t0.Add(25*time.Second), false)
 	if len(snd.calls) != 0 {
 		t.Fatalf("sent %+v", snd.calls)
 	}
@@ -171,7 +171,7 @@ func TestCollectorUnknownReasonSent(t *testing.T) {
 	c := &Collector{ProcessTree: NewProcessTreeSampler(&fakeTable{err: errors.New("x")}), Sender: snd}
 	tg := Target{RunnerID: "r", RootPID: 1}
 	c.Start(tg, t0)
-	c.Finish(ctx, tg, t0.Add(5*time.Second))
+	c.Finish(ctx, tg, t0.Add(5*time.Second), false)
 	if len(snd.calls) != 1 || snd.calls[0].unknown == "" || !snd.calls[0].final {
 		t.Fatalf("%+v", snd.calls)
 	}

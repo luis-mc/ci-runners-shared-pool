@@ -57,3 +57,20 @@ func TestJobSampleSenderV3SendsNothing(t *testing.T) {
 		t.Fatal("enabled after detach")
 	}
 }
+
+// OPS66 R5.61: the outcome noted for a job goes out once, on its final batch, and is then forgotten.
+func TestJobSampleSenderOutcomeOnFinal(t *testing.T) {
+	var s JobSampleSender
+	var sent []*agentv1.SessionRequest
+	defer s.Attach(func(r *agentv1.SessionRequest) error { sent = append(sent, r); return nil }, true)()
+	tg := jobsample.Target{RunnerID: "r", JobID: 1}
+	smp := []jobsample.Sample{{At: time.UnixMilli(1), Known: true}}
+	s.NoteOutcome(tg, jobsample.Outcome{OOMKilled: true, CutShort: true, MemoryPeakBytes: 77})
+	_ = s.Send(context.Background(), tg, jobsample.JobObject, smp, false, "") // not final: no flags
+	_ = s.Send(context.Background(), tg, jobsample.JobObject, smp, true, "")
+	_ = s.Send(context.Background(), tg, jobsample.JobObject, smp, true, "") // a later job of the runner: none
+	a, b, c := sent[0].GetJobResourceSamples(), sent[1].GetJobResourceSamples(), sent[2].GetJobResourceSamples()
+	if a.GetOomKilled() || !b.GetOomKilled() || !b.GetCutShort() || b.GetMemoryPeakBytes() != 77 || c.GetOomKilled() {
+		t.Fatalf("%v %v %v", a, b, c)
+	}
+}

@@ -10,6 +10,7 @@ package machines
 
 import (
 	"errors"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/poolsize"
 	"time"
 )
 
@@ -297,9 +298,21 @@ type Load struct {
 	// and the containers (R5.17); they feed the pool-size check.
 	WSLVMBytes      int64
 	ContainersBytes int64
+	// HostUseP95Bytes is the rolling 7-day p95 of the memory the PC uses
+	// without the pool; HostUseReady is true once the agent has 24 h of
+	// samples and HostUseSpan is how long they cover (OPS61, R5.68).
+	HostUseP95Bytes int64
+	HostUseReady    bool
+	HostUseSpan     time.Duration
 	SampledAt       time.Time
 	// ReceivedAt is controller time, used for the stale mark (R6.7).
 	ReceivedAt time.Time
+}
+
+// HostMeasured is true when the agent's host-use p95 counts: it says so and its
+// samples cover the 24 hours the p95 needs (OPS61).
+func (l Load) HostMeasured() bool {
+	return l.HostUseReady && l.HostUseSpan >= poolsize.MeasuredMinHours*time.Hour
 }
 
 // LoadPoint is one stored sample (R6.8).

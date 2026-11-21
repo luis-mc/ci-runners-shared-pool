@@ -2,6 +2,7 @@ package agent
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/agent/jobsample"
@@ -18,13 +19,37 @@ func HelloAckHasJobSamples(ack *agentv1.HelloAck) bool {
 // after Attach said the controller is on version 4; before that, and after Detach, Send does nothing.
 type JobSampleSender struct {
 	cur atomic.Pointer[jobSampleSession]
+
+	mu      sync.Mutex
+	outcome map[string]jobsample.Outcome // by runner, until the final batch goes
 }
 
 type jobSampleSession struct {
 	send func(*agentv1.SessionRequest) error
 }
 
-var _ jobsample.Sender = (*JobSampleSender)(nil)
+var (
+	_ jobsample.Sender       = (*JobSampleSender)(nil)
+	_ jobsample.OutcomeNoter = (*JobSampleSender)(nil)
+)
+
+// NoteOutcome keeps the outcome of a job for its final batch (OPS66 R5.61).
+func (s *JobSampleSender) NoteOutcome(t jobsample.Target, o jobsample.Outcome) {
+	s.mu.Lock()
+	if s.outcome == nil {
+		s.outcome = map[string]jobsample.Outcome{}
+	}
+	s.outcome[t.RunnerID] = o
+	s.mu.Unlock()
+}
+
+func (s *JobSampleSender) takeOutcome(runner string) jobsample.Outcome {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	o := s.outcome[runner]
+	delete(s.outcome, runner)
+	return o
+}
 
 // Attach opens the sender on a session; supported is HelloAckHasJobSamples of its ack. It returns the
 // function that closes it.
@@ -44,6 +69,10 @@ func (s *JobSampleSender) Enabled() bool { return s.cur.Load() != nil }
 // Send implements jobsample.Sender.
 func (s *JobSampleSender) Send(_ context.Context, t jobsample.Target, src jobsample.Source, samples []jobsample.Sample, final bool, unknownReason string) error {
 	ses := s.cur.Load()
+	var out jobsample.Outcome
+	if final {
+		out = s.takeOutcome(t.RunnerID)
+	}
 	if ses == nil || (len(samples) == 0 && !final) {
 		return nil
 	}
@@ -54,6 +83,7 @@ func (s *JobSampleSender) Send(_ context.Context, t jobsample.Target, src jobsam
 			Job: t.Job, GithubJobId: t.JobID, RunnerName: t.RunnerID,
 		},
 		Source: string(src), Final: final, UnknownReason: unknownReason,
+		OomKilled: out.OOMKilled, CutShort: out.CutShort, MemoryPeakBytes: out.MemoryPeakBytes,
 		Samples: make([]*agentv1.JobResourceSample, 0, len(samples)),
 	}
 	for _, sm := range samples {

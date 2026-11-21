@@ -40,6 +40,9 @@ func NewProcessTreeSampler(table ProcTable) *ProcessTreeSampler {
 // Source implements Sampler.
 func (*ProcessTreeSampler) Source() Source { return ProcessTree }
 
+// Interval implements Sampler: 5 s, see TreeInterval.
+func (*ProcessTreeSampler) Interval() time.Duration { return TreeInterval }
+
 // Sample implements Sampler. A process that exits between samples takes its CPU out of the sum, so a drop
 // reads as 0 and never as a negative.
 func (p *ProcessTreeSampler) Sample(ctx context.Context, t Target, now time.Time) (Sample, string, error) {
