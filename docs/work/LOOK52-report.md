@@ -50,3 +50,7 @@ Branch `LOOK52-lifecycle-contract-ds`. Retry of the first run, which could not p
 | DS234 D | pass | next-version; v4 flagged |
 | DS234 E | pass | 12 specs fixed |
 | G4 | pass | `fast_guards --base-ref auto` |
+
+PR: https://github.com/luis-mc/ci-runners-shared-pool/pull/373. CI: ci.yml started on the branch.
+
+CODE DONE 5d0de7ec1bdd6ab3908ea5339d5679b2099c54ba
