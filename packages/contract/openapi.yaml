@@ -5275,7 +5275,16 @@ components:
         memory_gib: { type: integer, minimum: 1 }
     RunnerClasses:
       type: object
-      required: [preset, presets, classes, hints, unheld, reserve_after_passes, reserve_after_minutes]
+      required:
+        [
+          preset,
+          presets,
+          classes,
+          hints,
+          unheld,
+          reserve_after_passes,
+          reserve_after_minutes,
+        ]
       properties:
         preset:
           type: string
