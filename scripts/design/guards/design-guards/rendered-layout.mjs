@@ -66,30 +66,59 @@ export const PAGE_SOURCE = `((cfg) => {
   return { problems };
 })`;
 
-export async function checkRenderedLayout(browser, file, { widths = WIDTHS, sectionToken = '--ds-space-6' } = {}) {
+export async function checkRenderedLayout(
+  browser,
+  file,
+  { widths = WIDTHS, sectionToken = '--ds-space-6' } = {},
+) {
   const out = [];
   for (const width of widths) {
     const page = await browser.newPage({ viewport: { width, height: 900 } });
     await page.goto(fileUrl(resolve(file)));
-    const n = (await page.evaluate(`${PAGE_SOURCE}(${JSON.stringify({ count: true, sectionToken })})`)).count;
+    const n = (
+      await page.evaluate(
+        `${PAGE_SOURCE}(${JSON.stringify({ count: true, sectionToken })})`,
+      )
+    ).count;
     const runs = [-1, ...Array.from({ length: n }, (_, i) => i)];
     const seen = new Set();
     for (const focus of runs) {
-      const res = await page.evaluate(`${PAGE_SOURCE}(${JSON.stringify({ focus, sectionToken })})`);
-      for (const p of res.problems) { const k = `${width}|${p.text}`; if (!seen.has(k)) { seen.add(k); out.push(`${file} @${width}px: ${p.rule}: ${p.text}`); } }
+      const res = await page.evaluate(
+        `${PAGE_SOURCE}(${JSON.stringify({ focus, sectionToken })})`,
+      );
+      for (const p of res.problems) {
+        const k = `${width}|${p.text}`;
+        if (!seen.has(k)) {
+          seen.add(k);
+          out.push(`${file} @${width}px: ${p.rule}: ${p.text}`);
+        }
+      }
     }
     await page.close();
   }
   return out;
 }
 
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('rendered-layout.mjs')) {
+if (
+  import.meta.url === `file://${process.argv[1]}` ||
+  process.argv[1]?.endsWith('rendered-layout.mjs')
+) {
   const { flags, rest } = args();
-  if (!rest.length) { console.error('usage: rendered-layout.mjs <page.html>...'); process.exit(2); }
+  if (!rest.length) {
+    console.error('usage: rendered-layout.mjs <page.html>...');
+    process.exit(2);
+  }
   const widths = flags.widths ? String(flags.widths).split(',').map(Number) : WIDTHS;
-  const pw = loadPlaywright(); const browser = await pw.chromium.launch();
+  const pw = loadPlaywright();
+  const browser = await pw.chromium.launch();
   const problems = [];
-  for (const f of rest) problems.push(...await checkRenderedLayout(browser, f, { widths, sectionToken: flags['section-token'] || '--ds-space-6' }));
+  for (const f of rest)
+    problems.push(
+      ...(await checkRenderedLayout(browser, f, {
+        widths,
+        sectionToken: flags['section-token'] || '--ds-space-6',
+      })),
+    );
   await browser.close();
   finish('rendered-layout', problems);
 }

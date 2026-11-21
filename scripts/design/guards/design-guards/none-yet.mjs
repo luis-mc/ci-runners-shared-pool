@@ -15,9 +15,15 @@ export function checkNoneYet(text, now, days) {
     const guard = cells[cells.length - 2];
     if (!/none yet/i.test(guard)) continue;
     const d = guard.match(/(\d{4}-\d{2}-\d{2})/);
-    if (!d) { out.push(`${cells[1]}: "none yet" has no date; write none yet (YYYY-MM-DD)`); continue; }
+    if (!d) {
+      out.push(`${cells[1]}: "none yet" has no date; write none yet (YYYY-MM-DD)`);
+      continue;
+    }
     const age = daysBetween(d[1], now);
-    if (age > days) out.push(`${cells[1]}: "none yet" is ${age} days old, the limit is ${days}; add the guard`);
+    if (age > days)
+      out.push(
+        `${cells[1]}: "none yet" is ${age} days old, the limit is ${days}; add the guard`,
+      );
   }
   return out;
 }
@@ -27,5 +33,8 @@ if (process.argv[1]?.endsWith('none-yet.mjs')) {
   let days = 30;
   const cfg = flags.config || 'tools/design-guards.json';
   if (existsSync(cfg)) days = JSON.parse(read(cfg)).none_yet_days ?? 30;
-  finish('none-yet', checkNoneYet(read(rest[0]), today(), days).map((p) => `${rest[0]}: ${p}`));
+  finish(
+    'none-yet',
+    checkNoneYet(read(rest[0]), today(), days).map((p) => `${rest[0]}: ${p}`),
+  );
 }

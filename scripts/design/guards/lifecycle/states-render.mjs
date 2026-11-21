@@ -24,18 +24,34 @@ const CLIP = `(() => {
   return out;
 })()`;
 
-export async function checkStates(browser, file, { scales = [1, 1.5, 2], width = 360 } = {}) {
+export async function checkStates(
+  browser,
+  file,
+  { scales = [1, 1.5, 2], width = 360 } = {},
+) {
   const out = [];
   for (const scale of scales) {
     const page = await browser.newPage({ viewport: { width, height: 800 } });
     await page.goto(fileUrl(resolve(file)));
-    await page.addStyleTag({ content: `html { font-size: ${scale * 100}% !important; }` });
+    await page.addStyleTag({
+      content: `html { font-size: ${scale * 100}% !important; }`,
+    });
     for (const p of await page.evaluate(CLIP)) out.push(`${file} @${scale * 100}%: ${p}`);
-    const n = (await page.evaluate(`${PAGE_SOURCE}(${JSON.stringify({ count: true, sectionToken: '--ds-space-6' })})`)).count;
+    const n = (
+      await page.evaluate(
+        `${PAGE_SOURCE}(${JSON.stringify({ count: true, sectionToken: '--ds-space-6' })})`,
+      )
+    ).count;
     const seen = new Set();
     for (const focus of [-1, ...Array.from({ length: n }, (_, i) => i)]) {
-      const res = await page.evaluate(`${PAGE_SOURCE}(${JSON.stringify({ focus, sectionToken: '--ds-space-6' })})`);
-      for (const p of res.problems) if (!seen.has(p.text)) { seen.add(p.text); out.push(`${file} @${scale * 100}%: ${p.rule}: ${p.text}`); }
+      const res = await page.evaluate(
+        `${PAGE_SOURCE}(${JSON.stringify({ focus, sectionToken: '--ds-space-6' })})`,
+      );
+      for (const p of res.problems)
+        if (!seen.has(p.text)) {
+          seen.add(p.text);
+          out.push(`${file} @${scale * 100}%: ${p.rule}: ${p.text}`);
+        }
     }
     await page.close();
   }
@@ -44,11 +60,18 @@ export async function checkStates(browser, file, { scales = [1, 1.5, 2], width =
 
 if (process.argv[1]?.endsWith('states-render.mjs')) {
   const { flags, rest } = args();
-  if (!rest.length) { console.error('usage: states-render.mjs <page.html>...'); process.exit(2); }
+  if (!rest.length) {
+    console.error('usage: states-render.mjs <page.html>...');
+    process.exit(2);
+  }
   const scales = flags.scales ? String(flags.scales).split(',').map(Number) : [1, 1.5, 2];
-  const pw = loadPlaywright(); const browser = await pw.chromium.launch();
+  const pw = loadPlaywright();
+  const browser = await pw.chromium.launch();
   const problems = [];
-  for (const f of rest) problems.push(...await checkStates(browser, f, { scales, width: Number(flags.width || 360) }));
+  for (const f of rest)
+    problems.push(
+      ...(await checkStates(browser, f, { scales, width: Number(flags.width || 360) })),
+    );
   await browser.close();
   finish('states-render', problems);
 }

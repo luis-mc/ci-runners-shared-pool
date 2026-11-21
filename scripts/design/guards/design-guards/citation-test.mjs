@@ -21,10 +21,21 @@ export function citationProblems(text, exists) {
     const ids = l.match(ID) || [];
     const paths = [...l.matchAll(PATH)].map((m) => m[1]).filter(isTest);
     const ok = paths.some(exists);
-    for (const id of ids) { cited.add(id); if (ok) named.set(id, true); }
+    for (const id of ids) {
+      cited.add(id);
+      if (ok) named.set(id, true);
+    }
   });
-  for (const l of proofs) { const paths = [...l.matchAll(PATH)].map((m) => m[1]).filter(isTest); if (paths.some(exists)) for (const id of l.match(ID) || []) named.set(id, true); }
-  return [...cited].filter((id) => !named.get(id)).map((id) => `cites ${id} but names no test that proves it (a backticked test path that exists)`);
+  for (const l of proofs) {
+    const paths = [...l.matchAll(PATH)].map((m) => m[1]).filter(isTest);
+    if (paths.some(exists)) for (const id of l.match(ID) || []) named.set(id, true);
+  }
+  return [...cited]
+    .filter((id) => !named.get(id))
+    .map(
+      (id) =>
+        `cites ${id} but names no test that proves it (a backticked test path that exists)`,
+    );
 }
 
 if (process.argv[1]?.endsWith('citation-test.mjs')) {
@@ -32,7 +43,11 @@ if (process.argv[1]?.endsWith('citation-test.mjs')) {
   const root = rest[0] || '.';
   const problems = [];
   for (const f of walk(join(root, flags.specs || 'docs/features'), /^spec\.md$/)) {
-    for (const p of citationProblems(read(f), (p) => existsSync(join(root, p)) || existsSync(join(dirname(f), p)))) problems.push(`${rel(root, f)}: ${p}`);
+    for (const p of citationProblems(
+      read(f),
+      (p) => existsSync(join(root, p)) || existsSync(join(dirname(f), p)),
+    ))
+      problems.push(`${rel(root, f)}: ${p}`);
   }
   finish('citation-test', problems);
 }

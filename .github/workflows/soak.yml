@@ -8,7 +8,7 @@ on:
         description: Measurement window, a Go duration
         default: 60s
   schedule:
-    - cron: "17 3 * * *"
+    - cron: '17 3 * * *'
 
 permissions:
   contents: read

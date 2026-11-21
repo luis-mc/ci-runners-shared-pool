@@ -7,7 +7,8 @@
  */
 import { args, walk, read, rel, finish } from './_lib.mjs';
 
-const PROP = /(?:^|[;{\s"'`])((?:margin|padding)(?:-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?|gap|row-gap|column-gap|grid-gap|inset|marginTop|marginBottom|marginLeft|marginRight|paddingTop|paddingBottom|paddingLeft|paddingRight|rowGap|columnGap)\s*:\s*([^;}\n]*)/g;
+const PROP =
+  /(?:^|[;{\s"'`])((?:margin|padding)(?:-(?:top|right|bottom|left|inline|block|inline-start|inline-end|block-start|block-end))?|gap|row-gap|column-gap|grid-gap|inset|marginTop|marginBottom|marginLeft|marginRight|paddingTop|paddingBottom|paddingLeft|paddingRight|rowGap|columnGap)\s*:\s*([^;}\n]*)/g;
 const RAW = /(?<![\w-])-?\d*\.?\d+(px|rem|em|pt)\b/;
 
 export function scanSpacing(text) {
@@ -18,7 +19,11 @@ export function scanSpacing(text) {
     const camel = /[A-Z]/.test(m[1]);
     // a unit literal, or (in a JS style object) a bare non-zero number such as `marginTop: 12`
     if (RAW.test(value) || (camel && /^\s*-?\d*\.?\d*[1-9]\d*\s*[,}]/.test(m[2] + '}'))) {
-      hits.push({ line: clean.slice(0, m.index).split('\n').length, prop: m[1], value: m[2].trim() });
+      hits.push({
+        line: clean.slice(0, m.index).split('\n').length,
+        prop: m[1],
+        value: m[2].trim(),
+      });
     }
   }
   return hits;
@@ -31,7 +36,10 @@ if (process.argv[1]?.endsWith('spacing-tokens.mjs')) {
   const problems = [];
   for (const f of walk(root, /\.(css|scss|tsx|ts|jsx|js|html|vue|svelte)$/)) {
     if (tokenFile.test(f.split('/').pop())) continue;
-    for (const h of scanSpacing(read(f))) problems.push(`${rel(root, f)}:${h.line}: ${h.prop}: ${h.value} (use a --ds-space token)`);
+    for (const h of scanSpacing(read(f)))
+      problems.push(
+        `${rel(root, f)}:${h.line}: ${h.prop}: ${h.value} (use a --ds-space token)`,
+      );
   }
   finish('spacing-tokens', problems);
 }
