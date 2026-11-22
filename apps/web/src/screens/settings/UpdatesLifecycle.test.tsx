@@ -7,7 +7,7 @@ import { renderApp, signedIn } from '../../testing/mock';
 afterEach(cleanup);
 
 const status = (extra: Record<string, unknown> = {}) => ({
-  state: 'idle',
+  state: 'up_to_date',
   current: '1.4.0',
   available: null,
   required: false,

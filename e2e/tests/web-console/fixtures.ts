@@ -190,7 +190,7 @@ export class Mock {
         if (path.endsWith('/status'))
           return route.fulfill({
             json: {
-              state: 'idle',
+              state: 'up_to_date',
               current: '1.4.0',
               available: null,
               required: false,
