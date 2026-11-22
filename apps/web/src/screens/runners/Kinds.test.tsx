@@ -10,7 +10,7 @@ import {
   signedIn,
   type MockApi,
 } from '../../testing/mock';
-import { chooseKind, kindReasons } from './kinds';
+import { PERSISTENT_ELSEWHERE, chooseKind, kindReasons } from './kinds';
 
 afterEach(cleanup);
 
@@ -164,15 +164,17 @@ describe('Add runners: kind (D93, D94(b))', () => {
     expect((await radio(/^Ephemeral/)).disabled).toBe(true);
   });
 
-  it('offers both kinds for Linux on a Windows machine with the container backend', () => {
+  it('offers Persistent only where it runs on the machine itself (runners R5.134)', () => {
     const win = machine({ os: 'windows', container_os: 'linux' });
     expect(kindReasons(win, 'linux')).toEqual({
-      persistent: undefined,
+      persistent: PERSISTENT_ELSEWHERE('windows', 'linux'),
       ephemeral: undefined,
     });
+    expect(chooseKind(win, 'linux', [], undefined).kind).toBe('ephemeral');
     const off = machine({ os: 'windows', container_os: 'linux', backends: [] });
-    expect(kindReasons(off, 'linux').persistent).toMatch(/need the container backend/);
+    expect(kindReasons(off, 'linux').persistent).toBe(PERSISTENT_ELSEWHERE('windows', 'linux'));
     expect(chooseKind(off, 'linux', [], undefined).none).toBe(true);
+    expect(kindReasons(machine({ os: 'linux' }), 'linux').persistent).toBeUndefined();
   });
 });
 
@@ -201,6 +203,40 @@ describe('Runner page (runners R5.89, R5.90)', () => {
       table.querySelector('[title*="Persistent. Keeps dependencies: no"]'),
     ).toBeTruthy();
     expect(table.querySelector('[title*="Ephemeral"]')).toBeTruthy();
+  });
+
+  it('shows gated: offline by design, the weekly wake-up and why jobs wait (runners R5.140)', async () => {
+    const api = page().on('GET', '/api/v1/listener-gate', {
+      enforce: false,
+      wake_every_days: 7,
+      runners: [
+        {
+          runner_name: 'crsp-linux-1',
+          machine_id: 'm1',
+          os: 'linux',
+          text: 'gated: offline by design',
+          listener_on: false,
+          next_wake: '2026-11-29T10:00:00Z',
+          queue_text: 'waiting for room on M1: needs 6 CPU, 5 free',
+        },
+      ],
+    });
+    renderApp(api, '/pool/runners/r1');
+    expect(await screen.findByText('gated: offline by design')).toBeTruthy();
+    expect(screen.getByText('Weekly wake-up')).toBeTruthy();
+    expect(screen.getByText('waiting for room on M1: needs 6 CPU, 5 free')).toBeTruthy();
+    expect(screen.getByText(/The gate is in observe mode/)).toBeTruthy();
+  });
+
+  it('shows no Listener section for a runner the gate does not hold', async () => {
+    const api = page().on('GET', '/api/v1/listener-gate', {
+      enforce: true,
+      wake_every_days: 7,
+      runners: [],
+    });
+    renderApp(api, '/pool/runners/r1');
+    await screen.findByText('Dependency cache size');
+    expect(screen.queryByText('Weekly wake-up')).toBeNull();
   });
 
   it('saves the keep-dependencies setting with Save', async () => {
