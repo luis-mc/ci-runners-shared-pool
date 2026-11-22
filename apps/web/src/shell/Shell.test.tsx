@@ -340,7 +340,7 @@ describe('sessions (R5.8 to R5.12)', () => {
     const api = signedIn().on('GET', '/api/v1/me', () =>
       apiError(401, 'unauthenticated', 'Sign in.'),
     );
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     const button = await screen.findByRole('button', { name: 'Sign in with GitHub' });
     fireEvent.click(button);
     expect(assign).toHaveBeenCalledWith(
@@ -360,7 +360,7 @@ describe('sessions (R5.8 to R5.12)', () => {
 
   it('refuses a return path that is not on this origin (R5.9)', async () => {
     const { safeReturnPath } = await import('../auth/session');
-    expect(safeReturnPath('/pool/machines/m1')).toBe('/pool/machines/m1');
+    expect(safeReturnPath('/setup/machines/m1')).toBe('/setup/machines/m1');
     expect(safeReturnPath('//evil.example')).toBe('/');
     expect(safeReturnPath('https://evil.example/x')).toBe('/');
     expect(safeReturnPath('/\\evil')).toBe('/');
@@ -382,7 +382,7 @@ describe('sessions (R5.8 to R5.12)', () => {
     const api = signedIn().on('GET', '/api/v1/machines', () =>
       apiError(401, 'session_expired', 'The session ended.'),
     );
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     const dialog = await screen.findByRole('dialog', { name: 'Session ended' });
     expect(
       within(dialog).getByRole('button', { name: 'Sign in with GitHub' }),
@@ -424,7 +424,7 @@ describe('sessions (R5.8 to R5.12)', () => {
         github_signin: { state: 'ended' },
       })
       .on('POST', '/api/v1/auth/logout', undefined);
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     await screen.findByRole('heading', { name: 'Machines' });
     expect(screen.getByRole('img', { name: 'GitHub sign-in ended' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /octo/ }));
@@ -456,7 +456,7 @@ describe('sessions (R5.8 to R5.12)', () => {
 
   it('shows a machine list through the same shell', async () => {
     const api = signedIn().on('GET', '/api/v1/machines', { items: [machine()] });
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     expect(await screen.findByRole('link', { name: 'build-1' })).toBeTruthy();
   });
 });

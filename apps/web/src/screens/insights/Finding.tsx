@@ -44,7 +44,7 @@ const evidenceColumns: Column<Evidence>[] = [
 ];
 
 export const changePath = (f: Pick<Finding, 'id'>): string =>
-  `/jobs/insights/finding/${f.id}/change`;
+  `/analytics/finding/${f.id}/change`;
 
 function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
   const [until, setUntil] = useState<string | undefined>(f.dismissed_until);
@@ -56,8 +56,8 @@ function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
     <>
       <Breadcrumbs
         trail={[
-          { label: 'Jobs', to: '/jobs' },
-          { label: 'Run insights', to: '/jobs/insights' },
+          { label: 'Jobs', to: '/pool' },
+          { label: 'Suggestions', to: '/analytics' },
           { label: f.title },
         ]}
       />
@@ -117,7 +117,7 @@ function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
               Review the change
             </LinkButton>
           ) : (
-            <LinkButton to="/jobs/insights">Back to Do next</LinkButton>
+            <LinkButton to="/analytics/insights">Back to Suggestions</LinkButton>
           )
         }
       />

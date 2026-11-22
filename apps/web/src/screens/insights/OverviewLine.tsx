@@ -9,7 +9,7 @@ export function OverviewInsights() {
   const { open, minutes_saved_week } = result.data;
   return (
     <Text>
-      <TextLink to="/jobs/insights">
+      <TextLink to="/analytics/insights">
         {`${open} ${open === 1 ? 'thing' : 'things'} to do next, about ${minutes_saved_week} min a week`}
       </TextLink>
     </Text>

@@ -24,7 +24,7 @@ function finding(over: Partial<Finding> = {}): Finding {
     severity: 'fail',
     title: 'No online runner carries [self-hosted, linux, arm64]',
     detail: '.github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]',
-    fix: { text: 'Add a runner with these labels.', link: '/pool/runners' },
+    fix: { text: 'Add a runner with these labels.', link: '/setup/runners' },
     needs_admin: false,
     milestone: 1,
     checked_at: '2026-11-14T10:00:12Z',
@@ -151,7 +151,7 @@ describe('Doctor screen', () => {
     );
     expect(
       within(labels).getByRole('button', { name: 'Open' }).getAttribute('href'),
-    ).toBe('/pool/runners');
+    ).toBe('/setup/runners');
     expect(
       screen.getByText(/Last run \d{4}-\d{2}-\d{2} \d{2}:\d{2} \(5 min ago\)\./),
     ).toBeTruthy();

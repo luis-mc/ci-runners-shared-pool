@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderApp, repository, runner, signedIn } from '../../testing/mock';
 import { groupByMachine, runnerTotals } from '../runners/Runners';
 import { showStrip, STRIP_STORE_NAME } from '../overview/HowCrspWorks';
-import { poolTotals } from './PoolSummary';
+import { poolTotals } from './SetupSummary';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -46,7 +46,7 @@ describe('the seven areas and the old addresses (D24)', () => {
       within(nav).getByRole('link', { name: 'Shared Pool' }).getAttribute('aria-current'),
     ).toBe('page');
     expect(screen.getByRole('link', { name: 'Runners' }).getAttribute('href')).toBe(
-      '/pool/runners',
+      '/setup/runners',
     );
   });
 
@@ -67,7 +67,7 @@ describe('the seven areas and the old addresses (D24)', () => {
   });
 
   it('shows the Shared Pool tabs and goes to a tab with the keyboard', async () => {
-    renderApp(ready(), '/pool');
+    renderApp(ready(), '/setup/summary');
     const tabs = await screen.findByRole('tablist', { name: 'Shared Pool sections' });
     expect(
       within(tabs)
@@ -134,19 +134,19 @@ describe('the seven areas and the old addresses (D24)', () => {
 
 describe('Shared Pool summary and first-run guide (D33)', () => {
   it('shows the three steps on a pool with nothing in it, the later ones disabled with a reason', async () => {
-    renderApp(empty(), '/pool');
+    renderApp(empty(), '/setup/summary');
     expect(await screen.findByText('1 Add a machine')).toBeTruthy();
     expect(screen.getByText('2 Set runners')).toBeTruthy();
     expect(screen.getByText('3 Choose repositories')).toBeTruthy();
     expect(screen.getByText('Add a machine').closest('a')?.getAttribute('href')).toBe(
-      '/pool/machines/add',
+      '/setup/machines/add',
     );
     const later = screen.getByRole<HTMLButtonElement>('button', { name: 'Add runners' });
     expect(later.disabled).toBe(true);
   });
 
   it('shows the figures and no guide once the pool is set up', async () => {
-    renderApp(ready(), '/pool');
+    renderApp(ready(), '/setup/summary');
     expect((await screen.findAllByText('1 of 1 online')).length).toBeGreaterThan(0);
     expect(screen.queryByText('1 Add a machine')).toBeNull();
     expect(screen.getByRole('table', { name: 'Runners per system' })).toBeTruthy();
@@ -207,7 +207,7 @@ describe('Runners grouped by machine (D32)', () => {
     const api = ready().on('GET', '/api/v1/runners', {
       items: [items[0]!, busy, items[2]!],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     expect(await screen.findByText('2 machines, 3 runners, 1 busy')).toBeTruthy();
     const t1 = await screen.findByRole('table', { name: 'Runners on build-1' });
     expect(screen.getByRole('table', { name: 'Runners on win-1' })).toBeTruthy();

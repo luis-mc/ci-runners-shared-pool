@@ -74,8 +74,8 @@ export function recommendationTitle(r: Recommendation): string {
 /** Where the Open button of a recommendation goes. */
 export function recommendationTo(r: Recommendation): string {
   if (r.rule === 'over_budget' || r.rule === 'dangling')
-    return '/pool/images/registry/budgets';
-  return r.image_id ? `/pool/images/registry/${r.image_id}` : '/pool/images?tab=registry';
+    return '/setup/images/registry/budgets';
+  return r.image_id ? `/setup/images/registry/${r.image_id}` : '/setup/images?tab=registry';
 }
 
 export const decidedBy = (r: Recommendation): string =>

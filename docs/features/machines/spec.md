@@ -153,7 +153,7 @@ Ported from dev-standards `claude/plugins/delivery/scripts/load.py` and `load_gu
 
 **R5.15** (M1) — The agent measures total memory use % and total CPU use % of the machine. Windows: `GlobalMemoryStatusEx` and `GetSystemTimes`. Linux: `/proc/meminfo` and `/proc/stat`. macOS: `vm_stat` with `hw.memsize`, and CPU from `host_processor_info` or `top`. CPU is the delta of raw counters between two samples, never a sleep inside a hook.
 
-**R5.16** (M1) — The agent samples every 5 seconds. The figure that decides is the median of the last 5 samples, so one spike does not decide (DL176). The one-shot job hooks use their own cached mean of up to 3 samples in 30 s (scheduling R5.42, D7); both rules are built and apply to different readers.
+**R5.16** (M1) — The agent samples every 2 seconds. The figure that decides is the median of the last 5 samples, so one spike does not decide (DL176). The one-shot job hooks use their own cached mean of up to 3 samples in 30 s (scheduling R5.42, D7); both rules are built and apply to different readers.
 
 **R5.17** (M1) — On Windows with WSL2, the WSL VM's memory is the larger of the `vmmem` or `vmmemWSL` working set and its private bytes, and at least the memory its containers use (DL177). Windows trims the working set, so it alone reads too low.
 
@@ -358,7 +358,7 @@ flowchart LR
 ```mermaid
 flowchart TD
   total[Total RAM] --> budget["× memory budget (85%) = budget"]
-  host["Host own use: used − vmmem or pool containers − crsp<br/>sampled every 5 s, one point per 5 min, 7 days"] --> p95["p95 (needs 24 h of samples)"]
+  host["Host own use: used − vmmem or pool containers − crsp<br/>sampled every 2 s, one point per 5 min, 7 days"] --> p95["p95 (needs 24 h of samples)"]
   budget --> room["Measured room = budget − p95 − 1 GiB safety margin"]
   p95 --> room
   p95 -. fewer than 24 h .-> fixed["Measuring: today's room = budget − used now"]

@@ -9,14 +9,14 @@ afterEach(cleanup);
 
 describe('Finding page', () => {
   it('offers Review the change for a setup fix', async () => {
-    renderApp(jobsApi(), '/jobs/insights/finding/1');
+    renderApp(jobsApi(), '/analytics/finding/1');
     expect(await screen.findByRole('button', { name: 'Review the change' })).toBeTruthy();
     expect(screen.getByText(/estimate/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Hide for 7 days' })).toBeTruthy();
   });
 
   it('hides the finding for 7 days and says when it comes back', async () => {
-    renderApp(jobsApi(), '/jobs/insights/finding/1');
+    renderApp(jobsApi(), '/analytics/finding/1');
     fireEvent.click(await screen.findByRole('button', { name: 'Hide for 7 days' }));
     expect(await screen.findByText(/Hidden until .* if it is still true/)).toBeTruthy();
     expect(
@@ -25,14 +25,14 @@ describe('Finding page', () => {
   });
 
   it('shows the snippet and no change primary for a repository fix', async () => {
-    renderApp(jobsApi(), '/jobs/insights/finding/2');
+    renderApp(jobsApi(), '/analytics/finding/2');
     await screen.findByLabelText('Workflow snippet');
     expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Review the change' })).toBeNull();
   });
 
   it('says so when the finding is not there', async () => {
-    renderApp(jobsApi(), '/jobs/insights/finding/99');
+    renderApp(jobsApi(), '/analytics/finding/99');
     expect(await screen.findByText(/Could not load this finding/)).toBeTruthy();
   });
 });

@@ -57,7 +57,7 @@ export function MachineCard({ m }: { m: Machine }) {
   const cpu = m.load?.cpu_pct;
   const budget = m.settings;
   return (
-    <Card title={m.name} to={`/pool/machines/${m.id}`}>
+    <Card title={m.name} to={`/setup/machines/${m.id}`}>
       <Status kind={s.kind} word={s.word} />
       <LevelBar
         label="Memory"
@@ -143,7 +143,7 @@ export function AppGoneBanner() {
   return (
     <Message
       tone="problem"
-      action={<TextLink to="/setup">Run the setup wizard again</TextLink>}
+      action={<TextLink to="/setup?wizard=1">Run the setup wizard again</TextLink>}
     >
       The GitHub App is gone. {health.reason ?? ''} crsp has stopped its GitHub work. Jobs
       that are running keep running.
@@ -208,7 +208,7 @@ export function Overview() {
                 data.items.length === 0 ? (
                   <Empty
                     title="No machine is in the pool yet. Add a machine so jobs have somewhere to run."
-                    action={<TextLink to="/pool/machines/add">Add a machine</TextLink>}
+                    action={<TextLink to="/setup/machines/add">Add a machine</TextLink>}
                   />
                 ) : (
                   <CardGrid>

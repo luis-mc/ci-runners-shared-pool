@@ -1,10 +1,9 @@
-// Jobs, Overview (UX-75, concept A of the Jobs redesign study): four numbers with their change and trend, the top
-// three findings, and cards that only show and link (UX-52). Every tile and card leads to a list.
+// Analytics > Insights (LOOK56, UX-75): four numbers with their change and trend, where the time goes, the busiest
+// repositories, the failed jobs, then the waits and the runner timeline. Cards only show and link (UX-52).
 import {
   BarList,
   Card,
   CardGrid,
-  FindingList,
   Section,
   Sparkline,
   Stack,
@@ -14,39 +13,15 @@ import {
   TextLink,
   formatDuration,
   type BarItem,
-  type FindingItem,
 } from '@crsp/ui';
-import { Navigate, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient } from '../../api/api';
 import { useLoad } from '../../api/hooks';
-import { findingPath } from '../insights/DoNext';
-import { useFindings } from '../insights/api';
-import { minutesWords, ranked, type Finding } from '../insights/words';
+import { Timeline } from '../insights/Timeline';
+import { Waits } from '../insights/Waits';
 import { Load } from '../common';
-import { FILTER_KEYS, useGroups, useJobList, useStats } from './api';
-import { groupLink } from './Groups';
-import { passChange, passRate, periods, waitChange } from './overviewStats';
-
-/** An old address of the Queue (`/jobs?view=jobs`, `/jobs?repository=...`) goes to the list it used to show. */
-const LIST_PARAMS: readonly string[] = [...FILTER_KEYS, 'view', 'elsewhere', 'state'];
-
-export function JobsIndex() {
-  const [params] = useSearchParams();
-  if (LIST_PARAMS.some((k) => params.has(k))) {
-    const rest = new URLSearchParams(params);
-    const elsewhere = rest.get('elsewhere') === '1';
-    rest.delete('elsewhere');
-    if (!elsewhere && !rest.has('state')) rest.set('state', 'queued');
-    const q = rest.toString();
-    return (
-      <Navigate
-        to={`/jobs/${elsewhere ? 'elsewhere' : 'live'}${q ? `?${q}` : ''}`}
-        replace
-      />
-    );
-  }
-  return <Overview />;
-}
+import { useGroups, useJobList, useStats } from '../jobs/api';
+import { groupLink } from '../jobs/Groups';
+import { passChange, passRate, periods, waitChange } from '../jobs/overviewStats';
 
 function usePoolBusy(): { used: number; slots: number } | undefined {
   const client = useClient();
@@ -59,11 +34,10 @@ function usePoolBusy(): { used: number; slots: number } | undefined {
     : undefined;
 }
 
-function Overview() {
+export function Insights() {
   const stats = useStats(14);
   const waiting = useJobList({ state: 'queued', limit: 1 });
   const pool = usePoolBusy();
-  const findings = useFindings(undefined);
   const groups = useGroups('repository');
   return (
     <Stack>
@@ -82,7 +56,7 @@ function Overview() {
                   label="Waiting now"
                   {...(queued === undefined ? {} : { value: String(queued) })}
                   unit={queued === 1 ? 'job' : 'jobs'}
-                  to="/jobs/live?state=queued"
+                  to="/pool/live?state=queued"
                   linkName="Open the jobs that wait now"
                 />
                 <StatTile
@@ -93,7 +67,7 @@ function Overview() {
                   {...(wait ? { change: wait.change, changeText: wait.text } : {})}
                   trend={last.waitSeries}
                   trendUnit="seconds"
-                  to="/jobs/charts"
+                  to="/analytics/charts"
                   linkName="Open the charts of the waits"
                 />
                 <StatTile
@@ -102,7 +76,7 @@ function Overview() {
                   {...(pass ? { change: pass.change, changeText: pass.text } : {})}
                   trend={last.passSeries}
                   trendUnit="percent"
-                  to="/jobs/done"
+                  to="/pool/jobs"
                   linkName="Open the finished jobs"
                 />
                 <StatTile
@@ -113,25 +87,12 @@ function Overview() {
                         changeText: `${pool.used} of ${pool.slots} slots in use`,
                       }
                     : {})}
-                  to="/pool/machines"
+                  to="/setup/machines"
                   linkName="Open the machines"
                 />
               </StatGrid>
-              <Section
-                title="Needs you"
-                hint="The things that save the most time a week, best first. Open one to change it."
-              >
-                {findings.result.state === 'ready' ? (
-                  <FindingList
-                    label="Needs you"
-                    items={strip(findings.result.data.items)}
-                  />
-                ) : (
-                  <Text tone="muted">Loading the findings.</Text>
-                )}
-              </Section>
               <CardGrid>
-                <Card title="Where the time goes" to="/jobs/charts">
+                <Card title="Where the time goes" to="/analytics/charts">
                   <Text>
                     {last.waitP90 === undefined
                       ? 'No finished jobs in the last 7 days.'
@@ -143,7 +104,7 @@ function Overview() {
                     unit="seconds"
                   />
                 </Card>
-                <Card title="Busiest repositories" to="/jobs/done?group=repository">
+                <Card title="Busiest repositories" to="/pool/jobs?group=repository">
                   <Load
                     result={groups.result}
                     what="the repositories"
@@ -167,41 +128,24 @@ function Overview() {
                     )}
                   </Load>
                 </Card>
-                <Card title="Failed jobs" to="/jobs/done?state=done">
+                <Card title="Failed jobs" to="/pool/jobs?state=done">
                   <Text>
                     {last.jobs === 0
                       ? 'No finished jobs in the last 7 days.'
                       : `${last.failed} of ${last.jobs} jobs failed in the last 7 days.`}
                   </Text>
                 </Card>
-                <Card title="Run elsewhere" to="/jobs/elsewhere">
-                  <Text>
-                    Jobs that GitHub gave to a runner that is not crsp. Open the list to
-                    see which runner each one used.
-                  </Text>
-                </Card>
               </CardGrid>
               <Text tone="muted">
                 Each number is compared with the 7 days before.{' '}
-                <TextLink to="/jobs/charts">Open the charts</TextLink> for longer ranges.
+                <TextLink to="/analytics/charts">Open the charts</TextLink> for longer ranges.
               </Text>
+              <Waits />
+              <Timeline />
             </>
           );
         }}
       </Load>
     </Stack>
   );
-}
-
-function strip(items: readonly Finding[]): FindingItem[] {
-  return ranked(items)
-    .slice(0, 3)
-    .map((f) => ({
-      key: String(f.id),
-      title: f.title,
-      minutes: minutesWords(f.minutes_saved_week),
-      fix: f.fix,
-      to: findingPath(f),
-      linkLabel: `Open: ${f.title}`,
-    }));
 }

@@ -12,6 +12,6 @@ describe('Overview line', () => {
     const link = await screen.findByRole('link', {
       name: /4 things to do next, about 277 min a week/,
     });
-    expect(link.getAttribute('href')).toContain('/jobs/insights');
+    expect(link.getAttribute('href')).toContain('/analytics/insights');
   });
 });

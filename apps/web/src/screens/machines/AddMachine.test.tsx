@@ -70,7 +70,7 @@ describe('Copy and wait', () => {
         return code({ state: 'joined', progress: 'connected', machine_id: 'm1' });
       return code({ state: 'joined', progress: 'ready', machine_id: 'm1' });
     });
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     fireEvent.click(screen.getByRole('radio', { name: 'Copy a command' }));
     await press('Next');
@@ -89,7 +89,7 @@ describe('Copy and wait', () => {
     const a = api(() =>
       code({ state: 'joined', progress: 'connected', machine_id: 'm1' }),
     );
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     await press('Next');
     await press('Join a machine');
@@ -105,7 +105,7 @@ describe('Copy and wait', () => {
   it('offers the SSH choice for Windows with its note', async () => {
     renderApp(
       api(() => code()),
-      '/pool/machines/add',
+      '/setup/machines/add',
     );
     await screen.findByRole('radio', { name: 'Windows' });
     fireEvent.click(screen.getByRole('radio', { name: 'Windows' }));
@@ -133,7 +133,7 @@ describe('I have SSH', () => {
   it('asks for what is missing before Review', async () => {
     renderApp(
       api(() => code()),
-      '/pool/machines/add',
+      '/setup/machines/add',
     );
     await screen.findByRole('radio', { name: 'Linux' });
     fireEvent.click(screen.getByRole('radio', { name: 'I have SSH' }));
@@ -156,7 +156,7 @@ describe('I have SSH', () => {
         ]);
       return Response.json(code(), { status: 201 });
     });
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     fill();
     await press('Next');
@@ -189,7 +189,7 @@ describe('I have SSH', () => {
       '/api/v1/join-codes/ssh',
       apiError(400, 'bad_request', 'the install command did not finish on build1.lan'),
     );
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     fill();
     await press('Next');
@@ -211,7 +211,7 @@ describe('I have SSH', () => {
         'the SSH user is not an administrator on this machine',
       );
     });
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Windows' });
     fireEvent.click(screen.getByRole('radio', { name: 'Windows' }));
     fill();
@@ -266,7 +266,7 @@ describe('Download an installer', () => {
         ? code()
         : code({ state: 'joined', progress: 'ready', machine_id: 'm1' });
     }).on('POST', '/api/v1/join-files', () => file());
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     fireEvent.click(screen.getByRole('radio', { name: 'Download an installer' }));
     await press('Next');
@@ -290,7 +290,7 @@ describe('Download an installer', () => {
     const a = api(() => code()).on('POST', '/api/v1/join-files', () =>
       file('crsp-join-windows-until-20991114T1015Z.cmd'),
     );
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Windows' });
     fireEvent.click(screen.getByRole('radio', { name: 'Windows' }));
     fireEvent.click(screen.getByRole('radio', { name: 'Download an installer' }));
@@ -310,7 +310,7 @@ describe('Download an installer', () => {
         'This controller has no release packages. Copy the command instead.',
       ),
     );
-    renderApp(a, '/pool/machines/add');
+    renderApp(a, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     fireEvent.click(screen.getByRole('radio', { name: 'Download an installer' }));
     await press('Next');

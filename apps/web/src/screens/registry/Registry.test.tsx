@@ -113,7 +113,7 @@ describe('words', () => {
 
 describe('Registry tab', () => {
   it('shows the budgets, the recommendations and one row per image, with one primary', async () => {
-    renderApp(api(), '/pool/images?tab=registry');
+    renderApp(api(), '/setup/images?tab=registry');
     expect((await screen.findAllByText('Images in the registry')).length).toBeGreaterThan(
       0,
     );
@@ -134,7 +134,7 @@ describe('Registry tab', () => {
       api().on('GET', '/api/v1/registry/overview', () =>
         apiError(501, 'not_implemented', 'Not built yet.'),
       ),
-      '/pool/images?tab=registry',
+      '/setup/images?tab=registry',
     );
     expect(await screen.findByText(/Could not load the registry\./)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
@@ -155,7 +155,7 @@ describe('Registry tab', () => {
           },
         }),
       ),
-      '/pool/images?tab=registry',
+      '/setup/images?tab=registry',
     );
     expect(
       await screen.findByText(/The registry is not running\. The folder is full\./),
@@ -169,7 +169,7 @@ describe('Registry tab', () => {
         '/api/v1/registry/overview',
         overview({ recommendations: [], images: { standard: 0, custom: 0 } }),
       ),
-      '/pool/images?tab=registry',
+      '/setup/images?tab=registry',
     );
     expect(await screen.findByText(/No images yet\./)).toBeTruthy();
   });
@@ -202,7 +202,7 @@ describe('what the server now says (REG14)', () => {
           ],
         }),
       ),
-      '/pool/images?tab=registry',
+      '/setup/images?tab=registry',
     );
     expect(
       (await screen.findAllByText(/Node web c57a88 is a newer version/)).length,
@@ -212,7 +212,7 @@ describe('what the server now says (REG14)', () => {
   it('writes the unused days the server counted', async () => {
     renderApp(
       api([img({ id: 'img_b', profile: 'Node web', unused_days: 70 })]),
-      '/pool/images?tab=registry',
+      '/setup/images?tab=registry',
     );
     expect(await screen.findByText('unused 70 days')).toBeTruthy();
   });
@@ -236,7 +236,7 @@ describe('what the server now says (REG14)', () => {
           ],
         }),
       ),
-      '/pool/images/registry/img_a',
+      '/setup/images/registry/img_a',
     );
     expect(
       await screen.findByText(/A runner uses this image\. The registry refuses/),
@@ -255,7 +255,7 @@ describe('what the server now says (REG14)', () => {
           pulls_text: 'Pulled 3 times in the last 14 days.',
         }),
       ),
-      '/pool/images/registry/img_a',
+      '/setup/images/registry/img_a',
     );
     expect(await screen.findByText(/It is deleted 9 days after the branch/)).toBeTruthy();
     expect(screen.getByText('Pulled 3 times in the last 14 days.')).toBeTruthy();
@@ -285,7 +285,7 @@ describe('Replace wizard steps (REG14)', () => {
     };
     renderApp(
       api().on('GET', '/api/v1/registry/replace-plans/:id', plan),
-      '/pool/images/registry/img_n/replace?plan=plan_1',
+      '/setup/images/registry/img_n/replace?plan=plan_1',
     );
     expect(await screen.findByText('Point octo/docs at c57a88')).toBeTruthy();
     expect(screen.getByText('Point octo/site at c57a88')).toBeTruthy();
@@ -305,7 +305,7 @@ describe('Replace wizard steps (REG14)', () => {
           bodies.push(c.body);
           return apiError(409, 'conflict', 'Stop here.');
         }),
-      '/pool/images/registry/img_a',
+      '/setup/images/registry/img_a',
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Go back to this one' }));
     await waitFor(() => expect(bodies).toEqual([{ new_image_id: 'img_a' }]));
@@ -326,7 +326,7 @@ describe('Image page', () => {
                 { kind: 'image', id: 'img_a', text: '1.0 GB freed' },
               ]);
         }),
-      '/pool/images/registry/img_a',
+      '/setup/images/registry/img_a',
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
     expect(await screen.findByText('1.0 GB freed')).toBeTruthy();
@@ -357,7 +357,7 @@ describe('Image page', () => {
             { kind: 'job', id: '8133', text: 'job 8133 of octo/app' },
           ]),
         ),
-      '/pool/images/registry/img_a',
+      '/setup/images/registry/img_a',
     );
     fireEvent.click(await screen.findByRole('button', { name: 'Delete' }));
     expect(await screen.findByText(/job 8133 of octo\/app/)).toBeTruthy();
@@ -369,7 +369,7 @@ describe('Image page', () => {
   it('says not scanned yet', async () => {
     renderApp(
       api().on('GET', '/api/v1/registry/images/:id', detail(img())),
-      '/pool/images/registry/img_a',
+      '/setup/images/registry/img_a',
     );
     expect(await screen.findByText(/Not scanned yet\./)).toBeTruthy();
   });

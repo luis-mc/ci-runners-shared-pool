@@ -24,13 +24,13 @@ const queued = [
 
 describe('Run elsewhere', () => {
   it('keeps other runners out of the Queue', async () => {
-    renderApp(jobsApi({ jobs: queued }), '/jobs/live?state=queued&view=jobs');
+    renderApp(jobsApi({ jobs: queued }), '/pool/live?state=queued&view=jobs');
     await screen.findByText('mine');
     expect(screen.queryByText('theirs')).toBeNull();
   });
 
   it('lists them in their own tab with runner, group and labels', async () => {
-    renderApp(jobsApi({ jobs: queued }), '/jobs/elsewhere');
+    renderApp(jobsApi({ jobs: queued }), '/analytics/elsewhere');
     await screen.findByText('theirs');
     expect(screen.queryByText('mine')).toBeNull();
     expect(
@@ -39,7 +39,7 @@ describe('Run elsewhere', () => {
   });
 
   it('sends the old Queue address with the filter to the Run elsewhere tab', async () => {
-    renderApp(jobsApi({ jobs: queued }), '/jobs?elsewhere=1');
+    renderApp(jobsApi({ jobs: queued }), '/pool?elsewhere=1');
     await screen.findByText('theirs');
     expect(
       screen.getByRole('tab', { name: 'Run elsewhere' }).getAttribute('aria-selected'),
@@ -47,7 +47,7 @@ describe('Run elsewhere', () => {
   });
 
   it('says so when nothing runs elsewhere', async () => {
-    renderApp(jobsApi({ jobs: [] }), '/jobs/elsewhere');
+    renderApp(jobsApi({ jobs: [] }), '/analytics/elsewhere');
     expect(await screen.findByText('No job runs on another runner.')).toBeTruthy();
   });
 });

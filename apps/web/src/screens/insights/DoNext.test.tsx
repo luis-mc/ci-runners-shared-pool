@@ -8,7 +8,7 @@ afterEach(cleanup);
 
 describe('Do next', () => {
   it('puts Run insights before Charts and ranks by minutes saved', async () => {
-    renderApp(jobsApi(), '/jobs/insights');
+    renderApp(jobsApi(), '/analytics/insights');
     await screen.findByRole('region', { name: 'Do next' });
     const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
     expect(tabs.indexOf('Run insights')).toBe(tabs.indexOf('Charts') - 1);
@@ -23,7 +23,7 @@ describe('Do next', () => {
   });
 
   it('keeps the repository filter and names the digest fold', async () => {
-    renderApp(jobsApi(), '/jobs/insights');
+    renderApp(jobsApi(), '/analytics/insights');
     await screen.findByRole('region', { name: 'Do next' });
     fireEvent.click(await screen.findByRole('button', { name: 'octo/api' }));
     expect(await screen.findByText(/3 unit tests run over/)).toBeTruthy();

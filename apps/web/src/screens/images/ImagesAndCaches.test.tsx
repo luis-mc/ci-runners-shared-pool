@@ -83,7 +83,7 @@ const notBuilt = (): Schemas['Image'] => {
 
 describe('Images', () => {
   it('shows loading, then the empty state in the words of the design system', async () => {
-    renderApp(base(), '/pool/images');
+    renderApp(base(), '/setup/images');
     expect(await screen.findByText('Loading images')).toBeTruthy();
     expect(
       await screen.findByText(
@@ -102,7 +102,7 @@ describe('Images', () => {
       base().on('GET', '/api/v1/images', () =>
         apiError(503, 'unavailable', 'The database is busy.'),
       ),
-      '/pool/images',
+      '/setup/images',
     );
     expect(await screen.findByText(/Could not load images\./)).toBeTruthy();
     expect(screen.getByText(/The database is busy\. Try again\./)).toBeTruthy();
@@ -157,7 +157,7 @@ describe('Images', () => {
           ],
         })
         .on('GET', '/api/v1/images', { items: [needy(), ok, nb] }),
-      '/pool/images',
+      '/setup/images',
     );
     expect(await screen.findByText(/Each machine has one Linux image\./)).toBeTruthy();
     expect(screen.getByText('Missing LLVM · needed by octo/app')).toBeTruthy();
@@ -169,7 +169,7 @@ describe('Images', () => {
   });
 
   it('opens the detail from a row', async () => {
-    renderApp(detailApi(image()), '/pool/images');
+    renderApp(detailApi(image()), '/setup/images');
     fireEvent.click(await screen.findByRole('button', { name: /build-1, Linux/ }));
     expect(
       await screen.findByRole('heading', { level: 1, name: 'build-1' }),
@@ -180,7 +180,7 @@ describe('Images', () => {
 
   it('ticks a layer, saves and rebuilds', async () => {
     const api = detailApi(image());
-    renderApp(api, '/pool/images/i1');
+    renderApp(api, '/setup/images/i1');
     const save = await screen.findByRole<HTMLButtonElement>('button', {
       name: 'Save and rebuild',
     });
@@ -200,7 +200,7 @@ describe('Images', () => {
   });
 
   it('Cancel drops the change', async () => {
-    renderApp(detailApi(image()), '/pool/images/i1');
+    renderApp(detailApi(image()), '/setup/images/i1');
     const box = await screen.findByRole<HTMLInputElement>('checkbox', {
       name: /Browsers/,
     });
@@ -212,7 +212,7 @@ describe('Images', () => {
 
   it('says what is missing and Add it ticks it without saving', async () => {
     const api = detailApi(needy());
-    renderApp(api, '/pool/images/i1');
+    renderApp(api, '/setup/images/i1');
     expect(await screen.findByText('octo/app needs LLVM')).toBeTruthy();
     const llvm = screen.getByRole<HTMLInputElement>('checkbox', { name: /LLVM/ });
     expect(llvm.checked).toBe(false);
@@ -229,7 +229,7 @@ describe('Images', () => {
 
   it('shows a not built image with Save, and saves the layers', async () => {
     const api = detailApi(notBuilt());
-    renderApp(api, '/pool/images/i1');
+    renderApp(api, '/setup/images/i1');
     expect(
       await screen.findByText(
         'Not built yet. Choose layers now; it is built when its first runner starts.',
@@ -243,7 +243,7 @@ describe('Images', () => {
   });
 
   it('folds what is inside: base tools and extra packages per repository', async () => {
-    renderApp(detailApi(image()), '/pool/images/i1');
+    renderApp(detailApi(image()), '/setup/images/i1');
     expect(await screen.findByText('What is inside this image')).toBeTruthy();
     expect(screen.getByText(/Always included: Ubuntu 24\.04 · git/)).toBeTruthy();
     expect(screen.getByText('octo/app: libssl-dev, ffmpeg')).toBeTruthy();
@@ -258,7 +258,7 @@ describe('Images', () => {
             { kind: 'job', id: '9', text: 'octo/app e2e' },
           ]),
     );
-    renderApp(api, '/pool/images/i1');
+    renderApp(api, '/setup/images/i1');
     fireEvent.click(await screen.findByRole('button', { name: 'Rebuild' }));
     const dialog = await screen.findByRole('dialog', {
       name: 'Rebuild the image of build-1, Linux?',
@@ -273,7 +273,7 @@ describe('Images', () => {
   });
 
   it('shows a rebuilding image as busy', async () => {
-    renderApp(detailApi(image({ state: 'rebuilding' })), '/pool/images/i1');
+    renderApp(detailApi(image({ state: 'rebuilding' })), '/setup/images/i1');
     expect(
       await screen.findByRole('progressbar', { name: /Rebuilding build-1/ }),
     ).toBeTruthy();
@@ -288,7 +288,7 @@ describe('Caches', () => {
     base().on('GET', '/api/v1/caches', { items });
 
   it('says what is empty and offers Add runners to an admin', async () => {
-    renderApp(withCaches([]), '/pool/images?tab=caches');
+    renderApp(withCaches([]), '/setup/images?tab=caches');
     expect(
       await screen.findByText(
         'No caches yet. Caches show here when a runner has been added.',
@@ -304,7 +304,7 @@ describe('Caches', () => {
       base().on('GET', '/api/v1/caches', () =>
         apiError(503, 'unavailable', 'The database is busy.'),
       ),
-      '/pool/images?tab=caches',
+      '/setup/images?tab=caches',
     );
     expect(await screen.findByText(/Could not load caches\./)).toBeTruthy();
   });
@@ -341,7 +341,7 @@ describe('Caches', () => {
     const api = signedIn(viewer)
       .on('GET', '/api/v1/machines', { items: [machine()] })
       .on('GET', '/api/v1/caches', { items: [cache()] });
-    renderApp(api, '/pool/images?tab=caches');
+    renderApp(api, '/setup/images?tab=caches');
     const wipe = await screen.findByRole<HTMLButtonElement>('button', { name: 'Wipe' });
     expect(wipe.disabled).toBe(true);
     expect(screen.getByText('Only an admin can do this.')).toBeTruthy();
@@ -363,7 +363,7 @@ describe('Caches', () => {
 
   it('asks first, names the cache, its size and the jobs, and does nothing before yes (UX-62)', async () => {
     const api = wipeApi();
-    renderApp(api, '/pool/images?tab=caches');
+    renderApp(api, '/setup/images?tab=caches');
     fireEvent.click(await screen.findByRole('button', { name: 'Wipe' }));
     const dialog = await screen.findByRole('dialog', {
       name: 'Wipe Tool cache of crsp-linux-1?',
@@ -378,7 +378,7 @@ describe('Caches', () => {
 
   it('wipes on yes and shows the wiping row and the strip entry naming what it waits for', async () => {
     const api = wipeApi();
-    renderApp(api, '/pool/images?tab=caches');
+    renderApp(api, '/setup/images?tab=caches');
     fireEvent.click(await screen.findByRole('button', { name: 'Wipe' }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Wipe' }));
@@ -399,7 +399,7 @@ describe('Caches', () => {
       waiting_for: ['octo/app e2e'],
     });
     const api = base().on('GET', '/api/v1/caches', () => ({ items: [state] }));
-    renderApp(api, '/pool/images?tab=caches');
+    renderApp(api, '/setup/images?tab=caches');
     const busy = await screen.findByRole<HTMLButtonElement>('button', { name: 'Wiping' });
     expect(busy.disabled).toBe(true);
     expect(screen.getByText('Waiting for octo/app e2e.')).toBeTruthy();
@@ -425,7 +425,7 @@ describe('Caches', () => {
     try {
       let state: Schemas['Cache'] = cache({ state: 'wiping' });
       const api = base().on('GET', '/api/v1/caches', () => ({ items: [state] }));
-      renderApp(api, '/pool/images?tab=caches', { stream: false });
+      renderApp(api, '/setup/images?tab=caches', { stream: false });
       await screen.findByRole('button', { name: 'Wiping' });
       state = cache();
       expect(await screen.findByRole('button', { name: 'Wipe' })).toBeTruthy();
@@ -437,7 +437,7 @@ describe('Caches', () => {
   it('says why the last wipe failed', async () => {
     renderApp(
       withCaches([cache({ error: 'The folder is locked.' })]),
-      '/pool/images?tab=caches',
+      '/setup/images?tab=caches',
     );
     expect(
       await screen.findByText(
@@ -452,7 +452,7 @@ describe('Caches', () => {
         ? apiError(503, 'unavailable', 'The machine is offline.')
         : apiError(409, 'needs_confirmation', 'Needs a yes.', []),
     );
-    renderApp(api, '/pool/images?tab=caches');
+    renderApp(api, '/setup/images?tab=caches');
     fireEvent.click(await screen.findByRole('button', { name: 'Wipe' }));
     const dialog = await screen.findByRole('dialog');
     expect(within(dialog).getByText('Tool cache of crsp-linux-1, 3.2 GB')).toBeTruthy();
@@ -463,7 +463,7 @@ describe('Caches', () => {
   });
 
   it('switches tabs', async () => {
-    renderApp(withCaches([cache()]), '/pool/images');
+    renderApp(withCaches([cache()]), '/setup/images');
     fireEvent.click(await screen.findByRole('tab', { name: 'Caches' }));
     expect(await screen.findByRole('region', { name: 'build-1' })).toBeTruthy();
   });

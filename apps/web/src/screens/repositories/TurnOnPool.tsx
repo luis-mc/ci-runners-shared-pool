@@ -267,7 +267,7 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
                         onReturn={() => void readAgain()}
                       />
                     )}
-                    <LinkButton to="/repositories">Open Repositories</LinkButton>
+                    <LinkButton to="/setup/pool">Open Repositories</LinkButton>
                   </Cluster>
                 }
               >
@@ -470,7 +470,7 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
         : {
             donePrimary: {
               label: 'Open Repositories',
-              onPress: () => void navigate('/repositories'),
+              onPress: () => void navigate('/setup/pool'),
             },
           })}
     >
@@ -484,7 +484,7 @@ export function TurnOnPoolPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/repositories', label: 'Repositories' },
+          { to: '/setup/pool', label: 'Repositories' },
           { label: 'Turn on the pool' },
         ]}
       />

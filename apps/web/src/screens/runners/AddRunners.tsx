@@ -335,7 +335,7 @@ export function AddRunnersWizard() {
         {machines.length === 0 ? (
           <Message
             tone="needs-you"
-            action={<LinkButton to="/pool/machines/add">Add a machine</LinkButton>}
+            action={<LinkButton to="/setup/machines/add">Add a machine</LinkButton>}
           >
             Add a machine first. Runners live on a machine.
           </Message>
@@ -371,7 +371,7 @@ export function AddRunnersWizard() {
           <Message
             tone="needs-you"
             action={
-              <LinkButton to={`/pool/machines/${picked.id}`}>
+              <LinkButton to={`/setup/machines/${picked.id}`}>
                 Allow it on the machine
               </LinkButton>
             }
@@ -396,7 +396,7 @@ export function AddRunnersWizard() {
           <Message
             tone="note"
             action={
-              <LinkButton to={`/pool/machines/${picked.id}`}>
+              <LinkButton to={`/setup/machines/${picked.id}`}>
                 Allow it on the machine
               </LinkButton>
             }
@@ -574,7 +574,7 @@ export function AddRunnersWizard() {
       failedAt={failedAt}
       donePrimary={{
         label: 'Open Runners',
-        onPress: () => void navigate('/pool/runners'),
+        onPress: () => void navigate('/setup/runners'),
       }}
     >
       <Section
@@ -598,7 +598,7 @@ export function AddRunnersPage() {
   return (
     <Page>
       <Breadcrumbs
-        trail={[{ to: '/pool/runners', label: 'Runners' }, { label: 'Add runners' }]}
+        trail={[{ to: '/setup/runners', label: 'Runners' }, { label: 'Add runners' }]}
       />
       <PageHeader title="Add runners" />
       <AddRunnersWizard />

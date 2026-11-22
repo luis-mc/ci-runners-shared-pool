@@ -42,7 +42,7 @@ function MachineNumbers({ kind }: { kind: 'slots' | 'budget' }) {
       {(data) =>
         data.items.length === 0 ? (
           <Text tone="muted">
-            No machine yet. <TextLink to="/pool/machines/add">Add a machine</TextLink> to
+            No machine yet. <TextLink to="/setup/machines/add">Add a machine</TextLink> to
             see its {kind === 'slots' ? 'slots' : 'load budget'}.
           </Text>
         ) : data.items.length === 1 ? null : (
@@ -67,17 +67,17 @@ function extra(id: string): ReactNode {
       return (
         <>
           <MachineNumbers kind="slots" />
-          <TextLink to="/pool/size">Open Pool size</TextLink>
+          <TextLink to="/setup/size">Open Pool size</TextLink>
         </>
       );
     case 'q-budget':
       return <MachineNumbers kind="budget" />;
     case 'q-waiting':
-      return <TextLink to="/jobs">Open Jobs</TextLink>;
+      return <TextLink to="/pool">Open Jobs</TextLink>;
     case 'q-doctor':
       return <TextLink to="/doctor">Open the Doctor</TextLink>;
     case 'q-images':
-      return <TextLink to="/pool/images">Open Images and caches</TextLink>;
+      return <TextLink to="/setup/images">Open Images and caches</TextLink>;
     default:
       return null;
   }

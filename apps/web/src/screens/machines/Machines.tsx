@@ -64,7 +64,7 @@ export function MachinesList() {
     {
       id: 'name',
       header: 'Name',
-      cell: (m) => <TextLink to={`/pool/machines/${m.id}`}>{m.name}</TextLink>,
+      cell: (m) => <TextLink to={`/setup/machines/${m.id}`}>{m.name}</TextLink>,
       sort: (m) => m.name,
     },
     { id: 'os', header: 'System', cell: (m) => systemText(m), sort: (m) => m.os },
@@ -175,7 +175,7 @@ export function MachinesList() {
             kind="primary"
             disabled={!session.can('admin')}
             reason={session.can('admin') ? undefined : session.whyNot('admin')}
-            onPress={() => void navigate('/pool/machines/add')}
+            onPress={() => void navigate('/setup/machines/add')}
           >
             Add a machine
           </Button>
@@ -202,7 +202,7 @@ export function MachineDetail() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/machines', label: 'Machines' },
+          { to: '/setup/machines', label: 'Machines' },
           { label: result.state === 'ready' ? result.data.name : 'Machine' },
         ]}
       />
@@ -346,7 +346,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           params: { path: { machineId: m.id }, query: { confirm: true } },
         }),
       ),
-    () => void navigate('/pool/machines'),
+    () => void navigate('/setup/machines'),
   );
 
   const untickedUsable = m.backends.filter((b) => b.usable && !allowed.includes(b.name));

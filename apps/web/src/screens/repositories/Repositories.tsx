@@ -219,7 +219,7 @@ export function RepositoriesList() {
       cell: (r) => (
         <Stack gap="tight">
           <Text>
-            <TextLink to={`/repositories/${r.owner}/${r.name}`}>{r.name}</TextLink>
+            <TextLink to={`/setup/pool/${r.owner}/${r.name}`}>{r.name}</TextLink>
             {r.visibility !== 'private' || r.problem ? (
               <>
                 {' '}
@@ -292,7 +292,7 @@ export function RepositoriesList() {
           tone={returned === 'request' ? 'needs-you' : 'done'}
           action={
             returned === 'request' ? undefined : (
-              <LinkButton to="/repositories">Use pool</LinkButton>
+              <LinkButton to="/setup/pool">Use pool</LinkButton>
             )
           }
         >
@@ -357,12 +357,12 @@ export function RepositoriesList() {
                     {showPublic ? (
                       <>
                         {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} listed in grey: the pool serves private repositories only. `}
-                        <TextLink to="/repositories">Hide them</TextLink>
+                        <TextLink to="/setup/pool">Hide them</TextLink>
                       </>
                     ) : (
                       <>
                         {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} not listed: the pool serves private repositories only. `}
-                        <TextLink to="/repositories?public=1">List them too</TextLink>
+                        <TextLink to="/setup/pool?public=1">List them too</TextLink>
                       </>
                     )}
                   </Message>
@@ -509,7 +509,7 @@ export function RepositoriesList() {
                     ]),
                   )
                 : void navigate(
-                    `/repositories/turn-on?${chosen.map((r) => `repo=${r.id}`).join('&')}`,
+                    `/setup/pool/turn-on?${chosen.map((r) => `repo=${r.id}`).join('&')}`,
                   )
             }
           >
@@ -558,7 +558,7 @@ export function RepositoryDetail() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/repositories', label: 'Repositories' },
+          { to: '/setup/pool', label: 'Repositories' },
           { label: `${owner}/${name}` },
         ]}
       />
@@ -752,7 +752,7 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
                       ? 'Public repositories are off. Turn them on in Settings first.'
                       : undefined
               }
-              onPress={() => void navigate(`/repositories/turn-on?repo=${r.id}`)}
+              onPress={() => void navigate(`/setup/pool/turn-on?repo=${r.id}`)}
             >
               Use pool
             </Button>
@@ -912,7 +912,7 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
               {r.pool_on && r.ephemeral_capacity === false ? (
                 <Message
                   tone="needs-you"
-                  action={<LinkButton to="/pool/runners/add">Add runners</LinkButton>}
+                  action={<LinkButton to="/setup/runners/add">Add runners</LinkButton>}
                 >
                   {NO_CAPACITY}
                 </Message>
@@ -1028,7 +1028,7 @@ function VisibilityCell({ r, inactive }: { r: Repository; inactive: boolean }) {
       <Text>{word}</Text>
       <Text>
         {r.problem.text}{' '}
-        <TextLink to={`/repositories/${r.owner}/${r.name}`}>Fix it</TextLink>
+        <TextLink to={`/setup/pool/${r.owner}/${r.name}`}>Fix it</TextLink>
       </Text>
     </Stack>
   );

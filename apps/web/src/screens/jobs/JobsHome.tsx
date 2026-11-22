@@ -1,5 +1,5 @@
-// Jobs, home: one tab row (Overview, Live, Done, Run elsewhere, Run insights, Charts; UX-74) and the one list of the
-// Live, Done and Run elsewhere tabs: a search box, the state filter All, Queue, Running and Done, one table and a
+// Pool > Jobs and Analytics > Run elsewhere (LOOK56): the one list of both, today's Live tab renamed with the filters of
+// the old Done tab (range, Group by, export): a search box, the state filter All, Queue, Running and Done, one table and a
 // details panel (owner decision 20 Nov 2026, option 11 of CRSP211). Wait reasons say what is happening (UX-29); a
 // status is a word, a glyph and a colour (UX-58). Runs are the first view, jobs the second.
 import {
@@ -12,14 +12,11 @@ import {
   LinkButton,
   ListToolbar,
   Message,
-  Page,
-  PageHeader,
   Progress,
   SearchTable,
   Segmented,
   Stack,
   Status,
-  Tabs,
   Text,
   TextLink,
   fileNameOf,
@@ -28,7 +25,7 @@ import {
   type Column,
 } from '@crsp/ui';
 import { useState } from 'react';
-import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient } from '../../api/api';
 import type { Loaded } from '../../api/hooks';
 import { Load } from '../common';
@@ -78,15 +75,6 @@ import {
   type Job,
 } from './words';
 
-export const JOBS_TABS = [
-  { id: 'overview', label: 'Overview', to: '/jobs' },
-  { id: 'live', label: 'Live', to: '/jobs/live' },
-  { id: 'done', label: 'Done', to: '/jobs/done' },
-  { id: 'elsewhere', label: 'Run elsewhere', to: '/jobs/elsewhere' },
-  { id: 'insights', label: 'Run insights', to: '/jobs/insights' },
-  { id: 'charts', label: 'Charts', to: '/jobs/charts' },
-] as const;
-
 /** Done: shows 25, "Show more" adds 25 up to 100 a page; older ones by filter and range (owner decision 1). */
 export const DONE_KEPT = 100;
 export const DONE_STEP = 25;
@@ -97,30 +85,6 @@ const RANGES = [
   { value: '30', label: 'Last 30 days' },
   { value: '90', label: 'Last 90 days' },
 ] as const;
-
-export function JobsLayout() {
-  const navigate = useNavigate();
-  const { pathname } = useLocation();
-  const segment = pathname.split('/')[2] ?? '';
-  const current = JOBS_TABS.find((t) => t.id === segment)?.id ?? 'overview';
-  return (
-    <Page>
-      <PageHeader
-        title="Jobs"
-        lead="Open a run to see its jobs, and a job to see its steps."
-      />
-      <Tabs
-        label="Jobs sections"
-        tabs={JOBS_TABS}
-        current={current}
-        onChange={(id) =>
-          void navigate(JOBS_TABS.find((t) => t.id === id)?.to ?? '/jobs')
-        }
-      />
-      <Outlet />
-    </Page>
-  );
-}
 
 const FILTER_NAMES: Record<(typeof FILTER_KEYS)[number], string> = {
   repository: 'repository',
@@ -198,7 +162,7 @@ function JobCell({ j }: { j: Job }) {
   return (
     <Cut tail={j.run_attempt > 1 ? `, attempt ${j.run_attempt}` : ''}>
       {`${workflowFile(j.workflow ?? 'workflow')} / `}
-      <TextLink to={`/jobs/${j.id}`}>{j.job_name}</TextLink>
+      <TextLink to={`/pool/jobs/${j.id}`}>{j.job_name}</TextLink>
     </Cut>
   );
 }
@@ -628,12 +592,12 @@ function JobDetail({ j, now }: { j: Job; now: number }) {
               ]),
         ]}
       />
-      <LinkButton to={`/jobs/${j.id}`}>Open job</LinkButton>
+      <LinkButton to={`/pool/jobs/${j.id}`}>Open job</LinkButton>
     </>
   );
 }
 
-type Tab = 'live' | 'done' | 'elsewhere';
+type Tab = 'jobs' | 'elsewhere';
 
 function JobsListTab({ tab }: { tab: Tab }) {
   const f = useFilters();
@@ -650,10 +614,10 @@ function JobsListTab({ tab }: { tab: Tab }) {
   const view: View = elsewhere ? 'jobs' : chosen;
   const rawState = params.get('state');
   const state: StateFilter =
-    STATES.find((s) => s.value === rawState)?.value ?? (tab === 'done' ? 'done' : 'all');
+    STATES.find((s) => s.value === rawState)?.value ?? 'all';
   const rawGroup = params.get('group');
   const group =
-    tab === 'done' ? GROUPS.find((g) => g.value === rawGroup)?.value : undefined;
+    tab === 'jobs' ? GROUPS.find((g) => g.value === rawGroup)?.value : undefined;
   // The words are kept in the page, not in the address: an address that changes at every key draws the page again.
   const [q, setQuery] = useState(params.get('q') ?? '');
   const mine = (items: Job[], s: Exclude<StateFilter, 'all'>): Job[] =>
@@ -844,9 +808,9 @@ function JobsListTab({ tab }: { tab: Tab }) {
   // Done adds its own choices, in a bar of their own so the bar of the list stays one row: the range of the finished
   // work, and one Group by choice in place of the five By tabs (UX-74).
   const doneBar =
-    tab === 'done' ? (
+    tab === 'jobs' ? (
       <ListToolbar
-        label="Done"
+        label="Range and grouping"
         filters={
           <>
             <Segmented
@@ -997,10 +961,10 @@ function JobsListTab({ tab }: { tab: Tab }) {
               columns={withElsewhere(jobColumns(state1 ?? 'all', live), elsewhere)}
               rowKey={(j) => String(j.id)}
               rowLabel={(j) => j.job_name}
-              onOpen={(j) => void navigate(`/jobs/${j.id}`)}
+              onOpen={(j) => void navigate(`/pool/jobs/${j.id}`)}
               action={{
                 label: 'Open job',
-                to: (j) => `/jobs/${j.id}`,
+                to: (j) => `/pool/jobs/${j.id}`,
                 name: (j) => j.job_name,
               }}
               detail={{
@@ -1023,7 +987,7 @@ function JobsListTab({ tab }: { tab: Tab }) {
       </Stack>
       <ActionBar
         primary={
-          tab === 'done' ? (
+          tab === 'jobs' ? (
             <ExportButton
               what={`done ${unit}`}
               run={exportRows}
@@ -1031,7 +995,7 @@ function JobsListTab({ tab }: { tab: Tab }) {
               primary
             />
           ) : (
-            <LinkButton to="/pool/runners/add" kind="primary">
+            <LinkButton to="/setup/runners/add" kind="primary">
               Add runners
             </LinkButton>
           )
@@ -1049,6 +1013,5 @@ function withElsewhere(cols: Column<Job>[], on: boolean): Column<Job>[] {
   return cols.flatMap((c) => (c.id === 'branch' ? [c, elsewhereColumn] : [c]));
 }
 
-export const LiveTab = () => <JobsListTab tab="live" />;
-export const DoneTab = () => <JobsListTab tab="done" />;
+export const JobsTab = () => <JobsListTab tab="jobs" />;
 export const ElsewhereTab = () => <JobsListTab tab="elsewhere" />;

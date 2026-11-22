@@ -93,10 +93,10 @@ describe('Jobs by group', () => {
     );
     expect(filterQuery('repository=octo/app')).toBe('repository=octo%2Fapp');
     expect(groupLink('repository', row({ filter: 'repository=octo/app' }) as never)).toBe(
-      '/jobs/done?repository=octo%2Fapp',
+      '/pool/jobs?repository=octo%2Fapp',
     );
     expect(groupLink('runner', row({}) as never)).toBe(
-      '/jobs/done?view=jobs&runner=runner-1',
+      '/pool/jobs?view=jobs&runner=runner-1',
     );
   });
 });

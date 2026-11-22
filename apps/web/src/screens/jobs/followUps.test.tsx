@@ -41,18 +41,18 @@ describe('Run page, started next', () => {
           started_next: [installers],
         }),
       }),
-      '/jobs/run/100',
+      '/pool/runs/100',
     );
     await screen.findByText('ci.yml on OPS34-jobs-section');
     expect(screen.getByText('follow-up running')).toBeTruthy();
     expect(screen.getAllByText('success').length).toBeGreaterThan(0); // the run's own result stays
     const link = screen.getByRole('link', { name: 'Installers' });
-    expect(link.getAttribute('href')).toContain('/jobs/run/900');
+    expect(link.getAttribute('href')).toContain('/pool/runs/900');
     expect(link.parentElement?.textContent).toBe('Installers, running');
   });
 
   it('adds nothing for a run that started nothing', async () => {
-    renderApp(jobsApi({ run: runItem() }), '/jobs/run/100');
+    renderApp(jobsApi({ run: runItem() }), '/pool/runs/100');
     await screen.findByText('ci.yml on OPS34-jobs-section');
     expect(screen.queryByText('follow-up running')).toBeNull();
     expect(screen.queryByText('Started next')).toBeNull();
@@ -69,7 +69,7 @@ describe('Done list, started next', () => {
       }),
       runSummary({ id: 101, branch: 'other' }),
     ];
-    renderApp(jobsApi({ runs }), '/jobs/done');
+    renderApp(jobsApi({ runs }), '/pool/jobs');
     const table = await screen.findByRole('table', { name: 'Done runs' });
     const rows = within(table).getAllByRole('row').slice(1);
     const withNext = rows.find((r) => r.textContent?.includes('#100'));

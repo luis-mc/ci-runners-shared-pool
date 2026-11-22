@@ -41,7 +41,7 @@ export function RegistryBudgetsPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/images?tab=registry', label: '‹ Registry' },
+          { to: '/setup/images?tab=registry', label: '‹ Registry' },
           { label: 'Budgets' },
         ]}
       />
@@ -193,7 +193,7 @@ function BudgetsBody({
         </Stack>
       </Section>
       <Section title="Mirror of upstream images">
-        <LinkButton to="/pool/images/registry/mirror">Open the mirror</LinkButton>
+        <LinkButton to="/setup/images/registry/mirror">Open the mirror</LinkButton>
       </Section>
       {save.error ? (
         <Message tone="problem">{`Could not save. ${save.error}`}</Message>

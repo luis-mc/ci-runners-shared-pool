@@ -20,10 +20,9 @@ import { AppShell } from './shell/Shell';
 import { FaultBoundary } from './screens/common';
 import { DoctorScreen } from './screens/doctor/Doctor';
 import { jobsRoutes } from './screens/jobs/routes';
-import { MOVED, MovedTo } from './screens/pool/redirects';
-import { PoolLayout } from './screens/pool/PoolLayout';
-import { PoolSizePage } from './screens/pool/PoolSizePage';
-import { PoolSummary } from './screens/pool/PoolSummary';
+import { SetupLayout } from './screens/setup/SetupLayout';
+import { SizePage } from './screens/setup/SizePage';
+import { SetupSummary } from './screens/setup/SetupSummary';
 import { NotFound } from './screens/Later';
 import { ImageDetail } from './screens/images/ImageDetail';
 import { RegistryBudgetsPage } from './screens/registry/RegistryBudgetsPage';
@@ -51,7 +50,7 @@ import {
   ThemeApplier,
 } from './screens/settings/Settings';
 import { UpdateCompactPage, UpdateReviewPage } from './screens/settings/Updates';
-import { SetupPage } from './screens/setup/Setup';
+import { SetupEntry } from './screens/setup/Setup';
 
 // Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
 const HelpScreen = lazy(() =>
@@ -169,44 +168,41 @@ export function App({
           <ArrowNavigation>
             <Routes>
               <Route path="/sign-in" element={<SignInPage />} />
-              <Route path="/setup" element={<SetupPage />} />
+              <Route path="/setup" element={<SetupEntry />} />
               <Route element={<CompactGate />}>
                 <Route path="update" element={<UpdateCompactPage />} />
               </Route>
               <Route element={<Gate factory={eventSource} />}>
                 <Route index element={<Overview />} />
-                <Route path="repositories" element={<RepositoriesList />} />
-                <Route path="repositories/turn-on" element={<TurnOnPoolPage />} />
-                <Route path="repositories/:owner/:name" element={<RepositoryDetail />} />
-                <Route path="pool" element={<PoolLayout />}>
-                  <Route index element={<PoolSummary />} />
+                <Route path="setup" element={<SetupLayout />}>
+                  <Route path="summary" element={<SetupSummary />} />
                   <Route path="machines" element={<MachinesList />} />
                   <Route path="runners" element={<RunnersList />} />
                   <Route path="images" element={<ImagesAndCaches />} />
-                  <Route path="size" element={<PoolSizePage />} />
+                  <Route path="size" element={<SizePage />} />
+                  <Route path="pool" element={<RepositoriesList />} />
                 </Route>
-                <Route path="pool/machines/add" element={<AddMachinePage />} />
-                <Route path="pool/machines/:id" element={<MachineDetail />} />
-                <Route path="pool/runners/add" element={<AddRunnersPage />} />
-                <Route path="pool/runners/:id" element={<RunnerPage />} />
-                <Route path="pool/images/:imageId" element={<ImageDetail />} />
+                <Route path="setup/pool/turn-on" element={<TurnOnPoolPage />} />
+                <Route path="setup/pool/:owner/:name" element={<RepositoryDetail />} />
+                <Route path="setup/machines/add" element={<AddMachinePage />} />
+                <Route path="setup/machines/:id" element={<MachineDetail />} />
+                <Route path="setup/runners/add" element={<AddRunnersPage />} />
+                <Route path="setup/runners/:id" element={<RunnerPage />} />
+                <Route path="setup/images/:imageId" element={<ImageDetail />} />
                 <Route
-                  path="pool/images/registry/budgets"
+                  path="setup/images/registry/budgets"
                   element={<RegistryBudgetsPage />}
                 />
                 <Route
-                  path="pool/images/registry/mirror"
+                  path="setup/images/registry/mirror"
                   element={<RegistryMirrorPage />}
                 />
-                <Route path="pool/images/registry/:id" element={<RegistryImagePage />} />
+                <Route path="setup/images/registry/:id" element={<RegistryImagePage />} />
                 <Route
-                  path="pool/images/registry/:id/replace"
+                  path="setup/images/registry/:id/replace"
                   element={<RegistryReplacePage />}
                 />
                 {jobsRoutes}
-                {MOVED.map(([from, to]) => (
-                  <Route key={from} path={from} element={<MovedTo to={to} />} />
-                ))}
                 <Route path="doctor" element={<DoctorScreen />} />
                 <Route
                   path="help"

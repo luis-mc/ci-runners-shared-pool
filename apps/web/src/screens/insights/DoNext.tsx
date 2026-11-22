@@ -24,7 +24,7 @@ import {
 } from './words';
 
 export const findingPath = (f: Pick<Finding, 'id'>): string =>
-  `/jobs/insights/finding/${f.id}`;
+  `/analytics/finding/${f.id}`;
 
 export const doNextColumns: Column<Finding>[] = [
   {
