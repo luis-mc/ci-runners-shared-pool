@@ -7135,6 +7135,8 @@ components:
           description: Automatic pauses while the machine runs on battery. On by default; Always ignores it (machines R5.61, R5.63).
         cpu_cap_pct:
           $ref: '#/components/schemas/CpuCapPct'
+        disk_floor_gib:
+          $ref: '#/components/schemas/DiskFloorGib'
         pause_until:
           type: string
           format: date-time
@@ -7200,6 +7202,11 @@ components:
       type: integer
       description: The share of the whole machine's CPU the runner processes may use, in percent (machines R5.64). Separate from the load budget. 100 is no cap.
       enum: [25, 50, 75, 100]
+    DiskFloorGib:
+      type: integer
+      minimum: 0
+      maximum: 2000
+      description: The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
     PauseReason:
       type: string
       description: Why a machine takes no new job (machines R5.62). Other features read these exact names.
@@ -7244,6 +7251,13 @@ components:
         cpu_cap_detail:
           type: string
           description: Why the cap is not applied, in words fit to show.
+        disk_floor_gib:
+          type: integer
+          minimum: 0
+          description: The free-disk floor in force on the agent, in GiB (runners R5.83). 0 while it is off or the agent has not reported it.
+        disk_floor_off:
+          type: boolean
+          description: The floor is off because config.toml or the agent flag says so. The console shows it read-only; a console value is refused.
     PoolSizeCheckRequest:
       type: object
       required: [pool_memory_gib, pool_cpus]
@@ -7442,6 +7456,8 @@ components:
           type: boolean
         cpu_cap_pct:
           $ref: '#/components/schemas/CpuCapPct'
+        disk_floor_gib:
+          $ref: '#/components/schemas/DiskFloorGib'
         docker_compact:
           $ref: '#/components/schemas/DockerCompactMode'
         docker_compact_threshold_gib:

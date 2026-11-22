@@ -169,6 +169,9 @@ type Settings struct {
 	PauseUntil         time.Time
 	PausedUntilResumed bool
 	CPUCapPct          int
+	// DiskFloorGiB is the free disk the console set for this machine (runners
+	// R5.83, OPS86); 0 means none set, so the agent keeps its own first value.
+	DiskFloorGiB int
 	// The Docker disk compact policy (caches R5.51 to R5.54, machines R5.66). An empty
 	// mode is automatic; 0 and "" take the defaults of EffectiveCompact.
 	CompactMode         string
@@ -197,6 +200,9 @@ const (
 	PauseUntilResumedValue = "until_resumed"
 	PauseNone              = "none"
 )
+
+// MaxDiskFloorGiB is the top of the disk floor the console accepts (runners R5.83).
+const MaxDiskFloorGiB = 2000
 
 // CPUCaps are the CPU cap values in percent (R5.64).
 var CPUCaps = []int{25, 50, 75, 100}
@@ -261,6 +267,8 @@ type SettingsUpdate struct {
 	PauseOnBattery *bool
 	// CPUCapPct is 25, 50, 75 or 100 (R5.64).
 	CPUCapPct *int
+	// DiskFloorGiB is 1 to MaxDiskFloorGiB (runners R5.83).
+	DiskFloorGiB *int
 	// The Docker disk compact policy (caches R5.51 to R5.54): on, off or empty for
 	// automatic; the threshold in GiB; idle minutes.
 	CompactMode         *string

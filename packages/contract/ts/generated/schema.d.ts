@@ -4561,6 +4561,7 @@ export interface components {
             /** @description Automatic pauses while the machine runs on battery. On by default; Always ignores it (machines R5.61, R5.63). */
             pause_on_battery?: boolean;
             cpu_cap_pct?: components["schemas"]["CpuCapPct"];
+            disk_floor_gib?: components["schemas"]["DiskFloorGib"];
             /**
              * Format: date-time
              * @description A pause from the tray with a timer ends at this time. Absent when none runs (machines R5.61).
@@ -4611,6 +4612,8 @@ export interface components {
          * @enum {integer}
          */
         CpuCapPct: 25 | 50 | 75 | 100;
+        /** @description The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config. */
+        DiskFloorGib: number;
         /**
          * @description Why a machine takes no new job (machines R5.62). Other features read these exact names.
          * @enum {string}
@@ -4638,6 +4641,10 @@ export interface components {
             cpu_cap_state?: components["schemas"]["CpuCapState"];
             /** @description Why the cap is not applied, in words fit to show. */
             cpu_cap_detail?: string;
+            /** @description The free-disk floor in force on the agent, in GiB (runners R5.83). 0 while it is off or the agent has not reported it. */
+            disk_floor_gib?: number;
+            /** @description The floor is off because config.toml or the agent flag says so. The console shows it read-only; a console value is refused. */
+            disk_floor_off?: boolean;
         };
         /**
          * @example {
@@ -4780,6 +4787,7 @@ export interface components {
             mode?: components["schemas"]["MachineMode"];
             pause_on_battery?: boolean;
             cpu_cap_pct?: components["schemas"]["CpuCapPct"];
+            disk_floor_gib?: components["schemas"]["DiskFloorGib"];
             docker_compact?: components["schemas"]["DockerCompactMode"];
             /** @description How many GiB of Docker's disk file must be reclaimable (file size minus what Docker uses) before the compact runs. 0 takes 30 (caches R5.51 to R5.54). */
             docker_compact_threshold_gib?: number;

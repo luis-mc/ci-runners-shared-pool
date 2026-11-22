@@ -217,7 +217,7 @@ func SettingsFromProto(p *agentv1.MachineSettings) machines.Settings {
 		DrainTimeoutMinutes: int(p.GetDrainTimeoutMinutes()), WindowsSymlinkRight: p.GetWindowsSymlinkRight(),
 		PoolMemoryGiB: p.GetPoolMemoryGib(), PoolCPUs: int(p.GetPoolCpus()),
 		Mode: p.GetMode(), PauseOnBattery: p.GetPauseOnBattery(), PauseUntil: untilTime(p.GetPauseUntilUnixMs()),
-		PausedUntilResumed: p.GetPauseUntilResumed(), CPUCapPct: int(p.GetCpuCapPct()),
+		PausedUntilResumed: p.GetPauseUntilResumed(), CPUCapPct: int(p.GetCpuCapPct()), DiskFloorGiB: int(p.GetDiskFloorGib()),
 	}
 }
 

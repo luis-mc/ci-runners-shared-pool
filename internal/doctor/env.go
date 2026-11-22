@@ -155,6 +155,9 @@ type Machine struct {
 	// PauseReason is why the machine takes no new jobs ("disk_low", "paused",
 	// "on_battery", ...); empty while it accepts.
 	PauseReason string
+	// DiskFloorGiB is the free-disk floor in force on the machine, in GiB
+	// (runners R5.83); 0 when unknown or off.
+	DiskFloorGiB int
 	// Admin is true when the doctor on this machine runs with administrator
 	// rights, for checks that need them (R5.13). Reported by the agent.
 	Admin bool
