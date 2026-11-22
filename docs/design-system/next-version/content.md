@@ -876,6 +876,22 @@ The fixed words of the waterfall, job graph and charts (components 50 to 55, RES
 | lowest, highest, last, values                                   | Chart and sparkline text alternatives ("5 values, last 4 s").                                  |
 | no data yet                                                     | A sparkline, heatmap or forecast chart with nothing to draw.                                   |
 
+## Timeline words
+
+The fixed words of the slot timeline (component 72, LOOK58). Every other word comes in through props.
+
+| Word                                                                                                                                      | Where                                                                           |
+| ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| running, waiting for a runner, waiting for room, reserved, forecast, no runner fits, timer ran out, done, failed                          | The nine states: each with its glyph in the legend, on the bars and in the table. |
+| States                                                                                                                                    | Name of the legend list.                                                        |
+| now {time}                                                                                                                                | The label of the now line on the axis.                                          |
+| Back to now                                                                                                                               | Button shown when the chart is scrolled away from now; pins it again.           |
+| Loading older jobs                                                                                                                        | Note while older jobs load.                                                     |
+| Showing the last 24 hours                                                                                                                 | Note when no older jobs exist.                                                  |
+| Left and Right arrows scroll. Home goes to now. End goes to the end of the forecast.                                                      | The key hint under the chart (read with the chart).                             |
+| Slot, Job, State, Start, End or forecast                                                                                                  | Table heads under _Show as table_.                                              |
+| now, about {time}, about {time} to {time}                                                                                                 | The End or forecast cell of a running job and of a forecast.                    |
+
 ## Ordered list words
 
 | Word                                  | Where                               |
