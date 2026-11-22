@@ -29,7 +29,6 @@ import { ImageDetail } from './screens/images/ImageDetail';
 import { ImagesAndCaches } from './screens/images/ImagesAndCaches';
 import { MachineDetail, MachinesList } from './screens/machines/Machines';
 import { Overview } from './screens/overview/Overview';
-import { RepositoriesList, RepositoryDetail } from './screens/repositories/Repositories';
 import { RunnersList } from './screens/runners/Runners';
 import { RunnerPage } from './screens/runners/RunnerPage';
 import {
@@ -63,6 +62,12 @@ const RegistryReplacePage = later(
   () =>
     import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
   true,
+);
+const RepositoriesList = later(() =>
+  import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
+);
+const RepositoryDetail = later(() =>
+  import('./screens/repositories/Repositories').then((m) => m.RepositoryDetail),
 );
 const AddMachinePage = later(
   () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
