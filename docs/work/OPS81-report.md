@@ -8,7 +8,7 @@ Branch OPS81-crsp-timers, from origin/main plus merge commits of OPS73 and OPS74
 3. [done] Migration 00039, store, GitHub run cancel, scheduler lifecycle hook (job start = gate's first go), wiring in `cmd/crsp/timers_wiring.go`.
 4. [done] OpenAPI + codegen (no drift), handlers, authz table, API tests.
 5. [done] Scheduling spec (R5.99 to R5.106, R5.75, R5.1, R5.20, test table), doctor spec (R5.60, timeout row), change notes.
-6. [todo] Draft PR, CI run, loop to green.
+6. [done] Draft PR #380, `ci.yml` dispatch run 44972052066 green on 5423be4.
 
 ## Checks run
 - unit tests: timers, api, github, scheduler, store (with -race), doctor, insights, cmd/crsp: pass.
@@ -30,3 +30,9 @@ Branch OPS81-crsp-timers, from origin/main plus merge commits of OPS73 and OPS74
 
 ## Not done / follow-ups
 - Console screens (LOOK56), `.crsp.yml` source, run-end caller, queued/start-up handlers, App permission (see above).
+
+## CI
+- `ci.yml` (workflow_dispatch) on 5423be4: success.
+- `dev-standards` (PR run) is red only for docs_check W1: reports under `docs/work/` on the branch (mine and OPS74's), stripped at the join by design. No other error.
+
+CODE DONE 5423be4789b977a70e05c34183fdc630902dd6c6
