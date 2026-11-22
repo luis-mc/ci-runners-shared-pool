@@ -297,8 +297,27 @@ function Lc33 {
   Out-Lc 'LC-33' (($n -le 1) -and ($legacy -eq 0)) "$n data folders, $legacy legacy folders"
 }
 function Lint { # LC-18: WiX ICE validation and one Apps-list entry
-  & wix msi validate $Pkg | Out-Null
-  $ice = $LASTEXITCODE -eq 0
+  # The pinned WiX 5.0.2 is a dotnet local tool (installer/dotnet-tools.json), the way installer/build.ps1
+  # gets it; it is not on PATH. Call it the same way: restore, then `dotnet wix`. ICEs are never suppressed.
+  $installerDir = Join-Path (Split-Path -Parent (Split-Path -Parent $script:Here)) 'installer'
+  $how = "dotnet tool restore, then dotnet wix msi validate, in $installerDir (manifest installer/dotnet-tools.json)"
+  $ice = $false
+  $wixOk = $false
+  if ((Test-Path (Join-Path $installerDir 'dotnet-tools.json')) -and (Get-Command dotnet -ErrorAction SilentlyContinue)) {
+    $pkgFull = (Resolve-Path $Pkg).Path
+    Push-Location $installerDir
+    try {
+      & dotnet tool restore 2>&1 | Out-Host
+      if ($LASTEXITCODE -eq 0) {
+        $wixOk = $true
+        & dotnet wix msi validate $pkgFull 2>&1 | Out-Host
+        $ice = $LASTEXITCODE -eq 0
+      }
+    } catch {
+      $how = "$how; $($_.Exception.Message)"
+    } finally { Pop-Location }
+  }
+  if (-not $wixOk) { Out-Lc 'LC-18' $false "wix not found: $how"; return }
   $entries = @(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
     Where-Object { $_.DisplayName -eq $script:AppsName }).Count
   Out-Lc 'LC-18' ($ice -and ($entries -eq 1)) "ICE $(if ($ice) { 'clean' } else { 'errors' }), $entries Apps-list entry(ies)"
