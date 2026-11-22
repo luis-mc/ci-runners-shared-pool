@@ -22,7 +22,8 @@ export function useOverview(): {
         if (on) store.seed(first);
       })
       .catch((e: unknown) => {
-        if (on) setFailed(e instanceof Error ? e.message : 'The controller did not answer.');
+        if (on)
+          setFailed(e instanceof Error ? e.message : 'The controller did not answer.');
       });
     return () => {
       on = false;

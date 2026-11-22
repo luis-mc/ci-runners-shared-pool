@@ -4,6 +4,7 @@ import { cleanup, fireEvent, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp } from '../../testing/mock';
 import { jobsApi } from '../../testing/jobsData';
+import { stepsFor } from './steps';
 
 afterEach(cleanup);
 
@@ -31,8 +32,57 @@ describe('Finding page', () => {
     expect(screen.queryByRole('button', { name: 'Review the change' })).toBeNull();
   });
 
+  it('gives the numbered steps of a repository suggestion and names the repository', async () => {
+    renderApp(jobsApi(), '/analytics/finding/2');
+    const steps = await screen.findByRole('list', { name: 'Steps' });
+    expect(steps.querySelectorAll('li').length).toBeGreaterThanOrEqual(3);
+    expect(steps.textContent).toContain('octo/');
+  });
+
   it('says so when the finding is not there', async () => {
     renderApp(jobsApi(), '/analytics/finding/99');
     expect(await screen.findByText(/Could not load this finding/)).toBeTruthy();
+  });
+});
+
+describe('steps of a suggestion', () => {
+  const kinds = [
+    'wait.hold',
+    'housekeeping.lane',
+    'pool.size',
+    'pool.idle_next_to_queue',
+    'repo.slots',
+    'run.critical_path',
+    'run.superseded',
+    'run.duplicate_event',
+    'run.retested_tree',
+    'run.fail_fast',
+    'workflow.timeout',
+    'workflow.retry',
+    'workflow.matrix_axis',
+    'workflow.step_order',
+    'workflow.cache',
+    'test.slow',
+    'test.flaky',
+    'test.duplicate',
+    'test.no_assertions',
+    'something.new',
+  ];
+  it.each(kinds)('%s has at least three steps', (kind) => {
+    const steps = stepsFor({
+      kind,
+      repository: 'octo/app',
+      scope: 'repo',
+      subject: 'ci.yml',
+    });
+    expect(steps.length).toBeGreaterThanOrEqual(3);
+  });
+  it('names the repository in the steps of a repository suggestion', () => {
+    for (const kind of kinds.filter(
+      (k) => k !== 'pool.size' && k !== 'pool.idle_next_to_queue',
+    ))
+      expect(
+        stepsFor({ kind, repository: 'octo/app', scope: 'repo' }).join(' '),
+      ).toContain('octo/app');
   });
 });

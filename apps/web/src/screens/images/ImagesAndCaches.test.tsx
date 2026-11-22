@@ -320,7 +320,7 @@ describe('Caches', () => {
           last_wiped_at: '2026-11-13T10:00:00Z',
         }),
       ]),
-      '/caches',
+      '/setup/images?tab=caches',
     );
     const section = await screen.findByRole('region', { name: 'build-1' });
     const tool = within(section).getByRole('region', {

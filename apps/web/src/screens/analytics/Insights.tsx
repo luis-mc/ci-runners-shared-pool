@@ -4,7 +4,6 @@ import {
   BarList,
   Card,
   CardGrid,
-  Section,
   Sparkline,
   Stack,
   StatGrid,
@@ -56,7 +55,7 @@ export function Insights() {
                   label="Waiting now"
                   {...(queued === undefined ? {} : { value: String(queued) })}
                   unit={queued === 1 ? 'job' : 'jobs'}
-                  to="/pool/live?state=queued"
+                  to="/pool/jobs?state=queued"
                   linkName="Open the jobs that wait now"
                 />
                 <StatTile
@@ -138,7 +137,8 @@ export function Insights() {
               </CardGrid>
               <Text tone="muted">
                 Each number is compared with the 7 days before.{' '}
-                <TextLink to="/analytics/charts">Open the charts</TextLink> for longer ranges.
+                <TextLink to="/analytics/charts">Open the charts</TextLink> for longer
+                ranges.
               </Text>
               <Waits />
               <Timeline />

@@ -69,7 +69,7 @@ describe('Done list, started next', () => {
       }),
       runSummary({ id: 101, branch: 'other' }),
     ];
-    renderApp(jobsApi({ runs }), '/pool/jobs');
+    renderApp(jobsApi({ runs }), '/pool/jobs?state=done');
     const table = await screen.findByRole('table', { name: 'Done runs' });
     const rows = within(table).getAllByRole('row').slice(1);
     const withNext = rows.find((r) => r.textContent?.includes('#100'));

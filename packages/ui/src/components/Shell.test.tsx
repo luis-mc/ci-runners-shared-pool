@@ -9,11 +9,11 @@ afterEach(cleanup);
 describe('TopMenu', () => {
   it('marks the open item with aria-current and never adds the class active', () => {
     render(
-      <MemoryRouter initialEntries={['/jobs']}>
+      <MemoryRouter initialEntries={['/pool']}>
         <TopMenu
           items={[
             { to: '/', label: 'Overview', end: true },
-            { to: '/jobs', label: 'Jobs' },
+            { to: '/pool', label: 'Pool' },
           ]}
         />
       </MemoryRouter>,

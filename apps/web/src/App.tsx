@@ -18,6 +18,7 @@ import { LiveProvider } from './live/LiveProvider';
 import type { EventSourceFactory } from './live/store';
 import { AppShell } from './shell/Shell';
 import { FaultBoundary } from './screens/common';
+import { later } from './screens/lazy';
 import { DoctorScreen } from './screens/doctor/Doctor';
 import { jobsRoutes } from './screens/jobs/routes';
 import { SetupLayout } from './screens/setup/SetupLayout';
@@ -25,17 +26,10 @@ import { SizePage } from './screens/setup/SizePage';
 import { SetupSummary } from './screens/setup/SetupSummary';
 import { NotFound } from './screens/Later';
 import { ImageDetail } from './screens/images/ImageDetail';
-import { RegistryBudgetsPage } from './screens/registry/RegistryBudgetsPage';
-import { RegistryImagePage } from './screens/registry/RegistryImagePage';
-import { RegistryMirrorPage } from './screens/registry/RegistryMirrorPage';
-import { RegistryReplacePage } from './screens/registry/RegistryReplacePage';
 import { ImagesAndCaches } from './screens/images/ImagesAndCaches';
 import { MachineDetail, MachinesList } from './screens/machines/Machines';
-import { AddMachinePage } from './screens/machines/AddMachine';
 import { Overview } from './screens/overview/Overview';
 import { RepositoriesList, RepositoryDetail } from './screens/repositories/Repositories';
-import { TurnOnPoolPage } from './screens/repositories/TurnOnPool';
-import { AddRunnersPage } from './screens/runners/AddRunners';
 import { RunnersList } from './screens/runners/Runners';
 import { RunnerPage } from './screens/runners/RunnerPage';
 import {
@@ -51,6 +45,28 @@ import {
 } from './screens/settings/Settings';
 import { UpdateCompactPage, UpdateReviewPage } from './screens/settings/Updates';
 import { SetupEntry } from './screens/setup/Setup';
+
+const RegistryBudgetsPage = later(() =>
+  import('./screens/registry/RegistryBudgetsPage').then((m) => m.RegistryBudgetsPage),
+);
+const RegistryImagePage = later(() =>
+  import('./screens/registry/RegistryImagePage').then((m) => m.RegistryImagePage),
+);
+const RegistryMirrorPage = later(() =>
+  import('./screens/registry/RegistryMirrorPage').then((m) => m.RegistryMirrorPage),
+);
+const RegistryReplacePage = later(() =>
+  import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
+);
+const AddMachinePage = later(() =>
+  import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
+);
+const TurnOnPoolPage = later(() =>
+  import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
+);
+const AddRunnersPage = later(() =>
+  import('./screens/runners/AddRunners').then((m) => m.AddRunnersPage),
+);
 
 // Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
 const HelpScreen = lazy(() =>
@@ -205,7 +221,7 @@ export function App({
                 {jobsRoutes}
                 <Route path="doctor" element={<DoctorScreen />} />
                 <Route
-                  path="help"
+                  path="help/*"
                   element={
                     <Suspense
                       fallback={

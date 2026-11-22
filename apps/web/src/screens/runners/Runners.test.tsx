@@ -208,7 +208,7 @@ describe('Runners list', () => {
         list = [{ ...list[0]!, state: 'draining', reason: 'remove asked' }];
         return runner({ state: 'draining' });
       });
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(
       screen.getByRole('checkbox', { name: 'Select crsp-home-automation-windows' }),
@@ -238,7 +238,7 @@ describe('Runners list', () => {
       .on('DELETE', '/api/v1/runners/:id', () =>
         apiError(404, 'not_found', 'no such runner or plan'),
       );
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select crsp-linux-1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete 1 runner' }));

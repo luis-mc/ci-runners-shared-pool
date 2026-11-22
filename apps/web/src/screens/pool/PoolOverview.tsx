@@ -1,6 +1,14 @@
 // Pool > Overview (LOOK56, option B): the queue plan, the running jobs and the routing labels in use. It only shows
 // and links (UX-52).
-import { Empty, Section, Status, Table, TextLink, formatDuration, type Column } from '@crsp/ui';
+import {
+  Empty,
+  Section,
+  Status,
+  Table,
+  TextLink,
+  formatDuration,
+  type Column,
+} from '@crsp/ui';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad } from '../../api/hooks';
 import { useNow } from '@crsp/ui';
@@ -31,7 +39,11 @@ function QueuePlanTable({ queued, readAt }: { queued: readonly Job[]; readAt: nu
   );
   const columns: Column<Job>[] = [
     { id: 'n', header: '#', cell: (j) => String(rows.indexOf(j) + 1) },
-    { id: 'job', header: 'Job', cell: (j) => `${j.job_name} ${j.repository} #${j.run_id}` },
+    {
+      id: 'job',
+      header: 'Job',
+      cell: (j) => `${j.job_name} ${j.repository} #${j.run_id}`,
+    },
     {
       id: 'why',
       header: 'Why it waits',
@@ -45,7 +57,8 @@ function QueuePlanTable({ queued, readAt }: { queued: readonly Job[]; readAt: nu
     {
       id: 'start',
       header: 'Start',
-      cell: (j) => (needsYou(j) ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt)),
+      cell: (j) =>
+        needsYou(j) ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt),
     },
     { id: 'where', header: 'Machine and runner', cell: (j) => placeWords(j) },
   ];
@@ -100,7 +113,12 @@ export function RunningTable({ running }: { running: readonly Job[] }) {
       {running.length === 0 ? (
         <Empty title="No jobs running. Jobs show here when a workflow runs on the pool." />
       ) : (
-        <Table caption="Running jobs" columns={columns} rows={running} rowKey={(j) => String(j.id)} />
+        <Table
+          caption="Running jobs"
+          columns={columns}
+          rows={running}
+          rowKey={(j) => String(j.id)}
+        />
       )}
     </Section>
   );
@@ -118,7 +136,11 @@ function RoutingLabels({ jobs }: { jobs: readonly Job[] }) {
   const columns: Column<LabelRow>[] = [
     { id: 'label', header: 'Label', cell: (r) => r.label },
     { id: 'jobs', header: 'Jobs', cell: (r) => r.jobs.join(', ') || 'none' },
-    { id: 'runners', header: 'Runner carrying it', cell: (r) => r.runners.join(', ') || 'none yet' },
+    {
+      id: 'runners',
+      header: 'Runner carrying it',
+      cell: (r) => r.runners.join(', ') || 'none yet',
+    },
   ];
   return (
     <Section title="Routing labels in use">
@@ -128,7 +150,12 @@ function RoutingLabels({ jobs }: { jobs: readonly Job[] }) {
           return rows.length === 0 ? (
             <Empty title="No job carries a routing label right now." />
           ) : (
-            <Table caption="Routing labels" columns={columns} rows={rows} rowKey={(x) => x.label} />
+            <Table
+              caption="Routing labels"
+              columns={columns}
+              rows={rows}
+              rowKey={(x) => x.label}
+            />
           );
         }}
       </Load>

@@ -80,7 +80,7 @@ describe('the logon right finding (runners R5.89, doctor R5.45)', () => {
     subject: { kind: 'runner', id: 'r1', name: 'crsp-a' },
     fix: {
       text: 'Press Start. The agent gives the account the right again.',
-      link: '/machines/m9',
+      link: '/setup/machines/m9',
     },
   });
 
@@ -257,7 +257,7 @@ describe('Doctor screen', () => {
 
   it('keeps Run checks again as the one primary, in the bar; a fix button in a row stays normal (D27)', async () => {
     const api = signedIn().on('GET', '/api/v1/doctor/findings', {
-      items: [finding({ fix: { text: 'Open it.', link: '/machines' } })],
+      items: [finding({ fix: { text: 'Open it.', link: '/setup/machines' } })],
       last_run_at: lastRun,
     });
     renderApp(api, '/doctor');

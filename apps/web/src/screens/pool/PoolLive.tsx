@@ -34,13 +34,22 @@ export function liveRows(
       endSec: nowSec,
       ...(j.queued_at ? { waitFromSec: sec(Date.parse(j.queued_at)) } : {}),
       ...(j.forecast && !queued
-        ? { forecast: { loSec: sec(startMs) + j.forecast.lo, hiSec: sec(startMs) + j.forecast.hi } }
+        ? {
+            forecast: {
+              loSec: sec(startMs) + j.forecast.lo,
+              hiSec: sec(startMs) + j.forecast.hi,
+            },
+          }
         : {}),
       detail: queued ? waitWords(j) : s.word,
       onOpen: () => open(j),
     };
   });
-  return { rows, totalSec: Math.max(nowSec + 60, ...rows.map((r) => r.forecast?.hiSec ?? 0)), nowSec };
+  return {
+    rows,
+    totalSec: Math.max(nowSec + 60, ...rows.map((r) => r.forecast?.hiSec ?? 0)),
+    nowSec,
+  };
 }
 
 export function PoolLive() {

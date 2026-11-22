@@ -35,7 +35,11 @@ export function PoolMachines() {
               {d.items.map((m) => (
                 <Section key={m.id} title={m.name}>
                   <MachineCard m={withLiveLoad(m, live.overview)} />
-                  <Load result={runners.result} what="the runners" reload={runners.reload}>
+                  <Load
+                    result={runners.result}
+                    what="the runners"
+                    reload={runners.reload}
+                  >
                     {(r) => {
                       const mine = r.items.filter((x) => x.machine_id === m.id);
                       return mine.length === 0 ? (
@@ -50,7 +54,9 @@ export function PoolMachines() {
                       );
                     }}
                   </Load>
-                  <TextLink to={`/setup/machines/${m.id}`}>Change {m.name} in Setup &gt; Machines</TextLink>
+                  <TextLink to={`/setup/machines/${m.id}`}>
+                    Change {m.name} in Setup &gt; Machines
+                  </TextLink>
                 </Section>
               ))}
             </Stack>

@@ -34,7 +34,9 @@ export interface PoolCounts {
 }
 
 /** Running, starting (a runner was given but the job has not begun), queued, and queued with no runner that fits. */
-export function poolCounts(o: Pick<Schemas['Overview'], 'running' | 'queued' | 'queued_count'>): PoolCounts {
+export function poolCounts(
+  o: Pick<Schemas['Overview'], 'running' | 'queued' | 'queued_count'>,
+): PoolCounts {
   const starting = o.running.filter((j) => !j.started_at).length;
   const queued = o.queued ?? [];
   return {
@@ -46,7 +48,9 @@ export function poolCounts(o: Pick<Schemas['Overview'], 'running' | 'queued' | '
 }
 
 /** Where a job is placed, in words: "BuildTower · tower-small-1", or none yet. */
-export function placeWords(j: Pick<Job, 'machine_id' | 'runner_name' | 'runner'>): string {
+export function placeWords(
+  j: Pick<Job, 'machine_id' | 'runner_name' | 'runner'>,
+): string {
   const machine = j.runner?.machine_name ?? j.machine_id;
   const runner = j.runner?.name ?? j.runner_name;
   return [machine, runner].filter(Boolean).join(' · ') || 'none yet';

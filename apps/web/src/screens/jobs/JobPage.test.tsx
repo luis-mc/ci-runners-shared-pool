@@ -136,7 +136,10 @@ describe('Job page', () => {
   });
 
   it('breadcrumbs back to the run', async () => {
-    renderApp(jobsApi({ detail: jobDetail({ ...job({ run_id: 100 }) }) }), '/pool/jobs/12');
+    renderApp(
+      jobsApi({ detail: jobDetail({ ...job({ run_id: 100 }) }) }),
+      '/pool/jobs/12',
+    );
     await screen.findByRole('heading', { level: 1, name: 'test' });
     const crumbs = screen.getByRole('navigation', { name: 'You are here' });
     expect(within(crumbs).getByText('Run #100, attempt 1')).toBeTruthy();

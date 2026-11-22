@@ -143,7 +143,7 @@ describe('Machine policy section', () => {
       { policy: pol('failed', 'access denied') },
     );
     const api = detail(failed);
-    renderApp(api, '/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     expect(
       await screen.findByText(/The CPU cap was not set\. access denied/),
     ).toBeTruthy();

@@ -16,7 +16,9 @@ const FILTERS = [
 
 const matches = (f: Filter, j: Job): boolean =>
   f === '' ||
-  (f === 'none' ? j.wait_reason === 'no_runner_with_labels' : j.wait_reason !== 'no_runner_with_labels');
+  (f === 'none'
+    ? j.wait_reason === 'no_runner_with_labels'
+    : j.wait_reason !== 'no_runner_with_labels');
 
 export function QueuePlan() {
   const [filter, setFilter] = useState<Filter>('');
@@ -42,7 +44,12 @@ export function QueuePlan() {
               ) : (
                 <Stack>
                   {shown.map((j) => (
-                    <QueueEntry key={j.id} j={j} place={queue.indexOf(j) + 1} readAt={readAt} />
+                    <QueueEntry
+                      key={j.id}
+                      j={j}
+                      place={queue.indexOf(j) + 1}
+                      readAt={readAt}
+                    />
                   ))}
                 </Stack>
               )}
@@ -64,7 +71,10 @@ function QueueEntry({ j, place, readAt }: { j: Job; place: number; readAt: numbe
       title={`${place}. ${j.job_name} ${j.repository} #${j.run_id}`}
       hint={waitWords(j)}
     >
-      <Status kind={risk ? 'failed' : 'waiting'} word={risk ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt)} />
+      <Status
+        kind={risk ? 'failed' : 'waiting'}
+        word={risk ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt)}
+      />
       <p>
         {placeWords(j) === 'none yet' ? 'No machine yet.' : `Plan: ${placeWords(j)}.`}{' '}
         {j.labels.length ? `Label ${j.labels.join(', ')}.` : ''}

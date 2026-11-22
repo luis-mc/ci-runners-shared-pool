@@ -112,6 +112,7 @@ export function ConnectGithubWizard({
         setPhase('done');
         const next = new URLSearchParams(params);
         next.delete('app');
+        next.set('wizard', '1');
         setParams(next, { replace: true });
       } else setPhase('done-after-reload');
       return;
@@ -124,6 +125,7 @@ export function ConnectGithubWizard({
       next.delete('error');
       next.delete('app_url');
       next.delete('app');
+      next.set('wizard', '1');
       setParams(next, { replace: true });
     } else if (flow === 'started') {
       setStep(3);
@@ -198,7 +200,7 @@ export function ConnectGithubWizard({
   };
 
   const startAgain = () => {
-    setParams(new URLSearchParams(), { replace: true });
+    setParams(new URLSearchParams({ wizard: '1' }), { replace: true });
     setProblem(undefined);
     setStep(1);
     setPhase('first-run');
@@ -335,7 +337,7 @@ export function ConnectGithubWizard({
         label: 'Sign in with GitHub',
         onPress: () => {
           onDone();
-          window.location.assign(signInUrl('/setup'));
+          window.location.assign(signInUrl('/setup?wizard=1'));
         },
       }}
     >
@@ -359,6 +361,7 @@ function SetupPage() {
         const s = await unwrap(client.POST('/api/v1/setup/redeem', { body: { code } }));
         const next = new URLSearchParams(params);
         next.delete('code');
+        next.set('wizard', '1');
         setParams(next, { replace: true });
         return withPoolOn(client, s);
       } catch (e) {
@@ -463,7 +466,9 @@ function Checklist({
           ) : !signedIn ? (
             <Stack>
               <Text>Sign in with GitHub to go on.</Text>
-              <Button onPress={() => window.location.assign(signInUrl('/setup'))}>
+              <Button
+                onPress={() => window.location.assign(signInUrl('/setup?wizard=1'))}
+              >
                 Sign in with GitHub
               </Button>
             </Stack>

@@ -1,11 +1,6 @@
 // Analytics > Suggestions (LOOK56): a segment row (component 12) holds Do next, Tests and Guardrails; a filter by repository is kept across the segments (UX-31).
 import { Chips, Segmented, Stack } from '@crsp/ui';
-import {
-  Outlet,
-  useLocation,
-  useNavigate,
-  useSearchParams,
-} from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useFindings } from './api';
 
 export const SEGMENTS = [

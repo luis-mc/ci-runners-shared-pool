@@ -75,7 +75,9 @@ export function recommendationTitle(r: Recommendation): string {
 export function recommendationTo(r: Recommendation): string {
   if (r.rule === 'over_budget' || r.rule === 'dangling')
     return '/setup/images/registry/budgets';
-  return r.image_id ? `/setup/images/registry/${r.image_id}` : '/setup/images?tab=registry';
+  return r.image_id
+    ? `/setup/images/registry/${r.image_id}`
+    : '/setup/images?tab=registry';
 }
 
 export const decidedBy = (r: Recommendation): string =>

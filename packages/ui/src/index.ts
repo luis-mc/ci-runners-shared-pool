@@ -48,3 +48,5 @@ export * from './components/SearchTable';
 export * from './components/StatTile';
 export * from './components/BarList';
 export * from './components/FindingList';
+export * from './components/Steps';
+export * from './components/SideMenu';

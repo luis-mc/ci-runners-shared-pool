@@ -613,8 +613,7 @@ function JobsListTab({ tab }: { tab: Tab }) {
   const elsewhere = tab === 'elsewhere';
   const view: View = elsewhere ? 'jobs' : chosen;
   const rawState = params.get('state');
-  const state: StateFilter =
-    STATES.find((s) => s.value === rawState)?.value ?? 'all';
+  const state: StateFilter = STATES.find((s) => s.value === rawState)?.value ?? 'all';
   const rawGroup = params.get('group');
   const group =
     tab === 'jobs' ? GROUPS.find((g) => g.value === rawGroup)?.value : undefined;

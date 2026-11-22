@@ -38,7 +38,7 @@ describe('links use theme tokens (UX-80)', () => {
     expect(css).not.toMatch(/^a(:visited)?\s*[,{]/m);
   });
 
-  it.each(['.ds-link', '.ds-topmenu__link', '.ds-boxbadge'])(
+  it.each(['.ds-link', '.ds-topmenu__link', '.ds-boxbadge', '.ds-sidemenu__link'])(
     '%s sets a token colour for normal, visited, hover and focus-visible',
     (cls) => {
       expect(blocks(cls)).toMatch(colour);
@@ -55,6 +55,22 @@ describe('links use theme tokens (UX-80)', () => {
   it('marks the current top menu item with a token colour in every state', () => {
     for (const s of ['', ':visited', ':hover', ':focus-visible']) {
       expect(blocks(`.ds-topmenu__link[aria-current='page']${s}`)).toMatch(colour);
+    }
+  });
+
+  it('every link class in the stylesheet sets a token colour for visited, hover and focus', () => {
+    const classes = new Set(css.match(/\.ds-[a-z0-9_-]*link(?![a-z0-9_-])/g) ?? []);
+    expect(classes.size).toBeGreaterThan(2);
+    for (const cls of classes) {
+      for (const s of [':visited', ':hover', ':focus-visible']) {
+        expect(blocks(`${cls}${s}`), `${cls}${s}`).toMatch(colour);
+      }
+    }
+  });
+
+  it('marks the current side menu item with a token colour in every state', () => {
+    for (const s of ['', ':visited', ':hover', ':focus-visible']) {
+      expect(blocks(`.ds-sidemenu__link[aria-current='page']${s}`)).toMatch(colour);
     }
   });
 

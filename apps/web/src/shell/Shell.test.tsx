@@ -43,15 +43,7 @@ describe('the shell (R5.3)', () => {
       within(nav)
         .getAllByRole('link')
         .map((a) => a.textContent),
-    ).toEqual([
-      'Overview',
-      'Shared Pool',
-      'Repositories',
-      'Jobs',
-      'Doctor',
-      'Settings',
-      'Help',
-    ]);
+    ).toEqual(['Overview', 'Setup', 'Pool', 'Doctor', 'Analytics', 'Settings', 'Help']);
     expect(
       within(nav).getByRole('link', { name: 'Overview' }).getAttribute('aria-current'),
     ).toBe('page');
@@ -249,10 +241,10 @@ describe('the command palette (R5.4)', () => {
     fireEvent.keyDown(document, { key: 'k', ctrlKey: true });
     const dialog = await screen.findByRole('dialog', { name: 'Commands' });
     fireEvent.change(within(dialog).getByRole('textbox'), {
-      target: { value: 'shared' },
+      target: { value: 'analytics' },
     });
     fireEvent.keyDown(within(dialog).getByRole('textbox'), { key: 'Enter' });
-    expect(await screen.findByRole('heading', { name: 'Shared Pool' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Analytics' })).toBeTruthy();
   });
 
   it('opens with Cmd+K and closes with Escape', async () => {
@@ -295,10 +287,10 @@ describe('the command palette (R5.4)', () => {
     await user.keyboard('j');
     expect((box as HTMLInputElement).value).toBe('j');
     await user.clear(box);
-    await user.keyboard('sha');
+    await user.keyboard('ana');
     const options = () => within(dialog).getAllByRole('option');
     expect(options().map((o) => o.textContent)).toEqual(
-      expect.arrayContaining([expect.stringContaining('Shared Pool')]),
+      expect.arrayContaining([expect.stringContaining('Analytics')]),
     );
     expect(within(dialog).queryByRole('option', { name: /Doctor/ })).toBeNull();
     await user.clear(box);
@@ -310,9 +302,9 @@ describe('the command palette (R5.4)', () => {
     expect(document.activeElement).toBe(within(options()[0]!).getByRole('button'));
     await user.keyboard('{ArrowUp}');
     expect(document.activeElement).toBe(box);
-    await user.type(box, 'Shared Pool');
+    await user.type(box, 'Analytics');
     await user.keyboard('{Enter}');
-    expect(await screen.findByRole('heading', { name: 'Shared Pool' })).toBeTruthy();
+    expect(await screen.findByRole('heading', { name: 'Analytics' })).toBeTruthy();
     expect(screen.queryByRole('dialog', { name: 'Commands' })).toBeNull();
   });
 
@@ -344,7 +336,7 @@ describe('sessions (R5.8 to R5.12)', () => {
     const button = await screen.findByRole('button', { name: 'Sign in with GitHub' });
     fireEvent.click(button);
     expect(assign).toHaveBeenCalledWith(
-      '/auth/github/login?return_to=%2Fpool%2Fmachines',
+      '/auth/github/login?return_to=%2Fsetup%2Fmachines',
     );
   });
 
@@ -390,7 +382,7 @@ describe('sessions (R5.8 to R5.12)', () => {
     expect(screen.getByRole('heading', { name: 'Machines' })).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Sign in with GitHub' }));
     expect(assign).toHaveBeenCalledWith(
-      '/auth/github/login?return_to=%2Fpool%2Fmachines',
+      '/auth/github/login?return_to=%2Fsetup%2Fmachines',
     );
   });
 
@@ -432,7 +424,7 @@ describe('sessions (R5.8 to R5.12)', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Sign in with GitHub again' }));
     await waitFor(() =>
       expect(assign).toHaveBeenCalledWith(
-        '/auth/github/login?return_to=%2Fpool%2Fmachines',
+        '/auth/github/login?return_to=%2Fsetup%2Fmachines',
       ),
     );
     expect(api.count('POST', '/api/v1/auth/logout')).toBe(1);
@@ -508,7 +500,7 @@ describe('a runner service that did not start', () => {
 
   it('shows a Problem banner naming the machine, the runner and the reason, with Start', async () => {
     const api = signedIn().on('GET', '/api/v1/machines', { items: [broken()] });
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     const banner = await screen.findByText(
       /crsp-gameroompc-1 on GameRoomPC did not start/,
     );
@@ -526,7 +518,7 @@ describe('a runner service that did not start', () => {
         fixed = true;
         return { status: 202 };
       });
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     fireEvent.click(await screen.findByRole('button', { name: 'Start' }));
     await waitFor(() =>
       expect(api.count('POST', '/api/v1/machines/m9/redetect')).toBe(1),
@@ -541,7 +533,7 @@ describe('a runner service that did not start', () => {
   it('shows no banner for a machine without a problem or one that is offline', async () => {
     const off = { ...broken(), online: false };
     const api = signedIn().on('GET', '/api/v1/machines', { items: [machine(), off] });
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('heading', { level: 1, name: 'Runners' });
     expect(screen.queryByText(/did not start/)).toBeNull();
   });

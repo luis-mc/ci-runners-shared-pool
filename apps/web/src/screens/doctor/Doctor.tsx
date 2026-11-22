@@ -1,6 +1,7 @@
 // Doctor (web-console 4.8, R5.26): findings grouped by area with a status word (UX-58), what is wrong and its fix,
 // the time of the last run (UX-53), and "Run checks again" as the one primary, in the action bar (UX-71); a fix button in a row is a normal button (D27). It is busy while the run lasts
 // and shows its progress (UX-13, UX-29); the busy state is the server's run state, not a timer (UX-19).
+import { consoleAddress } from './serverLinks';
 import {
   Badge,
   BulletList,
@@ -282,6 +283,11 @@ export function severityStatus(s: Severity): { kind: StatusKind; word: string } 
 const isProblem = (f: Finding) => f.severity === 'fail' || f.severity === 'warn';
 
 /** The groups in screen order, each with the findings that are not simply ok. */
+const needsYouColumns: Column<Finding>[] = [
+  { id: 'what', header: 'What is wrong', cell: (f) => f.title, kind: 'grow', grow: 3 },
+  { id: 'area', header: 'Area', cell: (f) => areaOf(f.check), kind: 'fit' },
+];
+
 export function groupFindings(
   items: readonly Finding[],
 ): { area: string; items: Finding[] }[] {
@@ -400,9 +406,11 @@ export function DoctorScreen() {
           {f.fix.command ? <CodeBlock text={f.fix.command} label="Fix command" /> : null}
           {f.fix.link?.startsWith('/') ? (
             <Cluster>
-              <LinkButton to={f.fix.link}>Open</LinkButton>
+              <LinkButton to={consoleAddress(f.fix.link)}>Open</LinkButton>
               {f.check === 'runner.logon' && f.severity === 'fail' ? (
-                <StartRunnerService machineId={f.fix.link.slice('/machines/'.length)} />
+                <StartRunnerService
+                  machineId={consoleAddress(f.fix.link).slice('/setup/machines/'.length)}
+                />
               ) : null}
             </Cluster>
           ) : null}
@@ -441,8 +449,8 @@ export function DoctorScreen() {
       ) : null}
       <Load result={result} what="the doctor findings" reload={reload}>
         {(data) => {
-          const groups = groupFindings(data.items);
           const problems = data.items.filter(isProblem);
+          const groups = groupFindings(data.items);
           if (data.items.length === 0 && !data.last_run_at)
             return (
               <Section title="Findings">
@@ -477,6 +485,20 @@ export function DoctorScreen() {
                       .join(', ')}.`}
                   </Message>
                 ))}
+              {problems.length > 0 ? (
+                <Section
+                  title="Needs you"
+                  count={problems.length}
+                  hint="What is wrong now, first. The fix of each is in its area below."
+                >
+                  <Table
+                    caption="Needs you"
+                    columns={needsYouColumns}
+                    rows={problems}
+                    rowKey={(f) => `needs:${f.check}:${f.subject.id}`}
+                  />
+                </Section>
+              ) : null}
               {groups.map((g) => (
                 <Section key={g.area} title={g.area}>
                   <Table

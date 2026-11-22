@@ -24,7 +24,7 @@ const queued = [
 
 describe('Run elsewhere', () => {
   it('keeps other runners out of the Queue', async () => {
-    renderApp(jobsApi({ jobs: queued }), '/pool/live?state=queued&view=jobs');
+    renderApp(jobsApi({ jobs: queued }), '/pool/jobs?state=queued&view=jobs');
     await screen.findByText('mine');
     expect(screen.queryByText('theirs')).toBeNull();
   });
@@ -36,14 +36,6 @@ describe('Run elsewhere', () => {
     expect(
       screen.getByText(/old-pool-3 \(group legacy; labels self-hosted, old\)/),
     ).toBeTruthy();
-  });
-
-  it('sends the old Queue address with the filter to the Run elsewhere tab', async () => {
-    renderApp(jobsApi({ jobs: queued }), '/pool?elsewhere=1');
-    await screen.findByText('theirs');
-    expect(
-      screen.getByRole('tab', { name: 'Run elsewhere' }).getAttribute('aria-selected'),
-    ).toBe('true');
   });
 
   it('says so when nothing runs elsewhere', async () => {

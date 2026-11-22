@@ -216,7 +216,7 @@ describe('App health banner (github-integration R5.6)', () => {
       within(alert)
         .getByRole('link', { name: 'Run the setup wizard again' })
         .getAttribute('href'),
-    ).toBe('/setup');
+    ).toBe('/setup?wizard=1');
   });
 
   it('draws nothing while the App answers', async () => {

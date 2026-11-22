@@ -52,7 +52,10 @@ export function ImageDetail() {
   return (
     <Page>
       <Breadcrumbs
-        trail={[{ to: '/setup/images', label: '‹ Images' }, { label: machine ?? 'Image' }]}
+        trail={[
+          { to: '/setup/images', label: '‹ Images' },
+          { label: machine ?? 'Image' },
+        ]}
       />
       {ready ? null : (
         <PageHeader title="Image" lead="One image: its layers and what is inside." />

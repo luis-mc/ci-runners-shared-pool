@@ -3222,3 +3222,85 @@ a.ds-stat:focus-visible {
 .ds-findings__meta {
   color: var(--ds-color-text-muted);
 }
+
+/* Component 70: numbered steps. */
+.ds-steps {
+  display: grid;
+  gap: var(--ds-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-steps__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ds-space-3);
+}
+.ds-steps__number {
+  color: var(--ds-color-primary);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-steps__text {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Component 71: side menu. Every link state uses tokens (UX-80). */
+.ds-sidemenu-layout {
+  display: grid;
+  gap: var(--ds-space-5);
+  min-inline-size: 0;
+}
+.ds-sidemenu-layout__body {
+  display: grid;
+  gap: var(--ds-space-6);
+  min-inline-size: 0;
+  align-content: start;
+}
+.ds-sidemenu__list {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-sidemenu__link {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  min-block-size: var(--ds-target-min);
+  padding-inline: var(--ds-space-2);
+  color: var(--ds-color-text);
+  text-decoration: none;
+  border-inline-start: var(--ds-border-thick) solid transparent;
+}
+.ds-sidemenu__link:visited {
+  color: var(--ds-color-text);
+}
+.ds-sidemenu__link:hover {
+  color: var(--ds-color-primary);
+}
+.ds-sidemenu__link:focus-visible {
+  color: var(--ds-color-text);
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-sidemenu__link[aria-current='page'] {
+  font-weight: var(--ds-weight-bold);
+  color: var(--ds-color-primary);
+  border-inline-start-color: var(--ds-color-primary);
+}
+.ds-sidemenu__link[aria-current='page']:visited,
+.ds-sidemenu__link[aria-current='page']:hover,
+.ds-sidemenu__link[aria-current='page']:focus-visible {
+  color: var(--ds-color-primary);
+}
+.ds-sidemenu__number {
+  color: var(--ds-color-text-muted);
+}
+@media (min-width: 900px) {
+  .ds-sidemenu-layout {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+  }
+}

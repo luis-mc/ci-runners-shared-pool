@@ -49,14 +49,14 @@ describe('Pane', () => {
   it('uses a level-3 heading and a link in a card grid', () => {
     render(
       <MemoryRouter>
-        <Pane title="Runners" level={3} to="/runners">
+        <Pane title="Runners" level={3} to="/setup/runners">
           x
         </Pane>
       </MemoryRouter>,
     );
     expect(screen.getByRole('heading', { level: 3 })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Runners' }).getAttribute('href')).toBe(
-      '/runners',
+      '/setup/runners',
     );
   });
 

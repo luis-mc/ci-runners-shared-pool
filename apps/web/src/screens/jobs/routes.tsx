@@ -1,23 +1,43 @@
 // The routes of Pool > Jobs, the run and job pages, and the Analytics tabs (web-console R5.117, LOOK56). Old addresses
 // (/jobs/..., /repositories, /shared-pool/...) are gone: there are no redirects.
-import { Route } from 'react-router-dom';
-import { ChartsTab } from './Charts';
+import { ClockProvider } from '@crsp/ui';
+import { Outlet, Route } from 'react-router-dom';
+import { later } from '../lazy';
 import { ElsewhereTab, JobsTab } from './JobsHome';
 import { JobPage } from './JobPage';
 import { RunPage } from './RunPage';
 import { AnalyticsLayout } from '../analytics/AnalyticsLayout';
-import { Insights } from '../analytics/Insights';
 import { PoolSection } from '../pool/PoolSection';
-import { PoolLive } from '../pool/PoolLive';
-import { PoolMachines } from '../pool/PoolMachines';
-import { PoolOverview } from '../pool/PoolOverview';
-import { QueuePlan } from '../pool/QueuePlan';
-import { ActionWizard } from '../insights/ActionWizard';
 import { DoNext } from '../insights/DoNext';
-import { FindingPage } from '../insights/Finding';
-import { Guardrails } from '../insights/Guardrails';
 import { InsightsLayout } from '../insights/InsightsLayout';
-import { Tests } from '../insights/Tests';
+
+const PoolOverview = later(() =>
+  import('../pool/PoolOverview').then((m) => m.PoolOverview),
+);
+const PoolLive = later(() => import('../pool/PoolLive').then((m) => m.PoolLive));
+const PoolMachines = later(() =>
+  import('../pool/PoolMachines').then((m) => m.PoolMachines),
+);
+const QueuePlan = later(() => import('../pool/QueuePlan').then((m) => m.QueuePlan));
+const Insights = later(() => import('../analytics/Insights').then((m) => m.Insights));
+const ChartsTab = later(() => import('./Charts').then((m) => m.ChartsTab));
+const Tests = later(() => import('../insights/Tests').then((m) => m.Tests));
+const Guardrails = later(() =>
+  import('../insights/Guardrails').then((m) => m.Guardrails),
+);
+const FindingPage = later(() => import('../insights/Finding').then((m) => m.FindingPage));
+const ActionWizard = later(() =>
+  import('../insights/ActionWizard').then((m) => m.ActionWizard),
+);
+
+/** The run and job pages count their timers every second (R5.150). */
+function EverySecond() {
+  return (
+    <ClockProvider tickMs={1000}>
+      <Outlet />
+    </ClockProvider>
+  );
+}
 
 export const jobsRoutes = (
   <>
@@ -28,8 +48,10 @@ export const jobsRoutes = (
       <Route path="jobs" element={<JobsTab />} />
       <Route path="machines" element={<PoolMachines />} />
     </Route>
-    <Route path="pool/runs/:runId" element={<RunPage />} />
-    <Route path="pool/jobs/:id" element={<JobPage />} />
+    <Route element={<EverySecond />}>
+      <Route path="pool/runs/:runId" element={<RunPage />} />
+      <Route path="pool/jobs/:id" element={<JobPage />} />
+    </Route>
     <Route path="analytics" element={<AnalyticsLayout />}>
       <Route element={<InsightsLayout />}>
         <Route index element={<DoNext />} />
