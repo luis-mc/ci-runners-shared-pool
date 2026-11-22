@@ -28,6 +28,10 @@ func (s *Service) Current() Settings {
 	return s.cur
 }
 
+// TimersEnforced says whether the timers stop jobs and cancel runs; false is
+// observe mode. It is what the doctor reads.
+func (s *Service) TimersEnforced(context.Context) (bool, error) { return s.Current().Enforce, nil }
+
 // Get returns the settings in force.
 func (s *Service) Get(context.Context) Settings { return s.Current() }
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 )
@@ -25,9 +26,19 @@ const (
 	ActRunCancelNow    = "timer.run.cancel_now"
 	ActRunCancelFailed = "timer.run.cancel_failed"
 	ActRunExtend       = "timer.run.extend"
-	ActQueuedAlert     = "timer.queued.alert"
-	ActStartupExpired  = "timer.startup.expired"
+	// Observe mode (enforce off): what crsp would have done, written and not done.
+	ActJobWouldStop   = "timer.job.would_stop"
+	ActRunWouldCancel = "timer.run.would_cancel"
+	ActQueuedAlert    = "timer.queued.alert"
+	ActStartupExpired = "timer.startup.expired"
 )
+
+// ObserveSuffix ends the note of a timer that ran out in observe mode. A clock
+// with this note has been reported and is not reported again, also after a
+// restart of the controller.
+const ObserveSuffix = "(timers in observe mode)"
+
+func observedNote(note string) bool { return strings.HasSuffix(note, ObserveSuffix) }
 
 // Config wires the engine. Store, Queued and Startup may be nil.
 type Config struct {
@@ -204,35 +215,55 @@ func (e *Engine) Tick(ctx context.Context) error {
 	var stopJobs []*job
 	var cancelRuns []*run
 
+	enforce := e.cfg.Settings().Enforce
 	e.mu.Lock()
 	for _, r := range e.runs {
 		switch {
-		case r.State == StateRunning && !now.Before(r.StartedAt.Add(r.Limit)):
+		case r.State == StateRunning && !observedNote(r.Note) && !now.Before(r.StartedAt.Add(r.Limit)):
 			r.State = StateGrace
 			r.Deadline = r.StartedAt.Add(r.Limit).Add(Grace)
 			events = append(events, Event{Action: ActRunGrace, Actor: ActorSystem, Run: r.Key,
-				Text: fmt.Sprintf("Run timer ran out at %s; cancelling in %d s.", mmss(r.Limit), int(Grace/time.Second))})
+				Text: fmt.Sprintf("Run timer ran out at %s; %s in %d s.", mmss(r.Limit), runVerb(enforce), int(Grace/time.Second))})
 			saveRuns = append(saveRuns, r.RunClock)
 		}
 	}
 	for _, r := range e.runs {
 		if r.State == StateGrace && !r.acting && !now.Before(r.Deadline) {
+			if !enforce {
+				// Observe mode: report, send nothing. The clock goes back to running
+				// with the note, so the report is made once.
+				r.State = StateRunning
+				r.Deadline = time.Time{}
+				r.Note = fmt.Sprintf("would cancel at %s %s", mmss(r.Limit), ObserveSuffix)
+				events = append(events, Event{Action: ActRunWouldCancel, Actor: ActorSystem, Run: r.Key, Text: r.Note})
+				saveRuns = append(saveRuns, r.RunClock)
+				continue
+			}
 			r.acting = true
 			cancelRuns = append(cancelRuns, r)
 		}
 	}
 	for _, j := range e.jobs {
-		if j.State == StateRunning && !now.Before(j.StartedAt.Add(j.Limit)) {
+		if j.State == StateRunning && !observedNote(j.Note) && !now.Before(j.StartedAt.Add(j.Limit)) {
 			j.State = StateGrace
 			j.Deadline = j.StartedAt.Add(j.Limit).Add(Grace)
 			k := j.Key
 			events = append(events, Event{Action: ActJobGrace, Actor: ActorSystem, Job: &k, Run: k.Run(),
-				Text: fmt.Sprintf("Job timer ran out at %s; stopping in %d s.", mmss(j.Limit), int(Grace/time.Second))})
+				Text: fmt.Sprintf("Job timer ran out at %s; %s in %d s.", mmss(j.Limit), jobVerb(enforce), int(Grace/time.Second))})
 			saveJobs = append(saveJobs, j.JobClock)
 		}
 	}
 	for _, j := range e.jobs {
 		if j.State == StateGrace && !j.acting && !now.Before(j.Deadline) && !e.coveredLocked(j) {
+			if !enforce {
+				j.State = StateRunning
+				j.Deadline = time.Time{}
+				j.Note = fmt.Sprintf("would stop at %s %s", mmss(j.Limit), ObserveSuffix)
+				k := j.Key
+				events = append(events, Event{Action: ActJobWouldStop, Actor: ActorSystem, Job: &k, Run: k.Run(), Text: j.Note})
+				saveJobs = append(saveJobs, j.JobClock)
+				continue
+			}
 			j.acting = true
 			stopJobs = append(stopJobs, j)
 		}
@@ -266,6 +297,20 @@ func (e *Engine) Tick(ctx context.Context) error {
 func (e *Engine) coveredLocked(j *job) bool {
 	r, ok := e.runs[j.Key.Run()]
 	return ok && (r.State == StateGrace || r.State == StateStopped)
+}
+
+func jobVerb(enforce bool) string {
+	if enforce {
+		return "stopping"
+	}
+	return "would stop"
+}
+
+func runVerb(enforce bool) string {
+	if enforce {
+		return "cancelling"
+	}
+	return "would cancel"
 }
 
 func (e *Engine) audit(ctx context.Context, ev Event) error {
@@ -486,17 +531,17 @@ func (e *Engine) Job(ctx context.Context, k JobKey) (JobView, bool) {
 		covered := e.coveredLocked(j)
 		var rv *RunView
 		if r, ok := e.runs[k.Run()]; ok && covered {
-			v := runView(r.RunClock, now)
+			v := runView(r.RunClock, now, e.cfg.Settings().Enforce)
 			rv = &v
 		}
-		v := jobView(j.JobClock, now, covered, j.acting, rv)
+		v := jobView(j.JobClock, now, covered, j.acting, rv, e.cfg.Settings().Enforce)
 		e.mu.Unlock()
 		return v, true
 	}
 	e.mu.Unlock()
 	if e.cfg.Store != nil {
 		if c, ok, err := e.cfg.Store.LoadJob(ctx, k); err == nil && ok {
-			return jobView(c, now, false, false, nil), true
+			return jobView(c, now, false, false, nil, true), true
 		}
 	}
 	return JobView{}, false
@@ -507,7 +552,7 @@ func (e *Engine) Run(ctx context.Context, k RunKey) (RunView, bool) {
 	now := e.cfg.Clock.Now()
 	e.mu.Lock()
 	if r, ok := e.runs[k]; ok {
-		v := runView(r.RunClock, now)
+		v := runView(r.RunClock, now, e.cfg.Settings().Enforce)
 		v.CanCancelNow = v.CanCancelNow && !r.acting
 		e.mu.Unlock()
 		return v, true
@@ -515,22 +560,25 @@ func (e *Engine) Run(ctx context.Context, k RunKey) (RunView, bool) {
 	e.mu.Unlock()
 	if e.cfg.Store != nil {
 		if c, ok, err := e.cfg.Store.LoadRun(ctx, k); err == nil && ok {
-			return runView(c, now), true
+			return runView(c, now, true), true
 		}
 	}
 	return RunView{}, false
 }
 
-func jobView(c JobClock, now time.Time, covered, acting bool, rv *RunView) JobView {
+func jobView(c JobClock, now time.Time, covered, acting bool, rv *RunView, enforce bool) JobView {
 	v := JobView{Key: c.Key, State: c.State, StartedAt: c.StartedAt, Limit: c.Limit, Note: c.Note, Extended: c.Extended, CoveredByRun: covered}
 	switch c.State {
 	case StateRunning:
 		v.Elapsed = now.Sub(c.StartedAt)
 		v.Text = fmt.Sprintf("Job timer %s of %s", mmss(v.Elapsed), mmss(c.Limit))
+		if observedNote(c.Note) {
+			v.Text += "; " + c.Note
+		}
 	case StateGrace:
 		v.Elapsed = now.Sub(c.StartedAt)
 		v.Deadline = c.Deadline
-		v.Text = jobText("Job", c.Limit, c.Deadline.Sub(now), "stopping")
+		v.Text = jobText("Job", c.Limit, c.Deadline.Sub(now), jobVerb(enforce))
 		if covered && rv != nil {
 			v.Text = rv.Text
 		}
@@ -546,16 +594,19 @@ func jobView(c JobClock, now time.Time, covered, acting bool, rv *RunView) JobVi
 	return v
 }
 
-func runView(c RunClock, now time.Time) RunView {
+func runView(c RunClock, now time.Time, enforce bool) RunView {
 	v := RunView{Key: c.Key, State: c.State, StartedAt: c.StartedAt, Limit: c.Limit, Note: c.Note, Extended: c.Extended}
 	switch c.State {
 	case StateRunning:
 		v.Elapsed = now.Sub(c.StartedAt)
 		v.Text = fmt.Sprintf("Run timer %s of %s", mmss(v.Elapsed), mmss(c.Limit))
+		if observedNote(c.Note) {
+			v.Text += "; " + c.Note
+		}
 	case StateGrace:
 		v.Elapsed = now.Sub(c.StartedAt)
 		v.Deadline = c.Deadline
-		v.Text = jobText("Run", c.Limit, c.Deadline.Sub(now), "cancelling")
+		v.Text = jobText("Run", c.Limit, c.Deadline.Sub(now), runVerb(enforce))
 		v.CanCancelNow = true
 		v.CanExtend = !c.Extended
 	case StateStopped:

@@ -26,13 +26,13 @@ type TimerService interface {
 
 func genTimerSettings(s timers.Settings) gen.TimerSettings {
 	return gen.TimerSettings{JobMinutes: s.JobMin, RunMinutes: s.RunMin, HoldMinutes: s.HoldMin, TimeoutMinutes: s.TimeoutMin,
-		QueuedMinutes: s.QueuedMin, StartupMinutes: s.StartupMin,
+		QueuedMinutes: s.QueuedMin, StartupMinutes: s.StartupMin, Enforce: s.Enforce,
 		GraceSeconds: int(timers.Grace / time.Second), ExtendMinutes: int(timers.ExtendBy / time.Minute)}
 }
 
 func timerInput(b gen.TimerSettingsInput) timers.Input {
 	return timers.Input{JobMin: b.JobMinutes, RunMin: b.RunMinutes, HoldMin: b.HoldMinutes,
-		TimeoutMin: b.TimeoutMinutes, QueuedMin: b.QueuedMinutes, StartupMin: b.StartupMinutes}
+		TimeoutMin: b.TimeoutMinutes, QueuedMin: b.QueuedMinutes, StartupMin: b.StartupMinutes, Enforce: b.Enforce}
 }
 
 func timerProblems(p []timers.Problem) []gen.TimerSettingsProblem {

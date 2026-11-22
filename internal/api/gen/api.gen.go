@@ -7936,6 +7936,9 @@ type TimelineSegmentMarkers string
 
 // TimerSettings defines model for TimerSettings.
 type TimerSettings struct {
+	// Enforce Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.
+	Enforce bool `json:"enforce"`
+
 	// ExtendMinutes Fixed at 10.
 	ExtendMinutes int `json:"extend_minutes"`
 
@@ -7972,12 +7975,13 @@ type TimerSettingsCheck struct {
 
 // TimerSettingsInput Only the fields given change.
 type TimerSettingsInput struct {
-	HoldMinutes    *int `json:"hold_minutes,omitempty"`
-	JobMinutes     *int `json:"job_minutes,omitempty"`
-	QueuedMinutes  *int `json:"queued_minutes,omitempty"`
-	RunMinutes     *int `json:"run_minutes,omitempty"`
-	StartupMinutes *int `json:"startup_minutes,omitempty"`
-	TimeoutMinutes *int `json:"timeout_minutes,omitempty"`
+	Enforce        *bool `json:"enforce,omitempty"`
+	HoldMinutes    *int  `json:"hold_minutes,omitempty"`
+	JobMinutes     *int  `json:"job_minutes,omitempty"`
+	QueuedMinutes  *int  `json:"queued_minutes,omitempty"`
+	RunMinutes     *int  `json:"run_minutes,omitempty"`
+	StartupMinutes *int  `json:"startup_minutes,omitempty"`
+	TimeoutMinutes *int  `json:"timeout_minutes,omitempty"`
 }
 
 // TimerSettingsProblem defines model for TimerSettingsProblem.

@@ -34,6 +34,11 @@ type Settings struct {
 	QueuedMin int `json:"queued_minutes"`
 	// StartupMin is how long a runner may take to start its job. Default 2.
 	StartupMin int `json:"startup_minutes"`
+	// Enforce says whether a timer that ran out stops the job or cancels the run.
+	// False (the default, on a new install and on upgrade) is observe mode: the
+	// countdowns and the grace run, crsp reports what it would do and sends no
+	// stop and no cancel. Only the owner switches it on, in Settings.
+	Enforce bool `json:"enforce"`
 }
 
 // Defaults are the owner's defaults of 22 Nov 2026.
@@ -49,10 +54,11 @@ const (
 	FieldTimeout = "timeout_minutes"
 	FieldQueued  = "queued_minutes"
 	FieldStartup = "startup_minutes"
+	FieldEnforce = "enforce"
 )
 
 // Fields lists the setting names in display order.
-var Fields = []string{FieldJob, FieldRun, FieldHold, FieldTimeout, FieldQueued, FieldStartup}
+var Fields = []string{FieldJob, FieldRun, FieldHold, FieldTimeout, FieldQueued, FieldStartup, FieldEnforce}
 
 // Messages of a refused value, in the owner's words.
 const (
@@ -64,6 +70,7 @@ const (
 // Input is a change of settings: a nil field is not given.
 type Input struct {
 	JobMin, RunMin, HoldMin, TimeoutMin, QueuedMin, StartupMin *int
+	Enforce                                                    *bool
 }
 
 // Apply returns cur with the given fields set.
@@ -79,6 +86,9 @@ func (in Input) Apply(cur Settings) Settings {
 	set(&cur.TimeoutMin, in.TimeoutMin)
 	set(&cur.QueuedMin, in.QueuedMin)
 	set(&cur.StartupMin, in.StartupMin)
+	if in.Enforce != nil {
+		cur.Enforce = *in.Enforce
+	}
 	return cur
 }
 
@@ -140,16 +150,22 @@ func Parse(raw string) Settings {
 	if raw == "" {
 		return s
 	}
-	var in map[string]int
+	var in map[string]json.RawMessage
 	if json.Unmarshal([]byte(raw), &in) != nil {
 		return s
 	}
 	cand := s
 	for k, dst := range map[string]*int{FieldJob: &cand.JobMin, FieldRun: &cand.RunMin, FieldHold: &cand.HoldMin,
 		FieldTimeout: &cand.TimeoutMin, FieldQueued: &cand.QueuedMin, FieldStartup: &cand.StartupMin} {
-		if v, ok := in[k]; ok {
+		var v int
+		if json.Unmarshal(in[k], &v) == nil {
 			*dst = v
 		}
+	}
+	// A set saved before the enforce setting has none: it stays in observe mode.
+	var enf bool
+	if json.Unmarshal(in[FieldEnforce], &enf) == nil {
+		cand.Enforce = enf
 	}
 	if len(cand.Validate()) > 0 {
 		return s

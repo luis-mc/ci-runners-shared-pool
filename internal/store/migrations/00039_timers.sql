@@ -4,6 +4,11 @@
 -- milliseconds, 0 means unknown. The console reads these later. They sit in their
 -- own tables, keyed like jobs and runs, so the jobs upsert stays as it is.
 
+-- The timer settings (key 'timers' of the settings table) carry `enforce`. A set saved
+-- without it, which is every install that upgrades, reads as enforce=false, so timers
+-- start in observe mode: they report and stop nothing until the owner switches
+-- enforcement on in Settings (scheduling R5.107). No row is written here.
+
 -- state is running, grace, stopped or ended.
 CREATE TABLE job_clocks (
     job_id           INTEGER PRIMARY KEY,

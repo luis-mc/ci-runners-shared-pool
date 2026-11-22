@@ -302,7 +302,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	c.Options.RunnerClasses = newClassService(d.DB, runnerSvc, d.Machines)
 	// crsp's job and run timers with their 30 s grace (scheduling R5.99 to R5.106).
-	wireTimers(ctx, d.DB, logger, c, d.Queue, agent, gh, &repoLookup{store: repoStore}, runnerSvc)
+	timerSvc := wireTimers(ctx, d.DB, logger, c, d.Queue, agent, gh, &repoLookup{store: repoStore}, runnerSvc)
 	// Long-lived runners serve every repository that uses the pool: one hidden
 	// registration for each pool repository, made and removed with the pool
 	// switch and by the reconcile loop (runners R5.88).
@@ -349,6 +349,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		Extra:     checks.KVMReportedChecks(),
 		Demand:    quietSource{wd: quietDemand},
 		Ephemeral: runnerSvc,
+		Timers:    timerSvc,
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger

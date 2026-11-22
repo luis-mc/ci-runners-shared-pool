@@ -1687,7 +1687,7 @@ export interface paths {
         };
         /**
          * The job, run, hold, timeout, queued and start-up timers
-         * @description scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). The grace of 30 s and the 10 minute extension are fixed.
+         * @description scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
          */
         get: operations["getTimerSettings"];
         /**
@@ -3546,6 +3546,8 @@ export interface components {
             queued_minutes: number;
             /** @description A runner that has not started its job in this time is removed and the job admitted again. Default 2. */
             startup_minutes: number;
+            /** @description Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes. */
+            enforce: boolean;
             /** @description Fixed at 30. */
             grace_seconds: number;
             /** @description Fixed at 10. */
@@ -3559,6 +3561,7 @@ export interface components {
             timeout_minutes?: number;
             queued_minutes?: number;
             startup_minutes?: number;
+            enforce?: boolean;
         };
         TimerSettingsProblem: {
             /** @enum {string} */

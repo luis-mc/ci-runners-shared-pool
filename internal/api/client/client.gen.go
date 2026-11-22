@@ -7937,6 +7937,9 @@ type TimelineSegmentMarkers string
 
 // TimerSettings defines model for TimerSettings.
 type TimerSettings struct {
+	// Enforce Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.
+	Enforce bool `json:"enforce"`
+
 	// ExtendMinutes Fixed at 10.
 	ExtendMinutes int `json:"extend_minutes"`
 
@@ -7973,12 +7976,13 @@ type TimerSettingsCheck struct {
 
 // TimerSettingsInput Only the fields given change.
 type TimerSettingsInput struct {
-	HoldMinutes    *int `json:"hold_minutes,omitempty"`
-	JobMinutes     *int `json:"job_minutes,omitempty"`
-	QueuedMinutes  *int `json:"queued_minutes,omitempty"`
-	RunMinutes     *int `json:"run_minutes,omitempty"`
-	StartupMinutes *int `json:"startup_minutes,omitempty"`
-	TimeoutMinutes *int `json:"timeout_minutes,omitempty"`
+	Enforce        *bool `json:"enforce,omitempty"`
+	HoldMinutes    *int  `json:"hold_minutes,omitempty"`
+	JobMinutes     *int  `json:"job_minutes,omitempty"`
+	QueuedMinutes  *int  `json:"queued_minutes,omitempty"`
+	RunMinutes     *int  `json:"run_minutes,omitempty"`
+	StartupMinutes *int  `json:"startup_minutes,omitempty"`
+	TimeoutMinutes *int  `json:"timeout_minutes,omitempty"`
 }
 
 // TimerSettingsProblem defines model for TimerSettingsProblem.
@@ -10843,7 +10847,7 @@ type ClientInterface interface {
 
 	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
 	//
-	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). The grace of 30 s and the 10 minute extension are fixed.
+	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
 	//
 	// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
 	GetTimerSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -15031,7 +15035,7 @@ func (c *Client) RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRe
 
 // GetTimerSettings The job, run, hold, timeout, queued and start-up timers
 //
-// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). The grace of 30 s and the 10 minute extension are fixed.
+// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
 //
 // Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
 func (c *Client) GetTimerSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -26651,7 +26655,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetTimerSettingsWithResponse The job, run, hold, timeout, queued and start-up timers
 	//
-	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). The grace of 30 s and the 10 minute extension are fixed.
+	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -39586,7 +39590,7 @@ func (c *ClientWithResponses) RedeemSetupLinkWithResponse(ctx context.Context, b
 
 // GetTimerSettingsWithResponse The job, run, hold, timeout, queued and start-up timers
 //
-// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). The grace of 30 s and the 10 minute extension are fixed.
+// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
 //
 // Returns a wrapper object for the known response body format(s).
 //

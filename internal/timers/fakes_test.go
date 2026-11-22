@@ -116,9 +116,14 @@ type rig struct {
 
 var t0 = time.Date(2026, 11, 22, 10, 0, 0, 0, time.UTC)
 
-func newRig() *rig {
+// newRig is an engine in enforce mode: the behaviour before observe mode.
+func newRig() *rig { return newRigMode(true) }
+
+func newRigMode(enforce bool) *rig {
 	r := &rig{clock: &fakeClock{t: t0}, agent: &fakeAgent{}, gh: &fakeGH{}, audit: &fakeAudit{}, store: newFakeStore()}
-	r.eng = New(Config{Settings: Defaults, Clock: r.clock, Agent: r.agent, GitHub: r.gh, Audit: r.audit, Store: r.store})
+	set := Defaults()
+	set.Enforce = enforce
+	r.eng = New(Config{Settings: func() Settings { return set }, Clock: r.clock, Agent: r.agent, GitHub: r.gh, Audit: r.audit, Store: r.store})
 	return r
 }
 
