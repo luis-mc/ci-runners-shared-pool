@@ -15,8 +15,8 @@
     %ProgramFiles%\crsp    crsp.exe; replaced by every upgrade
     %ProgramData%\crsp     the data folder (R5.10): config.toml, the database,
                            backups, logs, the CA. Administrators and SYSTEM only. Kept by every upgrade and by a
-                           silent uninstall; removed at uninstall only when the
-                           user ticks the box (REMOVEDATA=1).
+                           silent uninstall; deleted at uninstall only on request: PURGE=1 on msiexec, or
+                           "Delete my data too" in the remove window (OPS69).
 
   The service is `crsp.exe controller` as LocalSystem (R5.4: it manages the
   runner services and accounts and runs the MSI upgrade for auto-update), named "crsp" like internal/tray.ServiceName.
@@ -155,17 +155,28 @@
       One entry in Settings > Apps: the package's own (ProductCode, written by Windows
       Installer). Every major upgrade replaces it. An earlier build also wrote a second,
       hand-made key (Uninstall\crsp) and hid its own with ARPSYSTEMCOMPONENT; a machine
-      could then show the program twice (CRSP147), so neither is authored any more. A
-      Settings uninstall keeps the data; REMOVEDATA=1 on msiexec removes it.
+      could then show the program twice (CRSP147), so neither is authored any more.
     -->
 
     <!--
-      Uninstall asks whether to remove the data folder, default no. Silently,
-      `msiexec /x <msi> /qn` keeps it and REMOVEDATA=1 removes it. A major
-      upgrade never removes it (UPGRADINGPRODUCTCODE is set while the old
-      version is removed).
+      Remove (OPS69). An interactive uninstall asks every time, with no default, through the native
+      window `crsp lifecycle-window remove` (TRAY12): it exits 10 for Keep my data, 11 for Delete my
+      data too and 1 for Cancel. `crsp uninstall option ask-to FILE` calls it and writes the answer to FILE;
+      a cancel ends the uninstall with nothing changed. Silently, `msiexec /x <msi> /qn` keeps the data;
+      PURGE=1 deletes it (REMOVEDATA=1, the older name, is the same). A major upgrade never removes it
+      (UPGRADINGPRODUCTCODE is set while the old version is removed).
+      Keeping or deleting, the runners are unregistered from GitHub first, while the controller still
+      runs (UnregisterRunners, as the signed-in user), then `crsp uninstall option from-installer` stops what
+      is left, deletes everything crsp made when asked (settings, database, logs, caches, runner images,
+      containers and the crsp WSL distro) and writes the audit row with actor and result. The program,
+      the service and the other entries are removed by this package.
     -->
+    <Property Id="PURGE" Value="0" Secure="yes" />
+    <Property Id="PURGEARG" Value=" " />
     <Property Id="REMOVEDATA" Value="0" Secure="yes" />
+    <SetProperty Id="PURGE" Value="1" After="AppSearch" Sequence="both" Condition="REMOVEDATA=&quot;1&quot;" />
+    <SetProperty Id="PURGEARG" Value="--delete-data " After="SetPURGE" Sequence="both" Condition="PURGE=&quot;1&quot; OR REMOVEDATA=&quot;1&quot;" />
+    <SetProperty Id="CHOICEFILE" Value="[CommonAppDataFolder]crsp-remove-choice.txt" After="CostFinalize" Sequence="both" />
 
     <!-- WixQuietExec puts what a command prints into the MSI log. -->
     <SetProperty Id="StopServiceEarly"
@@ -238,9 +249,13 @@
                   Impersonate="no"
                   Return="ignore" />
 
-    <!-- The data folder's contents, removed at uninstall only on request, after the service has stopped. -->
+    <!--
+      The remove step, as SYSTEM, after the service has stopped and nothing runs from the program folder.
+      PURGE=1 on the command line deletes; otherwise the answer the window gave (CHOICEFILE) decides; with
+      neither, the data is kept. The actor of the audit row is the user who started the uninstall.
+    -->
     <SetProperty Id="RemoveData"
-                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command &quot;Remove-Item -LiteralPath '[DATAFOLDER]' -Recurse -Force -ErrorAction SilentlyContinue&quot;"
+                 Value="&quot;[INSTALLFOLDER]crsp.exe&quot; uninstall --from-installer --yes [PURGEARG]--actor &quot;[LogonUser]&quot; --choice-file &quot;[CHOICEFILE]&quot;"
                  Before="RemoveData"
                  Sequence="execute" />
     <CustomAction Id="RemoveData"
@@ -249,6 +264,44 @@
                   Execute="deferred"
                   Impersonate="no"
                   Return="ignore" />
+
+    <!-- Fallback for a delete when the program could not (it is gone or broken): the data folder is removed by the installer. -->
+    <SetProperty Id="PurgeFolder"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command &quot;Remove-Item -LiteralPath '[DATAFOLDER]' -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -LiteralPath '[CHOICEFILE]' -Force -ErrorAction SilentlyContinue&quot;"
+                 Before="PurgeFolder"
+                 Sequence="execute" />
+    <CustomAction Id="PurgeFolder"
+                  BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)"
+                  DllEntry="WixQuietExec"
+                  Execute="deferred"
+                  Impersonate="no"
+                  Return="ignore" />
+
+    <!--
+      The runners are unregistered from GitHub before the service stops: the controller does it, so it must
+      still run. This runs as the person who started the uninstall (their crsp login), before the tray and
+      the service are closed. A machine with nobody signed in to crsp keeps the runners registered; the
+      remove step says so in the audit row. It never blocks the uninstall.
+    -->
+    <CustomAction Id="UnregisterRunners"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]crsp.exe&quot; uninstall --runners-only"
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="ignore" />
+
+    <!--
+      The window that asks "Keep my data" or "Delete my data too" (TRAY12 builds it, `crsp lifecycle-window
+      remove`; this runs it through `crsp uninstall option ask-to`). An interactive uninstall only: a silent
+      one keeps the data, PURGE=1 deletes it. A cancel (exit 1) fails this action, so the uninstall ends
+      with nothing changed.
+    -->
+    <CustomAction Id="AskRemove"
+                  Directory="INSTALLFOLDER"
+                  ExeCommand="&quot;[INSTALLFOLDER]crsp.exe&quot; uninstall --ask-to &quot;[CHOICEFILE]&quot;"
+                  Execute="immediate"
+                  Impersonate="yes"
+                  Return="check" />
 
     <!--
       A failed run rolls back: Windows Installer puts the old version back
@@ -304,8 +357,12 @@
       <Custom Action="StopServiceEarly" After="RemoveExistingProducts" />
       <Custom Action="EndProgramProcesses" After="StopServices" />
       <Custom Action="StartServices2" After="StartServices" Condition="NOT REMOVE~=&quot;ALL&quot;" />
+      <Custom Action="UnregisterRunners" Before="CloseTray"
+              Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="RemoveData" After="EndProgramProcesses"
-              Condition="REMOVE~=&quot;ALL&quot; AND REMOVEDATA=&quot;1&quot; AND NOT UPGRADINGPRODUCTCODE" />
+              Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="PurgeFolder" After="RemoveData"
+              Condition="REMOVE~=&quot;ALL&quot; AND PURGE=&quot;1&quot; AND NOT UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
 
     <!-- What the install window says for each step that can take a moment (operations R5.86). -->
@@ -314,34 +371,22 @@
       <ProgressText Action="StopServiceEarly" Message="Stopping the crsp service" />
       <ProgressText Action="EndProgramProcesses" Message="Closing programs that use crsp files" />
       <ProgressText Action="StartServices2" Message="Starting the crsp service" />
-      <ProgressText Action="RemoveData" Message="Removing the crsp data folder" />
+      <ProgressText Action="UnregisterRunners" Message="Unregistering the runners from GitHub" />
+      <ProgressText Action="RemoveData" Message="Removing crsp" />
+      <ProgressText Action="PurgeFolder" Message="Removing the crsp data folder" />
     </UI>
 
-    <!-- The dialogs: the minimal install page, and on uninstall one question. -->
+    <!-- The dialogs: the minimal install page. The uninstall question is the native remove window (OPS69). -->
     <ui:WixUI Id="WixUI_Minimal" />
     <WixVariable Id="WixUILicenseRtf" Value="$(var.LicenseRtf)" />
     <!-- TRAY5 D12 / D17: the stock dialogs keep their layout; the art is ours. -->
     <WixVariable Id="WixUIBannerBmp" Value="$(var.BannerBmp)" />
     <WixVariable Id="WixUIDialogBmp" Value="$(var.DialogBmp)" />
 
-    <UI>
-      <Dialog Id="RemoveDataDlg" Width="370" Height="270" Title="[ProductName] Setup">
-        <Control Id="Title" Type="Text" X="15" Y="6" Width="340" Height="15" Transparent="yes" NoPrefix="yes" Text="{\WixUI_Font_Title}Remove [ProductName]" />
-        <Control Id="Body" Type="Text" X="25" Y="50" Width="320" Height="40" Transparent="yes" NoPrefix="yes"
-                 Text="This removes the crsp program, its Windows service, the PATH entry, the Start Menu shortcut, the tray autostart and the firewall rule." />
-        <Control Id="RemoveDataCheck" Type="CheckBox" X="25" Y="110" Width="320" Height="36" Property="REMOVEDATA" CheckBoxValue="1"
-                 Text="Also delete my data: the config file, the database, the audit log, backups and the certificate authority in [DATAFOLDER]. This cannot be undone." />
-        <Control Id="Remove" Type="PushButton" X="236" Y="243" Width="56" Height="17" Default="yes" Text="Remove">
-          <Publish Event="EndDialog" Value="Return" />
-        </Control>
-        <Control Id="Cancel" Type="PushButton" X="304" Y="243" Width="56" Height="17" Cancel="yes" Text="Cancel">
-          <Publish Event="EndDialog" Value="Exit" />
-        </Control>
-      </Dialog>
-    </UI>
+    <!-- Interactive uninstall only (full or reduced UI, not a silent run, not an upgrade, PURGE not given). -->
     <InstallUISequence>
-      <Show Dialog="RemoveDataDlg" After="CostFinalize"
-            Condition="Installed AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
+      <Custom Action="AskRemove" After="CostFinalize"
+              Condition="Installed AND REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE AND UILevel&gt;=4 AND PURGE&lt;&gt;&quot;1&quot;" />
     </InstallUISequence>
   </Package>
 </Wix>

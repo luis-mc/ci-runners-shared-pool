@@ -181,6 +181,29 @@ export class Mock {
       }),
     );
     await page.route('**/api/v1/**', (route) => this.answer(route));
+    // The lifecycle endpoints (/api/v1/update/*): idle and current, until a spec routes its own. Routes run last-added first, so this goes after the catch-all.
+    await page.route(
+      /\/api\/v1\/update\/(status|history|fleet|policy|install)$/,
+      (route) => {
+        const path = new URL(route.request().url()).pathname;
+        if (route.request().method() !== 'GET') return route.fulfill({ json: {} });
+        if (path.endsWith('/status'))
+          return route.fulfill({
+            json: {
+              state: 'idle',
+              current: '1.4.0',
+              available: null,
+              required: false,
+              policy: 'automatic_when_idle',
+              window: null,
+              next_check_at: null,
+              failures: null,
+              waiting_for_jobs: false,
+            },
+          });
+        return route.fulfill({ json: [] });
+      },
+    );
   }
 
   private async answer(route: Route): Promise<void> {

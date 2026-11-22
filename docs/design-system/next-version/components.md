@@ -746,6 +746,46 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Rules:** UX-41, UX-10, UX-51, UX-17, UX-16, UX-72, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/Help.test.tsx`, `apps/web/src/screens/help/Help.test.tsx`, `e2e/tests/web-console/help.spec.ts` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
+## 70. Update window
+
+- **Used for:** the whole update of the desktop app, in one window (UX-79, UX-80). Steps: Review, Downloading, Waiting for work to finish, Installing, Testing, Done. It shows progress and Cancel where the updater supports it. The result is on Done ("Updated to version 1.2.3."). On Windows it is a native window; the web console shows the same steps in its own page (component 73). An update nobody asked for ends with one tray notice that opens Done (component 74).
+- **Looks:** the product band at the top with the product icon, the step line, one detail line, a progress bar and a button row at the right. It grows with its content; it has no scrollbar.
+- **Source:** `internal/updatewindow` (native), `parts/rust/question_window.rs` of the starter
+- **Rules:** UX-79, UX-80, UX-16, UX-17, CORE-1, CORE-3, CORE-5, CORE-6.
+- **Guard:** the layout check of the window at 100%, 150% and 200% text scale; `scripts/design/guards/lifecycle/states-render.mjs` (LC-24, LC-30).
+
+## 71. Page sections
+
+- **Used for:** the top level of every page. It stacks the page's sections with one gap, the section token `--ds-space-6`. A page never sets its own gap.
+- **Looks:** a column of sections. Each section is marked `data-ds-section`.
+- **Source:** `packages/ui/src/components` (`PageSections`, `Section`)
+- **Rules:** UX-81, UX-10, UX-16, CORE-2, CORE-7.
+- **Guard:** `scripts/design/guards/design-guards/layout-roles.mjs` and `scripts/design/guards/design-guards/rendered-layout.mjs`.
+
+## 72. Card grid
+
+- **Used for:** cards side by side. It wraps from one column on a phone to as many as fit. The form role of a layout is the field grid (component 43), not a new part.
+- **Looks:** equal columns with the card gap `--ds-space-5`.
+- **Source:** `packages/ui/src/components` (`CardGrid`)
+- **Rules:** UX-81, UX-16, CORE-2, CORE-7.
+- **Guard:** `scripts/design/guards/design-guards/layout-roles.mjs`.
+
+## 73. Lifecycle parts
+
+- **Used for:** install, update and remove in the web console and on a phone: `UpdateBanner` (ready, running, done, failed), `UpdatesCard` (policy, time window, wait for running work, last check, admin lock), `UpdateHistory` (audit events with actor and result), `RemoteUpdate` (phone, 360 to 393 px), `RemoveDialog` (Remove disabled until Keep my data or Delete my data too is chosen) and `FleetRows` (Up to date, Waiting, Needs you). Words come from the lifecycle words table.
+- **Looks:** cards on the shared part class `ds-part`. Tokens only. Every state is a word, never colour alone.
+- **Source:** `packages/ui/src/components/lifecycle` (LOOK53 builds it from `parts/react-typescript/` of the starter)
+- **Rules:** UX-82, UX-4, UX-26, UX-16, CORE-1, CORE-2, CORE-4, CORE-5.
+- **Guard:** `scripts/design/guards/lifecycle/parts-tokens.mjs` (LC-23) and `scripts/design/guards/lifecycle/states-render.mjs` (LC-24).
+
+## 74. Question window and tray menu
+
+- **Used for:** the native side of the lifecycle. One question window shows update progress and the remove question. The tray menu only notifies.
+- **Looks:** the window is sized from its content and the text scale, never a fixed size. The tray shows one notice per event per 24 hours.
+- **Source:** `internal/updatewindow`, `internal/tray`, `internal/trayserver`
+- **Rules:** UX-83, UX-79, UX-80, CORE-3, CORE-4.
+- **Guard:** `scripts/design/guards/lifecycle/tray-modal.mjs` (LC-22, LC-30) and `scripts/design/guards/lifecycle/states-render.mjs` (LC-30).
+
 ## How to add a component
 
 - Give it the next number.

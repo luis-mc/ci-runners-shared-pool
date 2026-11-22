@@ -7,7 +7,6 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
 	"os/exec"
 	"runtime"
-	"sync/atomic"
 )
 
 // LinkSource asks the service for a one-time link.
@@ -52,9 +51,6 @@ type Opener struct {
 	Links   LinkSource
 	Targets TargetLinkSource // for the Review steps; nil when the service cannot
 	Checker UpdateChecker
-	// Ask shows the update dialog and Installer starts the install after Install now (CRSP147); nil: a notice only.
-	Ask       Asker
-	Installer UpdateInstaller
 	// RepoURL is the repository page that Open on GitHub opens; empty takes the github.com page.
 	RepoURL string
 	Version string // this tray's own version, for the "up to date" notice
@@ -64,12 +60,12 @@ type Opener struct {
 	// Native opens the native update window (Windows, TRAY5); nil: the console page opens instead.
 	Native NativeWindow
 	Files  Launcher
-	Notify Notifier
+	// Notices keeps one notice per event per 24 hours (LC-22); nil lets every notice through.
+	Notices *Notices
+	Notify  Notifier
 	// Current returns the last known status; Open refuses a dead link while stopped (R5.14).
 	Current func() Status
 	LogDir  func() string
-
-	asking atomic.Bool // an update dialog is open; a second press starts no other (TRAY2)
 }
 
 // Open asks for a one-time link and opens it in the browser (R5.6, R5.14).

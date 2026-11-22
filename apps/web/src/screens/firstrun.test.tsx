@@ -223,8 +223,8 @@ describe('the machine page (findings 7, 8, 9)', () => {
 
   it('keeps Remove in its own section with what it does', async () => {
     renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/pool/machines/m1');
-    const section = await screen.findByRole('region', { name: 'Remove this machine' });
-    expect(within(section).getByText(/Jobs that run there finish first/)).toBeTruthy();
-    expect(within(section).getByRole('button', { name: 'Remove' })).toBeTruthy();
+    const section = await screen.findByRole('region', { name: 'Remove crsp' });
+    expect(within(section).getByText('Choose what happens to your data.')).toBeTruthy();
+    expect(within(section).getByRole('button', { name: 'Remove crsp' })).toBeTruthy();
   });
 });

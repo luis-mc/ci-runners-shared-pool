@@ -169,27 +169,22 @@ describe('Machine detail', () => {
     expect(api.count('POST', '/api/v1/machines/m1/drain')).toBe(0);
   });
 
-  it('removes a machine only after the question names it, its runners and its jobs', async () => {
+  it('removes crsp from a machine only after Keep my data or Delete my data too is chosen', async () => {
     const api = base()
-      .on('DELETE', '/api/v1/machines/:id', {
-        id: 'c2',
-        machine_id: 'm1',
-        kind: 'remove',
-        state: 'waiting',
-        started_at: 'x',
-        waiting_for: [],
-      })
+      .on('POST', '/api/v1/remove', {})
       .on('GET', '/api/v1/machines', { items: [] });
     renderApp(api, '/pool/machines/m1');
-    fireEvent.click(await screen.findByRole('button', { name: 'Remove' }));
-    const dialog = await screen.findByRole('dialog', { name: 'Remove build-1?' });
-    expect(within(dialog).getByText('Machine build-1')).toBeTruthy();
-    expect(within(dialog).getByText(/^Its runners/)).toBeTruthy();
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Remove' }));
-    await waitFor(() => expect(api.count('DELETE', '/api/v1/machines/m1')).toBe(1));
-    expect(api.calls.find((c) => c.method === 'DELETE')?.query.get('confirm')).toBe(
-      'true',
-    );
+    fireEvent.click(await screen.findByRole('button', { name: 'Remove crsp' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Remove crsp' });
+    const confirm = within(dialog).getByRole('button', { name: 'Remove crsp' });
+    expect(confirm.hasAttribute('disabled')).toBe(true);
+    fireEvent.click(within(dialog).getByRole('radio', { name: /Delete my data too/ }));
+    fireEvent.click(confirm);
+    await waitFor(() => expect(api.count('POST', '/api/v1/remove')).toBe(1));
+    expect(api.calls.find((c) => c.path === '/api/v1/remove')?.body).toEqual({
+      machine_id: 'm1',
+      delete_data: true,
+    });
   });
 
   it('shows Resume for a drained machine and resumes without a question', async () => {
@@ -261,8 +256,8 @@ describe('Machine detail, one page', () => {
     expect(primaries).toEqual(['Save']);
     expect(screen.getAllByRole('button', { name: 'Save' }).length).toBe(1);
     expect(screen.getAllByRole('button', { name: 'Cancel' }).length).toBe(1);
-    const remove = screen.getByRole('region', { name: 'Remove this machine' });
-    expect(within(remove).getByRole('button', { name: 'Remove' })).toBeTruthy();
+    const remove = screen.getByRole('region', { name: 'Remove crsp' });
+    expect(within(remove).getByRole('button', { name: 'Remove crsp' })).toBeTruthy();
   });
 
   it('keeps the h1 when the machine could not load', async () => {

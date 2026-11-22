@@ -175,6 +175,9 @@ func VersionedName(plain, version string) string {
 // PlainName is the reverse of VersionedName: crsp-windows-amd64_0.1.15.msi gives
 // crsp-windows-amd64.msi. A name without a version part comes back unchanged.
 func PlainName(name string) string {
+	if p := plainFromRelease(name); p != "" {
+		return p
+	}
 	for _, ext := range []string{".tar.gz", ".zip", ".msi", ".pkg", ".deb", ".rpm"} {
 		if base, ok := strings.CutSuffix(name, ext); ok {
 			if i := strings.LastIndex(base, "_"); i > 0 {
@@ -186,30 +189,66 @@ func PlainName(name string) string {
 	return name
 }
 
-// PickAsset chooses the asset of a release for a plain name: the versioned name
-// first, the plain name as the fallback for releases up to 0.1.14. When neither
-// is there it returns the versioned name, so the error names what is expected.
+// ReleaseName is the release asset name of the lifecycle standard: Crsp-<version>-<os>-<arch>.<ext>
+// (os win, linux or macos; arch x64 or arm64), for example Crsp-0.1.22-win-x64.msi. It takes the
+// plain name crsp-<goos>-<goarch>.<ext>; a name of another shape comes back as "".
+func ReleaseName(plain, version string) string {
+	version = strings.TrimPrefix(version, "v")
+	for _, ext := range []string{".tar.gz", ".zip", ".msi", ".pkg", ".deb", ".rpm"} {
+		base, ok := strings.CutSuffix(plain, ext)
+		if !ok {
+			continue
+		}
+		parts := strings.Split(base, "-")
+		if len(parts) != 3 || parts[0] != "crsp" || version == "" {
+			return ""
+		}
+		osName := map[string]string{"windows": "win", "darwin": "macos", "linux": "linux"}[parts[1]]
+		arch := map[string]string{"amd64": "x64", "arm64": "arm64"}[parts[2]]
+		if osName == "" || arch == "" {
+			return ""
+		}
+		return "Crsp-" + version + "-" + osName + "-" + arch + ext
+	}
+	return ""
+}
+
+// ManifestName is the signed manifest of an asset: the asset's name plus .manifest.json.
+func ManifestName(asset string) string { return asset + ".manifest.json" }
+
+// assetCandidates lists the names a release may use for a plain name, newest scheme first: the
+// lifecycle name (Crsp-<version>-<os>-<arch>.<ext>), the versioned name since OPS40, the plain
+// name up to 0.1.14. The old names stay for one transition release.
+func assetCandidates(plain, version string) []string {
+	out := make([]string, 0, 3)
+	if n := ReleaseName(plain, version); n != "" {
+		out = append(out, n)
+	}
+	return append(out, VersionedName(plain, version), plain)
+}
+
+// PickAsset chooses the asset of a release for a plain name: the lifecycle name first, then the
+// versioned name, then the plain name. When none is there it returns the first candidate, so the
+// error names what is expected.
 func PickAsset(rel Release, plain string) string {
-	v := VersionedName(plain, rel.Version)
-	if _, ok := rel.Assets[v]; ok {
-		return v
+	c := assetCandidates(plain, rel.Version)
+	for _, n := range c {
+		if _, ok := rel.Assets[n]; ok {
+			return n
+		}
 	}
-	if _, ok := rel.Assets[plain]; ok {
-		return plain
-	}
-	return v
+	return c[0]
 }
 
 // PickFromSums is PickAsset for a SHA256SUMS text.
 func PickFromSums(sums []byte, plain, version string) string {
-	v := VersionedName(plain, version)
-	if _, ok := SumFor(sums, v); ok {
-		return v
+	c := assetCandidates(plain, version)
+	for _, n := range c {
+		if _, ok := SumFor(sums, n); ok {
+			return n
+		}
 	}
-	if _, ok := SumFor(sums, plain); ok {
-		return plain
-	}
-	return v
+	return c[0]
 }
 
 // AssetName is the plain release asset name this OS and architecture installs
@@ -285,4 +324,25 @@ func AssetFor(kind, goos, goarch string) string {
 		return "crsp-linux-" + goarch + ".rpm"
 	}
 	return AssetName(goos, goarch)
+}
+
+// plainFromRelease reverses ReleaseName: Crsp-0.1.22-win-x64.msi gives crsp-windows-amd64.msi.
+func plainFromRelease(name string) string {
+	for _, ext := range []string{".tar.gz", ".zip", ".msi", ".pkg", ".deb", ".rpm"} {
+		base, ok := strings.CutSuffix(name, ext)
+		if !ok {
+			continue
+		}
+		parts := strings.Split(base, "-")
+		if len(parts) < 4 || parts[0] != "Crsp" {
+			return ""
+		}
+		goos := map[string]string{"win": "windows", "macos": "darwin", "linux": "linux"}[parts[len(parts)-2]]
+		arch := map[string]string{"x64": "amd64", "arm64": "arm64"}[parts[len(parts)-1]]
+		if goos == "" || arch == "" {
+			return ""
+		}
+		return "crsp-" + goos + "-" + arch + ext
+	}
+	return ""
 }

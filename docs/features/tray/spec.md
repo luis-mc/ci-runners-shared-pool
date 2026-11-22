@@ -218,6 +218,12 @@ The band, the buttons and the focus ring follow the design system, component 49 
 
 **R5.30** — Open on GitHub MUST open `https://github.com/luis-mc/ci-runners-shared-pool` in the default browser. (M1, CRSP19)
 
+**R5.31** (UX-83, component 74) — The tray only notifies (LC-22). It MUST NOT show a Yes/No box, an OK box or any question of its own. A found update opens the console page, or the native window when the console cannot open; with neither it shows one notice with no button. One notice per event per 24 hours. (TRAY12)
+
+**R5.32** (UX-79, UX-80, component 70) — The native update window MUST show every update state that can appear in it: waiting, downloading with progress, verifying, installing, testing, updated, rolling back, rolled back, refused and skipped, plus the end states already built. Every word comes from the lifecycle words table (LC-2, LC-24). It MUST NOT clip at 100%, 125%, 150% and 200% DPI (LC-30). (TRAY12)
+
+**R5.33** (UX-82, component 74) — `crsp lifecycle-window remove` opens the remove question: Keep my data and Delete my data too, none chosen, Cancel, and Remove disabled until one is chosen, with the hint `Choose what happens to your data first.` Exit code 10 means keep, 11 delete, 1 cancel. (LC-24, TRAY12)
+
 ### Notices
 
 **R5.19** — The tray MUST show each notice from the service (machine offline, job waiting longer than N minutes, disk nearly full, runner version outdated, update ready) as one OS notification, once per change of that notice. A notice that has not changed MUST NOT be shown again, also after the tray restarts. (M8)
@@ -345,6 +351,9 @@ Rows marked built have tests that exist and run in CI. Rows marked planned are n
 | R5.28 | built: internal/settings/settings_test.go, TestAutoUpdateDefaultsOnAndToggles; internal/api/handlers_update_test.go, TestSettingsAutoUpdateDefaultOnAndToggle; internal/cli/cmd_update_test.go, TestUpdateAutoTogglesTheSetting; apps/web/src/screens/settings/Updates.test.tsx |
 | R5.29 | built: internal/tray/menu_test.go, TestClientCarriesUpdateFieldsAndTarget, TestLookForUpdatesSaysTheResult |
 | R5.30 | built: internal/tray/menu_test.go, TestOpenOnGitHubOpensTheRepository |
+| R5.31 | built: internal/tray/modal_guard_test.go, TestTrayAsksNothing, TestNoticeWindowIs24Hours; internal/tray/update_prompt_test.go, TestNoWindowShowsOneNoticeFromTheWordsTable, TestNoticesOncePer24Hours |
+| R5.32 | built: internal/updatewindow/lifecycle_test.go, TestEveryLifecycleStateRenders, TestRolledBackNamesTheRetryTime, TestNoBannedWordInAnyView; internal/updatewindow/layout_test.go, TestNothingIsClippedAtAnyDPI (fake font at 100, 125, 150, 200%). The real-font check `crsp update-window --layout-check` runs on Windows only |
+| R5.33 | built: internal/updatewindow/lifecycle_test.go, TestRemoveHasNoDefaultAndIsDisabledUntilChosen, TestRemoveExitCodes, TestRemoveArrowKeysStepTheChoice, TestRemoveLayoutGrowsWithALongPath; the drawn window is built for Windows and compiled by GOOS=windows go vet |
 | R5.19 | planned: internal/tray/notices_test.go, TestNoticeShownOncePerChangeAcrossRestart |
 | R5.20 | planned: internal/tray/notices_test.go, TestNoticeClickOpensLink |
 | R5.21 | built: internal/tray/tray_test.go, TestAutostartOnOff (XDG and LaunchAgent writers; the Windows Run-key writer is built, not unit tested) |
@@ -430,3 +439,14 @@ Source: .github/workflows/tray-smoke.yml
 Source: packaging/autostart/README.md
 
 Also: menu_open_windows.go and menu_open_other.go (is the menu open), autostart_windows.go, autostart_other.go, svcstate_darwin.go, svcstate_windows.go, notify_*.go and sni_other.go are the per-OS parts; internal/tray/testdata/snihost is the StatusNotifierWatcher stand-in for the Linux smoke.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-79, UX-80, UX-82 `internal/updatewindow/lifecycle_test.go`
+Proof: UX-83 `internal/tray/modal_guard_test.go`
+Proof: CORE-1, CORE-7, UX-1, UX-6, UX-18, UX-26, UX-29, UX-30, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-71 `scripts/design/action-bar.test.ts`

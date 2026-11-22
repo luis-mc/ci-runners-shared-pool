@@ -18,13 +18,15 @@ import (
 )
 
 const (
-	className  = "CrspUpdateWindow"
-	mutexName  = `Local\crsp-update-window`
-	timerTick  = 1
-	timerAnim  = 2
-	wmRefresh  = wmApp + 1
-	pollEvery  = time.Second
-	installMax = 3 * time.Minute // the service answers Install after the first stage
+	className = "CrspUpdateWindow"
+	mutexName = `Local\crsp-update-window`
+	// removeMutexName keeps the remove question apart from an update window.
+	removeMutexName = `Local\crsp-remove-window`
+	timerTick       = 1
+	timerAnim       = 2
+	wmRefresh       = wmApp + 1
+	pollEvery       = time.Second
+	installMax      = 3 * time.Minute // the service answers Install after the first stage
 )
 
 // win is the one window of the process.
@@ -36,6 +38,8 @@ type win struct {
 
 	mu    sync.Mutex // the model and ui are touched by the window thread and the poller
 	model *Model
+	rm    *RemoveModel // the remove question; nil for the update
+	exit  int          // the exit code of the process (remove: ExitKeep, ExitDelete, ExitCancel)
 	ui    uiState
 
 	layout Layout
@@ -54,7 +58,11 @@ func runWindow(c Config, o Options) int {
 	_, _, _ = pSetProcessDpiAwareness.Call(^uintptr(3)) // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4
 
 	// One window only: a second start brings the first to the front.
-	if _, err := windows.CreateMutex(nil, false, wstr(mutexName)); err != nil {
+	mutex := mutexName
+	if c.Mode == ModeRemove {
+		mutex = removeMutexName
+	}
+	if _, err := windows.CreateMutex(nil, false, wstr(mutex)); err != nil {
 		if err == windows.ERROR_ALREADY_EXISTS {
 			focusFirst()
 			return 0
@@ -62,11 +70,14 @@ func runWindow(c Config, o Options) int {
 	}
 
 	w := &win{svc: o.Service, model: NewModel(c.From, c.To, c.Mode), ui: newUI()}
+	if c.Mode == ModeRemove {
+		w.rm, w.exit, w.svc = NewRemoveModel(c.Product, c.Size, c.Path), ExitCancel, nil
+	}
 	theWin = w
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 	// A first reading before the window opens: it decides what the first picture is.
-	if w.svc != nil {
+	if w.svc != nil && w.rm == nil {
 		sctx, sc := context.WithTimeout(ctx, 4*time.Second)
 		st, err := w.svc.Status(sctx)
 		sc()
@@ -130,7 +141,7 @@ func runWindow(c Config, o Options) int {
 		_, _, _ = pDispatchMessage.Call(ptr(&m))
 	}
 	w.fonts.free()
-	return 0
+	return w.exit
 }
 
 // focusFirst brings the window of the first start to the front.
@@ -166,8 +177,16 @@ func loadIcons(dpi int) (big, small uintptr) {
 func (w *win) relayout() {
 	w.mu.Lock()
 	defer w.mu.Unlock()
-	w.view = w.model.View()
+	w.view = w.currentView()
 	w.layout = Compute(w.fonts.metrics(), w.view)
+}
+
+// currentView is the remove question or the update step. The caller holds the lock.
+func (w *win) currentView() View {
+	if w.rm != nil {
+		return w.rm.View()
+	}
+	return w.model.View()
 }
 
 func (w *win) outerSize() (int, int) {
@@ -185,7 +204,7 @@ func (w *win) afterChange() {
 	w.mu.Lock()
 	v, l := w.view, w.layout
 	if w.ui.focus < 0 || w.ui.focus >= len(v.Buttons) || w.lastSt != v.State {
-		w.ui.focus = indexOf(v, v.Default)
+		w.ui.focus = indexOf(v, v.Default) // -1 when nothing is the default (remove)
 	}
 	if w.ui.hot >= len(v.Buttons) {
 		w.ui.hot = -1
@@ -246,7 +265,16 @@ func (w *win) activate(id ButtonID) {
 		return
 	}
 	w.mu.Unlock()
+	if w.rm != nil {
+		w.activateRemove(id)
+		return
+	}
 	switch id {
+	case BtnWhatsNew:
+		w.mu.Lock()
+		v := w.model.doneVersion()
+		w.mu.Unlock()
+		openURL(releaseURL(v))
 	case BtnNotNow, BtnHide, BtnClose:
 		_, _, _ = pDestroyWindow.Call(w.hwnd) // the update, if any, goes on in the service
 	case BtnUpdate:
@@ -281,6 +309,38 @@ func (w *win) activate(id ButtonID) {
 			_, _, _ = pPostMessage.Call(w.hwnd, wmRefresh, 0, 0)
 		}()
 	}
+}
+
+// activateRemove does what a button of the remove question says. Remove presses only when a
+// choice is made; Cancel, Escape and the close button leave with ExitCancel.
+func (w *win) activateRemove(id ButtonID) {
+	w.mu.Lock()
+	code, ok := w.rm.ExitCode()
+	w.mu.Unlock()
+	switch id {
+	case BtnRemove:
+		if !ok {
+			return // disabled until Keep my data or Delete my data too is chosen
+		}
+		w.exit = code
+	case BtnCancel:
+		w.exit = ExitCancel
+	default:
+		return
+	}
+	_, _, _ = pDestroyWindow.Call(w.hwnd)
+}
+
+// choiceAt is the choice under (x, y), or "".
+func (w *win) choiceAt(x, y int) ChoiceID {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	for _, it := range w.layout.Items {
+		if it.Kind == KindChoice && x >= it.Rect.Min.X && x < it.Rect.Max.X && y >= it.Rect.Min.Y && y < it.Rect.Max.Y {
+			return it.Choice
+		}
+	}
+	return ""
 }
 
 // buttonAt is the index of the button under (x, y), or -1.
@@ -366,6 +426,13 @@ func wndProc(hwnd, m, wp, lp uintptr) uintptr {
 		invalidate(hwnd)
 		return 0
 	case wmLButtonDown:
+		if c := w.choiceAt(lo(lp), hi(lp)); c != "" && w.rm != nil {
+			w.mu.Lock()
+			w.rm.Choose(c)
+			w.mu.Unlock()
+			w.afterChange()
+			return 0
+		}
 		i := w.buttonAt(lo(lp), hi(lp))
 		if i >= 0 {
 			w.mu.Lock()
@@ -430,10 +497,22 @@ func (w *win) key(vk uintptr) {
 		invalidate(w.hwnd)
 	case vkReturn:
 		w.mu.Unlock()
-		w.activate(v.Default)
+		if v.Default != "" { // remove has no default: Enter presses nothing
+			w.activate(v.Default)
+		}
 	case vkEscape:
 		w.mu.Unlock()
 		w.activate(v.EscapeIs)
+	case vkDown, vkRight, vkUp, vkLeft:
+		if w.rm != nil {
+			d := 1
+			if vk == vkUp || vk == vkLeft {
+				d = -1
+			}
+			w.rm.Step(d)
+		}
+		w.mu.Unlock()
+		w.afterChange()
 	case vkSpace:
 		id, ok := w.buttonID(w.ui.focus)
 		w.mu.Unlock()
