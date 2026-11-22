@@ -43,6 +43,7 @@ type Runner struct {
 	Name           string
 	MachineID      string
 	OS             string
+	Labels         []string // the labels it carries: self-hosted, the OS, the architecture
 	ServiceRef     string // what the agent starts and stops
 	GitHubRunnerID int64
 	InstallationID int64

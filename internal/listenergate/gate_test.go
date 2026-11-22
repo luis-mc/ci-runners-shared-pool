@@ -265,3 +265,27 @@ func TestStatusSaysOfflineByDesign(t *testing.T) {
 		t.Errorf("%+v", st[0])
 	}
 }
+
+func TestPickPrefersTheRunnerWithoutAJobAndChecksLabels(t *testing.T) {
+	a := Runner{ID: "a", Name: "box-a", MachineID: "m1", OS: "linux", Labels: []string{"self-hosted", "linux", "x64"}, ServiceRef: "sa"}
+	b := Runner{ID: "b", Name: "box-b", MachineID: "m1", OS: "linux", Labels: []string{"self-hosted", "linux", "x64", "gpu"}, ServiceRef: "sb"}
+	other := Runner{ID: "c", Name: "box-c", MachineID: "m2", OS: "linux", Labels: []string{"self-hosted", "linux"}}
+	r := newRig(true, a, b, other)
+	ctx := context.Background()
+	routing := func(l string) bool { return strings.HasPrefix(l, "crsp-") }
+	_, _ = r.g.Admit(ctx, Job{JobID: 1, JobLabel: "crsp-x-0001", Runner: a})
+	got, ok, err := r.g.Pick(ctx, "m1", "linux", []string{"self-hosted", "linux", "crsp-x-0002"}, routing)
+	if err != nil || !ok || got.ID != "b" {
+		t.Fatalf("got %+v ok=%v err=%v", got, ok, err)
+	}
+	got, ok, _ = r.g.Pick(ctx, "m1", "linux", []string{"self-hosted", "linux", "gpu"}, routing)
+	if !ok || got.ID != "b" {
+		t.Errorf("gpu job: %+v", got)
+	}
+	if _, ok, _ := r.g.Pick(ctx, "m1", "windows", nil, routing); ok {
+		t.Error("a Linux runner was picked for a Windows job")
+	}
+	if _, ok, _ := r.g.Pick(ctx, "m3", "linux", nil, routing); ok {
+		t.Error("a runner of another machine was picked")
+	}
+}

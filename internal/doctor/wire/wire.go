@@ -45,6 +45,8 @@ type DoctorDeps struct {
 	Ephemeral doctor.EphemeralSource
 	// Timers tells whether the timers enforce; nil makes timers.mode skip.
 	Timers doctor.TimerSource
+	// ListenerGate tells whether the listener gate enforces; nil makes listener.gate skip.
+	ListenerGate doctor.GateSource
 }
 
 // NewDoctor makes the engine with the M1 core checks and every extra check,
@@ -58,7 +60,7 @@ func NewDoctor(d DoctorDeps) (*doctor.Engine, *doctor.Service) {
 	eng := &doctor.Engine{
 		Registry: reg, Store: d.Store, Events: d.Events, Logger: d.Logger,
 		Env: func(ctx context.Context) (doctor.Env, error) {
-			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers}
+			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate}
 			if d.GitHub != nil {
 				g, err := d.GitHub(ctx)
 				if err != nil {

@@ -554,7 +554,7 @@ Rows that name a file without "planned" are built (CRSP23). Planned rows are NOT
 | R5.61 | internal/doctor/checks/machinereset_test.go TestMachineResetWarns; internal/store/controllerstate_test.go TestResetSigns |
 | R5.62 | internal/doctor/checks/checks_test.go TestLoadBudgetWarnsWhileJobsRun |
 | R5.63 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsSameWarnsForMissingTool, TestRunnerToolsSameOKWhenEqual, TestRunnerToolsSameSkipsWithoutProbe, TestRunnerToolsSameNeedsTwoRunners |
-| R5.64 | `internal/doctor/checks/poolmemory_test.go` TestPoolMemoryFinding, TestPoolMemoryOfflineMachineIsSkipped; `internal/doctor/wire/wire_test.go` (53 core checks) |
+| R5.64 | `internal/doctor/checks/poolmemory_test.go` TestPoolMemoryFinding, TestPoolMemoryOfflineMachineIsSkipped; `internal/doctor/wire/wire_test.go` (55 core checks) |
 | R5.65 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsPlan, TestRunnerToolsPlanSaysWhichXcodeToInstall |
 | R5.65 | `internal/doctor/checks/timers_test.go` TestTimersMode |
 

@@ -200,3 +200,57 @@ func (g *Gate) finish(ctx context.Context, l Lease) error {
 
 // Save is the store write, kept apart so finish reads clearly.
 func (g *Gate) Save(ctx context.Context, l Lease) error { return g.Store.Save(ctx, l) }
+
+// Holds is true while the gate keeps a label or a listener for the job.
+func (g *Gate) Holds(ctx context.Context, jobID int64) bool {
+	l, ok, err := g.Store.Get(ctx, jobID)
+	return err == nil && ok && (l.State == Started || l.State == Stopping)
+}
+
+// Serves reports whether the runner can carry a job: the OS matches and every
+// generic label of the job is one the runner has. A routing label is the one the
+// gate adds, so it is skipped.
+func (r Runner) Serves(os string, labels []string, isRouting func(string) bool) bool {
+	if os != "" && !strings.EqualFold(r.OS, os) {
+		return false
+	}
+	have := map[string]bool{"self-hosted": true, strings.ToLower(r.OS): true}
+	for _, l := range r.Labels {
+		have[strings.ToLower(l)] = true
+	}
+	for _, raw := range labels {
+		l := strings.ToLower(strings.TrimSpace(raw))
+		if l == "" || (isRouting != nil && isRouting(l)) {
+			continue
+		}
+		if !have[l] {
+			return false
+		}
+	}
+	return true
+}
+
+// Pick chooses the gated runner of a machine that takes a job: one that serves
+// its labels and holds the fewest open leases, so a runner with no job is
+// preferred. ok is false when the machine has none.
+func (g *Gate) Pick(ctx context.Context, machineID, os string, labels []string, isRouting func(string) bool) (Runner, bool, error) {
+	rs, err := g.Runners.Gated(ctx)
+	if err != nil {
+		return Runner{}, false, err
+	}
+	var best Runner
+	bestOpen, found := 0, false
+	for _, r := range rs {
+		if r.MachineID != machineID || !r.Serves(os, labels, isRouting) {
+			continue
+		}
+		open, err := g.Store.OpenFor(ctx, r.ID)
+		if err != nil {
+			return Runner{}, false, err
+		}
+		if !found || len(open) < bestOpen {
+			best, bestOpen, found = r, len(open), true
+		}
+	}
+	return best, found, nil
+}
