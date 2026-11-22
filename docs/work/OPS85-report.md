@@ -14,3 +14,9 @@ Branch `OPS85-open-runs-on-pr`, from `origin/OPS77-integration` (carries OPS73).
 - Audit: `runs_on_pr.opened` / `runs_on_pr.existing`, one row per pull request.
 - Nothing calls OpenPR except the POST handler: no loop, webhook or schedule.
 - For `all`, a refusal or failure of one repository is that row's state; the others go on.
+
+## Result
+
+CI `ci.yml` run 45002175813 green on 2111fe4. Draft PR #388.
+
+CODE DONE 2111fe4882ce12a6631235c9e0da33afe97a5c20
