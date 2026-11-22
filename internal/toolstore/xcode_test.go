@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -20,7 +21,7 @@ func fakeXcodes(versions ...string) XcodeFinder {
 		app := "/Applications/Xcode-" + v + ".app"
 		apps = append(apps, app)
 		if !bad {
-			byDev[filepath.Join(app, "Contents", "Developer")] = "Xcode " + v + "\nBuild version 16C5032a\n"
+			byDev[path.Join(app, "Contents", "Developer")] = "Xcode " + v + "\nBuild version 16C5032a\n"
 		}
 	}
 	return XcodeFinder{
