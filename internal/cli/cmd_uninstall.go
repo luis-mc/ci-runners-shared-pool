@@ -17,6 +17,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/client"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/uninstall"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
 )
 
 // UninstallHooks lets the program and the tests replace the parts of `crsp uninstall` that touch the machine.
@@ -144,6 +145,10 @@ func (c *call) uninstall(args []string) error {
 	}
 	if len(sum.Warnings) > 0 {
 		_, _ = fmt.Fprintf(w, "crsp is removed, with %d warning(s) above.\n", len(sum.Warnings))
+		return nil
+	}
+	if hooks.RemoveProgram == nil && runtime.GOOS == "windows" {
+		_, _ = fmt.Fprintln(w, "Windows Installer is removing the crsp program and service now; it ends this program and finishes in a moment.")
 		return nil
 	}
 	_, _ = fmt.Fprintln(w, "crsp is removed.")
@@ -302,30 +307,30 @@ func (c *call) hostSteps(runners func(ctx context.Context) (int, error)) uninsta
 	}
 }
 
-// removeProgram removes the program and the service when crsp uninstall is run by hand. On Windows it starts
-// the installer's uninstall detached (it ends this process, which is in the program folder), passing PURGE
-// through. Elsewhere the package manager owns the files.
+// removeProgram removes the program and the service when crsp uninstall is run by hand. On Windows, for an
+// MSI install (the install-kind marker next to the exe), it hands the removal to Windows Installer: msiexec
+// /x with PURGE=1 for --delete-data, started detached so it can replace this very exe. The installer ends
+// this process, so the call returns once msiexec has started. Elsewhere the package manager owns the files.
 func removeProgram(ctx context.Context, deleteData bool) error {
 	if runtime.GOOS != "windows" {
 		return errors.New("remove the package with your package manager (apt remove crsp, dnf remove crsp, or the macOS uninstaller); the data step is done")
 	}
-	code, err := msiProductCode(ctx)
-	if err != nil {
-		return err
+	if self, err := os.Executable(); err == nil && update.InstallKindFor(self, "windows") != update.KindMSI {
+		return errors.New("this copy of crsp was not installed by the Windows installer; delete its folder yourself; the data step is done")
 	}
-	purge := "0"
-	if deleteData {
-		purge = "1"
-	}
-	// An uninstall run by the installer that this very command started never asks again: the answer is PURGE.
-	cmd := exec.CommandContext(ctx, filepath.Join(os.Getenv("SystemRoot"), "System32", "msiexec.exe"), "/x", code, "/qn", "/norestart", "PURGE="+purge)
-	return cmd.Start()
+	return uninstall.MSIHandoff{
+		SystemRoot:  os.Getenv("SystemRoot"),
+		ProductCode: msiProductCode,
+		Start:       uninstall.StartDetached,
+		LogFile:     filepath.Join(os.TempDir(), "crsp-uninstall.log"),
+	}.Remove(ctx, deleteData)
 }
 
-// msiProductCode reads the ProductCode of the installed crsp from the Apps list.
+// msiProductCode reads the ProductCode of the installed crsp: from the Apps list, else from the UpgradeCode.
 func msiProductCode(ctx context.Context) (string, error) {
 	out, err := exec.CommandContext(ctx, "powershell.exe", "-NoProfile", "-NonInteractive", "-Command",
-		`(Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'CI Runners Shared Pool' } | Select-Object -First 1).PSChildName`).Output()
+		`$c = (Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*','HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -eq 'CI Runners Shared Pool' } | Select-Object -First 1).PSChildName; `+
+			`if (-not $c) { try { $c = @((New-Object -ComObject WindowsInstaller.Installer).RelatedProducts('`+uninstall.UpgradeCode+`'))[0] } catch { } }; $c`).Output()
 	code := strings.TrimSpace(string(out))
 	if err != nil || !strings.HasPrefix(code, "{") {
 		return "", errors.New("crsp is not in the Apps list; nothing to remove")

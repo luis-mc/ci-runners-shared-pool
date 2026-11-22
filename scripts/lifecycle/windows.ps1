@@ -255,6 +255,8 @@ function Lc15Cli { # purge by the CLI: crsp uninstall --delete-data (OPS69)
   if (-not (Test-Path $exe)) { Out-Lc 'LC-15' $false 'crsp.exe is not installed for the --delete-data run'; return }
   & $exe uninstall --delete-data --yes | Out-Null
   $rc = $LASTEXITCODE
+  # The CLI hands the removal to Windows Installer, detached (it ends this very exe); wait until the product is gone.
+  [void](Wait-Until { -not (Get-ProductCode) } 300)
   [void](Remove-Msi -Purge)
   $out = & pwsh -NoProfile -File (Join-Path $script:Here 'leftovers.ps1') -Lifecycle $Lifecycle
   Out-Lc 'LC-15' (($rc -eq 0) -and ($LASTEXITCODE -eq 0)) $(if ($out) { 'cli leftovers: ' + ($out -join '; ') } else { 'crsp uninstall --delete-data leaves nothing' })

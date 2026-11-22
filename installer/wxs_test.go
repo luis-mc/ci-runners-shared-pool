@@ -245,3 +245,35 @@ func TestMSIComments(t *testing.T) {
 		}
 	}
 }
+
+// ICE43, ICE57, ICE69: the per-machine Start Menu shortcut and the tray's Run value sit in the component of
+// crsp.exe, whose key path is that file (a per-machine key path); no HKCU entry is authored anywhere.
+func TestMSIShortcutIsPerMachineAndInTheExeComponent(t *testing.T) {
+	s := wxs(t)
+	if strings.Contains(s, `Root="HKCU"`) {
+		t.Error("no HKCU entry: the package is per-machine")
+	}
+	comp := regexp.MustCompile(`(?s)<Component Id="CrspProgram">.*?\n      </Component>`).FindString(s)
+	if comp == "" {
+		t.Fatal("component CrspProgram not found")
+	}
+	for _, want := range []string{`<File Id="CrspExe"`, `<Shortcut Id="CrspShortcut"`, `Name="crsp-tray"`} {
+		if !strings.Contains(comp, want) {
+			t.Errorf("CrspProgram must hold %s", want)
+		}
+	}
+	if strings.Contains(s, `Id="StartMenuShortcut"`) || strings.Contains(s, `Id="TrayAutostart"`) {
+		t.Error("the shortcut and the Run value must not be components of their own")
+	}
+}
+
+// LC-15: the purge removes the whole data folder (logs included) after the service is gone and the files are removed.
+func TestMSIPurgeRunsAfterTheServiceAndFilesAreGone(t *testing.T) {
+	s := wxs(t)
+	if !strings.Contains(s, `<Custom Action="PurgeFolder" After="RemoveFiles"`) {
+		t.Error("PurgeFolder must run after RemoveFiles (the service is stopped and deleted by then)")
+	}
+	if !strings.Contains(s, "Get-Process -Name crsp") || !strings.Contains(s, "Remove-Item -LiteralPath '[DATAFOLDER]' -Recurse -Force") {
+		t.Error("PurgeFolder must end crsp processes and remove the whole data folder")
+	}
+}

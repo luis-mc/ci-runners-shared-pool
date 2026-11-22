@@ -102,15 +102,13 @@
                               Port="8460,8461"
                               Profile="private"
                               Scope="any" />
-      </Component>
 
-      <!-- Tells the updater how this copy was installed (CRSP19): the text "msi". Removed with the product. -->
-      <Component Id="InstallKind">
-        <File Id="InstallKindFile" Name="install-kind" Source="install-kind" KeyPath="yes" />
-      </Component>
-
-      <!-- The Start Menu shortcut opens the tray. Not advertised: a plain shortcut starts the tray and nothing else. -->
-      <Component Id="StartMenuShortcut">
+        <!--
+          The Start Menu shortcut opens the tray. Not advertised: a plain shortcut starts the tray and nothing
+          else. It lives in this component, whose key path is crsp.exe under Program Files: a per-machine key
+          path, so a per-machine shortcut (Scope="perMachine" makes ALLUSERS=1, so ProgramMenuFolder is the
+          all-users Start menu) holds no per-user data (ICE43, ICE57). No HKCU entry is authored.
+        -->
         <Shortcut Id="CrspShortcut"
                   Directory="ProgramMenuFolder"
                   Name="CI Runners Shared Pool"
@@ -121,18 +119,23 @@
                   WorkingDirectory="INSTALLFOLDER"
                   Show="minimized"
                   Advertise="no" />
-        <RegistryValue Root="HKLM" Key="Software\crsp\Installed" Name="StartMenuShortcut" Type="integer" Value="1" KeyPath="yes" />
-      </Component>
 
-      <!-- The tray starts at every user's sign-in (R5.3). -->
-      <Component Id="TrayAutostart">
+        <!--
+          The tray starts at every user's sign-in (R5.3). In this component, not its own: the value names
+          crsp.exe ([#CrspExe]), and a reference to a file of another component is ICE69.
+        -->
         <RegistryValue Root="HKLM"
                        Key="Software\Microsoft\Windows\CurrentVersion\Run"
                        Name="crsp-tray"
                        Type="string"
-                       Value="&quot;[#CrspExe]&quot; tray"
-                       KeyPath="yes" />
+                       Value="&quot;[#CrspExe]&quot; tray" />
       </Component>
+
+      <!-- Tells the updater how this copy was installed (CRSP19): the text "msi". Removed with the product. -->
+      <Component Id="InstallKind">
+        <File Id="InstallKindFile" Name="install-kind" Source="install-kind" KeyPath="yes" />
+      </Component>
+
     </ComponentGroup>
 
     <!--
@@ -265,9 +268,15 @@
                   Impersonate="no"
                   Return="ignore" />
 
-    <!-- Fallback for a delete when the program could not (it is gone or broken): the data folder is removed by the installer. -->
+    <!--
+      The delete of the whole data folder, logs included, by the installer itself (a purge leaves nothing, LC-15).
+      It runs late: after the service is stopped and deleted (a killed service is restarted by its failure
+      action, which would make the folder again) and the files are removed, just before the installer removes
+      the empty folder. It ends any crsp process left (the tray), then removes the folder and tries again for
+      up to 15 s, because a file handle can outlive its process by a moment.
+    -->
     <SetProperty Id="PurgeFolder"
-                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command &quot;Remove-Item -LiteralPath '[DATAFOLDER]' -Recurse -Force -ErrorAction SilentlyContinue; Remove-Item -LiteralPath '[CHOICEFILE]' -Force -ErrorAction SilentlyContinue&quot;"
+                 Value="&quot;[System64Folder]WindowsPowerShell\v1.0\powershell.exe&quot; -NoProfile -NonInteractive -ExecutionPolicy Bypass -Command &quot;for ($i = 0; $i -lt 15; $i++) [\{] Get-Process -Name crsp -ErrorAction SilentlyContinue | Stop-Process -Force -ErrorAction SilentlyContinue; Remove-Item -LiteralPath '[DATAFOLDER]' -Recurse -Force -ErrorAction SilentlyContinue; if (-not (Test-Path -LiteralPath '[DATAFOLDER]')) [\{] break [\}]; Start-Sleep -Seconds 1 [\}]; Remove-Item -LiteralPath '[CHOICEFILE]' -Force -ErrorAction SilentlyContinue; exit 0&quot;"
                  Before="PurgeFolder"
                  Sequence="execute" />
     <CustomAction Id="PurgeFolder"
@@ -361,7 +370,7 @@
               Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
       <Custom Action="RemoveData" After="EndProgramProcesses"
               Condition="REMOVE~=&quot;ALL&quot; AND NOT UPGRADINGPRODUCTCODE" />
-      <Custom Action="PurgeFolder" After="RemoveData"
+      <Custom Action="PurgeFolder" After="RemoveFiles"
               Condition="REMOVE~=&quot;ALL&quot; AND PURGE=&quot;1&quot; AND NOT UPGRADINGPRODUCTCODE" />
     </InstallExecuteSequence>
 
