@@ -271,3 +271,41 @@ func TestSimulateQueueEdges(t *testing.T) {
 		t.Fatal("no queue")
 	}
 }
+
+func TestSimulateQueueSlots(t *testing.T) {
+	run := func(n float64, slot int) SlotJob { j := job(n); j.Slot = slot; return j }
+	// 2 slots: the running job holds slot 2 for 100 s, so slot 1 is free first.
+	etas, known, slot := SimulateQueueSlots(2, []SlotJob{run(100, 2)}, []SlotJob{job(50), job(30), job(10)})
+	wantSlot, wantStart := []int{1, 1, 1}, []float64{0, 50, 80}
+	for i := range wantSlot {
+		if !known[i] || slot[i] != wantSlot[i] {
+			t.Fatalf("job %d: slot %v known %v", i, slot, known)
+		}
+		near(t, etas[i].P50, wantStart[i])
+	}
+	// The same running job on slot 1 leaves slot 2 to the queue.
+	_, _, slot = SimulateQueueSlots(2, []SlotJob{run(100, 1)}, []SlotJob{job(50), job(60)})
+	if slot[0] != 2 || slot[1] != 2 {
+		t.Fatalf("held slot 1: %v", slot)
+	}
+	// A running job with no known slot takes the lowest free number; ties go to the lower slot.
+	_, _, slot = SimulateQueueSlots(3, []SlotJob{job(100)}, []SlotJob{job(5), job(5), job(5)})
+	if slot[0] != 2 || slot[1] != 3 || slot[2] != 2 {
+		t.Fatalf("loose running: %v", slot)
+	}
+	// Starts agree with SimulateQueue; no slots or no history leaves slot 0.
+	e1, k1 := SimulateQueue(2, []SlotJob{job(100)}, []SlotJob{job(50), job(20)})
+	e2, k2, _ := SimulateQueueSlots(2, []SlotJob{job(100)}, []SlotJob{job(50), job(20)})
+	if e1[1] != e2[1] || k1[1] != k2[1] {
+		t.Fatalf("differs: %v %v", e1, e2)
+	}
+	_, k, slot := SimulateQueueSlots(0, nil, []SlotJob{job(5)})
+	if k[0] || slot[0] != 0 {
+		t.Fatalf("zero slots: %v %v", k, slot)
+	}
+	none := SlotJob{Remaining: Forecast{Basis: BasisNone}}
+	_, k, slot = SimulateQueueSlots(1, nil, []SlotJob{none, job(5)})
+	if !k[0] || slot[0] != 1 || k[1] || slot[1] != 0 {
+		t.Fatalf("no history: %v %v", k, slot)
+	}
+}
