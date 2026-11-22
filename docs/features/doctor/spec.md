@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/doctor/**"]
 design_system: [UX-4, UX-6, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-31, UX-52, UX-53, UX-58, UX-61, "components 1, 10, 11, 12, 15, 16, 17, 18, 19, 21"]
-last_verified: 2026-11-14
+last_verified: 2026-11-22
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -226,7 +226,7 @@ States:
 
 **R5.64** (M1, Built OPS61; machines R5.71) — **`machine.pool.memory`: the pool or the WSL cap is more than the PC can spare.** For each machine with a pool memory set or a `.wslconfig` memory cap, once its agent has measured 24 hours of the PC's own use, the check compares both with total RAM less the host p95 (the memory the PC uses without the pool, 7 days). It is `ok` when both fit and `warn` when the pool, the cap or both are above it, saying how much the PC uses ("Windows and the programs of the PC use up to 10.2 GiB (p95, 7 days)"), the figure to stay at or below, and that a `.wslconfig` change applies after WSL restarts. The fix is a link to the machine page, where the Pool size block shows the recommended size and the cap lines to copy. A machine with no pool size and no cap, one still measuring and one with no memory fact has no finding; an offline machine is skipped. New check; the safety margin of the recommendation is not part of this check, so a pool at the recommended size never trips it.
 
-**R5.65** (M1, Built OPS75; runners R5.119; owner decision 21 Nov "tool store") — **`runner.tools.plan`: the runner's tool store lacks a tool its workflows use.** For each persistent runner on a machine with a tool store (Windows, macOS) the agent compares the tool plan of the runner's repository (runners R5.110) with the store and reports one item per tool and version. `warn` when something is missing: the title is "r1 lacks rust 1.85, which the workflow uses", the detail names what the store has, and the fix says the next job that needs it installs it first (so it starts late and fails if the install fails), to let the agent install it by running a job, or to change the version in the workflow, a version file or `.crsp.yml` `tools:`. `ok` when every tool is there. `skip` when the plan could not be made (the reason is in the detail). A runner whose agent reported no plan (Linux, an older agent) and an offline machine have no finding. The doctor reads only and installs nothing. NOT YET IMPLEMENTED: the agent link carrying `agent.ToolPlanReport` into `doctor.Runner.ToolPlan`.
+**R5.65** (M1, Built OPS75; runners R5.119; owner decision 21 Nov "tool store") — **`runner.tools.plan`: the runner's tool store lacks a tool its workflows use.** For each persistent runner on a machine with a tool store (Windows, macOS) the agent compares the tool plan of the runner's repository (runners R5.110) with the store and reports one item per tool and version. `warn` when something is missing: the title is "r1 lacks rust 1.85, which the workflow uses", the detail names what the store has, and the fix says the next job that needs it installs it first (so it starts late and fails if the install fails), to let the agent install it by running a job, or to change the version in the workflow, a version file or `.crsp.yml` `tools:`. A missing Xcode is the exception (owner answer 22 Nov: the owner installs Xcode, the runner never downloads it): the item carries a hint, and the detail and fix say which Xcode to install in `/Applications` (for example Xcode 16.2 as `Xcode-16.2.app`) and that a job that needs it fails until then. `ok` when every tool is there. `skip` when the plan could not be made (the reason is in the detail). A runner whose agent reported no plan (Linux, an older agent) and an offline machine have no finding. The doctor reads only and installs nothing. NOT YET IMPLEMENTED: the agent link carrying `agent.ToolPlanReport` into `doctor.Runner.ToolPlan`.
 
 ## 6. Non-functional requirements
 
@@ -551,7 +551,7 @@ Rows that name a file without "planned" are built (CRSP23). Planned rows are NOT
 | R5.61 | internal/doctor/checks/machinereset_test.go TestMachineResetWarns; internal/store/controllerstate_test.go TestResetSigns |
 | R5.62 | internal/doctor/checks/checks_test.go TestLoadBudgetWarnsWhileJobsRun |
 | R5.63 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsSameWarnsForMissingTool, TestRunnerToolsSameOKWhenEqual, TestRunnerToolsSameSkipsWithoutProbe, TestRunnerToolsSameNeedsTwoRunners |
-| R5.65 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsPlan |
+| R5.65 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsPlan, TestRunnerToolsPlanSaysWhichXcodeToInstall |
 | R5.64 | `internal/doctor/checks/poolmemory_test.go` TestPoolMemoryFinding, TestPoolMemoryOfflineMachineIsSkipped; `internal/doctor/wire/wire_test.go` (51 core checks) |
 
 ## 10. Decisions
