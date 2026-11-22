@@ -22,3 +22,8 @@ crsp-<goos>-<goarch>_<version>.<ext> in the assets and in SHA256SUMS, then check
 actionlint ok; go test ./internal/update/... ok; golangci-lint ./internal/update ok; test_release_scripts ok;
 docs_check ok; fast_guards: see CI.
 Untouched: release-ed25519.pub, e2e_push_check, delivery_common, lifecycle_*, .gitleaksignore.
+
+## Result
+PR #386 draft. CI run 44999793174 green (first run 44997656824 hit an unrelated internal/cli flake).
+
+CODE DONE 18f52563ed4e8611315e8a0cfc82b02791560fb0
