@@ -1631,6 +1631,34 @@ paths:
                 $ref: '#/components/schemas/LoadHistory'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/assign/leases:
+    get:
+      operationId: listAssignLeases
+      x-cli: none
+      x-cli-reason: 'Later: the queue view (OPS80 is back end only).'
+      tags: [jobs]
+      summary: Jobs that wait for a runner, start or run, with their reasons
+      description: >-
+        runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease
+        says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: state
+          in: query
+          required: false
+          description: Only leases in this state.
+          schema:
+            $ref: '#/components/schemas/AssignLeaseState'
+      responses:
+        '200':
+          description: The leases, oldest queued first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignLeaseList'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/machines/{machineId}/slots:
     get:
       operationId: listSlots
@@ -8730,6 +8758,71 @@ components:
           description: 1 is first in line.
         wait_reason:
           $ref: '#/components/schemas/WaitReason'
+    AssignLeaseState:
+      type: string
+      enum: [waiting, starting, running, done, gone]
+    AssignReasonCode:
+      type: string
+      description: >-
+        Why a waiting job has no runner: pool (CPU or memory not free), load (over
+        budget or not measured), reserved (another job holds the machine's room),
+        never (no runner of the machine is big enough), no_machine (no machine has
+        its labels or OS), start_failed (the start failed, retried later), starting.
+      enum: [pool, load, reserved, never, no_machine, start_failed, starting]
+    AssignLease:
+      type: object
+      required: [job_id, repository, state, queued_at]
+      properties:
+        job_id:
+          type: integer
+          format: int64
+        run_id:
+          type: integer
+          format: int64
+        repository:
+          type: string
+        job:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        job_label:
+          type: string
+          description: The job-name routing label; empty when the job has none.
+        state:
+          $ref: '#/components/schemas/AssignLeaseState'
+        machine_id:
+          type: string
+        runner_name:
+          type: string
+        cpus:
+          type: integer
+        memory_gib:
+          type: integer
+        class:
+          type: string
+        queued_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          description: The console reason of a waiting job.
+        reason_code:
+          $ref: '#/components/schemas/AssignReasonCode'
+        passes:
+          type: integer
+        reserved_since:
+          type: string
+          format: date-time
+    AssignLeaseList:
+      type: object
+      required: [leases]
+      properties:
+        leases:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignLease'
     SlotStatus:
       type: object
       required: [machine_id, slots, tickets]

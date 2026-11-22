@@ -1119,6 +1119,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/assign/leases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Jobs that wait for a runner, start or run, with their reasons
+         * @description runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+         */
+        get: operations["listAssignLeases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/machines/{machineId}/slots": {
         parameters: {
             query?: never;
@@ -5422,6 +5442,41 @@ export interface components {
             place: number;
             wait_reason?: components["schemas"]["WaitReason"];
         };
+        /** @enum {string} */
+        AssignLeaseState: "waiting" | "starting" | "running" | "done" | "gone";
+        /**
+         * @description Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+         * @enum {string}
+         */
+        AssignReasonCode: "pool" | "load" | "reserved" | "never" | "no_machine" | "start_failed" | "starting";
+        AssignLease: {
+            /** Format: int64 */
+            job_id: number;
+            /** Format: int64 */
+            run_id?: number;
+            repository: string;
+            job?: string;
+            labels?: string[];
+            /** @description The job-name routing label; empty when the job has none. */
+            job_label?: string;
+            state: components["schemas"]["AssignLeaseState"];
+            machine_id?: string;
+            runner_name?: string;
+            cpus?: number;
+            memory_gib?: number;
+            class?: string;
+            /** Format: date-time */
+            queued_at: string;
+            /** @description The console reason of a waiting job. */
+            reason?: string;
+            reason_code?: components["schemas"]["AssignReasonCode"];
+            passes?: number;
+            /** Format: date-time */
+            reserved_since?: string;
+        };
+        AssignLeaseList: {
+            leases: components["schemas"]["AssignLease"][];
+        };
         SlotStatus: {
             machine_id: string;
             slots: components["schemas"]["Slot"][];
@@ -8537,6 +8592,30 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoadHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAssignLeases: {
+        parameters: {
+            query?: {
+                /** @description Only leases in this state. */
+                state?: components["schemas"]["AssignLeaseState"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The leases, oldest queued first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignLeaseList"];
                 };
             };
             default: components["responses"]["Error"];

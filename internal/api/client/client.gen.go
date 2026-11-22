@@ -113,6 +113,66 @@ func (e Arch) Valid() bool {
 	}
 }
 
+// Defines values for AssignLeaseState.
+const (
+	AssignLeaseStateDone     AssignLeaseState = "done"
+	AssignLeaseStateGone     AssignLeaseState = "gone"
+	AssignLeaseStateRunning  AssignLeaseState = "running"
+	AssignLeaseStateStarting AssignLeaseState = "starting"
+	AssignLeaseStateWaiting  AssignLeaseState = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the AssignLeaseState enum.
+func (e AssignLeaseState) Valid() bool {
+	switch e {
+	case AssignLeaseStateDone:
+		return true
+	case AssignLeaseStateGone:
+		return true
+	case AssignLeaseStateRunning:
+		return true
+	case AssignLeaseStateStarting:
+		return true
+	case AssignLeaseStateWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AssignReasonCode.
+const (
+	AssignReasonCodeLoad        AssignReasonCode = "load"
+	AssignReasonCodeNever       AssignReasonCode = "never"
+	AssignReasonCodeNoMachine   AssignReasonCode = "no_machine"
+	AssignReasonCodePool        AssignReasonCode = "pool"
+	AssignReasonCodeReserved    AssignReasonCode = "reserved"
+	AssignReasonCodeStartFailed AssignReasonCode = "start_failed"
+	AssignReasonCodeStarting    AssignReasonCode = "starting"
+)
+
+// Valid indicates whether the value is a known member of the AssignReasonCode enum.
+func (e AssignReasonCode) Valid() bool {
+	switch e {
+	case AssignReasonCodeLoad:
+		return true
+	case AssignReasonCodeNever:
+		return true
+	case AssignReasonCodeNoMachine:
+		return true
+	case AssignReasonCodePool:
+		return true
+	case AssignReasonCodeReserved:
+		return true
+	case AssignReasonCodeStartFailed:
+		return true
+	case AssignReasonCodeStarting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AttemptRefState.
 const (
 	AttemptRefStateDone    AttemptRefState = "done"
@@ -4138,6 +4198,44 @@ type ApplyPlanRequest struct {
 
 // Arch defines model for Arch.
 type Arch string
+
+// AssignLease defines model for AssignLease.
+type AssignLease struct {
+	Class *string `json:"class,omitempty"`
+	Cpus  *int    `json:"cpus,omitempty"`
+	Job   *string `json:"job,omitempty"`
+	JobId int64   `json:"job_id"`
+
+	// JobLabel The job-name routing label; empty when the job has none.
+	JobLabel  *string   `json:"job_label,omitempty"`
+	Labels    *[]string `json:"labels,omitempty"`
+	MachineId *string   `json:"machine_id,omitempty"`
+	MemoryGib *int      `json:"memory_gib,omitempty"`
+	Passes    *int      `json:"passes,omitempty"`
+	QueuedAt  time.Time `json:"queued_at"`
+
+	// Reason The console reason of a waiting job.
+	Reason *string `json:"reason,omitempty"`
+
+	// ReasonCode Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+	ReasonCode    *AssignReasonCode `json:"reason_code,omitempty"`
+	Repository    string            `json:"repository"`
+	ReservedSince *time.Time        `json:"reserved_since,omitempty"`
+	RunId         *int64            `json:"run_id,omitempty"`
+	RunnerName    *string           `json:"runner_name,omitempty"`
+	State         AssignLeaseState  `json:"state"`
+}
+
+// AssignLeaseList defines model for AssignLeaseList.
+type AssignLeaseList struct {
+	Leases []AssignLease `json:"leases"`
+}
+
+// AssignLeaseState defines model for AssignLeaseState.
+type AssignLeaseState string
+
+// AssignReasonCode Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+type AssignReasonCode string
 
 // AttemptRef defines model for AttemptRef.
 type AttemptRef struct {
@@ -8183,6 +8281,12 @@ type Error = ErrorEnvelope
 // ExportFile defines model for ExportFile.
 type ExportFile = string
 
+// ListAssignLeasesParams defines parameters for ListAssignLeases.
+type ListAssignLeasesParams struct {
+	// State Only leases in this state.
+	State *AssignLeaseState `form:"state,omitempty" json:"state,omitempty"`
+}
+
 // ListAuditEventsParams defines parameters for ListAuditEvents.
 type ListAuditEventsParams struct {
 	Actor      *string `form:"actor,omitempty" json:"actor,omitempty"`
@@ -8954,6 +9058,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /api/v1/app/webhook (the `SetAppWebhook` operationId).
 	SetAppWebhook(ctx context.Context, body SetAppWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAssignLeases Jobs that wait for a runner, start or run, with their reasons
+	//
+	// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+	//
+	// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+	ListAssignLeases(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListAuditEvents The audit log, newest first
 	//
@@ -10878,6 +10989,23 @@ func (c *Client) SetAppWebhookWithBody(ctx context.Context, contentType string, 
 // Corresponds with PUT /api/v1/app/webhook (the `SetAppWebhook` operationId).
 func (c *Client) SetAppWebhook(ctx context.Context, body SetAppWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSetAppWebhookRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAssignLeases Jobs that wait for a runner, start or run, with their reasons
+//
+// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+//
+// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+func (c *Client) ListAssignLeases(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAssignLeasesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -15149,6 +15277,60 @@ func NewSetAppWebhookRequestWithBody(server string, contentType string, body io.
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAssignLeasesRequest constructs an http.Request for the ListAssignLeases method
+func NewListAssignLeasesRequest(server string, params *ListAssignLeasesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/assign/leases")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -23837,6 +24019,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /api/v1/app/webhook (the `SetAppWebhook` operationId).
 	SetAppWebhookWithResponse(ctx context.Context, body SetAppWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*SetAppWebhookResponse, error)
 
+	// ListAssignLeasesWithResponse Jobs that wait for a runner, start or run, with their reasons
+	//
+	// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+	ListAssignLeasesWithResponse(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*ListAssignLeasesResponse, error)
+
 	// ListAuditEventsWithResponse The audit log, newest first
 	//
 	// observability R5.24 to R5.27. Viewers may read it (owner decision for M1). Read-only: no operation edits or deletes a row.
@@ -26168,6 +26359,54 @@ func (r SetAppWebhookResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r SetAppWebhookResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAssignLeasesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AssignLeaseList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAssignLeasesResponse) GetJSON200() *AssignLeaseList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListAssignLeasesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAssignLeasesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAssignLeasesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAssignLeasesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAssignLeasesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -34939,6 +35178,21 @@ func (c *ClientWithResponses) SetAppWebhookWithResponse(ctx context.Context, bod
 	return ParseSetAppWebhookResponse(rsp)
 }
 
+// ListAssignLeasesWithResponse Jobs that wait for a runner, start or run, with their reasons
+//
+// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+func (c *ClientWithResponses) ListAssignLeasesWithResponse(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*ListAssignLeasesResponse, error) {
+	rsp, err := c.ListAssignLeases(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAssignLeasesResponse(rsp)
+}
+
 // ListAuditEventsWithResponse The audit log, newest first
 //
 // observability R5.24 to R5.27. Viewers may read it (owner decision for M1). Read-only: no operation edits or deletes a row.
@@ -38527,6 +38781,39 @@ func ParseSetAppWebhookResponse(rsp *http.Response) (*SetAppWebhookResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AppWebhook
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAssignLeasesResponse parses an HTTP response from a ListAssignLeasesWithResponse call
+func ParseListAssignLeasesResponse(rsp *http.Response) (*ListAssignLeasesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAssignLeasesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssignLeaseList
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

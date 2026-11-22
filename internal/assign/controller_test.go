@@ -2,6 +2,7 @@ package assign
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -214,4 +215,47 @@ func TestNoLabelAskedSetsNoRoutingLabel(t *testing.T) {
 		t.Fatalf("lease: %+v", l)
 	}
 	var _ = github.Job{}
+}
+
+type labelAPI struct{ added, removed []string }
+
+func (l *labelAPI) AddRunnerLabels(_ context.Context, _ int64, _ github.RunnerScope, _ int64, ls []string) error {
+	l.added = append(l.added, ls...)
+	return nil
+}
+func (l *labelAPI) RemoveRunnerLabel(_ context.Context, _ int64, _ github.RunnerScope, _ int64, x string) error {
+	l.removed = append(l.removed, x)
+	return nil
+}
+
+func TestPersistentLabelsWriteOnChangeAFewAtATimeUnderTheCap(t *testing.T) {
+	if p := PlanLabels([]string{"crsp-a-0001"}, []string{"crsp-a-0001"}, 3); !p.Empty() {
+		t.Fatalf("no change, no write: %+v", p)
+	}
+	var want []string
+	for i := 0; i < 12; i++ {
+		want = append(want, fmt.Sprintf("crsp-j%d-%04x", i, i))
+	}
+	p := PlanLabels(nil, want, 3)
+	if len(p.Add) != LabelBatch || p.Deferred != 12-LabelBatch {
+		t.Fatalf("a few at a time: %+v", p)
+	}
+	// Removals go first and make room under the cap of 100 (3 read-only + 97).
+	have := make([]string, 97)
+	for i := range have {
+		have[i] = fmt.Sprintf("crsp-h%d-%04x", i, i)
+	}
+	p = PlanLabels(have, append([]string{"crsp-new-ffff"}, have[1:]...), 3)
+	if len(p.Remove) != 1 || len(p.Add) != 1 || len(p.Refused) != 0 {
+		t.Fatalf("swap at the cap: %+v", p)
+	}
+	p = PlanLabels(have, append([]string{"crsp-new-ffff"}, have...), 3)
+	if len(p.Add) != 0 || len(p.Refused) != 1 {
+		t.Fatalf("the 101st label is never sent: %+v", p)
+	}
+	api := &labelAPI{}
+	must(t, SyncLabels(ctx, api, 1, github.RunnerScope{}, 9, PlanLabels([]string{"crsp-old-0001"}, []string{"crsp-new-0002"}, 3)))
+	if len(api.added) != 1 || len(api.removed) != 1 {
+		t.Fatalf("api: %+v", api)
+	}
 }

@@ -79,6 +79,10 @@
     "internal/api/stubs_registry_*.go": [
       "docs/features/registry/spec.md"
     ],
+    "internal/assign/**": [
+      "docs/features/github-integration/spec.md",
+      "docs/features/runners/spec.md"
+    ],
     "internal/audit/**": [
       "docs/features/observability/spec.md"
     ],
