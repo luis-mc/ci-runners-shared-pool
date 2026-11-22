@@ -2,7 +2,7 @@
 """Decide whether the CI `image` job runs (OPS41). Standard library only.
 
 The base image build is slow, so it runs on a release pull request (head
-branch ends in -integration), on a push to the default branch and on a manual
+branch ends in -integration or -release-N), on a push to the default branch and on a manual
 run. On any other pull request it runs only when the change touches images/**
 or the build or ci workflow files. An API error means image=true: the job runs.
 The script never fails the job.
@@ -12,6 +12,7 @@ GITHUB_OUTPUT (optional).
 """
 import json
 import os
+import re
 import sys
 import urllib.request
 
@@ -50,11 +51,16 @@ def changed_files(repo, number, get):
     return names
 
 
+def is_release_branch(head_ref):
+    """A branch named *-integration or *-release-N is a release (CRSP222)."""
+    return head_ref.endswith("-integration") or re.search(r"-release-[0-9]+$", head_ref) is not None
+
+
 def should_build(event, repo, number, head_ref, get):
     """Return (build, reason). `get` maps an API path to parsed JSON."""
     if event != "pull_request":
         return True, "event %s always builds the image" % event
-    if head_ref.endswith("-integration"):
+    if is_release_branch(head_ref):
         return True, "release pull request (%s)" % head_ref
     if touches_image(changed_files(repo, number, get)):
         return True, "the change touches images/ or the build or ci workflow"

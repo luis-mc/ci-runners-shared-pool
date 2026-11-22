@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
 	"strings"
 )
@@ -22,7 +21,7 @@ func (c *call) confirm(title string, items []string, yes bool) error {
 		return fail(ExitNotConfirmed, "Nothing changed. Run it again with --yes to go on without a question.")
 	}
 	_, _ = fmt.Fprint(w, "Type yes to go on: ")
-	line, _ := bufio.NewReader(c.env.Stdin).ReadString('\n')
+	line, _ := c.stdin().ReadString('\n')
 	if strings.EqualFold(strings.TrimSpace(line), "yes") {
 		return nil
 	}

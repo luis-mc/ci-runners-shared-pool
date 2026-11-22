@@ -43,7 +43,7 @@ var otherAreaAuth = map[string]string{
 	"getCaCertificate": authPublic, "getPackage": authPublic, "getHealth": authPublic,
 
 	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser,
-	"getUpdateStatus": authUser, "listCaches": authUser, "listImages": authUser, "getDoctorRun": authUser, "getJob": authUser, "getMachine": authUser,
+	"getUpdateStatus": authUser, "getLifecycleStatus": authUser, "listUpdateHistory": authUser, "listUpdateFleet": authUser, "listCaches": authUser, "listImages": authUser, "getDoctorRun": authUser, "getJob": authUser, "getMachine": authUser,
 	"getMachineChange": authUser, "getMachineLoad": authUser, "getOverview": authUser, "getPoolSettings": authUser,
 	"getQueueSettings": authUser, "getRunner": authUser, "getRunnerEnv": authUser, "listEnvSets": authUser, "listJobSizes": authUser, "getRunnerClasses": authUser, "getRunnerPlan": authUser, "getSettings": authUser,
 	"listAuditEvents": authUser, "listDoctorFindings": authUser, "listJobs": authUser, "listMachines": authUser,
@@ -51,7 +51,7 @@ var otherAreaAuth = map[string]string{
 	"listRuns": authUser, "getRun": authUser, "listJobGroups": authUser, "getJobStats": authUser, "listJobSummaries": authUser, "getForecast": authUser,
 	"exportJobSummaries": authUser,
 
-	"applyUpdate": authAdmin, "checkForUpdate": authAdmin, "exportConfig": authAdmin, "rebuildImage": authAdmin,
+	"applyUpdate": authAdmin, "setUpdatePolicy": authAdmin, "installUpdate": authAdmin, "checkForUpdate": authAdmin, "exportConfig": authAdmin, "rebuildImage": authAdmin,
 	"restartService": authAdmin, "getListenAddress": authAdmin, "putListenAddress": authAdmin, "stopRunnerPlan": authAdmin, "updateImageLayers": authAdmin, "wipeCache": authAdmin,
 	"createJoinCode": authAdmin, "createJoinFile": authAdmin, "joinMachineOverSsh": authAdmin, "createRunners": authAdmin, "decideMachineChange": authAdmin, "deleteRunner": authAdmin, "deleteRunnerRegistration": authAdmin, "updateRunnerSettings": authAdmin, "clearRunnerCache": authAdmin,
 	"drainMachine": authAdmin, "freeStaleSlots": authAdmin, "getInstallCommand": authAdmin, "getJoinCode": authAdmin,
@@ -61,7 +61,7 @@ var otherAreaAuth = map[string]string{
 	"updateQueueSettings": authAdmin, "putEnvSet": authAdmin, "putJobSizeOverride": authAdmin, "putRunnerClasses": authAdmin, "deleteJobSizeOverride": authAdmin, "deleteEnvSet": authAdmin, "getRegistrySettings": authAdmin,
 	"putRegistryLogin": authAdmin, "deleteRegistryLogin": authAdmin, "putRegistryCaBundle": authAdmin, "deleteRegistryCaBundle": authAdmin,
 
-	"restoreBackup": authOwner, "runMachineCommand": authOwner, "removeRunnerLeftovers": authAdmin, "removeRegistration": authAdmin, "startDockerCompact": authAdmin, "updateSettings": authOwner,
+	"restoreBackup": authOwner, "removeCrsp": authOwner, "runMachineCommand": authOwner, "removeRunnerLeftovers": authAdmin, "removeRegistration": authAdmin, "startDockerCompact": authAdmin, "updateSettings": authOwner,
 }
 
 // roleFor returns the role an operation needs (public, user, admin or owner).

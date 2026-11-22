@@ -34,6 +34,7 @@ func tree(env *Env) *command {
 		unbuilt("config", "configuration as a file (export, import, apply)", "M8", "export|import|apply"),
 		cmdBackup(), cmdRestore(),
 		cmdUpdate(), cmdRestart(),
+		cmdUninstall("uninstall"), cmdUninstall("remove"),
 		{name: "help", summary: "print usage", run: func(c *call, _ []string) error {
 			writeUsage(c.env.Stdout, root, nil)
 			return nil

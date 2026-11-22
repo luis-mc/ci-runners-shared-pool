@@ -31,6 +31,7 @@ const (
 	KindBarLabel
 	KindDivider
 	KindButton
+	KindChoice // one radio choice of a question
 )
 
 // Item is one thing the window draws.
@@ -40,6 +41,8 @@ type Item struct {
 	Lines  []string // text items: the wrapped lines, one per line height
 	Button ButtonID
 	Label  string
+	Choice ChoiceID // KindChoice: which choice
+	Chosen bool     // KindChoice: it is the selected one
 }
 
 // Layout is the client area of the window and what sits in it.
@@ -64,6 +67,8 @@ const (
 	buttonGapW   = 10
 	sectionGap   = 10
 	bottomMargin = 10
+	radioUnits   = 13 // the radio circle, and the indent of a choice's text
+	choiceGap    = 6
 )
 
 func tenths(u, n int) int { return (u*n + 5) / 10 }
@@ -109,6 +114,20 @@ func Compute(m Metrics, v View) Layout {
 		y += ph
 		if i < len(v.Body)-1 {
 			y += tenths(u, paraGap)
+		}
+	}
+
+	if len(v.Choices) > 0 {
+		y += tenths(u, sectionGap)
+		ind := tenths(u, radioUnits) + tenths(u, sectionGap)
+		for i, c := range v.Choices {
+			lines := wrap(m, c.Label, wrapW-ind, false)
+			ch := max(len(lines)*tenths(u, lineUnits), tenths(u, radioUnits))
+			add(Item{Kind: KindChoice, Rect: image.Rect(pad, y, pad+textW, y+ch), Lines: lines, Choice: c.ID, Chosen: c.Chosen, Label: c.Label})
+			y += ch
+			if i < len(v.Choices)-1 {
+				y += tenths(u, choiceGap)
+			}
 		}
 	}
 
@@ -193,6 +212,16 @@ func Clipped(m Metrics, l Layout) []string {
 			bad = append(bad, fmt.Sprintf("item %d (%d) %v runs past the right margin %d", i, it.Kind, it.Rect, l.W-tenths(l.Unit, padUnits)))
 		}
 		switch it.Kind {
+		case KindChoice:
+			ind := tenths(l.Unit, radioUnits) + tenths(l.Unit, sectionGap)
+			if len(it.Lines)*tenths(l.Unit, lineUnits) > it.Rect.Dy() {
+				bad = append(bad, fmt.Sprintf("item %d: %d choice lines do not fit %d px", i, len(it.Lines), it.Rect.Dy()))
+			}
+			for _, ln := range it.Lines {
+				if w := m.Measure(ln, false); w+ind > it.Rect.Dx() {
+					bad = append(bad, fmt.Sprintf("item %d: choice line %q is %d px wide in %d px", i, ln, w, it.Rect.Dx()-ind))
+				}
+			}
 		case KindHeading, KindBody, KindBarLabel:
 			lh := tenths(l.Unit, lineUnits)
 			if it.Kind == KindHeading {
@@ -244,6 +273,21 @@ func SampleViews() []View {
 		switch s {
 		case StateReview:
 			m.Mode = ModeReview
+		case StateVerifying:
+			snap.Stage = sampleStage("verifying", -1)
+		case StateTesting:
+			snap.Stage = sampleStage("testing", -1)
+		case StateRollingBack:
+			snap.Stage = sampleStage("rolling_back", -1)
+			snap.Stage.Previous = "0.1.12"
+		case StateRolledBack:
+			snap.Stage = sampleStage("rolled_back", -1)
+			snap.Stage.Previous = "0.1.12"
+			snap.Stage.RetryAt = "2026-11-21T18:05:00Z"
+		case StateRefused:
+			snap.Stage = sampleStage("refused", -1)
+		case StateSkipped:
+			snap.Stage = sampleStage("skipped", -1)
 		case StateDownloading:
 			snap.Stage = sampleStage("downloading", 42)
 		case StateWaiting:
@@ -271,7 +315,11 @@ func SampleViews() []View {
 		m.Observe(snap)
 		out = append(out, m.View())
 	}
-	return out
+	// The remove question, with nothing chosen and with the longest choice chosen.
+	r := NewRemoveModel(ProductName, "128.4", `C:\ProgramData\crsp\a-very-long-folder-name\with\nested\data`)
+	out = append(out, r.View())
+	r.Choose(ChoicePurge)
+	return append(out, r.View())
 }
 
 func sampleStage(name string, pc int) *tray.StageInfo {

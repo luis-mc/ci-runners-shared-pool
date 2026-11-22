@@ -1,0 +1,8 @@
+{
+  "roles": {
+    "page-sections": "PageSections",
+    "card-grid": "CardGrid",
+    "form": "FieldGrid"
+  },
+  "pages": ["apps/web/src/screens"]
+}

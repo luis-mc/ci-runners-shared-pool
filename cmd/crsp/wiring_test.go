@@ -18,6 +18,7 @@ import (
 	"gopkg.in/yaml.v3"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
@@ -53,7 +54,7 @@ func realController(t *testing.T) (*controller, http.Handler) {
 	}
 	svc := machines.New(machines.Options{Repo: machines.NewMemRepo(), ControllerAddress: "localhost", AgentPort: 8461, Fingerprint: ca.Fingerprint()})
 	mr := &machinesRuntime{Service: svc, CA: ca, stop: func() {}}
-	um := startUpdates(ctx, cfg, logger, mr, ops.Settings, &idleHook{})
+	um, _ := startUpdates(ctx, cfg, logger, mr, ops.Settings, &idleHook{}, audit.New(db))
 	queue := scheduler.NewEngine(db, scheduler.WithLogger(logger))
 
 	ctl, err := buildController(ctx, controllerDeps{

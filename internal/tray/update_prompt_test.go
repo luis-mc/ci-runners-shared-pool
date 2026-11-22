@@ -2,101 +2,88 @@ package tray
 
 import (
 	"context"
-	"errors"
 	"strings"
 	"testing"
-
-	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
+	"time"
 )
-
-type fakeInstaller struct {
-	calls int
-	err   error
-}
-
-func (f *fakeInstaller) Install(context.Context) (Status, error) { f.calls++; return Status{}, f.err }
 
 type notices struct{ titles, bodies []string }
 
 func (n *notices) add(t, b string) { n.titles = append(n.titles, t); n.bodies = append(n.bodies, b) }
 
-func newOffer(now bool, askErr error, st Status) (*Opener, *fakeInstaller, *notices, *[]UpdatePrompt) {
-	inst, n, asked := &fakeInstaller{}, &notices{}, &[]UpdatePrompt{}
-	o := &Opener{
-		Checker: fakeChecker{st: st}, Version: "1.4.0", Notify: n.add, Installer: inst,
-		Ask: func(p UpdatePrompt, _ Launcher) (bool, error) { *asked = append(*asked, p); return now, askErr },
-	}
-	return o, inst, n, asked
+func newOffer(st Status) (*Opener, *notices) {
+	n := &notices{}
+	return &Opener{Checker: fakeChecker{st: st}, Version: "1.4.0", Notify: n.add}, n
 }
 
 var found = Status{Update: UpdateInfo{Latest: "1.5.0", Available: true, ReleaseURL: "https://example.test/v1.5.0", Jobs: 2}}
 
-// The check only asks. Later changes nothing; Install now installs; neither happens by itself.
-func TestLookForUpdatesAsksAndNeverInstallsByItself(t *testing.T) {
-	o, inst, _, asked := newOffer(false, nil, found)
-	if err := o.LookForUpdates(context.Background()); err != nil {
-		t.Fatal(err)
+// The tray only notifies (LC-22): with no console and no native window it shows one notice in
+// the words of the table, and nothing installs.
+func TestNoWindowShowsOneNoticeFromTheWordsTable(t *testing.T) {
+	o, n := newOffer(found)
+	if err := o.LookForUpdates(context.Background()); err == nil {
+		t.Fatal("no window could open: the caller hears it")
 	}
-	if len(*asked) != 1 || inst.calls != 0 {
-		t.Fatalf("Later: asked=%d installs=%d", len(*asked), inst.calls)
-	}
-	p := (*asked)[0]
-	if p.Current != "1.4.0" || p.Latest != "1.5.0" || p.ReleaseURL == "" || p.Jobs != 2 {
-		t.Fatalf("%+v", p)
-	}
-
-	o, inst, n, _ := newOffer(true, nil, found)
-	if err := o.LookForUpdates(context.Background()); err != nil {
-		t.Fatal(err)
-	}
-	if inst.calls != 1 || len(n.titles) != 1 || n.titles[0] != "Updating to 1.5.0" || !strings.Contains(n.bodies[0], "running jobs") {
-		t.Fatalf("Install now: installs=%d %v", inst.calls, n.titles)
+	if len(n.titles) != 1 || !strings.Contains(n.bodies[0], "Version 1.5.0 is ready.") {
+		t.Fatalf("%v %v", n.titles, n.bodies)
 	}
 }
 
-func TestLookForUpdatesWithoutDialogNeverInstalls(t *testing.T) {
-	o, inst, n, _ := newOffer(true, ErrNoDialog, found)
-	if err := o.LookForUpdates(context.Background()); err == nil || inst.calls != 0 || len(n.titles) != 1 {
-		t.Fatalf("a missing dialog must not count as yes: err=%v installs=%d", err, inst.calls)
-	}
-	o.Ask = nil
-	n.titles = nil
-	if err := o.LookForUpdates(context.Background()); err != nil || inst.calls != 0 || len(n.titles) != 1 {
-		t.Fatalf("no asker: err=%v installs=%d", err, inst.calls)
-	}
-}
-
-func TestInstallNowFailureIsSaid(t *testing.T) {
-	o, inst, n, _ := newOffer(true, nil, found)
-	inst.err = errors.New("busy")
-	if err := o.LookForUpdates(context.Background()); err == nil || n.titles[len(n.titles)-1] != "Could not start the update" {
-		t.Fatalf("%v %v", err, n.titles)
-	}
-}
-
-func TestUpToDateAndAlreadyUpdatingAskNothing(t *testing.T) {
-	o, inst, n, asked := newOffer(true, nil, Status{})
+func TestUpToDateAndAlreadyUpdatingNotifyOnly(t *testing.T) {
+	o, n := newOffer(Status{})
 	_ = o.LookForUpdates(context.Background())
-	if len(*asked) != 0 || inst.calls != 0 || n.titles[0] != "Up to date" || !strings.Contains(n.bodies[0], "newest stable release") {
+	if n.titles[0] != "Up to date" || !strings.Contains(n.bodies[0], "newest stable release") {
 		t.Fatalf("%v", n.titles)
 	}
 	busy := found
 	busy.Update.State = "waiting_for_jobs"
-	o, inst, n, asked = newOffer(true, nil, busy)
+	o, n = newOffer(busy)
 	_ = o.LookForUpdates(context.Background())
-	if len(*asked) != 0 || inst.calls != 0 || n.titles[0] != "Already updating" {
+	if n.titles[0] != "Already updating" {
 		t.Fatalf("%v", n.titles)
 	}
 }
 
-// The box says the owner's sentence, with the version, and the two choices are Update now and Not now.
-func TestPromptBodyAndChoicesAreTheOwnersWords(t *testing.T) {
-	b := UpdatePrompt{Current: "1.4.0", Latest: "1.5.0", Jobs: 3}.Body()
-	if b != "Version 1.5.0 is ready. Running jobs finish first; the service restarts (about 1 min)." {
+// One notice per event per 24 hours.
+func TestNoticesOncePer24Hours(t *testing.T) {
+	now := time.Unix(1000, 0)
+	n := &Notices{Now: func() time.Time { return now }}
+	if !n.Allow("a") || n.Allow("a") || !n.Allow("b") {
+		t.Fatal("first passes, repeat does not, other event does")
+	}
+	now = now.Add(NoticeWindow - time.Second)
+	if n.Allow("a") {
+		t.Fatal("still quiet")
+	}
+	now = now.Add(time.Second)
+	if !n.Allow("a") {
+		t.Fatal("window over")
+	}
+}
+
+func TestOfferNoticeIsLimitedByTheNoticeWindow(t *testing.T) {
+	o, n := newOffer(found)
+	o.Notices = &Notices{}
+	_ = o.Offer(context.Background(), found)
+	_ = o.Offer(context.Background(), found)
+	if len(n.titles) != 1 {
+		t.Fatalf("%v", n.titles)
+	}
+}
+
+// Words: the table's sentence, no banned word.
+func TestReadyNoticeUsesTheTableAndNoBannedWord(t *testing.T) {
+	_, b := ReadyNotice("1.5.0")
+	if b != "Version 1.5.0 is ready." {
 		t.Fatalf("%q", b)
 	}
-	if PromptInstallNow != "Update now" || PromptLater != "Not now" {
-		t.Fatalf("%q %q", PromptInstallNow, PromptLater)
+	for _, w := range []string{WordAvailableTitle, WordAvailablePrimary, WordNotNow, WordRolledBackTitle, WordRefusedTitle} {
+		for _, bad := range []string{"OK", "Yes", "Install now", "Later", "daemon", "binary", "payload"} {
+			if strings.Contains(w, bad) {
+				t.Errorf("%q has banned word %q", w, bad)
+			}
+		}
 	}
 }
 
@@ -121,44 +108,16 @@ func TestOfferedOncePerVersion(t *testing.T) {
 	}
 }
 
-// A second press while a dialog is open starts no second dialog (TRAY2).
-func TestOfferWhileDialogOpenAsksOnce(t *testing.T) {
-	release, started := make(chan struct{}), make(chan struct{})
-	calls := 0
-	o := &Opener{Version: "1.4.0", Notify: func(string, string) {}, Installer: &fakeInstaller{},
-		Ask: func(UpdatePrompt, Launcher) (bool, error) {
-			calls++
-			close(started)
-			<-release
-			return false, nil
-		}}
-	done := make(chan error)
-	go func() { done <- o.Offer(context.Background(), found) }()
-	<-started
-	if err := o.Offer(context.Background(), found); err != nil || calls != 1 {
-		t.Fatalf("second Offer: err=%v calls=%d", err, calls)
-	}
-	close(release)
-	if err := <-done; err != nil {
-		t.Fatal(err)
-	}
-	o.Ask = func(UpdatePrompt, Launcher) (bool, error) { calls++; return false, nil }
-	_ = o.Offer(context.Background(), found)
-	if calls != 2 {
-		t.Fatalf("after the answer a new dialog may open: calls=%d", calls)
-	}
-}
-
 // TRAY8: a release that is not newer than the running one is never offered, whatever the service says.
 func TestOfferNeverOffersAVersionThatIsNotNewer(t *testing.T) {
 	for _, latest := range []string{"1.4.0", "1.3.9"} {
 		st := Status{Version: "1.4.0", Update: UpdateInfo{Latest: latest, Available: true}}
-		o, inst, n, asked := newOffer(true, nil, st)
+		o, n := newOffer(st)
 		if err := o.Offer(context.Background(), st); err != nil {
 			t.Fatal(err)
 		}
-		if len(*asked) != 0 || inst.calls != 0 || len(n.titles) != 1 || n.titles[0] != "Up to date" {
-			t.Fatalf("%s: asked=%d installs=%d notices=%v", latest, len(*asked), inst.calls, n.titles)
+		if len(n.titles) != 1 || n.titles[0] != "Up to date" {
+			t.Fatalf("%s: notices=%v", latest, n.titles)
 		}
 		if st.UpdateShown() {
 			t.Fatalf("%s: the Update line must stay hidden", latest)
@@ -169,17 +128,5 @@ func TestOfferNeverOffersAVersionThatIsNotNewer(t *testing.T) {
 		if (&Offered{}).Due(Status{Version: "1.4.0", Update: UpdateInfo{Latest: latest, Available: true, AutoOff: true}}) {
 			t.Fatalf("%s: due", latest)
 		}
-	}
-}
-
-// TRAY8: the service answering "already the newest" is an Up to date notice, not a failure.
-func TestInstallAnsweredNoUpdateSaysUpToDate(t *testing.T) {
-	o, inst, n, _ := newOffer(true, nil, found)
-	inst.err = update.ErrNoUpdate
-	if err := o.Offer(context.Background(), found); err != nil {
-		t.Fatal(err)
-	}
-	if len(n.titles) == 0 || n.titles[len(n.titles)-1] != "Up to date" {
-		t.Fatalf("notices %v %v", n.titles, n.bodies)
 	}
 }

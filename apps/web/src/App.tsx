@@ -18,27 +18,18 @@ import { LiveProvider } from './live/LiveProvider';
 import type { EventSourceFactory } from './live/store';
 import { AppShell } from './shell/Shell';
 import { FaultBoundary } from './screens/common';
-import { DoctorScreen } from './screens/doctor/Doctor';
 import { jobsRoutes } from './screens/jobs/routes';
 import { MOVED, MovedTo } from './screens/pool/redirects';
 import { PoolLayout } from './screens/pool/PoolLayout';
 import { PoolSizePage } from './screens/pool/PoolSizePage';
 import { PoolSummary } from './screens/pool/PoolSummary';
 import { NotFound } from './screens/Later';
-import { ImageDetail } from './screens/images/ImageDetail';
-import { RegistryBudgetsPage } from './screens/registry/RegistryBudgetsPage';
-import { RegistryImagePage } from './screens/registry/RegistryImagePage';
-import { RegistryMirrorPage } from './screens/registry/RegistryMirrorPage';
-import { RegistryReplacePage } from './screens/registry/RegistryReplacePage';
+import { later } from './screens/lazy';
 import { ImagesAndCaches } from './screens/images/ImagesAndCaches';
 import { MachineDetail, MachinesList } from './screens/machines/Machines';
-import { AddMachinePage } from './screens/machines/AddMachine';
 import { Overview } from './screens/overview/Overview';
 import { RepositoriesList, RepositoryDetail } from './screens/repositories/Repositories';
-import { TurnOnPoolPage } from './screens/repositories/TurnOnPool';
-import { AddRunnersPage } from './screens/runners/AddRunners';
 import { RunnersList } from './screens/runners/Runners';
-import { RunnerPage } from './screens/runners/RunnerPage';
 import {
   AccessTab,
   AuditTab,
@@ -50,12 +41,68 @@ import {
   SettingsLayout,
   ThemeApplier,
 } from './screens/settings/Settings';
-import { UpdateCompactPage, UpdateReviewPage } from './screens/settings/Updates';
-import { SetupPage } from './screens/setup/Setup';
 
 // Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
 const HelpScreen = lazy(() =>
   import('./screens/help/Help').then((m) => ({ default: m.HelpScreen })),
+);
+
+// Screens that are not the first page load on their own, so the first JavaScript stays within its budget (R6.12).
+const DoctorScreen = later(
+  () => import('./screens/doctor/Doctor').then((m) => m.DoctorScreen),
+  { heading: 'Doctor' },
+);
+const RegistryBudgetsPage = later(
+  () =>
+    import('./screens/registry/RegistryBudgetsPage').then((m) => m.RegistryBudgetsPage),
+  { heading: 'Registry budgets' },
+);
+const RegistryImagePage = later(
+  () => import('./screens/registry/RegistryImagePage').then((m) => m.RegistryImagePage),
+  { heading: 'Image' },
+);
+const RegistryMirrorPage = later(
+  () => import('./screens/registry/RegistryMirrorPage').then((m) => m.RegistryMirrorPage),
+  { heading: 'Mirror of upstream images' },
+);
+const RegistryReplacePage = later(
+  () =>
+    import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
+  { heading: 'Replace an image' },
+);
+const ImageDetail = later(
+  () => import('./screens/images/ImageDetail').then((m) => m.ImageDetail),
+  { heading: 'Image' },
+);
+const AddMachinePage = later(
+  () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
+  { heading: 'Add a machine' },
+);
+const TurnOnPoolPage = later(
+  () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
+  { heading: 'Turn on the pool' },
+);
+const AddRunnersPage = later(
+  () => import('./screens/runners/AddRunners').then((m) => m.AddRunnersPage),
+  { heading: 'Add runners' },
+);
+const RunnerPage = later(
+  () => import('./screens/runners/RunnerPage').then((m) => m.RunnerPage),
+  { heading: 'Runner' },
+);
+const SetupPage = lazy(() =>
+  import('./screens/setup/Setup').then((m) => ({ default: m.SetupPage })),
+);
+const UpdateCompactPage = later(
+  () => import('./screens/settings/Updates').then((m) => m.UpdateCompactPage),
+  { heading: 'Update', compact: true },
+);
+const UpdateReviewPage = later(
+  () => import('./screens/settings/Updates').then((m) => m.UpdateReviewPage),
+  {
+    heading: (params) =>
+      params.get('kind') === 'restart' ? 'Restart the service' : 'Update',
+  },
 );
 
 /** No valid session: every path but /sign-in and /setup goes to /sign-in and keeps the path (R5.8). */
@@ -100,7 +147,9 @@ function Gate({ factory }: { factory: EventSourceFactory | undefined }) {
       <ThemeApplier />
       <AppShell>
         <FaultBoundary key={location.pathname}>
-          <Outlet />
+          <Suspense fallback={<Loading what="Loading the page" />}>
+            <Outlet />
+          </Suspense>
         </FaultBoundary>
       </AppShell>
     </LiveProvider>
@@ -148,7 +197,9 @@ function CompactGate() {
     <>
       <ThemeApplier />
       <FaultBoundary key={location.pathname}>
-        <Outlet />
+        <Suspense fallback={<Loading what="Loading the page" />}>
+          <Outlet />
+        </Suspense>
       </FaultBoundary>
     </>
   );
@@ -169,7 +220,14 @@ export function App({
           <ArrowNavigation>
             <Routes>
               <Route path="/sign-in" element={<SignInPage />} />
-              <Route path="/setup" element={<SetupPage />} />
+              <Route
+                path="/setup"
+                element={
+                  <Suspense fallback={<Loading what="Loading the page" />}>
+                    <SetupPage />
+                  </Suspense>
+                }
+              />
               <Route element={<CompactGate />}>
                 <Route path="update" element={<UpdateCompactPage />} />
               </Route>

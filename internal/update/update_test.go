@@ -97,8 +97,8 @@ func TestPickAssetPrefersTheVersionedName(t *testing.T) {
 		t.Errorf("older release keeps the plain name: %q", got)
 	}
 	none := Release{Version: "0.1.15", Assets: map[string]string{}}
-	if got := PickAsset(none, plain); got != versioned {
-		t.Errorf("missing asset names the versioned one: %q", got)
+	if got := PickAsset(none, plain); got != "Crsp-0.1.15-win-x64.msi" {
+		t.Errorf("missing asset names the lifecycle one: %q", got)
 	}
 	sums := []byte(strings.Repeat("a", 64) + "  " + plain + "\n")
 	if got := PickFromSums(sums, plain, "0.1.15"); got != plain {

@@ -11,7 +11,9 @@ failed=0
 case "$(uname -s)" in Linux) os=linux ;; Darwin) os=darwin ;; *) echo "skip: $(uname -s)"; exit 0 ;; esac
 case "$(uname -m)" in x86_64 | amd64) arch=amd64 ;; *) arch=arm64 ;; esac
 target="$os-$arch"
-name="crsp-${target}_0.1.15.tar.gz" # OPS40: the release version is in the name
+case "$os" in darwin) new_os=macos ;; *) new_os=$os ;; esac
+case "$arch" in amd64) new_arch=x64 ;; *) new_arch=$arch ;; esac
+name="Crsp-0.1.15-${new_os}-${new_arch}.tar.gz" # OPS69: Crsp-<version>-<os>-<arch>.tar.gz
 
 sum() { if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | awk '{ print $1 }'; else shasum -a 256 "$1" | awk '{ print $1 }'; fi; }
 
@@ -80,6 +82,17 @@ run "$bin:$nogh"
 rc=$?
 [ $rc -ne 0 ] && [ ! -e "$root/crsp-ran" ] && [ ! -e "$root/gh-calls" ] && grep -q "does not match" "$root/out"
 check "bad checksum: stops before gh and before install" $?
+
+# TestOlderReleaseWithVersionedNameStillInstalls (OPS40 names, one transition release)
+versioned="crsp-${target}_0.1.15.tar.gz"
+mv "$rel/$name" "$rel/$versioned"
+printf '%s  %s\n' "$(sum "$rel/$versioned")" "$versioned" >"$rel/SHA256SUMS"
+rm -f "$root/crsp-ran" "$root/gh-calls"
+run "$bin:$nogh" FAKE_GH_EXIT=0
+rc=$?
+[ $rc -eq 0 ] && [ -e "$root/crsp-ran" ] && grep -q "attestation verify .*$versioned --repo" "$root/gh-calls" 2>/dev/null
+check "older release: the _<version> archive name is found in SHA256SUMS and installs" $?
+mv "$rel/$versioned" "$rel/$name"
 
 # TestOlderReleaseWithPlainNameStillInstalls (releases up to 0.1.14)
 plain="crsp-$target.tar.gz"

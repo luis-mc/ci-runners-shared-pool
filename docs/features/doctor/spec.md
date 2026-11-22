@@ -607,3 +607,12 @@ Source: internal/api/handlers_doctor.go
 Still planned: the diff that makes `doctor.finding.*` events, the schedule, the SQLite store adapter, backend and controller checks, `--local`.
 
 - Outside this spec's globs: the Doctor screen in `apps/web/`, the API paths in `packages/contract/openapi.yaml`, `RunChecks` in `packages/contract/proto/agent/v1/agent.proto`.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-3, UX-6, UX-11, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-31, UX-52, UX-53, UX-58, UX-61, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-4, UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13 `scripts/design/wizard-behaviour.test.ts`
