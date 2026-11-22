@@ -1654,6 +1654,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runner-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The size classes of runners and the reservation numbers
+         * @description scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+         */
+        get: operations["getRunnerClasses"];
+        /**
+         * Save the size classes or the reservation numbers
+         * @description scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+         */
+        put: operations["putRunnerClasses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/registry": {
         parameters: {
             query?: never;
@@ -3312,6 +3336,39 @@ export interface components {
             class: components["schemas"]["JobSizeClass"];
             copy_line: string;
         };
+        RunnerClassSize: {
+            /** @enum {string} */
+            class: "small" | "medium" | "large" | "xl";
+            cpus: number;
+            memory_gib: number;
+        };
+        RunnerClasses: {
+            /** @description The preset the table equals, or custom. */
+            preset: string;
+            presets: ("standard" | "compact" | "memory-heavy" | "custom")[];
+            /** @description small, medium, large, xl. */
+            classes: components["schemas"]["RunnerClassSize"][];
+            /** @description Notes that never block a save. */
+            hints: string[];
+            /** @description Classes no machine's pool can hold. A note, not an error. */
+            unheld: string[];
+            /** @description Default 3. */
+            reserve_after_passes: number;
+            /** @description Default 10. */
+            reserve_after_minutes: number;
+        };
+        RunnerClassesInput: {
+            /**
+             * @description Sets the table to that preset. Ignored when `classes` is given.
+             * @enum {string}
+             */
+            preset?: "standard" | "compact" | "memory-heavy" | "custom";
+            classes?: components["schemas"]["RunnerClassSize"][];
+            reserve_after_passes?: number;
+            reserve_after_minutes?: number;
+            /** @description Needed when a size that runners use gets smaller. */
+            confirm_lowering?: boolean;
+        };
         EnvSetList: {
             items: components["schemas"]["EnvSet"][];
         };
@@ -3418,7 +3475,7 @@ export interface components {
          * @description observability R5.5.
          * @enum {string}
          */
-        WaitReason: "free_slot" | "load_over_budget" | "no_runner_with_labels" | "repository_parallel_limit" | "machine_drained" | "load_not_measured" | "paused" | "on_battery" | "unknown";
+        WaitReason: "free_slot" | "load_over_budget" | "no_runner_with_labels" | "repository_parallel_limit" | "machine_drained" | "load_not_measured" | "paused" | "on_battery" | "over_memory" | "unknown";
         /** @enum {string} */
         Severity: "ok" | "info" | "skip" | "warn" | "fail";
         /** @enum {string} */
@@ -9322,6 +9379,52 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunnerClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerClasses"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putRunnerClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunnerClassesInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerClasses"];
+                };
             };
             default: components["responses"]["Error"];
         };

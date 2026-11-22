@@ -82,6 +82,8 @@ type Options struct {
 	EnvSets *envsets.Service
 	// JobSizes serves the job size routes (handlers_jobsizes.go, scheduling R5.89 to R5.97). Nil answers 501.
 	JobSizes JobSizeService
+	// RunnerClasses serves the runner size class settings (handlers_runnerclasses.go, scheduling R5.89 to R5.93). Nil answers 501.
+	RunnerClasses RunnerClassService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService

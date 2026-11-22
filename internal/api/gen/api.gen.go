@@ -2785,6 +2785,78 @@ func (e RunWasteKind) Valid() bool {
 	}
 }
 
+// Defines values for RunnerClassSizeClass.
+const (
+	Large  RunnerClassSizeClass = "large"
+	Medium RunnerClassSizeClass = "medium"
+	Small  RunnerClassSizeClass = "small"
+	Xl     RunnerClassSizeClass = "xl"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassSizeClass enum.
+func (e RunnerClassSizeClass) Valid() bool {
+	switch e {
+	case Large:
+		return true
+	case Medium:
+		return true
+	case Small:
+		return true
+	case Xl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassesPresets.
+const (
+	RunnerClassesPresetsCompact     RunnerClassesPresets = "compact"
+	RunnerClassesPresetsCustom      RunnerClassesPresets = "custom"
+	RunnerClassesPresetsMemoryHeavy RunnerClassesPresets = "memory-heavy"
+	RunnerClassesPresetsStandard    RunnerClassesPresets = "standard"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassesPresets enum.
+func (e RunnerClassesPresets) Valid() bool {
+	switch e {
+	case RunnerClassesPresetsCompact:
+		return true
+	case RunnerClassesPresetsCustom:
+		return true
+	case RunnerClassesPresetsMemoryHeavy:
+		return true
+	case RunnerClassesPresetsStandard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassesInputPreset.
+const (
+	RunnerClassesInputPresetCompact     RunnerClassesInputPreset = "compact"
+	RunnerClassesInputPresetCustom      RunnerClassesInputPreset = "custom"
+	RunnerClassesInputPresetMemoryHeavy RunnerClassesInputPreset = "memory-heavy"
+	RunnerClassesInputPresetStandard    RunnerClassesInputPreset = "standard"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassesInputPreset enum.
+func (e RunnerClassesInputPreset) Valid() bool {
+	switch e {
+	case RunnerClassesInputPresetCompact:
+		return true
+	case RunnerClassesInputPresetCustom:
+		return true
+	case RunnerClassesInputPresetMemoryHeavy:
+		return true
+	case RunnerClassesInputPresetStandard:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunnerKind.
 const (
 	RunnerKindEphemeral  RunnerKind = "ephemeral"
@@ -3462,6 +3534,7 @@ const (
 	WaitReasonMachineDrained          WaitReason = "machine_drained"
 	WaitReasonNoRunnerWithLabels      WaitReason = "no_runner_with_labels"
 	WaitReasonOnBattery               WaitReason = "on_battery"
+	WaitReasonOverMemory              WaitReason = "over_memory"
 	WaitReasonPaused                  WaitReason = "paused"
 	WaitReasonRepositoryParallelLimit WaitReason = "repository_parallel_limit"
 	WaitReasonUnknown                 WaitReason = "unknown"
@@ -3481,6 +3554,8 @@ func (e WaitReason) Valid() bool {
 	case WaitReasonNoRunnerWithLabels:
 		return true
 	case WaitReasonOnBattery:
+		return true
+	case WaitReasonOverMemory:
 		return true
 	case WaitReasonPaused:
 		return true
@@ -7216,6 +7291,57 @@ type Runner struct {
 	UncleanReason *string `json:"unclean_reason,omitempty"`
 }
 
+// RunnerClassSize defines model for RunnerClassSize.
+type RunnerClassSize struct {
+	Class     RunnerClassSizeClass `json:"class"`
+	Cpus      int                  `json:"cpus"`
+	MemoryGib int                  `json:"memory_gib"`
+}
+
+// RunnerClassSizeClass defines model for RunnerClassSize.Class.
+type RunnerClassSizeClass string
+
+// RunnerClasses defines model for RunnerClasses.
+type RunnerClasses struct {
+	// Classes small, medium, large, xl.
+	Classes []RunnerClassSize `json:"classes"`
+
+	// Hints Notes that never block a save.
+	Hints []string `json:"hints"`
+
+	// Preset The preset the table equals, or custom.
+	Preset  string                 `json:"preset"`
+	Presets []RunnerClassesPresets `json:"presets"`
+
+	// ReserveAfterMinutes Default 10.
+	ReserveAfterMinutes int `json:"reserve_after_minutes"`
+
+	// ReserveAfterPasses Default 3.
+	ReserveAfterPasses int `json:"reserve_after_passes"`
+
+	// Unheld Classes no machine's pool can hold. A note, not an error.
+	Unheld []string `json:"unheld"`
+}
+
+// RunnerClassesPresets defines model for RunnerClasses.Presets.
+type RunnerClassesPresets string
+
+// RunnerClassesInput defines model for RunnerClassesInput.
+type RunnerClassesInput struct {
+	Classes *[]RunnerClassSize `json:"classes,omitempty"`
+
+	// ConfirmLowering Needed when a size that runners use gets smaller.
+	ConfirmLowering *bool `json:"confirm_lowering,omitempty"`
+
+	// Preset Sets the table to that preset. Ignored when `classes` is given.
+	Preset              *RunnerClassesInputPreset `json:"preset,omitempty"`
+	ReserveAfterMinutes *int                      `json:"reserve_after_minutes,omitempty"`
+	ReserveAfterPasses  *int                      `json:"reserve_after_passes,omitempty"`
+}
+
+// RunnerClassesInputPreset Sets the table to that preset. Ignored when `classes` is given.
+type RunnerClassesInputPreset string
+
 // RunnerEnv defines model for RunnerEnv.
 type RunnerEnv struct {
 	RunnerId string           `json:"runner_id"`
@@ -8627,6 +8753,9 @@ type PlanRepositoryChangesJSONRequestBody = PlanRepositoryChangesRequest
 // ApplyRepositoryChangesJSONRequestBody defines body for ApplyRepositoryChanges for application/json ContentType.
 type ApplyRepositoryChangesJSONRequestBody = ApplyPlanRequest
 
+// PutRunnerClassesJSONRequestBody defines body for PutRunnerClasses for application/json ContentType.
+type PutRunnerClassesJSONRequestBody = RunnerClassesInput
+
 // PlanRunnersJSONRequestBody defines body for PlanRunners for application/json ContentType.
 type PlanRunnersJSONRequestBody = PlanRunnersRequest
 
@@ -9094,6 +9223,12 @@ type ServerInterface interface {
 	// StopRepositoryPlan Stop a repository plan that is applying
 	// (POST /api/v1/repository-plans/{planId}/stop)
 	StopRepositoryPlan(w http.ResponseWriter, r *http.Request, planId PlanId)
+	// GetRunnerClasses The size classes of runners and the reservation numbers
+	// (GET /api/v1/runner-classes)
+	GetRunnerClasses(w http.ResponseWriter, r *http.Request)
+	// PutRunnerClasses Save the size classes or the reservation numbers
+	// (PUT /api/v1/runner-classes)
+	PutRunnerClasses(w http.ResponseWriter, r *http.Request)
 	// PlanRunners Plan adding runners on a machine
 	// (POST /api/v1/runner-plans)
 	PlanRunners(w http.ResponseWriter, r *http.Request)
@@ -13748,6 +13883,34 @@ func (siw *ServerInterfaceWrapper) StopRepositoryPlan(w http.ResponseWriter, r *
 	handler.ServeHTTP(w, r)
 }
 
+// GetRunnerClasses operation middleware
+func (siw *ServerInterfaceWrapper) GetRunnerClasses(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunnerClasses(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutRunnerClasses operation middleware
+func (siw *ServerInterfaceWrapper) PutRunnerClasses(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutRunnerClasses(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // PlanRunners operation middleware
 func (siw *ServerInterfaceWrapper) PlanRunners(w http.ResponseWriter, r *http.Request) {
 
@@ -15246,6 +15409,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.DeleteJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.ListJobSizes)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.GetRunnerClasses)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.PutRunnerClasses)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry", wrapper.GetRegistrySettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/registry/logins", wrapper.PutRegistryLogin)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/registry/logins/{kind}/{host}", wrapper.DeleteRegistryLogin)
@@ -21018,6 +21183,83 @@ func (response StopRepositoryPlandefaultJSONResponse) VisitStopRepositoryPlanRes
 	return err
 }
 
+type GetRunnerClassesRequestObject struct {
+}
+
+type GetRunnerClassesResponseObject interface {
+	VisitGetRunnerClassesResponse(w http.ResponseWriter) error
+}
+
+type GetRunnerClasses200JSONResponse RunnerClasses
+
+func (response GetRunnerClasses200JSONResponse) VisitGetRunnerClassesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunnerClassesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetRunnerClassesdefaultJSONResponse) VisitGetRunnerClassesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutRunnerClassesRequestObject struct {
+	Body *PutRunnerClassesJSONRequestBody
+}
+
+type PutRunnerClassesResponseObject interface {
+	VisitPutRunnerClassesResponse(w http.ResponseWriter) error
+}
+
+type PutRunnerClasses200JSONResponse RunnerClasses
+
+func (response PutRunnerClasses200JSONResponse) VisitPutRunnerClassesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutRunnerClassesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutRunnerClassesdefaultJSONResponse) VisitPutRunnerClassesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type PlanRunnersRequestObject struct {
 	Body *PlanRunnersJSONRequestBody
 }
@@ -23137,6 +23379,12 @@ type StrictServerInterface interface {
 	// StopRepositoryPlan Stop a repository plan that is applying
 	// (POST /api/v1/repository-plans/{planId}/stop)
 	StopRepositoryPlan(ctx context.Context, request StopRepositoryPlanRequestObject) (StopRepositoryPlanResponseObject, error)
+	// GetRunnerClasses The size classes of runners and the reservation numbers
+	// (GET /api/v1/runner-classes)
+	GetRunnerClasses(ctx context.Context, request GetRunnerClassesRequestObject) (GetRunnerClassesResponseObject, error)
+	// PutRunnerClasses Save the size classes or the reservation numbers
+	// (PUT /api/v1/runner-classes)
+	PutRunnerClasses(ctx context.Context, request PutRunnerClassesRequestObject) (PutRunnerClassesResponseObject, error)
 	// PlanRunners Plan adding runners on a machine
 	// (POST /api/v1/runner-plans)
 	PlanRunners(ctx context.Context, request PlanRunnersRequestObject) (PlanRunnersResponseObject, error)
@@ -27147,6 +27395,61 @@ func (sh *strictHandler) StopRepositoryPlan(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(StopRepositoryPlanResponseObject); ok {
 		if err := validResponse.VisitStopRepositoryPlanResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRunnerClasses operation middleware
+func (sh *strictHandler) GetRunnerClasses(w http.ResponseWriter, r *http.Request) {
+	var request GetRunnerClassesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRunnerClasses(ctx, request.(GetRunnerClassesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRunnerClasses")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunnerClassesResponseObject); ok {
+		if err := validResponse.VisitGetRunnerClassesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutRunnerClasses operation middleware
+func (sh *strictHandler) PutRunnerClasses(w http.ResponseWriter, r *http.Request) {
+	var request PutRunnerClassesRequestObject
+
+	var body PutRunnerClassesJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutRunnerClasses(ctx, request.(PutRunnerClassesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutRunnerClasses")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutRunnerClassesResponseObject); ok {
+		if err := validResponse.VisitPutRunnerClassesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

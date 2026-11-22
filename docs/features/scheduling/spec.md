@@ -7,7 +7,7 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/scheduler/**", "internal/hooks/**", "internal/api/handlers_jobs.go", "internal/store/schedstore.go", "internal/jobsize/**", "internal/api/handlers_jobsizes.go", "internal/store/jobsizes.go"]
+code: ["internal/scheduler/**", "internal/hooks/**", "internal/api/handlers_jobs.go", "internal/store/schedstore.go", "internal/jobsize/**", "internal/api/handlers_jobsizes.go", "internal/store/jobsizes.go", "internal/scheduler/admit/**", "internal/memcap/**", "internal/runners/sizeclass*.go", "internal/store/schedadmit.go", "internal/api/handlers_runnerclasses.go"]
 design_system: [UX-6, UX-14, UX-17, UX-19, UX-29, UX-34, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62, components 15, components 16, components 17, components 19]
 last_verified: 2026-11-18
 artifact:
@@ -355,6 +355,30 @@ Source paths are in github.com/luis-mc/dev-standards, under `claude/plugins/deli
 
 **R5.88** (OPS67; built) — **The size feeds admission.** `slots.Settings.Sizes` carries the sources in the order of R5.80 (console rules, file rules, then one entry per scanned or measured job, each with the repository) and `WeightOf` takes the first entry that matches the job's key or shard before it looks at the name classes of R5.69; the name classes stay as the fallback. The class named in a wait line (R5.69) is the size's class. Built: `schedTx.Settings` fills `Sizes` from migration `00035_job_sizes.sql`.
 
+### 5.14 Size classes, admission, reservation and the memory cap (OPS74)
+
+Owner decisions of 21 Nov 2026 (job sizing wave 1, T5). Back end only; the console screens follow after the owner reviews the layout. One unit of a job's size is one CPU and one GiB (R5.83).
+
+**R5.89** (OPS74; built) — **Runner size classes are an editable table with presets.** Four classes, smallest first: small, medium, large, xl, each with CPUs and GiB of memory. Runners own no CPUs: a class is the ceiling of the jobs a runner takes (R5.90) and the hard memory cap of each job (R5.95). The built-in table (`runners.SizeTable`) stays the default. Presets: **Standard** (recommended) small 2/4, medium 4/8, large 8/16, xl 16/32; **Compact** (pools up to 8 CPUs) 1/2, 2/4, 4/8, 8/16; **Memory-heavy** (browsers, Java) 2/6, 4/12, 8/24, 16/48; **Custom**. The table is saved in the setting `runner_size_classes`; a table that equals a preset shows that preset's name.
+
+**R5.90** (OPS74; built) — **Two checks before a runner takes a job.** (1) The job's requirement is within the runner's class ceiling, in CPUs and in memory. (2) The pool's free CPU and free memory both cover it; free is the pool of the machine (machines R5.58) less the requirements of the held `ci` jobs. If either fails the job waits with the wait reason `free_slot` and a line that names the figures ("the job needs 4 CPUs and 8 GiB; the pool has 2 CPUs and 4 GiB free"), and a later job that fits may pass it: the first job in the order of service that passes both checks goes. A job's requirement comes from sizing in the order of R5.80 (override, measured, scan, then the name classes of R5.69 and 1 CPU and 1 GiB) and is not cut to the job-slot budget; its class is the smallest class that holds it. A runner whose class is not known is not judged by the ceiling and gets no memory cap. Admission is on for a machine whose pool size is known; without a pool size the unit weights of R5.69 decide as before. The load check of R5.13 follows and is unchanged.
+
+**R5.91** (OPS74; built) — **A class table is saved only when it passes the hard rules.** Each refusal is a 400 with these words: whole numbers above 0: "Enter whole numbers above 0."; strict growth small < medium < large < xl in CPUs and in memory: "Large has 3 CPUs; it must have more than medium's 4. Sizes grow from small to xl."; a runner's class must fit its machine's pool: "Large needs 8 CPUs and 16 GiB. GameRoomPC's pool is 6 CPUs and 9 GiB. Pick medium for this runner, or raise the pool on the machine page." A size that no machine's pool holds is a note (`unheld` in the API), not an error. Hints never block: a step between neighbours under 1.5 times, memory outside 1.5 to 8 GiB per CPU, a class below the floor of 1 CPU and 2 GiB.
+
+**R5.92** (OPS74; built) — **Lowering a size that is in use needs a confirm.** A save that gives a class fewer CPUs or less memory while a runner has that class answers 409 `needs_confirmation` until `confirm_lowering` is true, like a smaller pool size (machines R5.58). A class no runner has is lowered freely.
+
+**R5.93** (OPS74; built) — **A job that is passed too often becomes the machine's reserved job.** Each time a later job starts on a machine where a waiting job (ahead of it in the order of service, blocked by R5.90) could run, the waiting job gets one pass. A waiting job could run on a machine when the machine's pool as a whole and the runner's class ceiling hold it; a job that never could is not counted and never reserved. After `reserve_after_passes` passes (default 3) or `reserve_after_minutes` minutes of waiting (default 10), whichever comes first, the job becomes the machine's reserved job, one at a time per machine. Its wait line reads "reserved since HH:MM, expected start HH:MM" in the owner's zone; the expected start is the forecast end (observability R5.40) of the first held job whose end leaves room, and "expected start not known yet" when a held job has no forecast. The reservation ends when the job starts or its ticket is gone. Both numbers are settings (whole numbers above 0). State: tables `sched_reservations` and `sched_passes` (migration 00037).
+
+**R5.94** (OPS74; built) — **Backfill: while a job is reserved, a later job starts only if it cannot delay it.** A job other than the reserved one starts only if (a) its forecast end is before the reserved job's expected start, or (b) the pool still leaves room for the reserved job at that time: the held jobs that end before the expected start no longer count, the job that starts does. A job without a forecast can pass only by (b); a reserved job whose start is not known is judged against what is held now. A job held by backfill waits with "a job is reserved on this machine; reserved since ...".
+
+**R5.95** (OPS74; built in the controller and the `memcap` package; the agent does not start the guard yet) — **CPU is counted, memory is capped per job.** The pool container keeps the pool's CPU set and memory cap (`container.ResourceArgs`, `cpuset.go`). Each job gets a hard memory cap at its runner class ceiling: the gate's answer carries `Class` and `MemoryCapGiB`. `memcap.Enforcer` is the one interface: Linux a cgroup (v2) memory limit per job inside the pool container (`memory.max`, no swap, `memory.oom.group`); Windows a job object memory limit; macOS a process-tree watcher that stops the tree when its resident memory is over the limit. Each has a fake (`memcap.Fake`; the watcher takes a fake `Tree`).
+
+**R5.96** (OPS74; built in the controller) — **A job over its memory cap is stopped and marked over memory.** The job record carries the reason `over_memory` and a line that names the class to raise: "over memory: the job went over the large class limit of 16 GiB. Raise the class of this runner to xl." (`Engine.ReportOverMemory`, `memcap.OverMemoryText`). A run killed for memory never lowers the measured size (R5.79): `scheduler.CountsForMeasured(overMemory)` is false for it.
+
+**R5.97** (OPS74; the rule is built, the Doctor check is not) — **A reserved job no runner can ever run is reported.** `admit.CanEverRun` says whether any runner's ceiling and the pool hold the reserved job, and `admit.UnservedText` is the Doctor's line, like unserved size labels (R5.67). Not built: the Doctor check that calls it.
+
+**R5.98** (OPS74; built) — **API.** `GET /api/v1/runner-classes` (user) gives the preset, the four classes, the hints, the classes no pool holds, and the two reservation numbers; `PUT /api/v1/runner-classes` (admin) saves a preset or four classes, the reservation numbers and `confirm_lowering` (R5.91, R5.92).
+
 ## 6. Non-functional requirements
 
 **R6.1** — With a free slot and a machine under budget, the job-started hook returns within 2 s. No measurement sleeps. M1. Built. Source: `load.py` `measure_now`.
@@ -554,6 +578,17 @@ A test with a path in backticks exists; one marked planned is NOT YET IMPLEMENTE
 | R5.87 | `internal/jobsize/resolve_test.go` TestViewsShowBothOverridesAndSource, TestSetOverrideValidates, TestCopyLine, TestScanReadsCrspFile; `internal/api/handlers_jobsizes_test.go` TestJobSizeRoutesContract, TestJobSizeRoutesRolesAndUnbuilt; console tests in `apps/web/src/screens` (job sizes) | new |
 | R5.88 | `internal/scheduler/slots/weights_test.go` TestWeightOfUsesSizesThenNameClasses; `internal/store/jobsizes_test.go` TestIntegrationJobSizesFeedSettings | new |
 
+| R5.89 | `internal/runners/sizeclass_table_test.go` TestPresetsMatchTheOwnersTables, TestSmallestClassThatFits | new (OPS74) |
+| R5.90 | `internal/scheduler/admit/admit_test.go` TestCheckCeilingThenPool, TestFreeNeverBelowZero; `internal/scheduler/admission_test.go` TestAdmissionPoolRoomAndPassing, TestAdmissionMemoryAloneHoldsAJob, TestAdmissionCeilingOfTheRunnerClass; `internal/scheduler/slots/admission_test.go` TestRequirementIsNotCutToTheJobSlotBudget | new (OPS74) |
+| R5.91 | `internal/runners/sizeclass_table_test.go` TestValidateRefusesWithTheOwnersWords, TestRunnerClassMustFitThePool, TestNoPoolHoldsASizeIsANote, TestHintsDoNotBlock, TestSaveRefusesARunnerThatNoLongerFits; `internal/runners/sizeclass_service_test.go` TestClassServiceRefusesAndSavesNothing | new (OPS74) |
+| R5.92 | `internal/runners/sizeclass_table_test.go` TestLoweringAClassInUseNeedsConfirm; `internal/runners/sizeclass_service_test.go` TestClassServiceChecksRunnersAndLowering | new (OPS74) |
+| R5.93 | `internal/scheduler/admit/admit_test.go` TestPromoteByPassesOrByTime, TestPassedCountsOnlyBlockedJobsThatCouldRun, TestExpectedStartFromForecastEnds, TestReservationText; `internal/scheduler/admission_test.go` TestThreePassesReserveAndBlockLaterJobs, TestTenMinutesReserveWithoutPasses, TestReservationEndsWhenItsTicketIsCancelled | new (OPS74) |
+| R5.94 | `internal/scheduler/admit/admit_test.go` TestBackfillEndsBeforeOrLeavesRoom, TestBackfillUnknownStartUsesWhatIsHeldNow; `internal/scheduler/admission_test.go` TestBackfillByForecastAndReservedJobStarts | new (OPS74) |
+| R5.95 | `internal/memcap/memcap_test.go` TestCgroupWritesTheCapAndSeesTheKill, TestCgroupRefusesNoLimitAndBadID, TestOOMKillsReadsTheCount, TestWatcherStopsATreeOverTheLimit, TestWatcherIgnoresAGoneTreeAndReleasedJobs, TestFakeTripsAndHostPicksTheMechanism; `internal/scheduler/admission_test.go` TestAdmissionPoolRoomAndPassing (cap in the answer) | new (OPS74) |
+| R5.96 | `internal/memcap/memcap_test.go` TestOverMemoryTextNamesTheClassToRaise; `internal/scheduler/admission_test.go` TestOverMemoryIsMarkedAndNamesTheClassToRaise, TestOverMemoryNeverLowersTheMeasuredSize | new (OPS74) |
+| R5.97 | `internal/scheduler/admit/admit_test.go` TestCanEverRunAndDoctorLine (rule only; the Doctor check is not built) | new (OPS74) |
+| R5.98 | `internal/api/handlers_runnerclasses_test.go` TestRunnerClassRoutesContract, TestRunnerClassRoutesRolesAndUnbuilt; `internal/runners/sizeclass_service_test.go` TestClassServiceSavesPresetAndReservationNumbers | new (OPS74) |
+
 ### Ported tests not in the table above
 
 These dev-standards tests touch the same modules but are not ported here, or go to another spec.
@@ -609,6 +644,8 @@ Source: `internal/scheduler/slots/config.go`, `internal/scheduler/slots/order.go
 - `internal/hooks`: the `crsp hook` commands, the gate loop, the job-completed hook, the agent socket protocol and the wrappers.
 - `internal/store/schedstore.go`: the SQLite side of `Store`, and the jobs reads.
 - `internal/api/handlers_jobs.go`: listJobs, getJob, listSlots, freeStaleSlots.
+- `internal/scheduler/admit`: admission, passes, the reserved job and backfill (pure); `internal/scheduler/admission.go` wires it into the gate; `internal/store/schedadmit.go` and migration `00037_admission.sql` keep its state (OPS74).
+- `internal/memcap`: the memory cap per job behind one interface (cgroup, job object, watcher, fake); `internal/runners/sizeclass_table.go` and `sizeclass_service.go`: the class table, presets and save rules; `internal/api/handlers_runnerclasses.go`: the routes (OPS74).
 - `internal/jobsize`: the scan, the stack and cost tables, the precedence and the 2x reset (OPS67); `internal/store/jobsizes.go` keeps its rows; `internal/api/handlers_jobsizes.go` serves them; `cmd/crsp/jobsize_wiring.go` starts the scan from job events.
 
 Planned, not built: `demand.go`, `windows.go` (M2 and M3); placement across machines (R5.48, R5.49). Built in CRSP50: `placement.go` (one machine). The tables are those of `internal/store/migrations/00006_scheduling.sql`.

@@ -22,6 +22,11 @@ func WaitWords(reason WaitReason, text string) string {
 			return "No free slot: " + text + "."
 		}
 		return "No free slot."
+	case WaitOverMemory:
+		if text != "" {
+			return "Stopped over memory. " + text
+		}
+		return "Stopped over memory."
 	case WaitNoRunnerLabels:
 		return "No machine has this OS and these labels."
 	case WaitMachineDrained:
