@@ -46,9 +46,25 @@ function Remove-Msi([switch]$Purge) {
   if ($Purge) { $a += 'PURGE=1' }
   return (Start-Process msiexec.exe -ArgumentList $a -Wait -PassThru).ExitCode
 }
+function Get-FileSha256($file) {
+  # The service holds its database open, so open with FileShare.ReadWrite: a live file is read, never skipped.
+  $stream = [System.IO.File]::Open($file, 'Open', 'Read', 'ReadWrite')
+  try {
+    $sha = [System.Security.Cryptography.SHA256]::Create()
+    try { return ([System.BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '') } finally { $sha.Dispose() }
+  } finally { $stream.Dispose() }
+}
 function Get-Checksums($paths) {
-  $paths | Where-Object { $_ -and (Test-Path $_) } | ForEach-Object { Get-ChildItem $_ -Recurse -File } |
-    Sort-Object FullName | ForEach-Object { '{0} {1}' -f (Get-FileHash $_.FullName).Hash, $_.FullName }
+  # A file that truly cannot be read is listed as "UNREADABLE path: reason" and recorded in $script:ChecksumError,
+  # so the step prints a FAIL line with the reason; it never crashes the script and never drops the file.
+  $files = $paths | Where-Object { $_ -and (Test-Path $_) } | ForEach-Object { Get-ChildItem $_ -Recurse -File } | Sort-Object FullName
+  foreach ($f in $files) {
+    try { '{0} {1}' -f (Get-FileSha256 $f.FullName), $f.FullName }
+    catch {
+      $script:ChecksumError = 'cannot read {0}: {1}' -f $f.FullName, $_.Exception.Message
+      'UNREADABLE {0}' -f $f.FullName
+    }
+  }
 }
 function Get-Version {
   $k = Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
@@ -83,17 +99,21 @@ function Lc8 {
   Out-Lc 'LC-8' ($LASTEXITCODE -eq 0) 'self-test on a fresh install'
 }
 function Lc10 {
+  $script:ChecksumError = $null
   $before = (Get-Checksums (Get-DataPaths)) + (Get-Version)
   [void](Install-Msi $Pkg)
   $after = (Get-Checksums (Get-DataPaths)) + (Get-Version)
+  if ($script:ChecksumError) { Out-Lc 'LC-10' $false $script:ChecksumError; return }
   Out-Lc 'LC-10' (($before -join "`n") -eq ($after -join "`n")) 'reinstall of the same version changes nothing'
 }
 function Lc11 {
   if (-not $PrevPkg) { Out-Lc 'LC-11' $false 'missing input PrevPkg'; return }
   [void](Remove-Msi -Purge); [void](Install-Msi $PrevPkg)
+  $script:ChecksumError = $null
   $before = Get-Checksums (Get-DataPaths)
   $rc = Install-Msi $Pkg
   $after = Get-Checksums (Get-DataPaths)
+  if ($script:ChecksumError) { Out-Lc 'LC-11' $false $script:ChecksumError; return }
   Out-Lc 'LC-11' (($rc -eq 0) -and $before -and (($before -join "`n") -eq ($after -join "`n"))) 'upgrade from N-1 keeps config and data (checksums)'
 }
 function Lc12 {
