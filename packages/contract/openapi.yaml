@@ -11067,20 +11067,61 @@ components:
         measured: { type: boolean, description: 'True from 5 good runs on.' }
     HealthThresholds:
       type: object
-      required: [disk_days_under, disk_free_pct_under, no_heartbeat_seconds, clock_skew_seconds, oom_window_minutes]
+      required:
+        [
+          disk_days_under,
+          disk_free_pct_under,
+          no_heartbeat_seconds,
+          clock_skew_seconds,
+          oom_window_minutes,
+        ]
       properties:
-        disk_days_under: { type: integer, minimum: 1, maximum: 365, description: 'A disk that fills in fewer days is a finding (default 3).' }
-        disk_free_pct_under: { type: integer, minimum: 1, maximum: 90, description: 'A disk with less free space is a finding (default 10).' }
-        no_heartbeat_seconds: { type: integer, minimum: 30, maximum: 3600, description: 'No heartbeat for this long is a finding (default 120).' }
-        clock_skew_seconds: { type: integer, minimum: 1, maximum: 3600, description: 'A clock this far from the controller is a finding (default 30).' }
-        oom_window_minutes: { type: integer, minimum: 1, maximum: 1440, description: 'An OOM kill this recent is a finding (default 60).' }
+        disk_days_under:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 365,
+            description: 'A disk that fills in fewer days is a finding (default 3).',
+          }
+        disk_free_pct_under:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 90,
+            description: 'A disk with less free space is a finding (default 10).',
+          }
+        no_heartbeat_seconds:
+          {
+            type: integer,
+            minimum: 30,
+            maximum: 3600,
+            description: 'No heartbeat for this long is a finding (default 120).',
+          }
+        clock_skew_seconds:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 3600,
+            description: 'A clock this far from the controller is a finding (default 30).',
+          }
+        oom_window_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 1440,
+            description: 'An OOM kill this recent is a finding (default 60).',
+          }
     MachineHealth:
       type: object
       required: [machine_id, reported, stale, volumes]
       description: A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
       properties:
         machine_id: { type: string }
-        reported: { type: boolean, description: 'False until the first report arrives; every other field is absent then.' }
+        reported:
+          {
+            type: boolean,
+            description: 'False until the first report arrives; every other field is absent then.',
+          }
         received_at: { type: string, format: date-time }
         stale: { type: boolean, description: 'The last report is older than 3 minutes.' }
         boot: { $ref: '#/components/schemas/HealthBoot' }
@@ -11103,7 +11144,11 @@ components:
         unknown_reason: { type: string }
         uptime_seconds: { type: integer, format: int64 }
         last_boot_at: { type: string, format: date-time }
-        unexpected_restart: { type: boolean, description: 'Booted in the last 24 hours without a restart crsp asked for.' }
+        unexpected_restart:
+          {
+            type: boolean,
+            description: 'Booted in the last 24 hours without a restart crsp asked for.',
+          }
     HealthVolume:
       type: object
       required: [role, path]
@@ -11114,7 +11159,11 @@ components:
         total_bytes: { type: integer, format: int64 }
         free_bytes: { type: integer, format: int64 }
         free_pct: { type: number }
-        days_until_full: { type: number, description: 'From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.' }
+        days_until_full:
+          {
+            type: number,
+            description: 'From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.',
+          }
         days_note: { type: string, description: 'Why days_until_full is absent.' }
     HealthSwap:
       type: object
@@ -11135,7 +11184,11 @@ components:
         unknown_reason: { type: string }
         total_kills: { type: integer, format: int64 }
         last_kill_at: { type: string, format: date-time }
-        recent: { type: boolean, description: 'A kill inside the Doctor window (default 1 hour).' }
+        recent:
+          {
+            type: boolean,
+            description: 'A kill inside the Doctor window (default 1 hour).',
+          }
         scopes:
           type: array
           items:
@@ -11155,10 +11208,19 @@ components:
     HealthConnectivity:
       type: object
       properties:
-        rtt_ms: { type: integer, format: int64, description: 'Agent to controller round trip, from the heartbeats.' }
+        rtt_ms:
+          {
+            type: integer,
+            format: int64,
+            description: 'Agent to controller round trip, from the heartbeats.',
+          }
         last_heartbeat_at: { type: string, format: date-time }
         reconnects_24h: { type: integer }
-        clock_skew_seconds: { type: number, description: 'Agent clock minus controller clock; positive means the agent is ahead.' }
+        clock_skew_seconds:
+          {
+            type: number,
+            description: 'Agent clock minus controller clock; positive means the agent is ahead.',
+          }
         github: { $ref: '#/components/schemas/HealthGithub' }
         dns: { $ref: '#/components/schemas/HealthDns' }
     HealthVersions:
@@ -11180,17 +11242,30 @@ components:
         restart_pending: { type: boolean }
         restart_reasons: { type: array, items: { type: string } }
         pending_update_count: { type: integer }
-        active_hours_start: { type: integer, description: 'Windows Update active hours, local hour 0 to 23.' }
+        active_hours_start:
+          {
+            type: integer,
+            description: 'Windows Update active hours, local hour 0 to 23.',
+          }
         active_hours_end: { type: integer }
         auto_update_state: { type: string }
-        restart_may_happen_now: { type: boolean, description: 'A restart is pending and the OS may do it now.' }
-        restart_may_hit_jobs: { type: boolean, description: 'It may happen now and the machine runs or takes jobs.' }
+        restart_may_happen_now:
+          { type: boolean, description: 'A restart is pending and the OS may do it now.' }
+        restart_may_hit_jobs:
+          {
+            type: boolean,
+            description: 'It may happen now and the machine runs or takes jobs.',
+          }
     HealthPower:
       type: object
       properties:
         on_battery: { type: boolean }
         source_unknown_reason: { type: string }
-        sleep_enabled: { type: boolean, description: 'A setting can suspend or hibernate the machine.' }
+        sleep_enabled:
+          {
+            type: boolean,
+            description: 'A setting can suspend or hibernate the machine.',
+          }
         sleep_modes: { type: array, items: { type: string } }
         sleep_unknown_reason: { type: string }
         last_wake_at: { type: string, format: date-time }
@@ -11221,15 +11296,31 @@ components:
         steal_pct: { type: number }
     JobStatsCounts:
       type: object
-      required: [succeeded, failed, cancelled, timed_out, over_memory, stopped, other, total]
+      required:
+        [succeeded, failed, cancelled, timed_out, over_memory, stopped, other, total]
       properties:
         succeeded: { type: integer, format: int64 }
         failed: { type: integer, format: int64 }
         cancelled: { type: integer, format: int64 }
-        timed_out: { type: integer, format: int64, description: 'Ended by the crsp job timer, or by GitHub as timed out.' }
+        timed_out:
+          {
+            type: integer,
+            format: int64,
+            description: 'Ended by the crsp job timer, or by GitHub as timed out.',
+          }
         over_memory: { type: integer, format: int64 }
-        stopped: { type: integer, format: int64, description: 'Stopped by crsp (a drain, a Stop, a removal).' }
-        other: { type: integer, format: int64, description: 'No known result (a job crsp lost).' }
+        stopped:
+          {
+            type: integer,
+            format: int64,
+            description: 'Stopped by crsp (a drain, a Stop, a removal).',
+          }
+        other:
+          {
+            type: integer,
+            format: int64,
+            description: 'No known result (a job crsp lost).',
+          }
         total: { type: integer, format: int64 }
     JobStatsRates:
       type: object
@@ -11267,10 +11358,16 @@ components:
       properties:
         counts: { $ref: '#/components/schemas/JobStatsCounts' }
         rates: { $ref: '#/components/schemas/JobStatsRates' }
-        avg_run_seconds: { type: number, description: 'Absent when no job in the window has times.' }
+        avg_run_seconds:
+          { type: number, description: 'Absent when no job in the window has times.' }
         avg_queue_wait_seconds: { type: number }
-        busy_seconds: { type: number, description: 'Time jobs ran inside the window, summed.' }
-        busy_pct: { type: number, description: 'Busy seconds over the window times the slots (a runner has one), 0 to 100.' }
+        busy_seconds:
+          { type: number, description: 'Time jobs ran inside the window, summed.' }
+        busy_pct:
+          {
+            type: number,
+            description: 'Busy seconds over the window times the slots (a runner has one), 0 to 100.',
+          }
         last_failure: { $ref: '#/components/schemas/JobStatsFailure' }
         top_failing:
           type: array
