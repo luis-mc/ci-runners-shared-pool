@@ -81,4 +81,10 @@ regexes = [
   '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',
   '''\$\{\{\s*(secrets\.[A-Za-z0-9_]+|github\.token)\s*\}\}''',
   '''[:=]\s*\.\.\.''',
+  # CRSP32: a fake example value from the contract history, never a real secret
+  '''s3cret-signing-key''',
+  # CRSP37: fake signing secrets of the notification tests, and the length limit constant of the form,
+  # which the history scan reads as a secret; none of them is a real secret
+  '''whsec-(api-)?0123456789[0-9a-f]*-SIGNING''',
+  '''MIN_SECRET = 16;''',
 ]

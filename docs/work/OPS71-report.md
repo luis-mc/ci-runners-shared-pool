@@ -14,7 +14,7 @@
 
 | File | Result | Note |
 | --- | --- | --- |
-| `.gitleaks.toml` | template | Owner: as-is. Drops the three crsp allowlist entries for fake example secrets (CRSP32, CRSP37; see "Risks"). |
+| `.gitleaks.toml` | template + main's 3 regexes | Owner decision, 22 Nov: the 1.54.1 template plus the three allowlist regexes main already has, copied verbatim with their comments (a fake signing key of the contract history, CRSP32; the fake `whsec` signing secrets of the notification tests, and the form's length-limit constant, CRSP37). Nothing else added; main's scan behaviour is unchanged. |
 | `.github/workflows/package.yml` | template + per-repo value | Build line set to `-o dist/crsp ./cmd/crsp` (PRODUCT value, matches `smoke.json`). Checkout and setup-python pins go back to the template's `v4`/`v5` pins. |
 | `scripts/delivery/gate.json` | template + per-repo value | `ui_paths: ["apps/web/", "packages/ui/"]`. Keeps `-timeout 10s` on the guards step (not weakening G1). Drops `bash scripts/ci/go-test.sh -short` as unit step, and the `e2e` step (see "Risks"). |
 | `scripts/delivery/smoke.json` | template + per-repo values | `build`, `start`, `expect`, `health` restored (the template says "Fill start..."). Only `_note` text and `example_start` differ from before. |
@@ -39,7 +39,7 @@ That is 15 files that differ; 12 carry a crsp edit once pin-only and format-only
 
 - `gate.json` no longer has the `e2e` step, so the pre-push hook no longer asks for the e2e gate, and the `unit` step is the template's `go test -short ./...` (G1 warns on it, as it did on crsp's 150 s script).
   CI (`ci.yml`) still runs e2e and tests on its own. The guardrail check below says whether G1 still passes.
-- `.gitleaks.toml` has no allowlist for the three fake values; the check below says whether the history scan still passes.
+- `.gitleaks.toml` first had no allowlist for the three fake values (history scan red). Settled by the owner on 22 Nov: the three main regexes are back (see table).
 - `package.yml` uses the template's older action pins.
 
 ## Checks
@@ -51,12 +51,10 @@ That is 15 files that differ; 12 carry a crsp edit once pin-only and format-only
 | `fast_guards.py --base-ref auto` | all steps PASS; G1 warns (mode warn): `conftest.py`, `ci.yml:311`, `scripts/ci/go-test.sh:40` (150 s), `gate.json:53` (unit step). Same class of warn as before the sync. |
 | delivery doctor (`delivery_doctor.py self-check`) | all ok except `gh` (not signed in in this sandbox) and a warn that `smoke_packaged.py`, `tools.json`, `windows-msi-linux.sh` differ from the template (crsp edits, table above). |
 | `docs_check.py` | one error, W1: `docs/work/` files on the branch. By rule (D9) they never reach main; strip with `docs_work.py strip` before the merge. Docs: none, delivery tooling only, no product behaviour. |
-| `gitleaks git` (full history, template `.gitleaks.toml`) | **5 findings**: 4 old fake values (CRSP32, CRSP37 history; two `generic-api-key`, two `project-named-secret`) that crsp's allowlist covered, and 1 in my first commit of this report (it quoted the fake values). With crsp's old config only the report finding remained. |
+| `gitleaks dir .` and `gitleaks git` (full history, `--config .gitleaks.toml` = template + main's 3 regexes) | 0 findings in both. With the bare template the history scan finds 4 (commit `07cb8b6c` of this branch, where an earlier draft of this report quoted the fake values, and three lines of commit `3016aa75`); the 3 regexes cover all of them. |
 
-## Open problem for the owner
+## Secret scan: decided
 
-The CI secret scan (`ci.yml`, full history, `--config .gitleaks.toml`) will be red: the owner's "template as-is" for `.gitleaks.toml`
-removed the allowlist for the 4 old fake values, and `.gitleaksignore` is off limits. One decision fixes it: put back the three crsp
-allowlist regexes in `.gitleaks.toml` (the fake values are not secrets), or approve `.gitleaksignore` fingerprints. The fifth finding
-is commit `07cb8b6c` of this branch (my report quoted the fake values); history is not rewritten (no force-push), so it needs
-the same decision. Nothing was weakened to hide it.
+Owner decision, 22 Nov (about 08:00 Lisbon): keep main's three allowlist lines. `.gitleaksignore` is untouched and history is not
+rewritten. Commit `07cb8b6c` of this branch stays in the branch history but will not reach main: RELEASE-54 ships as one commit.
+This report describes the fake values and does not quote them.
