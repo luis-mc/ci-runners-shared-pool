@@ -54,6 +54,7 @@ type REST struct {
 	tokens   map[int64]cachedToken
 	budgets  map[int64]*budget
 	runCache map[string]cachedRuns
+	jobCache map[string]cachedJobs
 
 	// retries counts retried writes, for tests.
 	retries int

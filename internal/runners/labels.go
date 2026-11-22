@@ -5,9 +5,22 @@ package runners
 
 import (
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 )
+
+// routingLabelRE is the shape of a per-job routing label, crsp-<slug>-<4 hex>
+// (github-integration R5.101). A JIT runner gets its job's label when it is made
+// and the label is read-only afterwards (runners R5.103).
+var routingLabelRE = regexp.MustCompile(`^crsp-[a-z0-9]+(-[a-z0-9]+)*-[0-9a-f]{4}$`)
+
+// IsRoutingLabel reports whether l has the shape of a per-job routing label.
+func IsRoutingLabel(l string) bool { return routingLabelRE.MatchString(strings.ToLower(l)) }
+
+// MaxLabels is the most labels one runner may carry, read-only ones included;
+// GitHub answers the 101st add with HTTP 500.
+const MaxLabels = 100
 
 // EphemeralLabel is carried by every ephemeral runner (a fresh container made
 // for one job) and by no persistent runner. A repository set to "ephemeral
@@ -54,12 +67,16 @@ func ValidateLabels(labels []string, poolName string, verified map[string]bool) 
 		case l == "":
 			return nil, &LabelError{Label: raw, Reason: "empty"}
 		case l == poolName && poolName != "":
+		case IsRoutingLabel(l):
 		case !fixedLabels[l]:
 			return nil, &LabelError{Label: l, Reason: "not a generic label (allowed: self-hosted, OS, architecture, docker, kvm, gpu and the pool name)"}
 		case capabilityLabels[l] && !verified[l]:
 			return nil, &LabelError{Label: l, Reason: "the agent has not checked that this works on the machine"}
 		}
 		seen[l] = true
+	}
+	if len(seen) > MaxLabels {
+		return nil, &LabelError{Label: fmt.Sprintf("%d labels", len(seen)), Reason: fmt.Sprintf("a runner carries at most %d labels", MaxLabels)}
 	}
 	out := make([]string, 0, len(seen))
 	for l := range seen {
