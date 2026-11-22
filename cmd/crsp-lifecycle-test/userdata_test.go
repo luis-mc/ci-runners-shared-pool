@@ -85,8 +85,16 @@ func declaredDiffs(before, after snapshot, decls []store.DeclaredChange) (notes,
 }
 
 var dropDecl = []store.DeclaredChange{{Migration: 42, Task: "CRSP227", Reason: "parity removed", DropTables: []string{"access_credentials"}}}
-var rewriteDecl = []store.DeclaredChange{{Migration: 43, Task: "CRSP229", Reason: "legacy_vars removed",
-	Rewrites: []store.DeclaredRewrite{{Table: "repos_state", Column: "body", JSONKey: "legacy_vars"}}}}
+
+// rewriteDecl is the real declaration of migration 43, so the test proves what the lane applies.
+var rewriteDecl = func() []store.DeclaredChange {
+	for _, d := range store.DeclaredChanges {
+		if d.Migration == 43 {
+			return []store.DeclaredChange{d}
+		}
+	}
+	panic("no declaration for migration 43")
+}()
 
 func TestUndeclaredDropStillFails(t *testing.T) {
 	cols := []string{"id"}
@@ -137,24 +145,26 @@ func TestDeclaredDropThatLeavesTheTableFails(t *testing.T) {
 
 func TestDeclaredRewrite(t *testing.T) {
 	cols := []string{"id", "body", "saved_at"}
-	mk := func(v int64, rows ...[]string) snapshot {
-		return snap(v, map[string]store.TableData{"repos_state": tbl(cols, rows...)})
+	mk := func(v int64, body string) snapshot {
+		return snap(v, map[string]store.TableData{"repos_state": tbl(cols, []string{"=1", "=" + body, "=t1"})})
 	}
-	b := mk(42, []string{"=1", `={"a":1,"legacy_vars":{"x":"y"}}`, "=t1"}, []string{"=2", `={"a":2}`, "=t1"})
-	ok := mk(43, []string{"=1", `={"a":1}`, "=t2"}, []string{"=2", `={"a":2}`, "=t2"})
-	notes, d := declaredDiffs(b, ok, rewriteDecl)
+	before := mk(42, `{"version":1,"policies":{"a/x":{"Mode":"on","LegacyVars":true,"legacy_vars":{"k":"v"},"Size":2},"a/y":{"Mode":"off","legacy_vars":false}},"legacy_vars":"top"}`)
+	pass := mk(43, `{"version":1,"policies":{"a/x":{"Mode":"on","Size":2},"a/y":{"Mode":"off"}},"legacy_vars":"top"}`)
+	notes, d := declaredDiffs(before, pass, rewriteDecl)
 	if len(d) != 0 || len(notes) != 1 || !strings.Contains(notes[0], "migration 43 (CRSP229)") {
-		t.Fatalf("a declared rewrite passes: %v %v", notes, d)
+		t.Fatalf("policies that lose LegacyVars pass across 43: %v %v", notes, d)
 	}
-	lost := mk(43, []string{"=1", `={"a":1}`, "=t2"})
-	if _, d := declaredDiffs(b, lost, rewriteDecl); len(d) != 1 || !strings.Contains(d[0], "repos_state") {
-		t.Fatalf("a declared rewrite that loses a row must fail: %v", d)
+	for name, after := range map[string]snapshot{
+		"a lost policy":          mk(43, `{"version":1,"policies":{"a/x":{"Mode":"on","Size":2}},"legacy_vars":"top"}`),
+		"a changed policy field": mk(43, `{"version":1,"policies":{"a/x":{"Mode":"on","Size":3},"a/y":{"Mode":"off"}},"legacy_vars":"top"}`),
+		"a top-level key lost":   mk(43, `{"version":1,"policies":{"a/x":{"Mode":"on","Size":2},"a/y":{"Mode":"off"}}}`),
+		"a lost row":             snap(43, map[string]store.TableData{"repos_state": tbl(cols)}),
+	} {
+		if _, d := declaredDiffs(before, after, rewriteDecl); len(d) == 0 {
+			t.Fatalf("%s must fail across 43", name)
+		}
 	}
-	other := mk(43, []string{"=1", `={"a":9}`, "=t2"}, []string{"=2", `={"a":2}`, "=t2"})
-	if _, d := declaredDiffs(b, other, rewriteDecl); len(d) != 1 {
-		t.Fatalf("a declared rewrite changes only the named key: %v", d)
-	}
-	if _, d := declaredDiffs(mk(43, []string{"=1", `={"a":1,"legacy_vars":1}`, "=t1"}), mk(43, []string{"=1", `={"a":1}`, "=t1"}), rewriteDecl); len(d) != 1 {
+	if _, d := declaredDiffs(mk(43, `{"policies":{"a/x":{"LegacyVars":1}}}`), mk(43, `{"policies":{"a/x":{}}}`), rewriteDecl); len(d) != 1 {
 		t.Fatalf("a rewrite outside migration 43 must fail: %v", d)
 	}
 }

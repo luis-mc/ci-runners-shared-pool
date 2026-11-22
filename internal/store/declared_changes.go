@@ -13,12 +13,14 @@ type DeclaredChange struct {
 	Rewrites   []DeclaredRewrite // tables whose rows the migration rewrites
 }
 
-// DeclaredRewrite names a rewrite of one JSON key inside one column of a table. Every row must still be there,
-// with the same other cells; the column is compared with the key removed on both sides.
+// DeclaredRewrite names a rewrite that removes keys from the JSON object in one column of a table. Every row must
+// still be there, with the same other cells; the column is compared with exactly those keys removed on both sides.
+// A path is "$" followed by dot-separated object keys; "*" stands for every member of an object, so
+// "$.policies.*.legacy_vars" is the key legacy_vars of each policy under policies.
 type DeclaredRewrite struct {
-	Table   string
-	Column  string
-	JSONKey string
+	Table     string
+	Column    string
+	JSONPaths []string
 }
 
 // DeclaredChanges lists the declared changes, by migration number.
@@ -32,7 +34,9 @@ var DeclaredChanges = []DeclaredChange{
 	{
 		Migration: 43,
 		Task:      "CRSP229",
-		Reason:    "legacy_vars removed",
-		Rewrites:  []DeclaredRewrite{{Table: "repos_state", Column: "body", JSONKey: "legacy_vars"}},
+		Reason:    "legacy_vars removed from every saved policy",
+		Rewrites: []DeclaredRewrite{{Table: "repos_state", Column: "body", JSONPaths: []string{
+			"$.policies.*.LegacyVars", "$.policies.*.legacy_vars",
+		}}},
 	},
 }

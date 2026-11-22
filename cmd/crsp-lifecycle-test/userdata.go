@@ -112,17 +112,17 @@ func applyDeclared(before, after snapshot, decls []store.DeclaredChange) (bt, at
 			if !had || !ok {
 				continue // a table that is gone is reported by the comparison
 			}
-			bt[r.Table] = withoutJSONKey(b, r.Column, r.JSONKey)
-			at[r.Table] = withoutJSONKey(a, r.Column, r.JSONKey)
-			notes = append(notes, fmt.Sprintf("LC-11 note: declared by migration %d (%s): table %s rewritten, key %s removed from column %s", d.Migration, d.Task, r.Table, r.JSONKey, r.Column))
+			bt[r.Table] = withoutJSONPaths(b, r.Column, r.JSONPaths)
+			at[r.Table] = withoutJSONPaths(a, r.Column, r.JSONPaths)
+			notes = append(notes, fmt.Sprintf("LC-11 note: declared by migration %d (%s): table %s rewritten, %s removed from column %s", d.Migration, d.Task, r.Table, strings.Join(r.JSONPaths, ", "), r.Column))
 		}
 	}
 	return bt, at, notes, diffs
 }
 
-// withoutJSONKey returns the table with the key removed from the JSON object in the column. A cell that is
-// not a JSON object (or NULL) is left as it is.
-func withoutJSONKey(td store.TableData, column, key string) store.TableData {
+// withoutJSONPaths returns the table with the keys at the paths removed from the JSON object in the column. A
+// cell that is not a JSON object (or NULL) is left as it is, and so is every key the paths do not name.
+func withoutJSONPaths(td store.TableData, column string, paths []string) store.TableData {
 	ci := -1
 	for i, c := range td.Columns {
 		if c == column {
@@ -136,17 +136,43 @@ func withoutJSONKey(td store.TableData, column, key string) store.TableData {
 	for i, row := range td.Rows {
 		r := append([]string(nil), row...)
 		if ci < len(r) && strings.HasPrefix(r[ci], "=") {
-			var obj map[string]json.RawMessage
-			if json.Unmarshal([]byte(r[ci][1:]), &obj) == nil && obj != nil {
-				delete(obj, key)
-				if b, err := json.Marshal(obj); err == nil {
-					r[ci] = "=" + string(b)
-				}
+			cell := json.RawMessage(r[ci][1:])
+			for _, p := range paths {
+				cell = removePath(cell, strings.Split(strings.TrimPrefix(p, "$."), "."))
 			}
+			r[ci] = "=" + string(cell)
 		}
 		out.Rows[i] = r
 	}
 	return out
+}
+
+// removePath removes the key the path names from the JSON object raw; "*" visits every member. Anything that is
+// not an object on the way is returned unchanged.
+func removePath(raw json.RawMessage, segs []string) json.RawMessage {
+	var obj map[string]json.RawMessage
+	if json.Unmarshal(raw, &obj) != nil || obj == nil {
+		return raw
+	}
+	switch {
+	case len(segs) == 1 && segs[0] != "*":
+		delete(obj, segs[0])
+	case segs[0] == "*":
+		for k, v := range obj {
+			obj[k] = removePath(v, segs[1:])
+		}
+	default:
+		v, ok := obj[segs[0]]
+		if !ok {
+			return raw
+		}
+		obj[segs[0]] = removePath(v, segs[1:])
+	}
+	b, err := json.Marshal(obj)
+	if err != nil {
+		return raw
+	}
+	return b
 }
 
 // runtimeColumns are columns the service rewrites by design on every save, by table. They are not config or data
