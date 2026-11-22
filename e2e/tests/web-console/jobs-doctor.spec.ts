@@ -261,6 +261,7 @@ test('Pool and Analytics: the tabs are in one order', async ({ page }) => {
     'Machines',
   ]);
   await page.goto('/analytics');
+  await expect(page.getByRole('tab', { name: 'Suggestions' })).toBeVisible();
   expect(await page.getByRole('tab').allTextContents()).toEqual([
     'Suggestions',
     'Insights',
