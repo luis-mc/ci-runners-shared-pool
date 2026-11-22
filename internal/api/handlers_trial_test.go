@@ -52,16 +52,16 @@ func TestRepositoryTrialOverHTTP(t *testing.T) {
 		Variables []string
 	}
 	_ = json.Unmarshal(b, &got)
-	if res.StatusCode != 200 || got.Mode != "canary" || len(got.Variables) != 1 || got.Variables[0] != "RUNS_ON_CANARY_BUILD" {
+	if res.StatusCode != 200 || got.Mode != "canary" || len(got.Variables) != 1 || got.Variables[0] != "CRSP_RUNS_ON_CANARY_BUILD" {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
-	if _, ok := h.fake.Variable("alice/app", "RUNS_ON_CANARY_BUILD"); !ok {
+	if _, ok := h.fake.Variable("alice/app", "CRSP_RUNS_ON_CANARY_BUILD"); !ok {
 		t.Fatal("canary variable written")
 	}
 	if res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "off"}, owner, hdr); res.StatusCode != 200 {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
-	if _, ok := h.fake.Variable("alice/app", "RUNS_ON_CANARY_BUILD"); ok {
+	if _, ok := h.fake.Variable("alice/app", "CRSP_RUNS_ON_CANARY_BUILD"); ok {
 		t.Fatal("off removes the canary variable")
 	}
 	// Public: refused.

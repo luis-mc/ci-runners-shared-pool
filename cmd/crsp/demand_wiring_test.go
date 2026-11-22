@@ -122,7 +122,7 @@ func TestHostsTakeAWindowsMachineWithLinuxContainers(t *testing.T) {
 	}
 }
 
-// RUNS_ON_LINUX is written for pool-on repositories once such a machine exists
+// CRSP_RUNS_ON_LINUX is written for pool-on repositories once such a machine exists
 // (it serves linux with the arch label and the pool label); without the
 // allowed container backend it serves only windows.
 func TestLinuxVariableServedByWindowsWithLinuxContainers(t *testing.T) {

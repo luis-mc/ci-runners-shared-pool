@@ -148,13 +148,13 @@ func TestPlanChangesNothingChanges(t *testing.T) { // R5.20
 	if r.PoolOn {
 		t.Fatal("a plan changes nothing")
 	}
-	if _, ok := e.fake.Variable("alice/web", "RUNS_ON_LINUX"); ok {
+	if _, ok := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX"); ok {
 		t.Fatal("a plan writes nothing to GitHub")
 	}
 	if e.fake.Count("PATCH", "/repos") != 0 || e.fake.Count("POST", "/repos/alice/web/actions/variables") != 0 {
 		t.Fatal("no write call during planning")
 	}
-	if plan.Steps[0].Action != ActPoolOn || plan.Steps[1].Action != ActWriteVariable || plan.Steps[1].Target != "RUNS_ON_LINUX" {
+	if plan.Steps[0].Action != ActPoolOn || plan.Steps[1].Action != ActWriteVariable || plan.Steps[1].Target != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("steps: %+v", plan.Steps)
 	}
 }
@@ -164,12 +164,12 @@ func TestEnableWritesVariablesAndGuardsForks(t *testing.T) { // R5.20, R5.26, R5
 	e.world()
 	ctx := context.Background()
 	e.turnOn(100, 101)
-	v, ok := e.fake.Variable("alice/web", "RUNS_ON_LINUX")
+	v, ok := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX")
 	// alice/web is public: it defaults to ephemeral runners only (R5.60).
 	if !ok || v != `["self-hosted","linux","x64","docker","crsp-home","ephemeral"]` {
 		t.Fatalf("variable %q %v", v, ok)
 	}
-	if _, ok := e.fake.Variable("alice/web", "RUNS_ON_WINDOWS"); ok {
+	if _, ok := e.fake.Variable("alice/web", "CRSP_RUNS_ON_WINDOWS"); ok {
 		t.Fatal("no variable for an OS no machine serves")
 	}
 	r, _ := e.store.GetRepository(ctx, 100)
@@ -352,7 +352,7 @@ func TestPoolOffNamesVariablesAndDeletesOnlyAfterYes(t *testing.T) { // R5.20, R
 	ctx := context.Background()
 	e.turnOn(101)
 	e.fake.SetWorkflow("alice/secret", ".github/workflows/ci.yml",
-		"on: push\njobs:\n  build:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n    steps: []\n")
+		"on: push\njobs:\n  build:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}\n    steps: []\n")
 	e.fake.SetWorkflow("alice/secret", ".github/workflows/lint.yml", "on: push\njobs:\n  l:\n    runs-on: ubuntu-latest\n")
 
 	plan, err := e.svc.PlanChanges(ctx, adminP, []Change{{RepositoryID: 101, Pool: false}})
@@ -365,10 +365,10 @@ func TestPoolOffNamesVariablesAndDeletesOnlyAfterYes(t *testing.T) { // R5.20, R
 			del = &plan.Steps[i]
 		}
 	}
-	if del == nil || !del.NeedsYes || del.Target != "RUNS_ON_LINUX" {
+	if del == nil || !del.NeedsYes || del.Target != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("%+v", plan.Steps)
 	}
-	for _, want := range []string{"RUNS_ON_LINUX", "fail to start", ".github/workflows/ci.yml"} {
+	for _, want := range []string{"CRSP_RUNS_ON_LINUX", "fail to start", ".github/workflows/ci.yml"} {
 		if !strings.Contains(del.Text, want) {
 			t.Errorf("the question must name %q: %s", want, del.Text)
 		}
@@ -376,7 +376,7 @@ func TestPoolOffNamesVariablesAndDeletesOnlyAfterYes(t *testing.T) { // R5.20, R
 	if strings.Contains(del.Text, "lint.yml") {
 		t.Error("only workflows that read the variable are named")
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX"); !ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); !ok {
 		t.Fatal("planning deletes nothing")
 	}
 
@@ -385,7 +385,7 @@ func TestPoolOffNamesVariablesAndDeletesOnlyAfterYes(t *testing.T) { // R5.20, R
 	if err != nil || got.State != PlanDone {
 		t.Fatalf("%v %+v", err, got)
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX"); !ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); !ok {
 		t.Fatal("a variable is deleted only after a yes")
 	}
 	if r, _ := e.store.GetRepository(ctx, 101); r.PoolOn {
@@ -414,7 +414,7 @@ func TestPoolOffNamesVariablesAndDeletesOnlyAfterYes(t *testing.T) { // R5.20, R
 	if err != nil || got.State != PlanDone {
 		t.Fatalf("%v %+v", err, got)
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX"); ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); ok {
 		t.Fatal("deleted after the yes")
 	}
 	mv, _ := e.store.ListManagedVariables(ctx, 101)
@@ -510,7 +510,7 @@ func TestEnableCallsRoutingHook(t *testing.T) {
 	e.world()
 	var called []string
 	e.svc.cfg.OnPoolOn = func(_ context.Context, r Repository) {
-		v, _ := e.fake.Variable(r.FullName, "RUNS_ON_LINUX")
+		v, _ := e.fake.Variable(r.FullName, "CRSP_RUNS_ON_LINUX")
 		called = append(called, r.FullName+" "+v)
 	}
 	e.turnOn(101)

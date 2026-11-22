@@ -24,7 +24,7 @@ const MaxLabels = 100
 
 // EphemeralLabel is carried by every ephemeral runner (a fresh container made
 // for one job) and by no persistent runner. A repository set to "ephemeral
-// only" gets it in its RUNS_ON variables, so GitHub itself never offers its
+// only" gets it in its CRSP_RUNS_ON variables, so GitHub itself never offers its
 // jobs to a persistent runner (github-integration R5.60, runners R5.91).
 const EphemeralLabel = "ephemeral"
 

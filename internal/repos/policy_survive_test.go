@@ -10,7 +10,7 @@ import (
 // RES6, github-integration R5.25, R5.26, R5.28, R5.42: the policy a user set on a
 // repository (priority, parallel jobs, labels, budgets, fallback,
 // cap, hosted labels) is never changed by what the controller reads or writes on
-// its own: a sync, the installation reconcile, the 10-minute RUNS_ON restore, a
+// its own: a sync, the installation reconcile, the 10-minute CRSP_RUNS_ON restore, a
 // change of the machines' labels, the fallback pass, or a restart.
 func TestRepositoryPolicyNeverRevertsOnItsOwn(t *testing.T) {
 	e, up := fallbackEnv(t)
@@ -49,14 +49,14 @@ func TestRepositoryPolicyNeverRevertsOnItsOwn(t *testing.T) {
 
 	// Someone edits the variable on GitHub, a machine joins with other labels, and
 	// the restore loop runs more than once.
-	e.fake.SetVariable("alice/secret", "RUNS_ON_LINUX", `["self-hosted","wrong"]`)
+	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX", `["self-hosted","wrong"]`)
 	e.cap.m = map[string][]string{"Linux": {"X64", "docker", "crsp-home", "gpu"}}
 	for i := 0; i < 3; i++ {
 		e.advance(10 * time.Minute)
 		if err := e.svc.ReconcileAllVariables(ctx); err != nil {
 			t.Fatal(err)
 		}
-		same("after the RUNS_ON restore loop")
+		same("after the CRSP_RUNS_ON restore loop")
 	}
 
 	// The fallback goes on and off by itself; the policy, the opt-in and the cap

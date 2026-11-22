@@ -77,7 +77,7 @@ func RegisterAssign(reg *doctor.Registry, src AssignSource) {
 	}))
 }
 
-// repoRunsOnAlways: RUNS_ON_<OS> exists, and is not empty, for every OS of a
+// repoRunsOnAlways: CRSP_RUNS_ON_<OS> exists, and is not empty, for every OS of a
 // routed repository (runners R5.116). A per-job variable falls back to it, and
 // crsp deletes a per-job variable but never blanks one: an empty variable is
 // refused by GitHub with HTTP 422.
@@ -104,7 +104,7 @@ func repoRunsOnAlways(ctx context.Context, env doctor.Env) []doctor.Finding {
 		}
 		names := make([]string, 0, len(r.Expected))
 		for n := range r.Expected {
-			if strings.HasPrefix(n, "RUNS_ON_") {
+			if strings.HasPrefix(n, "CRSP_RUNS_ON_") {
 				names = append(names, n)
 			}
 		}

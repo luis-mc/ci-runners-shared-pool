@@ -88,10 +88,6 @@ func (a *GitHubArea) refresh(ctx context.Context, p auth.Principal) syncState {
 func toPolicy(p repos.Policy, visibility string) gen.RepositoryPolicy {
 	out := gen.RepositoryPolicy{AllowForkPullRequests: p.AllowForkPRs, Labels: nonNil(p.Labels), RunnerGroups: nonNil(p.RunnerGroups),
 		MaxParallelJobs: p.MaxParallelJobs, Priority: p.Priority}
-	if p.LegacyVars {
-		v := true
-		out.LegacyVars = &v
-	}
 	if p.HostedFallback {
 		v := true
 		out.HostedFallback = &v
@@ -382,7 +378,7 @@ func (s *server) UpdateRepositoryPolicy(ctx context.Context, req gen.UpdateRepos
 	}
 	b := req.Body
 	u := repos.PolicyUpdate{Priority: b.Priority, MaxParallelJobs: b.MaxParallelJobs, AllowForkPRs: b.AllowForkPullRequests,
-		Labels: b.Labels, RunnerGroups: b.RunnerGroups, BudgetMemoryPct: b.BudgetMemoryPct, BudgetCPUPct: b.BudgetCpuPct, LegacyVars: b.LegacyVars,
+		Labels: b.Labels, RunnerGroups: b.RunnerGroups, BudgetMemoryPct: b.BudgetMemoryPct, BudgetCPUPct: b.BudgetCpuPct,
 		HostedFallback: b.HostedFallback, FallbackCapMinutes: b.FallbackCapMinutes, HostedLabels: b.HostedLabels}
 	if b.RunnerKinds != nil {
 		k := string(*b.RunnerKinds)

@@ -45,7 +45,7 @@ import (
 const (
 	envPoolName     = "CRSP_POOL_NAME"
 	defaultPoolName = "crsp-home"
-	// runsOnRestoreEvery is how often the RUNS_ON variables are put back to
+	// runsOnRestoreEvery is how often the CRSP_RUNS_ON variables are put back to
 	// what the policy wants (github-integration R5.28).
 	runsOnRestoreEvery = 10 * time.Minute
 	// runsOnCheckEvery is how often the runs-on workflow check runs for every
@@ -113,7 +113,7 @@ func (c *controller) Close() {
 
 // buildController wires the GitHub area, the runners service and the doctor
 // beside what runController made, and starts their background work under ctx
-// (the RUNS_ON restore loop, the first installation sync).
+// (the CRSP_RUNS_ON restore loop, the first installation sync).
 func buildController(ctx context.Context, d controllerDeps) (*controller, error) {
 	if d.Now == nil {
 		d.Now = time.Now
@@ -329,7 +329,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	rsvc.SetRegistrar(runnerSvc)
 	rsvc.SetFleet(runnerSvc)
 
-	// RUNS_ON variables: put back to the policy every 10 minutes, and once now.
+	// CRSP_RUNS_ON variables: put back to the policy every 10 minutes, and once now.
 	loopCtx, stopLoop := context.WithCancel(ctx)
 	loopDone := make(chan struct{})
 	go func() {
@@ -444,7 +444,7 @@ func (realClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
 type runsOnTasks struct {
 	// Ready is false until a GitHub App exists; the loops do nothing then.
 	Ready func() bool
-	// Reconcile syncs installations and puts the RUNS_ON variables back; it runs
+	// Reconcile syncs installations and puts the CRSP_RUNS_ON variables back; it runs
 	// every runsOnRestoreEvery.
 	Reconcile []func(ctx context.Context) (name string, err error)
 	// Check reads the workflow files of every enabled repository; it runs every
@@ -454,7 +454,7 @@ type runsOnTasks struct {
 	Fallback func(ctx context.Context) error
 }
 
-// runsOnLoop syncs installations and puts the RUNS_ON variables back every 10
+// runsOnLoop syncs installations and puts the CRSP_RUNS_ON variables back every 10
 // minutes, and runs the runs-on workflow check of every enabled repository
 // every hour, until ctx ends. It does nothing until a GitHub App exists.
 func runsOnLoop(ctx context.Context, logger *slog.Logger, clk loopClock, t runsOnTasks) {
@@ -550,7 +550,7 @@ func githubLoopTasks(gh *github.REST, rsvc *repos.Service, runnerSvc lightRemove
 				return "reconcile installations", rsvc.ReconcileInstallations(ctx)
 			},
 			func(ctx context.Context) (string, error) {
-				return "restore RUNS_ON variables", rsvc.ReconcileAllVariables(ctx)
+				return "restore CRSP_RUNS_ON variables", rsvc.ReconcileAllVariables(ctx)
 			},
 			// After the variables: no workflow points at a light runner while
 			// the runners are drained and removed (decision D110).

@@ -643,14 +643,14 @@ func TestRepositoriesFlowOverHTTP(t *testing.T) { // R5.17 to R5.20, R5.28, R5.2
 	if plan.State != "planned" || len(plan.Steps) < 2 || plan.Steps[0].Action != "pool_on" {
 		t.Fatalf("%s", b)
 	}
-	if _, ok := h.fake.Variable("alice/app", "RUNS_ON_LINUX"); ok {
+	if _, ok := h.fake.Variable("alice/app", "CRSP_RUNS_ON_LINUX"); ok {
 		t.Fatal("a plan changes nothing")
 	}
 	res, b = h.do("POST", "/api/v1/repository-plans/"+plan.ID+"/apply", map[string]any{"approved_steps": []string{}}, owner, hdr)
 	if res.StatusCode != 202 || !strings.Contains(string(b), `"state":"done"`) {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
-	if v, ok := h.fake.Variable("alice/app", "RUNS_ON_LINUX"); !ok || v != `["self-hosted","linux","x64","crsp-home"]` {
+	if v, ok := h.fake.Variable("alice/app", "CRSP_RUNS_ON_LINUX"); !ok || v != `["self-hosted","linux","x64","crsp-home"]` {
 		t.Fatalf("variable %q", v)
 	}
 	// After a reload the plan shows its outcome.

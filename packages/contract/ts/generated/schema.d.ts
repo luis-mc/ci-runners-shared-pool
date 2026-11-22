@@ -1467,7 +1467,7 @@ export interface paths {
         get: operations["getPublicRepositories"];
         /**
          * Turn public repositories on or off
-         * @description github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+         * @description github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
          */
         put: operations["setPublicRepositories"];
         post?: never;
@@ -4399,7 +4399,7 @@ export interface components {
          *       "user_admin_known": true,
          *       "variables": [
          *         {
-         *           "name": "RUNS_ON_LINUX",
+         *           "name": "CRSP_RUNS_ON_LINUX",
          *           "status": "ok",
          *           "value": "[\"self-hosted\",\"linux\",\"x64\"]"
          *         }
@@ -4559,7 +4559,7 @@ export interface components {
         };
         RepositoryVariable: {
             /** @enum {string} */
-            name: "RUNS_ON_LINUX" | "RUNS_ON_WINDOWS" | "RUNS_ON_MACOS" | "RUNS_ON_LIGHT";
+            name: "CRSP_RUNS_ON_LINUX" | "CRSP_RUNS_ON_WINDOWS" | "CRSP_RUNS_ON_MACOS" | "RUNS_ON_LIGHT";
             status: components["schemas"]["VariableStatus"];
             /** @description The JSON list of labels as written. */
             value?: string;
@@ -4581,8 +4581,6 @@ export interface components {
             runner_kinds?: "ephemeral_only" | "any_runner";
             /** @description True when the owner chose runner_kinds; false while it is the default of the repository's visibility. */
             runner_kinds_set?: boolean;
-            /** @description Also write CI_RUNS_ON and CI_RUNS_ON_WINDOWS with the same labels as RUNS_ON_LINUX and RUNS_ON_WINDOWS, for workflows that still follow the old dev-standards templates (github-integration R5.39). Off by default; for the move from the old pool. */
-            legacy_vars?: boolean;
             /** @description May lower the machine budget for this repository's jobs, never raise it (scheduling R5.4). */
             budget_memory_pct?: number;
             budget_cpu_pct?: number;
@@ -4615,8 +4613,6 @@ export interface components {
              * @enum {string}
              */
             runner_kinds?: "ephemeral_only" | "any_runner" | "default";
-            /** @description Turn the old variable names CI_RUNS_ON and CI_RUNS_ON_WINDOWS on or off (github-integration R5.39). */
-            legacy_vars?: boolean;
             /** @description Needed to turn fork jobs on (github-integration R5.26). */
             confirm_fork_risk?: boolean;
             /** @description Turn the hosted fallback on or off (github-integration R5.42). A public repository is refused. */
@@ -6182,7 +6178,7 @@ export interface components {
          *       "title": "No online runner carries [self-hosted, linux, arm64]",
          *       "detail": ".github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]",
          *       "fix": {
-         *         "text": "Add a runner with these labels, or use fromJSON(vars.RUNS_ON_LINUX).",
+         *         "text": "Add a runner with these labels, or use fromJSON(vars.CRSP_RUNS_ON_LINUX).",
          *         "link": "/runners"
          *       },
          *       "needs_admin": false,

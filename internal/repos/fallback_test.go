@@ -36,7 +36,7 @@ func optIn(t *testing.T, e *env, id int64, capMin int) {
 }
 
 func linuxVar(e *env) string {
-	v, _ := e.fake.Variable("alice/secret", "RUNS_ON_LINUX")
+	v, _ := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX")
 	return v
 }
 
@@ -127,12 +127,12 @@ func TestFallbackOtherRepositoriesUntouched(t *testing.T) { // R5.42
 	ctx := context.Background()
 	e.turnOn(100)
 	optIn(t, e, 101, 0)
-	before, _ := e.fake.Variable("alice/web", "RUNS_ON_LINUX")
+	before, _ := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX")
 	up.m["Linux"] = false
 	_ = e.svc.EvaluateFallback(ctx)
 	e.advance(4 * time.Minute)
 	_ = e.svc.EvaluateFallback(ctx)
-	if got, _ := e.fake.Variable("alice/web", "RUNS_ON_LINUX"); got != before {
+	if got, _ := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX"); got != before {
 		t.Fatalf("a repository that did not opt in changed: %s", got)
 	}
 }

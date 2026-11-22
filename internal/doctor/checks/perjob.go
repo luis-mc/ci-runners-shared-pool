@@ -14,8 +14,8 @@ import (
 // shows the patch and opens nothing.
 const OwnerLogin = "luis-mc"
 
-// workflowPerJob: a routed runs-on that still reads only RUNS_ON_<OS> instead
-// of the per-job form fromJSON(vars.CRSP_<JOB> || vars.RUNS_ON_<OS> || '"..."').
+// workflowPerJob: a routed runs-on that still reads only CRSP_RUNS_ON_<OS> instead
+// of the per-job form fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"..."').
 // It is info, never a failure: the job runs as before. On the owner's
 // repositories crsp opens one pull request; elsewhere the finding carries the
 // patch to copy or download (github-integration R5.107, R5.108).

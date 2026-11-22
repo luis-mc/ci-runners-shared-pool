@@ -15,7 +15,7 @@ const routedWorkflow = `name: ci
 on: push
 jobs:
   unit:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}
     steps:
       - run: go test ./...
 `

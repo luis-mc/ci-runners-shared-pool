@@ -119,8 +119,8 @@ func (s *Service) reposOf(ctx context.Context, installationID int64) []Repositor
 }
 
 // adoptPools turns the pool on for a repository the store does not know yet but
-// whose variables show the pool already runs it: RUNS_ON_LIGHT, or a RUNS_ON_
-// variable with a crsp label. The store of an older version lived in memory, so
+// whose variables show the pool already runs it: RUNS_ON_LIGHT, or a
+// CRSP_RUNS_ON_<OS> or older RUNS_ON_<OS> variable with a crsp label. The store of an older version lived in memory, so
 // an upgrade left the repositories with their pool off while GitHub still held
 // the variables (CRSP148). A GitHub error leaves the repository as it is.
 func (s *Service) adoptPools(ctx context.Context, fresh []Repository) {
@@ -148,6 +148,9 @@ func poolVariables(vars []github.Variable) bool {
 			if v.Name == o.Var && strings.Contains(v.Value, "crsp-") {
 				return true
 			}
+		}
+		if legacyOS(v.Name) != "" && strings.Contains(v.Value, "crsp-") {
+			return true // RUNS_ON_<OS>, the name an older version wrote
 		}
 	}
 	return false

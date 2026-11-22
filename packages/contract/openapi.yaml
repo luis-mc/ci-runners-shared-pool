@@ -2204,7 +2204,7 @@ paths:
       description: >-
         github-integration R5.54 and R5.55. Switching off turns the pool off for
         every public repository that has it on (its settings stay), sets its
-        RUNS_ON variables to the hosted labels, drains and removes its runners,
+        CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners,
         and audits each. `stopped` is how many repositories that was. Switching
         on stops nothing and turns nothing on by itself.
       x-auth: owner
@@ -6928,7 +6928,7 @@ components:
         user_is_github_admin: true
         user_admin_known: true
         variables:
-          - name: RUNS_ON_LINUX
+          - name: CRSP_RUNS_ON_LINUX
             status: ok
             value: '["self-hosted","linux","x64"]'
         policy:
@@ -7103,7 +7103,7 @@ components:
       properties:
         name:
           type: string
-          enum: [RUNS_ON_LINUX, RUNS_ON_WINDOWS, RUNS_ON_MACOS, RUNS_ON_LIGHT]
+          enum: [CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS, CRSP_RUNS_ON_MACOS, RUNS_ON_LIGHT]
         status:
           $ref: '#/components/schemas/VariableStatus'
         value:
@@ -7149,9 +7149,6 @@ components:
         runner_kinds_set:
           type: boolean
           description: True when the owner chose runner_kinds; false while it is the default of the repository's visibility.
-        legacy_vars:
-          type: boolean
-          description: Also write CI_RUNS_ON and CI_RUNS_ON_WINDOWS with the same labels as RUNS_ON_LINUX and RUNS_ON_WINDOWS, for workflows that still follow the old dev-standards templates (github-integration R5.39). Off by default; for the move from the old pool.
         budget_memory_pct:
           type: integer
           description: May lower the machine budget for this repository's jobs, never raise it (scheduling R5.4).
@@ -7200,9 +7197,6 @@ components:
           type: string
           enum: [ephemeral_only, any_runner, default]
           description: Set which runners take the repository's jobs (github-integration R5.60). default clears the owner's choice, so the default of the visibility applies.
-        legacy_vars:
-          type: boolean
-          description: Turn the old variable names CI_RUNS_ON and CI_RUNS_ON_WINDOWS on or off (github-integration R5.39).
         confirm_fork_risk:
           type: boolean
           description: Needed to turn fork jobs on (github-integration R5.26).
@@ -10015,7 +10009,7 @@ components:
         title: No online runner carries [self-hosted, linux, arm64]
         detail: .github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]
         fix:
-          text: Add a runner with these labels, or use fromJSON(vars.RUNS_ON_LINUX).
+          text: Add a runner with these labels, or use fromJSON(vars.CRSP_RUNS_ON_LINUX).
           link: /runners
         needs_admin: false
         milestone: 1

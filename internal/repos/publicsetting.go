@@ -97,7 +97,7 @@ func (s *Service) PublicOnPool(ctx context.Context) (int, error) {
 
 // StopPublicOnPool is what switching the setting off does (R5.55): for every
 // public repository whose pool is on, the pool goes off (policy kept), the
-// RUNS_ON variables take the hosted labels, the runners are drained and
+// CRSP_RUNS_ON variables take the hosted labels, the runners are drained and
 // removed, and the audit log says so. It returns how many repositories it
 // stopped. Every repository is tried; the errors are joined.
 func (s *Service) StopPublicOnPool(ctx context.Context, p auth.Principal, why string) (int, error) {

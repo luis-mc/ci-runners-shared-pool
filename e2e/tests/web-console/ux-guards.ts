@@ -169,13 +169,13 @@ const MANY_POLICIES = repository({
     ],
   },
   variables: [
-    { name: 'RUNS_ON_LINUX', status: 'ok', value: '["self-hosted","linux","x64"]' },
+    { name: 'CRSP_RUNS_ON_LINUX', status: 'ok', value: '["self-hosted","linux","x64"]' },
     {
-      name: 'RUNS_ON_WINDOWS',
+      name: 'CRSP_RUNS_ON_WINDOWS',
       status: 'wrong',
       value: '["self-hosted","windows","x64","very-long-label-that-goes-on"]',
     },
-    { name: 'RUNS_ON_MACOS', status: 'missing' },
+    { name: 'CRSP_RUNS_ON_MACOS', status: 'missing' },
     { name: 'RUNS_ON_LIGHT', status: 'not_managed', value: '["ubuntu-latest"]' },
   ],
 });

@@ -20,7 +20,7 @@ describe('default labels (finding 12)', () => {
   const repo = repository({
     variables: [
       {
-        name: 'RUNS_ON_LINUX',
+        name: 'CRSP_RUNS_ON_LINUX',
         status: 'ok',
         value: '["self-hosted","linux","crsp-home"]',
       },
@@ -123,7 +123,7 @@ describe('Add runners (findings 10, 11, 12)', () => {
     const repo = repository({
       pool_on: true,
       variables: [
-        { name: 'RUNS_ON_LINUX', status: 'ok', value: '["self-hosted","crsp-home"]' },
+        { name: 'CRSP_RUNS_ON_LINUX', status: 'ok', value: '["self-hosted","crsp-home"]' },
       ],
     });
     renderApp(api([], [repo]), '/setup/runners/add');

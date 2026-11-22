@@ -25,6 +25,14 @@ const (
 	LabelCap = 100
 	// VarPrefix starts every per-job variable.
 	VarPrefix = "CRSP_"
+	// PoolVarPrefix starts the pool variables (CRSP_RUNS_ON_<OS>, the size
+	// variables CRSP_RUNS_ON_<OS>_<SIZE>, the canary variables). It is
+	// reserved: no job takes a name under it (VarNames), and IsJobVar is false
+	// for it, so the sync never deletes a pool variable as a stale per-job one.
+	PoolVarPrefix = "CRSP_RUNS_ON_"
+	// JobVarPrefix starts the per-job variable of a job whose name would fall
+	// under PoolVarPrefix: CRSP_JOB_<NAME>_<hash>.
+	JobVarPrefix = "CRSP_JOB_"
 	// LabelPrefix starts every routing label (a generic label, runners R5.36).
 	LabelPrefix = "crsp-"
 	maxSlug     = 24
@@ -36,8 +44,13 @@ var routingLabelRE = regexp.MustCompile(`^crsp-[a-z0-9]+(-[a-z0-9]+)*-[0-9a-f]{4
 // IsLabel reports whether a label has the shape of a routing label.
 func IsLabel(l string) bool { return routingLabelRE.MatchString(strings.ToLower(l)) }
 
-// IsJobVar reports whether a variable name is a per-job variable.
-func IsJobVar(name string) bool { return strings.HasPrefix(name, VarPrefix) }
+// IsPoolVar reports whether a variable name is a pool variable, under the
+// reserved prefix CRSP_RUNS_ON_.
+func IsPoolVar(name string) bool { return strings.HasPrefix(name, PoolVarPrefix) }
+
+// IsJobVar reports whether a variable name is a per-job variable: CRSP_ and
+// not a pool variable.
+func IsJobVar(name string) bool { return strings.HasPrefix(name, VarPrefix) && !IsPoolVar(name) }
 
 // StripLabels drops routing labels from a list.
 func StripLabels(labels []string) []string {
@@ -91,7 +104,9 @@ func ClassLabel(repository, class string) string {
 }
 
 // VarNames gives each job key its variable name: CRSP_<JOB>. Keys that
-// normalise to the same name get the short hash of the later key added. The
+// normalise to the same name get the short hash of the later key added. A key
+// whose name would fall under the reserved PoolVarPrefix (a job named
+// runs-on-linux) is named CRSP_JOB_<NAME>_<hash> instead. The
 // result depends only on the set of keys, so the workflow patch, the sync and
 // the doctor all agree.
 func VarNames(jobs []string) map[string]string {
@@ -103,7 +118,11 @@ func VarNames(jobs []string) map[string]string {
 		if _, dup := out[k]; dup {
 			continue
 		}
-		n := VarPrefix + strings.ToUpper(strings.ReplaceAll(slug(k, 40), "-", "_"))
+		upper := strings.ToUpper(strings.ReplaceAll(slug(k, 40), "-", "_"))
+		n := VarPrefix + upper
+		if IsPoolVar(n) {
+			n = JobVarPrefix + upper + "_" + strings.ToUpper(shortHash(k))
+		}
 		if taken[n] {
 			n += "_" + strings.ToUpper(shortHash(k))
 		}
