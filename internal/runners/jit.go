@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backend"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/github"
@@ -15,8 +16,12 @@ type JobRunner struct {
 	MachineID string
 	Arch      string
 	Backend   string
-	Labels    []string // generic labels only (R5.36)
-	Scope     Scope
+	// OS is the runner's system: linux (the default), windows or macos. A
+	// Windows runner is a one-job process; a macOS runner is a one-job VM
+	// (runners R5.110).
+	OS     string
+	Labels []string // generic labels, and the job's routing label (R5.36, R5.103)
+	Scope  Scope
 	// ExtraPackages are the extra packages of the repository's pool (R5.51).
 	ExtraPackages []string
 	// JIT, when set, makes the JIT config of this runner instead of the
@@ -40,7 +45,11 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 		return Record{}, err
 	}
 	j.Labels = labels
-	pin, err := PinFor("linux", j.Arch)
+	if j.OS == "" {
+		j.OS = "linux"
+	}
+	iso := IsolationFor(j.OS)
+	pin, err := PinFor(j.OS, j.Arch)
 	if err != nil {
 		return Record{}, err
 	}
@@ -56,8 +65,8 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 		return Record{}, fmt.Errorf("resolve scope: %w", err)
 	}
 	id := s.newID("r_")
-	rec := Record{ID: id, Name: j.Name, MachineID: j.MachineID, OS: "linux", Arch: j.Arch, Kind: "ephemeral",
-		Backend: j.Backend, Isolation: string(backend.IsolationContainer), Labels: j.Labels,
+	rec := Record{ID: id, Name: j.Name, MachineID: j.MachineID, OS: j.OS, Arch: j.Arch, Kind: "ephemeral",
+		Backend: j.Backend, Isolation: string(iso), Labels: j.Labels,
 		Route: RouteForLabels(s.PoolName, j.Labels), SizeClass: DefaultSize, Scope: j.Scope,
 		RunnerVersion: pin.Version, State: Creating, Managed: true, CreatedAt: s.now()}
 	if err := s.Store.InsertRunner(ctx, rec); err != nil {
@@ -77,7 +86,7 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	if err != nil {
 		return fail(fmt.Errorf("JIT config: %w", err))
 	}
-	spec := backend.RunnerSpec{ID: id, Name: j.Name, OS: "linux", Arch: j.Arch, Labels: j.Labels, GitHubURL: t.URL, Group: t.Group,
+	spec := backend.RunnerSpec{ID: id, Name: j.Name, OS: j.OS, Arch: j.Arch, Labels: j.Labels, GitHubURL: t.URL, Group: t.Group,
 		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, CacheQuota: s.CacheQuota, ExtraPackages: j.ExtraPackages}
 	if m, err := s.Machines.GetMachine(ctx, j.MachineID); err == nil {
 		// The pool size of the machine caps the pool container (R5.27). A
@@ -118,4 +127,30 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	s.audit(ctx, actor, "runner.add", j.MachineID, id, j.Name)
 	rec.ServiceName, rec.GitHubRunnerID, rec.State = h.Ref, jit.RunnerID, Idle
 	return rec, nil
+}
+
+// IsolationFor is how the runner of one job is isolated on each system: a
+// container on Linux, a one-job process on Windows and a VM on macOS.
+func IsolationFor(os string) backend.Isolation {
+	switch os {
+	case "windows":
+		return backend.IsolationPersistent
+	case "macos":
+		return backend.IsolationVM
+	}
+	return backend.IsolationContainer
+}
+
+// StartupAllowance is how long a runner of this system takes from the start
+// call to a listening runner. The plan counts it, and a runner nobody used is
+// deleted after it plus two minutes (runners R5.112). A macOS runner boots a
+// VM, which takes 45 to 60 s.
+func StartupAllowance(os string) time.Duration {
+	switch os {
+	case "macos":
+		return 60 * time.Second
+	case "windows":
+		return 30 * time.Second
+	}
+	return 20 * time.Second
 }

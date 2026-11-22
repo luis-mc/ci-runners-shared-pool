@@ -319,6 +319,78 @@ func (c *REST) listRuns(ctx context.Context, r req) ([]apiRun, error) {
 	return runs, nil
 }
 
+// cachedJobs is the last answer of the jobs list of one run with its ETag.
+type cachedJobs struct {
+	etag string
+	jobs []apiJob
+}
+
+// listRunJobs lists the jobs of one run. Like listRuns it sends If-None-Match
+// with the ETag of the last answer and reuses it on a 304, which GitHub does
+// not count against the rate limit (github-integration R5.110). Only a list
+// that fits one page is cached.
+func (c *REST) listRunJobs(ctx context.Context, r req) ([]apiJob, error) {
+	r.method = "GET"
+	q := url.Values{}
+	for k, v := range r.query {
+		q[k] = v
+	}
+	q.Set("per_page", "100")
+	r.query = q
+	key := fmt.Sprintf("%d %s?%s", r.installation, r.path, q.Encode())
+	c.mu.Lock()
+	prev, hadPrev := c.jobCache[key]
+	c.mu.Unlock()
+	if hadPrev {
+		r.etag = prev.etag
+	}
+	var raw json.RawMessage
+	resp, err := c.do(ctx, r, &raw)
+	if err != nil {
+		return nil, err
+	}
+	if resp.status == http.StatusNotModified && hadPrev {
+		return prev.jobs, nil
+	}
+	var page struct {
+		Jobs []apiJob `json:"jobs"`
+	}
+	if err := json.Unmarshal(raw, &page); err != nil {
+		return nil, fmt.Errorf("github: unreadable answer: %w", err)
+	}
+	jobs := page.Jobs
+	if resp.next != "" {
+		more := req{method: "GET", path: resp.next, abs: true, bearer: r.bearer, installation: r.installation}
+		err := c.getAll(ctx, more, func(raw json.RawMessage) error {
+			var p struct {
+				Jobs []apiJob `json:"jobs"`
+			}
+			if err := json.Unmarshal(raw, &p); err != nil {
+				return err
+			}
+			jobs = append(jobs, p.Jobs...)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	c.mu.Lock()
+	if resp.next == "" && resp.etag != "" {
+		if c.jobCache == nil {
+			c.jobCache = map[string]cachedJobs{}
+		}
+		if len(c.jobCache) > 4096 {
+			c.jobCache = map[string]cachedJobs{} // bound the memory of a long run
+		}
+		c.jobCache[key] = cachedJobs{etag: resp.etag, jobs: jobs}
+	} else {
+		delete(c.jobCache, key)
+	}
+	c.mu.Unlock()
+	return jobs, nil
+}
+
 // ListOpenJobs implements InstallationClient (R5.37, R5.38): the jobs of
 // queued and in-progress runs.
 func (c *REST) ListOpenJobs(ctx context.Context, id int64, owner, repo string) ([]Job, error) {
@@ -339,24 +411,16 @@ func (c *REST) ListOpenJobs(ctx context.Context, id int64, owner, repo string) (
 			jr := r
 			jr.path = fmt.Sprintf("%s/%d/jobs", base, run.ID)
 			jr.query = url.Values{"filter": {"latest"}}
-			err := c.getAll(ctx, jr, func(raw json.RawMessage) error {
-				var page struct {
-					Jobs []apiJob `json:"jobs"`
-				}
-				if err := json.Unmarshal(raw, &page); err != nil {
-					return err
-				}
-				for _, j := range page.Jobs {
-					if seen[j.ID] || j.Status == "completed" {
-						continue
-					}
-					seen[j.ID] = true
-					out = append(out, j.job(full, run))
-				}
-				return nil
-			})
+			jobs, err := c.listRunJobs(ctx, jr)
 			if err != nil {
 				return nil, err
+			}
+			for _, j := range jobs {
+				if seen[j.ID] || j.Status == "completed" {
+					continue
+				}
+				seen[j.ID] = true
+				out = append(out, j.job(full, run))
 			}
 		}
 	}

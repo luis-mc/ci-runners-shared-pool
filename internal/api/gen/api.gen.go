@@ -112,6 +112,66 @@ func (e Arch) Valid() bool {
 	}
 }
 
+// Defines values for AssignLeaseState.
+const (
+	AssignLeaseStateDone     AssignLeaseState = "done"
+	AssignLeaseStateGone     AssignLeaseState = "gone"
+	AssignLeaseStateRunning  AssignLeaseState = "running"
+	AssignLeaseStateStarting AssignLeaseState = "starting"
+	AssignLeaseStateWaiting  AssignLeaseState = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the AssignLeaseState enum.
+func (e AssignLeaseState) Valid() bool {
+	switch e {
+	case AssignLeaseStateDone:
+		return true
+	case AssignLeaseStateGone:
+		return true
+	case AssignLeaseStateRunning:
+		return true
+	case AssignLeaseStateStarting:
+		return true
+	case AssignLeaseStateWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AssignReasonCode.
+const (
+	AssignReasonCodeLoad        AssignReasonCode = "load"
+	AssignReasonCodeNever       AssignReasonCode = "never"
+	AssignReasonCodeNoMachine   AssignReasonCode = "no_machine"
+	AssignReasonCodePool        AssignReasonCode = "pool"
+	AssignReasonCodeReserved    AssignReasonCode = "reserved"
+	AssignReasonCodeStartFailed AssignReasonCode = "start_failed"
+	AssignReasonCodeStarting    AssignReasonCode = "starting"
+)
+
+// Valid indicates whether the value is a known member of the AssignReasonCode enum.
+func (e AssignReasonCode) Valid() bool {
+	switch e {
+	case AssignReasonCodeLoad:
+		return true
+	case AssignReasonCodeNever:
+		return true
+	case AssignReasonCodeNoMachine:
+		return true
+	case AssignReasonCodePool:
+		return true
+	case AssignReasonCodeReserved:
+		return true
+	case AssignReasonCodeStartFailed:
+		return true
+	case AssignReasonCodeStarting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AttemptRefState.
 const (
 	AttemptRefStateDone    AttemptRefState = "done"
@@ -4252,6 +4312,44 @@ type ApplyPlanRequest struct {
 // Arch defines model for Arch.
 type Arch string
 
+// AssignLease defines model for AssignLease.
+type AssignLease struct {
+	Class *string `json:"class,omitempty"`
+	Cpus  *int    `json:"cpus,omitempty"`
+	Job   *string `json:"job,omitempty"`
+	JobId int64   `json:"job_id"`
+
+	// JobLabel The job-name routing label; empty when the job has none.
+	JobLabel  *string   `json:"job_label,omitempty"`
+	Labels    *[]string `json:"labels,omitempty"`
+	MachineId *string   `json:"machine_id,omitempty"`
+	MemoryGib *int      `json:"memory_gib,omitempty"`
+	Passes    *int      `json:"passes,omitempty"`
+	QueuedAt  time.Time `json:"queued_at"`
+
+	// Reason The console reason of a waiting job.
+	Reason *string `json:"reason,omitempty"`
+
+	// ReasonCode Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+	ReasonCode    *AssignReasonCode `json:"reason_code,omitempty"`
+	Repository    string            `json:"repository"`
+	ReservedSince *time.Time        `json:"reserved_since,omitempty"`
+	RunId         *int64            `json:"run_id,omitempty"`
+	RunnerName    *string           `json:"runner_name,omitempty"`
+	State         AssignLeaseState  `json:"state"`
+}
+
+// AssignLeaseList defines model for AssignLeaseList.
+type AssignLeaseList struct {
+	Leases []AssignLease `json:"leases"`
+}
+
+// AssignLeaseState defines model for AssignLeaseState.
+type AssignLeaseState string
+
+// AssignReasonCode Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+type AssignReasonCode string
+
 // AttemptRef defines model for AttemptRef.
 type AttemptRef struct {
 	Attempt int             `json:"attempt"`
@@ -8382,6 +8480,12 @@ type Error = ErrorEnvelope
 // ExportFile defines model for ExportFile.
 type ExportFile = string
 
+// ListAssignLeasesParams defines parameters for ListAssignLeases.
+type ListAssignLeasesParams struct {
+	// State Only leases in this state.
+	State *AssignLeaseState `form:"state,omitempty" json:"state,omitempty"`
+}
+
 // ListAuditEventsParams defines parameters for ListAuditEvents.
 type ListAuditEventsParams struct {
 	Actor      *string `form:"actor,omitempty" json:"actor,omitempty"`
@@ -9030,6 +9134,9 @@ type ServerInterface interface {
 	// SetAppWebhook Turn real GitHub webhooks on
 	// (PUT /api/v1/app/webhook)
 	SetAppWebhook(w http.ResponseWriter, r *http.Request)
+	// ListAssignLeases Jobs that wait for a runner, start or run, with their reasons
+	// (GET /api/v1/assign/leases)
+	ListAssignLeases(w http.ResponseWriter, r *http.Request, params ListAssignLeasesParams)
 	// ListAuditEvents The audit log, newest first
 	// (GET /api/v1/audit)
 	ListAuditEvents(w http.ResponseWriter, r *http.Request, params ListAuditEventsParams)
@@ -9700,6 +9807,39 @@ func (siw *ServerInterfaceWrapper) SetAppWebhook(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.SetAppWebhook(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListAssignLeases operation middleware
+func (siw *ServerInterfaceWrapper) ListAssignLeases(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListAssignLeasesParams
+
+	// ------------- Optional query parameter "state" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "state", r.URL.Query(), &params.State, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "state"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "state", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAssignLeases(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -15685,6 +15825,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/redetect", wrapper.RedetectMachine)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/recovery", wrapper.RecoverMachine)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/load", wrapper.GetMachineLoad)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/assign/leases", wrapper.ListAssignLeases)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots", wrapper.ListSlots)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots/free-stale", wrapper.FreeStaleSlots)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/changes/{changeId}", wrapper.GetMachineChange)
@@ -16095,6 +16236,45 @@ type SetAppWebhookdefaultJSONResponse struct {
 }
 
 func (response SetAppWebhookdefaultJSONResponse) VisitSetAppWebhookResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignLeasesRequestObject struct {
+	Params ListAssignLeasesParams
+}
+
+type ListAssignLeasesResponseObject interface {
+	VisitListAssignLeasesResponse(w http.ResponseWriter) error
+}
+
+type ListAssignLeases200JSONResponse AssignLeaseList
+
+func (response ListAssignLeases200JSONResponse) VisitListAssignLeasesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAssignLeasesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListAssignLeasesdefaultJSONResponse) VisitListAssignLeasesResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -23519,6 +23699,9 @@ type StrictServerInterface interface {
 	// SetAppWebhook Turn real GitHub webhooks on
 	// (PUT /api/v1/app/webhook)
 	SetAppWebhook(ctx context.Context, request SetAppWebhookRequestObject) (SetAppWebhookResponseObject, error)
+	// ListAssignLeases Jobs that wait for a runner, start or run, with their reasons
+	// (GET /api/v1/assign/leases)
+	ListAssignLeases(ctx context.Context, request ListAssignLeasesRequestObject) (ListAssignLeasesResponseObject, error)
 	// ListAuditEvents The audit log, newest first
 	// (GET /api/v1/audit)
 	ListAuditEvents(ctx context.Context, request ListAuditEventsRequestObject) (ListAuditEventsResponseObject, error)
@@ -24302,6 +24485,32 @@ func (sh *strictHandler) SetAppWebhook(w http.ResponseWriter, r *http.Request) {
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(SetAppWebhookResponseObject); ok {
 		if err := validResponse.VisitSetAppWebhookResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListAssignLeases operation middleware
+func (sh *strictHandler) ListAssignLeases(w http.ResponseWriter, r *http.Request, params ListAssignLeasesParams) {
+	var request ListAssignLeasesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAssignLeases(ctx, request.(ListAssignLeasesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAssignLeases")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAssignLeasesResponseObject); ok {
+		if err := validResponse.VisitListAssignLeasesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

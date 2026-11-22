@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/assign"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/doctor"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/github"
 )
@@ -1004,3 +1005,69 @@ func TestWorkflowPerJob(t *testing.T) {
 		t.Fatalf("%+v", fs)
 	}
 }
+
+type assignSrc struct{ un, long []assign.Lease }
+
+func (a assignSrc) Unserved(context.Context) ([]assign.Lease, error)    { return a.un, nil }
+func (a assignSrc) LongWaiting(context.Context) ([]assign.Lease, error) { return a.long, nil }
+
+func TestAssignQueueChecks(t *testing.T) {
+	l := assign.Lease{JobID: 7, Repository: "o/r", JobName: "gpu", Reason: "no machine can serve this job: there is no online machine with a linux runner with its labels"}
+	reg := doctor.NewRegistry()
+	RegisterAssign(reg, assignSrc{un: []assign.Lease{l}, long: []assign.Lease{l}})
+	if len(reg.All()) != 3 {
+		t.Fatalf("checks: %v", reg.SortedIDs())
+	}
+	env := doctor.Env{GitHub: newGH(), Fleet: &fleet{}}
+	want := map[string]doctor.Severity{"assign.unserved": doctor.Fail, "assign.waiting": doctor.Warn}
+	for _, c := range reg.All() {
+		sev, ok := want[c.ID()]
+		if !ok {
+			continue
+		}
+		fs := c.Run(context.Background(), env)
+		if len(fs) != 1 || fs[0].Severity != sev || !strings.Contains(fs[0].Detail, "24 hours") {
+			t.Fatalf("%s: %+v", c.ID(), fs)
+		}
+	}
+	reg2 := doctor.NewRegistry()
+	RegisterAssign(reg2, assignSrc{})
+	for _, c := range reg2.All() {
+		if c.ID() != "assign.unserved" {
+			continue
+		}
+		if fs := c.Run(context.Background(), env); len(fs) != 1 || fs[0].Severity != doctor.OK {
+			t.Fatalf("quiet queue: %+v", fs)
+		}
+	}
+}
+
+func TestRunsOnAlwaysExistsForARoutedRepository(t *testing.T) {
+	const routed = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	for _, tc := range []struct {
+		val   *string
+		src   string
+		sev   doctor.Severity
+		wants bool
+	}{{nil, routed, doctor.Fail, true}, {strp(" "), routed, doctor.Fail, true}, {strp(`["self-hosted","linux"]`), routed, doctor.OK, true},
+		{nil, "jobs:\n  a:\n    runs-on: ubuntu-latest\n", doctor.OK, false}} {
+		g := newGH()
+		g.files["o/r"] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte(tc.src)}}
+		if tc.val != nil {
+			g.vars["o/r"] = []github.Variable{{Name: "RUNS_ON_LINUX", Value: *tc.val}}
+		}
+		env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", map[string]string{"RUNS_ON_LINUX": `["self-hosted","linux"]`})}}}
+		fs := repoRunsOnAlways(context.Background(), env)
+		if !tc.wants {
+			if len(fs) != 0 {
+				t.Fatalf("not routed: %+v", fs)
+			}
+			continue
+		}
+		if len(fs) != 1 || fs[0].Severity != tc.sev {
+			t.Fatalf("%v: %+v", tc.val, fs)
+		}
+	}
+}
+
+func strp(s string) *string { return &s }

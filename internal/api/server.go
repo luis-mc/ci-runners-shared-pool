@@ -67,6 +67,8 @@ type Options struct {
 	// Jobs and Slots serve the jobs and slot routes (handlers_jobs.go).
 	Jobs  slots.Jobs
 	Slots scheduler.SlotQueue
+	// Assign serves the leases of the assign controller (handlers_assign.go).
+	Assign AssignLeases
 	// JobsData serves the Jobs section: runs, jobs, steps, forecasts, groups, stats and summaries (handlers_jobs.go,
 	// handlers_runs.go, handlers_jobstats.go). With it listJobs, getJob and exportJobs read from it, not from Jobs. Nil
 	// answers 501 on the new routes.

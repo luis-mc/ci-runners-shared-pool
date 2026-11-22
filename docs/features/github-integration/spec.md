@@ -13,6 +13,7 @@ code:
   - internal/secrets/**
   - internal/repos/**
   - internal/routing/**
+  - internal/assign/**
   - internal/trial/**
   - internal/cli/auth/**
   - apps/web/src/features/setup/**
@@ -340,6 +341,15 @@ Back end only. Admission (OPS74) and runner creation before assignment (wave 2) 
 
 **R5.108** (OPS73, built) — **The Doctor shows the patch; writes are throttled.** The check `workflow.perjob` (doctor) is info for a routed job that still reads only `RUNS_ON_<OS>`: on the owner's repositories it says crsp opens the pull request; on any other it carries the patch as a unified diff to copy or download as `crsp-per-job.patch`. The doctor reads the fallback form `fromJSON(vars.A || vars.B || '...')` (doctor R5.18, R5.19): the first variable that is set wins, then the default; a routing label is not checked against the pool's label sets. Writes to GitHub (variables, runner labels, the pull request) go through one shared throttle with a gap of one second (injected clock); a rate limit stops the bulk write, keeps what was written, holds the throttle until the reset and the next sync finishes the rest (OPS65).
 
+
+**R5.109** (OPS80, built) — **The workflow_job events drive the assign controller.** `queued`, `in_progress` and `completed` go to `assign.Events`, which implements `JobDetailEvents`. It queues the event for one worker and returns, so the webhook answers at once and the controller still sees the events one at a time. A full queue drops the event: the poller finds the job within a minute (R5.110). The `in_progress` event carries the job and the runner name; crsp moves its lease to that job (runners R5.128).
+
+**R5.110** (OPS80, built) — **A poller catches a lost webhook.** At start and every 30 to 60 s one poller (`assign.Poller`) lists the queued and in-progress jobs of every repository and gives each to the controller; a repeat makes no second runner (runners R5.126). The reads are conditional: the runs list and the jobs list of each run send `If-None-Match` and reuse the last answer on a 304, which GitHub does not count against the rate limit. A job missing from a complete listing is vanished (its lease ends); a repository that failed to list is skipped and its leases are left alone; a rate limit ends the round.
+
+**R5.111** (OPS80, built) — **The queue reasons are in the API.** `GET /api/v1/assign/leases` (`listAssignLeases`, optional `state`) lists the leases with `reason` (the console text, for example `waiting for room on M1: needs 6 CPU, 5 free`) and `reason_code` (`pool`, `load`, `reserved`, `never`, `no_machine`, `start_failed`, `starting`). No console screen reads it yet.
+
+**R5.112** (OPS80, built) — **Runner labels and variables stay within GitHub's limits.** An ephemeral runner gets its labels at JIT creation and they are read-only; a persistent runner gets custom labels through the runner labels API (`AddRunnerLabels`, `RemoveRunnerLabel`, behind `assign.RunnerLabels`). At most 100 labels per runner, read-only ones included; the 101st add is HTTP 500 and is never sent. Bulk writes are throttled: write only on a change, a few at a time (`assign.PlanLabels`). A per-job variable is deleted and never blanked (an empty variable is HTTP 422), and `RUNS_ON_<OS>` always exists for a routed repository (the Doctor check `repo.runson_always`).
+
 ## 6. Non-functional requirements
 
 **R6.1** (M1, built, CRSP106) — **Secrets only in the OS secret store.** The App private key, client secret, webhook secret, CLI tokens and any GitHub user refresh token live only in the OS secret store: Windows Credential Manager or DPAPI, macOS Keychain, Linux Secret Service, or a file with mode 0600 when no service exists. They never go to the database, config files, environment files, logs, crash files, API responses or the audit log.
@@ -534,6 +544,10 @@ Rows marked planned are not built yet; the others name the test files. The fake 
 | R5.106 | `internal/routing/service_test.go` TestOptInWritesVariablesOnlyOnChange, TestOnPush; `internal/repos/enable_test.go` TestEnableCallsRoutingHook; `internal/store/routing_test.go` TestIntegrationRoutingStateRoundTrip |
 | R5.107 | `internal/routing/patch_test.go` TestMakePatchRewritesRoutedRunsOn, TestPatchIgnoresBrokenAndUnroutedFiles; `internal/routing/service_test.go` TestOpenPROnceAndOnlyForOwner; `internal/github/routing_test.go` TestOpenPullRequestOnce |
 | R5.108 | `internal/routing/patch_test.go` TestPatchDiff; `internal/routing/routing_test.go` TestThrottleSpacesWrites; `internal/routing/service_test.go` TestRateLimitStopsBulkWrite; `internal/doctor/checks/checks_test.go` TestWorkflowPerJob; `internal/doctor/runson/runson_test.go` TestParseFallbackChain; `internal/repos/runson_test.go` TestCheckPerJobFallbackChain |
+| R5.109 | `internal/assign/sweep_test.go` TestEventsDispatchByAction |
+| R5.110 | `internal/assign/sweep_test.go` TestPollerFindsALostWebhookAndSeesJobsVanish, TestPollerIntervalIsWithin30And60Seconds, TestPollerRunPollsAtStartThenEveryInterval; `internal/github/client_test.go` TestOpenJobsReadsEachRunsJobsWithETag |
+| R5.111 | `internal/api/handlers_assign_test.go` TestListAssignLeasesShowsTheReason |
+| R5.112 | `internal/assign/controller_test.go` TestPersistentLabelsWriteOnChangeAFewAtATimeUnderTheCap; `internal/doctor/checks/checks_test.go` TestRunsOnAlwaysExistsForARoutedRepository; `internal/runners/jit_test.go` TestRoutingLabelPassesValidation |
 
 ## 10. Decisions
 

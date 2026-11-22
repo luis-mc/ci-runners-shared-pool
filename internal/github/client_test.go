@@ -736,3 +736,27 @@ func TestSetSecretSealsTheValueToTheRepositoryKey(t *testing.T) { // CRSP134
 		t.Fatalf("err = %v", err)
 	}
 }
+
+// github-integration R5.110: the jobs list of each run is conditional too, so a
+// poll round that finds nothing new costs no rate limit.
+func TestOpenJobsReadsEachRunsJobsWithETag(t *testing.T) {
+	e := newEnv(t)
+	ctx := context.Background()
+	e.fake.AddInstall(10, "alice", "User")
+	e.fake.AddRepo(100, 10, "alice", "demo", false)
+	e.fake.AddJob(fake.Job{ID: 1, RunID: 11, Repo: "alice/demo", Name: "build", Status: "queued", Labels: []string{"self-hosted", "linux"}})
+	for i := 0; i < 2; i++ {
+		if jobs, err := e.client.ListOpenJobs(ctx, 10, "alice", "demo"); err != nil || len(jobs) != 1 {
+			t.Fatalf("round %d: %+v %v", i, jobs, err)
+		}
+	}
+	conditional := 0
+	for _, r := range e.fake.Requests() {
+		if strings.HasSuffix(r.Path, "/jobs") && r.Header.Get("If-None-Match") != "" {
+			conditional++
+		}
+	}
+	if conditional == 0 {
+		t.Fatal("the second round must send If-None-Match on the jobs list")
+	}
+}
