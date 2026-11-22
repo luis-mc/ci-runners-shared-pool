@@ -39,11 +39,17 @@ function Get-ProductCode {
   if ($k) { return $k.PSChildName }
   return $null
 }
+function Get-LogDir {
+  # One folder for every log the workflow uploads (runner.temp/lifecycle-logs), so the artifact has one root.
+  $d = Join-Path $(if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }) 'lifecycle-logs'
+  if (-not (Test-Path $d)) { [void](New-Item -ItemType Directory -Path $d -Force) }
+  return $d
+}
 function Remove-Msi([switch]$Purge) {
   $code = Get-ProductCode
   if (-not $code) { return 0 }  # nothing installed: nothing to remove
   $script:MsiRemoveCount++
-  $log = Join-Path $(if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }) ("msi-remove-{0}.log" -f $script:MsiRemoveCount)
+  $log = Join-Path (Get-LogDir) ("msi-remove-{0}.log" -f $script:MsiRemoveCount)
   $script:LastMsiRemoveLog = $log
   $a = @('/x', $code, '/qn', '/norestart', '/l*v', $log)
   if ($Purge) { $a += 'PURGE=1' }
@@ -275,6 +281,10 @@ function Lc14 {
   Out-Lc 'LC-14' (($rc -eq 0) -and ($bad -eq 0)) 'remove keeps exactly keep_on_remove'
 }
 function Lc15 {
+  # LC-14 left nothing installed: install again, so there is a product to purge.
+  [void](Install-Msi $Pkg)
+  [void](Wait-Until { Test-Up } 60)
+  if (-not (Get-ProductCode)) { Out-Lc 'LC-15' $false 'nothing installed to purge'; return }
   $rc = Remove-Msi -Purge
   $log = $script:LastMsiRemoveLog
   $out = & pwsh -NoProfile -File (Join-Path $script:Here 'leftovers.ps1') -Lifecycle $Lifecycle
@@ -294,9 +304,10 @@ function Lc15Cli { # purge by the CLI: crsp uninstall --delete-data (OPS69)
   [void](Wait-Until { -not (Get-CimInstance Win32_Process -Filter "Name='msiexec.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match '/x\s*\{.*PURGE=1' }) } 120)
   [void](Remove-Msi -Purge)
   $out = & pwsh -NoProfile -File (Join-Path $script:Here 'leftovers.ps1') -Lifecycle $Lifecycle
-  if (-not $gone -or $out) {
-    $cl = Join-Path $env:TEMP 'crsp-uninstall.log'
-    if (Test-Path $cl) { Show-MsiLog $cl }
+  $cl = Join-Path $env:TEMP 'crsp-uninstall.log'
+  if (Test-Path $cl) {
+    Copy-Item -LiteralPath $cl -Destination (Get-LogDir) -Force -ErrorAction SilentlyContinue
+    if (-not $gone -or $out) { Show-MsiLog $cl }
   }
   Out-Lc 'LC-15' ($gone -and ($rc -eq 0) -and ($LASTEXITCODE -eq 0)) $(if ($out) { 'cli leftovers: ' + ($out -join '; ') } else { 'crsp uninstall --delete-data leaves nothing' })
 }

@@ -86,10 +86,7 @@ jobs:
         with:
           # Verbose msiexec logs of the remove runs (LC-15 evidence); stable name, newest kept.
           name: lifecycle-msi-logs-${{ matrix.arch }}
-          path: |
-            ${{ runner.temp }}/msi-remove-*.log
-            ${{ runner.temp }}/crsp-uninstall.log
-            ${{ env.TEMP }}/crsp-uninstall.log
+          path: ${{ runner.temp }}/lifecycle-logs/
           if-no-files-found: ignore
 
   # Fills the results folder and runs the release check. A release pull request fails unless every target
