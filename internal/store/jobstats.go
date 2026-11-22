@@ -79,52 +79,8 @@ func (s *Store) JobStats(ctx context.Context, sc JobStatsScope, from, to time.Ti
 	where, arg := sc.clause()
 	f, t := fmtTime(from), fmtTime(to)
 
-	rows, err := s.db.QueryContext(ctx, `SELECT class, COUNT(*), COALESCE(SUM(run_s), 0), COUNT(run_s), COALESCE(SUM(wait_s), 0), COUNT(wait_s) FROM (
- SELECT `+classExpr+` AS class,
-  CASE WHEN j.started_at != '' THEN (CAST(strftime('%s', j.completed_at) AS REAL) - CAST(strftime('%s', j.started_at) AS REAL)) END AS run_s,
-  CASE WHEN j.started_at != '' AND COALESCE(NULLIF(j.queued_at, ''), NULLIF(j.created_at, '')) IS NOT NULL
-   THEN (CAST(strftime('%s', j.started_at) AS REAL) - CAST(strftime('%s', COALESCE(NULLIF(j.queued_at, ''), j.created_at)) AS REAL)) END AS wait_s
- FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
- WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?) GROUP BY class`, arg, f, t)
-	if err != nil {
-		return out, fmt.Errorf("job stats counts: %w", err)
-	}
-	var runSum, waitSum float64
-	var runN, waitN int64
-	for rows.Next() {
-		var class string
-		var n, rn, wn int64
-		var rs, ws float64
-		if err := rows.Scan(&class, &n, &rs, &rn, &ws, &wn); err != nil {
-			_ = rows.Close()
-			return out, err
-		}
-		switch class {
-		case "succeeded":
-			out.Counts.Succeeded = n
-		case "failed":
-			out.Counts.Failed = n
-		case "cancelled":
-			out.Counts.Cancelled = n
-		case "timed_out":
-			out.Counts.TimedOut = n
-		case "over_memory":
-			out.Counts.OverMemory = n
-		case "stopped":
-			out.Counts.Stopped = n
-		default:
-			out.Counts.Other = n
-		}
-		runSum, runN, waitSum, waitN = runSum+rs, runN+rn, waitSum+ws, waitN+wn
-	}
-	if err := rows.Close(); err != nil {
+	if err := s.statsCounts(ctx, where, arg, f, t, &out); err != nil {
 		return out, err
-	}
-	if runN > 0 {
-		out.AvgRunSeconds, out.AvgRunKnown = runSum/float64(runN), true
-	}
-	if waitN > 0 {
-		out.AvgQueueWaitSeconds, out.AvgQueueWaitKnown = waitSum/float64(waitN), true
 	}
 
 	// Busy time: the part of every job's run that lies inside the window.
@@ -135,27 +91,11 @@ func (s *Store) JobStats(ctx context.Context, sc JobStatsScope, from, to time.Ti
 		return out, fmt.Errorf("job stats busy: %w", err)
 	}
 
-	fail, err := s.db.QueryContext(ctx, `SELECT j.id, j.repository, j.name, j.run_id, `+classExpr+` AS class, j.completed_at, j.html_url, COALESCE(u.html_url, '')
- FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
- LEFT JOIN runs u ON u.repository_id = j.repository_id AND u.run_id = j.run_id AND u.run_attempt = j.run_attempt
- WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ? AND `+classExpr+` IN `+failureClasses+`
- ORDER BY j.completed_at DESC LIMIT 1`, arg, f, t)
+	lf, err := s.statsLastFailure(ctx, where, arg, f, t)
 	if err != nil {
-		return out, fmt.Errorf("job stats last failure: %w", err)
-	}
-	for fail.Next() {
-		var lf JobFailureRef
-		var at string
-		if err := fail.Scan(&lf.JobID, &lf.Repository, &lf.Name, &lf.RunID, &lf.Class, &at, &lf.JobURL, &lf.RunURL); err != nil {
-			_ = fail.Close()
-			return out, err
-		}
-		lf.At = parseTime(at)
-		out.LastFailure = &lf
-	}
-	if err := fail.Close(); err != nil {
 		return out, err
 	}
+	out.LastFailure = lf
 
 	top, err := s.db.QueryContext(ctx, `SELECT j.repository, j.name, COUNT(*) AS n, MAX(j.completed_at)
  FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
@@ -198,4 +138,77 @@ func (s *Store) MachineRunnersWithJobs(ctx context.Context, machineID string, fr
 		out = append(out, r)
 	}
 	return out, rows.Err()
+}
+
+func (s *Store) statsCounts(ctx context.Context, where, arg, f, t string, out *JobStats) error {
+	rows, err := s.db.QueryContext(ctx, `SELECT class, COUNT(*), COALESCE(SUM(run_s), 0), COUNT(run_s), COALESCE(SUM(wait_s), 0), COUNT(wait_s) FROM (
+ SELECT `+classExpr+` AS class,
+  CASE WHEN j.started_at != '' THEN (CAST(strftime('%s', j.completed_at) AS REAL) - CAST(strftime('%s', j.started_at) AS REAL)) END AS run_s,
+  CASE WHEN j.started_at != '' AND COALESCE(NULLIF(j.queued_at, ''), NULLIF(j.created_at, '')) IS NOT NULL
+   THEN (CAST(strftime('%s', j.started_at) AS REAL) - CAST(strftime('%s', COALESCE(NULLIF(j.queued_at, ''), j.created_at)) AS REAL)) END AS wait_s
+ FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
+ WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?) GROUP BY class`, arg, f, t)
+	if err != nil {
+		return fmt.Errorf("job stats counts: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var runSum, waitSum float64
+	var runN, waitN int64
+	for rows.Next() {
+		var class string
+		var n, rn, wn int64
+		var rs, ws float64
+		if err := rows.Scan(&class, &n, &rs, &rn, &ws, &wn); err != nil {
+			return err
+		}
+		switch class {
+		case "succeeded":
+			out.Counts.Succeeded = n
+		case "failed":
+			out.Counts.Failed = n
+		case "cancelled":
+			out.Counts.Cancelled = n
+		case "timed_out":
+			out.Counts.TimedOut = n
+		case "over_memory":
+			out.Counts.OverMemory = n
+		case "stopped":
+			out.Counts.Stopped = n
+		default:
+			out.Counts.Other = n
+		}
+		runSum, runN, waitSum, waitN = runSum+rs, runN+rn, waitSum+ws, waitN+wn
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+	if runN > 0 {
+		out.AvgRunSeconds, out.AvgRunKnown = runSum/float64(runN), true
+	}
+	if waitN > 0 {
+		out.AvgQueueWaitSeconds, out.AvgQueueWaitKnown = waitSum/float64(waitN), true
+	}
+	return nil
+}
+
+func (s *Store) statsLastFailure(ctx context.Context, where, arg, f, t string) (*JobFailureRef, error) {
+	fail, err := s.db.QueryContext(ctx, `SELECT j.id, j.repository, j.name, j.run_id, `+classExpr+` AS class, j.completed_at, j.html_url, COALESCE(u.html_url, '')
+ FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
+ LEFT JOIN runs u ON u.repository_id = j.repository_id AND u.run_id = j.run_id AND u.run_attempt = j.run_attempt
+ WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ? AND `+classExpr+` IN `+failureClasses+`
+ ORDER BY j.completed_at DESC LIMIT 1`, arg, f, t)
+	if err != nil {
+		return nil, fmt.Errorf("job stats last failure: %w", err)
+	}
+	defer func() { _ = fail.Close() }()
+	if fail.Next() {
+		var lf JobFailureRef
+		var at string
+		if err := fail.Scan(&lf.JobID, &lf.Repository, &lf.Name, &lf.RunID, &lf.Class, &at, &lf.JobURL, &lf.RunURL); err != nil {
+			return nil, err
+		}
+		lf.At = parseTime(at)
+		return &lf, nil
+	}
+	return nil, fail.Err()
 }

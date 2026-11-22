@@ -121,8 +121,8 @@ func TestJobStatsBusyClipsToWindow(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := (2*h + h + 30*time.Minute).Seconds() // 1 h clipped job: it started 26 h ago, ended 23 h ago, so 1 h inside
-	want = (1*h + h + 30*time.Minute).Seconds()
+	// The first job started 26 h ago and ended 23 h ago, so 1 h of it is inside the window.
+	want := (1*h + h + 30*time.Minute).Seconds()
 	if d := st.BusySeconds - want; d > 1 || d < -1 {
 		t.Fatalf("busy %v want %v", st.BusySeconds, want)
 	}
@@ -190,7 +190,10 @@ func TestJobStatsUseTheIndexes(t *testing.T) {
 			_ = rows.Scan(&a, &b, &c, &d)
 			plan += d + "\n"
 		}
-		_ = rows.Close()
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
+		}
+		_ = rows.Close() //nolint:sqlclosecheck // closed per loop pass
 		if !strings.Contains(plan, idx) {
 			t.Errorf("%s: plan does not use %s:\n%s", col, idx, plan)
 		}
