@@ -805,7 +805,7 @@ func (s *Server) runs(w http.ResponseWriter, r *http.Request, full string) {
 	writeJSON(w, 200, body)
 }
 
-func (s *Server) runJobs(w http.ResponseWriter, _ *http.Request, full, rest string) {
+func (s *Server) runJobs(w http.ResponseWriter, r *http.Request, full, rest string) {
 	id, _ := strconv.ParseInt(strings.Split(strings.TrimPrefix(rest, "actions/runs/"), "/")[0], 10, 64)
 	items := []map[string]any{}
 	for _, j := range s.Jobs {
@@ -813,7 +813,17 @@ func (s *Server) runJobs(w http.ResponseWriter, _ *http.Request, full, rest stri
 			items = append(items, jobJSON(j))
 		}
 	}
-	writeJSON(w, 200, map[string]any{"total_count": len(items), "jobs": items})
+	body := map[string]any{"total_count": len(items), "jobs": items}
+	// An ETag over the body and 304 for a repeat, like GitHub (R5.110).
+	raw, _ := json.Marshal(body)
+	sum := sha256.Sum256(raw)
+	etag := `"` + hex.EncodeToString(sum[:8]) + `"`
+	w.Header().Set("ETag", etag)
+	if r.Header.Get("If-None-Match") == etag {
+		w.WriteHeader(304)
+		return
+	}
+	writeJSON(w, 200, body)
 }
 
 // HasRegistrationToken and HasRemoveToken tell whether a token was issued and

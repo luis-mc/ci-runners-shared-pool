@@ -20,6 +20,61 @@ type AccessCredential struct {
 	RevokedAt      sql.NullString
 }
 
+type AssignLabelset struct {
+	LabelKey   string
+	Repository string
+	Os         string
+	Labels     string
+	Cpus       int64
+	MemGib     int64
+	LastBusy   string
+}
+
+type AssignLease struct {
+	JobID         int64
+	RunID         int64
+	RunAttempt    int64
+	Repository    string
+	JobName       string
+	Labels        string
+	JobLabel      string
+	Os            string
+	State         string
+	MachineID     string
+	RunnerName    string
+	RunnerRecord  string
+	GithubRunner  int64
+	Cpus          int64
+	MemGib        int64
+	Class         string
+	QueuedAt      string
+	StartedAt     string
+	Passes        int64
+	ReservedSince string
+	Reason        string
+	ReasonCode    string
+	Fails         int64
+	NextTry       string
+	Arch          string
+	Alerted       int64
+	UpdatedAt     string
+}
+
+type AssignWarm struct {
+	ID           string
+	MachineID    string
+	LabelKey     string
+	Repository   string
+	Os           string
+	Labels       string
+	RunnerName   string
+	RunnerRecord string
+	GithubRunner int64
+	Cpus         int64
+	MemGib       int64
+	StartedAt    string
+}
+
 type AuditLog struct {
 	ID         int64
 	At         string
