@@ -17,3 +17,5 @@ Branch LOOK58c-machines-ui (from origin/LOOK58-timeline-machines, merged again a
 - Health badge limits are the Doctor defaults (disk free under 10%, fills in under 3 days, clock skew over 30 s), named constants in `machineHealth.ts`; they are not read from `/health-thresholds`.
 - Bundle: the first JavaScript was 306 777 bytes gzipped of 307 200 on the base (margin 0.4 KB, before this task). To reach a margin over 4 KB without raising the budget, the Repositories screens (`RepositoriesList`, `RepositoryDetail`) now load with their routes (`later(..., true)` in App.tsx): 300 812 bytes, margin 6.4 KB. The loading state keeps its one h1.
 - Not touched: the Timeline component, Pool > Live, Go code.
+
+CODE DONE c27335d
