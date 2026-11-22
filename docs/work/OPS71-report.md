@@ -14,7 +14,7 @@
 
 | File | Result | Note |
 | --- | --- | --- |
-| `.gitleaks.toml` | template | Owner: as-is. Drops crsp allowlist entries `s3cret-signing-key`, `whsec-(api-)?0123456789[0-9a-f]*-SIGNING`, `MIN_SECRET = 16;` (see "Risks"). |
+| `.gitleaks.toml` | template | Owner: as-is. Drops the three crsp allowlist entries for fake example secrets (CRSP32, CRSP37; see "Risks"). |
 | `.github/workflows/package.yml` | template + per-repo value | Build line set to `-o dist/crsp ./cmd/crsp` (PRODUCT value, matches `smoke.json`). Checkout and setup-python pins go back to the template's `v4`/`v5` pins. |
 | `scripts/delivery/gate.json` | template + per-repo value | `ui_paths: ["apps/web/", "packages/ui/"]`. Keeps `-timeout 10s` on the guards step (not weakening G1). Drops `bash scripts/ci/go-test.sh -short` as unit step, and the `e2e` step (see "Risks"). |
 | `scripts/delivery/smoke.json` | template + per-repo values | `build`, `start`, `expect`, `health` restored (the template says "Fill start..."). Only `_note` text and `example_start` differ from before. |
