@@ -64,9 +64,23 @@ function Get-FileSha256($file) {
 # Everything else under config and data is compared byte for byte.
 $script:DbName = 'controller.db'
 $script:VolatileNames = @($script:DbName, "$($script:DbName)-wal", "$($script:DbName)-shm")
+# Runtime state of the controller's own agent that the service rewrites on every start, by name. lifecycle.json
+# names as config and data only paths.config and paths.data (keep_on_remove: ["data"]) and has no runtime or cache
+# location, so these two files stay where they are and are left out of the comparison by name:
+#   agent\local-join  a one-time credential, new each start and every 5 min, valid 10 min
+#                     (cmd/crsp/machines_wiring.go writeLocalCredential; internal/machines/service.go LocalCredential).
+#   agent\hostuse.json  the measured host use, restored at start and saved every 5 min and at stop
+#                     (internal/agent/run.go sampleLoop: usePath = DataDir/hostuse.json).
+$script:RuntimeFiles = @('agent\local-join', 'agent\hostuse.json')
 function Test-VolatilePath($full) {
   $name = Split-Path -Leaf $full
   if ($script:VolatileNames -contains $name) { return $true }
+  if ($script:Data) {
+    $root = $script:Data.TrimEnd('\') + '\'
+    foreach ($r in $script:RuntimeFiles) {
+      if ($full.Equals($root + $r, [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+  }
   if ($script:Logs) {
     $logs = $script:Logs.TrimEnd('\') + '\'
     if ($full.StartsWith($logs, [System.StringComparison]::OrdinalIgnoreCase)) { return $true }

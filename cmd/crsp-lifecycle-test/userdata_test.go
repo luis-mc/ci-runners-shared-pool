@@ -51,3 +51,22 @@ func TestDBCompareKeepsAndDetects(t *testing.T) {
 		t.Fatalf("a changed row must be named by its table, got %v", err)
 	}
 }
+
+func TestCompareDataRuntimeColumn(t *testing.T) {
+	cols := []string{"id", "body", "saved_at"}
+	mk := func(body, saved string) map[string]store.TableData {
+		return map[string]store.TableData{"repos_state": {Columns: cols, Rows: [][]string{{"1", body, saved}}}}
+	}
+	if d := compareData(mk("a", "t1"), mk("a", "t2")); len(d) != 0 {
+		t.Fatalf("saved_at is rewritten by design and is not compared: %v", d)
+	}
+	d := compareData(mk("a", "t1"), mk("b", "t2"))
+	if len(d) != 1 || !strings.Contains(d[0], "changed columns: body") || strings.Contains(d[0], "saved_at") {
+		t.Fatalf("a changed body must be named, and only it: %v", d)
+	}
+	other := map[string]store.TableData{"other": {Columns: cols, Rows: [][]string{{"1", "a", "t1"}}}}
+	other2 := map[string]store.TableData{"other": {Columns: cols, Rows: [][]string{{"1", "a", "t2"}}}}
+	if d := compareData(other, other2); len(d) != 1 || !strings.Contains(d[0], "saved_at") {
+		t.Fatalf("no other table is excluded: %v", d)
+	}
+}

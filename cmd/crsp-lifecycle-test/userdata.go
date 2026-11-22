@@ -59,6 +59,59 @@ func dbCompare(beforePath, afterPath string) error {
 	return fmt.Errorf("user data changed: %s", strings.Join(diffs, "; "))
 }
 
+// runtimeColumns are columns the service rewrites by design on every save, by table. They are not config or data
+// the user keeps: lifecycle.json names the data the user keeps (paths.data, keep_on_remove: ["data"]) and a save
+// time is bookkeeping about the row, not a choice of the user. Only the named column is left out, never a table.
+//   - repos_state.saved_at: rewritten to the save time by internal/store/reposstate.go SaveReposState
+//     (ON CONFLICT ... saved_at = strftime(...'now')) each time the controller writes the repository state,
+//     including the write at start. The column body, which holds the user's choices, is still compared.
+var runtimeColumns = map[string]map[string]bool{
+	"repos_state": {"saved_at": true},
+}
+
+// dropColumns returns the table without the columns that are runtime state.
+func dropColumns(name string, td store.TableData) store.TableData {
+	skip := runtimeColumns[name]
+	if len(skip) == 0 {
+		return td
+	}
+	keep := []int{}
+	out := store.TableData{}
+	for i, c := range td.Columns {
+		if !skip[c] {
+			keep = append(keep, i)
+			out.Columns = append(out.Columns, c)
+		}
+	}
+	for _, row := range td.Rows {
+		r := make([]string, len(keep))
+		for k, i := range keep {
+			r[k] = row[i]
+		}
+		out.Rows = append(out.Rows, r)
+	}
+	return out
+}
+
+// changedColumns names the columns that differ between a lost before row and the after row that has the same
+// first cell. Empty when the after table has no such row (the row is gone).
+func changedColumns(cols []string, lost string, after [][]string) []string {
+	want := strings.Split(lost, "\x00")
+	for _, row := range after {
+		if len(row) == 0 || len(want) == 0 || row[0] != want[0] {
+			continue
+		}
+		var names []string
+		for i, c := range cols {
+			if i < len(row) && i < len(want) && row[i] != want[i] {
+				names = append(names, c)
+			}
+		}
+		return names
+	}
+	return nil
+}
+
 func compareData(before, after map[string]store.TableData) []string {
 	names := make([]string, 0, len(before))
 	for n := range before {
@@ -67,8 +120,11 @@ func compareData(before, after map[string]store.TableData) []string {
 	sort.Strings(names)
 	var diffs []string
 	for _, n := range names {
-		b := before[n]
+		b := dropColumns(n, before[n])
 		a, ok := after[n]
+		if ok {
+			a = dropColumns(n, a)
+		}
 		if !ok {
 			diffs = append(diffs, fmt.Sprintf("table %s is gone", n))
 			continue
@@ -91,11 +147,13 @@ func compareData(before, after map[string]store.TableData) []string {
 			continue
 		}
 		proj := make([]string, len(a.Rows))
+		projRows := make([][]string, len(a.Rows))
 		for r, row := range a.Rows {
 			cells := make([]string, len(idx))
 			for i, j := range idx {
 				cells[i] = row[j]
 			}
+			projRows[r] = cells
 			proj[r] = strings.Join(cells, "\x00")
 		}
 		sort.Strings(proj)
@@ -106,7 +164,11 @@ func compareData(before, after map[string]store.TableData) []string {
 		sort.Strings(bw)
 		// Rows a migration or the running service added are not a loss; a before row that is gone or changed is.
 		if lost := firstMissing(bw, proj); lost != "" {
-			diffs = append(diffs, fmt.Sprintf("table %s: a row it had (%s) is gone or changed; %d rows before, %d after", n, rowSummary(lost), len(bw), len(proj)))
+			what := ""
+			if cols := changedColumns(b.Columns, lost, projRows); len(cols) > 0 {
+				what = "; changed columns: " + strings.Join(cols, ", ")
+			}
+			diffs = append(diffs, fmt.Sprintf("table %s: a row it had (%s) is gone or changed; %d rows before, %d after%s", n, rowSummary(lost), len(bw), len(proj), what))
 		}
 	}
 	return diffs
