@@ -5,7 +5,7 @@ Branch OPS83-machine-health. Back end only.
 ## Steps
 - [x] 1. HealthReport proto (field 32 of SessionRequest) and codegen.
 - [x] 2. internal/agent/health collectors (per OS, fakes) and agent wiring.
-- [ ] 3. Migration 00040, store queries, job stats.
+- [x] 3. Migration 00040, store queries, job stats.
 - [ ] 4. internal/machinehealth controller service and thresholds.
 - [ ] 5. OpenAPI and handlers.
 - [ ] 6. Doctor checks.
