@@ -84,6 +84,8 @@ type Options struct {
 	JobSizes JobSizeService
 	// RunnerClasses serves the runner size class settings (handlers_runnerclasses.go, scheduling R5.89 to R5.93). Nil answers 501.
 	RunnerClasses RunnerClassService
+	// Timers serves the timer settings and the grace actions (handlers_timers.go, scheduling R5.99 to R5.106). Nil answers 501.
+	Timers TimerService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService

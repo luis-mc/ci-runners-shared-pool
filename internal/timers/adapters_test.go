@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
@@ -19,7 +20,7 @@ func openStore(t *testing.T) *store.Store {
 	return s
 }
 
-// R5.109: the clocks and their durations survive in the store and are read back.
+// R5.105: the clocks and their durations survive in the store and are read back.
 func TestStoreAdapterRoundTrip(t *testing.T) {
 	db := openStore(t)
 	a := StoreAdapter{DB: db}
@@ -53,7 +54,7 @@ func TestStoreAdapterRoundTrip(t *testing.T) {
 	}
 }
 
-// R5.108: a refused set is not saved; a saved one is read back.
+// R5.104: a refused set is not saved; a saved one is read back.
 func TestSettingsStore(t *testing.T) {
 	s := SettingsStore{DB: openStore(t)}
 	if got := s.Get(ctx); got != Defaults() {
@@ -91,7 +92,7 @@ func (f *fakeRecorder) RecordRefused(context.Context, audit.Actor, string, audit
 	return nil
 }
 
-// R5.106: an event becomes an audit row for the job or the run.
+// R5.102: an event becomes an audit row for the job or the run.
 func TestAuditAdapter(t *testing.T) {
 	f := &fakeRecorder{}
 	a := AuditAdapter{R: f}
@@ -120,7 +121,7 @@ func (c *canceller) CancelWorkflowRun(_ context.Context, inst int64, o, r string
 	return nil
 }
 
-// R5.104: the agent stops the runner's service; GitHub cancels by owner and name.
+// R5.100: the agent stops the runner's service; GitHub cancels by owner and name.
 func TestAgentAndGitHubAdapters(t *testing.T) {
 	s := &svcStop{}
 	if err := (AgentAdapter{S: s}).StopJobRunner(ctx, "m1", "svc-1"); err != nil || s.got[0] != "m1/svc-1" {
@@ -136,5 +137,33 @@ func TestAgentAndGitHubAdapters(t *testing.T) {
 	}
 	if err := g.CancelRun(ctx, "nonsense", 9); err == nil {
 		t.Fatal("bad repo")
+	}
+}
+
+// R5.99: the gate's first go starts the clock and the release ends it; a job
+// with no GitHub job id has no clock.
+func TestHookStartsAndEndsTheClock(t *testing.T) {
+	r := newRig()
+	h := &Hook{E: r.eng, Go: func(f func()) { f() },
+		RunnerRef: func(m, n string) string { return m + ":" + n },
+		LimitMin:  func(repo, job string) int { return map[string]int{"slow": 40}[job] }}
+	job := scheduler.JobRef{Repository: "luis-mc/app", RunID: 900, RunAttempt: 1, Job: "slow", GitHubJobID: 5, RunnerName: "r1"}
+	h.JobStarted("m1", job, 4*time.Second)
+	v, ok := r.eng.Job(ctx, jobKey(5))
+	if !ok || v.Limit != 40*time.Minute {
+		t.Fatalf("view %+v %v", v, ok)
+	}
+	if c := r.store.jobs[jobKey(5)]; c.RunnerRef != "m1:r1" || c.Hold != 4*time.Second {
+		t.Fatalf("stored %+v", c)
+	}
+	h.JobStarted("m1", scheduler.JobRef{Repository: "luis-mc/app", RunID: 900}, 0)
+	if len(r.store.jobs) != 1 {
+		t.Fatalf("a job with no id started a clock: %v", r.store.jobs)
+	}
+	r.clock.Advance(time.Minute)
+	h.JobEnded("m1", job)
+	h.JobEnded("m1", job) // a second release is not an error
+	if v, _ = r.eng.Job(ctx, jobKey(5)); v.State != StateEnded {
+		t.Fatalf("view %+v", v)
 	}
 }

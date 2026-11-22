@@ -8,7 +8,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
 )
 
-// The fixed parts of the clocks (scheduling R5.104, R5.105).
+// The fixed parts of the clocks (scheduling R5.100, R5.101).
 const (
 	// Grace is the time between a timer running out and crsp acting.
 	Grace = 30 * time.Second
@@ -16,7 +16,7 @@ const (
 	ExtendBy = 10 * time.Minute
 )
 
-// Settings are the timers, all whole minutes (scheduling R5.103, R5.108). The
+// Settings are the timers, all whole minutes (scheduling R5.99, R5.104). The
 // owner edits every one.
 type Settings struct {
 	// JobMin is the job timer: from the job's first real step. Default 30.
@@ -90,7 +90,7 @@ type Problem struct {
 
 // Validate checks every field: whole minutes above 0, the hold within its cap
 // and the job timer below the run timer. It is the same check the console runs
-// while the owner types (scheduling R5.108).
+// while the owner types (scheduling R5.104).
 func (s Settings) Validate() []Problem {
 	var out []Problem
 	for _, f := range []struct {

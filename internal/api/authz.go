@@ -40,6 +40,10 @@ var otherAreaAuth = map[string]string{
 	"startRegistryCleanup": authAdmin, "createRegistryReplacePlan": authAdmin, "startRegistryReplacePlan": authAdmin,
 	"stopRegistryReplacePlan": authAdmin, "rollbackRegistryReplacePlan": authAdmin, "putRegistryMirrorSettings": authAdmin,
 
+	// crsp's job and run timers (OPS81, docs/features/scheduling R5.99 to R5.106).
+	"getTimerSettings": authUser, "checkTimerSettings": authUser, "getJobTimer": authUser, "getRunTimer": authUser,
+	"putTimerSettings": authAdmin, "stopJobNow": authAdmin, "extendJobTimer": authAdmin, "cancelRunNow": authAdmin, "extendRunTimer": authAdmin,
+
 	"getCaCertificate": authPublic, "getPackage": authPublic, "getHealth": authPublic,
 
 	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser,

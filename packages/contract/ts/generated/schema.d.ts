@@ -1678,6 +1678,170 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/timer-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The job, run, hold, timeout, queued and start-up timers
+         * @description scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). The grace of 30 s and the 10 minute extension are fixed.
+         */
+        get: operations["getTimerSettings"];
+        /**
+         * Save timer settings
+         * @description scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+         */
+        put: operations["putTimerSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/timer-settings/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check timer settings without saving them
+         * @description scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+         */
+        post: operations["checkTimerSettings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/timer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The job timer of a job
+         * @description scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+         */
+        get: operations["getJobTimer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/timer/stop-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop now, during the grace of the job timer
+         * @description scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+         */
+        post: operations["stopJobNow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/timer/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend 10 min, during the grace of the job timer
+         * @description scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+         */
+        post: operations["extendJobTimer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runId}/timer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The run timer of a run attempt
+         * @description scheduling R5.100, R5.105.
+         */
+        get: operations["getRunTimer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runId}/timer/cancel-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel now, during the grace of the run timer
+         * @description scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+         */
+        post: operations["cancelRunNow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runId}/timer/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend 10 min, during the grace of the run timer
+         * @description scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+         */
+        post: operations["extendRunTimer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/registry": {
         parameters: {
             query?: never;
@@ -3368,6 +3532,100 @@ export interface components {
             reserve_after_minutes?: number;
             /** @description Needed when a size that runners use gets smaller. */
             confirm_lowering?: boolean;
+        };
+        TimerSettings: {
+            /** @description The job timer, from the first real step. Default 30. */
+            job_minutes: number;
+            /** @description The run timer, from the first job's real start. Default 45. */
+            run_minutes: number;
+            /** @description The hold of the job-started hook, at most 2. Default 2. */
+            hold_minutes: number;
+            /** @description timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60. */
+            timeout_minutes: number;
+            /** @description Alert for a job that waits this long in GitHub's queue. Default 720 (12 h). */
+            queued_minutes: number;
+            /** @description A runner that has not started its job in this time is removed and the job admitted again. Default 2. */
+            startup_minutes: number;
+            /** @description Fixed at 30. */
+            grace_seconds: number;
+            /** @description Fixed at 10. */
+            extend_minutes: number;
+        };
+        /** @description Only the fields given change. */
+        TimerSettingsInput: {
+            job_minutes?: number;
+            run_minutes?: number;
+            hold_minutes?: number;
+            timeout_minutes?: number;
+            queued_minutes?: number;
+            startup_minutes?: number;
+        };
+        TimerSettingsProblem: {
+            /** @enum {string} */
+            field: "job_minutes" | "run_minutes" | "hold_minutes" | "timeout_minutes" | "queued_minutes" | "startup_minutes";
+            /** @description In the owner's words. */
+            message: string;
+        };
+        TimerSettingsCheck: {
+            ok: boolean;
+            problems: components["schemas"]["TimerSettingsProblem"][];
+            /** @description The settings as they would be after the change. */
+            settings: components["schemas"]["TimerSettings"];
+        };
+        JobTimer: {
+            /** Format: int64 */
+            job_id: number;
+            repository?: string;
+            /** Format: int64 */
+            run_id?: number;
+            run_attempt?: number;
+            /** @enum {string} */
+            state: "running" | "grace" | "stopped" | "ended";
+            /**
+             * Format: date-time
+             * @description The job's first real step.
+             */
+            started_at?: string;
+            limit_seconds?: number;
+            elapsed_seconds?: number;
+            /**
+             * Format: date-time
+             * @description During the grace, when crsp acts. The countdown is deadline minus now.
+             */
+            deadline?: string;
+            /** @description The state in words, for example "Job timer ran out at 30:00; stopping in 30 s". */
+            text: string;
+            /** @description What crsp did, for example "stopped by crsp: job timer 30:00". */
+            note?: string;
+            can_stop_now: boolean;
+            can_extend: boolean;
+            extended: boolean;
+            /** @description The run timer ran out too; the run is cancelled and this job is not stopped on its own. */
+            covered_by_run: boolean;
+        };
+        RunTimer: {
+            /** Format: int64 */
+            run_id: number;
+            repository?: string;
+            run_attempt?: number;
+            /** @enum {string} */
+            state: "running" | "grace" | "stopped" | "ended";
+            /**
+             * Format: date-time
+             * @description The first job's real start.
+             */
+            started_at?: string;
+            limit_seconds?: number;
+            elapsed_seconds?: number;
+            /** Format: date-time */
+            deadline?: string;
+            /** @description For example "Run timer ran out at 45:00; cancelling in 30 s". */
+            text: string;
+            /** @description For example "cancelled by crsp: run timer 45:00". */
+            note?: string;
+            can_cancel_now: boolean;
+            can_extend: boolean;
+            extended: boolean;
         };
         EnvSetList: {
             items: components["schemas"]["EnvSet"][];
@@ -6988,6 +7246,9 @@ export interface components {
         SetName: string;
         RunnerId: string;
         JobId: number;
+        TimerRunId: number;
+        /** @description The attempt; the newest when absent. */
+        TimerAttempt: number;
         FindingId: number;
         RunId: string;
         BackupId: string;
@@ -9424,6 +9685,224 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunnerClasses"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTimerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimerSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putTimerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimerSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimerSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    checkTimerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimerSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description The check. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimerSettingsCheck"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJobTimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    stopJobNow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the stop. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    extendJobTimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the extension. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunTimer: {
+        parameters: {
+            query?: {
+                /** @description The attempt; the newest when absent. */
+                attempt?: components["parameters"]["TimerAttempt"];
+            };
+            header?: never;
+            path: {
+                runId: components["parameters"]["TimerRunId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cancelRunNow: {
+        parameters: {
+            query?: {
+                /** @description The attempt; the newest when absent. */
+                attempt?: components["parameters"]["TimerAttempt"];
+            };
+            header?: never;
+            path: {
+                runId: components["parameters"]["TimerRunId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the cancel. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    extendRunTimer: {
+        parameters: {
+            query?: {
+                /** @description The attempt; the newest when absent. */
+                attempt?: components["parameters"]["TimerAttempt"];
+            };
+            header?: never;
+            path: {
+                runId: components["parameters"]["TimerRunId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the extension. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTimer"];
                 };
             };
             default: components["responses"]["Error"];

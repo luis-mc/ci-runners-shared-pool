@@ -1,5 +1,5 @@
 -- +goose Up
--- OPS81: the job and run clocks of crsp (scheduling R5.103 to R5.110). Times are
+-- OPS81: the job and run clocks of crsp (scheduling R5.99 to R5.106). Times are
 -- UTC RFC3339 text, an empty string means unknown or not started. Durations are
 -- milliseconds, 0 means unknown. The console reads these later. They sit in their
 -- own tables, keyed like jobs and runs, so the jobs upsert stays as it is.

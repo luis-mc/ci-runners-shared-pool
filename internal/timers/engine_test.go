@@ -9,7 +9,7 @@ import (
 
 var ctx = context.Background()
 
-// Scheduling R5.104: a job timer that ran out gives a 30 s grace with a
+// Scheduling R5.100: a job timer that ran out gives a 30 s grace with a
 // countdown, then stops that job's runner and only that job.
 func TestJobTimerGraceThenStop(t *testing.T) {
 	r := newRig()
@@ -44,7 +44,7 @@ func TestJobTimerGraceThenStop(t *testing.T) {
 	}
 }
 
-// R5.104: a job that ends during the grace clears the countdown and nothing is stopped.
+// R5.100: a job that ends during the grace clears the countdown and nothing is stopped.
 func TestJobEndsDuringGrace(t *testing.T) {
 	r := newRig()
 	k := r.start(1)
@@ -79,7 +79,7 @@ func contains(l []string, s string) bool {
 	return false
 }
 
-// R5.104: the run timer starts at the first job's real start, not at later
+// R5.100: the run timer starts at the first job's real start, not at later
 // jobs, and cancels the whole run after its grace.
 func TestRunTimerCancelsTheRun(t *testing.T) {
 	r := newRig()
@@ -101,7 +101,7 @@ func TestRunTimerCancelsTheRun(t *testing.T) {
 	}
 }
 
-// R5.104: when the job and run timers run out together, only the run is cancelled.
+// R5.100: when the job and run timers run out together, only the run is cancelled.
 func TestBothRunOutCancelRunOnly(t *testing.T) {
 	r := newRig()
 	r.start(1)
@@ -123,7 +123,7 @@ func TestBothRunOutCancelRunOnly(t *testing.T) {
 	}
 }
 
-// R5.105: Extend 10 min works once per job, only during the grace.
+// R5.101: Extend 10 min works once per job, only during the grace.
 func TestExtendOnce(t *testing.T) {
 	r := newRig()
 	k := r.start(1)
@@ -164,7 +164,7 @@ func count(l []string, s string) int {
 	return n
 }
 
-// R5.105: Stop now stops at once and the audit row names who.
+// R5.101: Stop now stops at once and the audit row names who.
 func TestStopNow(t *testing.T) {
 	r := newRig()
 	k := r.start(1)
@@ -192,7 +192,7 @@ func TestStopNow(t *testing.T) {
 	}
 }
 
-// R5.105: Cancel now cancels the run at once; the run can be extended once too.
+// R5.101: Cancel now cancels the run at once; the run can be extended once too.
 func TestCancelNowAndExtendRun(t *testing.T) {
 	r := newRig()
 	r.start(1)
@@ -213,7 +213,7 @@ func TestCancelNowAndExtendRun(t *testing.T) {
 	}
 }
 
-// R5.106: an audit row that cannot be written stops the action.
+// R5.102: an audit row that cannot be written stops the action.
 func TestActionRefusedWhenAuditFails(t *testing.T) {
 	r := newRig()
 	k := r.start(1)
@@ -234,7 +234,7 @@ func TestActionRefusedWhenAuditFails(t *testing.T) {
 	}
 }
 
-// R5.104: a stop the agent cannot do is tried again after another grace.
+// R5.100: a stop the agent cannot do is tried again after another grace.
 func TestStopFailureRetries(t *testing.T) {
 	r := newRig()
 	k := r.start(1)
@@ -255,7 +255,7 @@ func TestStopFailureRetries(t *testing.T) {
 	}
 }
 
-// R5.103: the clock starts at JobStarted, keeps the durations and survives a restart.
+// R5.99: the clock starts at JobStarted, keeps the durations and survives a restart.
 func TestClockStartDurationsAndRestore(t *testing.T) {
 	r := newRig()
 	r.clock.Advance(time.Hour) // assignment long ago: the clock does not start there
@@ -282,7 +282,7 @@ func TestClockStartDurationsAndRestore(t *testing.T) {
 	}
 }
 
-// R5.103: a per-job limit at or above the run timer is not used.
+// R5.99: a per-job limit at or above the run timer is not used.
 func TestPerJobLimitAboveRunTimerIsIgnored(t *testing.T) {
 	r := newRig()
 	k := jobKey(1)
@@ -306,7 +306,7 @@ func (q *recStartup) StartupTooLong(_ context.Context, it StartupItem, _ time.Du
 	return nil
 }
 
-// R5.107: the queued timer alerts once at 12 h; the start-up timer acts once at 2 min.
+// R5.103: the queued timer alerts once at 12 h; the start-up timer acts once at 2 min.
 func TestQueuedAndStartupSweeps(t *testing.T) {
 	r := newRig()
 	q, s := &recQueued{}, &recStartup{}

@@ -11,7 +11,7 @@ import (
 // Actor of what crsp does by itself.
 const ActorSystem = "system"
 
-// Audit actions of the timers (scheduling R5.106).
+// Audit actions of the timers (scheduling R5.102).
 const (
 	ActJobGrace        = "timer.job.grace"
 	ActJobGraceCleared = "timer.job.grace_cleared"
@@ -94,7 +94,7 @@ func (e *Engine) Restore(ctx context.Context) error {
 }
 
 // JobStarted starts the job's clock at its first real step, which is when the
-// job-started hook returns, not at assignment (scheduling R5.103). The run
+// job-started hook returns, not at assignment (scheduling R5.99). The run
 // clock starts with the first job of the run. A second call for the same job
 // changes nothing.
 func (e *Engine) JobStarted(ctx context.Context, st JobStart) error {
@@ -132,7 +132,7 @@ func (e *Engine) JobStarted(ctx context.Context, st JobStart) error {
 }
 
 // JobEnded ends the job's clock. A grace that was running is cleared and
-// nothing is stopped (scheduling R5.104).
+// nothing is stopped (scheduling R5.100).
 func (e *Engine) JobEnded(ctx context.Context, k JobKey) error {
 	now := e.cfg.Clock.Now()
 	e.mu.Lock()
@@ -262,7 +262,7 @@ func (e *Engine) Tick(ctx context.Context) error {
 }
 
 // coveredLocked: the run timer ran out as well, so the run is cancelled and the
-// job is not stopped by itself (scheduling R5.104). The caller holds the lock.
+// job is not stopped by itself (scheduling R5.100). The caller holds the lock.
 func (e *Engine) coveredLocked(j *job) bool {
 	r, ok := e.runs[j.Key.Run()]
 	return ok && (r.State == StateGrace || r.State == StateStopped)
@@ -338,7 +338,7 @@ func (e *Engine) cancelRun(ctx context.Context, r *run, actor, action string) er
 }
 
 // StopNow stops a job in its grace at once. The audit row is written first, and
-// the job is not touched when it cannot be (scheduling R5.106).
+// the job is not touched when it cannot be (scheduling R5.102).
 func (e *Engine) StopNow(ctx context.Context, k JobKey, actor string) error {
 	e.mu.Lock()
 	j, ok := e.jobs[k]
@@ -628,4 +628,34 @@ func (e *Engine) SweepStartup(ctx context.Context, items []StartupItem) error {
 			Text: fmt.Sprintf("The runner did not start the job in %s; it is removed and the job is admitted again.", mmss(limit))}))
 	}
 	return errors.Join(errs...)
+}
+
+// JobByID is Job for a caller that has only GitHub's job id.
+func (e *Engine) JobByID(ctx context.Context, id int64) (JobView, bool) {
+	e.mu.Lock()
+	for k := range e.jobs {
+		if k.JobID == id {
+			e.mu.Unlock()
+			return e.Job(ctx, k)
+		}
+	}
+	e.mu.Unlock()
+	return e.Job(ctx, JobKey{JobID: id})
+}
+
+// RunByID is Run for a caller that has only GitHub's run id and the attempt
+// (0 means the newest open one, or attempt 1 for a stored one).
+func (e *Engine) RunByID(ctx context.Context, runID int64, attempt int) (RunView, bool) {
+	e.mu.Lock()
+	for k := range e.runs {
+		if k.RunID == runID && (attempt == 0 || k.Attempt == attempt) {
+			e.mu.Unlock()
+			return e.Run(ctx, k)
+		}
+	}
+	e.mu.Unlock()
+	if attempt == 0 {
+		attempt = 1
+	}
+	return e.Run(ctx, RunKey{RunID: runID, Attempt: attempt})
 }

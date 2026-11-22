@@ -4,8 +4,8 @@ import (
 	"context"
 )
 
-// The clocks of crsp's job and run timers (migration 00039, scheduling R5.103 to
-// R5.110). The tables job_clocks and run_clocks are keyed like jobs and runs and are
+// The clocks of crsp's job and run timers (migration 00039, scheduling R5.99 to
+// R5.106). The tables job_clocks and run_clocks are keyed like jobs and runs and are
 // independent of them, so the console joins them by id.
 
 // SettingTimers is the key of the timer settings in the settings table (JSON).

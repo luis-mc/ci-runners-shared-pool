@@ -2,11 +2,13 @@ package timers
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
@@ -93,7 +95,7 @@ func parseTS(s string) time.Time {
 }
 
 func jobRow(c JobClock) store.JobClockRow {
-	return store.JobClockRow{JobID: c.Key.JobID, RepoID: c.Key.RepoID, Repo: c.Key.Repo, RunID: c.Key.RunID, RunAttempt: c.Key.Attempt,
+	return store.JobClockRow{JobID: c.Key.JobID, Repo: c.Key.Repo, RunID: c.Key.RunID, RunAttempt: c.Key.Attempt,
 		StartedAt: ts(c.StartedAt), LimitSec: int(c.Limit / time.Second), Extended: c.Extended, State: string(c.State),
 		Deadline: ts(c.Deadline), Note: c.Note, MachineID: c.MachineID, RunnerRef: c.RunnerRef,
 		QueuedMs: c.Queued.Milliseconds(), StartupMs: c.Startup.Milliseconds(), HoldMs: c.Hold.Milliseconds(),
@@ -102,20 +104,20 @@ func jobRow(c JobClock) store.JobClockRow {
 
 func jobClock(r store.JobClockRow) JobClock {
 	ms := func(v int64) time.Duration { return time.Duration(v) * time.Millisecond }
-	return JobClock{Key: JobKey{RepoID: r.RepoID, Repo: r.Repo, RunID: r.RunID, Attempt: r.RunAttempt, JobID: r.JobID},
+	return JobClock{Key: JobKey{Repo: r.Repo, RunID: r.RunID, Attempt: r.RunAttempt, JobID: r.JobID},
 		MachineID: r.MachineID, RunnerRef: r.RunnerRef, StartedAt: parseTS(r.StartedAt), Limit: time.Duration(r.LimitSec) * time.Second,
 		Extended: r.Extended, State: State(r.State), Deadline: parseTS(r.Deadline), Note: r.Note,
 		Queued: ms(r.QueuedMs), Startup: ms(r.StartupMs), Hold: ms(r.HoldMs), Run: ms(r.RunMs), JobTimer: ms(r.JobTimerMs), RunTimer: ms(r.RunTimerMs)}
 }
 
 func runRow(c RunClock) store.RunClockRow {
-	return store.RunClockRow{RepoID: c.Key.RepoID, Repo: c.Key.Repo, RunID: c.Key.RunID, RunAttempt: c.Key.Attempt,
+	return store.RunClockRow{Repo: c.Key.Repo, RunID: c.Key.RunID, RunAttempt: c.Key.Attempt,
 		StartedAt: ts(c.StartedAt), LimitSec: int(c.Limit / time.Second), Extended: c.Extended, State: string(c.State),
 		Deadline: ts(c.Deadline), Note: c.Note, TimerMs: c.Elapsed.Milliseconds()}
 }
 
 func runClock(r store.RunClockRow) RunClock {
-	return RunClock{Key: RunKey{RepoID: r.RepoID, Repo: r.Repo, RunID: r.RunID, Attempt: r.RunAttempt},
+	return RunClock{Key: RunKey{Repo: r.Repo, RunID: r.RunID, Attempt: r.RunAttempt},
 		StartedAt: parseTS(r.StartedAt), Limit: time.Duration(r.LimitSec) * time.Second, Extended: r.Extended,
 		State: State(r.State), Deadline: parseTS(r.Deadline), Note: r.Note, Elapsed: time.Duration(r.TimerMs) * time.Millisecond}
 }
@@ -162,7 +164,7 @@ func (s StoreAdapter) LoadJob(ctx context.Context, k JobKey) (JobClock, bool, er
 
 // LoadRun implements Store.
 func (s StoreAdapter) LoadRun(ctx context.Context, k RunKey) (RunClock, bool, error) {
-	r, ok, err := s.DB.RunClock(ctx, k.RepoID, k.RunID, k.Attempt)
+	r, ok, err := s.DB.RunClock(ctx, 0, k.RunID, k.Attempt)
 	if err != nil || !ok {
 		return RunClock{}, false, err
 	}
@@ -194,4 +196,77 @@ func (e *ProblemError) Error() string {
 		return "the timer settings are not valid"
 	}
 	return e.Problems[0].Message
+}
+
+// Hook adapts the engine to scheduler.Lifecycle: the gate's first go is the
+// job's first real step, and the release of its slots is its end (scheduling
+// R5.99). Calls go to a goroutine, because the scheduler must not wait on the
+// store.
+type Hook struct {
+	E *Engine
+	// RunnerRef maps a runner name to what the agent stops (the service name or
+	// the container); nil uses the runner name as it is.
+	RunnerRef func(machineID, runnerName string) string
+	// LimitMin is the job's own timer from the repository's .crsp.yml; nil or 0
+	// means the default.
+	LimitMin func(repo, job string) int
+	// Go runs f; nil starts a goroutine. Tests pass a direct call.
+	Go func(f func())
+	// Log gets what could not be done; nil drops it.
+	Log func(msg string, err error)
+}
+
+var _ scheduler.Lifecycle = (*Hook)(nil)
+
+func (h *Hook) run(f func()) {
+	if h.Go != nil {
+		h.Go(f)
+		return
+	}
+	go f()
+}
+
+func (h *Hook) fail(msg string, err error) {
+	if err != nil && h.Log != nil {
+		h.Log(msg, err)
+	}
+}
+
+func keyOf(j scheduler.JobRef) (JobKey, bool) {
+	if j.GitHubJobID == 0 || j.Repository == "" || j.RunID == 0 {
+		return JobKey{}, false
+	}
+	return JobKey{Repo: j.Repository, RunID: j.RunID, Attempt: j.RunAttempt, JobID: j.GitHubJobID}, true
+}
+
+// JobStarted implements scheduler.Lifecycle.
+func (h *Hook) JobStarted(machineID string, job scheduler.JobRef, hold time.Duration) {
+	k, ok := keyOf(job)
+	if !ok {
+		return
+	}
+	h.run(func() {
+		ref := job.RunnerName
+		if h.RunnerRef != nil {
+			ref = h.RunnerRef(machineID, job.RunnerName)
+		}
+		limit := 0
+		if h.LimitMin != nil {
+			limit = h.LimitMin(job.Repository, job.Job)
+		}
+		h.fail("job timer not started", h.E.JobStarted(context.Background(), JobStart{Key: k, MachineID: machineID, RunnerRef: ref, LimitMin: limit, Hold: hold}))
+	})
+}
+
+// JobEnded implements scheduler.Lifecycle.
+func (h *Hook) JobEnded(_ string, job scheduler.JobRef) {
+	k, ok := keyOf(job)
+	if !ok {
+		return
+	}
+	h.run(func() {
+		if err := h.E.JobEnded(context.Background(), k); err != nil && !errors.Is(err, ErrUnknown) {
+			h.fail("job timer not ended", err)
+		}
+	})
 }

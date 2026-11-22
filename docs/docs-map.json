@@ -76,6 +76,9 @@
     "internal/api/handlers_runnerclasses.go": [
       "docs/features/scheduling/spec.md"
     ],
+    "internal/api/handlers_timers.go": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/api/stubs_registry_*.go": [
       "docs/features/registry/spec.md"
     ],
@@ -139,6 +142,9 @@
     ],
     "internal/github/**": [
       "docs/features/github-integration/spec.md"
+    ],
+    "internal/github/cancel.go": [
+      "docs/features/scheduling/spec.md"
     ],
     "internal/github/rest_insights*.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -268,6 +274,12 @@
       "docs/features/scheduling/spec.md"
     ],
     "internal/store/schedstore.go": [
+      "docs/features/scheduling/spec.md"
+    ],
+    "internal/store/timers.go": [
+      "docs/features/scheduling/spec.md"
+    ],
+    "internal/timers/**": [
       "docs/features/scheduling/spec.md"
     ],
     "internal/tools/**": [

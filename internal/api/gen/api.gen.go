@@ -1240,6 +1240,30 @@ func (e JobSizeSource) Valid() bool {
 	}
 }
 
+// Defines values for JobTimerState.
+const (
+	JobTimerStateEnded   JobTimerState = "ended"
+	JobTimerStateGrace   JobTimerState = "grace"
+	JobTimerStateRunning JobTimerState = "running"
+	JobTimerStateStopped JobTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the JobTimerState enum.
+func (e JobTimerState) Valid() bool {
+	switch e {
+	case JobTimerStateEnded:
+		return true
+	case JobTimerStateGrace:
+		return true
+	case JobTimerStateRunning:
+		return true
+	case JobTimerStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -2538,28 +2562,28 @@ func (e RepositoryRoutingWhere) Valid() bool {
 
 // Defines values for RepositoryRoutingWhy.
 const (
-	CapReached       RepositoryRoutingWhy = "cap_reached"
-	FallbackOff      RepositoryRoutingWhy = "fallback_off"
-	FallbackOn       RepositoryRoutingWhy = "fallback_on"
-	Grace            RepositoryRoutingWhy = "grace"
-	MachineUp        RepositoryRoutingWhy = "machine_up"
-	PublicRepository RepositoryRoutingWhy = "public_repository"
+	RepositoryRoutingWhyCapReached       RepositoryRoutingWhy = "cap_reached"
+	RepositoryRoutingWhyFallbackOff      RepositoryRoutingWhy = "fallback_off"
+	RepositoryRoutingWhyFallbackOn       RepositoryRoutingWhy = "fallback_on"
+	RepositoryRoutingWhyGrace            RepositoryRoutingWhy = "grace"
+	RepositoryRoutingWhyMachineUp        RepositoryRoutingWhy = "machine_up"
+	RepositoryRoutingWhyPublicRepository RepositoryRoutingWhy = "public_repository"
 )
 
 // Valid indicates whether the value is a known member of the RepositoryRoutingWhy enum.
 func (e RepositoryRoutingWhy) Valid() bool {
 	switch e {
-	case CapReached:
+	case RepositoryRoutingWhyCapReached:
 		return true
-	case FallbackOff:
+	case RepositoryRoutingWhyFallbackOff:
 		return true
-	case FallbackOn:
+	case RepositoryRoutingWhyFallbackOn:
 		return true
-	case Grace:
+	case RepositoryRoutingWhyGrace:
 		return true
-	case MachineUp:
+	case RepositoryRoutingWhyMachineUp:
 		return true
-	case PublicRepository:
+	case RepositoryRoutingWhyPublicRepository:
 		return true
 	default:
 		return false
@@ -2755,6 +2779,30 @@ func (e RunSummaryState) Valid() bool {
 	case RunSummaryStateQueued:
 		return true
 	case RunSummaryStateRunning:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunTimerState.
+const (
+	RunTimerStateEnded   RunTimerState = "ended"
+	RunTimerStateGrace   RunTimerState = "grace"
+	RunTimerStateRunning RunTimerState = "running"
+	RunTimerStateStopped RunTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the RunTimerState enum.
+func (e RunTimerState) Valid() bool {
+	switch e {
+	case RunTimerStateEnded:
+		return true
+	case RunTimerStateGrace:
+		return true
+	case RunTimerStateRunning:
+		return true
+	case RunTimerStateStopped:
 		return true
 	default:
 		return false
@@ -3337,6 +3385,36 @@ func (e TimelineSegmentMarkers) Valid() bool {
 	case AfterMergeWork:
 		return true
 	case IdleWhileWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TimerSettingsProblemField.
+const (
+	HoldMinutes    TimerSettingsProblemField = "hold_minutes"
+	JobMinutes     TimerSettingsProblemField = "job_minutes"
+	QueuedMinutes  TimerSettingsProblemField = "queued_minutes"
+	RunMinutes     TimerSettingsProblemField = "run_minutes"
+	StartupMinutes TimerSettingsProblemField = "startup_minutes"
+	TimeoutMinutes TimerSettingsProblemField = "timeout_minutes"
+)
+
+// Valid indicates whether the value is a known member of the TimerSettingsProblemField enum.
+func (e TimerSettingsProblemField) Valid() bool {
+	switch e {
+	case HoldMinutes:
+		return true
+	case JobMinutes:
+		return true
+	case QueuedMinutes:
+		return true
+	case RunMinutes:
+		return true
+	case StartupMinutes:
+		return true
+	case TimeoutMinutes:
 		return true
 	default:
 		return false
@@ -5453,6 +5531,38 @@ type JobSummaryList struct {
 	Items []JobSummary `json:"items"`
 }
 
+// JobTimer defines model for JobTimer.
+type JobTimer struct {
+	CanExtend  bool `json:"can_extend"`
+	CanStopNow bool `json:"can_stop_now"`
+
+	// CoveredByRun The run timer ran out too; the run is cancelled and this job is not stopped on its own.
+	CoveredByRun bool `json:"covered_by_run"`
+
+	// Deadline During the grace, when crsp acts. The countdown is deadline minus now.
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	JobId          int64      `json:"job_id"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note What crsp did, for example "stopped by crsp: job timer 30:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      *int64  `json:"run_id,omitempty"`
+
+	// StartedAt The job's first real step.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     JobTimerState `json:"state"`
+
+	// Text The state in words, for example "Job timer ran out at 30:00; stopping in 30 s".
+	Text string `json:"text"`
+}
+
+// JobTimerState defines model for JobTimer.State.
+type JobTimerState string
+
 // JoinCode defines model for JoinCode.
 type JoinCode struct {
 	CreatedAt time.Time `json:"created_at"`
@@ -7228,6 +7338,32 @@ type RunSummaryOverallState string
 // RunSummaryState defines model for RunSummary.State.
 type RunSummaryState string
 
+// RunTimer defines model for RunTimer.
+type RunTimer struct {
+	CanCancelNow   bool       `json:"can_cancel_now"`
+	CanExtend      bool       `json:"can_extend"`
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note For example "cancelled by crsp: run timer 45:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      int64   `json:"run_id"`
+
+	// StartedAt The first job's real start.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     RunTimerState `json:"state"`
+
+	// Text For example "Run timer ran out at 45:00; cancelling in 30 s".
+	Text string `json:"text"`
+}
+
+// RunTimerState defines model for RunTimer.State.
+type RunTimerState string
+
 // RunWaste defines model for RunWaste.
 type RunWaste struct {
 	Kind    RunWasteKind `json:"kind"`
@@ -7798,6 +7934,63 @@ type TimelineSegmentKind string
 // TimelineSegmentMarkers defines model for TimelineSegment.Markers.
 type TimelineSegmentMarkers string
 
+// TimerSettings defines model for TimerSettings.
+type TimerSettings struct {
+	// ExtendMinutes Fixed at 10.
+	ExtendMinutes int `json:"extend_minutes"`
+
+	// GraceSeconds Fixed at 30.
+	GraceSeconds int `json:"grace_seconds"`
+
+	// HoldMinutes The hold of the job-started hook, at most 2. Default 2.
+	HoldMinutes int `json:"hold_minutes"`
+
+	// JobMinutes The job timer, from the first real step. Default 30.
+	JobMinutes int `json:"job_minutes"`
+
+	// QueuedMinutes Alert for a job that waits this long in GitHub's queue. Default 720 (12 h).
+	QueuedMinutes int `json:"queued_minutes"`
+
+	// RunMinutes The run timer, from the first job's real start. Default 45.
+	RunMinutes int `json:"run_minutes"`
+
+	// StartupMinutes A runner that has not started its job in this time is removed and the job admitted again. Default 2.
+	StartupMinutes int `json:"startup_minutes"`
+
+	// TimeoutMinutes timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60.
+	TimeoutMinutes int `json:"timeout_minutes"`
+}
+
+// TimerSettingsCheck defines model for TimerSettingsCheck.
+type TimerSettingsCheck struct {
+	Ok       bool                   `json:"ok"`
+	Problems []TimerSettingsProblem `json:"problems"`
+
+	// Settings The settings as they would be after the change.
+	Settings TimerSettings `json:"settings"`
+}
+
+// TimerSettingsInput Only the fields given change.
+type TimerSettingsInput struct {
+	HoldMinutes    *int `json:"hold_minutes,omitempty"`
+	JobMinutes     *int `json:"job_minutes,omitempty"`
+	QueuedMinutes  *int `json:"queued_minutes,omitempty"`
+	RunMinutes     *int `json:"run_minutes,omitempty"`
+	StartupMinutes *int `json:"startup_minutes,omitempty"`
+	TimeoutMinutes *int `json:"timeout_minutes,omitempty"`
+}
+
+// TimerSettingsProblem defines model for TimerSettingsProblem.
+type TimerSettingsProblem struct {
+	Field TimerSettingsProblemField `json:"field"`
+
+	// Message In the owner's words.
+	Message string `json:"message"`
+}
+
+// TimerSettingsProblemField defines model for TimerSettingsProblem.Field.
+type TimerSettingsProblemField string
+
 // Trial defines model for Trial.
 type Trial struct {
 	CanaryJobs     *[]string  `json:"canary_jobs,omitempty"`
@@ -8166,6 +8359,12 @@ type RunnerId = string
 
 // SetName defines model for SetName.
 type SetName = string
+
+// TimerAttempt defines model for TimerAttempt.
+type TimerAttempt = int
+
+// TimerRunId defines model for TimerRunId.
+type TimerRunId = int64
 
 // To defines model for To.
 type To = time.Time
@@ -8592,6 +8791,24 @@ type GetRunSavingsParams struct {
 	Attempt *int `form:"attempt,omitempty" json:"attempt,omitempty"`
 }
 
+// GetRunTimerParams defines parameters for GetRunTimer.
+type GetRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// CancelRunNowParams defines parameters for CancelRunNow.
+type CancelRunNowParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// ExtendRunTimerParams defines parameters for ExtendRunTimer.
+type ExtendRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
 // RestartServiceParams defines parameters for RestartService.
 type RestartServiceParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
@@ -8788,6 +9005,12 @@ type StartAppManifestJSONRequestBody = StartAppManifestRequest
 
 // RedeemSetupLinkJSONRequestBody defines body for RedeemSetupLink for application/json ContentType.
 type RedeemSetupLinkJSONRequestBody = RedeemSetupLinkRequest
+
+// PutTimerSettingsJSONRequestBody defines body for PutTimerSettings for application/json ContentType.
+type PutTimerSettingsJSONRequestBody = TimerSettingsInput
+
+// CheckTimerSettingsJSONRequestBody defines body for CheckTimerSettings for application/json ContentType.
+type CheckTimerSettingsJSONRequestBody = TimerSettingsInput
 
 // AddUserJSONRequestBody defines body for AddUser for application/json ContentType.
 type AddUserJSONRequestBody = AddUserRequest
@@ -9007,6 +9230,15 @@ type ServerInterface interface {
 	// GetJobResources CPU and memory of one job
 	// (GET /api/v1/jobs/{jobId}/resources)
 	GetJobResources(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// GetJobTimer The job timer of a job
+	// (GET /api/v1/jobs/{jobId}/timer)
+	GetJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// ExtendJobTimer Extend 10 min, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/extend)
+	ExtendJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// StopJobNow Stop now, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/stop-now)
+	StopJobNow(w http.ResponseWriter, r *http.Request, jobId JobId)
 	// CreateJoinCode Make a one-time join code and the install commands
 	// (POST /api/v1/join-codes)
 	CreateJoinCode(w http.ResponseWriter, r *http.Request)
@@ -9274,6 +9506,15 @@ type ServerInterface interface {
 	// GetRunSavings How much sooner the run could have ended
 	// (GET /api/v1/runs/{runId}/savings)
 	GetRunSavings(w http.ResponseWriter, r *http.Request, runId RunId, params GetRunSavingsParams)
+	// GetRunTimer The run timer of a run attempt
+	// (GET /api/v1/runs/{runId}/timer)
+	GetRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params GetRunTimerParams)
+	// CancelRunNow Cancel now, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/cancel-now)
+	CancelRunNow(w http.ResponseWriter, r *http.Request, runId TimerRunId, params CancelRunNowParams)
+	// ExtendRunTimer Extend 10 min, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/extend)
+	ExtendRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params ExtendRunTimerParams)
 	// RestartService Restart the service after a drain
 	// (POST /api/v1/service/restart)
 	RestartService(w http.ResponseWriter, r *http.Request, params RestartServiceParams)
@@ -9319,6 +9560,15 @@ type ServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(w http.ResponseWriter, r *http.Request)
+	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+	// (GET /api/v1/timer-settings)
+	GetTimerSettings(w http.ResponseWriter, r *http.Request)
+	// PutTimerSettings Save timer settings
+	// (PUT /api/v1/timer-settings)
+	PutTimerSettings(w http.ResponseWriter, r *http.Request)
+	// CheckTimerSettings Check timer settings without saving them
+	// (POST /api/v1/timer-settings/check)
+	CheckTimerSettings(w http.ResponseWriter, r *http.Request)
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	// (GET /api/v1/update)
 	GetUpdateStatus(w http.ResponseWriter, r *http.Request)
@@ -12086,6 +12336,84 @@ func (siw *ServerInterfaceWrapper) GetJobResources(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// GetJobTimer operation middleware
+func (siw *ServerInterfaceWrapper) GetJobTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetJobTimer(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExtendJobTimer operation middleware
+func (siw *ServerInterfaceWrapper) ExtendJobTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExtendJobTimer(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StopJobNow operation middleware
+func (siw *ServerInterfaceWrapper) StopJobNow(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopJobNow(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateJoinCode operation middleware
 func (siw *ServerInterfaceWrapper) CreateJoinCode(w http.ResponseWriter, r *http.Request) {
 
@@ -14497,6 +14825,132 @@ func (siw *ServerInterfaceWrapper) GetRunSavings(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// GetRunTimer operation middleware
+func (siw *ServerInterfaceWrapper) GetRunTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runId" -------------
+	var runId TimerRunId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runId", r.PathValue("runId"), &runId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRunTimerParams
+
+	// ------------- Optional query parameter "attempt" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "attempt", r.URL.Query(), &params.Attempt, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "attempt"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "attempt", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunTimer(w, r, runId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelRunNow operation middleware
+func (siw *ServerInterfaceWrapper) CancelRunNow(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runId" -------------
+	var runId TimerRunId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runId", r.PathValue("runId"), &runId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CancelRunNowParams
+
+	// ------------- Optional query parameter "attempt" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "attempt", r.URL.Query(), &params.Attempt, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "attempt"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "attempt", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelRunNow(w, r, runId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExtendRunTimer operation middleware
+func (siw *ServerInterfaceWrapper) ExtendRunTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runId" -------------
+	var runId TimerRunId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runId", r.PathValue("runId"), &runId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExtendRunTimerParams
+
+	// ------------- Optional query parameter "attempt" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "attempt", r.URL.Query(), &params.Attempt, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "attempt"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "attempt", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExtendRunTimer(w, r, runId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RestartService operation middleware
 func (siw *ServerInterfaceWrapper) RestartService(w http.ResponseWriter, r *http.Request) {
 
@@ -14717,6 +15171,48 @@ func (siw *ServerInterfaceWrapper) RedeemSetupLink(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RedeemSetupLink(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTimerSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetTimerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTimerSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutTimerSettings operation middleware
+func (siw *ServerInterfaceWrapper) PutTimerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutTimerSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CheckTimerSettings operation middleware
+func (siw *ServerInterfaceWrapper) CheckTimerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CheckTimerSettings(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -15411,6 +15907,15 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.GetRunnerClasses)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.PutRunnerClasses)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.GetTimerSettings)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.PutTimerSettings)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/timer-settings/check", wrapper.CheckTimerSettings)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer", wrapper.GetJobTimer)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer/stop-now", wrapper.StopJobNow)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer/extend", wrapper.ExtendJobTimer)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs/{runId}/timer", wrapper.GetRunTimer)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs/{runId}/timer/cancel-now", wrapper.CancelRunNow)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs/{runId}/timer/extend", wrapper.ExtendRunTimer)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry", wrapper.GetRegistrySettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/registry/logins", wrapper.PutRegistryLogin)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/registry/logins/{kind}/{host}", wrapper.DeleteRegistryLogin)
@@ -18353,6 +18858,123 @@ type GetJobResourcesdefaultJSONResponse struct {
 }
 
 func (response GetJobResourcesdefaultJSONResponse) VisitGetJobResourcesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobTimerRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type GetJobTimerResponseObject interface {
+	VisitGetJobTimerResponse(w http.ResponseWriter) error
+}
+
+type GetJobTimer200JSONResponse JobTimer
+
+func (response GetJobTimer200JSONResponse) VisitGetJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetJobTimerdefaultJSONResponse) VisitGetJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendJobTimerRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type ExtendJobTimerResponseObject interface {
+	VisitExtendJobTimerResponse(w http.ResponseWriter) error
+}
+
+type ExtendJobTimer200JSONResponse JobTimer
+
+func (response ExtendJobTimer200JSONResponse) VisitExtendJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendJobTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExtendJobTimerdefaultJSONResponse) VisitExtendJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopJobNowRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type StopJobNowResponseObject interface {
+	VisitStopJobNowResponse(w http.ResponseWriter) error
+}
+
+type StopJobNow200JSONResponse JobTimer
+
+func (response StopJobNow200JSONResponse) VisitStopJobNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopJobNowdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StopJobNowdefaultJSONResponse) VisitStopJobNowResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -21851,6 +22473,126 @@ func (response GetRunSavingsdefaultJSONResponse) VisitGetRunSavingsResponse(w ht
 	return err
 }
 
+type GetRunTimerRequestObject struct {
+	RunId  TimerRunId `json:"runId"`
+	Params GetRunTimerParams
+}
+
+type GetRunTimerResponseObject interface {
+	VisitGetRunTimerResponse(w http.ResponseWriter) error
+}
+
+type GetRunTimer200JSONResponse RunTimer
+
+func (response GetRunTimer200JSONResponse) VisitGetRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetRunTimerdefaultJSONResponse) VisitGetRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelRunNowRequestObject struct {
+	RunId  TimerRunId `json:"runId"`
+	Params CancelRunNowParams
+}
+
+type CancelRunNowResponseObject interface {
+	VisitCancelRunNowResponse(w http.ResponseWriter) error
+}
+
+type CancelRunNow200JSONResponse RunTimer
+
+func (response CancelRunNow200JSONResponse) VisitCancelRunNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelRunNowdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response CancelRunNowdefaultJSONResponse) VisitCancelRunNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendRunTimerRequestObject struct {
+	RunId  TimerRunId `json:"runId"`
+	Params ExtendRunTimerParams
+}
+
+type ExtendRunTimerResponseObject interface {
+	VisitExtendRunTimerResponse(w http.ResponseWriter) error
+}
+
+type ExtendRunTimer200JSONResponse RunTimer
+
+func (response ExtendRunTimer200JSONResponse) VisitExtendRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendRunTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExtendRunTimerdefaultJSONResponse) VisitExtendRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type RestartServiceRequestObject struct {
 	Params RestartServiceParams
 }
@@ -22429,6 +23171,122 @@ type RedeemSetupLinkdefaultJSONResponse struct {
 }
 
 func (response RedeemSetupLinkdefaultJSONResponse) VisitRedeemSetupLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTimerSettingsRequestObject struct {
+}
+
+type GetTimerSettingsResponseObject interface {
+	VisitGetTimerSettingsResponse(w http.ResponseWriter) error
+}
+
+type GetTimerSettings200JSONResponse TimerSettings
+
+func (response GetTimerSettings200JSONResponse) VisitGetTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTimerSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetTimerSettingsdefaultJSONResponse) VisitGetTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutTimerSettingsRequestObject struct {
+	Body *PutTimerSettingsJSONRequestBody
+}
+
+type PutTimerSettingsResponseObject interface {
+	VisitPutTimerSettingsResponse(w http.ResponseWriter) error
+}
+
+type PutTimerSettings200JSONResponse TimerSettings
+
+func (response PutTimerSettings200JSONResponse) VisitPutTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutTimerSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutTimerSettingsdefaultJSONResponse) VisitPutTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckTimerSettingsRequestObject struct {
+	Body *CheckTimerSettingsJSONRequestBody
+}
+
+type CheckTimerSettingsResponseObject interface {
+	VisitCheckTimerSettingsResponse(w http.ResponseWriter) error
+}
+
+type CheckTimerSettings200JSONResponse TimerSettingsCheck
+
+func (response CheckTimerSettings200JSONResponse) VisitCheckTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckTimerSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response CheckTimerSettingsdefaultJSONResponse) VisitCheckTimerSettingsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -23163,6 +24021,15 @@ type StrictServerInterface interface {
 	// GetJobResources CPU and memory of one job
 	// (GET /api/v1/jobs/{jobId}/resources)
 	GetJobResources(ctx context.Context, request GetJobResourcesRequestObject) (GetJobResourcesResponseObject, error)
+	// GetJobTimer The job timer of a job
+	// (GET /api/v1/jobs/{jobId}/timer)
+	GetJobTimer(ctx context.Context, request GetJobTimerRequestObject) (GetJobTimerResponseObject, error)
+	// ExtendJobTimer Extend 10 min, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/extend)
+	ExtendJobTimer(ctx context.Context, request ExtendJobTimerRequestObject) (ExtendJobTimerResponseObject, error)
+	// StopJobNow Stop now, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/stop-now)
+	StopJobNow(ctx context.Context, request StopJobNowRequestObject) (StopJobNowResponseObject, error)
 	// CreateJoinCode Make a one-time join code and the install commands
 	// (POST /api/v1/join-codes)
 	CreateJoinCode(ctx context.Context, request CreateJoinCodeRequestObject) (CreateJoinCodeResponseObject, error)
@@ -23430,6 +24297,15 @@ type StrictServerInterface interface {
 	// GetRunSavings How much sooner the run could have ended
 	// (GET /api/v1/runs/{runId}/savings)
 	GetRunSavings(ctx context.Context, request GetRunSavingsRequestObject) (GetRunSavingsResponseObject, error)
+	// GetRunTimer The run timer of a run attempt
+	// (GET /api/v1/runs/{runId}/timer)
+	GetRunTimer(ctx context.Context, request GetRunTimerRequestObject) (GetRunTimerResponseObject, error)
+	// CancelRunNow Cancel now, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/cancel-now)
+	CancelRunNow(ctx context.Context, request CancelRunNowRequestObject) (CancelRunNowResponseObject, error)
+	// ExtendRunTimer Extend 10 min, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/extend)
+	ExtendRunTimer(ctx context.Context, request ExtendRunTimerRequestObject) (ExtendRunTimerResponseObject, error)
 	// RestartService Restart the service after a drain
 	// (POST /api/v1/service/restart)
 	RestartService(ctx context.Context, request RestartServiceRequestObject) (RestartServiceResponseObject, error)
@@ -23475,6 +24351,15 @@ type StrictServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(ctx context.Context, request RedeemSetupLinkRequestObject) (RedeemSetupLinkResponseObject, error)
+	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+	// (GET /api/v1/timer-settings)
+	GetTimerSettings(ctx context.Context, request GetTimerSettingsRequestObject) (GetTimerSettingsResponseObject, error)
+	// PutTimerSettings Save timer settings
+	// (PUT /api/v1/timer-settings)
+	PutTimerSettings(ctx context.Context, request PutTimerSettingsRequestObject) (PutTimerSettingsResponseObject, error)
+	// CheckTimerSettings Check timer settings without saving them
+	// (POST /api/v1/timer-settings/check)
+	CheckTimerSettings(ctx context.Context, request CheckTimerSettingsRequestObject) (CheckTimerSettingsResponseObject, error)
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	// (GET /api/v1/update)
 	GetUpdateStatus(ctx context.Context, request GetUpdateStatusRequestObject) (GetUpdateStatusResponseObject, error)
@@ -25369,6 +26254,84 @@ func (sh *strictHandler) GetJobResources(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetJobResourcesResponseObject); ok {
 		if err := validResponse.VisitGetJobResourcesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetJobTimer operation middleware
+func (sh *strictHandler) GetJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request GetJobTimerRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetJobTimer(ctx, request.(GetJobTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetJobTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetJobTimerResponseObject); ok {
+		if err := validResponse.VisitGetJobTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExtendJobTimer operation middleware
+func (sh *strictHandler) ExtendJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request ExtendJobTimerRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExtendJobTimer(ctx, request.(ExtendJobTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExtendJobTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExtendJobTimerResponseObject); ok {
+		if err := validResponse.VisitExtendJobTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StopJobNow operation middleware
+func (sh *strictHandler) StopJobNow(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request StopJobNowRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StopJobNow(ctx, request.(StopJobNowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StopJobNow")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StopJobNowResponseObject); ok {
+		if err := validResponse.VisitStopJobNowResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -27870,6 +28833,87 @@ func (sh *strictHandler) GetRunSavings(w http.ResponseWriter, r *http.Request, r
 	}
 }
 
+// GetRunTimer operation middleware
+func (sh *strictHandler) GetRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params GetRunTimerParams) {
+	var request GetRunTimerRequestObject
+
+	request.RunId = runId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRunTimer(ctx, request.(GetRunTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRunTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunTimerResponseObject); ok {
+		if err := validResponse.VisitGetRunTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelRunNow operation middleware
+func (sh *strictHandler) CancelRunNow(w http.ResponseWriter, r *http.Request, runId TimerRunId, params CancelRunNowParams) {
+	var request CancelRunNowRequestObject
+
+	request.RunId = runId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelRunNow(ctx, request.(CancelRunNowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelRunNow")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CancelRunNowResponseObject); ok {
+		if err := validResponse.VisitCancelRunNowResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExtendRunTimer operation middleware
+func (sh *strictHandler) ExtendRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params ExtendRunTimerParams) {
+	var request ExtendRunTimerRequestObject
+
+	request.RunId = runId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExtendRunTimer(ctx, request.(ExtendRunTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExtendRunTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExtendRunTimerResponseObject); ok {
+		if err := validResponse.VisitExtendRunTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // RestartService operation middleware
 func (sh *strictHandler) RestartService(w http.ResponseWriter, r *http.Request, params RestartServiceParams) {
 	var request RestartServiceRequestObject
@@ -28281,6 +29325,92 @@ func (sh *strictHandler) RedeemSetupLink(w http.ResponseWriter, r *http.Request)
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RedeemSetupLinkResponseObject); ok {
 		if err := validResponse.VisitRedeemSetupLinkResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTimerSettings operation middleware
+func (sh *strictHandler) GetTimerSettings(w http.ResponseWriter, r *http.Request) {
+	var request GetTimerSettingsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTimerSettings(ctx, request.(GetTimerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTimerSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTimerSettingsResponseObject); ok {
+		if err := validResponse.VisitGetTimerSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutTimerSettings operation middleware
+func (sh *strictHandler) PutTimerSettings(w http.ResponseWriter, r *http.Request) {
+	var request PutTimerSettingsRequestObject
+
+	var body PutTimerSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutTimerSettings(ctx, request.(PutTimerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutTimerSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutTimerSettingsResponseObject); ok {
+		if err := validResponse.VisitPutTimerSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CheckTimerSettings operation middleware
+func (sh *strictHandler) CheckTimerSettings(w http.ResponseWriter, r *http.Request) {
+	var request CheckTimerSettingsRequestObject
+
+	var body CheckTimerSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CheckTimerSettings(ctx, request.(CheckTimerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CheckTimerSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CheckTimerSettingsResponseObject); ok {
+		if err := validResponse.VisitCheckTimerSettingsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

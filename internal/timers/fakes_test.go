@@ -123,7 +123,7 @@ func newRig() *rig {
 }
 
 func jobKey(id int64) JobKey {
-	return JobKey{RepoID: 7, Repo: "luis-mc/app", RunID: 900, Attempt: 1, JobID: id}
+	return JobKey{Repo: "luis-mc/app", RunID: 900, Attempt: 1, JobID: id}
 }
 
 func (r *rig) start(id int64) JobKey {

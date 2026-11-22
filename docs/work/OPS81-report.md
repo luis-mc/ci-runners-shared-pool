@@ -1,10 +1,32 @@
 # OPS81 report: crsp timers with a 30 s grace
 
-Branch OPS81-crsp-timers, from origin/main plus merge commits of OPS73 and OPS74.
+Branch OPS81-crsp-timers, from origin/main plus merge commits of OPS73 and OPS74 (kept as merge commits).
 
 ## Steps
-1. [done] Hold cap 2 min (`slots.MaxHoldMin`), machine default 2 min, timeout-minutes guideline 60 (doctor `runner.slots`, `workflow.timeout`).
-2. [done] `internal/timers`: settings, .crsp.yml override, grace engine, adapters, fake-clock tests.
-3. [done] Migration 00039 (tables job_clocks, run_clocks: ALTER on jobs/runs breaks sqlc struct casts in code OPS80 may touch), store, GitHub run cancel (needs App Actions: write, see notes). Agent stop: existing StopRunner via StopService.
-4. [todo] OpenAPI + codegen, handlers, audit.
-5. [todo] Specs, change notes, checks, draft PR, CI.
+1. [done] Hold cap 2 min (`slots.MaxHoldMin`, new constant), machine default 2 min, timeout-minutes guideline 60 (`runner.slots`, `workflow.timeout`).
+2. [done] `internal/timers`: settings + check-while-typing, `.crsp.yml` per-job override, grace engine (fake clock/agent/GitHub), adapters, API service.
+3. [done] Migration 00039, store, GitHub run cancel, scheduler lifecycle hook (job start = gate's first go), wiring in `cmd/crsp/timers_wiring.go`.
+4. [done] OpenAPI + codegen (no drift), handlers, authz table, API tests.
+5. [done] Scheduling spec (R5.99 to R5.106, R5.75, R5.1, R5.20, test table), doctor spec (R5.60, timeout row), change notes.
+6. [todo] Draft PR, CI run, loop to green.
+
+## Checks run
+- unit tests: timers, api, github, scheduler, store (with -race), doctor, insights, cmd/crsp: pass.
+- go vet linux and windows: clean. darwin: clean for every touched package; `cmd/crsp` darwin cannot be vetted on this Linux host because `fyne.io/systray` needs cgo (same on the base).
+- golangci-lint v2.15.0 on the whole tree: 0 issues. fast_guards: pass. codegen drift: none.
+- docs_check: only W1 (reports under docs/work on a branch; stripped at the join, by design).
+
+## Decisions and deviations (owner please read)
+- **Tables, not columns.** The clocks are in new tables `job_clocks` and `run_clocks` (migration 00039), not ALTER columns on `jobs` and `runs`: added columns change the sqlc row types that `internal/store/jobsdata.go` and `insights_jobs.go` convert between, and those files are shared with other work. The fields are the ones asked for. `repository_id` is 0 (the scheduler names a job by `owner/name`); the console joins by job id, run id and repository name.
+- **Agent stop-runner command already exists** (`StopRunner`, through `StopService` of the agent link). No new agent command; `timers.AgentAdapter` uses it. The runner ref is the runner's service name, looked up from the runners service at start.
+- **GitHub permission.** Cancelling a run needs the App's Actions permission at *write*; `github.RequiredPermissions` has `actions: read`. Not changed here (github-integration area, OPS80 territory). Until granted GitHub answers 403; the engine records `timer.run.cancel_failed`, retries every 30 s, and `github.ErrCancelNeedsWrite` names the cause. Needs an owner decision and an App permission re-accept.
+- **Job start** is the gate's first go (`scheduler.Lifecycle.JobStarted`, new `internal/scheduler/lifecycle.go`, small hooks in gate.go and release.go). The `.crsp.yml` per-job override is parsed (`timers.ParseFile`, `timers: jobs: {pattern: minutes}`), but nothing reads the file at job start yet: `Hook.LimitMin` is nil in the wiring. A repository file source belongs with the stack scan reader (OPS67/OPS80).
+- **Run end** (`Engine.RunEnded`) has no caller yet: it needs the run-completed webhook (OPS80 owns it). Until then a run clock only ends by the cancel or stays open.
+- **Extend for a run**: the brief says "once per job"; I gave the run the same single extension (`ExtendRun`, `POST /runs/{id}/timer/extend`). Easy to remove.
+- **Queued and start-up timers**: types, settings, `QueuedHandler`/`StartupHandler` interfaces and the sweeps `Engine.SweepQueued`/`SweepStartup`. Not wired: OPS80 supplies the handlers and calls the sweeps at the join. Queued and start-up durations of a job come in through `JobStart` from OPS80's code.
+- `workflow.timeout` lives in `internal/insights/workflows` (limit constant 30 to 60); I changed it and its tests, and the one stale "over 30" line in the ci-run-insights spec.
+- Requirement numbers R5.99 to R5.106 (the scheduling spec had none free from R5.99).
+- Commit trailers: none, as the brief says (no Co-Authored-By, no attribution).
+
+## Not done / follow-ups
+- Console screens (LOOK56), `.crsp.yml` source, run-end caller, queued/start-up handlers, App permission (see above).

@@ -10,7 +10,7 @@ import (
 // State of a clock.
 type State string
 
-// The states (scheduling R5.104).
+// The states (scheduling R5.100).
 const (
 	StateRunning State = "running"
 	StateGrace   State = "grace"
@@ -20,15 +20,13 @@ const (
 
 // RunKey names one run attempt.
 type RunKey struct {
-	RepoID  int64
-	Repo    string // owner/name
+	Repo    string // owner/name, as the scheduler names it
 	RunID   int64
 	Attempt int
 }
 
 // JobKey names one job of a run attempt. JobID is GitHub's job id.
 type JobKey struct {
-	RepoID  int64
 	Repo    string // owner/name
 	RunID   int64
 	Attempt int
@@ -36,7 +34,7 @@ type JobKey struct {
 }
 
 // Run is the run the job belongs to.
-func (k JobKey) Run() RunKey { return RunKey{k.RepoID, k.Repo, k.RunID, k.Attempt} }
+func (k JobKey) Run() RunKey { return RunKey{k.Repo, k.RunID, k.Attempt} }
 
 // Errors the actions answer with.
 var (
@@ -46,7 +44,7 @@ var (
 	ErrCovered      = errors.New("the run timer ran out too: cancel the run instead")
 )
 
-// Agent stops one job's runner: the container or the process (scheduling R5.104).
+// Agent stops one job's runner: the container or the process (scheduling R5.100).
 // Only that job ends.
 type Agent interface {
 	StopJobRunner(ctx context.Context, machineID, runnerRef string) error
@@ -57,7 +55,7 @@ type GitHub interface {
 	CancelRun(ctx context.Context, repo string, runID int64) error
 }
 
-// Event is one audit row of a timer (scheduling R5.106). Every timer action is
+// Event is one audit row of a timer (scheduling R5.102). Every timer action is
 // one, and each shows on the job and run records.
 type Event struct {
 	Action string // timer.job.grace, timer.job.stop, ...
@@ -82,7 +80,7 @@ type Store interface {
 }
 
 // JobClock is the stored form of a job's clock and the durations of its life
-// (scheduling R5.109).
+// (scheduling R5.105).
 type JobClock struct {
 	Key                  JobKey
 	MachineID, RunnerRef string
@@ -161,7 +159,7 @@ type QueuedItem struct {
 }
 
 // QueuedHandler alerts when a job waited longer than the queued timer, before
-// GitHub's 24 h cancel (scheduling R5.107). OPS80 supplies it.
+// GitHub's 24 h cancel (scheduling R5.103). OPS80 supplies it.
 type QueuedHandler interface {
 	QueuedTooLong(ctx context.Context, item QueuedItem, waited time.Duration) error
 }
@@ -175,7 +173,7 @@ type StartupItem struct {
 }
 
 // StartupHandler acts when a runner did not start its job in time: remove the
-// runner, admit the job again and alert (scheduling R5.107). OPS80 supplies it.
+// runner, admit the job again and alert (scheduling R5.103). OPS80 supplies it.
 type StartupHandler interface {
 	StartupTooLong(ctx context.Context, item StartupItem, waited time.Duration) error
 }

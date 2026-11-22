@@ -34,6 +34,8 @@ type Engine struct {
 	runnerClass func(machineID, runnerName string) string
 	forecastEnd func(machineID string, job slots.Job, start time.Time) (time.Time, bool)
 	zone        *time.Location
+	// lifecycleState reports job starts and ends to the timers (SetLifecycle).
+	lifecycleState
 	// factsState reports job facts to the Jobs section (SetFacts).
 	factsState
 }

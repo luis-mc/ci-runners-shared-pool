@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-// scheduling R5.104: the run cancel is POST /repos/{owner}/{repo}/actions/runs/{id}/cancel.
+// scheduling R5.100: the run cancel is POST /repos/{owner}/{repo}/actions/runs/{id}/cancel.
 func TestCancelWorkflowRun(t *testing.T) {
 	e := newEnv(t)
 	e.fake.AddInstall(10, "alice", "User")

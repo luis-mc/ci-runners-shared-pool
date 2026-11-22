@@ -7,7 +7,7 @@ import (
 
 func ip(n int) *int { return &n }
 
-// R5.103: the owner's defaults.
+// R5.99: the owner's defaults.
 func TestDefaults(t *testing.T) {
 	d := Defaults()
 	if d.JobMin != 30 || d.RunMin != 45 || d.HoldMin != 2 || d.TimeoutMin != 60 || d.QueuedMin != 720 || d.StartupMin != 2 {
@@ -18,7 +18,7 @@ func TestDefaults(t *testing.T) {
 	}
 }
 
-// R5.108: whole minutes above 0, the hold within its cap, job below run.
+// R5.104: whole minutes above 0, the hold within its cap, job below run.
 func TestSettingsValidation(t *testing.T) {
 	cases := []struct {
 		name string
@@ -45,7 +45,7 @@ func TestSettingsValidation(t *testing.T) {
 	}
 }
 
-// R5.108: a saved set that does not validate never reaches a timer.
+// R5.104: a saved set that does not validate never reaches a timer.
 func TestParseKeepsDefaultsForABadSet(t *testing.T) {
 	if got := Parse(""); got != Defaults() {
 		t.Fatalf("empty %+v", got)
@@ -63,7 +63,7 @@ func TestParseKeepsDefaultsForABadSet(t *testing.T) {
 	}
 }
 
-// R5.103: the .crsp.yml override per job.
+// R5.99: the .crsp.yml override per job.
 func TestFileLimits(t *testing.T) {
 	f := ParseFile([]byte("sizes: {a: heavy}\ntimers:\n  jobs:\n    integration-*: 40\n    smoke: 5\n    bad: 0\n    worse: soon\n"))
 	if len(f.Errors) != 2 {

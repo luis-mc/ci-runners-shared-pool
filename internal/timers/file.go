@@ -10,7 +10,7 @@ import (
 )
 
 // FileLimits are the per-job job timers of a repository's .crsp.yml (scheduling
-// R5.103):
+// R5.99):
 //
 //	timers:
 //	  jobs:

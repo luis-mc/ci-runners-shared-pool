@@ -12,7 +12,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights"
 )
 
-// MaxTimeoutMinutes is the guideline for a job's timeout-minutes: a safety net only, because crsp's own job and run timers end a job first (scheduling R5.103).
+// MaxTimeoutMinutes is the guideline for a job's timeout-minutes: a safety net only, because crsp's own job and run timers end a job first (scheduling R5.99).
 const MaxTimeoutMinutes = 60
 
 // AllChecks lists every check ID, in the order Check reports them.
