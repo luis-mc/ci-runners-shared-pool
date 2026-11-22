@@ -93,6 +93,8 @@ type Options struct {
 	RunnerClasses RunnerClassService
 	// Timers serves the timer settings and the grace actions (handlers_timers.go, scheduling R5.99 to R5.106). Nil answers 501.
 	Timers TimerService
+	// Health serves machine health, job stats and the health thresholds (handlers_machinehealth.go, OPS83). Nil answers 501.
+	Health HealthService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService

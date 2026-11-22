@@ -1659,6 +1659,117 @@ paths:
                 $ref: '#/components/schemas/AssignLeaseList'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/health:
+    get:
+      operationId: getMachineHealth
+      x-cli: none
+      x-cli-reason: 'Later: machine detail commands (cli open question 7).'
+      tags: [machines]
+      summary: The health of one machine
+      description: >-
+        machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of
+        date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its
+        `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+      responses:
+        '200':
+          description: The health.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachineHealth'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/job-stats:
+    get:
+      operationId: getMachineJobStats
+      x-cli: none
+      x-cli-reason: 'Later: machine detail commands (cli open question 7).'
+      tags: [machines]
+      summary: Job stats of one machine and of its runners
+      description: machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/StatsWindow'
+      responses:
+        '200':
+          description: The stats.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachineJobStats'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runners/{runnerId}/job-stats:
+    get:
+      operationId: getRunnerJobStats
+      x-cli: none
+      x-cli-reason: 'Later: runner detail commands (cli open question 7).'
+      tags: [runners]
+      summary: Job stats of one runner
+      description: machines R5.78, R5.79.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RunnerId'
+        - $ref: '#/components/parameters/StatsWindow'
+      responses:
+        '200':
+          description: The stats.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerJobStats'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/health-thresholds:
+    get:
+      operationId: getHealthThresholds
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [doctor]
+      summary: The limits of the machine health checks
+      description: doctor R5.66.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The limits in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthThresholds'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putHealthThresholds
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [doctor]
+      summary: Change the limits of the machine health checks
+      description: doctor R5.66. A value outside its range is refused with the range.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthThresholds'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthThresholds'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/machines/{machineId}/slots:
     get:
       operationId: listSlots
@@ -5331,6 +5442,15 @@ components:
       required: true
       schema:
         type: string
+    StatsWindow:
+      name: window
+      in: query
+      required: false
+      description: The window of the stats, 24h (default) or 7d.
+      schema:
+        type: string
+        enum: [24h, 7d]
+        default: 24h
     MachineId:
       name: machineId
       in: path
@@ -11806,3 +11926,339 @@ components:
         cpu_p90_cores: { type: number }
         memory_p90_bytes: { type: integer, format: int64 }
         measured: { type: boolean, description: 'True from 5 good runs on.' }
+    HealthThresholds:
+      type: object
+      required:
+        [
+          disk_days_under,
+          disk_free_pct_under,
+          no_heartbeat_seconds,
+          clock_skew_seconds,
+          oom_window_minutes,
+        ]
+      properties:
+        disk_days_under:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 365,
+            description: 'A disk that fills in fewer days is a finding (default 3).',
+          }
+        disk_free_pct_under:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 90,
+            description: 'A disk with less free space is a finding (default 10).',
+          }
+        no_heartbeat_seconds:
+          {
+            type: integer,
+            minimum: 30,
+            maximum: 3600,
+            description: 'No heartbeat for this long is a finding (default 120).',
+          }
+        clock_skew_seconds:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 3600,
+            description: 'A clock this far from the controller is a finding (default 30).',
+          }
+        oom_window_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 1440,
+            description: 'An OOM kill this recent is a finding (default 60).',
+          }
+    MachineHealth:
+      type: object
+      required: [machine_id, reported, stale, volumes]
+      description: A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
+      properties:
+        machine_id: { type: string }
+        reported:
+          {
+            type: boolean,
+            description: 'False until the first report arrives; every other field is absent then.',
+          }
+        received_at: { type: string, format: date-time }
+        stale: { type: boolean, description: 'The last report is older than 3 minutes.' }
+        boot: { $ref: '#/components/schemas/HealthBoot' }
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthVolume'
+        swap: { $ref: '#/components/schemas/HealthSwap' }
+        oom: { $ref: '#/components/schemas/HealthOom' }
+        connectivity: { $ref: '#/components/schemas/HealthConnectivity' }
+        versions: { $ref: '#/components/schemas/HealthVersions' }
+        updates: { $ref: '#/components/schemas/HealthUpdates' }
+        power: { $ref: '#/components/schemas/HealthPower' }
+        docker_use: { $ref: '#/components/schemas/HealthDockerUse' }
+        thermal: { $ref: '#/components/schemas/HealthThermal' }
+        load: { $ref: '#/components/schemas/HealthLoad' }
+    HealthBoot:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        uptime_seconds: { type: integer, format: int64 }
+        last_boot_at: { type: string, format: date-time }
+        unexpected_restart:
+          {
+            type: boolean,
+            description: 'Booted in the last 24 hours without a restart crsp asked for.',
+          }
+    HealthVolume:
+      type: object
+      required: [role, path]
+      properties:
+        role: { type: string, enum: [system, data_dir, docker, runner_work] }
+        path: { type: string }
+        unknown_reason: { type: string }
+        total_bytes: { type: integer, format: int64 }
+        free_bytes: { type: integer, format: int64 }
+        free_pct: { type: number }
+        days_until_full:
+          {
+            type: number,
+            description: 'From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.',
+          }
+        days_note: { type: string, description: 'Why days_until_full is absent.' }
+    HealthSwap:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        total_bytes: { type: integer, format: int64 }
+        used_bytes: { type: integer, format: int64 }
+    HealthOomScope:
+      type: object
+      required: [scope, name, kills]
+      properties:
+        scope: { type: string, enum: [pool, job] }
+        name: { type: string }
+        kills: { type: integer, format: int64 }
+    HealthOom:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        total_kills: { type: integer, format: int64 }
+        last_kill_at: { type: string, format: date-time }
+        recent:
+          {
+            type: boolean,
+            description: 'A kill inside the Doctor window (default 1 hour).',
+          }
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthOomScope'
+    HealthGithub:
+      type: object
+      properties:
+        reachable: { type: boolean }
+        latency_ms: { type: integer, format: int64 }
+        checked_at: { type: string, format: date-time }
+        error: { type: string }
+    HealthDns:
+      type: object
+      properties:
+        ok: { type: boolean }
+        error: { type: string }
+    HealthConnectivity:
+      type: object
+      properties:
+        rtt_ms:
+          {
+            type: integer,
+            format: int64,
+            description: 'Agent to controller round trip, from the heartbeats.',
+          }
+        last_heartbeat_at: { type: string, format: date-time }
+        reconnects_24h: { type: integer }
+        clock_skew_seconds:
+          {
+            type: number,
+            description: 'Agent clock minus controller clock; positive means the agent is ahead.',
+          }
+        github: { $ref: '#/components/schemas/HealthGithub' }
+        dns: { $ref: '#/components/schemas/HealthDns' }
+    HealthVersions:
+      type: object
+      properties:
+        agent: { type: string }
+        controller: { type: string }
+        agent_out_of_date: { type: boolean }
+        runner_app: { type: string, description: 'The oldest runner app on the machine.' }
+        latest_runner: { type: string }
+        runner_out_of_date: { type: boolean }
+        docker_kind: { type: string }
+        docker: { type: string }
+        wsl: { type: string }
+    HealthUpdates:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        restart_pending: { type: boolean }
+        restart_reasons: { type: array, items: { type: string } }
+        pending_update_count: { type: integer }
+        active_hours_start:
+          {
+            type: integer,
+            description: 'Windows Update active hours, local hour 0 to 23.',
+          }
+        active_hours_end: { type: integer }
+        auto_update_state: { type: string }
+        restart_may_happen_now:
+          { type: boolean, description: 'A restart is pending and the OS may do it now.' }
+        restart_may_hit_jobs:
+          {
+            type: boolean,
+            description: 'It may happen now and the machine runs or takes jobs.',
+          }
+    HealthPower:
+      type: object
+      properties:
+        on_battery: { type: boolean }
+        source_unknown_reason: { type: string }
+        sleep_enabled:
+          {
+            type: boolean,
+            description: 'A setting can suspend or hibernate the machine.',
+          }
+        sleep_modes: { type: array, items: { type: string } }
+        sleep_unknown_reason: { type: string }
+        last_wake_at: { type: string, format: date-time }
+    HealthDockerUse:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        images_bytes: { type: integer, format: int64 }
+        build_cache_bytes: { type: integer, format: int64 }
+        volumes_bytes: { type: integer, format: int64 }
+        containers_bytes: { type: integer, format: int64 }
+        read_at: { type: string, format: date-time }
+    HealthThermal:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        max_temp_celsius: { type: number }
+        throttled: { type: boolean }
+        throttle_detail: { type: string }
+    HealthLoad:
+      type: object
+      properties:
+        load_unknown_reason: { type: string }
+        load1: { type: number }
+        load5: { type: number }
+        load15: { type: number }
+        steal_unknown_reason: { type: string }
+        steal_pct: { type: number }
+    JobStatsCounts:
+      type: object
+      required:
+        [succeeded, failed, cancelled, timed_out, over_memory, stopped, other, total]
+      properties:
+        succeeded: { type: integer, format: int64 }
+        failed: { type: integer, format: int64 }
+        cancelled: { type: integer, format: int64 }
+        timed_out:
+          {
+            type: integer,
+            format: int64,
+            description: 'Ended by the crsp job timer, or by GitHub as timed out.',
+          }
+        over_memory: { type: integer, format: int64 }
+        stopped:
+          {
+            type: integer,
+            format: int64,
+            description: 'Stopped by crsp (a drain, a Stop, a removal).',
+          }
+        other:
+          {
+            type: integer,
+            format: int64,
+            description: 'No known result (a job crsp lost).',
+          }
+        total: { type: integer, format: int64 }
+    JobStatsRates:
+      type: object
+      description: The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+      properties:
+        succeeded: { type: number }
+        failed: { type: number }
+        cancelled: { type: number }
+        timed_out: { type: number }
+        over_memory: { type: number }
+        stopped: { type: number }
+    JobStatsFailure:
+      type: object
+      required: [job_id, repository, job, run_id, class, at]
+      properties:
+        job_id: { type: integer, format: int64 }
+        repository: { type: string }
+        job: { type: string }
+        run_id: { type: integer, format: int64 }
+        class: { type: string, enum: [failed, timed_out, over_memory, stopped] }
+        at: { type: string, format: date-time }
+        job_url: { type: string }
+        run_url: { type: string }
+    JobStatsFailingJob:
+      type: object
+      required: [repository, job, failures, last_at]
+      properties:
+        repository: { type: string }
+        job: { type: string }
+        failures: { type: integer, format: int64 }
+        last_at: { type: string, format: date-time }
+    JobStatsSet:
+      type: object
+      required: [counts, top_failing]
+      properties:
+        counts: { $ref: '#/components/schemas/JobStatsCounts' }
+        rates: { $ref: '#/components/schemas/JobStatsRates' }
+        avg_run_seconds:
+          { type: number, description: 'Absent when no job in the window has times.' }
+        avg_queue_wait_seconds: { type: number }
+        busy_seconds:
+          { type: number, description: 'Time jobs ran inside the window, summed.' }
+        busy_pct:
+          {
+            type: number,
+            description: 'Busy seconds over the window times the slots (a runner has one), 0 to 100.',
+          }
+        last_failure: { $ref: '#/components/schemas/JobStatsFailure' }
+        top_failing:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobStatsFailingJob'
+    RunnerJobStatsEntry:
+      type: object
+      required: [runner_id, runner_name, stats]
+      properties:
+        runner_id: { type: string }
+        runner_name: { type: string }
+        stats: { $ref: '#/components/schemas/JobStatsSet' }
+    MachineJobStats:
+      type: object
+      required: [window, from, to, machine, runners]
+      properties:
+        window: { type: string, enum: [24h, 7d] }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        machine: { $ref: '#/components/schemas/JobStatsSet' }
+        runners:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunnerJobStatsEntry'
+    RunnerJobStats:
+      type: object
+      required: [window, from, to, runner_id, stats]
+      properties:
+        window: { type: string, enum: [24h, 7d] }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        runner_id: { type: string }
+        stats: { $ref: '#/components/schemas/JobStatsSet' }

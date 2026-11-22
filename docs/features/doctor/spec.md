@@ -229,6 +229,22 @@ States:
 
 **R5.65** (M1, Built OPS75; runners R5.119; owner decision 21 Nov "tool store") — **`runner.tools.plan`: the runner's tool store lacks a tool its workflows use.** For each persistent runner on a machine with a tool store (Windows, macOS) the agent compares the tool plan of the runner's repository (runners R5.110) with the store and reports one item per tool and version. `warn` when something is missing: the title is "r1 lacks rust 1.85, which the workflow uses", the detail names what the store has, and the fix says the next job that needs it installs it first (so it starts late and fails if the install fails), to let the agent install it by running a job, or to change the version in the workflow, a version file or `.crsp.yml` `tools:`. A missing Xcode is the exception (owner answer 22 Nov: the owner installs Xcode, the runner never downloads it): the item carries a hint, and the detail and fix say which Xcode to install in `/Applications` (for example Xcode 16.2 as `Xcode-16.2.app`) and that a job that needs it fails until then. `ok` when every tool is there. `skip` when the plan could not be made (the reason is in the detail). A runner whose agent reported no plan (Linux, an older agent) and an offline machine have no finding. The doctor reads only and installs nothing. NOT YET IMPLEMENTED: the agent link carrying `agent.ToolPlanReport` into `doctor.Runner.ToolPlan`.
 
+**R5.65** (M1, built OPS83; machines R5.72 to R5.77; owner decision 22 Nov) — **Machine health checks: what needs the owner.** Nine checks read the last HealthReport of each online machine through the optional `doctor.HealthFleet` (the controller registers them with `checks.HealthChecks()`, like the KVM checks). A machine that never reported, an offline machine and a failing source are `skip`, never a guess. An unknown value (the OS cannot give it) is a `skip` with the reason, never a pass.
+
+| Check | Finding | Severity |
+|---|---|---|
+| `machine.health.disk` | a volume is full in fewer than N days (trend of the last 24 h) or has under N % free (defaults 3 days, 10 %) | fail |
+| `machine.health.restart` | a restart is pending and may start while jobs run (machines R5.76) | warn |
+| `machine.health.sleep` | a sleep or hibernate setting can suspend a pool machine | warn |
+| `machine.health.battery` | the machine runs on battery | warn |
+| `machine.health.clock` | the clock is more than N s from the controller's (default 30) | warn |
+| `machine.health.versions` | the agent or a runner app is out of date (machines R5.77) | warn |
+| `machine.health.heartbeat` | no heartbeat for N s (default 120); it reads the last message, so it also works for an offline machine | fail |
+| `machine.health.oom` | an OOM kill inside the last N minutes (default 60) | warn |
+| `machine.health.throttle` | the CPU is throttled by heat | warn |
+
+**R5.66** (M1, built OPS83) — **The limits are editable settings.** `disk_days_under`, `disk_free_pct_under`, `no_heartbeat_seconds`, `clock_skew_seconds` and `oom_window_minutes` are one settings row (`health_thresholds`) with a range each; `GET` and `PUT /api/v1/health-thresholds` read and change it (`PUT` needs an admin; a value out of range is a 400 with the range). A missing or damaged row gives the defaults.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Speed: a full run over 10 machines, 50 runners and 100 repositories ends within 60 s. Each check has a timeout: default 10 s, ceiling 60 s. A quick run ends within 10 s. NOT YET IMPLEMENTED.
@@ -558,6 +574,8 @@ Rows that name a file without "planned" are built (CRSP23). Planned rows are NOT
 | R5.64 | `internal/doctor/checks/poolmemory_test.go` TestPoolMemoryFinding, TestPoolMemoryOfflineMachineIsSkipped; `internal/doctor/wire/wire_test.go` (53 core checks) |
 | R5.65 | `internal/doctor/checks/runnertools_test.go` TestRunnerToolsPlan, TestRunnerToolsPlanSaysWhichXcodeToInstall |
 | R5.65 | `internal/doctor/checks/timers_test.go` TestTimersMode |
+| R5.65 | `internal/doctor/checks/health_test.go` TestHealthDisk, TestHealthRestartSleepBattery, TestHealthClockVersionsOOMThrottle, TestHealthHeartbeat, TestHealthSkips, TestHealthChecksAreNineAndNotInRegister; `cmd/crsp/health_wiring_test.go` TestDoctorHealthMapping | built (OPS83) |
+| R5.66 | `internal/machinehealth/service_test.go` TestThresholds; `internal/api/handlers_machinehealth_test.go` TestHealthThresholdsRoutes; `internal/doctor/checks/health_test.go` TestHealthDisk (the limit is read from the settings) | built (OPS83) |
 
 ## 10. Decisions
 

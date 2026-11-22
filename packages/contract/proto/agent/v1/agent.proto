@@ -128,6 +128,8 @@ message SessionRequest {
     BuildReport build_report = 30;
     // CIX8: CPU and memory per running job (ci-run-insights R5.19). Protocol version 4.
     JobResourceSamples job_resource_samples = 31;
+    // OPS83: machine health, sent every minute and with Hello (machines R5.72).
+    HealthReport health_report = 32;
   }
 }
 
@@ -1295,4 +1297,158 @@ message JobResourceSample {
   // Resident memory of the job, in bytes.
   int64 memory_bytes = 3;
   bool known = 4;
+}
+
+// ---------------------------------------------------------------- machine health (OPS83)
+
+// HealthReport is what the agent reads of the machine's own health (machines
+// R5.72 to R5.77). The cheap sections are read every minute; slow ones (OS
+// updates, Docker disk use, GitHub reachability) are read off the hot path at
+// their own pace and repeated from the last read. A value an OS cannot give is
+// sent with known=false and an unknown_reason, never as 0.
+message HealthReport {
+  int64 sampled_at_unix_ms = 1;
+  BootHealth boot = 2;
+  repeated VolumeHealth volumes = 3;
+  SwapHealth swap = 4;
+  OomHealth oom = 5;
+  ConnectivityHealth connectivity = 6;
+  VersionHealth versions = 7;
+  UpdateHealth updates = 8;
+  PowerHealth power = 9;
+  DockerUseHealth docker_use = 10;
+  ThermalHealth thermal = 11;
+  LoadAverageHealth load_average = 12;
+}
+
+message BootHealth {
+  bool known = 1;
+  string unknown_reason = 2;
+  int64 uptime_seconds = 3;
+  int64 last_boot_unix_ms = 4;
+  // True when the machine booted without a shutdown or restart crsp asked for.
+  bool unexpected_restart = 5;
+}
+
+// VolumeHealth is the free space of one relevant volume. role is system,
+// data_dir, docker or runner_work.
+message VolumeHealth {
+  string role = 1;
+  string path = 2;
+  bool known = 3;
+  string unknown_reason = 4;
+  int64 total_bytes = 5;
+  int64 free_bytes = 6;
+}
+
+message SwapHealth {
+  bool known = 1;
+  string unknown_reason = 2;
+  int64 total_bytes = 3;
+  int64 used_bytes = 4;
+}
+
+// OomHealth counts out-of-memory kills. scope is pool or job.
+message OomHealth {
+  bool known = 1;
+  string unknown_reason = 2;
+  int64 total_kills = 3;
+  int64 last_kill_unix_ms = 4;
+  repeated OomScope scopes = 5;
+}
+
+message OomScope {
+  string scope = 1;
+  string name = 2;
+  int64 kills = 3;
+}
+
+message ConnectivityHealth {
+  bool rtt_known = 1;
+  int64 rtt_ms = 2;
+  int64 last_heartbeat_unix_ms = 3;
+  int32 reconnects_24h = 4;
+  bool github_known = 5;
+  bool github_reachable = 6;
+  int64 github_latency_ms = 7;
+  int64 github_checked_unix_ms = 8;
+  string github_error = 9;
+  bool dns_known = 10;
+  bool dns_ok = 11;
+  string dns_error = 12;
+  bool skew_known = 13;
+  // Agent clock minus controller clock, in seconds; positive means the agent is ahead.
+  double clock_skew_seconds = 14;
+}
+
+message VersionHealth {
+  string agent_version = 1;
+  string runner_app_version = 2;
+  // Docker engine or WSL version; empty when none.
+  string docker_version = 3;
+  string docker_kind = 4;
+  string wsl_version = 5;
+}
+
+// UpdateHealth is the restart and OS update state (slow, read at most hourly).
+message UpdateHealth {
+  bool known = 1;
+  string unknown_reason = 2;
+  bool restart_pending = 3;
+  repeated string restart_reasons = 4;
+  bool update_count_known = 5;
+  int32 pending_update_count = 6;
+  // Windows Update active hours as local hours 0 to 23; a restart is not
+  // started inside them.
+  bool active_hours_known = 7;
+  int32 active_hours_start = 8;
+  int32 active_hours_end = 9;
+  // Whether the OS may restart by itself while jobs run.
+  bool auto_restart_possible = 10;
+  string auto_update_state = 11;
+  // True when the OS may restart by itself now: automatic restart is on and
+  // the time is outside the active hours.
+  bool restart_allowed_now = 12;
+}
+
+message PowerHealth {
+  bool source_known = 1;
+  string source_unknown_reason = 2;
+  bool on_battery = 3;
+  bool sleep_known = 4;
+  string sleep_unknown_reason = 5;
+  // True when a setting can suspend or hibernate the machine.
+  bool sleep_enabled = 6;
+  repeated string sleep_modes = 7;
+  bool wake_known = 8;
+  int64 last_wake_unix_ms = 9;
+}
+
+message DockerUseHealth {
+  bool known = 1;
+  string unknown_reason = 2;
+  int64 images_bytes = 3;
+  int64 build_cache_bytes = 4;
+  int64 volumes_bytes = 5;
+  int64 containers_bytes = 6;
+  int64 read_unix_ms = 7;
+}
+
+message ThermalHealth {
+  bool known = 1;
+  string unknown_reason = 2;
+  double max_temp_celsius = 3;
+  bool throttled = 4;
+  string throttle_detail = 5;
+}
+
+message LoadAverageHealth {
+  bool load_known = 1;
+  string load_unknown_reason = 2;
+  double load1 = 3;
+  double load5 = 4;
+  double load15 = 5;
+  bool steal_known = 6;
+  string steal_unknown_reason = 7;
+  double steal_pct = 8;
 }

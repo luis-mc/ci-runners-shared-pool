@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
 	"strconv"
 	"strings"
 	"time"
@@ -325,6 +326,8 @@ type doctorFleet struct {
 	runners  runners.Store
 	repos    repos.Store
 	rsvc     *repos.Service
+	// health is the machine health service (OPS83); nil makes the health checks skip.
+	health *machinehealth.Service
 }
 
 func (f doctorFleet) Machines(ctx context.Context) ([]doctor.Machine, error) {

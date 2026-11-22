@@ -819,6 +819,7 @@ type SessionRequest struct {
 	//	*SessionRequest_PullReport
 	//	*SessionRequest_BuildReport
 	//	*SessionRequest_JobResourceSamples
+	//	*SessionRequest_HealthReport
 	Message       isSessionRequest_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1122,6 +1123,15 @@ func (x *SessionRequest) GetJobResourceSamples() *JobResourceSamples {
 	return nil
 }
 
+func (x *SessionRequest) GetHealthReport() *HealthReport {
+	if x != nil {
+		if x, ok := x.Message.(*SessionRequest_HealthReport); ok {
+			return x.HealthReport
+		}
+	}
+	return nil
+}
+
 type isSessionRequest_Message interface {
 	isSessionRequest_Message()
 }
@@ -1251,6 +1261,11 @@ type SessionRequest_JobResourceSamples struct {
 	JobResourceSamples *JobResourceSamples `protobuf:"bytes,31,opt,name=job_resource_samples,json=jobResourceSamples,proto3,oneof"`
 }
 
+type SessionRequest_HealthReport struct {
+	// OPS83: machine health, sent every minute and with Hello (machines R5.72).
+	HealthReport *HealthReport `protobuf:"bytes,32,opt,name=health_report,json=healthReport,proto3,oneof"`
+}
+
 func (*SessionRequest_Hello) isSessionRequest_Message() {}
 
 func (*SessionRequest_Heartbeat) isSessionRequest_Message() {}
@@ -1308,6 +1323,8 @@ func (*SessionRequest_PullReport) isSessionRequest_Message() {}
 func (*SessionRequest_BuildReport) isSessionRequest_Message() {}
 
 func (*SessionRequest_JobResourceSamples) isSessionRequest_Message() {}
+
+func (*SessionRequest_HealthReport) isSessionRequest_Message() {}
 
 // SessionResponse is one message from the controller.
 type SessionResponse struct {
@@ -8437,6 +8454,1252 @@ func (x *JobResourceSample) GetKnown() bool {
 	return false
 }
 
+// HealthReport is what the agent reads of the machine's own health (machines
+// R5.72 to R5.77). The cheap sections are read every minute; slow ones (OS
+// updates, Docker disk use, GitHub reachability) are read off the hot path at
+// their own pace and repeated from the last read. A value an OS cannot give is
+// sent with known=false and an unknown_reason, never as 0.
+type HealthReport struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	SampledAtUnixMs int64                  `protobuf:"varint,1,opt,name=sampled_at_unix_ms,json=sampledAtUnixMs,proto3" json:"sampled_at_unix_ms,omitempty"`
+	Boot            *BootHealth            `protobuf:"bytes,2,opt,name=boot,proto3" json:"boot,omitempty"`
+	Volumes         []*VolumeHealth        `protobuf:"bytes,3,rep,name=volumes,proto3" json:"volumes,omitempty"`
+	Swap            *SwapHealth            `protobuf:"bytes,4,opt,name=swap,proto3" json:"swap,omitempty"`
+	Oom             *OomHealth             `protobuf:"bytes,5,opt,name=oom,proto3" json:"oom,omitempty"`
+	Connectivity    *ConnectivityHealth    `protobuf:"bytes,6,opt,name=connectivity,proto3" json:"connectivity,omitempty"`
+	Versions        *VersionHealth         `protobuf:"bytes,7,opt,name=versions,proto3" json:"versions,omitempty"`
+	Updates         *UpdateHealth          `protobuf:"bytes,8,opt,name=updates,proto3" json:"updates,omitempty"`
+	Power           *PowerHealth           `protobuf:"bytes,9,opt,name=power,proto3" json:"power,omitempty"`
+	DockerUse       *DockerUseHealth       `protobuf:"bytes,10,opt,name=docker_use,json=dockerUse,proto3" json:"docker_use,omitempty"`
+	Thermal         *ThermalHealth         `protobuf:"bytes,11,opt,name=thermal,proto3" json:"thermal,omitempty"`
+	LoadAverage     *LoadAverageHealth     `protobuf:"bytes,12,opt,name=load_average,json=loadAverage,proto3" json:"load_average,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *HealthReport) Reset() {
+	*x = HealthReport{}
+	mi := &file_agent_v1_agent_proto_msgTypes[81]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *HealthReport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*HealthReport) ProtoMessage() {}
+
+func (x *HealthReport) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[81]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use HealthReport.ProtoReflect.Descriptor instead.
+func (*HealthReport) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{81}
+}
+
+func (x *HealthReport) GetSampledAtUnixMs() int64 {
+	if x != nil {
+		return x.SampledAtUnixMs
+	}
+	return 0
+}
+
+func (x *HealthReport) GetBoot() *BootHealth {
+	if x != nil {
+		return x.Boot
+	}
+	return nil
+}
+
+func (x *HealthReport) GetVolumes() []*VolumeHealth {
+	if x != nil {
+		return x.Volumes
+	}
+	return nil
+}
+
+func (x *HealthReport) GetSwap() *SwapHealth {
+	if x != nil {
+		return x.Swap
+	}
+	return nil
+}
+
+func (x *HealthReport) GetOom() *OomHealth {
+	if x != nil {
+		return x.Oom
+	}
+	return nil
+}
+
+func (x *HealthReport) GetConnectivity() *ConnectivityHealth {
+	if x != nil {
+		return x.Connectivity
+	}
+	return nil
+}
+
+func (x *HealthReport) GetVersions() *VersionHealth {
+	if x != nil {
+		return x.Versions
+	}
+	return nil
+}
+
+func (x *HealthReport) GetUpdates() *UpdateHealth {
+	if x != nil {
+		return x.Updates
+	}
+	return nil
+}
+
+func (x *HealthReport) GetPower() *PowerHealth {
+	if x != nil {
+		return x.Power
+	}
+	return nil
+}
+
+func (x *HealthReport) GetDockerUse() *DockerUseHealth {
+	if x != nil {
+		return x.DockerUse
+	}
+	return nil
+}
+
+func (x *HealthReport) GetThermal() *ThermalHealth {
+	if x != nil {
+		return x.Thermal
+	}
+	return nil
+}
+
+func (x *HealthReport) GetLoadAverage() *LoadAverageHealth {
+	if x != nil {
+		return x.LoadAverage
+	}
+	return nil
+}
+
+type BootHealth struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Known          bool                   `protobuf:"varint,1,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason  string                 `protobuf:"bytes,2,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	UptimeSeconds  int64                  `protobuf:"varint,3,opt,name=uptime_seconds,json=uptimeSeconds,proto3" json:"uptime_seconds,omitempty"`
+	LastBootUnixMs int64                  `protobuf:"varint,4,opt,name=last_boot_unix_ms,json=lastBootUnixMs,proto3" json:"last_boot_unix_ms,omitempty"`
+	// True when the machine booted without a shutdown or restart crsp asked for.
+	UnexpectedRestart bool `protobuf:"varint,5,opt,name=unexpected_restart,json=unexpectedRestart,proto3" json:"unexpected_restart,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *BootHealth) Reset() {
+	*x = BootHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[82]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *BootHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*BootHealth) ProtoMessage() {}
+
+func (x *BootHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[82]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use BootHealth.ProtoReflect.Descriptor instead.
+func (*BootHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{82}
+}
+
+func (x *BootHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *BootHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *BootHealth) GetUptimeSeconds() int64 {
+	if x != nil {
+		return x.UptimeSeconds
+	}
+	return 0
+}
+
+func (x *BootHealth) GetLastBootUnixMs() int64 {
+	if x != nil {
+		return x.LastBootUnixMs
+	}
+	return 0
+}
+
+func (x *BootHealth) GetUnexpectedRestart() bool {
+	if x != nil {
+		return x.UnexpectedRestart
+	}
+	return false
+}
+
+// VolumeHealth is the free space of one relevant volume. role is system,
+// data_dir, docker or runner_work.
+type VolumeHealth struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Role          string                 `protobuf:"bytes,1,opt,name=role,proto3" json:"role,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	Known         bool                   `protobuf:"varint,3,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason string                 `protobuf:"bytes,4,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	TotalBytes    int64                  `protobuf:"varint,5,opt,name=total_bytes,json=totalBytes,proto3" json:"total_bytes,omitempty"`
+	FreeBytes     int64                  `protobuf:"varint,6,opt,name=free_bytes,json=freeBytes,proto3" json:"free_bytes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VolumeHealth) Reset() {
+	*x = VolumeHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[83]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VolumeHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VolumeHealth) ProtoMessage() {}
+
+func (x *VolumeHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[83]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VolumeHealth.ProtoReflect.Descriptor instead.
+func (*VolumeHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{83}
+}
+
+func (x *VolumeHealth) GetRole() string {
+	if x != nil {
+		return x.Role
+	}
+	return ""
+}
+
+func (x *VolumeHealth) GetPath() string {
+	if x != nil {
+		return x.Path
+	}
+	return ""
+}
+
+func (x *VolumeHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *VolumeHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *VolumeHealth) GetTotalBytes() int64 {
+	if x != nil {
+		return x.TotalBytes
+	}
+	return 0
+}
+
+func (x *VolumeHealth) GetFreeBytes() int64 {
+	if x != nil {
+		return x.FreeBytes
+	}
+	return 0
+}
+
+type SwapHealth struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Known         bool                   `protobuf:"varint,1,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason string                 `protobuf:"bytes,2,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	TotalBytes    int64                  `protobuf:"varint,3,opt,name=total_bytes,json=totalBytes,proto3" json:"total_bytes,omitempty"`
+	UsedBytes     int64                  `protobuf:"varint,4,opt,name=used_bytes,json=usedBytes,proto3" json:"used_bytes,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SwapHealth) Reset() {
+	*x = SwapHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[84]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SwapHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SwapHealth) ProtoMessage() {}
+
+func (x *SwapHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[84]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SwapHealth.ProtoReflect.Descriptor instead.
+func (*SwapHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{84}
+}
+
+func (x *SwapHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *SwapHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *SwapHealth) GetTotalBytes() int64 {
+	if x != nil {
+		return x.TotalBytes
+	}
+	return 0
+}
+
+func (x *SwapHealth) GetUsedBytes() int64 {
+	if x != nil {
+		return x.UsedBytes
+	}
+	return 0
+}
+
+// OomHealth counts out-of-memory kills. scope is pool or job.
+type OomHealth struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Known          bool                   `protobuf:"varint,1,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason  string                 `protobuf:"bytes,2,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	TotalKills     int64                  `protobuf:"varint,3,opt,name=total_kills,json=totalKills,proto3" json:"total_kills,omitempty"`
+	LastKillUnixMs int64                  `protobuf:"varint,4,opt,name=last_kill_unix_ms,json=lastKillUnixMs,proto3" json:"last_kill_unix_ms,omitempty"`
+	Scopes         []*OomScope            `protobuf:"bytes,5,rep,name=scopes,proto3" json:"scopes,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *OomHealth) Reset() {
+	*x = OomHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[85]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OomHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OomHealth) ProtoMessage() {}
+
+func (x *OomHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[85]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OomHealth.ProtoReflect.Descriptor instead.
+func (*OomHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{85}
+}
+
+func (x *OomHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *OomHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *OomHealth) GetTotalKills() int64 {
+	if x != nil {
+		return x.TotalKills
+	}
+	return 0
+}
+
+func (x *OomHealth) GetLastKillUnixMs() int64 {
+	if x != nil {
+		return x.LastKillUnixMs
+	}
+	return 0
+}
+
+func (x *OomHealth) GetScopes() []*OomScope {
+	if x != nil {
+		return x.Scopes
+	}
+	return nil
+}
+
+type OomScope struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Scope         string                 `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Kills         int64                  `protobuf:"varint,3,opt,name=kills,proto3" json:"kills,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OomScope) Reset() {
+	*x = OomScope{}
+	mi := &file_agent_v1_agent_proto_msgTypes[86]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OomScope) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OomScope) ProtoMessage() {}
+
+func (x *OomScope) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[86]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OomScope.ProtoReflect.Descriptor instead.
+func (*OomScope) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{86}
+}
+
+func (x *OomScope) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
+func (x *OomScope) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *OomScope) GetKills() int64 {
+	if x != nil {
+		return x.Kills
+	}
+	return 0
+}
+
+type ConnectivityHealth struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	RttKnown            bool                   `protobuf:"varint,1,opt,name=rtt_known,json=rttKnown,proto3" json:"rtt_known,omitempty"`
+	RttMs               int64                  `protobuf:"varint,2,opt,name=rtt_ms,json=rttMs,proto3" json:"rtt_ms,omitempty"`
+	LastHeartbeatUnixMs int64                  `protobuf:"varint,3,opt,name=last_heartbeat_unix_ms,json=lastHeartbeatUnixMs,proto3" json:"last_heartbeat_unix_ms,omitempty"`
+	Reconnects_24H      int32                  `protobuf:"varint,4,opt,name=reconnects_24h,json=reconnects24h,proto3" json:"reconnects_24h,omitempty"`
+	GithubKnown         bool                   `protobuf:"varint,5,opt,name=github_known,json=githubKnown,proto3" json:"github_known,omitempty"`
+	GithubReachable     bool                   `protobuf:"varint,6,opt,name=github_reachable,json=githubReachable,proto3" json:"github_reachable,omitempty"`
+	GithubLatencyMs     int64                  `protobuf:"varint,7,opt,name=github_latency_ms,json=githubLatencyMs,proto3" json:"github_latency_ms,omitempty"`
+	GithubCheckedUnixMs int64                  `protobuf:"varint,8,opt,name=github_checked_unix_ms,json=githubCheckedUnixMs,proto3" json:"github_checked_unix_ms,omitempty"`
+	GithubError         string                 `protobuf:"bytes,9,opt,name=github_error,json=githubError,proto3" json:"github_error,omitempty"`
+	DnsKnown            bool                   `protobuf:"varint,10,opt,name=dns_known,json=dnsKnown,proto3" json:"dns_known,omitempty"`
+	DnsOk               bool                   `protobuf:"varint,11,opt,name=dns_ok,json=dnsOk,proto3" json:"dns_ok,omitempty"`
+	DnsError            string                 `protobuf:"bytes,12,opt,name=dns_error,json=dnsError,proto3" json:"dns_error,omitempty"`
+	SkewKnown           bool                   `protobuf:"varint,13,opt,name=skew_known,json=skewKnown,proto3" json:"skew_known,omitempty"`
+	// Agent clock minus controller clock, in seconds; positive means the agent is ahead.
+	ClockSkewSeconds float64 `protobuf:"fixed64,14,opt,name=clock_skew_seconds,json=clockSkewSeconds,proto3" json:"clock_skew_seconds,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *ConnectivityHealth) Reset() {
+	*x = ConnectivityHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[87]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ConnectivityHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ConnectivityHealth) ProtoMessage() {}
+
+func (x *ConnectivityHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[87]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ConnectivityHealth.ProtoReflect.Descriptor instead.
+func (*ConnectivityHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{87}
+}
+
+func (x *ConnectivityHealth) GetRttKnown() bool {
+	if x != nil {
+		return x.RttKnown
+	}
+	return false
+}
+
+func (x *ConnectivityHealth) GetRttMs() int64 {
+	if x != nil {
+		return x.RttMs
+	}
+	return 0
+}
+
+func (x *ConnectivityHealth) GetLastHeartbeatUnixMs() int64 {
+	if x != nil {
+		return x.LastHeartbeatUnixMs
+	}
+	return 0
+}
+
+func (x *ConnectivityHealth) GetReconnects_24H() int32 {
+	if x != nil {
+		return x.Reconnects_24H
+	}
+	return 0
+}
+
+func (x *ConnectivityHealth) GetGithubKnown() bool {
+	if x != nil {
+		return x.GithubKnown
+	}
+	return false
+}
+
+func (x *ConnectivityHealth) GetGithubReachable() bool {
+	if x != nil {
+		return x.GithubReachable
+	}
+	return false
+}
+
+func (x *ConnectivityHealth) GetGithubLatencyMs() int64 {
+	if x != nil {
+		return x.GithubLatencyMs
+	}
+	return 0
+}
+
+func (x *ConnectivityHealth) GetGithubCheckedUnixMs() int64 {
+	if x != nil {
+		return x.GithubCheckedUnixMs
+	}
+	return 0
+}
+
+func (x *ConnectivityHealth) GetGithubError() string {
+	if x != nil {
+		return x.GithubError
+	}
+	return ""
+}
+
+func (x *ConnectivityHealth) GetDnsKnown() bool {
+	if x != nil {
+		return x.DnsKnown
+	}
+	return false
+}
+
+func (x *ConnectivityHealth) GetDnsOk() bool {
+	if x != nil {
+		return x.DnsOk
+	}
+	return false
+}
+
+func (x *ConnectivityHealth) GetDnsError() string {
+	if x != nil {
+		return x.DnsError
+	}
+	return ""
+}
+
+func (x *ConnectivityHealth) GetSkewKnown() bool {
+	if x != nil {
+		return x.SkewKnown
+	}
+	return false
+}
+
+func (x *ConnectivityHealth) GetClockSkewSeconds() float64 {
+	if x != nil {
+		return x.ClockSkewSeconds
+	}
+	return 0
+}
+
+type VersionHealth struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	AgentVersion     string                 `protobuf:"bytes,1,opt,name=agent_version,json=agentVersion,proto3" json:"agent_version,omitempty"`
+	RunnerAppVersion string                 `protobuf:"bytes,2,opt,name=runner_app_version,json=runnerAppVersion,proto3" json:"runner_app_version,omitempty"`
+	// Docker engine or WSL version; empty when none.
+	DockerVersion string `protobuf:"bytes,3,opt,name=docker_version,json=dockerVersion,proto3" json:"docker_version,omitempty"`
+	DockerKind    string `protobuf:"bytes,4,opt,name=docker_kind,json=dockerKind,proto3" json:"docker_kind,omitempty"`
+	WslVersion    string `protobuf:"bytes,5,opt,name=wsl_version,json=wslVersion,proto3" json:"wsl_version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *VersionHealth) Reset() {
+	*x = VersionHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[88]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VersionHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VersionHealth) ProtoMessage() {}
+
+func (x *VersionHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[88]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VersionHealth.ProtoReflect.Descriptor instead.
+func (*VersionHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{88}
+}
+
+func (x *VersionHealth) GetAgentVersion() string {
+	if x != nil {
+		return x.AgentVersion
+	}
+	return ""
+}
+
+func (x *VersionHealth) GetRunnerAppVersion() string {
+	if x != nil {
+		return x.RunnerAppVersion
+	}
+	return ""
+}
+
+func (x *VersionHealth) GetDockerVersion() string {
+	if x != nil {
+		return x.DockerVersion
+	}
+	return ""
+}
+
+func (x *VersionHealth) GetDockerKind() string {
+	if x != nil {
+		return x.DockerKind
+	}
+	return ""
+}
+
+func (x *VersionHealth) GetWslVersion() string {
+	if x != nil {
+		return x.WslVersion
+	}
+	return ""
+}
+
+// UpdateHealth is the restart and OS update state (slow, read at most hourly).
+type UpdateHealth struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	Known              bool                   `protobuf:"varint,1,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason      string                 `protobuf:"bytes,2,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	RestartPending     bool                   `protobuf:"varint,3,opt,name=restart_pending,json=restartPending,proto3" json:"restart_pending,omitempty"`
+	RestartReasons     []string               `protobuf:"bytes,4,rep,name=restart_reasons,json=restartReasons,proto3" json:"restart_reasons,omitempty"`
+	UpdateCountKnown   bool                   `protobuf:"varint,5,opt,name=update_count_known,json=updateCountKnown,proto3" json:"update_count_known,omitempty"`
+	PendingUpdateCount int32                  `protobuf:"varint,6,opt,name=pending_update_count,json=pendingUpdateCount,proto3" json:"pending_update_count,omitempty"`
+	// Windows Update active hours as local hours 0 to 23; a restart is not
+	// started inside them.
+	ActiveHoursKnown bool  `protobuf:"varint,7,opt,name=active_hours_known,json=activeHoursKnown,proto3" json:"active_hours_known,omitempty"`
+	ActiveHoursStart int32 `protobuf:"varint,8,opt,name=active_hours_start,json=activeHoursStart,proto3" json:"active_hours_start,omitempty"`
+	ActiveHoursEnd   int32 `protobuf:"varint,9,opt,name=active_hours_end,json=activeHoursEnd,proto3" json:"active_hours_end,omitempty"`
+	// Whether the OS may restart by itself while jobs run.
+	AutoRestartPossible bool   `protobuf:"varint,10,opt,name=auto_restart_possible,json=autoRestartPossible,proto3" json:"auto_restart_possible,omitempty"`
+	AutoUpdateState     string `protobuf:"bytes,11,opt,name=auto_update_state,json=autoUpdateState,proto3" json:"auto_update_state,omitempty"`
+	// True when the OS may restart by itself now: automatic restart is on and
+	// the time is outside the active hours.
+	RestartAllowedNow bool `protobuf:"varint,12,opt,name=restart_allowed_now,json=restartAllowedNow,proto3" json:"restart_allowed_now,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *UpdateHealth) Reset() {
+	*x = UpdateHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[89]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateHealth) ProtoMessage() {}
+
+func (x *UpdateHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[89]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateHealth.ProtoReflect.Descriptor instead.
+func (*UpdateHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{89}
+}
+
+func (x *UpdateHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *UpdateHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *UpdateHealth) GetRestartPending() bool {
+	if x != nil {
+		return x.RestartPending
+	}
+	return false
+}
+
+func (x *UpdateHealth) GetRestartReasons() []string {
+	if x != nil {
+		return x.RestartReasons
+	}
+	return nil
+}
+
+func (x *UpdateHealth) GetUpdateCountKnown() bool {
+	if x != nil {
+		return x.UpdateCountKnown
+	}
+	return false
+}
+
+func (x *UpdateHealth) GetPendingUpdateCount() int32 {
+	if x != nil {
+		return x.PendingUpdateCount
+	}
+	return 0
+}
+
+func (x *UpdateHealth) GetActiveHoursKnown() bool {
+	if x != nil {
+		return x.ActiveHoursKnown
+	}
+	return false
+}
+
+func (x *UpdateHealth) GetActiveHoursStart() int32 {
+	if x != nil {
+		return x.ActiveHoursStart
+	}
+	return 0
+}
+
+func (x *UpdateHealth) GetActiveHoursEnd() int32 {
+	if x != nil {
+		return x.ActiveHoursEnd
+	}
+	return 0
+}
+
+func (x *UpdateHealth) GetAutoRestartPossible() bool {
+	if x != nil {
+		return x.AutoRestartPossible
+	}
+	return false
+}
+
+func (x *UpdateHealth) GetAutoUpdateState() string {
+	if x != nil {
+		return x.AutoUpdateState
+	}
+	return ""
+}
+
+func (x *UpdateHealth) GetRestartAllowedNow() bool {
+	if x != nil {
+		return x.RestartAllowedNow
+	}
+	return false
+}
+
+type PowerHealth struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	SourceKnown         bool                   `protobuf:"varint,1,opt,name=source_known,json=sourceKnown,proto3" json:"source_known,omitempty"`
+	SourceUnknownReason string                 `protobuf:"bytes,2,opt,name=source_unknown_reason,json=sourceUnknownReason,proto3" json:"source_unknown_reason,omitempty"`
+	OnBattery           bool                   `protobuf:"varint,3,opt,name=on_battery,json=onBattery,proto3" json:"on_battery,omitempty"`
+	SleepKnown          bool                   `protobuf:"varint,4,opt,name=sleep_known,json=sleepKnown,proto3" json:"sleep_known,omitempty"`
+	SleepUnknownReason  string                 `protobuf:"bytes,5,opt,name=sleep_unknown_reason,json=sleepUnknownReason,proto3" json:"sleep_unknown_reason,omitempty"`
+	// True when a setting can suspend or hibernate the machine.
+	SleepEnabled   bool     `protobuf:"varint,6,opt,name=sleep_enabled,json=sleepEnabled,proto3" json:"sleep_enabled,omitempty"`
+	SleepModes     []string `protobuf:"bytes,7,rep,name=sleep_modes,json=sleepModes,proto3" json:"sleep_modes,omitempty"`
+	WakeKnown      bool     `protobuf:"varint,8,opt,name=wake_known,json=wakeKnown,proto3" json:"wake_known,omitempty"`
+	LastWakeUnixMs int64    `protobuf:"varint,9,opt,name=last_wake_unix_ms,json=lastWakeUnixMs,proto3" json:"last_wake_unix_ms,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *PowerHealth) Reset() {
+	*x = PowerHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[90]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *PowerHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*PowerHealth) ProtoMessage() {}
+
+func (x *PowerHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[90]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use PowerHealth.ProtoReflect.Descriptor instead.
+func (*PowerHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{90}
+}
+
+func (x *PowerHealth) GetSourceKnown() bool {
+	if x != nil {
+		return x.SourceKnown
+	}
+	return false
+}
+
+func (x *PowerHealth) GetSourceUnknownReason() string {
+	if x != nil {
+		return x.SourceUnknownReason
+	}
+	return ""
+}
+
+func (x *PowerHealth) GetOnBattery() bool {
+	if x != nil {
+		return x.OnBattery
+	}
+	return false
+}
+
+func (x *PowerHealth) GetSleepKnown() bool {
+	if x != nil {
+		return x.SleepKnown
+	}
+	return false
+}
+
+func (x *PowerHealth) GetSleepUnknownReason() string {
+	if x != nil {
+		return x.SleepUnknownReason
+	}
+	return ""
+}
+
+func (x *PowerHealth) GetSleepEnabled() bool {
+	if x != nil {
+		return x.SleepEnabled
+	}
+	return false
+}
+
+func (x *PowerHealth) GetSleepModes() []string {
+	if x != nil {
+		return x.SleepModes
+	}
+	return nil
+}
+
+func (x *PowerHealth) GetWakeKnown() bool {
+	if x != nil {
+		return x.WakeKnown
+	}
+	return false
+}
+
+func (x *PowerHealth) GetLastWakeUnixMs() int64 {
+	if x != nil {
+		return x.LastWakeUnixMs
+	}
+	return 0
+}
+
+type DockerUseHealth struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	Known           bool                   `protobuf:"varint,1,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason   string                 `protobuf:"bytes,2,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	ImagesBytes     int64                  `protobuf:"varint,3,opt,name=images_bytes,json=imagesBytes,proto3" json:"images_bytes,omitempty"`
+	BuildCacheBytes int64                  `protobuf:"varint,4,opt,name=build_cache_bytes,json=buildCacheBytes,proto3" json:"build_cache_bytes,omitempty"`
+	VolumesBytes    int64                  `protobuf:"varint,5,opt,name=volumes_bytes,json=volumesBytes,proto3" json:"volumes_bytes,omitempty"`
+	ContainersBytes int64                  `protobuf:"varint,6,opt,name=containers_bytes,json=containersBytes,proto3" json:"containers_bytes,omitempty"`
+	ReadUnixMs      int64                  `protobuf:"varint,7,opt,name=read_unix_ms,json=readUnixMs,proto3" json:"read_unix_ms,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *DockerUseHealth) Reset() {
+	*x = DockerUseHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[91]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DockerUseHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DockerUseHealth) ProtoMessage() {}
+
+func (x *DockerUseHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[91]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DockerUseHealth.ProtoReflect.Descriptor instead.
+func (*DockerUseHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{91}
+}
+
+func (x *DockerUseHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *DockerUseHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *DockerUseHealth) GetImagesBytes() int64 {
+	if x != nil {
+		return x.ImagesBytes
+	}
+	return 0
+}
+
+func (x *DockerUseHealth) GetBuildCacheBytes() int64 {
+	if x != nil {
+		return x.BuildCacheBytes
+	}
+	return 0
+}
+
+func (x *DockerUseHealth) GetVolumesBytes() int64 {
+	if x != nil {
+		return x.VolumesBytes
+	}
+	return 0
+}
+
+func (x *DockerUseHealth) GetContainersBytes() int64 {
+	if x != nil {
+		return x.ContainersBytes
+	}
+	return 0
+}
+
+func (x *DockerUseHealth) GetReadUnixMs() int64 {
+	if x != nil {
+		return x.ReadUnixMs
+	}
+	return 0
+}
+
+type ThermalHealth struct {
+	state          protoimpl.MessageState `protogen:"open.v1"`
+	Known          bool                   `protobuf:"varint,1,opt,name=known,proto3" json:"known,omitempty"`
+	UnknownReason  string                 `protobuf:"bytes,2,opt,name=unknown_reason,json=unknownReason,proto3" json:"unknown_reason,omitempty"`
+	MaxTempCelsius float64                `protobuf:"fixed64,3,opt,name=max_temp_celsius,json=maxTempCelsius,proto3" json:"max_temp_celsius,omitempty"`
+	Throttled      bool                   `protobuf:"varint,4,opt,name=throttled,proto3" json:"throttled,omitempty"`
+	ThrottleDetail string                 `protobuf:"bytes,5,opt,name=throttle_detail,json=throttleDetail,proto3" json:"throttle_detail,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *ThermalHealth) Reset() {
+	*x = ThermalHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[92]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThermalHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThermalHealth) ProtoMessage() {}
+
+func (x *ThermalHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[92]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThermalHealth.ProtoReflect.Descriptor instead.
+func (*ThermalHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{92}
+}
+
+func (x *ThermalHealth) GetKnown() bool {
+	if x != nil {
+		return x.Known
+	}
+	return false
+}
+
+func (x *ThermalHealth) GetUnknownReason() string {
+	if x != nil {
+		return x.UnknownReason
+	}
+	return ""
+}
+
+func (x *ThermalHealth) GetMaxTempCelsius() float64 {
+	if x != nil {
+		return x.MaxTempCelsius
+	}
+	return 0
+}
+
+func (x *ThermalHealth) GetThrottled() bool {
+	if x != nil {
+		return x.Throttled
+	}
+	return false
+}
+
+func (x *ThermalHealth) GetThrottleDetail() string {
+	if x != nil {
+		return x.ThrottleDetail
+	}
+	return ""
+}
+
+type LoadAverageHealth struct {
+	state              protoimpl.MessageState `protogen:"open.v1"`
+	LoadKnown          bool                   `protobuf:"varint,1,opt,name=load_known,json=loadKnown,proto3" json:"load_known,omitempty"`
+	LoadUnknownReason  string                 `protobuf:"bytes,2,opt,name=load_unknown_reason,json=loadUnknownReason,proto3" json:"load_unknown_reason,omitempty"`
+	Load1              float64                `protobuf:"fixed64,3,opt,name=load1,proto3" json:"load1,omitempty"`
+	Load5              float64                `protobuf:"fixed64,4,opt,name=load5,proto3" json:"load5,omitempty"`
+	Load15             float64                `protobuf:"fixed64,5,opt,name=load15,proto3" json:"load15,omitempty"`
+	StealKnown         bool                   `protobuf:"varint,6,opt,name=steal_known,json=stealKnown,proto3" json:"steal_known,omitempty"`
+	StealUnknownReason string                 `protobuf:"bytes,7,opt,name=steal_unknown_reason,json=stealUnknownReason,proto3" json:"steal_unknown_reason,omitempty"`
+	StealPct           float64                `protobuf:"fixed64,8,opt,name=steal_pct,json=stealPct,proto3" json:"steal_pct,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
+}
+
+func (x *LoadAverageHealth) Reset() {
+	*x = LoadAverageHealth{}
+	mi := &file_agent_v1_agent_proto_msgTypes[93]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *LoadAverageHealth) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*LoadAverageHealth) ProtoMessage() {}
+
+func (x *LoadAverageHealth) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[93]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use LoadAverageHealth.ProtoReflect.Descriptor instead.
+func (*LoadAverageHealth) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{93}
+}
+
+func (x *LoadAverageHealth) GetLoadKnown() bool {
+	if x != nil {
+		return x.LoadKnown
+	}
+	return false
+}
+
+func (x *LoadAverageHealth) GetLoadUnknownReason() string {
+	if x != nil {
+		return x.LoadUnknownReason
+	}
+	return ""
+}
+
+func (x *LoadAverageHealth) GetLoad1() float64 {
+	if x != nil {
+		return x.Load1
+	}
+	return 0
+}
+
+func (x *LoadAverageHealth) GetLoad5() float64 {
+	if x != nil {
+		return x.Load5
+	}
+	return 0
+}
+
+func (x *LoadAverageHealth) GetLoad15() float64 {
+	if x != nil {
+		return x.Load15
+	}
+	return 0
+}
+
+func (x *LoadAverageHealth) GetStealKnown() bool {
+	if x != nil {
+		return x.StealKnown
+	}
+	return false
+}
+
+func (x *LoadAverageHealth) GetStealUnknownReason() string {
+	if x != nil {
+		return x.StealUnknownReason
+	}
+	return ""
+}
+
+func (x *LoadAverageHealth) GetStealPct() float64 {
+	if x != nil {
+		return x.StealPct
+	}
+	return 0
+}
+
 type GateDecision_Go struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Slots []*SlotGrant           `protobuf:"bytes,1,rep,name=slots,proto3" json:"slots,omitempty"`
@@ -8448,7 +9711,7 @@ type GateDecision_Go struct {
 
 func (x *GateDecision_Go) Reset() {
 	*x = GateDecision_Go{}
-	mi := &file_agent_v1_agent_proto_msgTypes[81]
+	mi := &file_agent_v1_agent_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8460,7 +9723,7 @@ func (x *GateDecision_Go) String() string {
 func (*GateDecision_Go) ProtoMessage() {}
 
 func (x *GateDecision_Go) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_v1_agent_proto_msgTypes[81]
+	mi := &file_agent_v1_agent_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8505,7 +9768,7 @@ type GateDecision_Wait struct {
 
 func (x *GateDecision_Wait) Reset() {
 	*x = GateDecision_Wait{}
-	mi := &file_agent_v1_agent_proto_msgTypes[82]
+	mi := &file_agent_v1_agent_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8517,7 +9780,7 @@ func (x *GateDecision_Wait) String() string {
 func (*GateDecision_Wait) ProtoMessage() {}
 
 func (x *GateDecision_Wait) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_v1_agent_proto_msgTypes[82]
+	mi := &file_agent_v1_agent_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8571,7 +9834,7 @@ type GateDecision_Timeout struct {
 
 func (x *GateDecision_Timeout) Reset() {
 	*x = GateDecision_Timeout{}
-	mi := &file_agent_v1_agent_proto_msgTypes[83]
+	mi := &file_agent_v1_agent_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8583,7 +9846,7 @@ func (x *GateDecision_Timeout) String() string {
 func (*GateDecision_Timeout) ProtoMessage() {}
 
 func (x *GateDecision_Timeout) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_v1_agent_proto_msgTypes[83]
+	mi := &file_agent_v1_agent_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8625,7 +9888,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x12machine_credential\x18\x02 \x01(\tR\x11machineCredential\x12\x1f\n" +
 	"\vcert_sha256\x18\x03 \x01(\tR\n" +
 	"certSha256\x125\n" +
-	"\bsettings\x18\x04 \x01(\v2\x19.agent.v1.MachineSettingsR\bsettings\"\xa4\x0e\n" +
+	"\bsettings\x18\x04 \x01(\v2\x19.agent.v1.MachineSettingsR\bsettings\"\xe3\x0e\n" +
 	"\x0eSessionRequest\x12'\n" +
 	"\x05hello\x18\x01 \x01(\v2\x0f.agent.v1.HelloH\x00R\x05hello\x123\n" +
 	"\theartbeat\x18\x02 \x01(\v2\x13.agent.v1.HeartbeatH\x00R\theartbeat\x127\n" +
@@ -8660,7 +9923,8 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\vpull_report\x18\x1d \x01(\v2\x14.agent.v1.PullReportH\x00R\n" +
 	"pullReport\x12:\n" +
 	"\fbuild_report\x18\x1e \x01(\v2\x15.agent.v1.BuildReportH\x00R\vbuildReport\x12P\n" +
-	"\x14job_resource_samples\x18\x1f \x01(\v2\x1c.agent.v1.JobResourceSamplesH\x00R\x12jobResourceSamplesB\t\n" +
+	"\x14job_resource_samples\x18\x1f \x01(\v2\x1c.agent.v1.JobResourceSamplesH\x00R\x12jobResourceSamples\x12=\n" +
+	"\rhealth_report\x18  \x01(\v2\x16.agent.v1.HealthReportH\x00R\fhealthReportB\t\n" +
 	"\amessage\"\xaf\f\n" +
 	"\x0fSessionResponse\x121\n" +
 	"\thello_ack\x18\x01 \x01(\v2\x12.agent.v1.HelloAckH\x00R\bhelloAck\x123\n" +
@@ -9373,7 +10637,136 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\n" +
 	"cpu_millis\x18\x02 \x01(\x03R\tcpuMillis\x12!\n" +
 	"\fmemory_bytes\x18\x03 \x01(\x03R\vmemoryBytes\x12\x14\n" +
-	"\x05known\x18\x04 \x01(\bR\x05known*\x93\x01\n" +
+	"\x05known\x18\x04 \x01(\bR\x05known\"\xeb\x04\n" +
+	"\fHealthReport\x12+\n" +
+	"\x12sampled_at_unix_ms\x18\x01 \x01(\x03R\x0fsampledAtUnixMs\x12(\n" +
+	"\x04boot\x18\x02 \x01(\v2\x14.agent.v1.BootHealthR\x04boot\x120\n" +
+	"\avolumes\x18\x03 \x03(\v2\x16.agent.v1.VolumeHealthR\avolumes\x12(\n" +
+	"\x04swap\x18\x04 \x01(\v2\x14.agent.v1.SwapHealthR\x04swap\x12%\n" +
+	"\x03oom\x18\x05 \x01(\v2\x13.agent.v1.OomHealthR\x03oom\x12@\n" +
+	"\fconnectivity\x18\x06 \x01(\v2\x1c.agent.v1.ConnectivityHealthR\fconnectivity\x123\n" +
+	"\bversions\x18\a \x01(\v2\x17.agent.v1.VersionHealthR\bversions\x120\n" +
+	"\aupdates\x18\b \x01(\v2\x16.agent.v1.UpdateHealthR\aupdates\x12+\n" +
+	"\x05power\x18\t \x01(\v2\x15.agent.v1.PowerHealthR\x05power\x128\n" +
+	"\n" +
+	"docker_use\x18\n" +
+	" \x01(\v2\x19.agent.v1.DockerUseHealthR\tdockerUse\x121\n" +
+	"\athermal\x18\v \x01(\v2\x17.agent.v1.ThermalHealthR\athermal\x12>\n" +
+	"\fload_average\x18\f \x01(\v2\x1b.agent.v1.LoadAverageHealthR\vloadAverage\"\xca\x01\n" +
+	"\n" +
+	"BootHealth\x12\x14\n" +
+	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12%\n" +
+	"\x0euptime_seconds\x18\x03 \x01(\x03R\ruptimeSeconds\x12)\n" +
+	"\x11last_boot_unix_ms\x18\x04 \x01(\x03R\x0elastBootUnixMs\x12-\n" +
+	"\x12unexpected_restart\x18\x05 \x01(\bR\x11unexpectedRestart\"\xb3\x01\n" +
+	"\fVolumeHealth\x12\x12\n" +
+	"\x04role\x18\x01 \x01(\tR\x04role\x12\x12\n" +
+	"\x04path\x18\x02 \x01(\tR\x04path\x12\x14\n" +
+	"\x05known\x18\x03 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x04 \x01(\tR\runknownReason\x12\x1f\n" +
+	"\vtotal_bytes\x18\x05 \x01(\x03R\n" +
+	"totalBytes\x12\x1d\n" +
+	"\n" +
+	"free_bytes\x18\x06 \x01(\x03R\tfreeBytes\"\x89\x01\n" +
+	"\n" +
+	"SwapHealth\x12\x14\n" +
+	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12\x1f\n" +
+	"\vtotal_bytes\x18\x03 \x01(\x03R\n" +
+	"totalBytes\x12\x1d\n" +
+	"\n" +
+	"used_bytes\x18\x04 \x01(\x03R\tusedBytes\"\xc0\x01\n" +
+	"\tOomHealth\x12\x14\n" +
+	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12\x1f\n" +
+	"\vtotal_kills\x18\x03 \x01(\x03R\n" +
+	"totalKills\x12)\n" +
+	"\x11last_kill_unix_ms\x18\x04 \x01(\x03R\x0elastKillUnixMs\x12*\n" +
+	"\x06scopes\x18\x05 \x03(\v2\x12.agent.v1.OomScopeR\x06scopes\"J\n" +
+	"\bOomScope\x12\x14\n" +
+	"\x05scope\x18\x01 \x01(\tR\x05scope\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x14\n" +
+	"\x05kills\x18\x03 \x01(\x03R\x05kills\"\x94\x04\n" +
+	"\x12ConnectivityHealth\x12\x1b\n" +
+	"\trtt_known\x18\x01 \x01(\bR\brttKnown\x12\x15\n" +
+	"\x06rtt_ms\x18\x02 \x01(\x03R\x05rttMs\x123\n" +
+	"\x16last_heartbeat_unix_ms\x18\x03 \x01(\x03R\x13lastHeartbeatUnixMs\x12%\n" +
+	"\x0ereconnects_24h\x18\x04 \x01(\x05R\rreconnects24h\x12!\n" +
+	"\fgithub_known\x18\x05 \x01(\bR\vgithubKnown\x12)\n" +
+	"\x10github_reachable\x18\x06 \x01(\bR\x0fgithubReachable\x12*\n" +
+	"\x11github_latency_ms\x18\a \x01(\x03R\x0fgithubLatencyMs\x123\n" +
+	"\x16github_checked_unix_ms\x18\b \x01(\x03R\x13githubCheckedUnixMs\x12!\n" +
+	"\fgithub_error\x18\t \x01(\tR\vgithubError\x12\x1b\n" +
+	"\tdns_known\x18\n" +
+	" \x01(\bR\bdnsKnown\x12\x15\n" +
+	"\x06dns_ok\x18\v \x01(\bR\x05dnsOk\x12\x1b\n" +
+	"\tdns_error\x18\f \x01(\tR\bdnsError\x12\x1d\n" +
+	"\n" +
+	"skew_known\x18\r \x01(\bR\tskewKnown\x12,\n" +
+	"\x12clock_skew_seconds\x18\x0e \x01(\x01R\x10clockSkewSeconds\"\xcb\x01\n" +
+	"\rVersionHealth\x12#\n" +
+	"\ragent_version\x18\x01 \x01(\tR\fagentVersion\x12,\n" +
+	"\x12runner_app_version\x18\x02 \x01(\tR\x10runnerAppVersion\x12%\n" +
+	"\x0edocker_version\x18\x03 \x01(\tR\rdockerVersion\x12\x1f\n" +
+	"\vdocker_kind\x18\x04 \x01(\tR\n" +
+	"dockerKind\x12\x1f\n" +
+	"\vwsl_version\x18\x05 \x01(\tR\n" +
+	"wslVersion\"\x93\x04\n" +
+	"\fUpdateHealth\x12\x14\n" +
+	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12'\n" +
+	"\x0frestart_pending\x18\x03 \x01(\bR\x0erestartPending\x12'\n" +
+	"\x0frestart_reasons\x18\x04 \x03(\tR\x0erestartReasons\x12,\n" +
+	"\x12update_count_known\x18\x05 \x01(\bR\x10updateCountKnown\x120\n" +
+	"\x14pending_update_count\x18\x06 \x01(\x05R\x12pendingUpdateCount\x12,\n" +
+	"\x12active_hours_known\x18\a \x01(\bR\x10activeHoursKnown\x12,\n" +
+	"\x12active_hours_start\x18\b \x01(\x05R\x10activeHoursStart\x12(\n" +
+	"\x10active_hours_end\x18\t \x01(\x05R\x0eactiveHoursEnd\x122\n" +
+	"\x15auto_restart_possible\x18\n" +
+	" \x01(\bR\x13autoRestartPossible\x12*\n" +
+	"\x11auto_update_state\x18\v \x01(\tR\x0fautoUpdateState\x12.\n" +
+	"\x13restart_allowed_now\x18\f \x01(\bR\x11restartAllowedNow\"\xe6\x02\n" +
+	"\vPowerHealth\x12!\n" +
+	"\fsource_known\x18\x01 \x01(\bR\vsourceKnown\x122\n" +
+	"\x15source_unknown_reason\x18\x02 \x01(\tR\x13sourceUnknownReason\x12\x1d\n" +
+	"\n" +
+	"on_battery\x18\x03 \x01(\bR\tonBattery\x12\x1f\n" +
+	"\vsleep_known\x18\x04 \x01(\bR\n" +
+	"sleepKnown\x120\n" +
+	"\x14sleep_unknown_reason\x18\x05 \x01(\tR\x12sleepUnknownReason\x12#\n" +
+	"\rsleep_enabled\x18\x06 \x01(\bR\fsleepEnabled\x12\x1f\n" +
+	"\vsleep_modes\x18\a \x03(\tR\n" +
+	"sleepModes\x12\x1d\n" +
+	"\n" +
+	"wake_known\x18\b \x01(\bR\twakeKnown\x12)\n" +
+	"\x11last_wake_unix_ms\x18\t \x01(\x03R\x0elastWakeUnixMs\"\x8f\x02\n" +
+	"\x0fDockerUseHealth\x12\x14\n" +
+	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12!\n" +
+	"\fimages_bytes\x18\x03 \x01(\x03R\vimagesBytes\x12*\n" +
+	"\x11build_cache_bytes\x18\x04 \x01(\x03R\x0fbuildCacheBytes\x12#\n" +
+	"\rvolumes_bytes\x18\x05 \x01(\x03R\fvolumesBytes\x12)\n" +
+	"\x10containers_bytes\x18\x06 \x01(\x03R\x0fcontainersBytes\x12 \n" +
+	"\fread_unix_ms\x18\a \x01(\x03R\n" +
+	"readUnixMs\"\xbd\x01\n" +
+	"\rThermalHealth\x12\x14\n" +
+	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
+	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12(\n" +
+	"\x10max_temp_celsius\x18\x03 \x01(\x01R\x0emaxTempCelsius\x12\x1c\n" +
+	"\tthrottled\x18\x04 \x01(\bR\tthrottled\x12'\n" +
+	"\x0fthrottle_detail\x18\x05 \x01(\tR\x0ethrottleDetail\"\x96\x02\n" +
+	"\x11LoadAverageHealth\x12\x1d\n" +
+	"\n" +
+	"load_known\x18\x01 \x01(\bR\tloadKnown\x12.\n" +
+	"\x13load_unknown_reason\x18\x02 \x01(\tR\x11loadUnknownReason\x12\x14\n" +
+	"\x05load1\x18\x03 \x01(\x01R\x05load1\x12\x14\n" +
+	"\x05load5\x18\x04 \x01(\x01R\x05load5\x12\x16\n" +
+	"\x06load15\x18\x05 \x01(\x01R\x06load15\x12\x1f\n" +
+	"\vsteal_known\x18\x06 \x01(\bR\n" +
+	"stealKnown\x120\n" +
+	"\x14steal_unknown_reason\x18\a \x01(\tR\x12stealUnknownReason\x12\x1b\n" +
+	"\tsteal_pct\x18\b \x01(\x01R\bstealPct*\x93\x01\n" +
 	"\x0fProtocolVersion\x12 \n" +
 	"\x1cPROTOCOL_VERSION_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12PROTOCOL_VERSION_1\x10\x01\x12\x16\n" +
@@ -9418,7 +10811,7 @@ func file_agent_v1_agent_proto_rawDescGZIP() []byte {
 }
 
 var file_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 10)
-var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 84)
+var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 97)
 var file_agent_v1_agent_proto_goTypes = []any{
 	(ProtocolVersion)(0),             // 0: agent.v1.ProtocolVersion
 	(RunnerState)(0),                 // 1: agent.v1.RunnerState
@@ -9511,9 +10904,22 @@ var file_agent_v1_agent_proto_goTypes = []any{
 	(*PullReport)(nil),               // 88: agent.v1.PullReport
 	(*JobResourceSamples)(nil),       // 89: agent.v1.JobResourceSamples
 	(*JobResourceSample)(nil),        // 90: agent.v1.JobResourceSample
-	(*GateDecision_Go)(nil),          // 91: agent.v1.GateDecision.Go
-	(*GateDecision_Wait)(nil),        // 92: agent.v1.GateDecision.Wait
-	(*GateDecision_Timeout)(nil),     // 93: agent.v1.GateDecision.Timeout
+	(*HealthReport)(nil),             // 91: agent.v1.HealthReport
+	(*BootHealth)(nil),               // 92: agent.v1.BootHealth
+	(*VolumeHealth)(nil),             // 93: agent.v1.VolumeHealth
+	(*SwapHealth)(nil),               // 94: agent.v1.SwapHealth
+	(*OomHealth)(nil),                // 95: agent.v1.OomHealth
+	(*OomScope)(nil),                 // 96: agent.v1.OomScope
+	(*ConnectivityHealth)(nil),       // 97: agent.v1.ConnectivityHealth
+	(*VersionHealth)(nil),            // 98: agent.v1.VersionHealth
+	(*UpdateHealth)(nil),             // 99: agent.v1.UpdateHealth
+	(*PowerHealth)(nil),              // 100: agent.v1.PowerHealth
+	(*DockerUseHealth)(nil),          // 101: agent.v1.DockerUseHealth
+	(*ThermalHealth)(nil),            // 102: agent.v1.ThermalHealth
+	(*LoadAverageHealth)(nil),        // 103: agent.v1.LoadAverageHealth
+	(*GateDecision_Go)(nil),          // 104: agent.v1.GateDecision.Go
+	(*GateDecision_Wait)(nil),        // 105: agent.v1.GateDecision.Wait
+	(*GateDecision_Timeout)(nil),     // 106: agent.v1.GateDecision.Timeout
 }
 var file_agent_v1_agent_proto_depIdxs = []int32{
 	17,  // 0: agent.v1.JoinRequest.facts:type_name -> agent.v1.Facts
@@ -9548,96 +10954,109 @@ var file_agent_v1_agent_proto_depIdxs = []int32{
 	88,  // 29: agent.v1.SessionRequest.pull_report:type_name -> agent.v1.PullReport
 	87,  // 30: agent.v1.SessionRequest.build_report:type_name -> agent.v1.BuildReport
 	89,  // 31: agent.v1.SessionRequest.job_resource_samples:type_name -> agent.v1.JobResourceSamples
-	15,  // 32: agent.v1.SessionResponse.hello_ack:type_name -> agent.v1.HelloAck
-	16,  // 33: agent.v1.SessionResponse.heartbeat:type_name -> agent.v1.Heartbeat
-	45,  // 34: agent.v1.SessionResponse.settings:type_name -> agent.v1.MachineSettings
-	41,  // 35: agent.v1.SessionResponse.gate_decision:type_name -> agent.v1.GateDecision
-	43,  // 36: agent.v1.SessionResponse.release_ack:type_name -> agent.v1.ReleaseAck
-	23,  // 37: agent.v1.SessionResponse.add_runner:type_name -> agent.v1.AddRunner
-	28,  // 38: agent.v1.SessionResponse.remove_runner:type_name -> agent.v1.RemoveRunner
-	29,  // 39: agent.v1.SessionResponse.drain_runner:type_name -> agent.v1.DrainRunner
-	46,  // 40: agent.v1.SessionResponse.drain:type_name -> agent.v1.Drain
-	47,  // 41: agent.v1.SessionResponse.resume:type_name -> agent.v1.Resume
-	49,  // 42: agent.v1.SessionResponse.redetect:type_name -> agent.v1.Redetect
-	54,  // 43: agent.v1.SessionResponse.run_checks:type_name -> agent.v1.RunChecks
-	50,  // 44: agent.v1.SessionResponse.machine_removed:type_name -> agent.v1.MachineRemoved
-	57,  // 45: agent.v1.SessionResponse.update_agent:type_name -> agent.v1.UpdateAgent
-	30,  // 46: agent.v1.SessionResponse.stop_runner:type_name -> agent.v1.StopRunner
-	59,  // 47: agent.v1.SessionResponse.measure_caches:type_name -> agent.v1.MeasureCaches
-	62,  // 48: agent.v1.SessionResponse.wipe_cache:type_name -> agent.v1.WipeCache
-	64,  // 49: agent.v1.SessionResponse.report_machine:type_name -> agent.v1.ReportMachine
-	33,  // 50: agent.v1.SessionResponse.update_runner_files:type_name -> agent.v1.UpdateRunnerFiles
-	32,  // 51: agent.v1.SessionResponse.run_host_command:type_name -> agent.v1.RunHostCommand
-	27,  // 52: agent.v1.SessionResponse.runner_hygiene:type_name -> agent.v1.RunnerHygiene
-	67,  // 53: agent.v1.SessionResponse.scan_runner_leftovers:type_name -> agent.v1.ScanRunnerLeftovers
-	69,  // 54: agent.v1.SessionResponse.remove_runner_leftovers:type_name -> agent.v1.RemoveRunnerLeftovers
-	83,  // 55: agent.v1.SessionResponse.ensure_image_answer:type_name -> agent.v1.EnsureImageAnswer
-	85,  // 56: agent.v1.SessionResponse.registry_grant:type_name -> agent.v1.RegistryToken
-	0,   // 57: agent.v1.Hello.protocol_version:type_name -> agent.v1.ProtocolVersion
-	17,  // 58: agent.v1.Hello.facts:type_name -> agent.v1.Facts
-	20,  // 59: agent.v1.Hello.load:type_name -> agent.v1.LoadReport
-	21,  // 60: agent.v1.Hello.runners:type_name -> agent.v1.RunnerStates
-	44,  // 61: agent.v1.Hello.holders:type_name -> agent.v1.HolderReport
-	0,   // 62: agent.v1.HelloAck.protocol_version:type_name -> agent.v1.ProtocolVersion
-	45,  // 63: agent.v1.HelloAck.settings:type_name -> agent.v1.MachineSettings
-	18,  // 64: agent.v1.Facts.gpus:type_name -> agent.v1.Gpu
-	19,  // 65: agent.v1.Facts.backends:type_name -> agent.v1.BackendSupport
-	22,  // 66: agent.v1.RunnerStates.runners:type_name -> agent.v1.RunnerStatus
-	1,   // 67: agent.v1.RunnerStatus.state:type_name -> agent.v1.RunnerState
-	35,  // 68: agent.v1.RunnerStatus.current_job:type_name -> agent.v1.JobRef
-	24,  // 69: agent.v1.AddRunner.runner:type_name -> agent.v1.RunnerSpec
-	26,  // 70: agent.v1.RunnerClean.runners:type_name -> agent.v1.RunnerCleanStatus
-	1,   // 71: agent.v1.RunnerResult.state:type_name -> agent.v1.RunnerState
-	35,  // 72: agent.v1.UsageReport.job:type_name -> agent.v1.JobRef
-	35,  // 73: agent.v1.GateRequest.job:type_name -> agent.v1.JobRef
-	36,  // 74: agent.v1.GateRequest.holder:type_name -> agent.v1.Holder
-	2,   // 75: agent.v1.SlotGrant.kind:type_name -> agent.v1.SlotKind
-	91,  // 76: agent.v1.GateDecision.go:type_name -> agent.v1.GateDecision.Go
-	92,  // 77: agent.v1.GateDecision.wait:type_name -> agent.v1.GateDecision.Wait
-	93,  // 78: agent.v1.GateDecision.timeout:type_name -> agent.v1.GateDecision.Timeout
-	35,  // 79: agent.v1.JobCompleted.job:type_name -> agent.v1.JobRef
-	35,  // 80: agent.v1.ReleaseAck.job:type_name -> agent.v1.JobRef
-	36,  // 81: agent.v1.HolderReport.alive:type_name -> agent.v1.Holder
-	35,  // 82: agent.v1.HolderReport.running:type_name -> agent.v1.JobRef
-	35,  // 83: agent.v1.DrainStatus.waiting_for:type_name -> agent.v1.JobRef
-	53,  // 84: agent.v1.LogBatch.lines:type_name -> agent.v1.LogLine
-	3,   // 85: agent.v1.LogLine.level:type_name -> agent.v1.LogLevel
-	35,  // 86: agent.v1.LogLine.job:type_name -> agent.v1.JobRef
-	56,  // 87: agent.v1.CheckResults.results:type_name -> agent.v1.CheckResult
-	35,  // 88: agent.v1.UpdateReport.waiting_for:type_name -> agent.v1.JobRef
-	61,  // 89: agent.v1.CacheReport.caches:type_name -> agent.v1.CacheStatus
-	35,  // 90: agent.v1.CacheWipeStatus.waiting_for:type_name -> agent.v1.JobRef
-	78,  // 91: agent.v1.MachineReport.kvm:type_name -> agent.v1.KvmReport
-	79,  // 92: agent.v1.MachineReport.engine:type_name -> agent.v1.EngineReport
-	80,  // 93: agent.v1.MachineReport.images:type_name -> agent.v1.ImageReport
-	77,  // 94: agent.v1.MachineReport.package_failures:type_name -> agent.v1.PackageFailure
-	75,  // 95: agent.v1.MachineReport.symlink:type_name -> agent.v1.SymlinkReport
-	76,  // 96: agent.v1.MachineReport.macos_vms:type_name -> agent.v1.MacVmReport
-	74,  // 97: agent.v1.MachineReport.docker_disk:type_name -> agent.v1.DockerDiskReport
-	73,  // 98: agent.v1.MachineReport.runner_services:type_name -> agent.v1.RunnerServiceReport
-	66,  // 99: agent.v1.ScanRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
-	66,  // 100: agent.v1.RemoveRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
-	68,  // 101: agent.v1.RemoveRunnerLeftovers.items:type_name -> agent.v1.LeftoverRef
-	70,  // 102: agent.v1.RunnerLeftoversReport.items:type_name -> agent.v1.Leftover
-	71,  // 103: agent.v1.RunnerLeftoversReport.results:type_name -> agent.v1.LeftoverResult
-	4,   // 104: agent.v1.EnsureImageAnswer.outcome:type_name -> agent.v1.EnsureImageAnswer.Outcome
-	5,   // 105: agent.v1.RegistryTokenRequest.action:type_name -> agent.v1.RegistryTokenRequest.Action
-	6,   // 106: agent.v1.PushReport.state:type_name -> agent.v1.PushReport.State
-	7,   // 107: agent.v1.BuildReport.phase:type_name -> agent.v1.BuildReport.Phase
-	8,   // 108: agent.v1.PullReport.source:type_name -> agent.v1.PullReport.Source
-	9,   // 109: agent.v1.PullReport.state:type_name -> agent.v1.PullReport.State
-	35,  // 110: agent.v1.JobResourceSamples.job:type_name -> agent.v1.JobRef
-	90,  // 111: agent.v1.JobResourceSamples.samples:type_name -> agent.v1.JobResourceSample
-	40,  // 112: agent.v1.GateDecision.Go.slots:type_name -> agent.v1.SlotGrant
-	10,  // 113: agent.v1.AgentService.Join:input_type -> agent.v1.JoinRequest
-	12,  // 114: agent.v1.AgentService.Session:input_type -> agent.v1.SessionRequest
-	11,  // 115: agent.v1.AgentService.Join:output_type -> agent.v1.JoinResponse
-	13,  // 116: agent.v1.AgentService.Session:output_type -> agent.v1.SessionResponse
-	115, // [115:117] is the sub-list for method output_type
-	113, // [113:115] is the sub-list for method input_type
-	113, // [113:113] is the sub-list for extension type_name
-	113, // [113:113] is the sub-list for extension extendee
-	0,   // [0:113] is the sub-list for field type_name
+	91,  // 32: agent.v1.SessionRequest.health_report:type_name -> agent.v1.HealthReport
+	15,  // 33: agent.v1.SessionResponse.hello_ack:type_name -> agent.v1.HelloAck
+	16,  // 34: agent.v1.SessionResponse.heartbeat:type_name -> agent.v1.Heartbeat
+	45,  // 35: agent.v1.SessionResponse.settings:type_name -> agent.v1.MachineSettings
+	41,  // 36: agent.v1.SessionResponse.gate_decision:type_name -> agent.v1.GateDecision
+	43,  // 37: agent.v1.SessionResponse.release_ack:type_name -> agent.v1.ReleaseAck
+	23,  // 38: agent.v1.SessionResponse.add_runner:type_name -> agent.v1.AddRunner
+	28,  // 39: agent.v1.SessionResponse.remove_runner:type_name -> agent.v1.RemoveRunner
+	29,  // 40: agent.v1.SessionResponse.drain_runner:type_name -> agent.v1.DrainRunner
+	46,  // 41: agent.v1.SessionResponse.drain:type_name -> agent.v1.Drain
+	47,  // 42: agent.v1.SessionResponse.resume:type_name -> agent.v1.Resume
+	49,  // 43: agent.v1.SessionResponse.redetect:type_name -> agent.v1.Redetect
+	54,  // 44: agent.v1.SessionResponse.run_checks:type_name -> agent.v1.RunChecks
+	50,  // 45: agent.v1.SessionResponse.machine_removed:type_name -> agent.v1.MachineRemoved
+	57,  // 46: agent.v1.SessionResponse.update_agent:type_name -> agent.v1.UpdateAgent
+	30,  // 47: agent.v1.SessionResponse.stop_runner:type_name -> agent.v1.StopRunner
+	59,  // 48: agent.v1.SessionResponse.measure_caches:type_name -> agent.v1.MeasureCaches
+	62,  // 49: agent.v1.SessionResponse.wipe_cache:type_name -> agent.v1.WipeCache
+	64,  // 50: agent.v1.SessionResponse.report_machine:type_name -> agent.v1.ReportMachine
+	33,  // 51: agent.v1.SessionResponse.update_runner_files:type_name -> agent.v1.UpdateRunnerFiles
+	32,  // 52: agent.v1.SessionResponse.run_host_command:type_name -> agent.v1.RunHostCommand
+	27,  // 53: agent.v1.SessionResponse.runner_hygiene:type_name -> agent.v1.RunnerHygiene
+	67,  // 54: agent.v1.SessionResponse.scan_runner_leftovers:type_name -> agent.v1.ScanRunnerLeftovers
+	69,  // 55: agent.v1.SessionResponse.remove_runner_leftovers:type_name -> agent.v1.RemoveRunnerLeftovers
+	83,  // 56: agent.v1.SessionResponse.ensure_image_answer:type_name -> agent.v1.EnsureImageAnswer
+	85,  // 57: agent.v1.SessionResponse.registry_grant:type_name -> agent.v1.RegistryToken
+	0,   // 58: agent.v1.Hello.protocol_version:type_name -> agent.v1.ProtocolVersion
+	17,  // 59: agent.v1.Hello.facts:type_name -> agent.v1.Facts
+	20,  // 60: agent.v1.Hello.load:type_name -> agent.v1.LoadReport
+	21,  // 61: agent.v1.Hello.runners:type_name -> agent.v1.RunnerStates
+	44,  // 62: agent.v1.Hello.holders:type_name -> agent.v1.HolderReport
+	0,   // 63: agent.v1.HelloAck.protocol_version:type_name -> agent.v1.ProtocolVersion
+	45,  // 64: agent.v1.HelloAck.settings:type_name -> agent.v1.MachineSettings
+	18,  // 65: agent.v1.Facts.gpus:type_name -> agent.v1.Gpu
+	19,  // 66: agent.v1.Facts.backends:type_name -> agent.v1.BackendSupport
+	22,  // 67: agent.v1.RunnerStates.runners:type_name -> agent.v1.RunnerStatus
+	1,   // 68: agent.v1.RunnerStatus.state:type_name -> agent.v1.RunnerState
+	35,  // 69: agent.v1.RunnerStatus.current_job:type_name -> agent.v1.JobRef
+	24,  // 70: agent.v1.AddRunner.runner:type_name -> agent.v1.RunnerSpec
+	26,  // 71: agent.v1.RunnerClean.runners:type_name -> agent.v1.RunnerCleanStatus
+	1,   // 72: agent.v1.RunnerResult.state:type_name -> agent.v1.RunnerState
+	35,  // 73: agent.v1.UsageReport.job:type_name -> agent.v1.JobRef
+	35,  // 74: agent.v1.GateRequest.job:type_name -> agent.v1.JobRef
+	36,  // 75: agent.v1.GateRequest.holder:type_name -> agent.v1.Holder
+	2,   // 76: agent.v1.SlotGrant.kind:type_name -> agent.v1.SlotKind
+	104, // 77: agent.v1.GateDecision.go:type_name -> agent.v1.GateDecision.Go
+	105, // 78: agent.v1.GateDecision.wait:type_name -> agent.v1.GateDecision.Wait
+	106, // 79: agent.v1.GateDecision.timeout:type_name -> agent.v1.GateDecision.Timeout
+	35,  // 80: agent.v1.JobCompleted.job:type_name -> agent.v1.JobRef
+	35,  // 81: agent.v1.ReleaseAck.job:type_name -> agent.v1.JobRef
+	36,  // 82: agent.v1.HolderReport.alive:type_name -> agent.v1.Holder
+	35,  // 83: agent.v1.HolderReport.running:type_name -> agent.v1.JobRef
+	35,  // 84: agent.v1.DrainStatus.waiting_for:type_name -> agent.v1.JobRef
+	53,  // 85: agent.v1.LogBatch.lines:type_name -> agent.v1.LogLine
+	3,   // 86: agent.v1.LogLine.level:type_name -> agent.v1.LogLevel
+	35,  // 87: agent.v1.LogLine.job:type_name -> agent.v1.JobRef
+	56,  // 88: agent.v1.CheckResults.results:type_name -> agent.v1.CheckResult
+	35,  // 89: agent.v1.UpdateReport.waiting_for:type_name -> agent.v1.JobRef
+	61,  // 90: agent.v1.CacheReport.caches:type_name -> agent.v1.CacheStatus
+	35,  // 91: agent.v1.CacheWipeStatus.waiting_for:type_name -> agent.v1.JobRef
+	78,  // 92: agent.v1.MachineReport.kvm:type_name -> agent.v1.KvmReport
+	79,  // 93: agent.v1.MachineReport.engine:type_name -> agent.v1.EngineReport
+	80,  // 94: agent.v1.MachineReport.images:type_name -> agent.v1.ImageReport
+	77,  // 95: agent.v1.MachineReport.package_failures:type_name -> agent.v1.PackageFailure
+	75,  // 96: agent.v1.MachineReport.symlink:type_name -> agent.v1.SymlinkReport
+	76,  // 97: agent.v1.MachineReport.macos_vms:type_name -> agent.v1.MacVmReport
+	74,  // 98: agent.v1.MachineReport.docker_disk:type_name -> agent.v1.DockerDiskReport
+	73,  // 99: agent.v1.MachineReport.runner_services:type_name -> agent.v1.RunnerServiceReport
+	66,  // 100: agent.v1.ScanRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
+	66,  // 101: agent.v1.RemoveRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
+	68,  // 102: agent.v1.RemoveRunnerLeftovers.items:type_name -> agent.v1.LeftoverRef
+	70,  // 103: agent.v1.RunnerLeftoversReport.items:type_name -> agent.v1.Leftover
+	71,  // 104: agent.v1.RunnerLeftoversReport.results:type_name -> agent.v1.LeftoverResult
+	4,   // 105: agent.v1.EnsureImageAnswer.outcome:type_name -> agent.v1.EnsureImageAnswer.Outcome
+	5,   // 106: agent.v1.RegistryTokenRequest.action:type_name -> agent.v1.RegistryTokenRequest.Action
+	6,   // 107: agent.v1.PushReport.state:type_name -> agent.v1.PushReport.State
+	7,   // 108: agent.v1.BuildReport.phase:type_name -> agent.v1.BuildReport.Phase
+	8,   // 109: agent.v1.PullReport.source:type_name -> agent.v1.PullReport.Source
+	9,   // 110: agent.v1.PullReport.state:type_name -> agent.v1.PullReport.State
+	35,  // 111: agent.v1.JobResourceSamples.job:type_name -> agent.v1.JobRef
+	90,  // 112: agent.v1.JobResourceSamples.samples:type_name -> agent.v1.JobResourceSample
+	92,  // 113: agent.v1.HealthReport.boot:type_name -> agent.v1.BootHealth
+	93,  // 114: agent.v1.HealthReport.volumes:type_name -> agent.v1.VolumeHealth
+	94,  // 115: agent.v1.HealthReport.swap:type_name -> agent.v1.SwapHealth
+	95,  // 116: agent.v1.HealthReport.oom:type_name -> agent.v1.OomHealth
+	97,  // 117: agent.v1.HealthReport.connectivity:type_name -> agent.v1.ConnectivityHealth
+	98,  // 118: agent.v1.HealthReport.versions:type_name -> agent.v1.VersionHealth
+	99,  // 119: agent.v1.HealthReport.updates:type_name -> agent.v1.UpdateHealth
+	100, // 120: agent.v1.HealthReport.power:type_name -> agent.v1.PowerHealth
+	101, // 121: agent.v1.HealthReport.docker_use:type_name -> agent.v1.DockerUseHealth
+	102, // 122: agent.v1.HealthReport.thermal:type_name -> agent.v1.ThermalHealth
+	103, // 123: agent.v1.HealthReport.load_average:type_name -> agent.v1.LoadAverageHealth
+	96,  // 124: agent.v1.OomHealth.scopes:type_name -> agent.v1.OomScope
+	40,  // 125: agent.v1.GateDecision.Go.slots:type_name -> agent.v1.SlotGrant
+	10,  // 126: agent.v1.AgentService.Join:input_type -> agent.v1.JoinRequest
+	12,  // 127: agent.v1.AgentService.Session:input_type -> agent.v1.SessionRequest
+	11,  // 128: agent.v1.AgentService.Join:output_type -> agent.v1.JoinResponse
+	13,  // 129: agent.v1.AgentService.Session:output_type -> agent.v1.SessionResponse
+	128, // [128:130] is the sub-list for method output_type
+	126, // [126:128] is the sub-list for method input_type
+	126, // [126:126] is the sub-list for extension type_name
+	126, // [126:126] is the sub-list for extension extendee
+	0,   // [0:126] is the sub-list for field type_name
 }
 
 func init() { file_agent_v1_agent_proto_init() }
@@ -9679,6 +11098,7 @@ func file_agent_v1_agent_proto_init() {
 		(*SessionRequest_PullReport)(nil),
 		(*SessionRequest_BuildReport)(nil),
 		(*SessionRequest_JobResourceSamples)(nil),
+		(*SessionRequest_HealthReport)(nil),
 	}
 	file_agent_v1_agent_proto_msgTypes[3].OneofWrappers = []any{
 		(*SessionResponse_HelloAck)(nil),
@@ -9723,7 +11143,7 @@ func file_agent_v1_agent_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_v1_agent_proto_rawDesc), len(file_agent_v1_agent_proto_rawDesc)),
 			NumEnums:      10,
-			NumMessages:   84,
+			NumMessages:   97,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

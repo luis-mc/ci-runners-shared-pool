@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
 	"log/slog"
 	"net/url"
 	"os"
@@ -77,6 +78,8 @@ type controllerDeps struct {
 	Caches *caches.Service
 	// Link carries runner commands to remote machines and reports (CRSP63); nil keeps remote machines unreachable.
 	Link *agentlink.Link
+	// Health is the machine health service (OPS83); nil leaves the health routes and checks off.
+	Health *machinehealth.Service
 	// MachineSecrets is the secret source the config export reads (mr.Secrets).
 	MachineSecrets secrets.Store
 	// Backends are the runner backends of the controller's own OS; nil means none.
@@ -339,7 +342,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 
 	// Doctor: the M1 check registry over the controller's own data.
 	_, docSvc := wire.NewDoctor(wire.DoctorDeps{
-		Fleet: doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc},
+		Fleet: doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc, health: d.Health},
 		GitHub: func(context.Context) (doctor.GitHub, error) {
 			if gh.AppID() == 0 {
 				return nil, nil
@@ -349,7 +352,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
 		KVM:       reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
 		Engines:   reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
-		Extra:     checks.KVMReportedChecks(),
+		Extra:     append(checks.KVMReportedChecks(), checks.HealthChecks()...),
 		Demand:    quietSource{wd: quietDemand},
 		Ephemeral: runnerSvc,
 		Timers:    timerSvc,
@@ -362,6 +365,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Lifecycle = d.Lifecycle
 		c.Options.Fleet = fleetView{svc: d.Machines, state: func(ctx context.Context) string { return d.Lifecycle.Status(ctx).State }}
 		c.Options.Remove = newRemoveService(d.Ops.Audit, d.Machines, func(err error) { logger.Warn("audit the remove", "err", err) })
+	}
+	if d.Health != nil {
+		c.Options.Health = d.Health
 	}
 	c.Options.Packages = d.Packages
 	c.Options.PublicHost, c.Options.ListenAddr = d.PublicHost, d.Cfg.ListenAddr

@@ -464,6 +464,13 @@ type JobDaily struct {
 	RunP90Ms   int64
 }
 
+type JobEndReason struct {
+	JobID      int64
+	Reason     string
+	Detail     string
+	RecordedAt string
+}
+
 type JobFactsPending struct {
 	JobID     int64
 	Json      string
@@ -658,6 +665,23 @@ type MachineChange struct {
 	StartedAt  string
 	DeadlineAt string
 	FinishedAt sql.NullString
+}
+
+type MachineDiskSample struct {
+	MachineID  string
+	Role       string
+	Path       string
+	SampledAt  string
+	FreeBytes  int64
+	TotalBytes int64
+}
+
+type MachineHealth struct {
+	MachineID  string
+	ReceivedAt string
+	Report     string
+	OomTotal   int64
+	LastOomAt  string
 }
 
 type MachineKey struct {
