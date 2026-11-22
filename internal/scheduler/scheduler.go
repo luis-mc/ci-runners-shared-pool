@@ -110,6 +110,11 @@ type Decision struct {
 	Place    int
 	// Timeout is "fail" or "run" when the maximum wait passed (R5.20).
 	Timeout string
+	// Class and MemoryCapGiB are the runner's class and the hard memory cap of
+	// the job at its ceiling, set on a go when admission knows the runner's
+	// class (R5.95). 0 means no cap.
+	Class        string
+	MemoryCapGiB int
 }
 
 // Freed is one slot or ticket freed, with its reason, for the slot log and

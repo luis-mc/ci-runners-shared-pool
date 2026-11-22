@@ -294,6 +294,13 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}); ok {
 		q.SetUncleanLookup(func(machineID, name string) string { return runnerSvc.Unclean(ctx, machineID, name) })
 	}
+	// The gate reads a runner's size class: its job ceiling and memory cap (scheduling R5.90, R5.95).
+	if q, ok := d.Queue.(interface {
+		SetRunnerClass(func(machineID, runnerName string) string)
+	}); ok {
+		q.SetRunnerClass(func(machineID, name string) string { return runnerSvc.ClassOf(ctx, machineID, name) })
+	}
+	c.Options.RunnerClasses = newClassService(d.DB, runnerSvc, d.Machines)
 	// Long-lived runners serve every repository that uses the pool: one hidden
 	// registration for each pool repository, made and removed with the pool
 	// switch and by the reconcile loop (runners R5.88).

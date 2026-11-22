@@ -2786,6 +2786,78 @@ func (e RunWasteKind) Valid() bool {
 	}
 }
 
+// Defines values for RunnerClassSizeClass.
+const (
+	Large  RunnerClassSizeClass = "large"
+	Medium RunnerClassSizeClass = "medium"
+	Small  RunnerClassSizeClass = "small"
+	Xl     RunnerClassSizeClass = "xl"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassSizeClass enum.
+func (e RunnerClassSizeClass) Valid() bool {
+	switch e {
+	case Large:
+		return true
+	case Medium:
+		return true
+	case Small:
+		return true
+	case Xl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassesPresets.
+const (
+	RunnerClassesPresetsCompact     RunnerClassesPresets = "compact"
+	RunnerClassesPresetsCustom      RunnerClassesPresets = "custom"
+	RunnerClassesPresetsMemoryHeavy RunnerClassesPresets = "memory-heavy"
+	RunnerClassesPresetsStandard    RunnerClassesPresets = "standard"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassesPresets enum.
+func (e RunnerClassesPresets) Valid() bool {
+	switch e {
+	case RunnerClassesPresetsCompact:
+		return true
+	case RunnerClassesPresetsCustom:
+		return true
+	case RunnerClassesPresetsMemoryHeavy:
+		return true
+	case RunnerClassesPresetsStandard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassesInputPreset.
+const (
+	RunnerClassesInputPresetCompact     RunnerClassesInputPreset = "compact"
+	RunnerClassesInputPresetCustom      RunnerClassesInputPreset = "custom"
+	RunnerClassesInputPresetMemoryHeavy RunnerClassesInputPreset = "memory-heavy"
+	RunnerClassesInputPresetStandard    RunnerClassesInputPreset = "standard"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassesInputPreset enum.
+func (e RunnerClassesInputPreset) Valid() bool {
+	switch e {
+	case RunnerClassesInputPresetCompact:
+		return true
+	case RunnerClassesInputPresetCustom:
+		return true
+	case RunnerClassesInputPresetMemoryHeavy:
+		return true
+	case RunnerClassesInputPresetStandard:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunnerKind.
 const (
 	RunnerKindEphemeral  RunnerKind = "ephemeral"
@@ -3463,6 +3535,7 @@ const (
 	WaitReasonMachineDrained          WaitReason = "machine_drained"
 	WaitReasonNoRunnerWithLabels      WaitReason = "no_runner_with_labels"
 	WaitReasonOnBattery               WaitReason = "on_battery"
+	WaitReasonOverMemory              WaitReason = "over_memory"
 	WaitReasonPaused                  WaitReason = "paused"
 	WaitReasonRepositoryParallelLimit WaitReason = "repository_parallel_limit"
 	WaitReasonUnknown                 WaitReason = "unknown"
@@ -3482,6 +3555,8 @@ func (e WaitReason) Valid() bool {
 	case WaitReasonNoRunnerWithLabels:
 		return true
 	case WaitReasonOnBattery:
+		return true
+	case WaitReasonOverMemory:
 		return true
 	case WaitReasonPaused:
 		return true
@@ -7217,6 +7292,57 @@ type Runner struct {
 	UncleanReason *string `json:"unclean_reason,omitempty"`
 }
 
+// RunnerClassSize defines model for RunnerClassSize.
+type RunnerClassSize struct {
+	Class     RunnerClassSizeClass `json:"class"`
+	Cpus      int                  `json:"cpus"`
+	MemoryGib int                  `json:"memory_gib"`
+}
+
+// RunnerClassSizeClass defines model for RunnerClassSize.Class.
+type RunnerClassSizeClass string
+
+// RunnerClasses defines model for RunnerClasses.
+type RunnerClasses struct {
+	// Classes small, medium, large, xl.
+	Classes []RunnerClassSize `json:"classes"`
+
+	// Hints Notes that never block a save.
+	Hints []string `json:"hints"`
+
+	// Preset The preset the table equals, or custom.
+	Preset  string                 `json:"preset"`
+	Presets []RunnerClassesPresets `json:"presets"`
+
+	// ReserveAfterMinutes Default 10.
+	ReserveAfterMinutes int `json:"reserve_after_minutes"`
+
+	// ReserveAfterPasses Default 3.
+	ReserveAfterPasses int `json:"reserve_after_passes"`
+
+	// Unheld Classes no machine's pool can hold. A note, not an error.
+	Unheld []string `json:"unheld"`
+}
+
+// RunnerClassesPresets defines model for RunnerClasses.Presets.
+type RunnerClassesPresets string
+
+// RunnerClassesInput defines model for RunnerClassesInput.
+type RunnerClassesInput struct {
+	Classes *[]RunnerClassSize `json:"classes,omitempty"`
+
+	// ConfirmLowering Needed when a size that runners use gets smaller.
+	ConfirmLowering *bool `json:"confirm_lowering,omitempty"`
+
+	// Preset Sets the table to that preset. Ignored when `classes` is given.
+	Preset              *RunnerClassesInputPreset `json:"preset,omitempty"`
+	ReserveAfterMinutes *int                      `json:"reserve_after_minutes,omitempty"`
+	ReserveAfterPasses  *int                      `json:"reserve_after_passes,omitempty"`
+}
+
+// RunnerClassesInputPreset Sets the table to that preset. Ignored when `classes` is given.
+type RunnerClassesInputPreset string
+
 // RunnerEnv defines model for RunnerEnv.
 type RunnerEnv struct {
 	RunnerId string           `json:"runner_id"`
@@ -8627,6 +8753,9 @@ type PlanRepositoryChangesJSONRequestBody = PlanRepositoryChangesRequest
 
 // ApplyRepositoryChangesJSONRequestBody defines body for ApplyRepositoryChanges for application/json ContentType.
 type ApplyRepositoryChangesJSONRequestBody = ApplyPlanRequest
+
+// PutRunnerClassesJSONRequestBody defines body for PutRunnerClasses for application/json ContentType.
+type PutRunnerClassesJSONRequestBody = RunnerClassesInput
 
 // PlanRunnersJSONRequestBody defines body for PlanRunners for application/json ContentType.
 type PlanRunnersJSONRequestBody = PlanRunnersRequest
@@ -10102,6 +10231,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/repository-plans/{planId}/stop (the `StopRepositoryPlan` operationId).
 	StopRepositoryPlan(ctx context.Context, planId PlanId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRunnerClasses The size classes of runners and the reservation numbers
+	//
+	// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+	//
+	// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+	GetRunnerClasses(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutRunnerClassesWithBody Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClassesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutRunnerClasses Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClasses(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PlanRunnersWithBody Plan adding runners on a machine
 	//
@@ -13671,6 +13825,61 @@ func (c *Client) ApplyRepositoryChanges(ctx context.Context, planId PlanId, body
 // Corresponds with POST /api/v1/repository-plans/{planId}/stop (the `StopRepositoryPlan` operationId).
 func (c *Client) StopRepositoryPlan(ctx context.Context, planId PlanId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewStopRepositoryPlanRequest(c.Server, planId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRunnerClasses The size classes of runners and the reservation numbers
+//
+// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+//
+// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+func (c *Client) GetRunnerClasses(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunnerClassesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutRunnerClassesWithBody Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *Client) PutRunnerClassesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutRunnerClassesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutRunnerClasses Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *Client) PutRunnerClasses(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutRunnerClassesRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -21437,6 +21646,73 @@ func NewStopRepositoryPlanRequest(server string, planId PlanId) (*http.Request, 
 	return req, nil
 }
 
+// NewGetRunnerClassesRequest constructs an http.Request for the GetRunnerClasses method
+func NewGetRunnerClassesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runner-classes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutRunnerClassesRequest calls the generic PutRunnerClasses builder with application/json body
+func NewPutRunnerClassesRequest(server string, body PutRunnerClassesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutRunnerClassesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutRunnerClassesRequestWithBody constructs an http.Request for the PutRunnerClasses method, with any body, and a specified content type
+func NewPutRunnerClassesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runner-classes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPlanRunnersRequest calls the generic PlanRunners builder with application/json body
 func NewPlanRunnersRequest(server string, body PlanRunnersJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -25039,6 +25315,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/repository-plans/{planId}/stop (the `StopRepositoryPlan` operationId).
 	StopRepositoryPlanWithResponse(ctx context.Context, planId PlanId, reqEditors ...RequestEditorFn) (*StopRepositoryPlanResponse, error)
+
+	// GetRunnerClassesWithResponse The size classes of runners and the reservation numbers
+	//
+	// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+	GetRunnerClassesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRunnerClassesResponse, error)
+
+	// PutRunnerClassesWithBodyWithResponse Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClassesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error)
+
+	// PutRunnerClassesWithResponse Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClassesWithResponse(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error)
 
 	// PlanRunnersWithBodyWithResponse Plan adding runners on a machine
 	//
@@ -32280,6 +32583,102 @@ func (r StopRepositoryPlanResponse) ContentType() string {
 	return ""
 }
 
+type GetRunnerClassesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerClasses
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunnerClassesResponse) GetJSON200() *RunnerClasses {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunnerClassesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunnerClassesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunnerClassesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunnerClassesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunnerClassesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutRunnerClassesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerClasses
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutRunnerClassesResponse) GetJSON200() *RunnerClasses {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutRunnerClassesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutRunnerClassesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutRunnerClassesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutRunnerClassesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutRunnerClassesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type PlanRunnersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -37019,6 +37418,51 @@ func (c *ClientWithResponses) StopRepositoryPlanWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseStopRepositoryPlanResponse(rsp)
+}
+
+// GetRunnerClassesWithResponse The size classes of runners and the reservation numbers
+//
+// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+func (c *ClientWithResponses) GetRunnerClassesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRunnerClassesResponse, error) {
+	rsp, err := c.GetRunnerClasses(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunnerClassesResponse(rsp)
+}
+
+// PutRunnerClassesWithBodyWithResponse Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *ClientWithResponses) PutRunnerClassesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error) {
+	rsp, err := c.PutRunnerClassesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutRunnerClassesResponse(rsp)
+}
+
+// PutRunnerClassesWithResponse Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *ClientWithResponses) PutRunnerClassesWithResponse(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error) {
+	rsp, err := c.PutRunnerClasses(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutRunnerClassesResponse(rsp)
 }
 
 // PlanRunnersWithBodyWithResponse Plan adding runners on a machine
@@ -42562,6 +43006,72 @@ func ParseStopRepositoryPlanResponse(rsp *http.Response) (*StopRepositoryPlanRes
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRunnerClassesResponse parses an HTTP response from a GetRunnerClassesWithResponse call
+func ParseGetRunnerClassesResponse(rsp *http.Response) (*GetRunnerClassesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunnerClassesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerClasses
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutRunnerClassesResponse parses an HTTP response from a PutRunnerClassesWithResponse call
+func ParsePutRunnerClassesResponse(rsp *http.Response) (*PutRunnerClassesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutRunnerClassesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerClasses
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error

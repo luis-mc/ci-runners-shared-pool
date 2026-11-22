@@ -1056,6 +1056,22 @@ type RunsOnFinding struct {
 	FoundAt      string
 }
 
+type SchedPass struct {
+	TicketID  string
+	MachineID string
+	Passes    int64
+}
+
+type SchedReservation struct {
+	MachineID string
+	TicketID  string
+	Cpus      int64
+	MemGib    int64
+	Class     string
+	Since     string
+	Expected  string
+}
+
 type SchemaMetum struct {
 	Key       string
 	Value     string
