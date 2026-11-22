@@ -33,6 +33,9 @@ type Env struct {
 	Ephemeral EphemeralSource
 	// Postgres is nil when no Postgres server is read; runner.postgres_logins then skips.
 	Postgres PostgresSource
+	// Timers says whether crsp's job and run timers enforce; nil makes
+	// timers.mode skip.
+	Timers TimerSource
 	// PoolName is the pool's name label; RunnerPrefix starts the name of every
 	// runner the product makes (default "crsp-").
 	PoolName string
@@ -516,6 +519,12 @@ type UncleanLister interface {
 // wait. The controller's watchdog keeps it; a check only reads it.
 type DemandSource interface {
 	QuietDemand(ctx context.Context) ([]QuietDemand, error)
+}
+
+// TimerSource tells whether the timers stop jobs and cancel runs (enforce on)
+// or only report (observe mode, scheduling R5.99). A check only reads it.
+type TimerSource interface {
+	TimersEnforced(ctx context.Context) (bool, error)
 }
 
 // VMTool is one program the VM backend runs.

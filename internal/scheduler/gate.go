@@ -37,6 +37,7 @@ func (e *Engine) Gate(ctx context.Context, req GateRequest) (Decision, error) {
 	e.notifyFreed(freed)
 	if err == nil {
 		e.emitDecision(req.MachineID, req.Job, dec)
+		e.lifeStarted(req.MachineID, req.Job, dec)
 	}
 	return dec, err
 }
@@ -71,6 +72,7 @@ func (e *Engine) Beat(ctx context.Context, machineID, gateID string, load Load) 
 	e.notifyFreed(freed)
 	if err == nil {
 		e.emitDecision(machineID, job, dec)
+		e.lifeStarted(machineID, job, dec)
 	}
 	return dec, err
 }

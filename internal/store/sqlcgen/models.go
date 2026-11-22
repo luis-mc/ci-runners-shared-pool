@@ -430,6 +430,28 @@ type Job struct {
 	CheckedAt    string
 }
 
+type JobClock struct {
+	JobID        int64
+	RepositoryID int64
+	Repository   string
+	RunID        int64
+	RunAttempt   int64
+	StartedAt    string
+	LimitSec     int64
+	Extended     int64
+	State        string
+	Deadline     string
+	Note         string
+	MachineID    string
+	RunnerRef    string
+	QueuedMs     int64
+	StartupMs    int64
+	HoldMs       int64
+	RunMs        int64
+	JobTimerMs   int64
+	RunTimerMs   int64
+}
+
 type JobDaily struct {
 	Day        string
 	Repository string
@@ -1034,6 +1056,20 @@ type Run struct {
 	CompletedAt  string
 	Conclusion   string
 	UpdatedAt    string
+}
+
+type RunClock struct {
+	RepositoryID int64
+	RunID        int64
+	RunAttempt   int64
+	Repository   string
+	StartedAt    string
+	LimitSec     int64
+	Extended     int64
+	State        string
+	Deadline     string
+	Note         string
+	RunTimerMs   int64
 }
 
 type RunFollowUp struct {

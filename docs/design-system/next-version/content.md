@@ -1443,3 +1443,19 @@ The words of install, update and remove (UX-79 to UX-83, components 70 to 74). T
 | Version {version} is skipped. We look again when a newer version is out. | Title after the third failure. |
 | Pair this machine first. Crsp looks for updates after that. | Title on an unpaired machine; no check runs. |
 | Remove {product}, Keep my data, Delete my data too ({size} GB in {path}), Cancel | The Remove question. The Remove button says `Remove {product}`, stays disabled until one choice is made, and its reason is `Choose what happens to your data first.`. |
+## Timer mode words (OPS81, scheduling R5.107, doctor R5.65)
+
+Timers start in observe mode: they report and stop nothing until the owner switches enforcement on in Settings. `{mm:ss}` is the limit of the timer, `{n}` the seconds left of the grace.
+
+| Where | Words |
+|---|---|
+| Setting name | Enforce timers |
+| Setting help | Off: timers only report. A job or run over its limit is written to the audit log and noted, and nothing is stopped or cancelled. On: crsp stops the job and cancels the run. Stop now, Cancel now and Extend 10 min work in both modes. |
+| Job note, observe mode | would stop at {mm:ss} (timers in observe mode) |
+| Run note, observe mode | would cancel at {mm:ss} (timers in observe mode) |
+| Grace line, observe mode | Job timer ran out at {mm:ss}; would stop in {n} s / Run timer ran out at {mm:ss}; would cancel in {n} s |
+| Audit actions | timer.job.would_stop, timer.run.would_cancel |
+| Doctor finding, observe mode (info) | Timers are in observe mode: jobs over the limit are reported, not stopped |
+| Doctor detail | The countdowns run and the audit log shows what crsp would have stopped or cancelled. Nothing is stopped until you switch enforcement on. |
+| Doctor fix | When the reports look right, switch on Enforce timers in Settings. |
+| Doctor finding, enforcing (ok) | Timers stop jobs and cancel runs that run over |

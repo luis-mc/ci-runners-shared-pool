@@ -16,13 +16,13 @@ const (
 )
 
 // JobTimeoutMin is the longest timeout-minutes crsp asks a job to carry
-// (doctor workflow.timeout, guideline 30). Time held in the job-started hook
-// counts against it, so the hold must end well before it (scheduling R5.75).
-const JobTimeoutMin = 30
+// (doctor workflow.timeout, guideline 60). GitHub's timeout-minutes is a safety
+// net only: crsp's own job and run timers end a job first (scheduling R5.99).
+const JobTimeoutMin = 60
 
-// MaxHoldMin is the longest the job-started hook may hold a job: a third of
-// JobTimeoutMin. A longer setting is cut to it when the hook reads it (R5.75).
-const MaxHoldMin = JobTimeoutMin / 3
+// MaxHoldMin is the longest the job-started hook may hold a job: 2 minutes. A
+// longer setting is cut to it when the hook reads it (R5.75).
+const MaxHoldMin = 2
 
 // Settings are the scheduling settings of one machine (R5.1).
 type Settings struct {
