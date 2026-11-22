@@ -129,7 +129,7 @@ func only(t *testing.T, fs []doctor.Finding, check string) doctor.Finding {
 func TestEveryRegisteredCheckIsM1AndHasAnID(t *testing.T) {
 	reg := doctor.NewRegistry()
 	Register(reg)
-	if len(reg.All()) != 51 {
+	if len(reg.All()) != 52 {
 		t.Fatalf("checks: %v", reg.SortedIDs())
 	}
 	for _, c := range reg.All() {
@@ -971,5 +971,36 @@ func TestRunnerCacheWrite(t *testing.T) {
 	}
 	if got["crsp-good"].Severity != doctor.OK || got["crsp-new"].Severity != doctor.Skip {
 		t.Errorf("good %+v, unlooked %+v", got["crsp-good"], got["crsp-new"])
+	}
+}
+
+// github-integration R5.107, R5.108: a routed job that still reads only the
+// shared variable is info; on the owner's repository crsp opens the pull
+// request, on another one the finding carries the patch.
+func TestWorkflowPerJob(t *testing.T) {
+	const old = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n"
+	const done = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	for _, tc := range []struct {
+		full, src string
+		sev       doctor.Severity
+		patch     bool
+	}{{"luis-mc/app", old, doctor.Info, false}, {"other/app", old, doctor.Info, true}, {"other/app", done, doctor.OK, false}} {
+		g := newGH()
+		g.files[tc.full] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte(tc.src)}}
+		env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, tc.full, nil)}}}
+		f := only(t, run(t, env, "workflow.perjob"), "workflow.perjob")
+		if f.Severity != tc.sev || (f.Fix.Command != "") != tc.patch {
+			t.Fatalf("%s: %+v", tc.full, f)
+		}
+		if tc.patch && !strings.Contains(f.Fix.Command, "+    runs-on: ${{ fromJSON(vars.CRSP_E2E") {
+			t.Fatalf("patch %q", f.Fix.Command)
+		}
+	}
+	// A repository with no routed job gives no finding.
+	g := newGH()
+	g.files["o/r"] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte("jobs:\n  a:\n    runs-on: ubuntu-latest\n")}}
+	env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", nil)}}}
+	if fs := run(t, env, "workflow.perjob"); len(fs) != 0 {
+		t.Fatalf("%+v", fs)
 	}
 }

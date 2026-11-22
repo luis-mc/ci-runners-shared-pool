@@ -3,6 +3,7 @@ package repos
 import (
 	"context"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -232,5 +233,34 @@ func TestCheckAllRunsOnCoversEnabledRepositories(t *testing.T) { // R5.30
 	}
 	if fs, _ := e.svc.Findings(ctx, 101); len(fs) == 0 {
 		t.Fatal("the pass found nothing in a file with findings")
+	}
+}
+
+// R5.30, R5.105: the per-job form with a fallback chain is read; the routing
+// label on the runners crsp chose is not a finding; a job whose own variable is
+// not set yet falls back to the pool variable and the hosted label.
+func TestCheckPerJobFallbackChain(t *testing.T) {
+	src := []byte("jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n  gone:\n    runs-on: ${{ fromJSON(vars.CRSP_GONE || vars.RUNS_ON_WINDOWS) }}\n")
+	jobs := ParseRunsOn(src)
+	if len(jobs) != 2 || jobs[0].Var != "CRSP_E2E" || len(jobs[0].Vars) != 2 || !reflect.DeepEqual(jobs[0].Default, []string{"ubuntu-latest"}) {
+		t.Fatalf("parsed %+v", jobs)
+	}
+	pool := [][]string{{"self-hosted", "Linux", "X64"}}
+	// The per-job variable is set; its routing label is on the chosen runners, not in the pool label sets.
+	vars := map[string]string{"CRSP_E2E": `["self-hosted","Linux","crsp-e2e-7f3a"]`, "RUNS_ON_LINUX": `["self-hosted","Linux"]`}
+	for _, f := range Check("w.yml", jobs[:1], vars, pool) {
+		t.Errorf("per-job variable gave a finding: %+v", f)
+	}
+	// Not set: the pool variable answers; a hosted default is skipped.
+	if got := Check("w.yml", jobs[:1], map[string]string{"RUNS_ON_LINUX": `["self-hosted","Linux"]`}, pool); len(got) != 0 {
+		t.Fatalf("fallback to the pool variable: %+v", got)
+	}
+	if got := Check("w.yml", jobs[:1], nil, pool); len(got) != 0 {
+		t.Fatalf("hosted default is not checked: %+v", got)
+	}
+	// Neither variable nor default: the pool variable is named.
+	got := Check("w.yml", jobs[1:], nil, pool)
+	if len(got) != 1 || got[0].Kind != KindUsesVar || !strings.Contains(got[0].Text, "RUNS_ON_WINDOWS") {
+		t.Fatalf("missing pool variable: %+v", got)
 	}
 }

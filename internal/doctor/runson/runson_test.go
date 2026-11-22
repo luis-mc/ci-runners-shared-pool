@@ -129,3 +129,31 @@ func TestBadYAMLIsAnError(t *testing.T) {
 		t.Errorf("empty file: %v %v", jobs, err)
 	}
 }
+
+// R5.18: a fallback chain of variables with a JSON-string default resolves to
+// the first variable that is set, then the default.
+func TestParseFallbackChain(t *testing.T) {
+	src := "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	jobs, err := Parse("w.yml", []byte(src))
+	if err != nil || len(jobs) != 1 {
+		t.Fatalf("jobs %+v err %v", jobs, err)
+	}
+	j := jobs[0]
+	if j.Kind != Variable || j.Var != "CRSP_E2E" || len(j.Vars) != 2 || j.Vars[1] != "RUNS_ON_LINUX" || len(j.Labels) != 1 || j.Labels[0] != "ubuntu-latest" {
+		t.Fatalf("job %+v", j)
+	}
+	if l, ok, _ := j.Resolve(map[string]string{"RUNS_ON_LINUX": `["self-hosted","Linux"]`, "CRSP_E2E": `["self-hosted","Linux","crsp-e2e-7f3a"]`}); !ok || len(l) != 3 {
+		t.Fatalf("first set variable must win: %v %v", l, ok)
+	}
+	if l, ok, _ := j.Resolve(map[string]string{"RUNS_ON_LINUX": `["self-hosted","Linux"]`}); !ok || len(l) != 2 {
+		t.Fatalf("pool variable next: %v %v", l, ok)
+	}
+	if l, ok, _ := j.Resolve(nil); !ok || l[0] != "ubuntu-latest" {
+		t.Fatalf("default last: %v %v", l, ok)
+	}
+	// Not a chain: another call, or an operand that is not a variable, stays unresolved.
+	bad, _ := Parse("w.yml", []byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(inputs.x || vars.A) }}\n"))
+	if bad[0].Kind != Unresolved {
+		t.Fatalf("%+v", bad[0])
+	}
+}

@@ -925,6 +925,41 @@ type RestoreDrill struct {
 	Detail     string
 }
 
+type RoutingJob struct {
+	Repository string
+	Job        string
+	VarName    string
+	Label      string
+	Class      string
+	Os         string
+	Value      string
+}
+
+type RoutingLabel struct {
+	Repository string
+	Label      string
+	State      string
+	Since      string
+	Jobs       string
+}
+
+type RoutingPr struct {
+	Repository string
+	Number     int64
+	Url        string
+	OpenedAt   string
+}
+
+type RoutingRunnerLabel struct {
+	Repository string
+	RunnerID   string
+	GithubID   int64
+	Label      string
+	ScopeOwner string
+	ScopeRepo  string
+	ScopeOrg   string
+}
+
 type Run struct {
 	RepositoryID int64
 	RunID        int64

@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/doctor/runson"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/routing"
 )
 
 // RunsOnJob is the runs-on of one workflow job.
@@ -17,6 +20,9 @@ type RunsOnJob struct {
 	Literal []string
 	// Var names the variable of a fromJSON(vars.NAME) expression, if any.
 	Var string
+	// Vars holds every variable of a fallback chain, in order:
+	// fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '"ubuntu-latest"').
+	Vars []string
 	// Default holds the labels of `|| '[...]'` after the variable.
 	Default []string
 	// Unresolved is set for an expression that cannot be resolved, such as a
@@ -101,12 +107,19 @@ func (r *RunsOnJob) fill(v string) {
 		r.Literal = []string{strings.TrimSpace(v)}
 		return
 	}
+	if vars, def, ok := runson.ParseChain(v); ok && len(vars) > 1 {
+		r.Var, r.Vars = vars[0], vars
+		if labels, ok := runson.ParseDefault(def); ok {
+			r.Default = labels
+		}
+		return
+	}
 	m := fromJSONRE.FindStringSubmatch(v)
 	if m == nil {
 		r.Unresolved = true
 		return
 	}
-	r.Var = m[1]
+	r.Var, r.Vars = m[1], []string{m[1]}
 	def := ""
 	for _, g := range m[2:] {
 		if g != "" {
@@ -118,6 +131,8 @@ func (r *RunsOnJob) fill(v string) {
 		var labels []string
 		if err := json.Unmarshal([]byte(def), &labels); err == nil {
 			r.Default = labels
+		} else if one := ""; json.Unmarshal([]byte(def), &one) == nil && one != "" {
+			r.Default = []string{one}
 		} else {
 			r.Default = []string{def}
 		}
@@ -146,14 +161,26 @@ func Check(path string, jobs []RunsOnJob, vars map[string]string, pool [][]strin
 		viaVar := false
 		if j.Var != "" {
 			viaVar = true
-			raw, set := vars[j.Var]
+			chain := j.Vars
+			if len(chain) == 0 {
+				chain = []string{j.Var}
+			}
+			setVar, raw, set := chain[0], "", false
+			for _, n := range chain { // the first variable of the chain that is set wins
+				if v, ok := vars[n]; ok {
+					setVar, raw, set = n, v, true
+					break
+				}
+			}
+			j.Var = chain[len(chain)-1] // the pool variable the job needs when none is set
 			switch {
 			case set:
 				if err := json.Unmarshal([]byte(raw), &labels); err != nil {
 					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar,
-						Text: "job " + j.Job + ": variable " + j.Var + " is not a JSON list of labels"})
+						Text: "job " + j.Job + ": variable " + setVar + " is not a JSON list of labels"})
 					continue
 				}
+				labels = routing.StripLabels(labels) // routing labels sit on the runners crsp chose
 			case len(j.Default) > 0:
 				labels = j.Default
 			default:

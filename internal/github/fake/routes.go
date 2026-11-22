@@ -358,6 +358,8 @@ func (s *Server) repoRoutes(w http.ResponseWriter, r *http.Request) {
 			uid = u.ID
 		}
 		writeJSON(w, 200, s.repoJSON(rp, uid))
+	case strings.HasPrefix(rest, "actions/runners") && s.runnerLabelRoute(w, r, full, strings.TrimPrefix(rest, "actions/runners")):
+	case s.routingRoute(w, r, full, rest):
 	case strings.HasPrefix(rest, "actions/runners"):
 		s.runnerRoutes(w, r, full, strings.TrimPrefix(rest, "actions/runners"))
 	case rest == "actions/variables" || strings.HasPrefix(rest, "actions/variables/"):

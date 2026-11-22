@@ -289,6 +289,13 @@ func (s *Service) ApplyPlan(ctx context.Context, p auth.Principal, id string, ap
 			_ = s.CheckRunsOn(ctx, id)
 		}
 	}
+	if s.cfg.OnPoolOn != nil { // the pool is on and its variables are written (R5.106)
+		for _, c := range changesOf(plan) {
+			if r2, err := s.cfg.Store.GetRepository(ctx, c.RepositoryID); c.Pool && err == nil && r2.PoolOn {
+				s.cfg.OnPoolOn(ctx, r2)
+			}
+		}
+	}
 	return plan, nil
 }
 

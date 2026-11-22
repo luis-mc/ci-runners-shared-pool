@@ -502,3 +502,19 @@ func TestSyncWithoutTokenAppErrorLeavesFlagUnknown(t *testing.T) {
 		}
 	}
 }
+
+// R5.106: opting a repository in calls the routing hook once, after the pool
+// is on and the variables are written; the hook's work never blocks the opt-in.
+func TestEnableCallsRoutingHook(t *testing.T) {
+	e := newEnv(t)
+	e.world()
+	var called []string
+	e.svc.cfg.OnPoolOn = func(_ context.Context, r Repository) {
+		v, _ := e.fake.Variable(r.FullName, "RUNS_ON_LINUX")
+		called = append(called, r.FullName+" "+v)
+	}
+	e.turnOn(101)
+	if len(called) != 1 || !strings.HasPrefix(called[0], "alice/secret [\"self-hosted\"") {
+		t.Fatalf("hook calls %v", called)
+	}
+}
