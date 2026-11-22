@@ -20,6 +20,8 @@ The version is in every installer and archive name, without the leading `v` (`cr
 | `crsp-sbom-go.spdx.json`, `crsp-sbom-web.spdx.json` | The SBOMs (SPDX 2.3 JSON): Go modules in the binary, npm packages of the web console |
 | `SHA256SUMS` | SHA-256 of every asset above |
 
+Transition (CRSP224): every installer and archive is published twice, once as `Crsp-<version>-<os>-<arch>.<ext>` and once, byte for byte the same, as `crsp-<goos>-<goarch>_<version>.<ext>`. Both names are in `SHA256SUMS` and attested. The second name is for installs on 0.1.21 or older, whose updater looks for it. Use the `Crsp-` name for a new install. The legacy names stay until no supported install is on 0.1.21 or older.
+
 ## 1. Check the checksum
 
 Put the file and `SHA256SUMS` from the same release in one folder.

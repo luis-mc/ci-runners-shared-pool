@@ -11,6 +11,10 @@ name: Release
 # no leading v (an edge build carries edge-<sha>). The CI artifacts and the files the build
 # scripts write keep their stable names (DL-22); the publish job renames the files when it fills
 # dist/ (scripts/ci/release-names.sh).
+# TRANSITION (CRSP224): each installer and archive is also published as a byte-identical copy named
+# crsp-<goos>-<goarch>_<version>.<ext> (goos windows, linux, darwin; goarch amd64, arm64), the name
+# the updater of 0.1.21 and older looks for. They are in SHA256SUMS and attested like the others,
+# and stay until no supported install is on 0.1.21 or older (operations R5.127).
 # crsp-sbom-go.spdx.json and crsp-sbom-web.spdx.json (SPDX SBOMs, CRSP90),
 # manifest.json and manifest.json.sig (the update manifest and its Ed25519 signature, signed with
 # the secret CRSP_UPDATE_SIGNING_KEY; the release fails when the secret is missing),
@@ -329,19 +333,32 @@ jobs:
             --repo "$GH_REPO" --tag "$tag" --out dist/manifest.json
           bash scripts/ci/release-sign.sh dist/manifest.json dist/manifest.json.sig
 
+      # CRSP224, TRANSITION: a byte-identical copy of each installer and archive under the name the
+      # updater of 0.1.21 and older looks for, crsp-<goos>-<goarch>_<version>.<ext> (os windows,
+      # linux, darwin; arch amd64, arm64). OPS69 renamed the assets, and those updaters would find
+      # nothing. The copies come after the manifest, so manifest.json and its signature are unchanged;
+      # they join SHA256SUMS and the attestation below. The legacy names stay until no supported
+      # install is on 0.1.21 or older (operations R5.127, docs/guides/install.md).
+      - name: Legacy asset names for 0.1.21 and older (transition)
+        run: bash scripts/ci/release-legacy.sh dist "$VERSION"
+
       - name: Checksum every asset
         run: |
           set -euo pipefail
-          # 14 installers and archives + 2 SBOMs + the manifest and its signature
+          # 14 installers and archives + 14 legacy copies (CRSP224) + 2 SBOMs + the manifest and its signature
           count=$(find dist -type f | wc -l)
-          [ "$count" -eq 18 ] || { echo "::error::expected 18 assets, found $count"; exit 1; }
-          # Every installer and archive is named Crsp-<version>-<os>-<arch>.<ext> (OPS69).
-          bad=$(find dist -type f \( -name '*.msi' -o -name '*.pkg' -o -name '*.deb' -o -name '*.rpm' -o -name '*.tar.gz' -o -name '*.zip' \) -printf '%f\n' \
-            | grep -Evc "^Crsp-${VERSION//./\\.}-(win|linux|macos)-(x64|arm64)\.(msi|deb|rpm|pkg|tar\.gz|zip)$" || true)
-          [ "$bad" -eq 0 ] || { echo "::error::$bad installers or archives are not named Crsp-${VERSION}-<os>-<arch>.<ext>"; exit 1; }
-          (cd dist && sha256sum Crsp-* crsp-sbom-* manifest.json manifest.json.sig > SHA256SUMS)
+          [ "$count" -eq 32 ] || { echo "::error::expected 32 assets, found $count"; exit 1; }
+          # Every installer and archive is named Crsp-<version>-<os>-<arch>.<ext> (OPS69) or is its
+          # legacy copy crsp-<goos>-<goarch>_<version>.<ext> (CRSP224): 14 of each.
+          ext='(msi|deb|rpm|pkg|tar\.gz|zip)'
+          ver="${VERSION//./\.}"
+          files=$(find dist -type f -regextype posix-extended -regex ".*\.${ext}" -printf '%f\n')
+          new=$(grep -Ec "^Crsp-${ver}-(win|linux|macos)-(x64|arm64)\.${ext}$" <<<"$files" || true)
+          old=$(grep -Ec "^crsp-(windows|linux|darwin)-(amd64|arm64)_${ver}\.${ext}$" <<<"$files" || true)
+          [ "$new" -eq 14 ] && [ "$old" -eq 14 ] || { echo "::error::expected 14 Crsp-${VERSION}-<os>-<arch>.<ext> and 14 legacy crsp-<goos>-<goarch>_<version>.<ext> installers and archives, found $new and $old"; exit 1; }
+          (cd dist && sha256sum Crsp-* crsp-* manifest.json manifest.json.sig > SHA256SUMS)
           lines=$(wc -l < dist/SHA256SUMS)
-          [ "$lines" -eq 18 ] || { echo "::error::SHA256SUMS has $lines lines, expected 18"; exit 1; }
+          [ "$lines" -eq 32 ] || { echo "::error::SHA256SUMS has $lines lines, expected 32"; exit 1; }
           cat dist/SHA256SUMS
 
       # One attestation for every asset and for SHA256SUMS itself.
@@ -349,7 +366,7 @@ jobs:
         with:
           subject-path: |
             dist/Crsp-*
-            dist/crsp-sbom-*
+            dist/crsp-*
             dist/manifest.json
             dist/manifest.json.sig
             dist/SHA256SUMS

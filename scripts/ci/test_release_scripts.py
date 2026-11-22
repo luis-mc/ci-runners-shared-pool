@@ -119,6 +119,28 @@ class Workflow(unittest.TestCase):
         self.assertIn("name: msi-windows-${{ matrix.goarch }}", text)
         self.assertIn("name: pkg-${{ matrix.os }}-${{ matrix.arch }}", text)
 
+    def test_release_publishes_legacy_copies_after_the_manifest(self):
+        # CRSP224, TRANSITION: crsp-<goos>-<goarch>_<version>.<ext> copies for the 0.1.21 updater.
+        text = open(WORKFLOW).read()
+        self.assertIn('release-legacy.sh dist "$VERSION"', text)
+        # After the manifest (so it is unchanged), before the checksums (so they cover the copies).
+        self.assertLess(text.index("release_manifest.py"), text.index("release-legacy.sh"))
+        self.assertLess(text.index("release-legacy.sh"), text.index("> SHA256SUMS"))
+        self.assertIn("sha256sum Crsp-* crsp-* manifest.json manifest.json.sig > SHA256SUMS", text)
+        self.assertIn("dist/crsp-*", text)  # attestation subjects
+        self.assertIn('[ "$count" -eq 32 ]', text)
+        self.assertIn('[ "$lines" -eq 32 ]', text)
+
+    def test_legacy_names(self):
+        for args, want in (
+            (("0.1.22", "win", "x64", "msi"), "crsp-windows-amd64_0.1.22.msi"),
+            (("0.1.22", "win", "arm64", "zip"), "crsp-windows-arm64_0.1.22.zip"),
+            (("0.1.22", "linux", "arm64", "deb"), "crsp-linux-arm64_0.1.22.deb"),
+            (("0.1.22", "macos", "arm64", "pkg"), "crsp-darwin-arm64_0.1.22.pkg"),
+            (("v0.1.22", "macos", "x64", "tar.gz"), "crsp-darwin-amd64_0.1.22.tar.gz"),
+        ):
+            self.assertEqual(self.names("--legacy", *args), want)
+
     def test_release_signs_the_manifest(self):
         text = open(WORKFLOW).read()
         self.assertIn("CRSP_UPDATE_SIGNING_KEY: ${{ secrets.CRSP_UPDATE_SIGNING_KEY }}", text)

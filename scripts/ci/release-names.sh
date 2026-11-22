@@ -46,6 +46,40 @@ stable_to_asset() {
   asset_name "$version" "$os" "$arch" "$ext"
 }
 
+# CRSP224, TRANSITION: the name the updater of 0.1.21 and older looks for,
+# crsp-<goos>-<goarch>_<version>.<ext> (internal/update/source.go of v0.1.21, VersionedName). os:
+# win->windows, linux->linux, macos->darwin; arch: x64->amd64, arm64->arm64. Kept until no
+# supported install is on 0.1.21 or older (operations R5.127).
+# legacy_asset_name VERSION OS ARCH EXT; OS and ARCH may be Go names or release names.
+legacy_asset_name() {
+  local version="${1#v}" os arch
+  case "$2" in
+    windows|win) os=windows ;;
+    linux) os=linux ;;
+    darwin|macos) os=darwin ;;
+    *) echo "release-names: unknown os $2" >&2; return 1 ;;
+  esac
+  case "$3" in
+    amd64|x64|x86_64) arch=amd64 ;;
+    arm64|aarch64) arch=arm64 ;;
+    *) echo "release-names: unknown arch $3" >&2; return 1 ;;
+  esac
+  printf 'crsp-%s-%s_%s.%s\n' "$os" "$arch" "$version" "$4"
+}
+
+# release_to_legacy VERSION FILE: the legacy name of a Crsp-<version>-<os>-<arch>.<ext> asset.
+release_to_legacy() {
+  local version="${1#v}" base rest os arch ext
+  base="$(basename "$2")"
+  rest="${base#Crsp-"$version"-}"
+  [ "$rest" != "$base" ] || { echo "release-names: $base does not carry version $version" >&2; return 1; }
+  ext="${rest#*.}"
+  rest="${rest%%.*}"
+  os="${rest%%-*}"
+  arch="${rest#*-}"
+  legacy_asset_name "$version" "$os" "$arch" "$ext"
+}
+
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then
-  asset_name "$@"
+  if [ "${1:-}" = "--legacy" ]; then shift; legacy_asset_name "$@"; else asset_name "$@"; fi
 fi

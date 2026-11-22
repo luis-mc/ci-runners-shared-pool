@@ -377,6 +377,8 @@ stateDiagram-v2
   refused --> up_to_date
 ```
 
+**R5.127** (CRSP224, TRANSITION) — **Legacy asset names keep 0.1.21 and older able to update.** OPS69 renamed every release asset to `Crsp-<version>-<os>-<arch>.<ext>`, but the updater of 0.1.21 and older looks for `crsp-<goos>-<goarch>_<version>.<ext>` in the release and in `SHA256SUMS`, then checks the SHA-256 and the build provenance attestation for that digest, so those installs reported "release has no crsp-windows-amd64_<version>.msi for this machine". `release.yml` therefore also publishes a byte-identical copy of each of the 14 installers and archives under the legacy name (`scripts/ci/release-legacy.sh`; os windows, linux, darwin; arch amd64, arm64; the exact mapping of v0.1.21 `source.go`). The copies are made after the manifest, so `manifest.json` and its signature are unchanged and list only the `Crsp-*` names. The 14 copies are in `SHA256SUMS` (32 lines, an exact count) and in the attestation subjects. The updater of 0.1.22 and later prefers the `Crsp-*` name and the signed manifest (`PickAsset`). The legacy names stay until no supported install is on 0.1.21 or older; then the step, the copies in the counts and this requirement are removed.
+
 ## 6. Non-functional requirements
 
 **R6.1** (M3) — An update never stops a running job. A controller restart never stops a job on any machine; agents reconnect with backoff.
@@ -528,6 +530,7 @@ All tests are planned; none exists yet. Paths are where each test will live.
 | R5.122 | built (CRSP205): internal/update/attempt_test.go TestRestartHasItsOwnAttemptApartFromAnOldFailedUpdate, TestFailedRestartCarriesItsAttempt; apps/web/src/screens/settings/Updates.test.tsx (Restart the service judges its own attempt) |
 | R5.123 | installer/wxs_test.go TestMSINeverRemovesTheDataFolderOnUpgrade; internal/store/controllerstate_test.go TestMachinesSurviveRestart | built (OPS59) |
 | R5.126 | built (OPS68): scripts/delivery/lifecycle_conformance.py against cmd/crsp-lifecycle-test (LC-3 to LC-7, LC-25, LC-26, LC-28; CI step Lifecycle conformance); internal/update/lifecycle/core_test.go TestFailedInstallsRetryAt1hThen4hThenSkip, TestManifestRefusals, TestWindowOpensTheInstall; internal/update/service_test.go TestServiceNoCheckWhileUnpaired, TestServiceAutomaticInstallWhenIdle, TestServiceRestoreAfterFailedInstall; internal/update/assetname_test.go TestReleaseNameAndPick; internal/api/handlers_lifecycle_test.go TestRemoveNeedsAChoice; cmd/crsp/remove_wiring_test.go TestRemoveStartsTheUninstallForThisMachine, TestRemoveWritesAnAuditRowWithActorAndResult, TestRemoveRefusesAnotherMachine; internal/update/manifest_assets_test.go TestManifestAssetsAreParsedAndPickedByTarget, TestArm64UpdaterTakesItsOwnAsset, TestSharedManifestIsVerifiedPerAsset; internal/update/keys_test.go TestCommittedReleaseKeyIsAValidEd25519Key; cmd/crsp-lifecycle-test/main_test.go (LC-8, LC-29 commands) |
+| R5.127 | internal/update/legacy_assets_test.go TestV0121UpdaterFindsAnAssetForEveryTarget, TestLegacyNamesAreExactlyTheV0121Names, TestNewUpdaterPrefersTheNewNamesWhenBothArePublished; scripts/ci/test_release_scripts.py Workflow.test_release_publishes_legacy_copies_after_the_manifest, Workflow.test_legacy_names (CRSP224) |
 
 ## 10. Decisions
 
