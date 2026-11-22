@@ -321,11 +321,11 @@ const MEASURES = {
     }
     return bad;`,
   /** UX-4: one primary button on the screen (a screen that offers an action has exactly one). The tabs and
-   *  segmented switches that switch the section, the filter chips, the sort buttons of a table head, the row buttons of a table, the boxes of the job path (they jump to a card) and the ? term-help buttons (component 66) are not the screen's actions. */
+   *  segmented switches that switch the section, the filter chips, the sort buttons of a table head, the row buttons of a table, the boxes of the job path (they jump to a card), the bars of the slot timeline (component 72: they open a job, like a row button) and the ? term-help buttons (component 66) are not the screen's actions. */
   primary: `${VISIBLE}
     const all = Array.from(document.querySelectorAll('[data-primary], button[data-kind=primary], a[data-button][data-kind=primary]')).filter(visible);
     const names = all.map(label);
-    const hasActions = Array.from(document.querySelectorAll('main button, main a[data-button]')).some((e) => visible(e) && !e.closest('[role=tablist], .ds-segmented, .ds-chips, .ds-jobpath, table, [role=table], [role=row]') && !e.hasAttribute('data-term-help'));
+    const hasActions = Array.from(document.querySelectorAll('main button, main a[data-button]')).some((e) => visible(e) && !e.closest('[role=tablist], .ds-segmented, .ds-chips, .ds-jobpath, .ds-timeline, table, [role=table], [role=row]') && !e.hasAttribute('data-term-help'));
     if (names.length > 1) return ['more than one primary: ' + names.join(' | ')];
     if (names.length === 0 && hasActions) return ['no primary button although the screen has actions'];
     return [];`,
@@ -361,7 +361,7 @@ const MEASURES = {
     const de = document.documentElement;
     if (de.scrollWidth > de.clientWidth) bad.push('the page scrolls sideways (' + de.scrollWidth + ' px in ' + de.clientWidth + ' px)');
     for (const e of document.querySelectorAll('body *')) {
-      if (e.matches('input, textarea, select, option, svg, svg *') || !visible(e)) continue;
+      if (e.matches('input, textarea, select, option, svg, svg *, .ds-timeline__scroll') || !visible(e)) continue;
       const s = getComputedStyle(e);
       if ((s.overflowX === 'auto' || s.overflowX === 'scroll') && e.scrollWidth > e.clientWidth + 1) bad.push(label(e) + ' has a horizontal scroll bar (' + e.scrollWidth + ' px in ' + e.clientWidth + ' px)');
     }

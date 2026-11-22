@@ -2283,10 +2283,8 @@ legend > .ds-field__changed {
   position: relative;
   flex: none;
   inline-size: var(--tl-width);
-  block-size: var(--ds-space-7);
-}
-.ds-timeline[data-compact] .ds-timeline__track {
-  block-size: var(--ds-space-6);
+  /* A bar is a button of at least --ds-target-min by --ds-target-min (UX-16): the track is that and 4 px each side. */
+  block-size: calc(var(--ds-target-min) + 2 * var(--ds-space-1));
 }
 .ds-timeline__row {
   border-block-end: var(--ds-border-thin) solid var(--ds-color-divider);
@@ -2340,20 +2338,17 @@ legend > .ds-field__changed {
 }
 .ds-timeline__item {
   position: absolute;
-  inset-block: var(--ds-space-2);
+  inset-block: var(--ds-space-1);
   display: flex;
   gap: var(--ds-space-1);
   align-items: center;
-  min-inline-size: var(--ds-space-5);
+  min-inline-size: var(--ds-target-min);
   padding: 0 var(--ds-space-1);
   overflow: hidden;
   font: inherit;
   font-size: var(--ds-size-1);
   text-align: start;
   white-space: nowrap;
-}
-.ds-timeline[data-compact] .ds-timeline__item {
-  inset-block: var(--ds-space-1);
 }
 button.ds-timeline__item {
   cursor: pointer;
