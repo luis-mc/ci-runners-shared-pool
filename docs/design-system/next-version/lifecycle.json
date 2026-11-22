@@ -278,6 +278,10 @@
       }
     }
   },
+  "upgrade_data_rule": {
+    "rule": "LC-11",
+    "text": "An upgrade from the previous release keeps every config file and every row of the user tables. The one exception is a change a migration declares on purpose in internal/store/declared_changes.go: a table it drops (must be gone, not emptied) or a JSON key it removes from a column of a table (every row must stay, every other cell equal). A declaration applies only when the database before the upgrade is below that migration and the database after is at or above it. The lane prints each accepted change as its own line, 'LC-11 note: declared by migration N (TASK): ...'. Every other loss or change fails; there is no opt-out."
+  },
   "keep_on_remove": [
     "data"
   ],
