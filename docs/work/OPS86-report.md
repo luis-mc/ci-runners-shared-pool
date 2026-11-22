@@ -1,6 +1,6 @@
 # OPS86 report: disk floor per machine in the console
 
-Status: code complete, CI pending (branch OPS86-disk-floor-console).
+Status: CI green (run 45002364505), draft PR #389 open.
 
 ## Done
 - Step 1: contract (openapi + agent proto), regenerated code; per-machine `disk_floor_gib` in machine settings; service range 1 to 2000 GiB; push to agent; agent applies live in `Gate.SetSettings`; agent reports the floor in force and `disk_floor_off`; doctor `machine.floor.disk` uses the machine value. Go tests: machines, agent, API, doctor.
@@ -19,4 +19,6 @@ Status: code complete, CI pending (branch OPS86-disk-floor-console).
 - The free space line uses 2^30 bytes per GB so it matches the GiB floor; formatSize uses 10^9.
 
 ## Left
-- CI run on the branch, draft PR.
+- Strip this report before the join.
+
+CODE DONE 263cf186675af04bedcaaff32eff4ddefe47599b
