@@ -1,4 +1,4 @@
-// UX-79, UX-80 (LOOK56): link colours come from tokens in every state; the frame token and the wide breakpoint;
+// UX-84, UX-85 (LOOK56): link colours come from tokens in every state; the frame token and the wide breakpoint;
 // the phone header keeps its status in its own column.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -25,7 +25,7 @@ function blocks(selector: string): string {
 
 const colour = /(^|[\s;])color:\s*var\(--ds-color-[a-z-]+\)/;
 
-describe('links use theme tokens (UX-80)', () => {
+describe('links use theme tokens (UX-85)', () => {
   it('has a base rule for a and a:visited with a token colour', () => {
     expect(blocks(':where(a)')).toMatch(colour);
     expect(blocks(':where(a:visited)')).toMatch(colour);
@@ -82,7 +82,7 @@ describe('links use theme tokens (UX-80)', () => {
   });
 });
 
-describe('page frame (UX-79)', () => {
+describe('page frame (UX-84)', () => {
   it('is 96rem wide with wide layouts from 1400px', () => {
     expect(tokens).toMatch(/--ds-frame-wide:\s*96rem;/);
     expect(tokens).toMatch(/--ds-bp-wide:\s*1400px;/);

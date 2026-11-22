@@ -1,5 +1,5 @@
-// Component 71: a side menu with its page. A numbered list of links at the side on a wide screen and above the page
-// on a phone; the open item is marked. Links take their colours from tokens in every state (UX-80).
+// Component 76: a side menu with its page. A numbered list of links at the side on a wide screen and above the page
+// on a phone; the open item is marked. Links take their colours from tokens in every state (UX-85).
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 

@@ -227,7 +227,7 @@ The states named for every list follow the design system: loading (component 16,
   - **Jobs:** today's Live list (component 67) with the filters of the old Done tab: state *All*, *Queue*, *Running*, *Done*, a range, one *Group by* choice, *Export CSV*, and a *Why* panel on each row that says why a waiting job waits and when it starts. The Done tab is removed.
   - **Machines:** shows what runs where (a card and a runner table per machine) and links to Setup > Machines, where a machine is changed. It has no form.
 - **Analytics tabs:** four, in this order: Suggestions, Insights, Charts, Run elsewhere.
-  - **Suggestions:** today's *Do next* list with the segments *Do next*, *Tests* and *Guardrails* (the project filter is kept). A suggestion about a repository names that repository in its title, and its page has *Path forward*: the numbered steps the user takes, from `screens/insights/steps.ts` by the kind of the suggestion (content.md, Suggestion steps words; component 70).
+  - **Suggestions:** today's *Do next* list with the segments *Do next*, *Tests* and *Guardrails* (the project filter is kept). A suggestion about a repository names that repository in its title, and its page has *Path forward*: the numbered steps the user takes, from `screens/insights/steps.ts` by the kind of the suggestion (content.md, Suggestion steps words; component 75).
   - **Insights:** the four stat tiles, *Where the time goes*, *Busiest repositories*, *Failed jobs*, then *Waits* and the runner *Timeline*.
   - **Charts** and **Run elsewhere:** as before, moved from Jobs.
 - **Realtime (R5.150):** job state changes arrive through the event stream (`EventSource`) and reload the lists as they happen; job and run timers count every second in the browser (the Pool section and the Run and Job pages use a one-second clock); when the stream drops the lists ask again every 5 seconds and the shell banner says *Live updates paused* until the stream is back.
@@ -311,9 +311,9 @@ Settings hold configuration only (UX-52). Settings has six tabs (CRSP159, owner 
 - **In the console:** a ? (component 66) beside *Slots*, *Load budget*, *Queue*, *Runner type* and *Run elsewhere* opens a short answer with a link to the same card (`/help#q-slot`, `#q-budget`, `#q-queue`, `#q-runner-type`, `#q-elsewhere`).
 - **Keyboard:** Down, Up, `j` and `k` move between the controls, the boxes of the picture included (UX-57).
 - **States:** loading and could not load for the machine numbers (the cards still read); no machine (*No machine yet. Add a machine to see its slots.*).
-- **Topics (LOOK56, options F and G):** a side menu (component 71) of *Start here* (`/help`, everything above), *Where things are* (`/help/where`: the seven parts and the Setup and Pool tabs, each a link) and *Reading Queue Analysis* (`/help/queue`: the next job to start, read live from the pool). Its links use the theme tokens in every state (UX-80).
+- **Topics (LOOK56, options F and G):** a side menu (component 76) of *Start here* (`/help`, everything above), *Where things are* (`/help/where`: the seven parts and the Setup and Pool tabs, each a link) and *Reading Queue Analysis* (`/help/queue`: the next job to start, read live from the pool). Its links use the theme tokens in every state (UX-85).
 - **Components:** 1, 7, 8, 64, 66, 69, 71.
-- **Rules:** CORE-1 to CORE-7, UX-4, UX-10, UX-41, UX-43, UX-51, UX-57, UX-72, UX-80.
+- **Rules:** CORE-1 to CORE-7, UX-4, UX-10, UX-41, UX-43, UX-51, UX-57, UX-72, UX-85.
 
 ## 5. Functional requirements
 

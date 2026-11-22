@@ -749,7 +749,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Rules:** UX-41, UX-10, UX-51, UX-17, UX-16, UX-72, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/Help.test.tsx`, `apps/web/src/screens/help/Help.test.tsx`, `e2e/tests/web-console/help.spec.ts` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
-## 70. Numbered steps
+## 75. Numbered steps
 
 - **Used for:** the path forward of a suggestion: the steps the user takes, in order (LOOK56, owner change 2).
 - **Anatomy:** a numbered list, one step to a row: the number in the primary colour, then one sentence. The first step of a suggestion about a project names the repository.
@@ -761,16 +761,16 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Rules:** UX-10, UX-72, CORE-1, CORE-5.
 - **Guard:** `apps/web/src/screens/insights/DoNext.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
-## 71. Side menu
+## 76. Side menu
 
 - **Used for:** a page with a few topics that read one after another, such as Help (LOOK56, options F and G).
 - **Anatomy:** a numbered list of links at the side of the page on a wide screen, above the page on a phone; the open topic is bold with a bar in the primary colour. The page body sits beside it.
-- **States:** normal, visited, hover, focus-visible, current. Every state takes its colour from a token (UX-80), so no item shows the browser's blue or purple.
+- **States:** normal, visited, hover, focus-visible, current. Every state takes its colour from a token (UX-85), so no item shows the browser's blue or purple.
 - **Tokens:** `--ds-color-text`, `--ds-color-primary`, `--ds-color-text-muted`, `--ds-color-focus`, `--ds-space-1`, `--ds-space-2`, `--ds-space-5`, `--ds-target-min`. No new token.
 - **Keyboard and screen reader:** a navigation landmark named by its label; each item is one link; the open item has `aria-current="page"`.
 - **Phone (360, 393 px):** the list sits above the body; each item is at least `--ds-target-min` high.
 - **Source:** `packages/ui/src/components/SideMenu.tsx`, `packages/ui/src/components.css`
-- **Rules:** UX-80, UX-16, UX-69, CORE-1, CORE-5.
+- **Rules:** UX-85, UX-16, UX-69, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/link-frame.test.tsx`, `apps/web/src/screens/help/Help.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
 ## How to add a component

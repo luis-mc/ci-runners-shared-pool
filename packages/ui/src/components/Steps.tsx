@@ -1,4 +1,4 @@
-// Component 70: numbered steps. The path forward of a suggestion: what the user does, in order, one step to a line.
+// Component 75: numbered steps. The path forward of a suggestion: what the user does, in order, one step to a line.
 export function Steps({ label, steps }: { label: string; steps: readonly string[] }) {
   return (
     <ol className="ds-steps" aria-label={label}>

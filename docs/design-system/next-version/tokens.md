@@ -311,7 +311,7 @@ A screen works from 360 px up (UX-16). Write layouts mobile first.
 | `--ds-bp-sm`   | `600px`  | phone to tablet                 |
 | `--ds-bp-md`   | `900px`  | tablet to desktop               |
 | `--ds-bp-lg`   | `1200px` | wide screens                    |
-| `--ds-bp-wide` | `1400px` | wide layouts start here (UX-79) |
+| `--ds-bp-wide` | `1400px` | wide layouts start here (UX-84) |
 | `--ds-bp-xl`   | `1600px` | very wide screens               |
 
 CSS cannot read a custom property inside a media query. Write these values in the query itself.
