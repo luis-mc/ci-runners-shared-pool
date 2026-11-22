@@ -53,7 +53,10 @@ func (f *fakeService) ListenerState(context.Context, string, string) (ListenerSt
 
 type fakeAudit struct{ events []Event }
 
-func (a *fakeAudit) Record(_ context.Context, e Event) error { a.events = append(a.events, e); return nil }
+func (a *fakeAudit) Record(_ context.Context, e Event) error {
+	a.events = append(a.events, e)
+	return nil
+}
 
 func (a *fakeAudit) actions() string {
 	var s []string

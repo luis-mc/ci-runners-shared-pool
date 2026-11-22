@@ -98,7 +98,7 @@ func (s *Store) ListenerLeases(ctx context.Context, state, runnerID string) ([]L
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []ListenerLeaseRow
 	for rows.Next() {
 		var r ListenerLeaseRow
@@ -147,7 +147,7 @@ func (s *Store) ListenerWaking(ctx context.Context) ([]ListenerWake, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 	var out []ListenerWake
 	for rows.Next() {
 		var w ListenerWake

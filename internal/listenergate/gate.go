@@ -95,7 +95,7 @@ func (g *Gate) Admit(ctx context.Context, j Job) (taken bool, err error) {
 	}
 	if len(others) == 0 { // another job's listener is already on otherwise
 		if err := g.Service.StartListener(ctx, j.Runner.MachineID, j.Runner.ServiceRef, false); err != nil {
-			g.removeLabel(ctx, l, others)
+			_ = g.removeLabel(ctx, l, others) // best effort: the start error is the one to report
 			return false, g.fail(ctx, l, fmt.Errorf("start the listener of %s: %w", j.Runner.Name, err))
 		}
 	}

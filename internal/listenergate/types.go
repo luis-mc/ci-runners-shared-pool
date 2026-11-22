@@ -44,7 +44,7 @@ type Runner struct {
 	MachineID      string
 	OS             string
 	Labels         []string // the labels it carries: self-hosted, the OS, the architecture
-	ServiceRef     string // what the agent starts and stops
+	ServiceRef     string   // what the agent starts and stops
 	GitHubRunnerID int64
 	InstallationID int64
 	Scope          github.RunnerScope
@@ -144,4 +144,6 @@ type Event struct {
 }
 
 // Audit writes the events.
-type Audit interface{ Record(ctx context.Context, e Event) error }
+type Audit interface {
+	Record(ctx context.Context, e Event) error
+}
