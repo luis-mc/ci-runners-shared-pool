@@ -464,6 +464,8 @@ A command the role does not allow is shown disabled with its reason. The API ref
 
 **R5.118** (OPS34; UX-49) — **Layout.** Every Jobs route fits at 360, 393 and 1300 px with no sideways scroll, and passes the no-app-CSS scan and the keyboard rule (UX-57).
 
+**R5.123** (OPS85; github-integration R5.109; CORE-1 to CORE-7, UX-13, UX-38) — **Switch to crsp runners.** A pane *Switch to crsp runners* sits on the page of a repository whose pool is on, and a pane with the action *Switch all to crsp runners* sits on Repositories while some repository has the pool on. The action shows the preview first (per repository the files that change and the diff in a code block, *Nothing to change* or *not yours* for the rest), and only a second press, *Open the pull request*, opens it; the opening button is disabled and says *Opening* while it runs (UX-13). Done shows one line per repository with *Open on GitHub* linking to the pull request; an error says *Could not open the pull request.* and the reason and leaves the button. A viewer sees the action disabled with the reason (UX-38). Built from the shared Pane, Stack, Text, Button, CodeBlock, Message and ExternalButton parts only. The words are in the design-system `content` page of next-version.
+
 ## 6. Non-functional requirements
 
 Requirements marked (built, CRSP24) or (built, CRSP33) are built. The others are **NOT YET IMPLEMENTED**.
@@ -673,6 +675,7 @@ A row with a path has that test. A row that says NOT YET IMPLEMENTED names the p
 | R5.116 | Vitest, Go test | `apps/web/src/screens/jobs/Jobs.test.tsx` (both exports); `internal/api/handlers_jobsdata_test.go` TestExportJobsCSV, TestExportDailyCSV |
 | R5.117 | Vitest | `apps/web/src/screens/jobs/redirects.test.tsx` (the old Wait and duration tab opens Charts; the other old addresses keep working), `apps/web/src/screens/pool/pool.test.tsx` |
 | R5.118 | Playwright e2e | `e2e/tests/web-console/ux-routes.spec.ts` (data-mode layout check at 360, 393 and 1300 px for every Jobs route, read from `screens/jobs/routes.tsx`), `e2e/tests/web-console/ux-jobs-rows.spec.ts` (UX-72: one-line rows, one set of row words, cards alike at 393 px), `scripts/design/no-app-css.test.ts` |
+| R5.123 | Vitest | `apps/web/src/screens/repositories/RunsOnPr.test.tsx` (preview before open, busy while it opens, link to the pull request, one repository on its page, nothing to change, error, viewer disabled) |
 | R5.96 | Vitest, Playwright e2e | `apps/web/src/screens/settings/UpdatePage.test.tsx` (first run, asks first, Not now, Update now with percent and Hide, follows a running update, waits for the service and ends with Updated to X, failed with the log path, done after reload), `apps/web/src/screens/wizards.test.tsx` (the update page passes the ten wizard states), `e2e/tests/web-console/ux-routes.spec.ts` (`/update` at 360, 393 and 1300 px). Screens in `docs/review/TRAY4/` |
 | R5.101 | Vitest | `apps/web/src/index-icon.test.ts` (index.html links an icon file that exists in public/) |
 | R5.98 | Vitest | `apps/web/src/shell/Shell.test.tsx` (a runner service that did not start: the banner, Start, it clears, offline machine); `apps/web/src/screens/doctor/Doctor.test.tsx` (the Start button of `runner.logon`) |

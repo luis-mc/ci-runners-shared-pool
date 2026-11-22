@@ -553,6 +553,25 @@ The words of the section on the repositories screen (github-integration R5.21).
 | Failure | Could not change the pool. {reason} |
 | Refusal | you are not an owner of the {organization} organization in GitHub. |
 
+## Runs-on pull request words
+
+The words of the pane *Switch to crsp runners* on the Repositories list and on a repository's page (github-integration R5.109, web-console R5.123).
+
+| Where | Word |
+|---|---|
+| Pane title | Switch to crsp runners |
+| Lead, one repository | crsp opens one pull request on this repository. It changes each routed runs-on line to its own runner label. You review and merge it; crsp never merges. |
+| Lead, all | crsp opens one pull request on each repository with the pool on. It changes each routed runs-on line to its own runner label. You review and merge it; crsp never merges. |
+| Action | Switch to crsp runners (one repository), Switch all to crsp runners (all); busy: Reading the workflows |
+| Open | Open the pull request (one), Open the pull requests (several); busy: Opening |
+| Preview line | {n} file changes in {repository}. / {n} files change in {repository}. / Nothing to change in {repository}. / {repository} is not yours, so crsp opens no pull request there. / Could not read {repository}. {reason} |
+| Code block label | Change in {repository} |
+| Skipped | Not changed (runs-on is not on one line): {jobs} |
+| No repository | No repository has the pool on. |
+| Done | Pull request opened on {repository}. / A pull request is already open on {repository}. / Nothing to change in {repository}. / {repository} is not yours, so crsp opens no pull request there. |
+| Link | Open on GitHub |
+| Failure | Could not read the change. {reason} / Could not open the pull request. {reason} |
+
 ## First machine words
 
 The words of the setup step "Add the first machine" when a machine is already in the pool (machines R5.1, web-console 4.1).
