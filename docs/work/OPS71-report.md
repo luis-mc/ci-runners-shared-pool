@@ -44,4 +44,19 @@ That is 15 files that differ; 12 carry a crsp edit once pin-only and format-only
 
 ## Checks
 
-(filled in below)
+| Check | Result |
+| --- | --- |
+| `pytest scripts/delivery scripts/ci` | 42 passed, 1 error: `test_guardrails.py::test_limits` is a helper named `test_*` that pytest takes for a test (missing fixture). The file is byte-identical to 1.54.1 and to origin/main; not caused by this branch. |
+| `actionlint` | clean |
+| `fast_guards.py --base-ref auto` | all steps PASS; G1 warns (mode warn): `conftest.py`, `ci.yml:311`, `scripts/ci/go-test.sh:40` (150 s), `gate.json:53` (unit step). Same class of warn as before the sync. |
+| delivery doctor (`delivery_doctor.py self-check`) | all ok except `gh` (not signed in in this sandbox) and a warn that `smoke_packaged.py`, `tools.json`, `windows-msi-linux.sh` differ from the template (crsp edits, table above). |
+| `docs_check.py` | one error, W1: `docs/work/` files on the branch. By rule (D9) they never reach main; strip with `docs_work.py strip` before the merge. Docs: none, delivery tooling only, no product behaviour. |
+| `gitleaks git` (full history, template `.gitleaks.toml`) | **5 findings**: 4 old fake values (CRSP32, CRSP37 history; two `generic-api-key`, two `project-named-secret`) that crsp's allowlist covered, and 1 in my first commit of this report (it quoted the fake values). With crsp's old config only the report finding remained. |
+
+## Open problem for the owner
+
+The CI secret scan (`ci.yml`, full history, `--config .gitleaks.toml`) will be red: the owner's "template as-is" for `.gitleaks.toml`
+removed the allowlist for the 4 old fake values, and `.gitleaksignore` is off limits. One decision fixes it: put back the three crsp
+allowlist regexes in `.gitleaks.toml` (the fake values are not secrets), or approve `.gitleaksignore` fingerprints. The fifth finding
+is commit `07cb8b6c` of this branch (my report quoted the fake values); history is not rewritten (no force-push), so it needs
+the same decision. Nothing was weakened to hide it.
