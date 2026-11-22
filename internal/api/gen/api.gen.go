@@ -661,6 +661,48 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for HealthOomScopeScope.
+const (
+	HealthOomScopeScopeJob  HealthOomScopeScope = "job"
+	HealthOomScopeScopePool HealthOomScopeScope = "pool"
+)
+
+// Valid indicates whether the value is a known member of the HealthOomScopeScope enum.
+func (e HealthOomScopeScope) Valid() bool {
+	switch e {
+	case HealthOomScopeScopeJob:
+		return true
+	case HealthOomScopeScopePool:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for HealthVolumeRole.
+const (
+	HealthVolumeRoleDataDir    HealthVolumeRole = "data_dir"
+	HealthVolumeRoleDocker     HealthVolumeRole = "docker"
+	HealthVolumeRoleRunnerWork HealthVolumeRole = "runner_work"
+	HealthVolumeRoleSystem     HealthVolumeRole = "system"
+)
+
+// Valid indicates whether the value is a known member of the HealthVolumeRole enum.
+func (e HealthVolumeRole) Valid() bool {
+	switch e {
+	case HealthVolumeRoleDataDir:
+		return true
+	case HealthVolumeRoleDocker:
+		return true
+	case HealthVolumeRoleRunnerWork:
+		return true
+	case HealthVolumeRoleSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ImageState.
 const (
 	ImageStateFailed     ImageState = "failed"
@@ -1240,6 +1282,30 @@ func (e JobSizeSource) Valid() bool {
 	}
 }
 
+// Defines values for JobStatsFailureClass.
+const (
+	JobStatsFailureClassFailed     JobStatsFailureClass = "failed"
+	JobStatsFailureClassOverMemory JobStatsFailureClass = "over_memory"
+	JobStatsFailureClassStopped    JobStatsFailureClass = "stopped"
+	JobStatsFailureClassTimedOut   JobStatsFailureClass = "timed_out"
+)
+
+// Valid indicates whether the value is a known member of the JobStatsFailureClass enum.
+func (e JobStatsFailureClass) Valid() bool {
+	switch e {
+	case JobStatsFailureClassFailed:
+		return true
+	case JobStatsFailureClassOverMemory:
+		return true
+	case JobStatsFailureClassStopped:
+		return true
+	case JobStatsFailureClassTimedOut:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -1402,6 +1468,24 @@ func (e MachineChangeDecisionDecision) Valid() bool {
 	case MachineChangeDecisionDecisionStopJobs:
 		return true
 	case MachineChangeDecisionDecisionWaitLonger:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MachineJobStatsWindow.
+const (
+	MachineJobStatsWindowN24h MachineJobStatsWindow = "24h"
+	MachineJobStatsWindowN7d  MachineJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the MachineJobStatsWindow enum.
+func (e MachineJobStatsWindow) Valid() bool {
+	switch e {
+	case MachineJobStatsWindowN24h:
+		return true
+	case MachineJobStatsWindowN7d:
 		return true
 	default:
 		return false
@@ -2785,6 +2869,24 @@ func (e RunWasteKind) Valid() bool {
 	}
 }
 
+// Defines values for RunnerJobStatsWindow.
+const (
+	RunnerJobStatsWindowN24h RunnerJobStatsWindow = "24h"
+	RunnerJobStatsWindowN7d  RunnerJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the RunnerJobStatsWindow enum.
+func (e RunnerJobStatsWindow) Valid() bool {
+	switch e {
+	case RunnerJobStatsWindowN24h:
+		return true
+	case RunnerJobStatsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunnerKind.
 const (
 	RunnerKindEphemeral  RunnerKind = "ephemeral"
@@ -3619,6 +3721,24 @@ func (e WorkflowCheckStatus) Valid() bool {
 	}
 }
 
+// Defines values for StatsWindow.
+const (
+	StatsWindowN24h StatsWindow = "24h"
+	StatsWindowN7d  StatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the StatsWindow enum.
+func (e StatsWindow) Valid() bool {
+	switch e {
+	case StatsWindowN24h:
+		return true
+	case StatsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ExportAuditEventsParamsFormat.
 const (
 	ExportAuditEventsParamsFormatCsv  ExportAuditEventsParamsFormat = "csv"
@@ -3910,6 +4030,24 @@ func (e GetJobStatsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetMachineJobStatsParamsWindow.
+const (
+	GetMachineJobStatsParamsWindowN24h GetMachineJobStatsParamsWindow = "24h"
+	GetMachineJobStatsParamsWindowN7d  GetMachineJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetMachineJobStatsParamsWindow enum.
+func (e GetMachineJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetMachineJobStatsParamsWindowN24h:
+		return true
+	case GetMachineJobStatsParamsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DeleteRegistryLoginParamsKind.
 const (
 	DeleteRegistryLoginParamsKindContainer  DeleteRegistryLoginParamsKind = "container"
@@ -3925,6 +4063,24 @@ func (e DeleteRegistryLoginParamsKind) Valid() bool {
 	case DeleteRegistryLoginParamsKindPersistent:
 		return true
 	case DeleteRegistryLoginParamsKindVm:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetRunnerJobStatsParamsWindow.
+const (
+	GetRunnerJobStatsParamsWindowN24h GetRunnerJobStatsParamsWindow = "24h"
+	GetRunnerJobStatsParamsWindowN7d  GetRunnerJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetRunnerJobStatsParamsWindow enum.
+func (e GetRunnerJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetRunnerJobStatsParamsWindowN24h:
+		return true
+	case GetRunnerJobStatsParamsWindowN7d:
 		return true
 	default:
 		return false
@@ -4647,6 +4803,181 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// HealthBoot defines model for HealthBoot.
+type HealthBoot struct {
+	LastBootAt *time.Time `json:"last_boot_at,omitempty"`
+
+	// UnexpectedRestart Booted in the last 24 hours without a restart crsp asked for.
+	UnexpectedRestart *bool   `json:"unexpected_restart,omitempty"`
+	UnknownReason     *string `json:"unknown_reason,omitempty"`
+	UptimeSeconds     *int64  `json:"uptime_seconds,omitempty"`
+}
+
+// HealthConnectivity defines model for HealthConnectivity.
+type HealthConnectivity struct {
+	// ClockSkewSeconds Agent clock minus controller clock; positive means the agent is ahead.
+	ClockSkewSeconds *float32      `json:"clock_skew_seconds,omitempty"`
+	Dns              *HealthDns    `json:"dns,omitempty"`
+	Github           *HealthGithub `json:"github,omitempty"`
+	LastHeartbeatAt  *time.Time    `json:"last_heartbeat_at,omitempty"`
+	Reconnects24h    *int          `json:"reconnects_24h,omitempty"`
+
+	// RttMs Agent to controller round trip, from the heartbeats.
+	RttMs *int64 `json:"rtt_ms,omitempty"`
+}
+
+// HealthDns defines model for HealthDns.
+type HealthDns struct {
+	Error *string `json:"error,omitempty"`
+	Ok    *bool   `json:"ok,omitempty"`
+}
+
+// HealthDockerUse defines model for HealthDockerUse.
+type HealthDockerUse struct {
+	BuildCacheBytes *int64     `json:"build_cache_bytes,omitempty"`
+	ContainersBytes *int64     `json:"containers_bytes,omitempty"`
+	ImagesBytes     *int64     `json:"images_bytes,omitempty"`
+	ReadAt          *time.Time `json:"read_at,omitempty"`
+	UnknownReason   *string    `json:"unknown_reason,omitempty"`
+	VolumesBytes    *int64     `json:"volumes_bytes,omitempty"`
+}
+
+// HealthGithub defines model for HealthGithub.
+type HealthGithub struct {
+	CheckedAt *time.Time `json:"checked_at,omitempty"`
+	Error     *string    `json:"error,omitempty"`
+	LatencyMs *int64     `json:"latency_ms,omitempty"`
+	Reachable *bool      `json:"reachable,omitempty"`
+}
+
+// HealthLoad defines model for HealthLoad.
+type HealthLoad struct {
+	Load1              *float32 `json:"load1,omitempty"`
+	Load15             *float32 `json:"load15,omitempty"`
+	Load5              *float32 `json:"load5,omitempty"`
+	LoadUnknownReason  *string  `json:"load_unknown_reason,omitempty"`
+	StealPct           *float32 `json:"steal_pct,omitempty"`
+	StealUnknownReason *string  `json:"steal_unknown_reason,omitempty"`
+}
+
+// HealthOom defines model for HealthOom.
+type HealthOom struct {
+	LastKillAt *time.Time `json:"last_kill_at,omitempty"`
+
+	// Recent A kill inside the Doctor window (default 1 hour).
+	Recent        *bool             `json:"recent,omitempty"`
+	Scopes        *[]HealthOomScope `json:"scopes,omitempty"`
+	TotalKills    *int64            `json:"total_kills,omitempty"`
+	UnknownReason *string           `json:"unknown_reason,omitempty"`
+}
+
+// HealthOomScope defines model for HealthOomScope.
+type HealthOomScope struct {
+	Kills int64               `json:"kills"`
+	Name  string              `json:"name"`
+	Scope HealthOomScopeScope `json:"scope"`
+}
+
+// HealthOomScopeScope defines model for HealthOomScope.Scope.
+type HealthOomScopeScope string
+
+// HealthPower defines model for HealthPower.
+type HealthPower struct {
+	LastWakeAt *time.Time `json:"last_wake_at,omitempty"`
+	OnBattery  *bool      `json:"on_battery,omitempty"`
+
+	// SleepEnabled A setting can suspend or hibernate the machine.
+	SleepEnabled        *bool     `json:"sleep_enabled,omitempty"`
+	SleepModes          *[]string `json:"sleep_modes,omitempty"`
+	SleepUnknownReason  *string   `json:"sleep_unknown_reason,omitempty"`
+	SourceUnknownReason *string   `json:"source_unknown_reason,omitempty"`
+}
+
+// HealthSwap defines model for HealthSwap.
+type HealthSwap struct {
+	TotalBytes    *int64  `json:"total_bytes,omitempty"`
+	UnknownReason *string `json:"unknown_reason,omitempty"`
+	UsedBytes     *int64  `json:"used_bytes,omitempty"`
+}
+
+// HealthThermal defines model for HealthThermal.
+type HealthThermal struct {
+	MaxTempCelsius *float32 `json:"max_temp_celsius,omitempty"`
+	ThrottleDetail *string  `json:"throttle_detail,omitempty"`
+	Throttled      *bool    `json:"throttled,omitempty"`
+	UnknownReason  *string  `json:"unknown_reason,omitempty"`
+}
+
+// HealthThresholds defines model for HealthThresholds.
+type HealthThresholds struct {
+	// ClockSkewSeconds A clock this far from the controller is a finding (default 30).
+	ClockSkewSeconds int `json:"clock_skew_seconds"`
+
+	// DiskDaysUnder A disk that fills in fewer days is a finding (default 3).
+	DiskDaysUnder int `json:"disk_days_under"`
+
+	// DiskFreePctUnder A disk with less free space is a finding (default 10).
+	DiskFreePctUnder int `json:"disk_free_pct_under"`
+
+	// NoHeartbeatSeconds No heartbeat for this long is a finding (default 120).
+	NoHeartbeatSeconds int `json:"no_heartbeat_seconds"`
+
+	// OomWindowMinutes An OOM kill this recent is a finding (default 60).
+	OomWindowMinutes int `json:"oom_window_minutes"`
+}
+
+// HealthUpdates defines model for HealthUpdates.
+type HealthUpdates struct {
+	ActiveHoursEnd *int `json:"active_hours_end,omitempty"`
+
+	// ActiveHoursStart Windows Update active hours, local hour 0 to 23.
+	ActiveHoursStart   *int    `json:"active_hours_start,omitempty"`
+	AutoUpdateState    *string `json:"auto_update_state,omitempty"`
+	PendingUpdateCount *int    `json:"pending_update_count,omitempty"`
+
+	// RestartMayHappenNow A restart is pending and the OS may do it now.
+	RestartMayHappenNow *bool `json:"restart_may_happen_now,omitempty"`
+
+	// RestartMayHitJobs It may happen now and the machine runs or takes jobs.
+	RestartMayHitJobs *bool     `json:"restart_may_hit_jobs,omitempty"`
+	RestartPending    *bool     `json:"restart_pending,omitempty"`
+	RestartReasons    *[]string `json:"restart_reasons,omitempty"`
+	UnknownReason     *string   `json:"unknown_reason,omitempty"`
+}
+
+// HealthVersions defines model for HealthVersions.
+type HealthVersions struct {
+	Agent          *string `json:"agent,omitempty"`
+	AgentOutOfDate *bool   `json:"agent_out_of_date,omitempty"`
+	Controller     *string `json:"controller,omitempty"`
+	Docker         *string `json:"docker,omitempty"`
+	DockerKind     *string `json:"docker_kind,omitempty"`
+	LatestRunner   *string `json:"latest_runner,omitempty"`
+
+	// RunnerApp The oldest runner app on the machine.
+	RunnerApp       *string `json:"runner_app,omitempty"`
+	RunnerOutOfDate *bool   `json:"runner_out_of_date,omitempty"`
+	Wsl             *string `json:"wsl,omitempty"`
+}
+
+// HealthVolume defines model for HealthVolume.
+type HealthVolume struct {
+	// DaysNote Why days_until_full is absent.
+	DaysNote *string `json:"days_note,omitempty"`
+
+	// DaysUntilFull From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.
+	DaysUntilFull *float32         `json:"days_until_full,omitempty"`
+	FreeBytes     *int64           `json:"free_bytes,omitempty"`
+	FreePct       *float32         `json:"free_pct,omitempty"`
+	Path          string           `json:"path"`
+	Role          HealthVolumeRole `json:"role"`
+	TotalBytes    *int64           `json:"total_bytes,omitempty"`
+	UnknownReason *string          `json:"unknown_reason,omitempty"`
+}
+
+// HealthVolumeRole defines model for HealthVolume.Role.
+type HealthVolumeRole string
+
 // HistoryPoint One earlier run of a job key.
 type HistoryPoint struct {
 	At      time.Time  `json:"at"`
@@ -5360,6 +5691,77 @@ type JobStats struct {
 	Hours          []HourStat      `json:"hours"`
 }
 
+// JobStatsCounts defines model for JobStatsCounts.
+type JobStatsCounts struct {
+	Cancelled int64 `json:"cancelled"`
+	Failed    int64 `json:"failed"`
+
+	// Other No known result (a job crsp lost).
+	Other      int64 `json:"other"`
+	OverMemory int64 `json:"over_memory"`
+
+	// Stopped Stopped by crsp (a drain, a Stop, a removal).
+	Stopped   int64 `json:"stopped"`
+	Succeeded int64 `json:"succeeded"`
+
+	// TimedOut Ended by the crsp job timer, or by GitHub as timed out.
+	TimedOut int64 `json:"timed_out"`
+	Total    int64 `json:"total"`
+}
+
+// JobStatsFailingJob defines model for JobStatsFailingJob.
+type JobStatsFailingJob struct {
+	Failures   int64     `json:"failures"`
+	Job        string    `json:"job"`
+	LastAt     time.Time `json:"last_at"`
+	Repository string    `json:"repository"`
+}
+
+// JobStatsFailure defines model for JobStatsFailure.
+type JobStatsFailure struct {
+	At         time.Time            `json:"at"`
+	Class      JobStatsFailureClass `json:"class"`
+	Job        string               `json:"job"`
+	JobId      int64                `json:"job_id"`
+	JobUrl     *string              `json:"job_url,omitempty"`
+	Repository string               `json:"repository"`
+	RunId      int64                `json:"run_id"`
+	RunUrl     *string              `json:"run_url,omitempty"`
+}
+
+// JobStatsFailureClass defines model for JobStatsFailure.Class.
+type JobStatsFailureClass string
+
+// JobStatsRates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+type JobStatsRates struct {
+	Cancelled  *float32 `json:"cancelled,omitempty"`
+	Failed     *float32 `json:"failed,omitempty"`
+	OverMemory *float32 `json:"over_memory,omitempty"`
+	Stopped    *float32 `json:"stopped,omitempty"`
+	Succeeded  *float32 `json:"succeeded,omitempty"`
+	TimedOut   *float32 `json:"timed_out,omitempty"`
+}
+
+// JobStatsSet defines model for JobStatsSet.
+type JobStatsSet struct {
+	AvgQueueWaitSeconds *float32 `json:"avg_queue_wait_seconds,omitempty"`
+
+	// AvgRunSeconds Absent when no job in the window has times.
+	AvgRunSeconds *float32 `json:"avg_run_seconds,omitempty"`
+
+	// BusyPct Busy seconds over the window times the slots (a runner has one), 0 to 100.
+	BusyPct *float32 `json:"busy_pct,omitempty"`
+
+	// BusySeconds Time jobs ran inside the window, summed.
+	BusySeconds *float32         `json:"busy_seconds,omitempty"`
+	Counts      JobStatsCounts   `json:"counts"`
+	LastFailure *JobStatsFailure `json:"last_failure,omitempty"`
+
+	// Rates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+	Rates      *JobStatsRates       `json:"rates,omitempty"`
+	TopFailing []JobStatsFailingJob `json:"top_failing"`
+}
+
 // JobSummary One job type of one repository on one day (OPS34 D2).
 type JobSummary struct {
 	Day        string `json:"day"`
@@ -5617,6 +6019,41 @@ type MachineFacts struct {
 	OsVersion     *string `json:"os_version,omitempty"`
 	Threads       *int    `json:"threads,omitempty"`
 }
+
+// MachineHealth A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
+type MachineHealth struct {
+	Boot         *HealthBoot         `json:"boot,omitempty"`
+	Connectivity *HealthConnectivity `json:"connectivity,omitempty"`
+	DockerUse    *HealthDockerUse    `json:"docker_use,omitempty"`
+	Load         *HealthLoad         `json:"load,omitempty"`
+	MachineId    string              `json:"machine_id"`
+	Oom          *HealthOom          `json:"oom,omitempty"`
+	Power        *HealthPower        `json:"power,omitempty"`
+	ReceivedAt   *time.Time          `json:"received_at,omitempty"`
+
+	// Reported False until the first report arrives; every other field is absent then.
+	Reported bool `json:"reported"`
+
+	// Stale The last report is older than 3 minutes.
+	Stale    bool            `json:"stale"`
+	Swap     *HealthSwap     `json:"swap,omitempty"`
+	Thermal  *HealthThermal  `json:"thermal,omitempty"`
+	Updates  *HealthUpdates  `json:"updates,omitempty"`
+	Versions *HealthVersions `json:"versions,omitempty"`
+	Volumes  []HealthVolume  `json:"volumes"`
+}
+
+// MachineJobStats defines model for MachineJobStats.
+type MachineJobStats struct {
+	From    time.Time             `json:"from"`
+	Machine JobStatsSet           `json:"machine"`
+	Runners []RunnerJobStatsEntry `json:"runners"`
+	To      time.Time             `json:"to"`
+	Window  MachineJobStatsWindow `json:"window"`
+}
+
+// MachineJobStatsWindow defines model for MachineJobStats.Window.
+type MachineJobStatsWindow string
 
 // MachineList defines model for MachineList.
 type MachineList struct {
@@ -7222,6 +7659,25 @@ type RunnerEnv struct {
 	Vars     []ResolvedEnvVar `json:"vars"`
 }
 
+// RunnerJobStats defines model for RunnerJobStats.
+type RunnerJobStats struct {
+	From     time.Time            `json:"from"`
+	RunnerId string               `json:"runner_id"`
+	Stats    JobStatsSet          `json:"stats"`
+	To       time.Time            `json:"to"`
+	Window   RunnerJobStatsWindow `json:"window"`
+}
+
+// RunnerJobStatsWindow defines model for RunnerJobStats.Window.
+type RunnerJobStatsWindow string
+
+// RunnerJobStatsEntry defines model for RunnerJobStatsEntry.
+type RunnerJobStatsEntry struct {
+	RunnerId   string      `json:"runner_id"`
+	RunnerName string      `json:"runner_name"`
+	Stats      JobStatsSet `json:"stats"`
+}
+
 // RunnerKind defines model for RunnerKind.
 type RunnerKind string
 
@@ -8041,6 +8497,9 @@ type RunnerId = string
 // SetName defines model for SetName.
 type SetName = string
 
+// StatsWindow defines model for StatsWindow.
+type StatsWindow string
+
 // To defines model for To.
 type To = time.Time
 
@@ -8362,6 +8821,15 @@ type StartDockerCompactParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetMachineJobStatsParams defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetMachineJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetMachineJobStatsParamsWindow defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParamsWindow string
+
 // GetMachineLoadParams defines parameters for GetMachineLoad.
 type GetMachineLoadParams struct {
 	From *From `form:"from,omitempty" json:"from,omitempty"`
@@ -8429,6 +8897,15 @@ type DeleteRunnerParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
+
+// GetRunnerJobStatsParams defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetRunnerJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetRunnerJobStatsParamsWindow defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParamsWindow string
 
 // DeleteRunnerRegistrationParams defines parameters for DeleteRunnerRegistration.
 type DeleteRunnerRegistrationParams struct {
@@ -8542,6 +9019,9 @@ type PutEnvSetJSONRequestBody = EnvSetInput
 
 // SetOrgPoolJSONRequestBody defines body for SetOrgPool for application/json ContentType.
 type SetOrgPoolJSONRequestBody = OrgPoolSet
+
+// PutHealthThresholdsJSONRequestBody defines body for PutHealthThresholds for application/json ContentType.
+type PutHealthThresholdsJSONRequestBody = HealthThresholds
 
 // UpdateImageLayersJSONRequestBody defines body for UpdateImageLayers for application/json ContentType.
 type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
@@ -8797,6 +9277,12 @@ type ServerInterface interface {
 	// ListRepositories Repositories of the installations, with pool state and policy
 	// (GET /api/v1/github/repositories)
 	ListRepositories(w http.ResponseWriter, r *http.Request, params ListRepositoriesParams)
+	// GetHealthThresholds The limits of the machine health checks
+	// (GET /api/v1/health-thresholds)
+	GetHealthThresholds(w http.ResponseWriter, r *http.Request)
+	// PutHealthThresholds Change the limits of the machine health checks
+	// (PUT /api/v1/health-thresholds)
+	PutHealthThresholds(w http.ResponseWriter, r *http.Request)
 	// ListImages Images per machine and OS, with layers and sizes
 	// (GET /api/v1/images)
 	ListImages(w http.ResponseWriter, r *http.Request, params ListImagesParams)
@@ -8920,6 +9406,12 @@ type ServerInterface interface {
 	// DrainMachine Stop new jobs on a machine; running jobs finish
 	// (POST /api/v1/machines/{machineId}/drain)
 	DrainMachine(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// GetMachineHealth The health of one machine
+	// (GET /api/v1/machines/{machineId}/health)
+	GetMachineHealth(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// GetMachineJobStats Job stats of one machine and of its runners
+	// (GET /api/v1/machines/{machineId}/job-stats)
+	GetMachineJobStats(w http.ResponseWriter, r *http.Request, machineId MachineId, params GetMachineJobStatsParams)
 	// GetMachineLoad Load history at 15-second steps, up to 24 hours
 	// (GET /api/v1/machines/{machineId}/load)
 	GetMachineLoad(w http.ResponseWriter, r *http.Request, machineId MachineId, params GetMachineLoadParams)
@@ -9121,6 +9613,9 @@ type ServerInterface interface {
 	// GetRunnerEnv The merged environment of a runner, sensitive values masked
 	// (GET /api/v1/runners/{runnerId}/env)
 	GetRunnerEnv(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
+	// GetRunnerJobStats Job stats of one runner
+	// (GET /api/v1/runners/{runnerId}/job-stats)
+	GetRunnerJobStats(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params GetRunnerJobStatsParams)
 	// DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 	// (DELETE /api/v1/runners/{runnerId}/registration)
 	DeleteRunnerRegistration(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params DeleteRunnerRegistrationParams)
@@ -10661,6 +11156,34 @@ func (siw *ServerInterfaceWrapper) ListRepositories(w http.ResponseWriter, r *ht
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListRepositories(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetHealthThresholds operation middleware
+func (siw *ServerInterfaceWrapper) GetHealthThresholds(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetHealthThresholds(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutHealthThresholds operation middleware
+func (siw *ServerInterfaceWrapper) PutHealthThresholds(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutHealthThresholds(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -12308,6 +12831,74 @@ func (siw *ServerInterfaceWrapper) DrainMachine(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DrainMachine(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMachineHealth operation middleware
+func (siw *ServerInterfaceWrapper) GetMachineHealth(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMachineHealth(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMachineJobStats operation middleware
+func (siw *ServerInterfaceWrapper) GetMachineJobStats(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetMachineJobStatsParams
+
+	// ------------- Optional query parameter "window" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "window", r.URL.Query(), &params.Window, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "window"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "window", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMachineJobStats(w, r, machineId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -14032,6 +14623,48 @@ func (siw *ServerInterfaceWrapper) GetRunnerEnv(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// GetRunnerJobStats operation middleware
+func (siw *ServerInterfaceWrapper) GetRunnerJobStats(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runnerId" -------------
+	var runnerId RunnerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runnerId", r.PathValue("runnerId"), &runnerId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runnerId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRunnerJobStatsParams
+
+	// ------------- Optional query parameter "window" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "window", r.URL.Query(), &params.Window, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "window"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "window", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunnerJobStats(w, r, runnerId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DeleteRunnerRegistration operation middleware
 func (siw *ServerInterfaceWrapper) DeleteRunnerRegistration(w http.ResponseWriter, r *http.Request) {
 
@@ -15211,6 +15844,11 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/redetect", wrapper.RedetectMachine)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/recovery", wrapper.RecoverMachine)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/load", wrapper.GetMachineLoad)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/health", wrapper.GetMachineHealth)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/job-stats", wrapper.GetMachineJobStats)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/job-stats", wrapper.GetRunnerJobStats)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/health-thresholds", wrapper.GetHealthThresholds)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/health-thresholds", wrapper.PutHealthThresholds)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots", wrapper.ListSlots)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots/free-stale", wrapper.FreeStaleSlots)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/changes/{changeId}", wrapper.GetMachineChange)
@@ -17153,6 +17791,83 @@ func (response ListRepositoriesdefaultJSONResponse) VisitListRepositoriesRespons
 	return err
 }
 
+type GetHealthThresholdsRequestObject struct {
+}
+
+type GetHealthThresholdsResponseObject interface {
+	VisitGetHealthThresholdsResponse(w http.ResponseWriter) error
+}
+
+type GetHealthThresholds200JSONResponse HealthThresholds
+
+func (response GetHealthThresholds200JSONResponse) VisitGetHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetHealthThresholdsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetHealthThresholdsdefaultJSONResponse) VisitGetHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutHealthThresholdsRequestObject struct {
+	Body *PutHealthThresholdsJSONRequestBody
+}
+
+type PutHealthThresholdsResponseObject interface {
+	VisitPutHealthThresholdsResponse(w http.ResponseWriter) error
+}
+
+type PutHealthThresholds200JSONResponse HealthThresholds
+
+func (response PutHealthThresholds200JSONResponse) VisitPutHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutHealthThresholdsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutHealthThresholdsdefaultJSONResponse) VisitPutHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListImagesRequestObject struct {
 	Params ListImagesParams
 }
@@ -18765,6 +19480,85 @@ type DrainMachinedefaultJSONResponse struct {
 }
 
 func (response DrainMachinedefaultJSONResponse) VisitDrainMachineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineHealthRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+}
+
+type GetMachineHealthResponseObject interface {
+	VisitGetMachineHealthResponse(w http.ResponseWriter) error
+}
+
+type GetMachineHealth200JSONResponse MachineHealth
+
+func (response GetMachineHealth200JSONResponse) VisitGetMachineHealthResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineHealthdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMachineHealthdefaultJSONResponse) VisitGetMachineHealthResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineJobStatsRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+	Params    GetMachineJobStatsParams
+}
+
+type GetMachineJobStatsResponseObject interface {
+	VisitGetMachineJobStatsResponse(w http.ResponseWriter) error
+}
+
+type GetMachineJobStats200JSONResponse MachineJobStats
+
+func (response GetMachineJobStats200JSONResponse) VisitGetMachineJobStatsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineJobStatsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMachineJobStatsdefaultJSONResponse) VisitGetMachineJobStatsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -21371,6 +22165,46 @@ func (response GetRunnerEnvdefaultJSONResponse) VisitGetRunnerEnvResponse(w http
 	return err
 }
 
+type GetRunnerJobStatsRequestObject struct {
+	RunnerId RunnerId `json:"runnerId"`
+	Params   GetRunnerJobStatsParams
+}
+
+type GetRunnerJobStatsResponseObject interface {
+	VisitGetRunnerJobStatsResponse(w http.ResponseWriter) error
+}
+
+type GetRunnerJobStats200JSONResponse RunnerJobStats
+
+func (response GetRunnerJobStats200JSONResponse) VisitGetRunnerJobStatsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunnerJobStatsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetRunnerJobStatsdefaultJSONResponse) VisitGetRunnerJobStatsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type DeleteRunnerRegistrationRequestObject struct {
 	RunnerId RunnerId `json:"runnerId"`
 	Params   DeleteRunnerRegistrationParams
@@ -22840,6 +23674,12 @@ type StrictServerInterface interface {
 	// ListRepositories Repositories of the installations, with pool state and policy
 	// (GET /api/v1/github/repositories)
 	ListRepositories(ctx context.Context, request ListRepositoriesRequestObject) (ListRepositoriesResponseObject, error)
+	// GetHealthThresholds The limits of the machine health checks
+	// (GET /api/v1/health-thresholds)
+	GetHealthThresholds(ctx context.Context, request GetHealthThresholdsRequestObject) (GetHealthThresholdsResponseObject, error)
+	// PutHealthThresholds Change the limits of the machine health checks
+	// (PUT /api/v1/health-thresholds)
+	PutHealthThresholds(ctx context.Context, request PutHealthThresholdsRequestObject) (PutHealthThresholdsResponseObject, error)
 	// ListImages Images per machine and OS, with layers and sizes
 	// (GET /api/v1/images)
 	ListImages(ctx context.Context, request ListImagesRequestObject) (ListImagesResponseObject, error)
@@ -22963,6 +23803,12 @@ type StrictServerInterface interface {
 	// DrainMachine Stop new jobs on a machine; running jobs finish
 	// (POST /api/v1/machines/{machineId}/drain)
 	DrainMachine(ctx context.Context, request DrainMachineRequestObject) (DrainMachineResponseObject, error)
+	// GetMachineHealth The health of one machine
+	// (GET /api/v1/machines/{machineId}/health)
+	GetMachineHealth(ctx context.Context, request GetMachineHealthRequestObject) (GetMachineHealthResponseObject, error)
+	// GetMachineJobStats Job stats of one machine and of its runners
+	// (GET /api/v1/machines/{machineId}/job-stats)
+	GetMachineJobStats(ctx context.Context, request GetMachineJobStatsRequestObject) (GetMachineJobStatsResponseObject, error)
 	// GetMachineLoad Load history at 15-second steps, up to 24 hours
 	// (GET /api/v1/machines/{machineId}/load)
 	GetMachineLoad(ctx context.Context, request GetMachineLoadRequestObject) (GetMachineLoadResponseObject, error)
@@ -23164,6 +24010,9 @@ type StrictServerInterface interface {
 	// GetRunnerEnv The merged environment of a runner, sensitive values masked
 	// (GET /api/v1/runners/{runnerId}/env)
 	GetRunnerEnv(ctx context.Context, request GetRunnerEnvRequestObject) (GetRunnerEnvResponseObject, error)
+	// GetRunnerJobStats Job stats of one runner
+	// (GET /api/v1/runners/{runnerId}/job-stats)
+	GetRunnerJobStats(ctx context.Context, request GetRunnerJobStatsRequestObject) (GetRunnerJobStatsResponseObject, error)
 	// DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 	// (DELETE /api/v1/runners/{runnerId}/registration)
 	DeleteRunnerRegistration(ctx context.Context, request DeleteRunnerRegistrationRequestObject) (DeleteRunnerRegistrationResponseObject, error)
@@ -24419,6 +25268,61 @@ func (sh *strictHandler) ListRepositories(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// GetHealthThresholds operation middleware
+func (sh *strictHandler) GetHealthThresholds(w http.ResponseWriter, r *http.Request) {
+	var request GetHealthThresholdsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetHealthThresholds(ctx, request.(GetHealthThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetHealthThresholds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetHealthThresholdsResponseObject); ok {
+		if err := validResponse.VisitGetHealthThresholdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutHealthThresholds operation middleware
+func (sh *strictHandler) PutHealthThresholds(w http.ResponseWriter, r *http.Request) {
+	var request PutHealthThresholdsRequestObject
+
+	var body PutHealthThresholdsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutHealthThresholds(ctx, request.(PutHealthThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutHealthThresholds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutHealthThresholdsResponseObject); ok {
+		if err := validResponse.VisitPutHealthThresholdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListImages operation middleware
 func (sh *strictHandler) ListImages(w http.ResponseWriter, r *http.Request, params ListImagesParams) {
 	var request ListImagesRequestObject
@@ -25536,6 +26440,59 @@ func (sh *strictHandler) DrainMachine(w http.ResponseWriter, r *http.Request, ma
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DrainMachineResponseObject); ok {
 		if err := validResponse.VisitDrainMachineResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMachineHealth operation middleware
+func (sh *strictHandler) GetMachineHealth(w http.ResponseWriter, r *http.Request, machineId MachineId) {
+	var request GetMachineHealthRequestObject
+
+	request.MachineId = machineId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMachineHealth(ctx, request.(GetMachineHealthRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMachineHealth")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMachineHealthResponseObject); ok {
+		if err := validResponse.VisitGetMachineHealthResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMachineJobStats operation middleware
+func (sh *strictHandler) GetMachineJobStats(w http.ResponseWriter, r *http.Request, machineId MachineId, params GetMachineJobStatsParams) {
+	var request GetMachineJobStatsRequestObject
+
+	request.MachineId = machineId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMachineJobStats(ctx, request.(GetMachineJobStatsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMachineJobStats")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMachineJobStatsResponseObject); ok {
+		if err := validResponse.VisitGetMachineJobStatsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -27394,6 +28351,33 @@ func (sh *strictHandler) GetRunnerEnv(w http.ResponseWriter, r *http.Request, ru
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetRunnerEnvResponseObject); ok {
 		if err := validResponse.VisitGetRunnerEnvResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRunnerJobStats operation middleware
+func (sh *strictHandler) GetRunnerJobStats(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params GetRunnerJobStatsParams) {
+	var request GetRunnerJobStatsRequestObject
+
+	request.RunnerId = runnerId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRunnerJobStats(ctx, request.(GetRunnerJobStatsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRunnerJobStats")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunnerJobStatsResponseObject); ok {
+		if err := validResponse.VisitGetRunnerJobStatsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

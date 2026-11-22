@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
 	"log/slog"
 	"net"
 	"net/http"
@@ -47,7 +48,9 @@ type machinesRuntime struct {
 	Caches  *caches.Service
 	// Link carries runner commands to remote agents and holds their machine reports.
 	Link *agentlink.Link
-	CA   *tlsca.Authority
+	// Health keeps the machine health reports and serves the job stats (OPS83).
+	Health *machinehealth.Service
+	CA     *tlsca.Authority
 	// PublicHost is the name agents and runners use for this controller (CRSP_PUBLIC_HOST, else the host name).
 	PublicHost string
 	// Packages holds the release packages that downloaded installers fetch; nil for a development build.
@@ -135,6 +138,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	})
 	cs := caches.New(caches.Options{Machines: svc, Audit: rec})
 	lk := agentlink.New(svc)
+	hs := newHealthService(db, svc, version)
 	svc.SetHostRunner(lk)
 	svc.SetHooks(machines.Hooks{ControllerVersion: version,
 		// Protocol version 3, the registry path, is offered only when a registry core can open (REG11).
@@ -143,7 +147,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 		OnJobSamples: agentlink.ResourceSink{Batches: db.Resources()}.JobSamples,
 		OnHello:      func(ctx context.Context, id string, h *agentv1.Hello) { cs.OnHello(ctx, id, h); lk.OnHello(id) },
 		OnMessage: func(ctx context.Context, id string, m *agentv1.SessionRequest, reply func(*agentv1.SessionResponse)) bool {
-			return lk.OnMessage(id, m) || cs.OnMessage(ctx, id, m, reply)
+			return lk.OnMessage(id, m) || cs.OnMessage(ctx, id, m, reply) || hs.OnMessage(ctx, id, m)
 		}})
 
 	ln, err := (&net.ListenConfig{}).Listen(ctx, "tcp", addr)
@@ -206,7 +210,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 			}
 		}()
 	}
-	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, stop: func() {
+	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, stop: func() {
 		cancel()
 		_ = link.Close()
 		<-done

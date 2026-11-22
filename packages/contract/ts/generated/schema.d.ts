@@ -1119,6 +1119,90 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines/{machineId}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The health of one machine
+         * @description machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+         */
+        get: operations["getMachineHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/job-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job stats of one machine and of its runners
+         * @description machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+         */
+        get: operations["getMachineJobStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runners/{runnerId}/job-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job stats of one runner
+         * @description machines R5.78, R5.79.
+         */
+        get: operations["getRunnerJobStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health-thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The limits of the machine health checks
+         * @description doctor R5.66.
+         */
+        get: operations["getHealthThresholds"];
+        /**
+         * Change the limits of the machine health checks
+         * @description doctor R5.66. A value outside its range is refused with the range.
+         */
+        put: operations["putHealthThresholds"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/machines/{machineId}/slots": {
         parameters: {
             query?: never;
@@ -6863,6 +6947,272 @@ export interface components {
             /** @description True from 5 good runs on. */
             measured: boolean;
         };
+        HealthThresholds: {
+            /** @description A disk that fills in fewer days is a finding (default 3). */
+            disk_days_under: number;
+            /** @description A disk with less free space is a finding (default 10). */
+            disk_free_pct_under: number;
+            /** @description No heartbeat for this long is a finding (default 120). */
+            no_heartbeat_seconds: number;
+            /** @description A clock this far from the controller is a finding (default 30). */
+            clock_skew_seconds: number;
+            /** @description An OOM kill this recent is a finding (default 60). */
+            oom_window_minutes: number;
+        };
+        /** @description A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC. */
+        MachineHealth: {
+            machine_id: string;
+            /** @description False until the first report arrives; every other field is absent then. */
+            reported: boolean;
+            /** Format: date-time */
+            received_at?: string;
+            /** @description The last report is older than 3 minutes. */
+            stale: boolean;
+            boot?: components["schemas"]["HealthBoot"];
+            volumes: components["schemas"]["HealthVolume"][];
+            swap?: components["schemas"]["HealthSwap"];
+            oom?: components["schemas"]["HealthOom"];
+            connectivity?: components["schemas"]["HealthConnectivity"];
+            versions?: components["schemas"]["HealthVersions"];
+            updates?: components["schemas"]["HealthUpdates"];
+            power?: components["schemas"]["HealthPower"];
+            docker_use?: components["schemas"]["HealthDockerUse"];
+            thermal?: components["schemas"]["HealthThermal"];
+            load?: components["schemas"]["HealthLoad"];
+        };
+        HealthBoot: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            uptime_seconds?: number;
+            /** Format: date-time */
+            last_boot_at?: string;
+            /** @description Booted in the last 24 hours without a restart crsp asked for. */
+            unexpected_restart?: boolean;
+        };
+        HealthVolume: {
+            /** @enum {string} */
+            role: "system" | "data_dir" | "docker" | "runner_work";
+            path: string;
+            unknown_reason?: string;
+            /** Format: int64 */
+            total_bytes?: number;
+            /** Format: int64 */
+            free_bytes?: number;
+            free_pct?: number;
+            /** @description From the trend of the last 24 hours; absent when free space is not falling or there are too few samples. */
+            days_until_full?: number;
+            /** @description Why days_until_full is absent. */
+            days_note?: string;
+        };
+        HealthSwap: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            total_bytes?: number;
+            /** Format: int64 */
+            used_bytes?: number;
+        };
+        HealthOomScope: {
+            /** @enum {string} */
+            scope: "pool" | "job";
+            name: string;
+            /** Format: int64 */
+            kills: number;
+        };
+        HealthOom: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            total_kills?: number;
+            /** Format: date-time */
+            last_kill_at?: string;
+            /** @description A kill inside the Doctor window (default 1 hour). */
+            recent?: boolean;
+            scopes?: components["schemas"]["HealthOomScope"][];
+        };
+        HealthGithub: {
+            reachable?: boolean;
+            /** Format: int64 */
+            latency_ms?: number;
+            /** Format: date-time */
+            checked_at?: string;
+            error?: string;
+        };
+        HealthDns: {
+            ok?: boolean;
+            error?: string;
+        };
+        HealthConnectivity: {
+            /**
+             * Format: int64
+             * @description Agent to controller round trip, from the heartbeats.
+             */
+            rtt_ms?: number;
+            /** Format: date-time */
+            last_heartbeat_at?: string;
+            reconnects_24h?: number;
+            /** @description Agent clock minus controller clock; positive means the agent is ahead. */
+            clock_skew_seconds?: number;
+            github?: components["schemas"]["HealthGithub"];
+            dns?: components["schemas"]["HealthDns"];
+        };
+        HealthVersions: {
+            agent?: string;
+            controller?: string;
+            agent_out_of_date?: boolean;
+            /** @description The oldest runner app on the machine. */
+            runner_app?: string;
+            latest_runner?: string;
+            runner_out_of_date?: boolean;
+            docker_kind?: string;
+            docker?: string;
+            wsl?: string;
+        };
+        HealthUpdates: {
+            unknown_reason?: string;
+            restart_pending?: boolean;
+            restart_reasons?: string[];
+            pending_update_count?: number;
+            /** @description Windows Update active hours, local hour 0 to 23. */
+            active_hours_start?: number;
+            active_hours_end?: number;
+            auto_update_state?: string;
+            /** @description A restart is pending and the OS may do it now. */
+            restart_may_happen_now?: boolean;
+            /** @description It may happen now and the machine runs or takes jobs. */
+            restart_may_hit_jobs?: boolean;
+        };
+        HealthPower: {
+            on_battery?: boolean;
+            source_unknown_reason?: string;
+            /** @description A setting can suspend or hibernate the machine. */
+            sleep_enabled?: boolean;
+            sleep_modes?: string[];
+            sleep_unknown_reason?: string;
+            /** Format: date-time */
+            last_wake_at?: string;
+        };
+        HealthDockerUse: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            images_bytes?: number;
+            /** Format: int64 */
+            build_cache_bytes?: number;
+            /** Format: int64 */
+            volumes_bytes?: number;
+            /** Format: int64 */
+            containers_bytes?: number;
+            /** Format: date-time */
+            read_at?: string;
+        };
+        HealthThermal: {
+            unknown_reason?: string;
+            max_temp_celsius?: number;
+            throttled?: boolean;
+            throttle_detail?: string;
+        };
+        HealthLoad: {
+            load_unknown_reason?: string;
+            load1?: number;
+            load5?: number;
+            load15?: number;
+            steal_unknown_reason?: string;
+            steal_pct?: number;
+        };
+        JobStatsCounts: {
+            /** Format: int64 */
+            succeeded: number;
+            /** Format: int64 */
+            failed: number;
+            /** Format: int64 */
+            cancelled: number;
+            /**
+             * Format: int64
+             * @description Ended by the crsp job timer, or by GitHub as timed out.
+             */
+            timed_out: number;
+            /** Format: int64 */
+            over_memory: number;
+            /**
+             * Format: int64
+             * @description Stopped by crsp (a drain, a Stop, a removal).
+             */
+            stopped: number;
+            /**
+             * Format: int64
+             * @description No known result (a job crsp lost).
+             */
+            other: number;
+            /** Format: int64 */
+            total: number;
+        };
+        /** @description The counts as fractions of the total, 0 to 1. Absent when no job completed in the window. */
+        JobStatsRates: {
+            succeeded?: number;
+            failed?: number;
+            cancelled?: number;
+            timed_out?: number;
+            over_memory?: number;
+            stopped?: number;
+        };
+        JobStatsFailure: {
+            /** Format: int64 */
+            job_id: number;
+            repository: string;
+            job: string;
+            /** Format: int64 */
+            run_id: number;
+            /** @enum {string} */
+            class: "failed" | "timed_out" | "over_memory" | "stopped";
+            /** Format: date-time */
+            at: string;
+            job_url?: string;
+            run_url?: string;
+        };
+        JobStatsFailingJob: {
+            repository: string;
+            job: string;
+            /** Format: int64 */
+            failures: number;
+            /** Format: date-time */
+            last_at: string;
+        };
+        JobStatsSet: {
+            counts: components["schemas"]["JobStatsCounts"];
+            rates?: components["schemas"]["JobStatsRates"];
+            /** @description Absent when no job in the window has times. */
+            avg_run_seconds?: number;
+            avg_queue_wait_seconds?: number;
+            /** @description Time jobs ran inside the window, summed. */
+            busy_seconds?: number;
+            /** @description Busy seconds over the window times the slots (a runner has one), 0 to 100. */
+            busy_pct?: number;
+            last_failure?: components["schemas"]["JobStatsFailure"];
+            top_failing: components["schemas"]["JobStatsFailingJob"][];
+        };
+        RunnerJobStatsEntry: {
+            runner_id: string;
+            runner_name: string;
+            stats: components["schemas"]["JobStatsSet"];
+        };
+        MachineJobStats: {
+            /** @enum {string} */
+            window: "24h" | "7d";
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            machine: components["schemas"]["JobStatsSet"];
+            runners: components["schemas"]["RunnerJobStatsEntry"][];
+        };
+        RunnerJobStats: {
+            /** @enum {string} */
+            window: "24h" | "7d";
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            runner_id: string;
+            stats: components["schemas"]["JobStatsSet"];
+        };
     };
     responses: {
         /** @description Any error, in the error envelope. */
@@ -6925,6 +7275,8 @@ export interface components {
         /** @description The numeric GitHub repository id. */
         RepositoryId: number;
         PlanId: string;
+        /** @description The window of the stats, 24h (default) or 7d. */
+        StatsWindow: "24h" | "7d";
         MachineId: string;
         ChangeId: string;
         JoinCodeId: string;
@@ -8480,6 +8832,127 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoadHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The health. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineHealth"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineJobStats: {
+        parameters: {
+            query?: {
+                /** @description The window of the stats, 24h (default) or 7d. */
+                window?: components["parameters"]["StatsWindow"];
+            };
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stats. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineJobStats"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunnerJobStats: {
+        parameters: {
+            query?: {
+                /** @description The window of the stats, 24h (default) or 7d. */
+                window?: components["parameters"]["StatsWindow"];
+            };
+            header?: never;
+            path: {
+                runnerId: components["parameters"]["RunnerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stats. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerJobStats"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getHealthThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The limits in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthThresholds"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putHealthThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HealthThresholds"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthThresholds"];
                 };
             };
             default: components["responses"]["Error"];
