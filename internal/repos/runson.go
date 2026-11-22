@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	"gopkg.in/yaml.v3"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/doctor/runson"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/routing"
 )
 
 // RunsOnJob is the runs-on of one workflow job.
@@ -17,6 +20,9 @@ type RunsOnJob struct {
 	Literal []string
 	// Var names the variable of a fromJSON(vars.NAME) expression, if any.
 	Var string
+	// Vars holds every variable of a fallback chain, in order:
+	// fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"').
+	Vars []string
 	// Default holds the labels of `|| '[...]'` after the variable.
 	Default []string
 	// Unresolved is set for an expression that cannot be resolved, such as a
@@ -101,12 +107,19 @@ func (r *RunsOnJob) fill(v string) {
 		r.Literal = []string{strings.TrimSpace(v)}
 		return
 	}
+	if vars, def, ok := runson.ParseChain(v); ok && len(vars) > 1 {
+		r.Var, r.Vars = vars[0], vars
+		if labels, ok := runson.ParseDefault(def); ok {
+			r.Default = labels
+		}
+		return
+	}
 	m := fromJSONRE.FindStringSubmatch(v)
 	if m == nil {
 		r.Unresolved = true
 		return
 	}
-	r.Var = m[1]
+	r.Var, r.Vars = m[1], []string{m[1]}
 	def := ""
 	for _, g := range m[2:] {
 		if g != "" {
@@ -118,6 +131,8 @@ func (r *RunsOnJob) fill(v string) {
 		var labels []string
 		if err := json.Unmarshal([]byte(def), &labels); err == nil {
 			r.Default = labels
+		} else if one := ""; json.Unmarshal([]byte(def), &one) == nil && one != "" {
+			r.Default = []string{one}
 		} else {
 			r.Default = []string{def}
 		}
@@ -128,9 +143,9 @@ func (r *RunsOnJob) fill(v string) {
 //
 //   - self-hosted labels that no runner of the pool carries: fail
 //     (no_runner_with_labels);
-//   - self-hosted labels written out instead of fromJSON(vars.RUNS_ON_<OS>):
+//   - self-hosted labels written out instead of fromJSON(vars.CRSP_RUNS_ON_<OS>):
 //     warning (not_generic);
-//   - a RUNS_ON_<OS> variable the workflow reads that is not set: fail
+//   - a CRSP_RUNS_ON_<OS> variable the workflow reads that is not set: fail
 //     (uses_variable).
 //
 // vars are the repository's variables as GitHub holds them; pool lists the
@@ -146,20 +161,35 @@ func Check(path string, jobs []RunsOnJob, vars map[string]string, pool [][]strin
 		viaVar := false
 		if j.Var != "" {
 			viaVar = true
-			raw, set := vars[j.Var]
+			chain := j.Vars
+			if len(chain) == 0 {
+				chain = []string{j.Var}
+			}
+			setVar, raw, set := chain[0], "", false
+			for _, n := range chain { // the first variable of the chain that is set wins
+				if v, ok := vars[n]; ok {
+					setVar, raw, set = n, v, true
+					break
+				}
+			}
+			j.Var = chain[len(chain)-1] // the pool variable the job needs when none is set
 			switch {
 			case set:
 				if err := json.Unmarshal([]byte(raw), &labels); err != nil {
 					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar,
-						Text: "job " + j.Job + ": variable " + j.Var + " is not a JSON list of labels"})
+						Text: "job " + j.Job + ": variable " + setVar + " is not a JSON list of labels"})
 					continue
 				}
+				labels = routing.StripLabels(labels) // routing labels sit on the runners crsp chose
 			case len(j.Default) > 0:
 				labels = j.Default
 			default:
 				if isPoolVar(j.Var) {
 					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar,
 						Text: "job " + j.Job + " reads " + j.Var + ", which is not set; turn the pool on for this repository or set it"})
+				} else if repl, old := legacyReplacement(j.Var); old && repl != "" {
+					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar,
+						Text: "job " + j.Job + " reads " + j.Var + ", an old name crsp no longer writes; read " + repl + " instead"})
 				} else if _, size, ok := ParseSizeVariable(j.Var); ok {
 					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar, Text: sizeNotSetText(j.Job, j.Var, size)})
 				}
@@ -192,17 +222,17 @@ func sizeNotSetText(job, name, size string) string {
 }
 
 func isPoolVar(n string) bool {
-	return n == "RUNS_ON_LINUX" || n == "RUNS_ON_WINDOWS" || n == "RUNS_ON_MACOS"
+	return n == "CRSP_RUNS_ON_LINUX" || n == "CRSP_RUNS_ON_WINDOWS" || n == "CRSP_RUNS_ON_MACOS"
 }
 
 func varFor(labels []string) string {
 	switch {
 	case hasLabel(labels, "windows"):
-		return "RUNS_ON_WINDOWS"
+		return "CRSP_RUNS_ON_WINDOWS"
 	case hasLabel(labels, "macos"):
-		return "RUNS_ON_MACOS"
+		return "CRSP_RUNS_ON_MACOS"
 	}
-	return "RUNS_ON_LINUX"
+	return "CRSP_RUNS_ON_LINUX"
 }
 
 func hasLabel(labels []string, want string) bool {
@@ -231,7 +261,7 @@ func carried(want []string, pool [][]string) bool {
 	return false
 }
 
-// VariablesRead lists, per RUNS_ON_* variable, the workflow files that
+// VariablesRead lists, per CRSP_RUNS_ON_* variable, the workflow files that
 // read it, for the question that names them when the pool is turned off
 // (R5.29).
 func VariablesRead(files map[string][]byte) map[string][]string {
@@ -242,10 +272,16 @@ func VariablesRead(files map[string][]byte) map[string][]string {
 				out[j.Var] = appendUnique(out[j.Var], path)
 			}
 		}
-		// A variable read outside runs-on (a matrix, a step) still counts.
+		// A variable read outside runs-on (a matrix, a step) still counts, and
+		// so does a name an older version wrote.
 		for v := range pools {
 			if strings.Contains(string(content), "vars."+v) {
 				out[v] = appendUnique(out[v], path)
+			}
+		}
+		for _, n := range legacyVariableNames {
+			if containsVar(string(content), n.Old) {
+				out[n.Old] = appendUnique(out[n.Old], path)
 			}
 		}
 	}
@@ -255,7 +291,29 @@ func VariablesRead(files map[string][]byte) map[string][]string {
 	return out
 }
 
-var pools = map[string]bool{"RUNS_ON_LINUX": true, "RUNS_ON_WINDOWS": true, "RUNS_ON_MACOS": true, VarLight: true}
+var pools = map[string]bool{"CRSP_RUNS_ON_LINUX": true, "CRSP_RUNS_ON_WINDOWS": true, "CRSP_RUNS_ON_MACOS": true}
+
+// containsVar says whether content reads vars.<name> as a whole name, so
+// vars.CI_RUNS_ON does not count for vars.CI_RUNS_ON_WINDOWS.
+func containsVar(content, name string) bool {
+	needle := "vars." + name
+	for i := strings.Index(content, needle); i >= 0; {
+		end := i + len(needle)
+		if end == len(content) || !isNameByte(content[end]) {
+			return true
+		}
+		next := strings.Index(content[end:], needle)
+		if next < 0 {
+			return false
+		}
+		i = end + next
+	}
+	return false
+}
+
+func isNameByte(c byte) bool {
+	return c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+}
 
 func appendUnique(s []string, v string) []string {
 	for _, x := range s {

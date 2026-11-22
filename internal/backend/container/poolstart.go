@@ -16,7 +16,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/runners"
 )
 
-// The pool start joins what the earlier tasks built (parity plan, What is
+// The pool start joins what the earlier tasks built (the move to crsp, What is
 // left item 1): the cache lane (caches R5.43, R5.44), the job environment
 // (runners R5.53), the Wine prefix (R5.52), the `crsp` mount (R5.48), KVM
 // (R5.41), Postgres and db.env (R5.54) and the browsers path (R5.44). Each

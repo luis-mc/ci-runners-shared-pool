@@ -33,7 +33,7 @@ const WIDTHS = [360, 393, 1300];
 // The machine page has no sample id in the route table; its id in the mocked data is m1.
 const URLS = [
   ...new Set([
-    '/pool/machines/m1',
+    '/setup/machines/m1',
     ...consoleRoutes()
       .filter((r) => !r.signedOut)
       .map((r) => r.url),

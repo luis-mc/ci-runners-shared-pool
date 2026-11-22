@@ -90,10 +90,10 @@ function AreaMenu() {
 
 export const AREAS: readonly NavItem[] = [
   { to: '/', label: 'Overview', end: true },
-  { to: '/pool', label: 'Shared Pool' },
-  { to: '/repositories', label: 'Repositories' },
-  { to: '/jobs', label: 'Jobs' },
+  { to: '/setup', label: 'Setup' },
+  { to: '/pool', label: 'Pool' },
   { to: '/doctor', label: 'Doctor' },
+  { to: '/analytics', label: 'Analytics' },
   { to: '/settings', label: 'Settings' },
   { to: '/help', label: 'Help' },
 ];
@@ -161,7 +161,7 @@ function Palette({ onClose }: { onClose: () => void }) {
             id: `runner:${r.id}`,
             label: r.name,
             hint: 'runner',
-            to: `/pool/runners`,
+            to: '/setup/runners',
           });
       if (repos.status === 'fulfilled')
         for (const r of repos.value.items)
@@ -169,7 +169,7 @@ function Palette({ onClose }: { onClose: () => void }) {
             id: `repo:${r.id}`,
             label: r.full_name,
             hint: 'repository',
-            to: `/repositories/${r.owner}/${r.name}`,
+            to: `/setup/pool/${r.owner}/${r.name}`,
           });
       setFound(out);
     });
@@ -190,7 +190,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         id: `machine:${m.id}`,
         label: m.name,
         hint: 'machine',
-        to: `/pool/machines/${m.id}`,
+        to: `/setup/machines/${m.id}`,
       });
     items.push(...found);
     if (session.can('admin')) {
@@ -199,19 +199,19 @@ function Palette({ onClose }: { onClose: () => void }) {
           id: 'cmd:add-machine',
           label: 'Add a machine',
           hint: 'command',
-          to: '/pool/machines/add',
+          to: '/setup/machines/add',
         },
         {
           id: 'cmd:add-runners',
           label: 'Add runners',
           hint: 'command',
-          to: '/pool/runners/add',
+          to: '/setup/runners/add',
         },
         {
           id: 'cmd:pool-on',
           label: 'Turn on the pool',
           hint: 'command',
-          to: '/repositories',
+          to: '/setup/pool',
         },
       );
     }
@@ -358,7 +358,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
       <Message
         key="first-run"
         tone="needs-you"
-        action={<LinkButton to="/setup">Open the setup page</LinkButton>}
+        action={<LinkButton to="/setup?wizard=1">Open the setup page</LinkButton>}
       >
         {`First run is not finished. Next: ${open}.`}
       </Message>,
@@ -368,7 +368,7 @@ export function AppShell({ children }: { children?: ReactNode }) {
       <Message
         key="hosted-fallback"
         tone="needs-you"
-        action={<TextLink to="/repositories">Open Repositories</TextLink>}
+        action={<TextLink to="/setup/pool">Open Repositories</TextLink>}
       >
         {hosted === 1
           ? '1 repository runs on GitHub-hosted runners because no crsp machine is up.'
@@ -389,8 +389,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
   if (live.status === 'paused')
     banners.push(
       <Message key="live" tone="note" dismissible={false}>
-        Live updates paused. The data on screen is the last that arrived. The console
-        reconnects by itself.
+        Live updates paused. The data on screen is the last that arrived. The lists ask
+        again every 5 seconds, and the console reconnects by itself.
       </Message>,
     );
 

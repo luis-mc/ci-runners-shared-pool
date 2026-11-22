@@ -43,8 +43,11 @@ type Job struct {
 	// Labels are the literal labels; for Variable they are the default after
 	// `||`, when one is given.
 	Labels []string
-	// Var is the variable name for Variable.
-	Var string
+	// Var is the variable name for Variable; with a fallback chain
+	// (fromJSON(vars.A || vars.B || '...')) it is the first variable and Vars
+	// holds all of them in order.
+	Var  string
+	Vars []string
 	// Expr is the raw text of an Unresolved expression.
 	Expr string
 }
@@ -129,14 +132,26 @@ func parseNode(path, job string, n *yaml.Node) Job {
 
 func parseScalar(j Job, v string) Job {
 	v = strings.TrimSpace(v)
+	if vars, def, ok := ParseChain(v); ok {
+		j.Kind, j.Var, j.Vars = Variable, vars[0], vars
+		if def != "" {
+			labels, ok := ParseDefault(def)
+			if !ok {
+				j.Kind, j.Var, j.Vars, j.Expr = Unresolved, "", nil, v
+				return j
+			}
+			j.Labels = labels
+		}
+		return j
+	}
 	m := reVar.FindStringSubmatch(v)
 	if m == nil {
 		m = reVarIn.FindStringSubmatch(v)
 	}
 	if m != nil {
-		j.Kind, j.Var = Variable, m[1]
+		j.Kind, j.Var, j.Vars = Variable, m[1], []string{m[1]}
 		if m[2] != "" {
-			def, ok := parseDefault(m[2])
+			def, ok := ParseDefault(m[2])
 			if !ok {
 				j.Kind, j.Var, j.Expr = Unresolved, "", v
 				return j
@@ -153,8 +168,8 @@ func parseScalar(j Job, v string) Job {
 	return j
 }
 
-// parseDefault reads what follows `||`: 'label', '["a","b"]' or fromJSON('["a"]').
-func parseDefault(s string) ([]string, bool) {
+// ParseDefault reads what follows `||`: 'label', '["a","b"]' or fromJSON('["a"]').
+func ParseDefault(s string) ([]string, bool) {
 	s = strings.TrimSpace(s)
 	if m := reJSON.FindStringSubmatch(s); m != nil {
 		return ParseLabelList(m[1])
@@ -164,12 +179,16 @@ func parseDefault(s string) ([]string, bool) {
 		if strings.HasPrefix(strings.TrimSpace(inner), "[") {
 			return ParseLabelList(inner)
 		}
+		var one string // '"ubuntu-latest"': a JSON string
+		if json.Unmarshal([]byte(inner), &one) == nil && one != "" {
+			return []string{one}, true
+		}
 		return []string{inner}, inner != ""
 	}
 	return nil, false
 }
 
-// ParseLabelList reads a JSON list of strings, the form of a RUNS_ON_* variable.
+// ParseLabelList reads a JSON list of strings, the form of a CRSP_RUNS_ON_* variable.
 func ParseLabelList(v string) ([]string, bool) {
 	var l []string
 	if err := json.Unmarshal([]byte(v), &l); err != nil || len(l) == 0 {
@@ -187,16 +206,22 @@ func (j Job) Resolve(vars map[string]string) (labels []string, ok bool, missingV
 	case Literal:
 		return j.Labels, true, ""
 	case Variable:
-		if v, set := vars[j.Var]; set {
-			if l, valid := ParseLabelList(v); valid {
-				return l, true, ""
+		chain := j.Vars
+		if len(chain) == 0 {
+			chain = []string{j.Var}
+		}
+		for _, name := range chain {
+			if v, set := vars[name]; set {
+				if l, valid := ParseLabelList(v); valid {
+					return l, true, ""
+				}
+				return nil, false, ""
 			}
-			return nil, false, ""
 		}
 		if len(j.Labels) > 0 {
 			return j.Labels, true, ""
 		}
-		return nil, false, j.Var
+		return nil, false, chain[len(chain)-1]
 	}
 	return nil, false, ""
 }
@@ -235,18 +260,100 @@ func Carries(runner, need []string) bool {
 	return true
 }
 
-// OSOfVariable maps RUNS_ON_<OS> to the OS name, "" for any other name.
+// OSOfVariable maps CRSP_RUNS_ON_<OS> to the OS name, "" for any other name.
 func OSOfVariable(name string) string {
 	switch name {
-	case "RUNS_ON_LINUX":
+	case "CRSP_RUNS_ON_LINUX":
 		return "linux"
-	case "RUNS_ON_WINDOWS":
+	case "CRSP_RUNS_ON_WINDOWS":
 		return "windows"
-	case "RUNS_ON_MACOS":
+	case "CRSP_RUNS_ON_MACOS":
 		return "macos"
 	}
 	return ""
 }
 
 // VariableOfOS is the inverse of OSOfVariable.
-func VariableOfOS(os string) string { return "RUNS_ON_" + strings.ToUpper(os) }
+func VariableOfOS(os string) string { return "CRSP_RUNS_ON_" + strings.ToUpper(os) }
+
+// ParseChain reads ${{ fromJSON(vars.A || vars.B || 'default') }}: a chain of
+// one or more variables, then an optional default, inside the call or after it.
+// ok is false for any other expression.
+func ParseChain(v string) (vars []string, def string, ok bool) {
+	e := strings.TrimSpace(v)
+	if !strings.HasPrefix(e, "${{") || !strings.HasSuffix(e, "}}") {
+		return nil, "", false
+	}
+	e = strings.TrimSpace(e[3 : len(e)-2])
+	if !strings.HasPrefix(e, "fromJSON(") {
+		return nil, "", false
+	}
+	rest := e[len("fromJSON("):]
+	depth, quote, end := 1, byte(0), -1
+	for i := 0; i < len(rest) && end < 0; i++ {
+		c := rest[i]
+		switch {
+		case quote != 0:
+			if c == quote {
+				quote = 0
+			}
+		case c == '\'' || c == '"':
+			quote = c
+		case c == '(':
+			depth++
+		case c == ')':
+			depth--
+			if depth == 0 {
+				end = i
+			}
+		}
+	}
+	if end < 0 {
+		return nil, "", false
+	}
+	inner, after := rest[:end], strings.TrimSpace(rest[end+1:])
+	parts := splitOr(inner)
+	i := 0
+	for ; i < len(parts); i++ {
+		p := strings.TrimSpace(parts[i])
+		if !strings.HasPrefix(p, "vars.") || !reVarName.MatchString(p[5:]) {
+			break
+		}
+		vars = append(vars, p[5:])
+	}
+	if len(vars) == 0 {
+		return nil, "", false
+	}
+	def = strings.TrimSpace(strings.Join(parts[i:], "||"))
+	if after != "" {
+		if !strings.HasPrefix(after, "||") || def != "" {
+			return nil, "", false
+		}
+		def = strings.TrimSpace(after[2:])
+	}
+	return vars, def, true
+}
+
+var reVarName = regexp.MustCompile(`^[A-Za-z_][A-Za-z0-9_]*$`)
+
+// splitOr splits on || outside quotes.
+func splitOr(s string) []string {
+	var out []string
+	quote, last := byte(0), 0
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		switch {
+		case quote != 0:
+			if c == quote {
+				quote = 0
+			}
+		case c == '\'' || c == '"':
+			quote = c
+		case c == '|' && i+1 < len(s) && s[i+1] == '|':
+			out = append(out, s[last:i])
+			i++
+			last = i + 1
+		}
+	}
+	return append(out, s[last:])
+}

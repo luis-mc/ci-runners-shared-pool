@@ -28,6 +28,10 @@ type Policy struct {
 	CPUCapPct    int
 	CPUCapState  string
 	CPUCapDetail string
+	// DiskFloorGiB is the free-disk floor in force on the agent; DiskFloorOff
+	// says config.toml or the flag turned it off (runners R5.83).
+	DiskFloorGiB int
+	DiskFloorOff bool
 	// PauseUntil is the end of a timed pause from the tray; zero when none.
 	PauseUntil time.Time
 	ReportedAt time.Time
@@ -43,6 +47,7 @@ func (s *Service) HandleAccepting(_ context.Context, machineID string, r *agentv
 	p := Policy{
 		Accepting: r.GetAccepting(), PauseReason: r.GetPauseReason(), OnBattery: r.GetOnBattery(), BatteryKnown: r.GetBatteryKnown(),
 		CPUCapPct: int(r.GetCpuCapPct()), CPUCapState: r.GetCpuCapState(), CPUCapDetail: r.GetCpuCapDetail(), ReportedAt: s.now(),
+		DiskFloorGiB: int(r.GetDiskFloorGib()), DiskFloorOff: r.GetDiskFloorOff(),
 	}
 	if p.Accepting {
 		p.PauseReason = ""
@@ -55,7 +60,8 @@ func (s *Service) HandleAccepting(_ context.Context, machineID string, r *agentv
 	s.policies[machineID] = p
 	s.mu.Unlock()
 	if !had || old.Accepting != p.Accepting || old.PauseReason != p.PauseReason || old.OnBattery != p.OnBattery ||
-		old.CPUCapState != p.CPUCapState || old.CPUCapPct != p.CPUCapPct {
+		old.CPUCapState != p.CPUCapState || old.CPUCapPct != p.CPUCapPct ||
+		old.DiskFloorGiB != p.DiskFloorGiB || old.DiskFloorOff != p.DiskFloorOff {
 		s.notifyMachine(machineID)
 	}
 }
@@ -126,6 +132,12 @@ func applyPolicy(set Settings, u SettingsUpdate, now time.Time) (Settings, error
 			return set, fmt.Errorf("%w: the CPU cap is 25, 50, 75 or 100 percent", ErrInvalid)
 		}
 		set.CPUCapPct = *u.CPUCapPct
+	}
+	if u.DiskFloorGiB != nil {
+		if *u.DiskFloorGiB < 1 || *u.DiskFloorGiB > MaxDiskFloorGiB {
+			return set, fmt.Errorf("%w: the free disk to keep is 1 to %d GB", ErrInvalid, MaxDiskFloorGiB)
+		}
+		set.DiskFloorGiB = *u.DiskFloorGiB
 	}
 	if u.Pause != nil {
 		switch *u.Pause {

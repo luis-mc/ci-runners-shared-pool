@@ -87,9 +87,9 @@ export function ActionWizard() {
           <>
             <Breadcrumbs
               trail={[
-                { label: 'Jobs', to: '/jobs' },
-                { label: 'Run insights', to: '/jobs/insights' },
-                { label: f.title, to: `/jobs/insights/finding/${f.id}` },
+                { label: 'Jobs', to: '/pool' },
+                { label: 'Suggestions', to: '/analytics' },
+                { label: f.title, to: `/analytics/finding/${f.id}` },
                 { label: 'Review the change' },
               ]}
             />
@@ -107,13 +107,13 @@ export function ActionWizard() {
                 onPress: () => void start(),
               }}
               progress={{ text: 'Making the change' }}
-              onBack={() => void navigate(`/jobs/insights/finding/${f.id}`)}
+              onBack={() => void navigate(`/analytics/finding/${f.id}`)}
               backLabel="Not now"
               onTryAgain={() => void navigate(0)}
-              onStartAgain={() => void navigate('/jobs/insights')}
+              onStartAgain={() => void navigate('/analytics')}
               donePrimary={{
                 label: 'Back to Do next',
-                onPress: () => void navigate('/jobs/insights'),
+                onPress: () => void navigate('/analytics'),
               }}
               failedAt={phase === 'failed' ? 1 : undefined}
             >

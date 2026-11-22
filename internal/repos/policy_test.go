@@ -107,7 +107,7 @@ func TestUpdatePolicyEndToEnd(t *testing.T) { // R5.25, R5.26, R5.28
 	if err != nil || got.MaxParallelJobs != 3 || got.UpdatedBy != "alice" {
 		t.Fatalf("%+v %v", got, err)
 	}
-	v, _ := e.fake.Variable("alice/web", "RUNS_ON_LINUX")
+	v, _ := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX")
 	if !strings.Contains(v, `"gpu"`) {
 		t.Fatalf("a policy change rewrites the variables: %s", v)
 	}

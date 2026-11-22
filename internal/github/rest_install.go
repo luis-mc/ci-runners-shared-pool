@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -12,8 +11,6 @@ import (
 	"path"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/nacl/box"
 )
 
 func scopePath(scope RunnerScope) string {
@@ -319,6 +316,78 @@ func (c *REST) listRuns(ctx context.Context, r req) ([]apiRun, error) {
 	return runs, nil
 }
 
+// cachedJobs is the last answer of the jobs list of one run with its ETag.
+type cachedJobs struct {
+	etag string
+	jobs []apiJob
+}
+
+// listRunJobs lists the jobs of one run. Like listRuns it sends If-None-Match
+// with the ETag of the last answer and reuses it on a 304, which GitHub does
+// not count against the rate limit (github-integration R5.110). Only a list
+// that fits one page is cached.
+func (c *REST) listRunJobs(ctx context.Context, r req) ([]apiJob, error) {
+	r.method = "GET"
+	q := url.Values{}
+	for k, v := range r.query {
+		q[k] = v
+	}
+	q.Set("per_page", "100")
+	r.query = q
+	key := fmt.Sprintf("%d %s?%s", r.installation, r.path, q.Encode())
+	c.mu.Lock()
+	prev, hadPrev := c.jobCache[key]
+	c.mu.Unlock()
+	if hadPrev {
+		r.etag = prev.etag
+	}
+	var raw json.RawMessage
+	resp, err := c.do(ctx, r, &raw)
+	if err != nil {
+		return nil, err
+	}
+	if resp.status == http.StatusNotModified && hadPrev {
+		return prev.jobs, nil
+	}
+	var page struct {
+		Jobs []apiJob `json:"jobs"`
+	}
+	if err := json.Unmarshal(raw, &page); err != nil {
+		return nil, fmt.Errorf("github: unreadable answer: %w", err)
+	}
+	jobs := page.Jobs
+	if resp.next != "" {
+		more := req{method: "GET", path: resp.next, abs: true, bearer: r.bearer, installation: r.installation}
+		err := c.getAll(ctx, more, func(raw json.RawMessage) error {
+			var p struct {
+				Jobs []apiJob `json:"jobs"`
+			}
+			if err := json.Unmarshal(raw, &p); err != nil {
+				return err
+			}
+			jobs = append(jobs, p.Jobs...)
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+	}
+	c.mu.Lock()
+	if resp.next == "" && resp.etag != "" {
+		if c.jobCache == nil {
+			c.jobCache = map[string]cachedJobs{}
+		}
+		if len(c.jobCache) > 4096 {
+			c.jobCache = map[string]cachedJobs{} // bound the memory of a long run
+		}
+		c.jobCache[key] = cachedJobs{etag: resp.etag, jobs: jobs}
+	} else {
+		delete(c.jobCache, key)
+	}
+	c.mu.Unlock()
+	return jobs, nil
+}
+
 // ListOpenJobs implements InstallationClient (R5.37, R5.38): the jobs of
 // queued and in-progress runs.
 func (c *REST) ListOpenJobs(ctx context.Context, id int64, owner, repo string) ([]Job, error) {
@@ -339,24 +408,16 @@ func (c *REST) ListOpenJobs(ctx context.Context, id int64, owner, repo string) (
 			jr := r
 			jr.path = fmt.Sprintf("%s/%d/jobs", base, run.ID)
 			jr.query = url.Values{"filter": {"latest"}}
-			err := c.getAll(ctx, jr, func(raw json.RawMessage) error {
-				var page struct {
-					Jobs []apiJob `json:"jobs"`
-				}
-				if err := json.Unmarshal(raw, &page); err != nil {
-					return err
-				}
-				for _, j := range page.Jobs {
-					if seen[j.ID] || j.Status == "completed" {
-						continue
-					}
-					seen[j.ID] = true
-					out = append(out, j.job(full, run))
-				}
-				return nil
-			})
+			jobs, err := c.listRunJobs(ctx, jr)
 			if err != nil {
 				return nil, err
+			}
+			for _, j := range jobs {
+				if seen[j.ID] || j.Status == "completed" {
+					continue
+				}
+				seen[j.ID] = true
+				out = append(out, j.job(full, run))
 			}
 		}
 	}
@@ -377,38 +438,3 @@ func (c *REST) GetJob(ctx context.Context, id int64, owner, repo string, jobID i
 }
 
 var _ Client = (*REST)(nil)
-
-// SetSecret implements InstallationClient (CRSP134): fetch the repository's
-// Actions public key, seal the value to it (libsodium sealed box) and put it.
-// The plain value is not logged and not part of any error.
-func (c *REST) SetSecret(ctx context.Context, id int64, owner, repo, name, value string) error {
-	base := "/repos/" + url.PathEscape(owner) + "/" + url.PathEscape(repo) + "/actions/secrets"
-	r, err := c.installationReq(ctx, id, req{path: base + "/public-key"})
-	if err != nil {
-		return err
-	}
-	var pk struct {
-		KeyID string `json:"key_id"`
-		Key   string `json:"key"`
-	}
-	if _, err := c.do(ctx, r, &pk); err != nil {
-		return err
-	}
-	raw, err := base64.StdEncoding.DecodeString(pk.Key)
-	if err != nil || len(raw) != 32 {
-		return fmt.Errorf("github: the repository public key is not a 32-byte key")
-	}
-	var pub [32]byte
-	copy(pub[:], raw)
-	sealed, err := box.SealAnonymous(nil, []byte(value), &pub, rand.Reader)
-	if err != nil {
-		return fmt.Errorf("github: could not seal the secret: %w", err)
-	}
-	put, err := c.installationReq(ctx, id, req{method: "PUT", path: base + "/" + url.PathEscape(name), write: true,
-		body: map[string]string{"encrypted_value": base64.StdEncoding.EncodeToString(sealed), "key_id": pk.KeyID}})
-	if err != nil {
-		return err
-	}
-	_, err = c.do(ctx, put, nil)
-	return err
-}

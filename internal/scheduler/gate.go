@@ -37,6 +37,7 @@ func (e *Engine) Gate(ctx context.Context, req GateRequest) (Decision, error) {
 	e.notifyFreed(freed)
 	if err == nil {
 		e.emitDecision(req.MachineID, req.Job, dec)
+		e.lifeStarted(req.MachineID, req.Job, dec)
 	}
 	return dec, err
 }
@@ -71,6 +72,7 @@ func (e *Engine) Beat(ctx context.Context, machineID, gateID string, load Load) 
 	e.notifyFreed(freed)
 	if err == nil {
 		e.emitDecision(machineID, job, dec)
+		e.lifeStarted(machineID, job, dec)
 	}
 	return dec, err
 }
@@ -281,18 +283,34 @@ func (e *Engine) evaluate(tx slots.Tx, req GateRequest, create bool, now time.Ti
 	if me.PassedOver {
 		return wait(WaitRepoParallelLimit, fmt.Sprintf("repository %s runs its maximum parallel jobs (%d)", job.Repository, limits[job.Repository]))
 	}
-	if first, ok := slots.FirstInLine(ordered); !ok || first.ID != t.ID {
+	need, class := set.WeightOf(names)
+	var adm admitted
+	if set.Admission.On {
+		// R5.90 to R5.94: pool room, passes and the reserved job decide who goes.
+		if _, free := freeNumber(all, slots.KindCI, set.JobSlots); free == 0 {
+			return wait(WaitFreeSlot, fmt.Sprintf("no free slot (all %d busy)", set.JobSlots))
+		}
+		a, hold, err := e.admissionGate(tx, set, req.MachineID, t, ordered, all, now, wait)
+		if err != nil {
+			return Decision{}, err
+		}
+		if hold != nil {
+			return *hold, nil
+		}
+		adm = a
+	} else if first, ok := slots.FirstInLine(ordered); !ok || first.ID != t.ID {
 		return wait(WaitFreeSlot, fmt.Sprintf("%d ahead in the queue", slots.Ahead(ordered, t.ID)))
 	}
 	n, free := freeNumber(all, slots.KindCI, set.JobSlots)
 	if free == 0 {
 		return wait(WaitFreeSlot, fmt.Sprintf("no free slot (all %d busy)", set.JobSlots))
 	}
-	// R5.69: the job's weight must fit what the held ci jobs leave of the budget.
-	need, class := set.WeightOf(names)
-	capacity, used := set.Capacity(), set.HeldWeight(all)
-	if used.CPU+need.CPU > capacity.CPU || used.Memory+need.Memory > capacity.Memory {
-		return wait(WaitFreeSlot, WeightWaitText(class, need, used, capacity))
+	if !set.Admission.On {
+		// R5.69: the job's weight must fit what the held ci jobs leave of the budget.
+		capacity, used := set.Capacity(), set.HeldWeight(all)
+		if used.CPU+need.CPU > capacity.CPU || used.Memory+need.Memory > capacity.Memory {
+			return wait(WaitFreeSlot, WeightWaitText(class, need, used, capacity))
+		}
 	}
 	// R5.22: a load that cannot be measured never counts as under budget.
 	if !measured {
@@ -313,7 +331,12 @@ func (e *Engine) evaluate(tx slots.Tx, req GateRequest, create bool, now time.Ti
 	if _, err := tx.DeleteTicket(t.ID); err != nil {
 		return Decision{}, err
 	}
-	out := Decision{Go: []Grant{grantOf(s)}, SlotWait: now.Sub(t.QueuedAt())}
+	if set.Admission.On {
+		if err := settleAdmission(tx, req.MachineID, t.ID, adm); err != nil {
+			return Decision{}, err
+		}
+	}
+	out := Decision{Go: []Grant{grantOf(s)}, SlotWait: now.Sub(t.QueuedAt()), Class: adm.class, MemoryCapGiB: adm.capGiB}
 	if heavyGrant != nil {
 		out.Go = append([]Grant{*heavyGrant}, out.Go...)
 	}
@@ -407,6 +430,9 @@ func (e *Engine) Cancel(ctx context.Context, machineID, gateID string) error {
 			return err
 		}
 		if _, err := tx.DeleteTicket(gateID); err != nil {
+			return err
+		}
+		if err := tx.DropPasses(gateID); err != nil {
 			return err
 		}
 		freed = append(freed, e.droppedRow(tx, t, "gate cancelled", now))

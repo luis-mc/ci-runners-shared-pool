@@ -12,7 +12,7 @@ name: Artifact prune
 # note of the ones the project knows, kept in `.delivery/config.json`:
 #   {"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}}
 # After a plugin update run scripts/delivery/artifact_prune.py --sync-workflow.
-# workflows: ["CI", "Release", "Package", "Package Windows", "Installer", "Installer packages", "Tray smoke", "Parity"]
+# workflows: ["CI", "Release", "Package", "Package Windows", "Installer", "Installer packages", "Tray smoke"]
 #
 # Installer artifacts (CIR10 W5): when a workflow publishes them, add to the run line
 # `--hold windows-installer --hold-workflow package-windows.yml`, so a failed publish keeps its installer.

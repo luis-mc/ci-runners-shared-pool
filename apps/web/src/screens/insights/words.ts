@@ -24,6 +24,12 @@ export const RANGES = [
 export const projectOf = (f: Pick<Finding, 'repository' | 'scope'>): string =>
   f.repository ?? (f.scope === 'pool' ? 'the pool' : 'not known');
 
+/** The title of a suggestion with its repository named: "Add a timeout in octo/app" (LOOK56). */
+export const titleWithRepository = (f: Pick<Finding, 'title' | 'repository'>): string =>
+  f.repository && !f.title.includes(f.repository)
+    ? `${f.title} (${f.repository})`
+    : f.title;
+
 /** The minutes of a finding, always an estimate (R5.9). */
 export const minutesWords = (n: number): string => `about ${n} min a week`;
 

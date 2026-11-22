@@ -156,7 +156,7 @@ func ghCommand(r doctor.Repository, name, value string) string {
 	return fmt.Sprintf("gh variable set %s --repo %s --body '%s'", name, r.FullName, value)
 }
 
-// repoVars: RUNS_ON_<OS> is set, is a JSON list, and equals what the
+// repoVars: CRSP_RUNS_ON_<OS> is set, is a JSON list, and equals what the
 // product would write (R5.17). Unset where a workflow uses it, or not a JSON
 // list, fails; different warns. Ported from delivery_doctor.py machine_items
 // (machine.runs_on) and workflow_items (workflows.windows_var); tests
@@ -174,6 +174,9 @@ func repoVars(ctx context.Context, env doctor.Env) []doctor.Finding {
 		for _, j := range wf.jobs {
 			if j.Kind == runson.Variable {
 				used[j.Var] = true
+				for _, v := range j.Vars {
+					used[v] = true
+				}
 			}
 		}
 		names := make([]string, 0, len(r.Expected))
@@ -228,7 +231,7 @@ func unknownNote(err error) string {
 	return ""
 }
 
-// repoVarsRunner: a RUNS_ON_<OS> whose labels no online runner carries.
+// repoVarsRunner: a CRSP_RUNS_ON_<OS> whose labels no online runner carries.
 // Its jobs would queue forever (R5.17). New check.
 func repoVarsRunner(ctx context.Context, env doctor.Env) []doctor.Finding {
 	repos, out := poolRepos(ctx, env, "repo.vars.runner")
@@ -355,7 +358,7 @@ func workflowLabels(ctx context.Context, env doctor.Env) []doctor.Finding {
 			out = append(out, doctor.Finding{Check: "workflow.labels", Subject: s, Severity: doctor.Fail,
 				Title:  "No online runner carries the labels some workflows ask for in " + w.r.FullName,
 				Detail: strings.Join(lines, "\n"),
-				Fix: doctor.Fix{Text: "Add a runner with the labels, or change the workflow to `runs-on: ${{ fromJSON(vars.RUNS_ON_<OS>) }}`.",
+				Fix: doctor.Fix{Text: "Add a runner with the labels, or change the workflow to `runs-on: ${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '\"ubuntu-latest\"') }}`.",
 					Link: "/runners"}})
 		default:
 			out = append(out, doctor.Finding{Check: "workflow.labels", Subject: s, Severity: doctor.OK,
@@ -366,7 +369,7 @@ func workflowLabels(ctx context.Context, env doctor.Env) []doctor.Finding {
 }
 
 // workflowGeneric: a self-hosted job with literal labels instead of
-// fromJSON(vars.RUNS_ON_<OS>) (R5.19). Ported from delivery_doctor.py
+// fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"') (R5.19). Ported from delivery_doctor.py
 // workflow_items (workflows.generic); tests TestWorkflowGeneric.
 func workflowGeneric(ctx context.Context, env doctor.Env) []doctor.Finding {
 	wrs, out := workflowRepos(ctx, env, "workflow.generic")
@@ -383,7 +386,7 @@ func workflowGeneric(ctx context.Context, env doctor.Env) []doctor.Finding {
 		} else {
 			f.Severity, f.Title = doctor.Warn, "Some jobs in "+w.r.FullName+" write their runner labels by hand"
 			f.Detail = strings.Join(lines, "\n")
-			f.Fix = doctor.Fix{Text: "Use `runs-on: ${{ fromJSON(vars.RUNS_ON_<OS>) }}` so the product keeps the labels correct."}
+			f.Fix = doctor.Fix{Text: "Use `runs-on: ${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '\"ubuntu-latest\"') }}` so the product keeps the labels correct."}
 		}
 		out = append(out, f)
 	}

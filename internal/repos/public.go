@@ -25,7 +25,7 @@ func (s *Service) SetFleet(f Fleet) { s.cfg.Fleet = f }
 // StopServingPublic stops serving a repository that is public and whose pool is
 // on, as the controller (github-integration R5.47, R5.55). In this order: the
 // pool is turned off (no runner is registered after this; its settings stay),
-// the RUNS_ON variables are set to the hosted labels (so queued and new jobs
+// the CRSP_RUNS_ON variables are set to the hosted labels (so queued and new jobs
 // run on GitHub), the light runner and the job runners are removed, and the
 // audit log says why. Every step is tried even when an earlier one failed; the
 // errors are joined. A repository whose pool is off is only marked public. It
@@ -74,8 +74,9 @@ func (s *Service) stopPublic(ctx context.Context, p auth.Principal, r Repository
 	return true, nil
 }
 
-// hostedVariables sets every RUNS_ON variable that exists on the repository to
-// the hosted label of its OS. An alias is set only where the controller wrote it.
+// hostedVariables sets every CRSP_RUNS_ON variable that exists on the repository to
+// the hosted label of its OS. A name an older version wrote (RUNS_ON_<OS>,
+// CI_RUNS_ON, CI_RUNS_ON_WINDOWS) is set only where crsp wrote it.
 func (s *Service) hostedVariables(ctx context.Context, r Repository) error {
 	pol, err := s.policyOrDefault(ctx, r.ID)
 	if err != nil {
@@ -89,16 +90,16 @@ func (s *Service) hostedVariables(ctx context.Context, r Repository) error {
 	for _, v := range variableOrder {
 		osOf[v.Var] = v.OS
 	}
-	for _, a := range legacyAlias {
-		osOf[a.Old] = osOf[a.Var]
-	}
 	var errs []error
 	for _, v := range have {
 		os, ok := osOf[v.Name]
 		if !ok {
+			os = legacyOS(v.Name)
+		}
+		if os == "" || isSizeVar(v.Name) || legacySizeVarRE.MatchString(v.Name) {
 			continue
 		}
-		if isAlias(v.Name) {
+		if !ok { // a plain name an older version wrote: only where crsp wrote it
 			if yes, err := s.mayDelete(ctx, r, v.Name); err != nil || !yes {
 				if err != nil {
 					errs = append(errs, err)

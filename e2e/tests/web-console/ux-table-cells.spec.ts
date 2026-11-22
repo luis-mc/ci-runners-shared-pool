@@ -93,16 +93,16 @@ function seeded() {
 }
 
 const SCREENS = [
-  { name: 'Jobs, Live', path: '/jobs/live', ready: 'All runs' },
-  { name: 'Jobs, Queue', path: '/jobs/live?state=queued', ready: 'Queue runs' },
-  { name: 'Jobs, Running', path: '/jobs/live?state=running', ready: 'Running runs' },
-  { name: 'Jobs, Done', path: '/jobs/done', ready: 'Done runs' },
+  { name: 'Jobs, Live', path: '/pool/jobs', ready: 'All runs' },
+  { name: 'Jobs, Queue', path: '/pool/jobs?state=queued', ready: 'Queue runs' },
+  { name: 'Jobs, Running', path: '/pool/jobs?state=running', ready: 'Running runs' },
+  { name: 'Jobs, Done', path: '/pool/jobs?state=done', ready: 'Done runs' },
   {
     name: 'Jobs, Queue jobs',
-    path: '/jobs/live?state=queued&view=jobs',
+    path: '/pool/jobs?state=queued&view=jobs',
     ready: 'Queue jobs',
   },
-  { name: 'Runners', path: '/pool/runners', ready: 'Runners on' },
+  { name: 'Runners', path: '/setup/runners', ready: 'Runners on' },
 ];
 
 for (const s of SCREENS) {

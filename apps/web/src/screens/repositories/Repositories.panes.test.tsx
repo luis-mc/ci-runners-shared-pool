@@ -29,7 +29,7 @@ async function repoHeading(name: string) {
 
 describe('Repositories list in a pane', () => {
   it('draws the toolbar, table and pager inside the Repositories pane (CORE-1)', async () => {
-    renderApp(list(signedIn()), '/repositories');
+    renderApp(list(signedIn()), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     const pane = table.closest('.ds-pane') as HTMLElement;
     expect(pane).toBeTruthy();
@@ -45,7 +45,7 @@ describe('Repositories list in a pane', () => {
   });
 
   it('has one primary, also while rows are ticked (UX-4)', async () => {
-    renderApp(list(signedIn()), '/repositories');
+    renderApp(list(signedIn()), '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     expect(primaries()).toEqual(['Use pool']);
     fireEvent.click(screen.getByRole('button', { name: 'Select all 1' }));
@@ -54,7 +54,7 @@ describe('Repositories list in a pane', () => {
   });
 
   it('shows Select all N, and Clear that waits for a ticked row, in one toolbar line (UX-12)', async () => {
-    renderApp(list(signedIn()), '/repositories');
+    renderApp(list(signedIn()), '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     expect(
       screen.getByRole<HTMLButtonElement>('button', { name: 'Clear' }).disabled,
@@ -71,7 +71,7 @@ describe('Repositories list in a pane', () => {
         repository(),
         repository({ id: 8, full_name: 'octo/site', name: 'site', pool_on: true }),
       ]),
-      '/repositories',
+      '/setup/pool',
     );
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('button', { name: 'Pool on' }));
@@ -85,7 +85,7 @@ describe('Repositories list in a pane', () => {
         '/api/v1/github/repositories',
         apiError(500, 'internal', 'down'),
       ),
-      '/repositories',
+      '/setup/pool',
     );
     expect(await screen.findByText(/Could not load repositories/)).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1, name: 'Repositories' })).toBeTruthy();
@@ -97,20 +97,20 @@ describe('Repository detail in panes', () => {
     list(signedIn(), [r]).on('GET', '/api/v1/repositories/:id', r);
 
   it('keeps the h1 when the repository cannot be loaded (UX-17)', async () => {
-    renderApp(list(signedIn(), []), '/repositories/octo/app');
+    renderApp(list(signedIn(), []), '/setup/pool/octo/app');
     expect(await screen.findByText(/Could not load the repository/)).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1, name: 'octo/app' })).toBeTruthy();
   });
 
   it('puts State, Policy, Hosted fallback and Extra packages in panes', async () => {
-    renderApp(detail(), '/repositories/octo/app');
+    renderApp(detail(), '/setup/pool/octo/app');
     await repoHeading('octo/app');
     for (const t of ['State', 'Policy', 'Hosted fallback', 'Extra packages'])
       expect(screen.getByRole('heading', { level: 2, name: t })).toBeTruthy();
   });
 
   it('has one Save and one primary (UX-4, UX-24)', async () => {
-    renderApp(detail(), '/repositories/octo/app');
+    renderApp(detail(), '/setup/pool/octo/app');
     await repoHeading('octo/app');
     expect(screen.getAllByRole('button', { name: /^Save/ })).toHaveLength(1);
     // The action bar holds the one primary: Save (UX-4, UX-71).
@@ -118,7 +118,7 @@ describe('Repository detail in panes', () => {
   });
 
   it('keeps Save the one primary also once the pool is on, in the action bar', async () => {
-    renderApp(detail(repository({ pool_on: true })), '/repositories/octo/app');
+    renderApp(detail(repository({ pool_on: true })), '/setup/pool/octo/app');
     await repoHeading('octo/app');
     expect(primaries()).toEqual(['Save']);
     const bar = screen.getByRole('region', { name: 'Actions' });
@@ -134,7 +134,7 @@ describe('Repository detail in panes', () => {
         packages: ['zlib1g-dev'],
         text: 'zlib1g-dev',
       });
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     fireEvent.click(screen.getByRole('checkbox', { name: 'Run jobs from public forks' }));
     fireEvent.click(screen.getByRole('radio', { name: 'Run on GitHub-hosted runners' }));
@@ -163,7 +163,7 @@ describe('Repository detail in panes', () => {
 
   it('disables Save with its reason while clean, and counts the unsaved changes', async () => {
     const a = detail();
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     const save = screen.getByRole<HTMLButtonElement>('button', { name: 'Save' });
     expect(save.disabled).toBe(true);
@@ -183,7 +183,7 @@ describe('Turn on the pool in panes', () => {
   const wizard = (items: ReturnType<typeof repository>[]) => list(signedIn(), items);
 
   it('puts the choice in a pane with the choosing buttons and one primary', async () => {
-    renderApp(wizard([repository()]), '/repositories/turn-on');
+    renderApp(wizard([repository()]), '/setup/pool/turn-on');
     const pane = (
       await screen.findByRole('heading', { level: 2, name: /Repositories to turn on/ })
     ).closest('.ds-pane') as HTMLElement;
@@ -198,7 +198,7 @@ describe('Turn on the pool in panes', () => {
   it('names the admin rights as the next action when every repository is blocked', async () => {
     renderApp(
       wizard([repository({ user_is_github_admin: false })]),
-      '/repositories/turn-on',
+      '/setup/pool/turn-on',
     );
     expect(
       await screen.findByText(
@@ -212,7 +212,7 @@ describe('Turn on the pool in panes', () => {
   it('never says admin rights are missing when the flag was not read (OPS15)', async () => {
     renderApp(
       wizard([repository({ user_is_github_admin: false, user_admin_known: false })]),
-      '/repositories/turn-on',
+      '/setup/pool/turn-on',
     );
     expect(
       await screen.findByRole('table', { name: 'Repositories to turn on' }),
@@ -228,14 +228,14 @@ describe('Turn on the pool in panes', () => {
         '/api/v1/settings/public-repositories',
         { enabled: false, public_on_pool: 0 },
       ),
-      '/repositories/turn-on',
+      '/setup/pool/turn-on',
     );
     expect(await screen.findByText(/the ones left are public/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open the setting' })).toBeTruthy();
   });
 
   it('says the App must be installed when nothing is waiting', async () => {
-    renderApp(wizard([]), '/repositories/turn-on');
+    renderApp(wizard([]), '/setup/pool/turn-on');
     expect(await screen.findByText(/No repository is waiting/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Add a repository' })).toBeTruthy();
   });

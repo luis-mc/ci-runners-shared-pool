@@ -205,42 +205,7 @@ describe('Settings > Console > Network', () => {
   });
 });
 
-describe('Access for CI: the Needs-you box', () => {
-  it('opens the dialog from Choose an address, and the address check turns ok after it', async () => {
-    let chosen = false;
-    const a = signedIn()
-      .on('GET', '/api/v1/github/repositories', {
-        items: [{ id: 1, full_name: 'octo/app' }],
-        next_cursor: null,
-      })
-      .on('GET', '/api/v1/access-credentials', { items: [] })
-      .on('GET', '/api/v1/parity-address', () =>
-        chosen
-          ? { status: 'ok', url: 'https://192.168.1.20:8460' }
-          : {
-              status: 'needs_address',
-              problem: 'the console listens on a loopback address',
-              setting: 'CRSP_LISTEN_ADDR',
-            },
-      )
-      .on('GET', '/api/v1/settings/listen-address', () =>
-        listen(chosen ? { running: '192.168.1.20:8460' } : {}),
-      )
-      .on('POST', '/api/v1/settings/signin-address', () => signinAddress())
-      .on('PUT', '/api/v1/settings/listen-address', () => {
-        chosen = true;
-        return { address: '192.168.1.20:8460', restarting: true };
-      });
-    renderApp(a, '/settings/access');
-    expect(await screen.findByText(/cannot reach this controller yet/)).toBeTruthy();
-    open();
-    await (await inDialog()).findAllByRole('radio');
-    fireEvent.click(screen.getByRole('button', { name: 'Use this address' }));
-    expect(await screen.findByText('https://192.168.1.20:8460')).toBeTruthy();
-    expect(screen.queryByText(/cannot reach this controller yet/)).toBeNull();
-    expect(a.count('PUT', '/api/v1/settings/listen-address')).toBe(1);
-  });
-
+describe('Choose an address dialog', () => {
   // OPS16: GitHub only signs people in on addresses the App has a callback URL for.
   it('shows the guided step before switching to an address GitHub does not know, and Try again switches once it does', async () => {
     let known = false;

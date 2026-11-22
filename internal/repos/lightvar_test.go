@@ -25,7 +25,7 @@ func TestLightVariableRewrittenToNormalLabels(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, ok := lightVar(e, "alice/secret")
-	linux := e.variable("RUNS_ON_LINUX")
+	linux := e.variable("CRSP_RUNS_ON_LINUX")
 	if !ok || got != linux || strings.Contains(got, "crsp-light") {
 		t.Fatalf("RUNS_ON_LIGHT = %q, want %q", got, linux)
 	}

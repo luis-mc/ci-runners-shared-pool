@@ -7,7 +7,7 @@ import (
 )
 
 func fbRepo(where string, fallbackOn bool) doctor.Repository {
-	r := repo(1, "o/r", map[string]string{"RUNS_ON_LINUX": `["ubuntu-latest"]`})
+	r := repo(1, "o/r", map[string]string{"CRSP_RUNS_ON_LINUX": `["ubuntu-latest"]`})
 	r.Where, r.FallbackOn = where, fallbackOn
 	switch where {
 	case "waiting":

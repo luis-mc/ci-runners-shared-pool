@@ -29,7 +29,7 @@ export function RegistryMirrorPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/images?tab=registry', label: '‹ Registry' },
+          { to: '/setup/images?tab=registry', label: '‹ Registry' },
           { label: 'Mirror' },
         ]}
       />

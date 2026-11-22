@@ -20,7 +20,7 @@ describe('Machine policy section', () => {
   it('shows the mode, the battery switch and the CPU cap of the machine', async () => {
     renderApp(
       detail(withSettings({ mode: 'always', pause_on_battery: false, cpu_cap_pct: 50 })),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getByRole<HTMLInputElement>('radio', { name: /Always/ }).checked).toBe(
@@ -37,7 +37,7 @@ describe('Machine policy section', () => {
 
   it('saves a mode at once, without Save', async () => {
     const api = detail();
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getByRole('radio', { name: /Paused/ }));
     await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
@@ -46,7 +46,7 @@ describe('Machine policy section', () => {
 
   it('saves the battery switch and the CPU cap at once', async () => {
     const api = detail();
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getByRole('switch', { name: 'Pause on battery' }));
     await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
@@ -66,7 +66,7 @@ describe('Machine policy section', () => {
           policy: { on_battery: true, battery_known: true },
         }),
       ),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getAllByText('On battery').length).toBeGreaterThan(0);
@@ -84,7 +84,7 @@ describe('Machine policy section', () => {
         },
       ),
     );
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getByText('Paused until')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
@@ -103,7 +103,7 @@ describe('Machine policy section', () => {
         },
       ),
     );
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getByRole('button', { name: 'Resume' }));
     await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
@@ -122,7 +122,7 @@ describe('Machine policy section', () => {
           },
         }),
       ),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getAllByText(/Not supported on macOS yet/).length).toBeGreaterThan(0);
@@ -143,7 +143,7 @@ describe('Machine policy section', () => {
       { policy: pol('failed', 'access denied') },
     );
     const api = detail(failed);
-    renderApp(api, '/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     expect(
       await screen.findByText(/The CPU cap was not set\. access denied/),
     ).toBeTruthy();
@@ -179,7 +179,7 @@ describe('Machine policy section', () => {
           },
         }),
       ),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     expect(
       await screen.findByText(/The CPU cap was not set\. 1 of 2 runner services/),
@@ -189,7 +189,7 @@ describe('Machine policy section', () => {
   it('shows a viewer the values and the reason the controls are off (UX-38)', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/machines/:id', machine()),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByRole('heading', { name: 'build-1' });
     expect(
@@ -223,7 +223,7 @@ describe('Machines list: takes jobs', () => {
         }),
       ],
     });
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     const table = await screen.findByRole('table', { name: 'Machines' });
     expect(within(table).getByText('Taking jobs')).toBeTruthy();
     expect(within(table).getByText('On battery')).toBeTruthy();
@@ -252,7 +252,7 @@ describe('One state for taking jobs', () => {
             taking: { taking_jobs: false, reason },
           }),
         ),
-        '/pool/machines/m1',
+        '/setup/machines/m1',
       );
       await screen.findByRole('heading', { name: 'build-1' });
       // State and Now: the same word, twice. A taking word never shows beside it.
@@ -264,7 +264,7 @@ describe('One state for taking jobs', () => {
   }
 
   it('says Taking jobs in State and Now, with the button Stop new jobs', async () => {
-    renderApp(detail(), '/pool/machines/m1');
+    renderApp(detail(), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getAllByText('Taking jobs').length).toBeGreaterThanOrEqual(2);
     expect(screen.queryByText('Not taking jobs')).toBeNull();
@@ -272,7 +272,7 @@ describe('One state for taking jobs', () => {
   });
 
   it('shows a stopped machine as one picture, and Resume', async () => {
-    renderApp(detail(machine({ state: 'drained' })), '/pool/machines/m1');
+    renderApp(detail(machine({ state: 'drained' })), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getByRole('button', { name: 'Resume' })).toBeTruthy();
     expect(screen.queryByText('Taking jobs')).toBeNull();
@@ -282,7 +282,7 @@ describe('One state for taking jobs', () => {
   it('shows the battery switch as not applying under Always, with the reason', async () => {
     renderApp(
       detail(withSettings({ mode: 'always', pause_on_battery: true })),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByRole('heading', { name: 'build-1' });
     const sw = screen.getByRole<HTMLButtonElement>('switch', {
@@ -295,7 +295,7 @@ describe('One state for taking jobs', () => {
   });
 
   it('shows the battery switch as On under Automatic', async () => {
-    renderApp(detail(), '/pool/machines/m1');
+    renderApp(detail(), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     const sw = screen.getByRole<HTMLButtonElement>('switch', {
       name: 'Pause on battery',

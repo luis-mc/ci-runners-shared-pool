@@ -184,6 +184,7 @@ func settingsToAPI(st machines.Settings) gen.MachineSettings {
 	out.Mode = machinesPtr(gen.MachineMode(st.EffectiveMode()))
 	out.PauseOnBattery = machinesPtr(st.PauseOnBattery)
 	out.CpuCapPct = machinesPtr(gen.CpuCapPct(st.EffectiveCPUCap()))
+	out.DiskFloorGib = machinesPtr(st.DiskFloorGiB)
 	out.PauseUntilResumed = machinesPtr(st.PausedUntilResumed)
 	mode := gen.DockerCompactModeAuto
 	switch st.CompactMode {
@@ -228,7 +229,7 @@ func machineToAPI(v machines.View, now time.Time) gen.Machine {
 	if m.PauseReason != "" {
 		out.PauseReason = machinesPtr(gen.PauseReason(m.PauseReason))
 	}
-	pol := gen.MachinePolicy{OnBattery: v.Policy.OnBattery, BatteryKnown: v.Policy.BatteryKnown}
+	pol := gen.MachinePolicy{OnBattery: v.Policy.OnBattery, BatteryKnown: v.Policy.BatteryKnown, DiskFloorGib: machinesPtr(v.Policy.DiskFloorGiB), DiskFloorOff: machinesPtr(v.Policy.DiskFloorOff)}
 	if v.Policy.CPUCapState != "" {
 		pol.CpuCapState = machinesPtr(gen.CpuCapState(v.Policy.CPUCapState))
 	}
@@ -415,6 +416,7 @@ func (s *server) UpdateMachine(ctx context.Context, r gen.UpdateMachineRequestOb
 	if b.CpuCapPct != nil {
 		u.CPUCapPct = machinesPtr(int(*b.CpuCapPct))
 	}
+	u.DiskFloorGiB = b.DiskFloorGib
 	if b.Pause != nil {
 		u.Pause = machinesPtr(string(*b.Pause))
 	}

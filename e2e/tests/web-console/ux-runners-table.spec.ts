@@ -23,7 +23,7 @@ async function open(page: import('@playwright/test').Page, width: number) {
   mock.on('GET', '/api/v1/runners/:id', failure(404, 'not_found', 'No such runner.'));
   await mock.install(page);
   await page.setViewportSize({ width, height: 900 });
-  await page.goto('/pool/runners');
+  await page.goto('/setup/runners');
   await expect(page.getByRole('heading', { level: 1, name: 'Runners' })).toBeVisible();
 }
 

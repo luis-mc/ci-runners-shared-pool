@@ -56,7 +56,7 @@ const sizes = (
 };
 
 const open = async (api: MockApi) => {
-  renderApp(api, '/repositories/octo/app');
+  renderApp(api, '/setup/pool/octo/app');
   return screen.findByRole('table', { name: 'Job sizes' });
 };
 
@@ -146,7 +146,7 @@ describe('Job sizes', () => {
   });
 
   it('shows an empty sentence', async () => {
-    renderApp(sizes([]), '/repositories/octo/app');
+    renderApp(sizes([]), '/setup/pool/octo/app');
     expect(
       await screen.findByText(/No jobs are known for this repository yet/),
     ).toBeTruthy();
@@ -166,7 +166,7 @@ describe('Job sizes', () => {
           },
         ],
       }),
-      '/repositories/octo/app',
+      '/setup/pool/octo/app',
     );
     const t = await screen.findByRole('table', { name: 'Cost table' });
     expect(within(t).getByText('playwright')).toBeTruthy();
@@ -177,7 +177,7 @@ describe('Job sizes', () => {
   });
 
   it('shows loading first', () => {
-    renderApp(sizes([row()]), '/repositories/octo/app');
+    renderApp(sizes([row()]), '/setup/pool/octo/app');
     expect(screen.queryByRole('table', { name: 'Job sizes' })).toBeNull();
   });
 });

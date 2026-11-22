@@ -374,7 +374,7 @@ jobs:
           flags=""
           case "$TAG" in *-*) flags="--prerelease" ;; esac
           # shellcheck disable=SC2086
-          gh release create "$TAG" dist/* --verify-tag --generate-notes $flags
+          gh release create "$TAG" dist/* --verify-tag --generate-notes --notes-file docs/guides/upgrade-notes.md $flags
 
       # CRSP130: when GitHub found no merged PR between the previous stable tag
       # and this one, the generated notes have no "What's Changed" list; write
@@ -388,6 +388,8 @@ jobs:
           gh release view "$TAG" --json body --jq .body > "$RUNNER_TEMP/notes.md"
           bash scripts/ci/release-notes-fallback.sh "$TAG" "$RUNNER_TEMP/notes.md" > "$RUNNER_TEMP/fallback.md"
           if [ -s "$RUNNER_TEMP/fallback.md" ]; then
+            { cat docs/guides/upgrade-notes.md; echo; cat "$RUNNER_TEMP/fallback.md"; } > "$RUNNER_TEMP/fallback-full.md"
+            mv "$RUNNER_TEMP/fallback-full.md" "$RUNNER_TEMP/fallback.md"
             gh release edit "$TAG" --notes-file "$RUNNER_TEMP/fallback.md"
             echo "notes written from commit subjects"
           fi

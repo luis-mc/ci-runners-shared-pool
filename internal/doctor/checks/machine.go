@@ -249,14 +249,18 @@ func machineDiskFloor(ctx context.Context, env doctor.Env) []doctor.Finding {
 			continue
 		}
 		f.Severity, f.Title = doctor.Fail, "Jobs and VMs on "+m.Name+" are paused: free disk is under the floor"
-		f.Detail = "The machine starts no job and no VM until it has the floor plus 1 GiB free (default floor 10 GiB, `disk_floor_gib`)."
+		floor := m.DiskFloorGiB
+		if floor <= 0 {
+			floor = runnercache.DefaultDiskFloorGiB
+		}
+		f.Detail = fmt.Sprintf("The machine starts no job and no VM until it has the floor of %d GiB plus 1 GiB free (the floor is set per machine in the console).", floor)
 		if m.DiskFreeBytes != nil {
 			f.Detail = fmt.Sprintf("%.1f GiB free. %s", float64(*m.DiskFreeBytes)/float64(gib), f.Detail)
 		}
 		f.Fix = doctor.Fix{
 			Text: "Free space on " + m.Name + ", biggest first: container images and build cache (`docker system df`, then `docker image prune -a` and `docker builder prune`); " +
 				"runner caches (`crsp runners clean-work --machine " + m.Name + "`); job folders left by failed runs; VM disks and checkpoints of finished jobs (Hyper-V differencing disks, macOS clones). " +
-				"Or lower the floor with `disk_floor_gib` in config.toml, or `--disk-floor-gib` on the agent.",
+				"Or lower the floor under Machines, \"Free disk to keep\" in the console.",
 			Command: "crsp runners clean-work --machine " + m.Name,
 			Link:    machineLink(m),
 		}

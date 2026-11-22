@@ -77,6 +77,7 @@ func (t *schedTx) Settings(machineID string) (slots.Settings, error) {
 	if sizes, serr := loadSizes(t.ctx, t.tx); serr == nil {
 		s.Sizes = sizes
 	}
+	s.Admission = t.loadAdmission(machineID)
 	if errors.Is(err, sql.ErrNoRows) {
 		return s, nil
 	}

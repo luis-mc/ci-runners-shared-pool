@@ -12,7 +12,7 @@ describe('Repository insight panes', () => {
     const api = signedIn()
       .on('GET', '/api/v1/github/repositories', { items: [r], stale: { stale: false } })
       .on('GET', '/api/v1/repositories/:id', r);
-    renderApp(api, '/repositories/octo/app');
+    renderApp(api, '/setup/pool/octo/app');
     expect(await screen.findByRole('region', { name: 'CI checks' })).toBeTruthy();
     expect(screen.getByText('The job has no timeout-minutes.')).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Guardrails' })).toBeTruthy();
@@ -24,7 +24,7 @@ describe('Repository insight panes', () => {
 
 describe('Demand on Size and backends', () => {
   it('shows the demand and the estimates in words', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines', { items: [] }), '/pool/size');
+    renderApp(signedIn().on('GET', '/api/v1/machines', { items: [] }), '/setup/size');
     expect(await screen.findByRole('region', { name: 'Demand' })).toBeTruthy();
     expect(screen.getByText(/with 1 more slot the p95 wait would be about/)).toBeTruthy();
     expect(screen.getAllByText(/An estimate from the last 7 days/).length).toBe(2);
@@ -54,7 +54,7 @@ describe('Measured peaks on the Job page', () => {
       '/api/v1/jobs/:jobId/resources',
       resources,
     );
-    renderApp(api, '/jobs/12');
+    renderApp(api, '/pool/jobs/12');
     return within(await screen.findByRole('region', { name: 'CPU and memory' }));
   };
   const base = { samples: [] };

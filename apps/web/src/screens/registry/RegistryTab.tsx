@@ -194,7 +194,7 @@ function RegistryBody({
           <Card
             title="Where it runs"
             footer={
-              <LinkButton to="/pool/images/registry/budgets">Edit budgets</LinkButton>
+              <LinkButton to="/setup/images/registry/budgets">Edit budgets</LinkButton>
             }
           >
             <Facts
@@ -259,7 +259,7 @@ function RegistryBody({
               oneLine
               action={{
                 label: 'Open',
-                to: (i) => `/pool/images/registry/${i.id}`,
+                to: (i) => `/setup/images/registry/${i.id}`,
                 name: (i) => `${imageName(i)} ${shortKey(i.key)}`,
               }}
             />

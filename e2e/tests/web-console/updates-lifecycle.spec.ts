@@ -1,6 +1,7 @@
 // Settings > Updates and the Remove dialog (lifecycle standard) against the mocked API: policy and window, Check,
 // the retry text after a failed test, an update on another machine, Remove disabled until a data choice is made,
 // and the DOM layout of the page, the remove dialog and the banner at 360, 393, 1300 and 1800 px (guard A).
+import type { components } from '../../../packages/contract/ts/generated/schema';
 import { expect, test, type Page } from '@playwright/test';
 import {
   domLayoutSource,
@@ -21,8 +22,9 @@ interface State {
   calls: { method: string; path: string; body: unknown }[];
 }
 
-const base = () => ({
-  state: 'idle',
+// Typed by the contract: the mock can only say what the controller can say (CRSP225).
+const base = (): components['schemas']['LifecycleStatus'] => ({
+  state: 'up_to_date',
   current: '1.4.0',
   available: null,
   required: false,

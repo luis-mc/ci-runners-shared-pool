@@ -16,7 +16,7 @@ import (
 func TestDefaults(t *testing.T) {
 	d := slots.Defaults()
 	if d.BudgetMemoryPct != 85 || d.BudgetCPUPct != 60 || d.JobSlots != 2 || d.LightSlots != 1 || d.HeavySlots != 1 ||
-		d.SlotMaxAgeMin != 120 || d.GateMaxWaitMin != 10 || d.GatePollSec != 15 || d.OnTimeout != "fail" || len(d.HeavyJobs) != 0 {
+		d.SlotMaxAgeMin != 120 || d.GateMaxWaitMin != 2 || d.GatePollSec != 15 || d.OnTimeout != "fail" || len(d.HeavyJobs) != 0 {
 		t.Fatalf("%+v", d)
 	}
 	want := []string{"smoke", "prune", "prune-*", "cleanup", "remove-train", "decide", "delete-*", "runners"}
@@ -87,18 +87,18 @@ func TestRepoCanLowerNeverRaise(t *testing.T) {
 // test_settings_read_machine_json_over_the_old_file.
 func TestSettingsPrecedence(t *testing.T) {
 	machine := slots.Defaults()
-	machine.GateMaxWaitMin, machine.GatePollSec, machine.OnTimeout = 10, 5, "run"
+	machine.GateMaxWaitMin, machine.GatePollSec, machine.OnTimeout = 2, 5, "run"
 	none := func(string) string { return "" }
-	if g := slots.ResolveGate(-1, -1, "", none, machine); g != (slots.GateSettings{MaxWaitMin: 10, PollSec: 5, OnTimeout: "run"}) {
+	if g := slots.ResolveGate(-1, -1, "", none, machine); g != (slots.GateSettings{MaxWaitMin: 2, PollSec: 5, OnTimeout: "run"}) {
 		t.Fatalf("machine: %+v", g)
 	}
 	env := func(k string) string {
-		return map[string]string{"CRSP_GATE_MAX_WAIT_MIN": "8", "CRSP_GATE_POLL_SEC": "7", "CRSP_GATE_ON_TIMEOUT": "fail"}[k]
+		return map[string]string{"CRSP_GATE_MAX_WAIT_MIN": "1", "CRSP_GATE_POLL_SEC": "7", "CRSP_GATE_ON_TIMEOUT": "fail"}[k]
 	}
-	if g := slots.ResolveGate(-1, -1, "", env, machine); g != (slots.GateSettings{MaxWaitMin: 8, PollSec: 7, OnTimeout: "fail"}) {
+	if g := slots.ResolveGate(-1, -1, "", env, machine); g != (slots.GateSettings{MaxWaitMin: 1, PollSec: 7, OnTimeout: "fail"}) {
 		t.Fatalf("env: %+v", g)
 	}
-	if g := slots.ResolveGate(3, 1, "run", env, machine); g != (slots.GateSettings{MaxWaitMin: 3, PollSec: 1, OnTimeout: "run"}) {
+	if g := slots.ResolveGate(2, 1, "run", env, machine); g != (slots.GateSettings{MaxWaitMin: 2, PollSec: 1, OnTimeout: "run"}) {
 		t.Fatalf("flag: %+v", g)
 	}
 	// a poll below 0 counts as 0; an unknown on-timeout counts as fail
@@ -306,12 +306,12 @@ func TestTicketExpiryRule(t *testing.T) {
 	}
 }
 
-// OPS55 R5.75: the hold never reaches the job timeout; a longer setting is cut.
+// OPS55, OPS81 R5.75: the hold is at most 2 minutes; a longer setting is cut.
 func TestHoldIsCutBelowTheJobTimeout(t *testing.T) {
 	machine := slots.Defaults()
 	machine.GateMaxWaitMin = 45
 	none := func(string) string { return "" }
-	if g := slots.ResolveGate(-1, -1, "", none, machine); g.MaxWaitMin != slots.MaxHoldMin || g.MaxWaitMin >= slots.JobTimeoutMin {
+	if g := slots.ResolveGate(-1, -1, "", none, machine); g.MaxWaitMin != 2 || slots.MaxHoldMin != 2 {
 		t.Fatalf("machine value not cut: %+v", g)
 	}
 	if g := slots.ResolveGate(99, -1, "", none, machine); g.MaxWaitMin != slots.MaxHoldMin {

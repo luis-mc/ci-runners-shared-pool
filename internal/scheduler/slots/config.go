@@ -16,13 +16,13 @@ const (
 )
 
 // JobTimeoutMin is the longest timeout-minutes crsp asks a job to carry
-// (doctor workflow.timeout, guideline 30). Time held in the job-started hook
-// counts against it, so the hold must end well before it (scheduling R5.75).
-const JobTimeoutMin = 30
+// (doctor workflow.timeout, guideline 60). GitHub's timeout-minutes is a safety
+// net only: crsp's own job and run timers end a job first (scheduling R5.99).
+const JobTimeoutMin = 60
 
-// MaxHoldMin is the longest the job-started hook may hold a job: a third of
-// JobTimeoutMin. A longer setting is cut to it when the hook reads it (R5.75).
-const MaxHoldMin = JobTimeoutMin / 3
+// MaxHoldMin is the longest the job-started hook may hold a job: 2 minutes. A
+// longer setting is cut to it when the hook reads it (R5.75).
+const MaxHoldMin = 2
 
 // Settings are the scheduling settings of one machine (R5.1).
 type Settings struct {
@@ -47,6 +47,11 @@ type Settings struct {
 	// (R5.80 to R5.88), in precedence order: the first entry that matches a job
 	// wins. Not a stored setting: the store fills it for every read.
 	Sizes []JobSize
+	// Admission is the pool admission of scheduling R5.90 to R5.94. The zero
+	// value is off: the machine is admitted by unit weights (R5.69) as before.
+	// Not a stored machine setting: the store fills it from the pool size of the
+	// machine and the class settings.
+	Admission Admission
 }
 
 // Defaults returns the dev-standards defaults (R5.1; machine_slots.py DEFAULT_CONFIG).
@@ -73,6 +78,14 @@ var Keys = []string{
 	"slot_max_age_minutes", "gate_max_wait_minutes", "gate_poll_seconds", "gate_on_timeout",
 	"light_jobs", "heavy_jobs", "warm_runners",
 }
+
+// Reservation settings (scheduling R5.93) are global, not per machine: the
+// keys of the settings table.
+const (
+	SettingReservePasses  = "reserve_after_passes"
+	SettingReserveMinutes = "reserve_after_minutes"
+	SettingSizeClasses    = "runner_size_classes"
+)
 
 // number reads v as a number. A bool is never a number (R5.2).
 func number(v any) (float64, bool) {
