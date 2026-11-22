@@ -21,19 +21,30 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/lifecycletest"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/listenaddr"
 )
 
 const (
 	selfTestLimit = 180 * time.Second // contract default: self-test limit 180 s
 	selfTestPoll  = 2 * time.Second   // contract default: poll every 2 s
-	consoleURL    = "http://127.0.0.1:8460/healthz"
 )
+
+// consoleHealthURL is the installed console's health address on loopback: the
+// port of CRSP_LISTEN_ADDR when set, else the console's default port.
+func consoleHealthURL() string {
+	port := listenaddr.DefaultPort
+	if _, p, err := net.SplitHostPort(os.Getenv(listenaddr.EnvName)); err == nil && p != "" {
+		port = p
+	}
+	return "http://" + net.JoinHostPort("127.0.0.1", port) + "/healthz"
+}
 
 func main() {
 	selfT := flag.Bool("self-test", false, "poll the installed console until it answers (LC-8)")
@@ -44,7 +55,7 @@ func main() {
 	var err error
 	switch {
 	case *selfT:
-		err = selfTest(consoleURL, selfTestLimit, selfTestPoll)
+		err = selfTest(consoleHealthURL(), selfTestLimit, selfTestPoll)
 	case *state:
 		err = printState()
 	case *sim:

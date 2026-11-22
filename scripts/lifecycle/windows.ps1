@@ -140,9 +140,21 @@ function Lc16 {
   Out-Lc 'LC-16' (($rc -eq 0) -and -not (Test-RebootPending)) 'remove works with the tray running, no reboot'
 }
 function Lc17 {
-  $users = @(query user 2>$null)
-  if ($users.Count -gt 1) { Out-Lc 'LC-17' $false 'a user is signed in; run on a machine with none'; return }
-  Out-Lc 'LC-17' (Test-Up) 'service up with nobody signed in'
+  # LC-17 (lifecycle.json): "the service may not start when nobody is signed in". A hosted runner
+  # always has its own account signed in, so count no sessions. Prove what the words mean: the
+  # service starts by itself at boot (no sign-in needed), runs in session 0 under a service
+  # account (no user session holds it), and answers.
+  $svc = Get-CimInstance -ClassName Win32_Service -Filter "Name='$($script:Service)'" -ErrorAction SilentlyContinue
+  if (-not $svc) { Out-Lc 'LC-17' $false "service $($script:Service) is not installed"; return }
+  $boot = $svc.StartMode -eq 'Auto'
+  $sid = -1
+  if ($svc.ProcessId -gt 0) {
+    $proc = Get-CimInstance -ClassName Win32_Process -Filter "ProcessId=$($svc.ProcessId)" -ErrorAction SilentlyContinue
+    if ($proc) { $sid = [int]$proc.SessionId }
+  }
+  $session0 = $sid -eq 0
+  $up = Test-Up
+  Out-Lc 'LC-17' ($boot -and $session0 -and $up) "service start mode $($svc.StartMode), account $($svc.StartName), session $sid (0 = no user session), answering $up"
 }
 function Lc29 {
   $pair = $script:Lc.test_interface.simulate
