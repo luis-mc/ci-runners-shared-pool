@@ -84,3 +84,44 @@ func TestRunnerToolsSameNeedsTwoRunners(t *testing.T) {
 		t.Fatalf("findings = %+v", fs)
 	}
 }
+
+// OPS75 R5.65: a store that lacks a version of the plan warns by name; a full store is ok; a failed plan skips.
+func TestRunnerToolsPlan(t *testing.T) {
+	r1 := toolRunner("r1", "m1", appRepo, winLbl)
+	r1.ToolPlan = &doctor.ToolPlanProbe{Items: []doctor.ToolPlanItem{{Tool: "rust", Version: "1.85", Present: false}, {Tool: "node", Version: "22.1.0", Present: true}}}
+	r2 := toolRunner("r2", "m2", appRepo, winLbl)
+	r2.ToolPlan = &doctor.ToolPlanProbe{Items: []doctor.ToolPlanItem{{Tool: "node", Version: "22.1.0", Present: true}}}
+	r3 := toolRunner("r3", "m1", appRepo, winLbl)
+	r3.ToolPlan = &doctor.ToolPlanProbe{Err: "the tool plan could not be made: no access"}
+	r4 := toolRunner("r4", "m2", appRepo, winLbl) // no plan reported: no finding
+	env := doctor.Env{Now: now, Fleet: &fleet{machines: twoMachines(), runners: []doctor.Runner{r1, r2, r3, r4}}}
+	fs := forCheck(run(t, env, "runner.tools.plan"), "runner.tools.plan")
+	if len(fs) != 3 {
+		t.Fatalf("%d findings: %+v", len(fs), fs)
+	}
+	by := map[string]doctor.Finding{}
+	for _, f := range fs {
+		by[f.Subject.Name] = f
+	}
+	if f := by["r1"]; f.Severity != doctor.Warn || f.Title != "r1 lacks rust 1.85, which the workflow uses" || !strings.Contains(f.Detail, "node 22.1.0") || f.Fix.Text == "" {
+		t.Errorf("r1 = %+v", f)
+	}
+	if by["r2"].Severity != doctor.OK || by["r3"].Severity != doctor.Skip {
+		t.Errorf("r2 %+v r3 %+v", by["r2"], by["r3"])
+	}
+}
+
+// OPS75 R5.65 (owner decision 22 Nov): a missing Xcode is installed by the owner, so the warning says which one.
+func TestRunnerToolsPlanSaysWhichXcodeToInstall(t *testing.T) {
+	r := toolRunner("r1", "m1", appRepo, winLbl)
+	hint := "Xcode 16.2 is not installed on this Mac. Install Xcode 16.2 in /Applications (Xcode-16.2.app); the runner never downloads Xcode"
+	r.ToolPlan = &doctor.ToolPlanProbe{Items: []doctor.ToolPlanItem{{Tool: "xcode", Version: "16.2", Hint: hint}, {Tool: "node", Version: "22.1.0", Present: true}}}
+	env := doctor.Env{Now: now, Fleet: &fleet{machines: twoMachines(), runners: []doctor.Runner{r}}}
+	fs := forCheck(run(t, env, "runner.tools.plan"), "runner.tools.plan")
+	if len(fs) != 1 || fs[0].Severity != doctor.Warn || fs[0].Title != "r1 lacks xcode 16.2, which the workflow uses" {
+		t.Fatalf("findings = %+v", fs)
+	}
+	if !strings.Contains(fs[0].Fix.Text, "Install Xcode 16.2 in /Applications") || strings.Contains(fs[0].Detail, "installs it first") {
+		t.Errorf("fix %q detail %q", fs[0].Fix.Text, fs[0].Detail)
+	}
+}

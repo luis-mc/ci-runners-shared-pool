@@ -53,6 +53,7 @@ func Register(reg *doctor.Registry) {
 		doctor.NewCheck("runner.registrations", doctor.GroupRunner, M1, false, runnerRegistrations),
 		doctor.NewCheck("runner.slots", doctor.GroupRunner, M1, false, runnerSlots),
 		doctor.NewCheck("machine.reset", doctor.GroupMachine, M1, false, machineReset),
+		doctor.NewCheck("runner.tools.plan", doctor.GroupRunner, M1, false, runnerToolsPlan),
 		doctor.NewCheck("runner.tools.same", doctor.GroupRunner, M1, false, runnerToolsSame),
 		doctor.NewCheck("github.app.installation", doctor.GroupGitHub, M1, false, appInstallation),
 		doctor.NewCheck("github.app.permissions", doctor.GroupGitHub, M1, false, appPermissions),

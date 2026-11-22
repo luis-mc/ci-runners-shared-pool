@@ -266,6 +266,9 @@ type Runner struct {
 	// Tools is what the agent saw of the common tools on the runner's PATH as
 	// its service sees it; nil when it did not look (doctor R5.63).
 	Tools *ToolsProbe
+	// ToolPlan is the tool plan of the runner's repository set against the machine's tool store (Windows and
+	// macOS, runners R5.119); nil when the agent did not look or the OS has no store.
+	ToolPlan *ToolPlanProbe
 	// SymlinkWanted is true when the machine or label setting asks for the
 	// symbolic link right for this runner (runners R5.14). Symlink is what the
 	// agent read; nil when it did not look (R5.42).
@@ -323,6 +326,22 @@ func SymlinkProbeFrom(known, canLink, developerMode bool, errText string) *Symli
 type ToolsProbe struct {
 	Err   string
 	Tools []ToolProbe
+}
+
+// ToolPlanProbe is the tool plan against the tool store. Err is set when the agent could not make the plan
+// (the scan failed, a tools: entry is wrong); the check then skips the runner.
+type ToolPlanProbe struct {
+	Err   string
+	Items []ToolPlanItem
+}
+
+// ToolPlanItem is one tool and version of the plan and whether the store has it.
+type ToolPlanItem struct {
+	Tool, Version string
+	Present       bool
+	// Hint says what the owner does when the tool is missing and only the owner can add it: which Xcode to
+	// install (the store never downloads Xcode).
+	Hint string
 }
 
 // ToolProbe is one tool: found or not, and the first line of its version output.
