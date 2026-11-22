@@ -266,7 +266,7 @@ Tests: `internal/update/update_test.go` (decisions, verify, lock, backoff, helpe
 
 **R5.40** (M1) — A failed install or upgrade rolls back: Windows Installer puts the old version back and a rollback action starts the old service again. The `/l*v` log records the rollback.
 
-**R5.41** (M1) — `crsp.exe` run by the service manager reports its state through the Windows service protocol: Stop ends the controller as SIGTERM does, a non-zero end makes the service manager restart it, and the log goes to `%ProgramData%\crsp\logs\crsp.log`. `crsp tray` detaches from its console window.
+**R5.41** (M1) — `crsp.exe` run by the service manager reports its state through the Windows service protocol: Stop ends the controller as SIGTERM does, a non-zero end makes the service manager restart it, and the log goes to `%ProgramData%\crsp\logs\crsp.log` (CRSP233: when that file cannot be opened, for example after an upgrade left the folder or file unwritable, it goes to `crsp-<pid>.log` in the same folder, then to the temp folder, and never nowhere; the first line of the controller log names the file and says why an earlier one was not used). `crsp tray` detaches from its console window.
 
 ### Uninstall
 

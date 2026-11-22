@@ -89,7 +89,7 @@ Do this on a second PC (the Windows PC when you test Linux, and the reverse) or 
 
 ## 8. A job runs on the pool
 
-- [ ] Push a workflow to the test repository with `runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}` (or `CRSP_RUNS_ON_WINDOWS`), or start one by hand. Make it last about two minutes (a `sleep 120` step) so you can watch it.
+- [ ] Push a workflow to the test repository with `runs-on: ${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}` (`CRSP_RUNS_ON_WINDOWS` on Windows; `CRSP_<JOB>` is the per-job variable, upper case, and may be unset), or start one by hand. Make it last about two minutes (a `sleep 120` step) so you can watch it.
 - [ ] The job runs on this PC and ends green on GitHub.
 - Report if: the job waits more than a minute with a free runner (Doctor then says why, step 11), or fails with an error that names crsp.
 
