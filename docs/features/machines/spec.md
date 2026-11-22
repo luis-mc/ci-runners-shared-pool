@@ -376,7 +376,7 @@ flowchart TD
 **Packages.**
 
 - `internal/machines`: join codes, keys, the machine record, settings, drain and removal, offline detection. Controller side.
-- `internal/agent`: the agent mode. Link, reconnect, facts and backend detection, settings cache, drain execution, service install and uninstall.
+- `internal/agent`: the agent mode. Link, reconnect, facts and backend detection, settings cache, drain execution, service install and uninstall, and the job tool flow of a Windows or macOS machine (`toolstore.go`: tool store, private job home, tool plan probe; runners R5.110 to R5.119).
 - `internal/load`: the load measurement per OS, medians, WSL VM and Docker reads, cgroup v2. Pure functions over parsed input, with the OS calls behind one probe interface so tests feed fixed output (as `load.py` does with its test seams).
 
 **Agent link contract.** `packages/contract/proto/agent/v1/agent.proto` grows:
