@@ -1179,6 +1179,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Jobs on machine runner slots over time, past, running and forecast
+         * @description LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+         */
+        get: operations["getTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/health-thresholds": {
         parameters: {
             query?: never;
@@ -5416,6 +5436,68 @@ export interface components {
             steps: components["schemas"]["StepForecast"][];
             history: components["schemas"]["HistoryPoint"][];
         };
+        /**
+         * @description How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+         * @enum {string}
+         */
+        TimelineBarState: "running" | "waiting_runner" | "waiting_room" | "reserved" | "forecast" | "no_runner_fits" | "timer_ran_out" | "done" | "failed";
+        TimelineRow: {
+            /** @description `<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet. */
+            key: string;
+            machine_id: string;
+            machine_name: string;
+            /** @description 1-based. Absent on the waiting row. */
+            slot?: number;
+            /** @description For example `M1 slot 1`. */
+            label: string;
+        };
+        TimelineBar: {
+            id: string;
+            /**
+             * Format: int64
+             * @description Absent when the bar is a forecast of a job that has no record yet.
+             */
+            job_id?: number;
+            row_id: string;
+            state: components["schemas"]["TimelineBarState"];
+            label: string;
+            repository?: string;
+            /** Format: date-time */
+            start: string;
+            /**
+             * Format: date-time
+             * @description Absent while the job runs; the chart ends the bar at now.
+             */
+            end?: string;
+            /** Format: date-time */
+            end_lo?: string;
+            /** Format: date-time */
+            end_hi?: string;
+            /**
+             * Format: date-time
+             * @description When the job began to wait (the light part before the bar).
+             */
+            wait_from?: string;
+            /** @description The words of the bar for a screen reader and the tooltip. */
+            detail?: string;
+        };
+        Timeline: {
+            /** Format: date-time */
+            now: string;
+            /**
+             * Format: date-time
+             * @description The earliest time loaded.
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+             */
+            to: string;
+            rows: components["schemas"]["TimelineRow"][];
+            bars: components["schemas"]["TimelineBar"][];
+            more_before: boolean;
+        };
         Slot: {
             /** @enum {string} */
             kind: "ci" | "light" | "heavy";
@@ -8907,6 +8989,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunnerJobStats"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTimeline: {
+        parameters: {
+            query?: {
+                /** @description Only the slots and jobs of this machine. */
+                machine_id?: string;
+                before?: string;
+                hours?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timeline. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Timeline"];
                 };
             };
             default: components["responses"]["Error"];

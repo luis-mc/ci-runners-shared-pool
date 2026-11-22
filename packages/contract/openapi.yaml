@@ -1699,6 +1699,53 @@ paths:
                 $ref: '#/components/schemas/RunnerJobStats'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/timeline:
+    get:
+      operationId: getTimeline
+      x-cli: none
+      x-cli-reason: 'Later: timeline commands (LOOK58).'
+      tags: [jobs]
+      summary: Jobs on machine runner slots over time, past, running and forecast
+      description: >-
+        LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot
+        they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40,
+        scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no
+        slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339)
+        returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h
+        from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once
+        24 hours are loaded.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: machine_id
+          in: query
+          required: false
+          description: Only the slots and jobs of this machine.
+          schema:
+            type: string
+        - name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: hours
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+      responses:
+        '200':
+          description: The timeline.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timeline'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/health-thresholds:
     get:
       operationId: getHealthThresholds
@@ -8684,6 +8731,101 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/HistoryPoint'
+    TimelineBarState:
+      type: string
+      description: How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+      enum:
+        [
+          running,
+          waiting_runner,
+          waiting_room,
+          reserved,
+          forecast,
+          no_runner_fits,
+          timer_ran_out,
+          done,
+          failed,
+        ]
+    TimelineRow:
+      type: object
+      required: [key, machine_id, machine_name, label]
+      properties:
+        key:
+          type: string
+          description: "`<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet."
+        machine_id:
+          type: string
+        machine_name:
+          type: string
+        slot:
+          type: integer
+          description: 1-based. Absent on the waiting row.
+        label:
+          type: string
+          description: "For example `M1 slot 1`."
+    TimelineBar:
+      type: object
+      required: [id, row_id, state, label, start]
+      properties:
+        id:
+          type: string
+        job_id:
+          type: integer
+          format: int64
+          description: Absent when the bar is a forecast of a job that has no record yet.
+        row_id:
+          type: string
+        state:
+          $ref: '#/components/schemas/TimelineBarState'
+        label:
+          type: string
+        repository:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+          description: Absent while the job runs; the chart ends the bar at now.
+        end_lo:
+          type: string
+          format: date-time
+        end_hi:
+          type: string
+          format: date-time
+        wait_from:
+          type: string
+          format: date-time
+          description: When the job began to wait (the light part before the bar).
+        detail:
+          type: string
+          description: The words of the bar for a screen reader and the tooltip.
+    Timeline:
+      type: object
+      required: [now, from, to, rows, bars, more_before]
+      properties:
+        now:
+          type: string
+          format: date-time
+        from:
+          type: string
+          format: date-time
+          description: The earliest time loaded.
+        to:
+          type: string
+          format: date-time
+          description: The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineRow'
+        bars:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineBar'
+        more_before:
+          type: boolean
     Slot:
       type: object
       required: [kind, number, taken_at, repository, run_id, run_attempt, job]

@@ -3314,6 +3314,45 @@ func (e Theme) Valid() bool {
 	}
 }
 
+// Defines values for TimelineBarState.
+const (
+	TimelineBarStateDone          TimelineBarState = "done"
+	TimelineBarStateFailed        TimelineBarState = "failed"
+	TimelineBarStateForecast      TimelineBarState = "forecast"
+	TimelineBarStateNoRunnerFits  TimelineBarState = "no_runner_fits"
+	TimelineBarStateReserved      TimelineBarState = "reserved"
+	TimelineBarStateRunning       TimelineBarState = "running"
+	TimelineBarStateTimerRanOut   TimelineBarState = "timer_ran_out"
+	TimelineBarStateWaitingRoom   TimelineBarState = "waiting_room"
+	TimelineBarStateWaitingRunner TimelineBarState = "waiting_runner"
+)
+
+// Valid indicates whether the value is a known member of the TimelineBarState enum.
+func (e TimelineBarState) Valid() bool {
+	switch e {
+	case TimelineBarStateDone:
+		return true
+	case TimelineBarStateFailed:
+		return true
+	case TimelineBarStateForecast:
+		return true
+	case TimelineBarStateNoRunnerFits:
+		return true
+	case TimelineBarStateReserved:
+		return true
+	case TimelineBarStateRunning:
+		return true
+	case TimelineBarStateTimerRanOut:
+		return true
+	case TimelineBarStateWaitingRoom:
+		return true
+	case TimelineBarStateWaitingRunner:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TimelineLaneOrigin.
 const (
 	TimelineLaneOriginCrsp   TimelineLaneOrigin = "crsp"
@@ -8090,6 +8129,48 @@ type Ticket struct {
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 }
 
+// Timeline defines model for Timeline.
+type Timeline struct {
+	Bars []TimelineBar `json:"bars"`
+
+	// From The earliest time loaded.
+	From       time.Time     `json:"from"`
+	MoreBefore bool          `json:"more_before"`
+	Now        time.Time     `json:"now"`
+	Rows       []TimelineRow `json:"rows"`
+
+	// To The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+	To time.Time `json:"to"`
+}
+
+// TimelineBar defines model for TimelineBar.
+type TimelineBar struct {
+	// Detail The words of the bar for a screen reader and the tooltip.
+	Detail *string `json:"detail,omitempty"`
+
+	// End Absent while the job runs; the chart ends the bar at now.
+	End   *time.Time `json:"end,omitempty"`
+	EndHi *time.Time `json:"end_hi,omitempty"`
+	EndLo *time.Time `json:"end_lo,omitempty"`
+	Id    string     `json:"id"`
+
+	// JobId Absent when the bar is a forecast of a job that has no record yet.
+	JobId      *int64    `json:"job_id,omitempty"`
+	Label      string    `json:"label"`
+	Repository *string   `json:"repository,omitempty"`
+	RowId      string    `json:"row_id"`
+	Start      time.Time `json:"start"`
+
+	// State How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+	State TimelineBarState `json:"state"`
+
+	// WaitFrom When the job began to wait (the light part before the bar).
+	WaitFrom *time.Time `json:"wait_from,omitempty"`
+}
+
+// TimelineBarState How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+type TimelineBarState string
+
 // TimelineLane defines model for TimelineLane.
 type TimelineLane struct {
 	Labels      *[]string          `json:"labels,omitempty"`
@@ -8101,6 +8182,20 @@ type TimelineLane struct {
 
 // TimelineLaneOrigin defines model for TimelineLane.Origin.
 type TimelineLaneOrigin string
+
+// TimelineRow defines model for TimelineRow.
+type TimelineRow struct {
+	// Key `<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet.
+	Key string `json:"key"`
+
+	// Label For example `M1 slot 1`.
+	Label       string `json:"label"`
+	MachineId   string `json:"machine_id"`
+	MachineName string `json:"machine_name"`
+
+	// Slot 1-based. Absent on the waiting row.
+	Slot *int `json:"slot,omitempty"`
+}
 
 // TimelineSegment defines model for TimelineSegment.
 type TimelineSegment struct {
@@ -8948,6 +9043,14 @@ type GetRunSavingsParams struct {
 type RestartServiceParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
 	Confirmed *Confirmed `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
+// GetTimelineParams defines parameters for GetTimeline.
+type GetTimelineParams struct {
+	// MachineId Only the slots and jobs of this machine.
+	MachineId *string    `form:"machine_id,omitempty" json:"machine_id,omitempty"`
+	Before    *time.Time `form:"before,omitempty" json:"before,omitempty"`
+	Hours     *int       `form:"hours,omitempty" json:"hours,omitempty"`
 }
 
 // ApplyUpdateParams defines parameters for ApplyUpdate.
@@ -10947,6 +11050,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
+	//
+	// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+	//
+	// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+	GetTimeline(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	//
@@ -15032,6 +15142,23 @@ func (c *Client) RedeemSetupLinkWithBody(ctx context.Context, contentType string
 // Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 func (c *Client) RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRedeemSetupLinkRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTimeline Jobs on machine runner slots over time, past, running and forecast
+//
+// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+//
+// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+func (c *Client) GetTimeline(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTimelineRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -23638,6 +23765,84 @@ func NewRedeemSetupLinkRequestWithBody(server string, contentType string, body i
 	return req, nil
 }
 
+// NewGetTimelineRequest constructs an http.Request for the GetTimeline method
+func NewGetTimelineRequest(server string, params *GetTimelineParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timeline")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.MachineId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "machine_id", *params.MachineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "before", *params.Before, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Hours != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "hours", *params.Hours, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetUpdateStatusRequest constructs an http.Request for the GetUpdateStatus method
 func NewGetUpdateStatusRequest(server string) (*http.Request, error) {
 	var err error
@@ -26305,6 +26510,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLinkWithResponse(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*RedeemSetupLinkResponse, error)
+
+	// GetTimelineWithResponse Jobs on machine runner slots over time, past, running and forecast
+	//
+	// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+	GetTimelineWithResponse(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*GetTimelineResponse, error)
 
 	// GetUpdateStatusWithResponse The running version, the newest stable release, and the state of an update
 	//
@@ -34876,6 +35090,54 @@ func (r RedeemSetupLinkResponse) ContentType() string {
 	return ""
 }
 
+type GetTimelineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Timeline
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTimelineResponse) GetJSON200() *Timeline {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTimelineResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTimelineResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTimelineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTimelineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTimelineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetUpdateStatusResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -38861,6 +39123,21 @@ func (c *ClientWithResponses) RedeemSetupLinkWithResponse(ctx context.Context, b
 		return nil, err
 	}
 	return ParseRedeemSetupLinkResponse(rsp)
+}
+
+// GetTimelineWithResponse Jobs on machine runner slots over time, past, running and forecast
+//
+// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+func (c *ClientWithResponses) GetTimelineWithResponse(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*GetTimelineResponse, error) {
+	rsp, err := c.GetTimeline(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTimelineResponse(rsp)
 }
 
 // GetUpdateStatusWithResponse The running version, the newest stable release, and the state of an update
@@ -44977,6 +45254,39 @@ func ParseRedeemSetupLinkResponse(rsp *http.Response) (*RedeemSetupLinkResponse,
 			headers.SetCookie = &value
 		}
 		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetTimelineResponse parses an HTTP response from a GetTimelineWithResponse call
+func ParseGetTimelineResponse(rsp *http.Response) (*GetTimelineResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTimelineResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Timeline
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil

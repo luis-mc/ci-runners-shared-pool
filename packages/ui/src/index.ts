@@ -50,3 +50,4 @@ export * from './components/BarList';
 export * from './components/FindingList';
 export * from './components/Steps';
 export * from './components/SideMenu';
+export * from './components/Timeline.types';

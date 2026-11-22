@@ -3313,6 +3313,45 @@ func (e Theme) Valid() bool {
 	}
 }
 
+// Defines values for TimelineBarState.
+const (
+	TimelineBarStateDone          TimelineBarState = "done"
+	TimelineBarStateFailed        TimelineBarState = "failed"
+	TimelineBarStateForecast      TimelineBarState = "forecast"
+	TimelineBarStateNoRunnerFits  TimelineBarState = "no_runner_fits"
+	TimelineBarStateReserved      TimelineBarState = "reserved"
+	TimelineBarStateRunning       TimelineBarState = "running"
+	TimelineBarStateTimerRanOut   TimelineBarState = "timer_ran_out"
+	TimelineBarStateWaitingRoom   TimelineBarState = "waiting_room"
+	TimelineBarStateWaitingRunner TimelineBarState = "waiting_runner"
+)
+
+// Valid indicates whether the value is a known member of the TimelineBarState enum.
+func (e TimelineBarState) Valid() bool {
+	switch e {
+	case TimelineBarStateDone:
+		return true
+	case TimelineBarStateFailed:
+		return true
+	case TimelineBarStateForecast:
+		return true
+	case TimelineBarStateNoRunnerFits:
+		return true
+	case TimelineBarStateReserved:
+		return true
+	case TimelineBarStateRunning:
+		return true
+	case TimelineBarStateTimerRanOut:
+		return true
+	case TimelineBarStateWaitingRoom:
+		return true
+	case TimelineBarStateWaitingRunner:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TimelineLaneOrigin.
 const (
 	TimelineLaneOriginCrsp   TimelineLaneOrigin = "crsp"
@@ -8089,6 +8128,48 @@ type Ticket struct {
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 }
 
+// Timeline defines model for Timeline.
+type Timeline struct {
+	Bars []TimelineBar `json:"bars"`
+
+	// From The earliest time loaded.
+	From       time.Time     `json:"from"`
+	MoreBefore bool          `json:"more_before"`
+	Now        time.Time     `json:"now"`
+	Rows       []TimelineRow `json:"rows"`
+
+	// To The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+	To time.Time `json:"to"`
+}
+
+// TimelineBar defines model for TimelineBar.
+type TimelineBar struct {
+	// Detail The words of the bar for a screen reader and the tooltip.
+	Detail *string `json:"detail,omitempty"`
+
+	// End Absent while the job runs; the chart ends the bar at now.
+	End   *time.Time `json:"end,omitempty"`
+	EndHi *time.Time `json:"end_hi,omitempty"`
+	EndLo *time.Time `json:"end_lo,omitempty"`
+	Id    string     `json:"id"`
+
+	// JobId Absent when the bar is a forecast of a job that has no record yet.
+	JobId      *int64    `json:"job_id,omitempty"`
+	Label      string    `json:"label"`
+	Repository *string   `json:"repository,omitempty"`
+	RowId      string    `json:"row_id"`
+	Start      time.Time `json:"start"`
+
+	// State How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+	State TimelineBarState `json:"state"`
+
+	// WaitFrom When the job began to wait (the light part before the bar).
+	WaitFrom *time.Time `json:"wait_from,omitempty"`
+}
+
+// TimelineBarState How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+type TimelineBarState string
+
 // TimelineLane defines model for TimelineLane.
 type TimelineLane struct {
 	Labels      *[]string          `json:"labels,omitempty"`
@@ -8100,6 +8181,20 @@ type TimelineLane struct {
 
 // TimelineLaneOrigin defines model for TimelineLane.Origin.
 type TimelineLaneOrigin string
+
+// TimelineRow defines model for TimelineRow.
+type TimelineRow struct {
+	// Key `<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet.
+	Key string `json:"key"`
+
+	// Label For example `M1 slot 1`.
+	Label       string `json:"label"`
+	MachineId   string `json:"machine_id"`
+	MachineName string `json:"machine_name"`
+
+	// Slot 1-based. Absent on the waiting row.
+	Slot *int `json:"slot,omitempty"`
+}
 
 // TimelineSegment defines model for TimelineSegment.
 type TimelineSegment struct {
@@ -8949,6 +9044,14 @@ type RestartServiceParams struct {
 	Confirmed *Confirmed `form:"confirmed,omitempty" json:"confirmed,omitempty"`
 }
 
+// GetTimelineParams defines parameters for GetTimeline.
+type GetTimelineParams struct {
+	// MachineId Only the slots and jobs of this machine.
+	MachineId *string    `form:"machine_id,omitempty" json:"machine_id,omitempty"`
+	Before    *time.Time `form:"before,omitempty" json:"before,omitempty"`
+	Hours     *int       `form:"hours,omitempty" json:"hours,omitempty"`
+}
+
 // ApplyUpdateParams defines parameters for ApplyUpdate.
 type ApplyUpdateParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
@@ -9679,6 +9782,9 @@ type ServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(w http.ResponseWriter, r *http.Request)
+	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
+	// (GET /api/v1/timeline)
+	GetTimeline(w http.ResponseWriter, r *http.Request, params GetTimelineParams)
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	// (GET /api/v1/update)
 	GetUpdateStatus(w http.ResponseWriter, r *http.Request)
@@ -15196,6 +15302,65 @@ func (siw *ServerInterfaceWrapper) RedeemSetupLink(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// GetTimeline operation middleware
+func (siw *ServerInterfaceWrapper) GetTimeline(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetTimelineParams
+
+	// ------------- Optional query parameter "machine_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "machine_id", r.URL.Query(), &params.MachineId, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "machine_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machine_id", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "before" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "before", r.URL.Query(), &params.Before, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "before"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "before", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "hours" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "hours", r.URL.Query(), &params.Hours, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "hours"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "hours", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTimeline(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetUpdateStatus operation middleware
 func (siw *ServerInterfaceWrapper) GetUpdateStatus(w http.ResponseWriter, r *http.Request) {
 
@@ -15847,6 +16012,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/health", wrapper.GetMachineHealth)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/job-stats", wrapper.GetMachineJobStats)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/job-stats", wrapper.GetRunnerJobStats)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timeline", wrapper.GetTimeline)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/health-thresholds", wrapper.GetHealthThresholds)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/health-thresholds", wrapper.PutHealthThresholds)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots", wrapper.ListSlots)
@@ -23032,6 +23198,45 @@ func (response RedeemSetupLinkdefaultJSONResponse) VisitRedeemSetupLinkResponse(
 	return err
 }
 
+type GetTimelineRequestObject struct {
+	Params GetTimelineParams
+}
+
+type GetTimelineResponseObject interface {
+	VisitGetTimelineResponse(w http.ResponseWriter) error
+}
+
+type GetTimeline200JSONResponse Timeline
+
+func (response GetTimeline200JSONResponse) VisitGetTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTimelinedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetTimelinedefaultJSONResponse) VisitGetTimelineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetUpdateStatusRequestObject struct {
 }
 
@@ -24076,6 +24281,9 @@ type StrictServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(ctx context.Context, request RedeemSetupLinkRequestObject) (RedeemSetupLinkResponseObject, error)
+	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
+	// (GET /api/v1/timeline)
+	GetTimeline(ctx context.Context, request GetTimelineRequestObject) (GetTimelineResponseObject, error)
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	// (GET /api/v1/update)
 	GetUpdateStatus(ctx context.Context, request GetUpdateStatusRequestObject) (GetUpdateStatusResponseObject, error)
@@ -28962,6 +29170,32 @@ func (sh *strictHandler) RedeemSetupLink(w http.ResponseWriter, r *http.Request)
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RedeemSetupLinkResponseObject); ok {
 		if err := validResponse.VisitRedeemSetupLinkResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTimeline operation middleware
+func (sh *strictHandler) GetTimeline(w http.ResponseWriter, r *http.Request, params GetTimelineParams) {
+	var request GetTimelineRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTimeline(ctx, request.(GetTimelineRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTimeline")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTimelineResponseObject); ok {
+		if err := validResponse.VisitGetTimelineResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
