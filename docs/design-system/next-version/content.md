@@ -1353,6 +1353,20 @@ The measured block of the Job page, in the CPU and memory pane. `{n}` is a numbe
 | Job page, job key, not measured | Not measured yet: {runs} of 5 good runs. |
 | Job page, job key, no good run | No good run yet. |
 
+## Disk floor words (OPS86, runners R5.83)
+
+The free disk a machine keeps before it starts a job or a VM, on the machine page under Disk (the Save bar saves it). `{x}` is a number of GB (1 decimal at most).
+
+| Where | Words |
+|---|---|
+| Machine page, section title | Disk |
+| Field | Free disk to keep (unit " GB", 1 to 2000) |
+| Field help | Under this much free space new jobs wait (disk_low). Running jobs finish. |
+| Line under the field | {x} GB free now. |
+| Fact when config.toml turned the floor off | Free disk to keep: Off |
+| Note when config.toml turned the floor off | The floor is off in config.toml on this machine. It cannot be changed here. |
+| Mistake when the value is out of range | Free disk to keep must be from 1 GB to 2000 GB. |
+
 ## Help words
 
 The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 20 Nov, D57). English only. *Slot* is a shown word. *Runner type* is the word for persistent or ephemeral; Linux or Windows is the system, never the type.
