@@ -78,6 +78,9 @@ func run(args []string, stdout, stderr io.Writer) int {
 		// Hidden: the tray starts a copy of this program with it for the native update window (Windows, TRAY5).
 		return updatewindow.Run(updatewindow.Options{Args: args[1:], Service: tray.NewClient(), Stdout: stdout, Stderr: stderr})
 	}
+	if len(args) > 0 && args[0] == "lifecycle-window" { // the remove question: exit 10 keep, 11 delete, 1 cancel
+		return updatewindow.RunLifecycle(updatewindow.Options{Args: args[1:], Stdout: stdout, Stderr: stderr})
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return cli.Run(&cli.Env{
@@ -182,7 +185,7 @@ func runController() error {
 	mr.Service.SetQueueSource(db)
 	go mr.Service.RunCompactLoop(ctx, compactEvery, func(err error) { logger.Warn("docker disk compact pass", "err", err) })
 
-	um := startUpdates(ctx, cfg, logger, mr, ops.Settings, idle)
+	um, lc := startUpdates(ctx, cfg, logger, mr, ops.Settings, idle, audit.New(db))
 	// A machine that is paused or on battery holds new jobs with
 	// that reason (scheduling R5.68, machines R5.62).
 	queue := scheduler.NewEngine(db, scheduler.WithLogger(logger), scheduler.WithAccepting(func(id string) (bool, string) {
@@ -209,7 +212,7 @@ func runController() error {
 	sec = secrets.Learn(sec, secretRedactor.Add)
 	ctl, err := buildController(ctx, controllerDeps{
 		Cfg: cfg, Logger: logger, DB: db, Secrets: sec, Ops: ops,
-		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, MachineSecrets: mr.Secrets,
+		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Lifecycle: lc, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, MachineSecrets: mr.Secrets,
 	})
 	if err != nil {
 		return err

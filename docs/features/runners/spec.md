@@ -798,3 +798,12 @@ Built by CRSP22: the three persistent backends, the runner rules, plan and apply
 Source: internal/runners/service.go, internal/backend/windows/windows.go, internal/backend/linux/linux.go, internal/backend/macos/macos.go, internal/api/handlers_runners.go
 
 ## Versions
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-4 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-5, UX-6, UX-19, UX-25, UX-29, UX-30, UX-53, UX-58, UX-61, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`

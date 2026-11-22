@@ -3546,6 +3546,136 @@ paths:
                 $ref: '#/components/schemas/UpdateStatus'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/update/status:
+    get:
+      operationId: getLifecycleStatus
+      x-cli: none
+      x-cli-reason: The console and the tray show the update state; the CLI's update command reads getUpdateStatus.
+      tags: [update]
+      summary: The update state of this machine, by the lifecycle states
+      description: lifecycle standard (LC-3 to LC-7). The state is one of unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The lifecycle status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LifecycleStatus'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/update/policy:
+    post:
+      operationId: setUpdatePolicy
+      x-cli: none
+      x-cli-reason: Set in the console's update settings.
+      tags: [update]
+      summary: Choose when updates install
+      description: automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePolicyRequest'
+      responses:
+        '200':
+          description: The status with the new policy.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LifecycleStatus'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/update/install:
+    post:
+      operationId: installUpdate
+      x-cli: none
+      x-cli-reason: Started from the console or the tray; the CLI's update command applies updates by applyUpdate.
+      tags: [update]
+      summary: Install the offered version now, here or on another machine
+      description: With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstallUpdateRequest'
+      responses:
+        '202':
+          description: The install started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LifecycleStatus'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/update/history:
+    get:
+      operationId: listUpdateHistory
+      x-cli: none
+      x-cli-reason: Read in the console; the audit log holds the same rows.
+      tags: [update]
+      summary: Every check, install, rollback and remove, newest first
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The history.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpdateHistoryRow'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/update/fleet:
+    get:
+      operationId: listUpdateFleet
+      x-cli: none
+      x-cli-reason: Read in the console.
+      tags: [update]
+      summary: The version and update state of every machine
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The machines.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UpdateFleetMachine'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/remove:
+    post:
+      operationId: removeCrsp
+      x-cli: none
+      x-cli-reason: The CLI's uninstall command does the same on this machine.
+      tags: [update]
+      summary: Remove crsp from a machine, keeping or deleting its data
+      description: delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+      x-auth: owner
+      x-rate-limit: 5/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RemoveRequest'
+      responses:
+        '202':
+          description: The remove started.
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/service/restart:
     post:
       operationId: restartService
@@ -9815,6 +9945,150 @@ components:
         max_event_streams: 50
         fallback_grace_minutes: 3
         auto_update: true
+    LifecycleStatus:
+      type: object
+      description: The update state by the lifecycle standard.
+      required:
+        [
+          state,
+          current,
+          available,
+          required,
+          policy,
+          window,
+          next_check_at,
+          failures,
+          waiting_for_jobs,
+        ]
+      properties:
+        state:
+          type: string
+          enum:
+            [
+              unpaired,
+              up_to_date,
+              available,
+              review,
+              waiting,
+              downloading,
+              verifying,
+              refused,
+              installing,
+              testing,
+              updated,
+              rolling_back,
+              rolled_back,
+              skipped,
+            ]
+        current:
+          type: string
+          example: 0.1.21
+        available:
+          type: [string, 'null']
+          description: The version on offer; null when none.
+        required:
+          type: boolean
+        policy:
+          type: string
+          enum: [automatic_when_idle, ask_first]
+        window:
+          type: [object, 'null']
+          description: The daily install window in UTC, or null for any time.
+          required: [start, end]
+          properties:
+            start:
+              type: string
+              example: '01:00'
+            end:
+              type: string
+              example: '05:00'
+        next_check_at:
+          type: [string, 'null']
+          format: date-time
+        failures:
+          type: [object, 'null']
+          description: The failed installs of the version on offer, or null.
+          required: [version, count, retry_at]
+          properties:
+            version:
+              type: string
+            count:
+              type: integer
+            retry_at:
+              type: [string, 'null']
+              format: date-time
+        waiting_for_jobs:
+          type: boolean
+    UpdateWindow:
+      type: object
+      description: A daily install window, in UTC.
+      required: [start, end]
+      properties:
+        start:
+          type: string
+          example: '01:00'
+        end:
+          type: string
+          example: '05:00'
+    UpdatePolicyRequest:
+      type: object
+      required: [policy]
+      properties:
+        policy:
+          type: string
+          enum: [automatic_when_idle, ask_first]
+        window:
+          description: The daily install window in UTC, or null for any time.
+          oneOf:
+            - $ref: '#/components/schemas/UpdateWindow'
+            - type: 'null'
+    InstallUpdateRequest:
+      type: object
+      properties:
+        version:
+          type: string
+          description: The version to install; it must be the one on offer.
+        machine_id:
+          type: string
+          description: Install on this machine instead of this one (a remote install).
+    UpdateHistoryRow:
+      type: object
+      required: [at, actor, action, version, result]
+      properties:
+        at:
+          type: string
+          format: date-time
+        actor:
+          type: string
+        action:
+          type: string
+          enum: [check, install, rollback, remove]
+        version:
+          type: string
+        result:
+          type: string
+    UpdateFleetMachine:
+      type: object
+      required: [machine_id, name, version, state]
+      properties:
+        machine_id:
+          type: string
+        name:
+          type: string
+        version:
+          type: string
+        state:
+          type: string
+    RemoveRequest:
+      type: object
+      required: [delete_data]
+      properties:
+        machine_id:
+          type: string
+          description: Remove from this machine instead of this one.
+        delete_data:
+          type: [boolean, 'null']
+          description: Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default.
     UpdateStatus:
       type: object
       description: operations R5.11 to R5.18, tray R5.18.

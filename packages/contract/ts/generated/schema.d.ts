@@ -2339,6 +2339,120 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/update/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The update state of this machine, by the lifecycle states
+         * @description lifecycle standard (LC-3 to LC-7). The state is one of unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped.
+         */
+        get: operations["getLifecycleStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/update/policy": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Choose when updates install
+         * @description automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+         */
+        post: operations["setUpdatePolicy"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/update/install": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Install the offered version now, here or on another machine
+         * @description With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+         */
+        post: operations["installUpdate"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/update/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Every check, install, rollback and remove, newest first */
+        get: operations["listUpdateHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/update/fleet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** The version and update state of every machine */
+        get: operations["listUpdateFleet"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/remove": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove crsp from a machine, keeping or deleting its data
+         * @description delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+         */
+        post: operations["removeCrsp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/service/restart": {
         parameters: {
             query?: never;
@@ -6067,6 +6181,75 @@ export interface components {
             insights_update_every_n_runs?: number;
             /** @description operations R5.15. On by default. When on, a newer stable release installs by itself after a drain. When off, the console Review step asks first. */
             auto_update?: boolean;
+        };
+        /** @description The update state by the lifecycle standard. */
+        LifecycleStatus: {
+            /** @enum {string} */
+            state: "unpaired" | "up_to_date" | "available" | "review" | "waiting" | "downloading" | "verifying" | "refused" | "installing" | "testing" | "updated" | "rolling_back" | "rolled_back" | "skipped";
+            /** @example 0.1.21 */
+            current: string;
+            /** @description The version on offer; null when none. */
+            available: string | null;
+            required: boolean;
+            /** @enum {string} */
+            policy: "automatic_when_idle" | "ask_first";
+            /** @description The daily install window in UTC, or null for any time. */
+            window: {
+                /** @example 01:00 */
+                start: string;
+                /** @example 05:00 */
+                end: string;
+            } | null;
+            /** Format: date-time */
+            next_check_at: string | null;
+            /** @description The failed installs of the version on offer, or null. */
+            failures: {
+                version: string;
+                count: number;
+                /** Format: date-time */
+                retry_at: string | null;
+            } | null;
+            waiting_for_jobs: boolean;
+        };
+        /** @description A daily install window, in UTC. */
+        UpdateWindow: {
+            /** @example 01:00 */
+            start: string;
+            /** @example 05:00 */
+            end: string;
+        };
+        UpdatePolicyRequest: {
+            /** @enum {string} */
+            policy: "automatic_when_idle" | "ask_first";
+            /** @description The daily install window in UTC, or null for any time. */
+            window?: components["schemas"]["UpdateWindow"] | null;
+        };
+        InstallUpdateRequest: {
+            /** @description The version to install; it must be the one on offer. */
+            version?: string;
+            /** @description Install on this machine instead of this one (a remote install). */
+            machine_id?: string;
+        };
+        UpdateHistoryRow: {
+            /** Format: date-time */
+            at: string;
+            actor: string;
+            /** @enum {string} */
+            action: "check" | "install" | "rollback" | "remove";
+            version: string;
+            result: string;
+        };
+        UpdateFleetMachine: {
+            machine_id: string;
+            name: string;
+            version: string;
+            state: string;
+        };
+        RemoveRequest: {
+            /** @description Remove from this machine instead of this one. */
+            machine_id?: string;
+            /** @description Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default. */
+            delete_data: boolean | null;
         };
         /**
          * @description operations R5.11 to R5.18, tray R5.18.
@@ -10709,6 +10892,142 @@ export interface operations {
                 content: {
                     "application/json": components["schemas"]["UpdateStatus"];
                 };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getLifecycleStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The lifecycle status. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifecycleStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setUpdatePolicy: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["UpdatePolicyRequest"];
+            };
+        };
+        responses: {
+            /** @description The status with the new policy. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifecycleStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    installUpdate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["InstallUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description The install started. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LifecycleStatus"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listUpdateHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The history. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateHistoryRow"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listUpdateFleet: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The machines. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateFleetMachine"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    removeCrsp: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RemoveRequest"];
+            };
+        };
+        responses: {
+            /** @description The remove started. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
             };
             default: components["responses"]["Error"];
         };

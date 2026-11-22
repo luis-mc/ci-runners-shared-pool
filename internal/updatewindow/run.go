@@ -36,6 +36,8 @@ type Config struct {
 	HasAt       bool
 	LayoutCheck bool
 	Shots       string // layout check: write a PNG of every state and DPI into this folder
+	// The remove question (ModeRemove): the product, the size of its data in GB and the folder.
+	Product, Size, Path string
 }
 
 // ParseArgs reads the arguments of the hidden `crsp update-window` command.

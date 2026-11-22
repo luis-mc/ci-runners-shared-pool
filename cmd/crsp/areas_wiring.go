@@ -36,6 +36,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/tlsca"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/webhookhealth"
 )
 
@@ -67,6 +68,8 @@ type controllerDeps struct {
 	// Packages serves the release packages to new machines (machines R5.65); nil for a development build.
 	Packages api.PackageServer
 	Updates  api.UpdateService
+	// Lifecycle is the update state machine; Fleet lists the machines for it.
+	Lifecycle *update.Service
 	// Listen is the listen address service of the console (operations R5.90).
 	Listen *listenaddr.Service
 	Queue  scheduler.SlotQueue
@@ -364,6 +367,11 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger
 	c.Options.Settings, c.Options.Audit, c.Options.Backup = d.Ops.Settings, d.Ops.Audit, d.Ops.Backup
 	c.Options.Machines, c.Options.CA, c.Options.Update = d.Machines, d.CA, d.Updates
+	if d.Lifecycle != nil {
+		c.Options.Lifecycle = d.Lifecycle
+		c.Options.Fleet = fleetView{svc: d.Machines, state: func(ctx context.Context) string { return d.Lifecycle.Status(ctx).State }}
+		c.Options.Remove = newRemoveService(d.Ops.Audit, d.Machines, func(err error) { logger.Warn("audit the remove", "err", err) })
+	}
 	c.Options.Packages = d.Packages
 	c.Options.PublicHost, c.Options.ListenAddr = d.PublicHost, d.Cfg.ListenAddr
 	if d.Listen != nil {

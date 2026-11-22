@@ -489,7 +489,7 @@ Every test below is planned and NOT YET IMPLEMENTED. Paths are where the tests w
 | R6.2 | internal/machines/secrets_test.go | planned |
 | R6.3 | internal/machines/joincode_test.go | planned |
 | R6.4 | internal/machines/audit_test.go | planned |
-| R6.5 | internal/agent/idle_cost_test.go | planned (benchmark) |
+| R6.5 | `cmd/crsp-idle-soak` (soak program, run by `.github/workflows/soak.yml` nightly and on dispatch; 1% of one core and 50 MB over a 60 s window) | built |
 | R6.6 | internal/load/sample_bench_test.go | planned (benchmark) |
 | R6.7 | internal/machines/stale_test.go | planned |
 | R6.8 | internal/machines/load_retention_test.go | planned |
@@ -558,3 +558,14 @@ Source: cmd/crsp/main.go
 Planned, not yet in the tree: `internal/agent/`, `internal/machines/`, `internal/load/`, `apps/web/src/machines/`.
 
 Built in CRSP75: `internal/power/` (battery), `internal/cpucap/` (CPU cap), `internal/machines/policy.go`, `internal/agent/policy.go`, `apps/web/src/screens/machines/MachinePolicy.tsx`.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-4, UX-10, UX-16, UX-17, UX-42, UX-51 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: CORE-1, CORE-7, UX-5, UX-6, UX-18, UX-19, UX-22, UX-23, UX-25, UX-26, UX-28, UX-29, UX-30, UX-34, UX-41, UX-52, UX-53, UX-54, UX-58, UX-61, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-78 `e2e/tests/design-layout.spec.ts`
+Proof: UX-71 `scripts/design/action-bar.test.ts`

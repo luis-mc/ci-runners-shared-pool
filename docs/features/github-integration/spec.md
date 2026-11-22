@@ -604,3 +604,12 @@ Open checks for M1, each recorded as a fixture when built:
 - Source: internal/secrets/memory.go
 
 Code lives in `internal/github/` (with the fake in `internal/github/fake/`, not `githubfake`), `internal/auth/`, `internal/repos/`, `internal/secrets/` and `internal/logging/`. Planned and not built: `internal/cli/auth/` and the web features `apps/web/src/features/setup/`, `auth/`, `repositories/` and `users/`.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-5, UX-6, UX-22, UX-26, UX-28, UX-29, UX-30, UX-54, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-38 `scripts/design/wizard-behaviour.test.ts`

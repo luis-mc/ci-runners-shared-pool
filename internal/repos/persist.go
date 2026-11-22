@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"sort"
 	"time"
 )
 
@@ -97,6 +98,15 @@ func (m *MemStore) encode() ([]byte, error) {
 	for _, v := range m.vars {
 		sn.Vars = append(sn.Vars, v)
 	}
+	// The same state gives the same bytes: a map has no order, and a save that differs only in order is a change.
+	sort.Slice(sn.Installs, func(i, j int) bool { return sn.Installs[i].ID < sn.Installs[j].ID })
+	sort.Slice(sn.Repos, func(i, j int) bool { return sn.Repos[i].ID < sn.Repos[j].ID })
+	sort.Slice(sn.Vars, func(i, j int) bool {
+		if sn.Vars[i].RepositoryID != sn.Vars[j].RepositoryID {
+			return sn.Vars[i].RepositoryID < sn.Vars[j].RepositoryID
+		}
+		return sn.Vars[i].Name < sn.Vars[j].Name
+	})
 	return json.Marshal(sn)
 }
 

@@ -355,6 +355,13 @@ The list is closed. A screen uses one of these and no other width.
 | `--ds-border-medium` | `2px` | the Note edge; a chosen tile |
 | `--ds-border-thick` | `3px` | the focus ring; the Done and Needs you edges |
 | `--ds-border-double` | `6px` | the Problem edge, always a double line |
+| `--ds-border-width` | `var(--ds-border-thin)` | the one width a layout calculation subtracts for a border (`calc(var(--ds-space-3) - var(--ds-border-width))`); never a bare `1px` in a calc (UX-81) |
+
+## Opacity
+
+| Token | Value | Use |
+|---|---|---|
+| `--ds-opacity-disabled` | `0.6` | a disabled control and a row of Remove or Update that waits for a choice; the reason is always in words beside it (UX-82, UX-17) |
 
 ## Motion
 

@@ -18,10 +18,15 @@ New-Item -ItemType Directory -Path $work | Out-Null
 try {
     $sums = Join-Path $work 'SHA256SUMS'
     Invoke-WebRequest -Uri "$Base/SHA256SUMS" -OutFile $sums -UseBasicParsing
-    # The archive carries the release version in its name (crsp-windows-<arch>_<version>.zip,
-    # OPS40). SHA256SUMS has a fixed name and lists it. A release up to 0.1.14 lists the plain name.
-    $name = Get-Content $sums | ForEach-Object { ($_ -split '\s+', 2)[1] -replace '^\*', '' } |
-        Where-Object { $_ -match "^crsp-windows-$arch(_[0-9A-Za-z.+-]+)?\.zip$" } | Select-Object -First 1
+    # The archive is named Crsp-<version>-win-<arch>.zip (OPS69: arch x64 or arm64). SHA256SUMS has a fixed
+    # name and lists it. For one transition release the older names are tried second:
+    # crsp-windows-<arch>_<version>.zip and, up to 0.1.14, crsp-windows-<arch>.zip.
+    $newArch = if ($arch -eq 'amd64') { 'x64' } else { $arch }
+    $names = Get-Content $sums | ForEach-Object { ($_ -split '\s+', 2)[1] -replace '^\*', '' }
+    $name = $names | Where-Object { $_ -match "^Crsp-[0-9A-Za-z.+-]+-win-$newArch\.zip$" } | Select-Object -First 1
+    if (-not $name) {
+        $name = $names | Where-Object { $_ -match "^crsp-windows-$arch(_[0-9A-Za-z.+-]+)?\.zip$" } | Select-Object -First 1
+    }
     if (-not $name) { Stop-Install "no archive for windows-$arch is in SHA256SUMS" }
     $file = Join-Path $work $name
     Invoke-WebRequest -Uri "$Base/$name" -OutFile $file -UseBasicParsing
