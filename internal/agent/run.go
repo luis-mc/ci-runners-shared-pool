@@ -621,6 +621,8 @@ func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 	case *agentv1.SessionResponse_AddRunner, *agentv1.SessionResponse_StopRunner,
 		*agentv1.SessionResponse_RemoveRunner, *agentv1.SessionResponse_DrainRunner:
 		l.runnerCmd(ctx, msg)
+	case *agentv1.SessionResponse_ListenerControl:
+		l.listenerControl(ctx, m.ListenerControl)
 	case *agentv1.SessionResponse_UpdateRunnerFiles:
 		go l.updateFiles(ctx, m.UpdateRunnerFiles)
 	case *agentv1.SessionResponse_RunHostCommand:

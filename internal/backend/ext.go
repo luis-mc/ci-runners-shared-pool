@@ -93,3 +93,23 @@ type ServiceHealth struct {
 type ServiceHealer interface {
 	HealServices(ctx context.Context) ([]ServiceHealth, error)
 }
+
+// ListenerState is what the agent sees of a persistent runner's listener.
+type ListenerState string
+
+// The listener states.
+const (
+	ListenerOffline ListenerState = "offline"
+	ListenerOnline  ListenerState = "online"
+	ListenerBusy    ListenerState = "busy"
+)
+
+// ListenerControl starts, stops and reads the listener of a persistent runner
+// that runs on the machine itself, by its service ref (runners R5.134). A stop
+// waits for a clean exit and never kills; it is refused while a job is assigned.
+// maintenance on a start is the one moment the runner may update itself.
+type ListenerControl interface {
+	StartListener(ctx context.Context, ref string, maintenance bool) error
+	StopListener(ctx context.Context, ref string, jobAssigned bool) error
+	ListenerState(ctx context.Context, ref string) (ListenerState, error)
+}
