@@ -59,7 +59,7 @@ The owner and the admins of a pool see what the pool is doing right now, what it
 ```mermaid
 flowchart LR
   subgraph machine[Each machine]
-    ag[Agent] -->|load every 5 s| ag
+    ag[Agent] -->|load every 2 s| ag
     ag -->|setup and agent log lines| ag
   end
   ag -->|gRPC agent link| ctl
@@ -78,7 +78,7 @@ flowchart LR
   ctl --> files[Log files and crash files on disk]
 ```
 
-1. Each agent samples its machine's memory and CPU every 5 seconds and sends the load and its slot use over the agent link (decision 0004).
+1. Each agent samples its machine's memory and CPU every 2 seconds and sends the load and its slot use over the agent link (decision 0004).
 2. The scheduler changes the queue: a job is queued, gets a slot, starts, ends. Each change goes to the event hub in the same step that writes it.
 3. GitHub tells the controller when a job is queued, starts and completes (decision 0002). The controller joins that with its own slot times to get the wait time and the run time.
 4. The event hub gives every change a number and pushes it to every open console over server-sent events (SSE). A console that reconnects gets what it missed, or a fresh snapshot.
@@ -250,7 +250,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R6.1** — (M1) A change on a machine or in the queue reaches an open console within 2 seconds at the 95th percentile on a local network.
 
-**R6.2** — (M1) Load is sampled every 5 seconds and reported as the median of the last 3 samples (medians, as the product brief's load-measurement port from dev-standards `scripts/load.py` and `load_guard.py` asks; the measuring itself is the machines feature's). The hub sends at most one load event per machine per 5 seconds.
+**R6.2** — (M1) Load is sampled every 2 seconds and reported as the median of the last 3 samples (medians, as the product brief's load-measurement port from dev-standards `scripts/load.py` and `load_guard.py` asks; the measuring itself is the machines feature's). The hub sends at most one load event per machine per 5 seconds.
 
 **R6.3** — (M1) Stream limits: a comment line every 15 seconds keeps the stream open; the hub keeps the last 2,000 events or 10 minutes for replay, whichever is less; one stream that falls 500 events behind is closed and reconnects to a snapshot; at most 50 open streams per controller (setting, ceiling 200). A slow stream never slows the scheduler.
 
@@ -267,7 +267,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 | Data | Default | Floor | Ceiling |
 |---|---|---|---|
 | Event replay buffer (memory) | 2,000 events or 10 min | n/a | 10,000 events |
-| Raw load samples (5 s) | 24 hours | 1 hour | 7 days |
+| Raw load samples (2 s) | 24 hours | 1 hour | 7 days |
 | Load per minute (median) | 30 days | 1 day | 400 days |
 | Job history rows (jobs, runs, attempts, forecast log) | 90 days | 7 days | 400 days, and at most 1,000,000 rows |
 | Job step rows | 30 days | 7 days | 90 days |
