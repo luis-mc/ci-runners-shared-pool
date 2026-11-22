@@ -721,6 +721,48 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for HealthOomScopeScope.
+const (
+	HealthOomScopeScopeJob  HealthOomScopeScope = "job"
+	HealthOomScopeScopePool HealthOomScopeScope = "pool"
+)
+
+// Valid indicates whether the value is a known member of the HealthOomScopeScope enum.
+func (e HealthOomScopeScope) Valid() bool {
+	switch e {
+	case HealthOomScopeScopeJob:
+		return true
+	case HealthOomScopeScopePool:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for HealthVolumeRole.
+const (
+	HealthVolumeRoleDataDir    HealthVolumeRole = "data_dir"
+	HealthVolumeRoleDocker     HealthVolumeRole = "docker"
+	HealthVolumeRoleRunnerWork HealthVolumeRole = "runner_work"
+	HealthVolumeRoleSystem     HealthVolumeRole = "system"
+)
+
+// Valid indicates whether the value is a known member of the HealthVolumeRole enum.
+func (e HealthVolumeRole) Valid() bool {
+	switch e {
+	case HealthVolumeRoleDataDir:
+		return true
+	case HealthVolumeRoleDocker:
+		return true
+	case HealthVolumeRoleRunnerWork:
+		return true
+	case HealthVolumeRoleSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ImageState.
 const (
 	ImageStateFailed     ImageState = "failed"
@@ -1300,6 +1342,54 @@ func (e JobSizeSource) Valid() bool {
 	}
 }
 
+// Defines values for JobStatsFailureClass.
+const (
+	JobStatsFailureClassFailed     JobStatsFailureClass = "failed"
+	JobStatsFailureClassOverMemory JobStatsFailureClass = "over_memory"
+	JobStatsFailureClassStopped    JobStatsFailureClass = "stopped"
+	JobStatsFailureClassTimedOut   JobStatsFailureClass = "timed_out"
+)
+
+// Valid indicates whether the value is a known member of the JobStatsFailureClass enum.
+func (e JobStatsFailureClass) Valid() bool {
+	switch e {
+	case JobStatsFailureClassFailed:
+		return true
+	case JobStatsFailureClassOverMemory:
+		return true
+	case JobStatsFailureClassStopped:
+		return true
+	case JobStatsFailureClassTimedOut:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobTimerState.
+const (
+	JobTimerStateEnded   JobTimerState = "ended"
+	JobTimerStateGrace   JobTimerState = "grace"
+	JobTimerStateRunning JobTimerState = "running"
+	JobTimerStateStopped JobTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the JobTimerState enum.
+func (e JobTimerState) Valid() bool {
+	switch e {
+	case JobTimerStateEnded:
+		return true
+	case JobTimerStateGrace:
+		return true
+	case JobTimerStateRunning:
+		return true
+	case JobTimerStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -1534,6 +1624,24 @@ func (e MachineChangeDecisionDecision) Valid() bool {
 	case MachineChangeDecisionDecisionStopJobs:
 		return true
 	case MachineChangeDecisionDecisionWaitLonger:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MachineJobStatsWindow.
+const (
+	MachineJobStatsWindowN24h MachineJobStatsWindow = "24h"
+	MachineJobStatsWindowN7d  MachineJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the MachineJobStatsWindow enum.
+func (e MachineJobStatsWindow) Valid() bool {
+	switch e {
+	case MachineJobStatsWindowN24h:
+		return true
+	case MachineJobStatsWindowN7d:
 		return true
 	default:
 		return false
@@ -2670,28 +2778,28 @@ func (e RepositoryRoutingWhere) Valid() bool {
 
 // Defines values for RepositoryRoutingWhy.
 const (
-	CapReached       RepositoryRoutingWhy = "cap_reached"
-	FallbackOff      RepositoryRoutingWhy = "fallback_off"
-	FallbackOn       RepositoryRoutingWhy = "fallback_on"
-	Grace            RepositoryRoutingWhy = "grace"
-	MachineUp        RepositoryRoutingWhy = "machine_up"
-	PublicRepository RepositoryRoutingWhy = "public_repository"
+	RepositoryRoutingWhyCapReached       RepositoryRoutingWhy = "cap_reached"
+	RepositoryRoutingWhyFallbackOff      RepositoryRoutingWhy = "fallback_off"
+	RepositoryRoutingWhyFallbackOn       RepositoryRoutingWhy = "fallback_on"
+	RepositoryRoutingWhyGrace            RepositoryRoutingWhy = "grace"
+	RepositoryRoutingWhyMachineUp        RepositoryRoutingWhy = "machine_up"
+	RepositoryRoutingWhyPublicRepository RepositoryRoutingWhy = "public_repository"
 )
 
 // Valid indicates whether the value is a known member of the RepositoryRoutingWhy enum.
 func (e RepositoryRoutingWhy) Valid() bool {
 	switch e {
-	case CapReached:
+	case RepositoryRoutingWhyCapReached:
 		return true
-	case FallbackOff:
+	case RepositoryRoutingWhyFallbackOff:
 		return true
-	case FallbackOn:
+	case RepositoryRoutingWhyFallbackOn:
 		return true
-	case Grace:
+	case RepositoryRoutingWhyGrace:
 		return true
-	case MachineUp:
+	case RepositoryRoutingWhyMachineUp:
 		return true
-	case PublicRepository:
+	case RepositoryRoutingWhyPublicRepository:
 		return true
 	default:
 		return false
@@ -2893,6 +3001,30 @@ func (e RunSummaryState) Valid() bool {
 	}
 }
 
+// Defines values for RunTimerState.
+const (
+	RunTimerStateEnded   RunTimerState = "ended"
+	RunTimerStateGrace   RunTimerState = "grace"
+	RunTimerStateRunning RunTimerState = "running"
+	RunTimerStateStopped RunTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the RunTimerState enum.
+func (e RunTimerState) Valid() bool {
+	switch e {
+	case RunTimerStateEnded:
+		return true
+	case RunTimerStateGrace:
+		return true
+	case RunTimerStateRunning:
+		return true
+	case RunTimerStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunWasteKind.
 const (
 	RunWasteKindDuplicateEvent RunWasteKind = "duplicate_event"
@@ -2983,6 +3115,24 @@ func (e RunnerClassesInputPreset) Valid() bool {
 	case RunnerClassesInputPresetMemoryHeavy:
 		return true
 	case RunnerClassesInputPresetStandard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerJobStatsWindow.
+const (
+	RunnerJobStatsWindowN24h RunnerJobStatsWindow = "24h"
+	RunnerJobStatsWindowN7d  RunnerJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the RunnerJobStatsWindow enum.
+func (e RunnerJobStatsWindow) Valid() bool {
+	switch e {
+	case RunnerJobStatsWindowN24h:
+		return true
+	case RunnerJobStatsWindowN7d:
 		return true
 	default:
 		return false
@@ -3475,6 +3625,36 @@ func (e TimelineSegmentMarkers) Valid() bool {
 	}
 }
 
+// Defines values for TimerSettingsProblemField.
+const (
+	HoldMinutes    TimerSettingsProblemField = "hold_minutes"
+	JobMinutes     TimerSettingsProblemField = "job_minutes"
+	QueuedMinutes  TimerSettingsProblemField = "queued_minutes"
+	RunMinutes     TimerSettingsProblemField = "run_minutes"
+	StartupMinutes TimerSettingsProblemField = "startup_minutes"
+	TimeoutMinutes TimerSettingsProblemField = "timeout_minutes"
+)
+
+// Valid indicates whether the value is a known member of the TimerSettingsProblemField enum.
+func (e TimerSettingsProblemField) Valid() bool {
+	switch e {
+	case HoldMinutes:
+		return true
+	case JobMinutes:
+		return true
+	case QueuedMinutes:
+		return true
+	case RunMinutes:
+		return true
+	case StartupMinutes:
+		return true
+	case TimeoutMinutes:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TrialMode.
 const (
 	TrialModeCanary  TrialMode = "canary"
@@ -3868,6 +4048,24 @@ func (e WorkflowCheckStatus) Valid() bool {
 	}
 }
 
+// Defines values for StatsWindow.
+const (
+	StatsWindowN24h StatsWindow = "24h"
+	StatsWindowN7d  StatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the StatsWindow enum.
+func (e StatsWindow) Valid() bool {
+	switch e {
+	case StatsWindowN24h:
+		return true
+	case StatsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ExportAuditEventsParamsFormat.
 const (
 	ExportAuditEventsParamsFormatCsv  ExportAuditEventsParamsFormat = "csv"
@@ -4159,6 +4357,24 @@ func (e GetJobStatsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetMachineJobStatsParamsWindow.
+const (
+	GetMachineJobStatsParamsWindowN24h GetMachineJobStatsParamsWindow = "24h"
+	GetMachineJobStatsParamsWindowN7d  GetMachineJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetMachineJobStatsParamsWindow enum.
+func (e GetMachineJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetMachineJobStatsParamsWindowN24h:
+		return true
+	case GetMachineJobStatsParamsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DeleteRegistryLoginParamsKind.
 const (
 	DeleteRegistryLoginParamsKindContainer  DeleteRegistryLoginParamsKind = "container"
@@ -4174,6 +4390,24 @@ func (e DeleteRegistryLoginParamsKind) Valid() bool {
 	case DeleteRegistryLoginParamsKindPersistent:
 		return true
 	case DeleteRegistryLoginParamsKindVm:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetRunnerJobStatsParamsWindow.
+const (
+	GetRunnerJobStatsParamsWindowN24h GetRunnerJobStatsParamsWindow = "24h"
+	GetRunnerJobStatsParamsWindowN7d  GetRunnerJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetRunnerJobStatsParamsWindow enum.
+func (e GetRunnerJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetRunnerJobStatsParamsWindowN24h:
+		return true
+	case GetRunnerJobStatsParamsWindowN7d:
 		return true
 	default:
 		return false
@@ -4934,6 +5168,181 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// HealthBoot defines model for HealthBoot.
+type HealthBoot struct {
+	LastBootAt *time.Time `json:"last_boot_at,omitempty"`
+
+	// UnexpectedRestart Booted in the last 24 hours without a restart crsp asked for.
+	UnexpectedRestart *bool   `json:"unexpected_restart,omitempty"`
+	UnknownReason     *string `json:"unknown_reason,omitempty"`
+	UptimeSeconds     *int64  `json:"uptime_seconds,omitempty"`
+}
+
+// HealthConnectivity defines model for HealthConnectivity.
+type HealthConnectivity struct {
+	// ClockSkewSeconds Agent clock minus controller clock; positive means the agent is ahead.
+	ClockSkewSeconds *float32      `json:"clock_skew_seconds,omitempty"`
+	Dns              *HealthDns    `json:"dns,omitempty"`
+	Github           *HealthGithub `json:"github,omitempty"`
+	LastHeartbeatAt  *time.Time    `json:"last_heartbeat_at,omitempty"`
+	Reconnects24h    *int          `json:"reconnects_24h,omitempty"`
+
+	// RttMs Agent to controller round trip, from the heartbeats.
+	RttMs *int64 `json:"rtt_ms,omitempty"`
+}
+
+// HealthDns defines model for HealthDns.
+type HealthDns struct {
+	Error *string `json:"error,omitempty"`
+	Ok    *bool   `json:"ok,omitempty"`
+}
+
+// HealthDockerUse defines model for HealthDockerUse.
+type HealthDockerUse struct {
+	BuildCacheBytes *int64     `json:"build_cache_bytes,omitempty"`
+	ContainersBytes *int64     `json:"containers_bytes,omitempty"`
+	ImagesBytes     *int64     `json:"images_bytes,omitempty"`
+	ReadAt          *time.Time `json:"read_at,omitempty"`
+	UnknownReason   *string    `json:"unknown_reason,omitempty"`
+	VolumesBytes    *int64     `json:"volumes_bytes,omitempty"`
+}
+
+// HealthGithub defines model for HealthGithub.
+type HealthGithub struct {
+	CheckedAt *time.Time `json:"checked_at,omitempty"`
+	Error     *string    `json:"error,omitempty"`
+	LatencyMs *int64     `json:"latency_ms,omitempty"`
+	Reachable *bool      `json:"reachable,omitempty"`
+}
+
+// HealthLoad defines model for HealthLoad.
+type HealthLoad struct {
+	Load1              *float32 `json:"load1,omitempty"`
+	Load15             *float32 `json:"load15,omitempty"`
+	Load5              *float32 `json:"load5,omitempty"`
+	LoadUnknownReason  *string  `json:"load_unknown_reason,omitempty"`
+	StealPct           *float32 `json:"steal_pct,omitempty"`
+	StealUnknownReason *string  `json:"steal_unknown_reason,omitempty"`
+}
+
+// HealthOom defines model for HealthOom.
+type HealthOom struct {
+	LastKillAt *time.Time `json:"last_kill_at,omitempty"`
+
+	// Recent A kill inside the Doctor window (default 1 hour).
+	Recent        *bool             `json:"recent,omitempty"`
+	Scopes        *[]HealthOomScope `json:"scopes,omitempty"`
+	TotalKills    *int64            `json:"total_kills,omitempty"`
+	UnknownReason *string           `json:"unknown_reason,omitempty"`
+}
+
+// HealthOomScope defines model for HealthOomScope.
+type HealthOomScope struct {
+	Kills int64               `json:"kills"`
+	Name  string              `json:"name"`
+	Scope HealthOomScopeScope `json:"scope"`
+}
+
+// HealthOomScopeScope defines model for HealthOomScope.Scope.
+type HealthOomScopeScope string
+
+// HealthPower defines model for HealthPower.
+type HealthPower struct {
+	LastWakeAt *time.Time `json:"last_wake_at,omitempty"`
+	OnBattery  *bool      `json:"on_battery,omitempty"`
+
+	// SleepEnabled A setting can suspend or hibernate the machine.
+	SleepEnabled        *bool     `json:"sleep_enabled,omitempty"`
+	SleepModes          *[]string `json:"sleep_modes,omitempty"`
+	SleepUnknownReason  *string   `json:"sleep_unknown_reason,omitempty"`
+	SourceUnknownReason *string   `json:"source_unknown_reason,omitempty"`
+}
+
+// HealthSwap defines model for HealthSwap.
+type HealthSwap struct {
+	TotalBytes    *int64  `json:"total_bytes,omitempty"`
+	UnknownReason *string `json:"unknown_reason,omitempty"`
+	UsedBytes     *int64  `json:"used_bytes,omitempty"`
+}
+
+// HealthThermal defines model for HealthThermal.
+type HealthThermal struct {
+	MaxTempCelsius *float32 `json:"max_temp_celsius,omitempty"`
+	ThrottleDetail *string  `json:"throttle_detail,omitempty"`
+	Throttled      *bool    `json:"throttled,omitempty"`
+	UnknownReason  *string  `json:"unknown_reason,omitempty"`
+}
+
+// HealthThresholds defines model for HealthThresholds.
+type HealthThresholds struct {
+	// ClockSkewSeconds A clock this far from the controller is a finding (default 30).
+	ClockSkewSeconds int `json:"clock_skew_seconds"`
+
+	// DiskDaysUnder A disk that fills in fewer days is a finding (default 3).
+	DiskDaysUnder int `json:"disk_days_under"`
+
+	// DiskFreePctUnder A disk with less free space is a finding (default 10).
+	DiskFreePctUnder int `json:"disk_free_pct_under"`
+
+	// NoHeartbeatSeconds No heartbeat for this long is a finding (default 120).
+	NoHeartbeatSeconds int `json:"no_heartbeat_seconds"`
+
+	// OomWindowMinutes An OOM kill this recent is a finding (default 60).
+	OomWindowMinutes int `json:"oom_window_minutes"`
+}
+
+// HealthUpdates defines model for HealthUpdates.
+type HealthUpdates struct {
+	ActiveHoursEnd *int `json:"active_hours_end,omitempty"`
+
+	// ActiveHoursStart Windows Update active hours, local hour 0 to 23.
+	ActiveHoursStart   *int    `json:"active_hours_start,omitempty"`
+	AutoUpdateState    *string `json:"auto_update_state,omitempty"`
+	PendingUpdateCount *int    `json:"pending_update_count,omitempty"`
+
+	// RestartMayHappenNow A restart is pending and the OS may do it now.
+	RestartMayHappenNow *bool `json:"restart_may_happen_now,omitempty"`
+
+	// RestartMayHitJobs It may happen now and the machine runs or takes jobs.
+	RestartMayHitJobs *bool     `json:"restart_may_hit_jobs,omitempty"`
+	RestartPending    *bool     `json:"restart_pending,omitempty"`
+	RestartReasons    *[]string `json:"restart_reasons,omitempty"`
+	UnknownReason     *string   `json:"unknown_reason,omitempty"`
+}
+
+// HealthVersions defines model for HealthVersions.
+type HealthVersions struct {
+	Agent          *string `json:"agent,omitempty"`
+	AgentOutOfDate *bool   `json:"agent_out_of_date,omitempty"`
+	Controller     *string `json:"controller,omitempty"`
+	Docker         *string `json:"docker,omitempty"`
+	DockerKind     *string `json:"docker_kind,omitempty"`
+	LatestRunner   *string `json:"latest_runner,omitempty"`
+
+	// RunnerApp The oldest runner app on the machine.
+	RunnerApp       *string `json:"runner_app,omitempty"`
+	RunnerOutOfDate *bool   `json:"runner_out_of_date,omitempty"`
+	Wsl             *string `json:"wsl,omitempty"`
+}
+
+// HealthVolume defines model for HealthVolume.
+type HealthVolume struct {
+	// DaysNote Why days_until_full is absent.
+	DaysNote *string `json:"days_note,omitempty"`
+
+	// DaysUntilFull From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.
+	DaysUntilFull *float32         `json:"days_until_full,omitempty"`
+	FreeBytes     *int64           `json:"free_bytes,omitempty"`
+	FreePct       *float32         `json:"free_pct,omitempty"`
+	Path          string           `json:"path"`
+	Role          HealthVolumeRole `json:"role"`
+	TotalBytes    *int64           `json:"total_bytes,omitempty"`
+	UnknownReason *string          `json:"unknown_reason,omitempty"`
+}
+
+// HealthVolumeRole defines model for HealthVolume.Role.
+type HealthVolumeRole string
+
 // HistoryPoint One earlier run of a job key.
 type HistoryPoint struct {
 	At      time.Time  `json:"at"`
@@ -5656,6 +6065,77 @@ type JobStats struct {
 	Hours          []HourStat      `json:"hours"`
 }
 
+// JobStatsCounts defines model for JobStatsCounts.
+type JobStatsCounts struct {
+	Cancelled int64 `json:"cancelled"`
+	Failed    int64 `json:"failed"`
+
+	// Other No known result (a job crsp lost).
+	Other      int64 `json:"other"`
+	OverMemory int64 `json:"over_memory"`
+
+	// Stopped Stopped by crsp (a drain, a Stop, a removal).
+	Stopped   int64 `json:"stopped"`
+	Succeeded int64 `json:"succeeded"`
+
+	// TimedOut Ended by the crsp job timer, or by GitHub as timed out.
+	TimedOut int64 `json:"timed_out"`
+	Total    int64 `json:"total"`
+}
+
+// JobStatsFailingJob defines model for JobStatsFailingJob.
+type JobStatsFailingJob struct {
+	Failures   int64     `json:"failures"`
+	Job        string    `json:"job"`
+	LastAt     time.Time `json:"last_at"`
+	Repository string    `json:"repository"`
+}
+
+// JobStatsFailure defines model for JobStatsFailure.
+type JobStatsFailure struct {
+	At         time.Time            `json:"at"`
+	Class      JobStatsFailureClass `json:"class"`
+	Job        string               `json:"job"`
+	JobId      int64                `json:"job_id"`
+	JobUrl     *string              `json:"job_url,omitempty"`
+	Repository string               `json:"repository"`
+	RunId      int64                `json:"run_id"`
+	RunUrl     *string              `json:"run_url,omitempty"`
+}
+
+// JobStatsFailureClass defines model for JobStatsFailure.Class.
+type JobStatsFailureClass string
+
+// JobStatsRates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+type JobStatsRates struct {
+	Cancelled  *float32 `json:"cancelled,omitempty"`
+	Failed     *float32 `json:"failed,omitempty"`
+	OverMemory *float32 `json:"over_memory,omitempty"`
+	Stopped    *float32 `json:"stopped,omitempty"`
+	Succeeded  *float32 `json:"succeeded,omitempty"`
+	TimedOut   *float32 `json:"timed_out,omitempty"`
+}
+
+// JobStatsSet defines model for JobStatsSet.
+type JobStatsSet struct {
+	AvgQueueWaitSeconds *float32 `json:"avg_queue_wait_seconds,omitempty"`
+
+	// AvgRunSeconds Absent when no job in the window has times.
+	AvgRunSeconds *float32 `json:"avg_run_seconds,omitempty"`
+
+	// BusyPct Busy seconds over the window times the slots (a runner has one), 0 to 100.
+	BusyPct *float32 `json:"busy_pct,omitempty"`
+
+	// BusySeconds Time jobs ran inside the window, summed.
+	BusySeconds *float32         `json:"busy_seconds,omitempty"`
+	Counts      JobStatsCounts   `json:"counts"`
+	LastFailure *JobStatsFailure `json:"last_failure,omitempty"`
+
+	// Rates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+	Rates      *JobStatsRates       `json:"rates,omitempty"`
+	TopFailing []JobStatsFailingJob `json:"top_failing"`
+}
+
 // JobSummary One job type of one repository on one day (OPS34 D2).
 type JobSummary struct {
 	Day        string `json:"day"`
@@ -5673,6 +6153,38 @@ type JobSummary struct {
 type JobSummaryList struct {
 	Items []JobSummary `json:"items"`
 }
+
+// JobTimer defines model for JobTimer.
+type JobTimer struct {
+	CanExtend  bool `json:"can_extend"`
+	CanStopNow bool `json:"can_stop_now"`
+
+	// CoveredByRun The run timer ran out too; the run is cancelled and this job is not stopped on its own.
+	CoveredByRun bool `json:"covered_by_run"`
+
+	// Deadline During the grace, when crsp acts. The countdown is deadline minus now.
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	JobId          int64      `json:"job_id"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note What crsp did, for example "stopped by crsp: job timer 30:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      *int64  `json:"run_id,omitempty"`
+
+	// StartedAt The job's first real step.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     JobTimerState `json:"state"`
+
+	// Text The state in words, for example "Job timer ran out at 30:00; stopping in 30 s".
+	Text string `json:"text"`
+}
+
+// JobTimerState defines model for JobTimer.State.
+type JobTimerState string
 
 // JoinCode defines model for JoinCode.
 type JoinCode struct {
@@ -5807,6 +6319,43 @@ type ListenAddressChoice struct {
 type ListenAddressChosen struct {
 	Address    string `json:"address"`
 	Restarting bool   `json:"restarting"`
+}
+
+// ListenerGate defines model for ListenerGate.
+type ListenerGate struct {
+	Enforce bool                 `json:"enforce"`
+	Runners []ListenerGateRunner `json:"runners"`
+
+	// WakeEveryDays Fixed at 7.
+	WakeEveryDays int `json:"wake_every_days"`
+}
+
+// ListenerGateInput defines model for ListenerGateInput.
+type ListenerGateInput struct {
+	// Enforce True switches the gate on; false is observe mode.
+	Enforce bool `json:"enforce"`
+}
+
+// ListenerGateRunner defines model for ListenerGateRunner.
+type ListenerGateRunner struct {
+	// JobIds The jobs that hold the listener.
+	JobIds *[]int64 `json:"job_ids,omitempty"`
+
+	// LastWake Absent when the runner was never woken.
+	LastWake   *time.Time `json:"last_wake,omitempty"`
+	ListenerOn bool       `json:"listener_on"`
+	MachineId  string     `json:"machine_id"`
+
+	// NextWake When the weekly wake-up is due.
+	NextWake time.Time `json:"next_wake"`
+	Os       string    `json:"os"`
+
+	// QueueText Why jobs wait for this runner, in the owner's words. Absent when none wait.
+	QueueText  *string `json:"queue_text,omitempty"`
+	RunnerName string  `json:"runner_name"`
+
+	// Text `gated: offline by design`, or that the listener is on for an admitted job.
+	Text string `json:"text"`
 }
 
 // Load defines model for Load.
@@ -5944,6 +6493,41 @@ type MachineFacts struct {
 	OsVersion     *string `json:"os_version,omitempty"`
 	Threads       *int    `json:"threads,omitempty"`
 }
+
+// MachineHealth A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
+type MachineHealth struct {
+	Boot         *HealthBoot         `json:"boot,omitempty"`
+	Connectivity *HealthConnectivity `json:"connectivity,omitempty"`
+	DockerUse    *HealthDockerUse    `json:"docker_use,omitempty"`
+	Load         *HealthLoad         `json:"load,omitempty"`
+	MachineId    string              `json:"machine_id"`
+	Oom          *HealthOom          `json:"oom,omitempty"`
+	Power        *HealthPower        `json:"power,omitempty"`
+	ReceivedAt   *time.Time          `json:"received_at,omitempty"`
+
+	// Reported False until the first report arrives; every other field is absent then.
+	Reported bool `json:"reported"`
+
+	// Stale The last report is older than 3 minutes.
+	Stale    bool            `json:"stale"`
+	Swap     *HealthSwap     `json:"swap,omitempty"`
+	Thermal  *HealthThermal  `json:"thermal,omitempty"`
+	Updates  *HealthUpdates  `json:"updates,omitempty"`
+	Versions *HealthVersions `json:"versions,omitempty"`
+	Volumes  []HealthVolume  `json:"volumes"`
+}
+
+// MachineJobStats defines model for MachineJobStats.
+type MachineJobStats struct {
+	From    time.Time             `json:"from"`
+	Machine JobStatsSet           `json:"machine"`
+	Runners []RunnerJobStatsEntry `json:"runners"`
+	To      time.Time             `json:"to"`
+	Window  MachineJobStatsWindow `json:"window"`
+}
+
+// MachineJobStatsWindow defines model for MachineJobStats.Window.
+type MachineJobStatsWindow string
 
 // MachineList defines model for MachineList.
 type MachineList struct {
@@ -7489,6 +8073,32 @@ type RunSummaryOverallState string
 // RunSummaryState defines model for RunSummary.State.
 type RunSummaryState string
 
+// RunTimer defines model for RunTimer.
+type RunTimer struct {
+	CanCancelNow   bool       `json:"can_cancel_now"`
+	CanExtend      bool       `json:"can_extend"`
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note For example "cancelled by crsp: run timer 45:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      int64   `json:"run_id"`
+
+	// StartedAt The first job's real start.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     RunTimerState `json:"state"`
+
+	// Text For example "Run timer ran out at 45:00; cancelling in 30 s".
+	Text string `json:"text"`
+}
+
+// RunTimerState defines model for RunTimer.State.
+type RunTimerState string
+
 // RunWaste defines model for RunWaste.
 type RunWaste struct {
 	Kind    RunWasteKind `json:"kind"`
@@ -7607,6 +8217,25 @@ type RunnerClassesInputPreset string
 type RunnerEnv struct {
 	RunnerId string           `json:"runner_id"`
 	Vars     []ResolvedEnvVar `json:"vars"`
+}
+
+// RunnerJobStats defines model for RunnerJobStats.
+type RunnerJobStats struct {
+	From     time.Time            `json:"from"`
+	RunnerId string               `json:"runner_id"`
+	Stats    JobStatsSet          `json:"stats"`
+	To       time.Time            `json:"to"`
+	Window   RunnerJobStatsWindow `json:"window"`
+}
+
+// RunnerJobStatsWindow defines model for RunnerJobStats.Window.
+type RunnerJobStatsWindow string
+
+// RunnerJobStatsEntry defines model for RunnerJobStatsEntry.
+type RunnerJobStatsEntry struct {
+	RunnerId   string      `json:"runner_id"`
+	RunnerName string      `json:"runner_name"`
+	Stats      JobStatsSet `json:"stats"`
 }
 
 // RunnerKind defines model for RunnerKind.
@@ -8059,6 +8688,67 @@ type TimelineSegmentKind string
 // TimelineSegmentMarkers defines model for TimelineSegment.Markers.
 type TimelineSegmentMarkers string
 
+// TimerSettings defines model for TimerSettings.
+type TimerSettings struct {
+	// Enforce Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.
+	Enforce bool `json:"enforce"`
+
+	// ExtendMinutes Fixed at 10.
+	ExtendMinutes int `json:"extend_minutes"`
+
+	// GraceSeconds Fixed at 30.
+	GraceSeconds int `json:"grace_seconds"`
+
+	// HoldMinutes The hold of the job-started hook, at most 2. Default 2.
+	HoldMinutes int `json:"hold_minutes"`
+
+	// JobMinutes The job timer, from the first real step. Default 30.
+	JobMinutes int `json:"job_minutes"`
+
+	// QueuedMinutes Alert for a job that waits this long in GitHub's queue. Default 720 (12 h).
+	QueuedMinutes int `json:"queued_minutes"`
+
+	// RunMinutes The run timer, from the first job's real start. Default 45.
+	RunMinutes int `json:"run_minutes"`
+
+	// StartupMinutes A runner that has not started its job in this time is removed and the job admitted again. Default 2.
+	StartupMinutes int `json:"startup_minutes"`
+
+	// TimeoutMinutes timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60.
+	TimeoutMinutes int `json:"timeout_minutes"`
+}
+
+// TimerSettingsCheck defines model for TimerSettingsCheck.
+type TimerSettingsCheck struct {
+	Ok       bool                   `json:"ok"`
+	Problems []TimerSettingsProblem `json:"problems"`
+
+	// Settings The settings as they would be after the change.
+	Settings TimerSettings `json:"settings"`
+}
+
+// TimerSettingsInput Only the fields given change.
+type TimerSettingsInput struct {
+	Enforce        *bool `json:"enforce,omitempty"`
+	HoldMinutes    *int  `json:"hold_minutes,omitempty"`
+	JobMinutes     *int  `json:"job_minutes,omitempty"`
+	QueuedMinutes  *int  `json:"queued_minutes,omitempty"`
+	RunMinutes     *int  `json:"run_minutes,omitempty"`
+	StartupMinutes *int  `json:"startup_minutes,omitempty"`
+	TimeoutMinutes *int  `json:"timeout_minutes,omitempty"`
+}
+
+// TimerSettingsProblem defines model for TimerSettingsProblem.
+type TimerSettingsProblem struct {
+	Field TimerSettingsProblemField `json:"field"`
+
+	// Message In the owner's words.
+	Message string `json:"message"`
+}
+
+// TimerSettingsProblemField defines model for TimerSettingsProblem.Field.
+type TimerSettingsProblemField string
+
 // Trial defines model for Trial.
 type Trial struct {
 	CanaryJobs     *[]string  `json:"canary_jobs,omitempty"`
@@ -8465,6 +9155,15 @@ type RunnerId = string
 // SetName defines model for SetName.
 type SetName = string
 
+// StatsWindow defines model for StatsWindow.
+type StatsWindow string
+
+// TimerAttempt defines model for TimerAttempt.
+type TimerAttempt = int
+
+// TimerRunId defines model for TimerRunId.
+type TimerRunId = int64
+
 // To defines model for To.
 type To = time.Time
 
@@ -8792,6 +9491,15 @@ type StartDockerCompactParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetMachineJobStatsParams defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetMachineJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetMachineJobStatsParamsWindow defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParamsWindow string
+
 // GetMachineLoadParams defines parameters for GetMachineLoad.
 type GetMachineLoadParams struct {
 	From *From `form:"from,omitempty" json:"from,omitempty"`
@@ -8860,6 +9568,15 @@ type DeleteRunnerParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetRunnerJobStatsParams defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetRunnerJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetRunnerJobStatsParamsWindow defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParamsWindow string
+
 // DeleteRunnerRegistrationParams defines parameters for DeleteRunnerRegistration.
 type DeleteRunnerRegistrationParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -8894,6 +9611,24 @@ type GetRunParams struct {
 // GetRunSavingsParams defines parameters for GetRunSavings.
 type GetRunSavingsParams struct {
 	Attempt *int `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// GetRunTimerParams defines parameters for GetRunTimer.
+type GetRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// CancelRunNowParams defines parameters for CancelRunNow.
+type CancelRunNowParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// ExtendRunTimerParams defines parameters for ExtendRunTimer.
+type ExtendRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
 }
 
 // RestartServiceParams defines parameters for RestartService.
@@ -8973,6 +9708,9 @@ type PutEnvSetJSONRequestBody = EnvSetInput
 // SetOrgPoolJSONRequestBody defines body for SetOrgPool for application/json ContentType.
 type SetOrgPoolJSONRequestBody = OrgPoolSet
 
+// PutHealthThresholdsJSONRequestBody defines body for PutHealthThresholds for application/json ContentType.
+type PutHealthThresholdsJSONRequestBody = HealthThresholds
+
 // UpdateImageLayersJSONRequestBody defines body for UpdateImageLayers for application/json ContentType.
 type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
 
@@ -8987,6 +9725,9 @@ type JoinMachineOverSshJSONRequestBody = SshJoinRequest
 
 // CreateJoinFileJSONRequestBody defines body for CreateJoinFile for application/json ContentType.
 type CreateJoinFileJSONRequestBody = CreateJoinFileRequest
+
+// PutListenerGateJSONRequestBody defines body for PutListenerGate for application/json ContentType.
+type PutListenerGateJSONRequestBody = ListenerGateInput
 
 // UpdateMachineJSONRequestBody defines body for UpdateMachine for application/json ContentType.
 type UpdateMachineJSONRequestBody = MachineSettingsUpdate
@@ -9095,6 +9836,12 @@ type StartAppManifestJSONRequestBody = StartAppManifestRequest
 
 // RedeemSetupLinkJSONRequestBody defines body for RedeemSetupLink for application/json ContentType.
 type RedeemSetupLinkJSONRequestBody = RedeemSetupLinkRequest
+
+// PutTimerSettingsJSONRequestBody defines body for PutTimerSettings for application/json ContentType.
+type PutTimerSettingsJSONRequestBody = TimerSettingsInput
+
+// CheckTimerSettingsJSONRequestBody defines body for CheckTimerSettings for application/json ContentType.
+type CheckTimerSettingsJSONRequestBody = TimerSettingsInput
 
 // InstallUpdateJSONRequestBody defines body for InstallUpdate for application/json ContentType.
 type InstallUpdateJSONRequestBody = InstallUpdateRequest
@@ -9242,6 +9989,12 @@ type ServerInterface interface {
 	// ListRepositories Repositories of the installations, with pool state and policy
 	// (GET /api/v1/github/repositories)
 	ListRepositories(w http.ResponseWriter, r *http.Request, params ListRepositoriesParams)
+	// GetHealthThresholds The limits of the machine health checks
+	// (GET /api/v1/health-thresholds)
+	GetHealthThresholds(w http.ResponseWriter, r *http.Request)
+	// PutHealthThresholds Change the limits of the machine health checks
+	// (PUT /api/v1/health-thresholds)
+	PutHealthThresholds(w http.ResponseWriter, r *http.Request)
 	// ListImages Images per machine and OS, with layers and sizes
 	// (GET /api/v1/images)
 	ListImages(w http.ResponseWriter, r *http.Request, params ListImagesParams)
@@ -9323,6 +10076,15 @@ type ServerInterface interface {
 	// GetJobResources CPU and memory of one job
 	// (GET /api/v1/jobs/{jobId}/resources)
 	GetJobResources(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// GetJobTimer The job timer of a job
+	// (GET /api/v1/jobs/{jobId}/timer)
+	GetJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// ExtendJobTimer Extend 10 min, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/extend)
+	ExtendJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// StopJobNow Stop now, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/stop-now)
+	StopJobNow(w http.ResponseWriter, r *http.Request, jobId JobId)
 	// CreateJoinCode Make a one-time join code and the install commands
 	// (POST /api/v1/join-codes)
 	CreateJoinCode(w http.ResponseWriter, r *http.Request)
@@ -9338,6 +10100,12 @@ type ServerInterface interface {
 	// CreateJoinFile Download an installer file with a one-time join code built in
 	// (POST /api/v1/join-files)
 	CreateJoinFile(w http.ResponseWriter, r *http.Request)
+	// GetListenerGate The listener gate of persistent runners on the machine itself
+	// (GET /api/v1/listener-gate)
+	GetListenerGate(w http.ResponseWriter, r *http.Request)
+	// PutListenerGate Switch the listener gate between observe and enforce
+	// (PUT /api/v1/listener-gate)
+	PutListenerGate(w http.ResponseWriter, r *http.Request)
 	// ListMachines Every machine with state, backends, load and slots
 	// (GET /api/v1/machines)
 	ListMachines(w http.ResponseWriter, r *http.Request)
@@ -9365,6 +10133,12 @@ type ServerInterface interface {
 	// DrainMachine Stop new jobs on a machine; running jobs finish
 	// (POST /api/v1/machines/{machineId}/drain)
 	DrainMachine(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// GetMachineHealth The health of one machine
+	// (GET /api/v1/machines/{machineId}/health)
+	GetMachineHealth(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// GetMachineJobStats Job stats of one machine and of its runners
+	// (GET /api/v1/machines/{machineId}/job-stats)
+	GetMachineJobStats(w http.ResponseWriter, r *http.Request, machineId MachineId, params GetMachineJobStatsParams)
 	// GetMachineLoad Load history at 15-second steps, up to 24 hours
 	// (GET /api/v1/machines/{machineId}/load)
 	GetMachineLoad(w http.ResponseWriter, r *http.Request, machineId MachineId, params GetMachineLoadParams)
@@ -9575,6 +10349,9 @@ type ServerInterface interface {
 	// GetRunnerEnv The merged environment of a runner, sensitive values masked
 	// (GET /api/v1/runners/{runnerId}/env)
 	GetRunnerEnv(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
+	// GetRunnerJobStats Job stats of one runner
+	// (GET /api/v1/runners/{runnerId}/job-stats)
+	GetRunnerJobStats(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params GetRunnerJobStatsParams)
 	// DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 	// (DELETE /api/v1/runners/{runnerId}/registration)
 	DeleteRunnerRegistration(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params DeleteRunnerRegistrationParams)
@@ -9593,6 +10370,15 @@ type ServerInterface interface {
 	// GetRunSavings How much sooner the run could have ended
 	// (GET /api/v1/runs/{runId}/savings)
 	GetRunSavings(w http.ResponseWriter, r *http.Request, runId RunId, params GetRunSavingsParams)
+	// GetRunTimer The run timer of a run attempt
+	// (GET /api/v1/runs/{runId}/timer)
+	GetRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params GetRunTimerParams)
+	// CancelRunNow Cancel now, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/cancel-now)
+	CancelRunNow(w http.ResponseWriter, r *http.Request, runId TimerRunId, params CancelRunNowParams)
+	// ExtendRunTimer Extend 10 min, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/extend)
+	ExtendRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params ExtendRunTimerParams)
 	// RestartService Restart the service after a drain
 	// (POST /api/v1/service/restart)
 	RestartService(w http.ResponseWriter, r *http.Request, params RestartServiceParams)
@@ -9638,6 +10424,15 @@ type ServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(w http.ResponseWriter, r *http.Request)
+	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+	// (GET /api/v1/timer-settings)
+	GetTimerSettings(w http.ResponseWriter, r *http.Request)
+	// PutTimerSettings Save timer settings
+	// (PUT /api/v1/timer-settings)
+	PutTimerSettings(w http.ResponseWriter, r *http.Request)
+	// CheckTimerSettings Check timer settings without saving them
+	// (POST /api/v1/timer-settings/check)
+	CheckTimerSettings(w http.ResponseWriter, r *http.Request)
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	// (GET /api/v1/update)
 	GetUpdateStatus(w http.ResponseWriter, r *http.Request)
@@ -11172,6 +11967,34 @@ func (siw *ServerInterfaceWrapper) ListRepositories(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// GetHealthThresholds operation middleware
+func (siw *ServerInterfaceWrapper) GetHealthThresholds(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetHealthThresholds(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutHealthThresholds operation middleware
+func (siw *ServerInterfaceWrapper) PutHealthThresholds(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutHealthThresholds(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListImages operation middleware
 func (siw *ServerInterfaceWrapper) ListImages(w http.ResponseWriter, r *http.Request) {
 
@@ -12453,6 +13276,84 @@ func (siw *ServerInterfaceWrapper) GetJobResources(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// GetJobTimer operation middleware
+func (siw *ServerInterfaceWrapper) GetJobTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetJobTimer(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExtendJobTimer operation middleware
+func (siw *ServerInterfaceWrapper) ExtendJobTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExtendJobTimer(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StopJobNow operation middleware
+func (siw *ServerInterfaceWrapper) StopJobNow(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopJobNow(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // CreateJoinCode operation middleware
 func (siw *ServerInterfaceWrapper) CreateJoinCode(w http.ResponseWriter, r *http.Request) {
 
@@ -12538,6 +13439,34 @@ func (siw *ServerInterfaceWrapper) CreateJoinFile(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateJoinFile(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetListenerGate operation middleware
+func (siw *ServerInterfaceWrapper) GetListenerGate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetListenerGate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutListenerGate operation middleware
+func (siw *ServerInterfaceWrapper) PutListenerGate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutListenerGate(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -12810,6 +13739,74 @@ func (siw *ServerInterfaceWrapper) DrainMachine(w http.ResponseWriter, r *http.R
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.DrainMachine(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMachineHealth operation middleware
+func (siw *ServerInterfaceWrapper) GetMachineHealth(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMachineHealth(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMachineJobStats operation middleware
+func (siw *ServerInterfaceWrapper) GetMachineJobStats(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetMachineJobStatsParams
+
+	// ------------- Optional query parameter "window" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "window", r.URL.Query(), &params.Window, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "window"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "window", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMachineJobStats(w, r, machineId, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -14576,6 +15573,48 @@ func (siw *ServerInterfaceWrapper) GetRunnerEnv(w http.ResponseWriter, r *http.R
 	handler.ServeHTTP(w, r)
 }
 
+// GetRunnerJobStats operation middleware
+func (siw *ServerInterfaceWrapper) GetRunnerJobStats(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runnerId" -------------
+	var runnerId RunnerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runnerId", r.PathValue("runnerId"), &runnerId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runnerId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRunnerJobStatsParams
+
+	// ------------- Optional query parameter "window" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "window", r.URL.Query(), &params.Window, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "window"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "window", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunnerJobStats(w, r, runnerId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // DeleteRunnerRegistration operation middleware
 func (siw *ServerInterfaceWrapper) DeleteRunnerRegistration(w http.ResponseWriter, r *http.Request) {
 
@@ -14878,6 +15917,132 @@ func (siw *ServerInterfaceWrapper) GetRunSavings(w http.ResponseWriter, r *http.
 	handler.ServeHTTP(w, r)
 }
 
+// GetRunTimer operation middleware
+func (siw *ServerInterfaceWrapper) GetRunTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runId" -------------
+	var runId TimerRunId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runId", r.PathValue("runId"), &runId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetRunTimerParams
+
+	// ------------- Optional query parameter "attempt" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "attempt", r.URL.Query(), &params.Attempt, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "attempt"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "attempt", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRunTimer(w, r, runId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CancelRunNow operation middleware
+func (siw *ServerInterfaceWrapper) CancelRunNow(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runId" -------------
+	var runId TimerRunId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runId", r.PathValue("runId"), &runId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params CancelRunNowParams
+
+	// ------------- Optional query parameter "attempt" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "attempt", r.URL.Query(), &params.Attempt, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "attempt"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "attempt", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CancelRunNow(w, r, runId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExtendRunTimer operation middleware
+func (siw *ServerInterfaceWrapper) ExtendRunTimer(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runId" -------------
+	var runId TimerRunId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runId", r.PathValue("runId"), &runId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ExtendRunTimerParams
+
+	// ------------- Optional query parameter "attempt" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "attempt", r.URL.Query(), &params.Attempt, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "attempt"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "attempt", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExtendRunTimer(w, r, runId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RestartService operation middleware
 func (siw *ServerInterfaceWrapper) RestartService(w http.ResponseWriter, r *http.Request) {
 
@@ -15098,6 +16263,48 @@ func (siw *ServerInterfaceWrapper) RedeemSetupLink(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.RedeemSetupLink(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetTimerSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetTimerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetTimerSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutTimerSettings operation middleware
+func (siw *ServerInterfaceWrapper) PutTimerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutTimerSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// CheckTimerSettings operation middleware
+func (siw *ServerInterfaceWrapper) CheckTimerSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CheckTimerSettings(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -15826,6 +17033,11 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/recovery", wrapper.RecoverMachine)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/load", wrapper.GetMachineLoad)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/assign/leases", wrapper.ListAssignLeases)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/health", wrapper.GetMachineHealth)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/job-stats", wrapper.GetMachineJobStats)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/job-stats", wrapper.GetRunnerJobStats)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/health-thresholds", wrapper.GetHealthThresholds)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/health-thresholds", wrapper.PutHealthThresholds)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots", wrapper.ListSlots)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/slots/free-stale", wrapper.FreeStaleSlots)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/changes/{changeId}", wrapper.GetMachineChange)
@@ -15863,6 +17075,17 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.GetRunnerClasses)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.PutRunnerClasses)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/listener-gate", wrapper.GetListenerGate)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/listener-gate", wrapper.PutListenerGate)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.GetTimerSettings)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.PutTimerSettings)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/timer-settings/check", wrapper.CheckTimerSettings)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer", wrapper.GetJobTimer)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer/stop-now", wrapper.StopJobNow)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer/extend", wrapper.ExtendJobTimer)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs/{runId}/timer", wrapper.GetRunTimer)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs/{runId}/timer/cancel-now", wrapper.CancelRunNow)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs/{runId}/timer/extend", wrapper.ExtendRunTimer)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry", wrapper.GetRegistrySettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/registry/logins", wrapper.PutRegistryLogin)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/registry/logins/{kind}/{host}", wrapper.DeleteRegistryLogin)
@@ -17815,6 +19038,83 @@ func (response ListRepositoriesdefaultJSONResponse) VisitListRepositoriesRespons
 	return err
 }
 
+type GetHealthThresholdsRequestObject struct {
+}
+
+type GetHealthThresholdsResponseObject interface {
+	VisitGetHealthThresholdsResponse(w http.ResponseWriter) error
+}
+
+type GetHealthThresholds200JSONResponse HealthThresholds
+
+func (response GetHealthThresholds200JSONResponse) VisitGetHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetHealthThresholdsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetHealthThresholdsdefaultJSONResponse) VisitGetHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutHealthThresholdsRequestObject struct {
+	Body *PutHealthThresholdsJSONRequestBody
+}
+
+type PutHealthThresholdsResponseObject interface {
+	VisitPutHealthThresholdsResponse(w http.ResponseWriter) error
+}
+
+type PutHealthThresholds200JSONResponse HealthThresholds
+
+func (response PutHealthThresholds200JSONResponse) VisitPutHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutHealthThresholdsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutHealthThresholdsdefaultJSONResponse) VisitPutHealthThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListImagesRequestObject struct {
 	Params ListImagesParams
 }
@@ -18861,6 +20161,123 @@ func (response GetJobResourcesdefaultJSONResponse) VisitGetJobResourcesResponse(
 	return err
 }
 
+type GetJobTimerRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type GetJobTimerResponseObject interface {
+	VisitGetJobTimerResponse(w http.ResponseWriter) error
+}
+
+type GetJobTimer200JSONResponse JobTimer
+
+func (response GetJobTimer200JSONResponse) VisitGetJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetJobTimerdefaultJSONResponse) VisitGetJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendJobTimerRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type ExtendJobTimerResponseObject interface {
+	VisitExtendJobTimerResponse(w http.ResponseWriter) error
+}
+
+type ExtendJobTimer200JSONResponse JobTimer
+
+func (response ExtendJobTimer200JSONResponse) VisitExtendJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendJobTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExtendJobTimerdefaultJSONResponse) VisitExtendJobTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopJobNowRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type StopJobNowResponseObject interface {
+	VisitStopJobNowResponse(w http.ResponseWriter) error
+}
+
+type StopJobNow200JSONResponse JobTimer
+
+func (response StopJobNow200JSONResponse) VisitStopJobNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopJobNowdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StopJobNowdefaultJSONResponse) VisitStopJobNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type CreateJoinCodeRequestObject struct {
 	Body *CreateJoinCodeJSONRequestBody
 }
@@ -19053,6 +20470,83 @@ type CreateJoinFiledefaultJSONResponse struct {
 }
 
 func (response CreateJoinFiledefaultJSONResponse) VisitCreateJoinFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetListenerGateRequestObject struct {
+}
+
+type GetListenerGateResponseObject interface {
+	VisitGetListenerGateResponse(w http.ResponseWriter) error
+}
+
+type GetListenerGate200JSONResponse ListenerGate
+
+func (response GetListenerGate200JSONResponse) VisitGetListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetListenerGatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetListenerGatedefaultJSONResponse) VisitGetListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutListenerGateRequestObject struct {
+	Body *PutListenerGateJSONRequestBody
+}
+
+type PutListenerGateResponseObject interface {
+	VisitPutListenerGateResponse(w http.ResponseWriter) error
+}
+
+type PutListenerGate200JSONResponse ListenerGate
+
+func (response PutListenerGate200JSONResponse) VisitPutListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutListenerGatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutListenerGatedefaultJSONResponse) VisitPutListenerGateResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -19427,6 +20921,85 @@ type DrainMachinedefaultJSONResponse struct {
 }
 
 func (response DrainMachinedefaultJSONResponse) VisitDrainMachineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineHealthRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+}
+
+type GetMachineHealthResponseObject interface {
+	VisitGetMachineHealthResponse(w http.ResponseWriter) error
+}
+
+type GetMachineHealth200JSONResponse MachineHealth
+
+func (response GetMachineHealth200JSONResponse) VisitGetMachineHealthResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineHealthdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMachineHealthdefaultJSONResponse) VisitGetMachineHealthResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineJobStatsRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+	Params    GetMachineJobStatsParams
+}
+
+type GetMachineJobStatsResponseObject interface {
+	VisitGetMachineJobStatsResponse(w http.ResponseWriter) error
+}
+
+type GetMachineJobStats200JSONResponse MachineJobStats
+
+func (response GetMachineJobStats200JSONResponse) VisitGetMachineJobStatsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineJobStatsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMachineJobStatsdefaultJSONResponse) VisitGetMachineJobStatsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -22143,6 +23716,46 @@ func (response GetRunnerEnvdefaultJSONResponse) VisitGetRunnerEnvResponse(w http
 	return err
 }
 
+type GetRunnerJobStatsRequestObject struct {
+	RunnerId RunnerId `json:"runnerId"`
+	Params   GetRunnerJobStatsParams
+}
+
+type GetRunnerJobStatsResponseObject interface {
+	VisitGetRunnerJobStatsResponse(w http.ResponseWriter) error
+}
+
+type GetRunnerJobStats200JSONResponse RunnerJobStats
+
+func (response GetRunnerJobStats200JSONResponse) VisitGetRunnerJobStatsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunnerJobStatsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetRunnerJobStatsdefaultJSONResponse) VisitGetRunnerJobStatsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type DeleteRunnerRegistrationRequestObject struct {
 	RunnerId RunnerId `json:"runnerId"`
 	Params   DeleteRunnerRegistrationParams
@@ -22370,6 +23983,126 @@ type GetRunSavingsdefaultJSONResponse struct {
 }
 
 func (response GetRunSavingsdefaultJSONResponse) VisitGetRunSavingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunTimerRequestObject struct {
+	RunId  TimerRunId `json:"runId"`
+	Params GetRunTimerParams
+}
+
+type GetRunTimerResponseObject interface {
+	VisitGetRunTimerResponse(w http.ResponseWriter) error
+}
+
+type GetRunTimer200JSONResponse RunTimer
+
+func (response GetRunTimer200JSONResponse) VisitGetRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRunTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetRunTimerdefaultJSONResponse) VisitGetRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelRunNowRequestObject struct {
+	RunId  TimerRunId `json:"runId"`
+	Params CancelRunNowParams
+}
+
+type CancelRunNowResponseObject interface {
+	VisitCancelRunNowResponse(w http.ResponseWriter) error
+}
+
+type CancelRunNow200JSONResponse RunTimer
+
+func (response CancelRunNow200JSONResponse) VisitCancelRunNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CancelRunNowdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response CancelRunNowdefaultJSONResponse) VisitCancelRunNowResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendRunTimerRequestObject struct {
+	RunId  TimerRunId `json:"runId"`
+	Params ExtendRunTimerParams
+}
+
+type ExtendRunTimerResponseObject interface {
+	VisitExtendRunTimerResponse(w http.ResponseWriter) error
+}
+
+type ExtendRunTimer200JSONResponse RunTimer
+
+func (response ExtendRunTimer200JSONResponse) VisitExtendRunTimerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendRunTimerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExtendRunTimerdefaultJSONResponse) VisitExtendRunTimerResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -22959,6 +24692,122 @@ type RedeemSetupLinkdefaultJSONResponse struct {
 }
 
 func (response RedeemSetupLinkdefaultJSONResponse) VisitRedeemSetupLinkResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTimerSettingsRequestObject struct {
+}
+
+type GetTimerSettingsResponseObject interface {
+	VisitGetTimerSettingsResponse(w http.ResponseWriter) error
+}
+
+type GetTimerSettings200JSONResponse TimerSettings
+
+func (response GetTimerSettings200JSONResponse) VisitGetTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetTimerSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetTimerSettingsdefaultJSONResponse) VisitGetTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutTimerSettingsRequestObject struct {
+	Body *PutTimerSettingsJSONRequestBody
+}
+
+type PutTimerSettingsResponseObject interface {
+	VisitPutTimerSettingsResponse(w http.ResponseWriter) error
+}
+
+type PutTimerSettings200JSONResponse TimerSettings
+
+func (response PutTimerSettings200JSONResponse) VisitPutTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutTimerSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutTimerSettingsdefaultJSONResponse) VisitPutTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckTimerSettingsRequestObject struct {
+	Body *CheckTimerSettingsJSONRequestBody
+}
+
+type CheckTimerSettingsResponseObject interface {
+	VisitCheckTimerSettingsResponse(w http.ResponseWriter) error
+}
+
+type CheckTimerSettings200JSONResponse TimerSettingsCheck
+
+func (response CheckTimerSettings200JSONResponse) VisitCheckTimerSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckTimerSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response CheckTimerSettingsdefaultJSONResponse) VisitCheckTimerSettingsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -23807,6 +25656,12 @@ type StrictServerInterface interface {
 	// ListRepositories Repositories of the installations, with pool state and policy
 	// (GET /api/v1/github/repositories)
 	ListRepositories(ctx context.Context, request ListRepositoriesRequestObject) (ListRepositoriesResponseObject, error)
+	// GetHealthThresholds The limits of the machine health checks
+	// (GET /api/v1/health-thresholds)
+	GetHealthThresholds(ctx context.Context, request GetHealthThresholdsRequestObject) (GetHealthThresholdsResponseObject, error)
+	// PutHealthThresholds Change the limits of the machine health checks
+	// (PUT /api/v1/health-thresholds)
+	PutHealthThresholds(ctx context.Context, request PutHealthThresholdsRequestObject) (PutHealthThresholdsResponseObject, error)
 	// ListImages Images per machine and OS, with layers and sizes
 	// (GET /api/v1/images)
 	ListImages(ctx context.Context, request ListImagesRequestObject) (ListImagesResponseObject, error)
@@ -23888,6 +25743,15 @@ type StrictServerInterface interface {
 	// GetJobResources CPU and memory of one job
 	// (GET /api/v1/jobs/{jobId}/resources)
 	GetJobResources(ctx context.Context, request GetJobResourcesRequestObject) (GetJobResourcesResponseObject, error)
+	// GetJobTimer The job timer of a job
+	// (GET /api/v1/jobs/{jobId}/timer)
+	GetJobTimer(ctx context.Context, request GetJobTimerRequestObject) (GetJobTimerResponseObject, error)
+	// ExtendJobTimer Extend 10 min, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/extend)
+	ExtendJobTimer(ctx context.Context, request ExtendJobTimerRequestObject) (ExtendJobTimerResponseObject, error)
+	// StopJobNow Stop now, during the grace of the job timer
+	// (POST /api/v1/jobs/{jobId}/timer/stop-now)
+	StopJobNow(ctx context.Context, request StopJobNowRequestObject) (StopJobNowResponseObject, error)
 	// CreateJoinCode Make a one-time join code and the install commands
 	// (POST /api/v1/join-codes)
 	CreateJoinCode(ctx context.Context, request CreateJoinCodeRequestObject) (CreateJoinCodeResponseObject, error)
@@ -23903,6 +25767,12 @@ type StrictServerInterface interface {
 	// CreateJoinFile Download an installer file with a one-time join code built in
 	// (POST /api/v1/join-files)
 	CreateJoinFile(ctx context.Context, request CreateJoinFileRequestObject) (CreateJoinFileResponseObject, error)
+	// GetListenerGate The listener gate of persistent runners on the machine itself
+	// (GET /api/v1/listener-gate)
+	GetListenerGate(ctx context.Context, request GetListenerGateRequestObject) (GetListenerGateResponseObject, error)
+	// PutListenerGate Switch the listener gate between observe and enforce
+	// (PUT /api/v1/listener-gate)
+	PutListenerGate(ctx context.Context, request PutListenerGateRequestObject) (PutListenerGateResponseObject, error)
 	// ListMachines Every machine with state, backends, load and slots
 	// (GET /api/v1/machines)
 	ListMachines(ctx context.Context, request ListMachinesRequestObject) (ListMachinesResponseObject, error)
@@ -23930,6 +25800,12 @@ type StrictServerInterface interface {
 	// DrainMachine Stop new jobs on a machine; running jobs finish
 	// (POST /api/v1/machines/{machineId}/drain)
 	DrainMachine(ctx context.Context, request DrainMachineRequestObject) (DrainMachineResponseObject, error)
+	// GetMachineHealth The health of one machine
+	// (GET /api/v1/machines/{machineId}/health)
+	GetMachineHealth(ctx context.Context, request GetMachineHealthRequestObject) (GetMachineHealthResponseObject, error)
+	// GetMachineJobStats Job stats of one machine and of its runners
+	// (GET /api/v1/machines/{machineId}/job-stats)
+	GetMachineJobStats(ctx context.Context, request GetMachineJobStatsRequestObject) (GetMachineJobStatsResponseObject, error)
 	// GetMachineLoad Load history at 15-second steps, up to 24 hours
 	// (GET /api/v1/machines/{machineId}/load)
 	GetMachineLoad(ctx context.Context, request GetMachineLoadRequestObject) (GetMachineLoadResponseObject, error)
@@ -24140,6 +26016,9 @@ type StrictServerInterface interface {
 	// GetRunnerEnv The merged environment of a runner, sensitive values masked
 	// (GET /api/v1/runners/{runnerId}/env)
 	GetRunnerEnv(ctx context.Context, request GetRunnerEnvRequestObject) (GetRunnerEnvResponseObject, error)
+	// GetRunnerJobStats Job stats of one runner
+	// (GET /api/v1/runners/{runnerId}/job-stats)
+	GetRunnerJobStats(ctx context.Context, request GetRunnerJobStatsRequestObject) (GetRunnerJobStatsResponseObject, error)
 	// DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 	// (DELETE /api/v1/runners/{runnerId}/registration)
 	DeleteRunnerRegistration(ctx context.Context, request DeleteRunnerRegistrationRequestObject) (DeleteRunnerRegistrationResponseObject, error)
@@ -24158,6 +26037,15 @@ type StrictServerInterface interface {
 	// GetRunSavings How much sooner the run could have ended
 	// (GET /api/v1/runs/{runId}/savings)
 	GetRunSavings(ctx context.Context, request GetRunSavingsRequestObject) (GetRunSavingsResponseObject, error)
+	// GetRunTimer The run timer of a run attempt
+	// (GET /api/v1/runs/{runId}/timer)
+	GetRunTimer(ctx context.Context, request GetRunTimerRequestObject) (GetRunTimerResponseObject, error)
+	// CancelRunNow Cancel now, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/cancel-now)
+	CancelRunNow(ctx context.Context, request CancelRunNowRequestObject) (CancelRunNowResponseObject, error)
+	// ExtendRunTimer Extend 10 min, during the grace of the run timer
+	// (POST /api/v1/runs/{runId}/timer/extend)
+	ExtendRunTimer(ctx context.Context, request ExtendRunTimerRequestObject) (ExtendRunTimerResponseObject, error)
 	// RestartService Restart the service after a drain
 	// (POST /api/v1/service/restart)
 	RestartService(ctx context.Context, request RestartServiceRequestObject) (RestartServiceResponseObject, error)
@@ -24203,6 +26091,15 @@ type StrictServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(ctx context.Context, request RedeemSetupLinkRequestObject) (RedeemSetupLinkResponseObject, error)
+	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+	// (GET /api/v1/timer-settings)
+	GetTimerSettings(ctx context.Context, request GetTimerSettingsRequestObject) (GetTimerSettingsResponseObject, error)
+	// PutTimerSettings Save timer settings
+	// (PUT /api/v1/timer-settings)
+	PutTimerSettings(ctx context.Context, request PutTimerSettingsRequestObject) (PutTimerSettingsResponseObject, error)
+	// CheckTimerSettings Check timer settings without saving them
+	// (POST /api/v1/timer-settings/check)
+	CheckTimerSettings(ctx context.Context, request CheckTimerSettingsRequestObject) (CheckTimerSettingsResponseObject, error)
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	// (GET /api/v1/update)
 	GetUpdateStatus(ctx context.Context, request GetUpdateStatusRequestObject) (GetUpdateStatusResponseObject, error)
@@ -25436,6 +27333,61 @@ func (sh *strictHandler) ListRepositories(w http.ResponseWriter, r *http.Request
 	}
 }
 
+// GetHealthThresholds operation middleware
+func (sh *strictHandler) GetHealthThresholds(w http.ResponseWriter, r *http.Request) {
+	var request GetHealthThresholdsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetHealthThresholds(ctx, request.(GetHealthThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetHealthThresholds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetHealthThresholdsResponseObject); ok {
+		if err := validResponse.VisitGetHealthThresholdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutHealthThresholds operation middleware
+func (sh *strictHandler) PutHealthThresholds(w http.ResponseWriter, r *http.Request) {
+	var request PutHealthThresholdsRequestObject
+
+	var body PutHealthThresholdsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutHealthThresholds(ctx, request.(PutHealthThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutHealthThresholds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutHealthThresholdsResponseObject); ok {
+		if err := validResponse.VisitPutHealthThresholdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListImages operation middleware
 func (sh *strictHandler) ListImages(w http.ResponseWriter, r *http.Request, params ListImagesParams) {
 	var request ListImagesRequestObject
@@ -26145,6 +28097,84 @@ func (sh *strictHandler) GetJobResources(w http.ResponseWriter, r *http.Request,
 	}
 }
 
+// GetJobTimer operation middleware
+func (sh *strictHandler) GetJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request GetJobTimerRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetJobTimer(ctx, request.(GetJobTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetJobTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetJobTimerResponseObject); ok {
+		if err := validResponse.VisitGetJobTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExtendJobTimer operation middleware
+func (sh *strictHandler) ExtendJobTimer(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request ExtendJobTimerRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExtendJobTimer(ctx, request.(ExtendJobTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExtendJobTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExtendJobTimerResponseObject); ok {
+		if err := validResponse.VisitExtendJobTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StopJobNow operation middleware
+func (sh *strictHandler) StopJobNow(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request StopJobNowRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StopJobNow(ctx, request.(StopJobNowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StopJobNow")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StopJobNowResponseObject); ok {
+		if err := validResponse.VisitStopJobNowResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // CreateJoinCode operation middleware
 func (sh *strictHandler) CreateJoinCode(w http.ResponseWriter, r *http.Request) {
 	var request CreateJoinCodeRequestObject
@@ -26286,6 +28316,61 @@ func (sh *strictHandler) CreateJoinFile(w http.ResponseWriter, r *http.Request) 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateJoinFileResponseObject); ok {
 		if err := validResponse.VisitCreateJoinFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetListenerGate operation middleware
+func (sh *strictHandler) GetListenerGate(w http.ResponseWriter, r *http.Request) {
+	var request GetListenerGateRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetListenerGate(ctx, request.(GetListenerGateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetListenerGate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetListenerGateResponseObject); ok {
+		if err := validResponse.VisitGetListenerGateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutListenerGate operation middleware
+func (sh *strictHandler) PutListenerGate(w http.ResponseWriter, r *http.Request) {
+	var request PutListenerGateRequestObject
+
+	var body PutListenerGateJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutListenerGate(ctx, request.(PutListenerGateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutListenerGate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutListenerGateResponseObject); ok {
+		if err := validResponse.VisitPutListenerGateResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -26553,6 +28638,59 @@ func (sh *strictHandler) DrainMachine(w http.ResponseWriter, r *http.Request, ma
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(DrainMachineResponseObject); ok {
 		if err := validResponse.VisitDrainMachineResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMachineHealth operation middleware
+func (sh *strictHandler) GetMachineHealth(w http.ResponseWriter, r *http.Request, machineId MachineId) {
+	var request GetMachineHealthRequestObject
+
+	request.MachineId = machineId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMachineHealth(ctx, request.(GetMachineHealthRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMachineHealth")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMachineHealthResponseObject); ok {
+		if err := validResponse.VisitGetMachineHealthResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMachineJobStats operation middleware
+func (sh *strictHandler) GetMachineJobStats(w http.ResponseWriter, r *http.Request, machineId MachineId, params GetMachineJobStatsParams) {
+	var request GetMachineJobStatsRequestObject
+
+	request.MachineId = machineId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMachineJobStats(ctx, request.(GetMachineJobStatsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMachineJobStats")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMachineJobStatsResponseObject); ok {
+		if err := validResponse.VisitGetMachineJobStatsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -28504,6 +30642,33 @@ func (sh *strictHandler) GetRunnerEnv(w http.ResponseWriter, r *http.Request, ru
 	}
 }
 
+// GetRunnerJobStats operation middleware
+func (sh *strictHandler) GetRunnerJobStats(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params GetRunnerJobStatsParams) {
+	var request GetRunnerJobStatsRequestObject
+
+	request.RunnerId = runnerId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRunnerJobStats(ctx, request.(GetRunnerJobStatsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRunnerJobStats")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunnerJobStatsResponseObject); ok {
+		if err := validResponse.VisitGetRunnerJobStatsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // DeleteRunnerRegistration operation middleware
 func (sh *strictHandler) DeleteRunnerRegistration(w http.ResponseWriter, r *http.Request, runnerId RunnerId, params DeleteRunnerRegistrationParams) {
 	var request DeleteRunnerRegistrationRequestObject
@@ -28663,6 +30828,87 @@ func (sh *strictHandler) GetRunSavings(w http.ResponseWriter, r *http.Request, r
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetRunSavingsResponseObject); ok {
 		if err := validResponse.VisitGetRunSavingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRunTimer operation middleware
+func (sh *strictHandler) GetRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params GetRunTimerParams) {
+	var request GetRunTimerRequestObject
+
+	request.RunId = runId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRunTimer(ctx, request.(GetRunTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRunTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRunTimerResponseObject); ok {
+		if err := validResponse.VisitGetRunTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CancelRunNow operation middleware
+func (sh *strictHandler) CancelRunNow(w http.ResponseWriter, r *http.Request, runId TimerRunId, params CancelRunNowParams) {
+	var request CancelRunNowRequestObject
+
+	request.RunId = runId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CancelRunNow(ctx, request.(CancelRunNowRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CancelRunNow")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CancelRunNowResponseObject); ok {
+		if err := validResponse.VisitCancelRunNowResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExtendRunTimer operation middleware
+func (sh *strictHandler) ExtendRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params ExtendRunTimerParams) {
+	var request ExtendRunTimerRequestObject
+
+	request.RunId = runId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExtendRunTimer(ctx, request.(ExtendRunTimerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExtendRunTimer")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExtendRunTimerResponseObject); ok {
+		if err := validResponse.VisitExtendRunTimerResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -29081,6 +31327,92 @@ func (sh *strictHandler) RedeemSetupLink(w http.ResponseWriter, r *http.Request)
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RedeemSetupLinkResponseObject); ok {
 		if err := validResponse.VisitRedeemSetupLinkResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetTimerSettings operation middleware
+func (sh *strictHandler) GetTimerSettings(w http.ResponseWriter, r *http.Request) {
+	var request GetTimerSettingsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetTimerSettings(ctx, request.(GetTimerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetTimerSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetTimerSettingsResponseObject); ok {
+		if err := validResponse.VisitGetTimerSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutTimerSettings operation middleware
+func (sh *strictHandler) PutTimerSettings(w http.ResponseWriter, r *http.Request) {
+	var request PutTimerSettingsRequestObject
+
+	var body PutTimerSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutTimerSettings(ctx, request.(PutTimerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutTimerSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutTimerSettingsResponseObject); ok {
+		if err := validResponse.VisitPutTimerSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CheckTimerSettings operation middleware
+func (sh *strictHandler) CheckTimerSettings(w http.ResponseWriter, r *http.Request) {
+	var request CheckTimerSettingsRequestObject
+
+	var body CheckTimerSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CheckTimerSettings(ctx, request.(CheckTimerSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CheckTimerSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CheckTimerSettingsResponseObject); ok {
+		if err := validResponse.VisitCheckTimerSettingsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -168,6 +168,8 @@ message SessionResponse {
     // Protocol version 3, the image registry (REG10).
     EnsureImageAnswer ensure_image_answer = 28;
     RegistryToken registry_grant = 29;
+    // OPS78: start, stop or read the listener of a gated persistent runner.
+    ListenerControl listener_control = 30;
   }
 }
 
@@ -415,6 +417,22 @@ message StopRunner {
   bool clean_up = 4;
 }
 
+// ListenerControl starts, stops or reads the listener of a persistent runner
+// that runs on the machine itself (runners R5.134). action is start, stop or
+// status. A stop waits for a clean exit of the listener and is refused while a
+// job is assigned: job_assigned says so, and the agent also refuses when a
+// worker process of the runner is running. maintenance on a start is the one
+// moment the runner may update itself (the pinned version, runners R5.139).
+// The answer is a RunnerResult with listener set.
+message ListenerControl {
+  string command_id = 1;
+  string runner_id = 2;
+  string service_name = 3;
+  string action = 4;
+  bool job_assigned = 5;
+  bool maintenance = 6;
+}
+
 // RunnerResult answers AddRunner, RemoveRunner, DrainRunner and StopRunner. It
 // says what happened and nothing more: ok is true only when the agent did the
 // step. The text in error is redacted and never holds a token or a JIT config
@@ -439,6 +457,8 @@ message RunnerResult {
   // was stopped by the timeout) and the last bytes of its output, redacted.
   int32 exit_code = 10;
   string output = 11;
+  // ListenerControl: offline, online, busy or unknown.
+  string listener = 12;
 }
 
 // RunHostCommand runs one command on the machine for host maintenance (cli

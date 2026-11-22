@@ -44,6 +44,9 @@ type Controller struct {
 	Env     Env
 	Runners Runners
 	Notify  Notifier
+	// Gate is the listener gate of persistent runners on the machine itself;
+	// nil makes every job use a JIT runner (runners R5.134).
+	Gate Gate
 	// Purge deletes a runner by name at GitHub when no record of it exists
 	// (a start that crashed between the JIT call and the record). Nil skips it.
 	Purge func(ctx context.Context, repository, name string) error
@@ -250,6 +253,7 @@ func (c *Controller) warmByRunner(ctx context.Context, name string) (Warm, bool,
 func (c *Controller) Completed(ctx context.Context, j github.Job) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.gateDone(ctx, j.ID)
 	l, ok, err := c.Store.Get(ctx, j.ID)
 	if err != nil {
 		return err
@@ -290,6 +294,7 @@ func (c *Controller) Replan(ctx context.Context) error {
 func (c *Controller) Vanished(ctx context.Context, jobID int64) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
+	c.gateDone(ctx, jobID)
 	l, ok, err := c.Store.Get(ctx, jobID)
 	if err != nil || !ok || !l.State.Open() {
 		return err
@@ -565,6 +570,10 @@ func (c *Controller) launch(ctx context.Context, l *Lease, v *machineView, d sch
 	repo, ok, err := c.Env.Repo(ctx, l.Repository)
 	if err != nil || !ok {
 		return false, err
+	}
+	// A gated persistent runner of the machine takes the job when the gate enforces.
+	if taken, stop, err := c.gateAdmit(ctx, l, v, now); stop || err != nil {
+		return taken, err
 	}
 	// A warm runner of this label set on this machine takes the job as it is.
 	warm, err := c.Store.ListWarm(ctx)

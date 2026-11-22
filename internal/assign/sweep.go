@@ -51,7 +51,13 @@ func (c *Controller) unused(l Lease, now time.Time) bool {
 // dropRunner deletes a runner nobody used through GitHub and the agent. A
 // starting lease whose job is still queued waits again for a new runner.
 func (c *Controller) dropRunner(ctx context.Context, l Lease, now time.Time) error {
-	if l.RunnerRecord != "" {
+	if c.Gate != nil && c.Gate.Holds(ctx, l.JobID) {
+		// A gated persistent runner is never deleted: its listener is stopped and
+		// its label removed, and the job waits again.
+		if err := c.Gate.Done(ctx, l.JobID); err != nil {
+			return fmt.Errorf("stop the listener of %s: %w", l.RunnerName, err)
+		}
+	} else if l.RunnerRecord != "" {
 		err := c.Runners.RemoveIdleRunner(ctx, l.RunnerRecord, Actor)
 		if errors.Is(err, runners.ErrRunnerBusy) {
 			return nil // a job came in between: its in_progress webhook follows

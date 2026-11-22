@@ -4,6 +4,7 @@ import {
   Breadcrumbs,
   Button,
   CheckRow,
+  DateTime,
   EditBar,
   Facts,
   Message,
@@ -22,6 +23,14 @@ import { useCommand, useLoad } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { useVersion } from '../../live/LiveProvider';
 import { Load } from '../common';
+import {
+  GATE_OBSERVE_NOTE,
+  GATE_SECTION,
+  GATE_WAKE_HELP,
+  gateRowOf,
+  listenerText,
+  waitingText,
+} from './gateWords';
 import { KIND_NAMES } from './kinds';
 
 type Runner = Schemas['Runner'];
@@ -82,6 +91,17 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
   const [keeps, setKeeps] = useState(saved);
   useEffect(() => setKeeps(saved), [saved]);
 
+  // The listener gate of a persistent runner on the machine itself; a runner it does not gate shows nothing.
+  const { result: gateResult } = useLoad(
+    () =>
+      persistent
+        ? unwrap(client.GET('/api/v1/listener-gate'))
+        : Promise.resolve(undefined),
+    [persistent, r.id],
+  );
+  const gate = gateResult.state === 'ready' ? gateResult.data : undefined;
+  const gateRow = gateRowOf(gate, r.name);
+
   const save = useCommand(async () => {
     await unwrap(
       client.PATCH('/api/v1/runners/{runnerId}/settings', {
@@ -124,6 +144,21 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
           ]}
         />
       </Section>
+      {gate && gateRow ? (
+        <Section title={GATE_SECTION}>
+          <Stack>
+            {!gate.enforce ? <Message tone="note">{GATE_OBSERVE_NOTE}</Message> : null}
+            <Facts
+              items={[
+                { name: 'Listener', value: listenerText(gateRow) },
+                { name: 'Weekly wake-up', value: <DateTime value={gateRow.next_wake} /> },
+                { name: 'Jobs waiting', value: waitingText(gateRow) },
+              ]}
+            />
+            <Text tone="muted">{GATE_WAKE_HELP}</Text>
+          </Stack>
+        </Section>
+      ) : null}
       {persistent ? (
         <Section title="Dependencies">
           <Stack>

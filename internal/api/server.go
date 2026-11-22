@@ -95,6 +95,8 @@ type Options struct {
 	Timers TimerService
 	// Health serves machine health, job stats and the health thresholds (handlers_machinehealth.go, OPS83). Nil answers 501.
 	Health HealthService
+	// ListenerGate serves the listener gate setting and its runners (handlers_listenergate.go, runners R5.134). Nil answers 501.
+	ListenerGate ListenerGateService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService

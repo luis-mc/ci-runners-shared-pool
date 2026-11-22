@@ -2684,6 +2684,55 @@ paths:
                 $ref: '#/components/schemas/RunnerClasses'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/listener-gate:
+    get:
+      operationId: getListenerGate
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: The listener gate of persistent runners on the machine itself
+      description: >-
+        runners R5.134 to R5.140. `enforce` is false by default (observe mode):
+        crsp writes would_start and would_stop rows in the audit log and leaves
+        every listener as it is. Each runner shows `gated: offline by design`
+        while no job needs it, the day of its weekly wake-up, and why jobs wait.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The setting and the gated runners.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListenerGate'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putListenerGate
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: Switch the listener gate between observe and enforce
+      description: >-
+        runners R5.138. Switching on parks the listeners nobody needs at the next
+        round; a runner that has a job is never touched.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListenerGateInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListenerGate'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/timer-settings:
     get:
       operationId: getTimerSettings
@@ -5833,6 +5882,49 @@ components:
         confirm_lowering:
           type: boolean
           description: Needed when a size that runners use gets smaller.
+    ListenerGateInput:
+      type: object
+      required: [enforce]
+      properties:
+        enforce:
+          type: boolean
+          description: True switches the gate on; false is observe mode.
+    ListenerGateRunner:
+      type: object
+      required: [runner_name, machine_id, os, text, listener_on, next_wake]
+      properties:
+        runner_name: { type: string }
+        machine_id: { type: string }
+        os: { type: string }
+        text:
+          type: string
+          description: '`gated: offline by design`, or that the listener is on for an admitted job.'
+        listener_on: { type: boolean }
+        job_ids:
+          type: array
+          items: { type: integer, format: int64 }
+          description: The jobs that hold the listener.
+        last_wake:
+          type: string
+          format: date-time
+          description: Absent when the runner was never woken.
+        next_wake:
+          type: string
+          format: date-time
+          description: When the weekly wake-up is due.
+        queue_text:
+          type: string
+          description: Why jobs wait for this runner, in the owner's words. Absent when none wait.
+    ListenerGate:
+      type: object
+      required: [enforce, wake_every_days, runners]
+      properties:
+        enforce: { type: boolean }
+        wake_every_days: { type: integer, description: Fixed at 7. }
+        runners:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListenerGateRunner'
     TimerSettings:
       type: object
       required:

@@ -1425,6 +1425,31 @@ The Job sizes and Cost table panes on a repository's page. A size is *Light*, *N
 | Cost table, basis values | Assumption, Measured |
 | Cost table, empty | The cost table is empty. |
 
+## Listener gate words (OPS78, runners R5.134 to R5.140)
+
+Persistent runners that run on the machine itself are gated: crsp turns the listener on when it admits a job for the runner and off after the job. The gate starts in observe mode: it writes what it would do and leaves every listener as it is.
+
+| Where | Words |
+|---|---|
+| Section title, runner page | Listener |
+| Fact name | Listener |
+| Fact value, no job | gated: offline by design |
+| Fact value, a job holds it | listener on for the admitted job |
+| Fact name | Weekly wake-up |
+| Fact value | {date and time} |
+| Weekly wake-up help | Every gated runner is switched on for about a minute each week, with no job, so GitHub never removes it for staying offline. |
+| Fact name | Jobs waiting |
+| Fact value, none | No job waits for this runner. |
+| Observe mode note | The gate is in observe mode. crsp writes would_start and would_stop rows to the audit log and leaves the listener as it is. |
+| Setting name | Gate persistent runners |
+| Setting help | Off: observe mode. On: crsp starts the listener of a persistent runner when it admits a job for it and stops it after the job. A runner with a job is never stopped. |
+| Audit actions | listener.would_start, listener.would_stop, listener.start, listener.stop, listener.wake, listener.failed |
+| Doctor finding, observe mode (info) | The listener gate is in observe mode: persistent runners keep their listener on |
+| Doctor detail | The audit log shows when crsp would have started and stopped each listener. No listener is touched until you switch enforcement on. |
+| Doctor fix | When the reports look right, switch on Gate persistent runners in Settings. |
+| Doctor finding, enforcing (ok) | Persistent runners on the machine itself are gated: offline by design until a job needs them |
+| Add runners, Persistent not offered | Persistent runners run on the machine itself, and this {machine system} machine cannot run a persistent {system} runner there. {System} runners on this machine are ephemeral. |
+
 ## Lifecycle words
 
 The words of install, update and remove (UX-79 to UX-83, components 70 to 74). They come from `lifecycle.json`, `words.states`; a screen, the native window and the tray read that table and write no string of their own (LC-21). Banned: OK, Yes, No, Install now, Later, daemon, binary, payload, error codes, HTTP statuses, doubled punctuation. A date and time is shown by the shared `DateTime` part (UX-78).

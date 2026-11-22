@@ -346,8 +346,9 @@ describe('Add runners', () => {
     const no = await screen.findByRole<HTMLInputElement>('radio', { name: /win-2/ });
     expect(no.disabled).toBe(true);
     expect(screen.getByText('This machine runs windows, not linux.')).toBeTruthy();
+    // OPS78 (runners R5.134): Persistent is not offered for Linux on a Windows machine; it says why.
     expect(
-      screen.getByText(/Linux runners on this Windows machine run in containers/),
+      await screen.findByText(/Persistent runners run on the machine itself/),
     ).toBeTruthy();
   });
 
@@ -560,7 +561,9 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
     renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Add 1 runner' }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Allow 1 ephemeral runner' }),
+    );
     const text = await screen.findByText(/1 failed, 0 done\./);
     expect(text.textContent).toContain('1 failed, 0 done. registration was refused.');
     expect(text.textContent).toContain('Open Runners, remove it');

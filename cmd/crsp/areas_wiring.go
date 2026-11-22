@@ -308,6 +308,14 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	c.Options.RunnerClasses = newClassService(d.DB, runnerSvc, d.Machines)
 	// crsp's job and run timers with their 30 s grace (scheduling R5.99 to R5.106).
+	// The listener gate of persistent runners on the machine itself, in observe mode
+	// until the owner switches it on (runners R5.134). The assign.Gate it returns is
+	// what the assignment controller takes as its Gate.
+	var remoteLn remoteListener
+	if d.Link != nil {
+		remoteLn = &agentlink.Agent{L: d.Link}
+	}
+	gateSvc, _ := wireListenerGate(ctx, d.DB, logger, c, gh, runners.NewLocalAgent(reg), d.Machines, remoteLn, runnerSvc)
 	timerSvc := wireTimers(ctx, d.DB, logger, c, d.Queue, agent, gh, &repoLookup{store: repoStore}, runnerSvc)
 	// Long-lived runners serve every repository that uses the pool: one hidden
 	// registration for each pool repository, made and removed with the pool
@@ -350,12 +358,13 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			return gh, nil
 		},
 		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
-		KVM:       reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
-		Engines:   reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
-		Extra:     append(checks.KVMReportedChecks(), checks.HealthChecks()...),
-		Demand:    quietSource{wd: quietDemand},
-		Ephemeral: runnerSvc,
-		Timers:    timerSvc,
+		KVM:          reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
+		Engines:      reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
+		Extra:        append(checks.KVMReportedChecks(), checks.HealthChecks()...),
+		Demand:       quietSource{wd: quietDemand},
+		Ephemeral:    runnerSvc,
+		Timers:       timerSvc,
+		ListenerGate: gateSvc,
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger

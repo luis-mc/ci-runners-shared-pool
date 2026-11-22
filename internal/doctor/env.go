@@ -36,6 +36,9 @@ type Env struct {
 	// Timers says whether crsp's job and run timers enforce; nil makes
 	// timers.mode skip.
 	Timers TimerSource
+	// ListenerGate says whether the listener gate enforces; nil makes
+	// listener.gate skip.
+	ListenerGate GateSource
 	// PoolName is the pool's name label; RunnerPrefix starts the name of every
 	// runner the product makes (default "crsp-").
 	PoolName string
@@ -525,6 +528,12 @@ type DemandSource interface {
 // or only report (observe mode, scheduling R5.99). A check only reads it.
 type TimerSource interface {
 	TimersEnforced(ctx context.Context) (bool, error)
+}
+
+// GateSource tells whether the listener gate of persistent runners acts (enforce
+// on) or only reports (observe mode, runners R5.134). A check only reads it.
+type GateSource interface {
+	GateEnforced(ctx context.Context) (bool, error)
 }
 
 // VMTool is one program the VM backend runs.
