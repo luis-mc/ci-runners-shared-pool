@@ -16,7 +16,7 @@ import {
   TextLink,
   formatSize,
 } from '@crsp/ui';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad } from '../../api/hooks';
@@ -89,7 +89,12 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
   const persistent = r.kind === 'persistent';
   const saved = r.keep_dependencies !== false;
   const [keeps, setKeeps] = useState(saved);
-  useEffect(() => setKeeps(saved), [saved]);
+  // Follow the saved value when it changes. Not an effect: a mount effect ran after an early click and undid it.
+  const [seenSaved, setSeenSaved] = useState(saved);
+  if (seenSaved !== saved) {
+    setSeenSaved(saved);
+    setKeeps(saved);
+  }
 
   // The listener gate of a persistent runner on the machine itself; a runner it does not gate shows nothing.
   const { result: gateResult } = useLoad(
