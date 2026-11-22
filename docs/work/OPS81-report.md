@@ -42,3 +42,10 @@ CODE DONE 5423be4789b977a70e05c34183fdc630902dd6c6
 - Observe: grace still runs and shows ("would stop in 30 s"); when the grace ends the engine writes `timer.job.would_stop` / `timer.run.would_cancel`, sets the note (`would stop at 30:00 (timers in observe mode)` / `would cancel at 45:00 ...`), sends no stop and no cancel; the clock returns to `running` carrying that note, which is the "reported once" marker (survives a restart, no schema change). Stop now, Cancel now and Extend act in both modes. Enforce: unchanged.
 - Doctor: new check `timers.mode` (info in observe mode, link /settings, never warn). Docs: scheduling R5.107, doctor R5.65, content.md "Timer mode words", CHANGES C13, change notes edited (the notes for OPS81 already existed, so edited instead of `docs_fold note`).
 - Deviations: (1) brief said OPS81 added a doctor timer check file; none exists, so I added `internal/doctor/checks/timers.go` and the small wiring it needs (`doctor.Env.Timers`, `wire.DoctorDeps.Timers`, `cmd/crsp/areas_wiring.go`, `Service.TimersEnforced`) plus the check-count tests (52 to 53, 54 to 55). (2) `internal/api/handlers_timers.go` and the generated files changed to map the field. (3) The run's note is on the run clock only; open jobs of the run get no note. (4) The console Settings screen does not exist yet (LOOK56); the doctor link is `/settings`.
+
+## CI (observe-mode follow-up)
+- `ci.yml` (workflow_dispatch) on d5ae109: success.
+- `dev-standards` (PR run) red only for docs_check W1 (reports under `docs/work/`, stripped at the join by design); docs_check shows no other error.
+- Local: go vet linux and windows clean for touched packages; darwin vet clean for internal/*, `cmd/crsp` darwin needs cgo (systray, unrelated); golangci-lint 0 issues; codegen drift none; fast_guards: only the existing G1/G4 warnings, none in touched files.
+
+CODE DONE d5ae109fe06c16063395cbd112f032531429edd0 (observe mode)
