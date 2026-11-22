@@ -27,6 +27,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../api/api';
 import { signInUrl, useSession } from '../auth/session';
 import { useMachines, useRefreshTick } from '../api/machines';
+import { useUpdateBanner } from './UpdateBannerHost';
 import { useLiveState, useVersion } from '../live/LiveProvider';
 import { wipingLabel } from '../screens/images/labels';
 import { allRepositories } from '../screens/repositories/plans';
@@ -348,6 +349,8 @@ export function AppShell({ children }: { children?: ReactNode }) {
     .filter((j): j is ActivityJob => j !== undefined);
 
   const banners: ReactNode[] = [];
+  const updateBanner = useUpdateBanner();
+  if (updateBanner) banners.push(updateBanner);
   const open = setup ? firstOpenStep(setup) : undefined;
   // No first-run banner while the service restarts: its machines are not back yet, they are not missing.
   if (open && !machineList.reconnecting)

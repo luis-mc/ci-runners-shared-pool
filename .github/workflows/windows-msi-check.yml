@@ -1,7 +1,7 @@
 name: Windows MSI (Linux check)
 
 # CIR10 W1/W2. OPTIONAL. A CI CHECK ONLY: it proves the MSI authoring builds under Wine.
-# The shipped MSI is built on Windows (package-windows.yml). Wine cannot write LZX, so this
+# The shipped MSI is built on Windows (package-windows.yml) and named Crsp-<version>-win-<arch>.msi (OPS69). Wine cannot write LZX, so this
 # build uses `mszip`; the file is bigger and has never been installed.
 # PRODUCT: delete this file if the product ships no MSI. Fill scripts/delivery/windows-build-tools.json.
 on:

@@ -467,3 +467,14 @@ Migration numbers reserved for the wave, so parallel tasks never collide: 00020 
 Built (REG14): the registry API fields the screens used to work out themselves (R5.33a, R5.35a, R5.54, R5.54a): `internal/registry/records/read.go` (`extras`, `UnusedDays`, `RecommendedImages`, `InUse`, `SharedBytes`, `VariantGoneDays`, `LineageEntry.Relation`), `internal/api/handlers_registry_reg4.go`, `internal/api/handlers_registry_reg7.go` (`replaceSteps`), `replace.Service.KeepDaysDefault`, and the screens `RegistryTab.tsx`, `RegistryImagePage.tsx`, `RegistryReplacePage.tsx`, `RegistryBudgetsPage.tsx`. **Not yet:** the ready-made line of Add runners (`ReadyMadeLine`) still maps the machine arch to `amd64` or `arm64` and shows the first current image of that arch, not the image of the machine's profile; it needs the Add runners plan to carry the job image key of the machine.
 
 Built (REG9): internal/registry/mirror/ (`config.go`, `mirror.go`, `service.go`), internal/registry/mirror/engineconf/, internal/store/registry_mirror.go, internal/api/handlers_registry_reg9.go, internal/agent/engine_mirror.go, cmd/crsp/registry_mirror_wiring.go. No new migration: the columns of `registry_mirror_settings` in 00019 are enough (00028 stays unused).
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-4, UX-16, UX-49 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-5, UX-19, UX-25, UX-28, UX-29, UX-30, UX-34, UX-41, UX-54, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-71 `scripts/design/action-bar.test.ts`
+Proof: UX-72 `e2e/tests/web-console/ux-jobs-rows.spec.ts`
+Proof: UX-73 `e2e/tests/web-console/registry.spec.ts`

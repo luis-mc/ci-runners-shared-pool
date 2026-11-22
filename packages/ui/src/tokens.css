@@ -48,6 +48,7 @@
   --ds-row-action-width: 8rem;
   --ds-cell-grow-min: 6rem;
   --ds-border-thin: 1px;
+  --ds-border-width: var(--ds-border-thin);
   --ds-border-medium: 2px;
   --ds-border-thick: 3px;
   --ds-border-double: 6px;

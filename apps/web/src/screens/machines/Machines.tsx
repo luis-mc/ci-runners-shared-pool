@@ -20,7 +20,6 @@ import {
   Status,
   Table,
   Breadcrumbs,
-  Text,
   TextLink,
   formatPast,
   formatPercent,
@@ -30,7 +29,7 @@ import {
   ActionBar,
   EditBar,
 } from '@crsp/ui';
-import { useMemo, useState } from 'react';
+import { lazy, Suspense, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
@@ -43,6 +42,8 @@ import { MachineDockerDiskSection } from './MachineDockerDisk';
 import { MachinePolicySection, PolicyStatus, takingState } from './MachinePolicy';
 import { usePoolSize } from './PoolSize';
 import { RecoverySection } from './Recovery';
+
+const MachineRemove = lazy(() => import('./MachineRemove'));
 
 type Machine = Schemas['Machine'];
 
@@ -339,16 +340,6 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     );
     onChanged();
   });
-  const removeQ = useQuestion(
-    () =>
-      unwrap(
-        client.DELETE('/api/v1/machines/{machineId}', {
-          params: { path: { machineId: m.id }, query: { confirm: true } },
-        }),
-      ),
-    () => void navigate('/pool/machines'),
-  );
-
   const untickedUsable = m.backends.filter((b) => b.usable && !allowed.includes(b.name));
   const f = m.facts;
   return (
@@ -516,32 +507,13 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           {poolSize.section}
         </Stack>
       </form>
-      <Pane
-        title="Remove this machine"
-        footer={
-          <Button
-            kind="danger"
-            onPress={() =>
-              removeQ.ask(
-                [
-                  `Machine ${m.name}`,
-                  `Its runners (${m.slots_used} in use)`,
-                  'Its settings and its place in the pool',
-                ],
-                jobs,
-              )
-            }
-            disabled={!admin}
-          >
-            Remove
-          </Button>
-        }
-      >
-        <Text tone="muted">
-          Removing takes the machine and its runners out of the pool. Jobs that run there
-          finish first. The agent stays installed on the machine.
-        </Text>
-      </Pane>
+      <Suspense fallback={null}>
+        <MachineRemove
+          machineId={m.id}
+          disabled={!admin}
+          onRemoved={() => void navigate('/pool/machines')}
+        />
+      </Suspense>
       {saved ? <Message tone="done">Settings saved.</Message> : null}
       {save.error ? (
         <Message tone="problem">Could not save. {save.error} Try again.</Message>
@@ -573,16 +545,6 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
         error={drainQ.error}
         onCancel={drainQ.cancel}
         onConfirm={() => void drainQ.confirm()}
-      />
-      <Ask
-        title={`Remove ${m.name}?`}
-        action="Remove"
-        busyLabel="Removing"
-        q={removeQ.question}
-        busy={removeQ.busy}
-        error={removeQ.error}
-        onCancel={removeQ.cancel}
-        onConfirm={() => void removeQ.confirm()}
       />
       <Ask
         title="Save these settings?"

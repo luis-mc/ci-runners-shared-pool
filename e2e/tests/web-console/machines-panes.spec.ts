@@ -33,8 +33,8 @@ for (const width of [360, 393, 1300]) {
       await expect(page.getByRole('button', { name: 'Cancel' })).toHaveCount(1);
       await expect(
         page
-          .getByRole('region', { name: 'Remove this machine' })
-          .getByRole('button', { name: 'Remove' }),
+          .getByRole('region', { name: 'Remove crsp' })
+          .getByRole('button', { name: 'Remove crsp' }),
       ).toBeVisible();
       await expect(
         page.locator('button[data-primary]').filter({ hasText: 'Save' }),

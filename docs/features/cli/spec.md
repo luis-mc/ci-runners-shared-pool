@@ -241,6 +241,8 @@ A command that Ctrl-C cut off may still run on the machine until its own timeout
 
 **R5.63** (built, OPS38; owner decision D104; doctor R5.48) — `machine leftovers MACHINE` MUST list the runner services, folders, local accounts and downloads that no runner of this controller owns, taken from the items of the latest doctor finding `machine.runner_leftovers` of that machine (kind, name, size, why); with none it says so and exits 0; with `--json` it prints `{"items": [...]}`. `machine leftovers remove MACHINE NAME... [--yes]` MUST take each NAME from that list (a name not on it exits 4 and sends nothing), print what goes and ask "Type yes to go on:" (R5.14, R5.15), then call `POST /api/v1/machines/{machineId}/runner-leftovers/remove` once and print one line per item (`removed`, `already gone`, `refused` or `failed`, with the controller's reason). It exits 1 when any item was refused or failed. It changes nothing on a machine the scan did not list; the controller refuses anything owned or outside the crsp runners folders. The same rights as the console (admin).
 
+**R5.64** (built, OPS69; operations R5.32, R5.33) — `uninstall` (alias `remove`) `[--delete-data|--keep-data] [--yes]` removes crsp from this machine. It lists what goes and what stays, then needs a yes (R5.14). Data is kept unless `--delete-data` or `PURGE=1` says otherwise; `--delete-data` also deletes settings, database, logs, caches, runner images, containers and the `crsp` WSL distro. Both ways unregister the runners from GitHub and are audited with actor and result. In a terminal without either flag it asks "Keep my data or delete my data too", with no default, through the native window `crsp lifecycle-window remove` (exit 10 keep, 11 delete, 1 cancel) or, when no window can be shown, in the terminal. Installer-only flags: `--ask-to FILE`, `--choice-file FILE`, `--from-installer`, `--runners-only`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — The CLI MUST NOT print, log or write to its config file any secret: controller tokens, GitHub tokens, the App private key, the webhook secret, registration or remove tokens. The one-time join code (`machine add`) and the one-time console link (`open`) are the only short-lived codes it prints, and only on those commands.
@@ -339,6 +341,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R5.61 | built: internal/cli/cmd_machine_settings_test.go TestMachineSettingsShowsThePolicy, TestMachineSettingsSetsThePolicy, TestMachineSettingsRefusesBadValues |
 | R5.62 | planned in the OPS28 code branches (names reconciled when they land): `internal/cli` tests for `runner add --ephemeral`, the dependency flags, `runner update`, `runner clear-cache` and `repo policy --runner-kind` |
 | R5.63 | built: internal/cli/cmd_machine_leftovers_test.go TestMachineLeftoversLists, TestMachineLeftoversListEmpty, TestMachineLeftoversRemove, TestMachineLeftoversRemoveNeedsConfirmation, TestMachineLeftoversRemoveRefusedAndUnknown |
+| R5.64 | built: internal/cli/cmd_uninstall_test.go TestUninstallSilentKeepsDataAndUnregistersRunners, TestUninstallDeleteDataFlagAndPurge, TestUninstallWindowAnswers, TestUninstallWithoutWindowAsksInTheTerminalWithNoDefault |
 
 ## 10. Decisions
 

@@ -1,0 +1,116 @@
+# OPS69: the Windows MSI lifecycle lanes (DELIVERYSPEC LC-8 to LC-21, LC-29, LC-33) and the release check (LC-32).
+# One lane per target, on GitHub-hosted runners: windows-latest (x64) and windows-11-arm (arm64). Each lane builds the
+# MSI from the branch, then runs install, upgrade (previous release to this build), a broken build and its
+# rollback, a refused downgrade, remove (keeps data), purge (PURGE=1) and the --delete-data run, the leftover
+# scan and the package lints. Each lane writes lifecycle-result-<lane>-<arch>.json for the release check.
+# Called by ci.yml on a release pull request (release: true); also runnable by hand. Linux and macOS are not
+# lifecycle targets (owner decision, 21 Nov): their packages are built, no lifecycle check runs for them.
+name: lifecycle
+on:
+  workflow_call:
+    inputs:
+      release:
+        description: 'true on a release pull request: every target lane must pass'
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      release:
+        description: 'true: every target lane must pass'
+        type: boolean
+        default: false
+
+concurrency:
+  group: lifecycle-${{ github.ref }}-${{ github.workflow }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  LIFECYCLE_JSON: docs/design-system/next-version/lifecycle.json
+
+jobs:
+  windows:
+    name: windows ${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: x64, runner: windows-latest }
+          - { arch: arm64, runner: windows-11-arm }
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: '3.13'
+      - name: Build the MSIs from this branch and get the previous release
+        run: ./scripts/lifecycle/fetch-packages.ps1 -Arch ${{ matrix.arch }}
+      - name: Build the lifecycle test tool (LC-8, LC-29)
+        run: |
+          New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\lc-bin" | Out-Null
+          $env:CGO_ENABLED = '0'
+          go build -o "$env:RUNNER_TEMP\lc-bin\crsp-lifecycle-test.exe" ./cmd/crsp-lifecycle-test
+          "$env:RUNNER_TEMP\lc-bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
+      - name: Lifecycle steps
+        run: |
+          ./scripts/lifecycle/windows.ps1 -Check all | Tee-Object lifecycle-steps.txt
+          # A pipe hides the script's exit code: a FAIL line fails the lane.
+          if (Select-String -Path lifecycle-steps.txt -Pattern '^LC-\d+ FAIL' -Quiet) { exit 1 }
+      - name: Write the lane result
+        if: ${{ always() }}
+        run: python scripts/delivery/lifecycle_release_check.py write-result --lane windows --arch ${{ matrix.arch }} --package msi --steps lifecycle-steps.txt --out lifecycle-result-windows-${{ matrix.arch }}.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ always() }}
+        with:
+          # Stable name, no version or run number (artifact-prune.yml keeps the newest).
+          name: lifecycle-result-windows-${{ matrix.arch }}
+          path: |
+            lifecycle-result-windows-${{ matrix.arch }}.json
+            lifecycle-steps.txt
+          if-no-files-found: ignore
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ always() }}
+        with:
+          # Verbose msiexec logs of the remove runs (LC-15 evidence); stable name, newest kept.
+          name: lifecycle-msi-logs-${{ matrix.arch }}
+          path: ${{ runner.temp }}/lifecycle-logs/
+          if-no-files-found: ignore
+
+  # Fills the results folder and runs the release check. A release pull request fails unless every target
+  # lane passed. lifecycle.off in .delivery/config.json stays empty (scripts/delivery/lifecycle_optout.py).
+  release-check:
+    name: release check
+    needs: windows
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: lifecycle-result-*
+          path: lifecycle-results
+          merge-multiple: true
+      - name: Opt-outs are empty or valid
+        run: python3 scripts/delivery/lifecycle_optout.py check
+      - name: Every target lane passed
+        env:
+          RELEASE: ${{ inputs.release }}
+        run: |
+          set -euo pipefail
+          flag=""
+          [ "$RELEASE" = "true" ] && flag="--release"
+          python3 scripts/delivery/lifecycle_release_check.py check --lifecycle "$LIFECYCLE_JSON" --results lifecycle-results $flag

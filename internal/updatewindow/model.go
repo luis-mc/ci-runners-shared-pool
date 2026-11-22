@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/tray"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
@@ -25,10 +26,16 @@ const (
 	StateFailed           State = "failed"
 	StateCancelled        State = "cancelled"
 	StateUpToDate         State = "up_to_date" // the version offered is not newer than the one that runs (TRAY8)
+	StateVerifying        State = "verifying"  // the download is checked: SHA-256, signature
+	StateTesting          State = "testing"    // the new version runs its self-test
+	StateRollingBack      State = "rolling_back"
+	StateRolledBack       State = "rolled_back" // the test failed; the old version runs again
+	StateRefused          State = "refused"     // the download did not pass its signature check; nothing changed
+	StateSkipped          State = "skipped"     // three failures: no new try until a newer version
 )
 
 // AllStates lists every state, in the order of an update.
-var AllStates = []State{StateReview, StateDownloading, StateWaiting, StateWaitingInstaller, StateInstalling, StateRestarting, StateDone, StateFailed, StateCancelled, StateUpToDate}
+var AllStates = []State{StateReview, StateWaiting, StateDownloading, StateVerifying, StateInstalling, StateRestarting, StateTesting, StateDone, StateRollingBack, StateRolledBack, StateRefused, StateSkipped, StateFailed, StateCancelled, StateUpToDate}
 
 // Mode is how the window was opened.
 type Mode string
@@ -40,6 +47,8 @@ const (
 	// ModeLive opens on whatever the update does now: the menu item while it runs, or the
 	// toast after an automatic update (Done).
 	ModeLive Mode = "live"
+	// ModeRemove is the remove question (crsp lifecycle-window remove).
+	ModeRemove Mode = "remove"
 )
 
 // ButtonID names a button. The window sends the ID back; the page code never draws a button.
@@ -52,6 +61,10 @@ const (
 	BtnHide   ButtonID = "hide"
 	BtnCancel ButtonID = "cancel"
 	BtnClose  ButtonID = "close"
+	// BtnWhatsNew opens the release notes after an update.
+	BtnWhatsNew ButtonID = "whats_new"
+	// BtnRemove, BtnKeep and BtnPurge belong to the remove question.
+	BtnRemove ButtonID = "remove"
 )
 
 // Button is one button of the bar, left to right.
@@ -59,6 +72,24 @@ type Button struct {
 	ID      ButtonID
 	Label   string
 	Primary bool // filled; the others are outlined (D16)
+	// Disabled buttons are drawn muted and press nothing (Remove, until a choice is made).
+	Disabled bool
+}
+
+// ChoiceID names one of the radio choices of a question.
+type ChoiceID string
+
+// The two choices of the remove question. Neither is chosen when the window opens.
+const (
+	ChoiceKeep  ChoiceID = "keep"
+	ChoicePurge ChoiceID = "purge"
+)
+
+// Choice is one radio option; Chosen says it is the selected one.
+type Choice struct {
+	ID     ChoiceID
+	Label  string
+	Chosen bool
 }
 
 // Bar is the progress bar of a state.
@@ -90,6 +121,7 @@ type View struct {
 	Percent int // 0 to 100; Bar determinate only
 	Tone    Tone
 	Buttons []Button
+	Choices []Choice // radio options above the buttons (remove); none for the update
 	// Default is the button Enter presses; Escape and the close button of the title bar do
 	// EscapeIs: Not now on Review, Hide while it works, Close at the end.
 	Default  ButtonID
@@ -198,8 +230,26 @@ func (m *Model) State() State {
 			}
 		case "downloading":
 			return StateDownloading
-		case "waiting_for_jobs":
+		case "waiting_for_jobs", "waiting":
 			return StateWaiting
+		case "verifying":
+			return StateVerifying
+		case "testing":
+			return StateTesting
+		case "rolling_back":
+			return StateRollingBack
+		case "rolled_back":
+			if trust {
+				return StateRolledBack
+			}
+		case "refused":
+			if trust {
+				return StateRefused
+			}
+		case "skipped":
+			if trust {
+				return StateSkipped
+			}
 		case "waiting_installer":
 			return StateWaitingInstaller
 		case "installing", "restarting":
@@ -261,20 +311,28 @@ func (m *Model) View() View {
 	s := m.State()
 	to := m.version()
 	v := View{State: s, Percent: -1}
+	hide := []Button{{ID: BtnHide, Label: WordHide}}
+	closeOnly := []Button{{ID: BtnClose, Label: WordClose, Primary: true}}
+	working := func(heading string, body ...string) {
+		v.Heading, v.Body, v.Bar, v.Buttons = heading, body, BarIndeterminate, hide
+		v.Default, v.EscapeIs = BtnHide, BtnHide
+	}
+	ended := func(tone Tone, heading string, body ...string) {
+		v.Heading, v.Tone, v.Body, v.Buttons = heading, tone, body, closeOnly
+		v.Default, v.EscapeIs = BtnClose, BtnClose
+	}
+	version := "Version " + to
 	switch s {
 	case StateReview:
 		if m.To != "" {
 			to = m.To // the offer, never the version of a leftover stage
 		}
-		v.Heading = "Update to " + to
-		v.Body = []string{
-			fmt.Sprintf("Version %s is ready. You run %s.", to, m.From),
-			"Running jobs finish first, then the service restarts (about 1 min). No job is stopped.",
-		}
-		v.Buttons = []Button{{BtnNotNow, WordNotNow, false}, {BtnUpdate, WordUpdate, true}}
+		v.Heading = tray.Fill(tray.WordAvailableTitle, "version", to)
+		v.Body = []string{fmt.Sprintf("You run version %s. Running jobs finish first, then the service restarts (about 1 min). Jobs are never stopped by an update.", m.From)}
+		v.Buttons = []Button{{ID: BtnNotNow, Label: WordNotNow}, {ID: BtnUpdate, Label: tray.Fill(tray.WordAvailablePrimary, "version", to), Primary: true}}
 		v.Default, v.EscapeIs = BtnUpdate, BtnNotNow
 	case StateDownloading:
-		v.Heading = "Downloading " + to
+		v.Heading = tray.WordDownloading
 		v.Bar = BarIndeterminate
 		if st := m.last.Stage; st != nil && st.Name == "downloading" && st.Percent >= 0 {
 			v.Bar, v.Percent = BarDeterminate, min(st.Percent, 100)
@@ -282,58 +340,72 @@ func (m *Model) View() View {
 		if m.requested && !m.returned {
 			v.Body = []string{WordStarted}
 		} else {
-			v.Body = []string{"The update is checked against its checksum and signature before it installs."}
+			v.Body = []string{version}
 		}
-		v.Buttons = []Button{{BtnHide, WordHide, false}, {BtnCancel, WordCancel, false}}
+		v.Buttons = []Button{{ID: BtnHide, Label: WordHide}, {ID: BtnCancel, Label: WordCancel}}
 		v.Default, v.EscapeIs = BtnHide, BtnHide
 	case StateWaiting:
-		v.Heading = "Waiting for jobs"
-		v.Body = []string{jobsLine(m.last.Jobs), "This machine takes no new jobs meanwhile. No job is stopped."}
-		v.Buttons = []Button{{BtnHide, WordHide, false}, {BtnCancel, WordCancel, false}}
+		v.Heading = tray.WordWaiting
+		v.Body = []string{jobsLine(m.last.Jobs), tray.WordNoJobStopped}
+		v.Buttons = []Button{{ID: BtnHide, Label: WordHide}, {ID: BtnCancel, Label: WordCancel}}
 		v.Default, v.EscapeIs = BtnHide, BtnHide
+	case StateVerifying:
+		working(tray.WordVerifying, version)
 	case StateInstalling:
-		v.Heading = "Installing " + to
-		v.Bar = BarIndeterminate
+		working(tray.WordInstalling, version)
 		if st := m.last.Stage; st != nil && st.Name == "installing" && st.Percent >= 0 {
 			v.Bar, v.Percent = BarDeterminate, min(st.Percent, 100)
 		}
-		v.Body = []string{"This cannot be cancelled. You can hide this window; the update goes on."}
-		v.Buttons = []Button{{BtnHide, WordHide, false}}
-		v.Default, v.EscapeIs = BtnHide, BtnHide
 	case StateWaitingInstaller:
-		v.Heading = WordWaitingInstaller
-		v.Bar = BarIndeterminate
-		v.Body = []string{waitingInstallerLine(m.last.Stage)}
-		v.Buttons = []Button{{BtnHide, WordHide, false}}
-		v.Default, v.EscapeIs = BtnHide, BtnHide
+		working(WordWaitingInstaller, waitingInstallerLine(m.last.Stage))
 	case StateRestarting:
-		v.Heading = "Restarting the service"
-		v.Bar = BarIndeterminate
-		v.Body = []string{"The service is replaced and starts again. This window waits for it."}
-		v.Buttons = []Button{{BtnHide, WordHide, false}}
-		v.Default, v.EscapeIs = BtnHide, BtnHide
+		working(tray.WordRestarting, version)
+	case StateTesting:
+		working(tray.WordTesting, version)
+	case StateRollingBack:
+		working(tray.Fill(tray.WordRollingBack, "previous", m.previous()))
 	case StateDone:
-		v.Heading, v.Tone = "Updated", ToneDone
-		v.Body = []string{"Now running " + m.doneVersion() + "."}
-		v.Buttons = []Button{{BtnClose, WordClose, true}}
+		v.Heading, v.Tone = tray.Fill(tray.WordUpdatedTitle, "version", m.doneVersion()), ToneDone
+		v.Buttons = []Button{{ID: BtnWhatsNew, Label: tray.WordWhatsNew}, {ID: BtnClose, Label: WordClose, Primary: true}}
 		v.Default, v.EscapeIs = BtnClose, BtnClose
+	case StateRolledBack:
+		ended(ToneProblem, m.rolledBackTitle())
+	case StateRefused:
+		ended(ToneProblem, tray.Fill(tray.WordRefusedTitle, "version", to))
+	case StateSkipped:
+		ended(ToneNormal, tray.Fill(tray.WordSkippedTitle, "version", to))
 	case StateFailed:
-		v.Heading, v.Tone = "The update failed", ToneProblem
-		v.Body = m.failureLines()
-		v.Buttons = []Button{{BtnClose, WordClose, true}}
-		v.Default, v.EscapeIs = BtnClose, BtnClose
+		ended(ToneProblem, tray.WordFailedTitle, m.failureLines()...)
 	case StateUpToDate:
-		v.Heading = WordUpToDate
-		v.Body = []string{"Now running " + m.running() + ". This is the newest stable release."}
-		v.Buttons = []Button{{BtnClose, WordClose, true}}
-		v.Default, v.EscapeIs = BtnClose, BtnClose
+		ended(ToneNormal, WordUpToDate, "Version "+m.running()+" is the newest stable release.")
 	case StateCancelled:
-		v.Heading = "Update cancelled"
-		v.Body = []string{"Nothing changed. Still on " + m.running() + "."}
-		v.Buttons = []Button{{BtnClose, WordClose, true}}
-		v.Default, v.EscapeIs = BtnClose, BtnClose
+		ended(ToneNormal, tray.WordCancelledTitle, "Nothing changed. Still on version "+m.running()+".")
 	}
 	return v
+}
+
+// previous is the version that runs again after a rollback.
+func (m *Model) previous() string {
+	if st := m.last.Stage; st != nil && st.Previous != "" {
+		return st.Previous
+	}
+	return m.running()
+}
+
+// rolledBackTitle is the table's sentence; the retry time is shown as a clock time of this
+// machine, and the sentence without the retry when no new try is planned.
+func (m *Model) rolledBackTitle() string {
+	t := ""
+	if st := m.last.Stage; st != nil {
+		if at, err := time.Parse(time.RFC3339, st.RetryAt); err == nil {
+			t = at.Local().Format("15:04")
+		}
+	}
+	tpl := tray.WordRolledBackTitle
+	if t == "" {
+		tpl = tray.WordRolledBackFinal
+	}
+	return tray.Fill(tpl, "version", m.version(), "previous", m.previous(), "time", t)
 }
 
 func waitingInstallerLine(st *tray.StageInfo) string {
@@ -347,11 +419,11 @@ func waitingInstallerLine(st *tray.StageInfo) string {
 func jobsLine(n int) string {
 	switch n {
 	case 0:
-		return "The jobs on this machine are finishing. The update starts when they are done."
+		return "The jobs on this machine are finishing."
 	case 1:
-		return "1 job runs now. The update starts when it is done."
+		return "1 job runs now."
 	}
-	return fmt.Sprintf("%d jobs run now. The update starts when they are done.", n)
+	return fmt.Sprintf("%d jobs run now.", n)
 }
 
 func (m *Model) doneVersion() string {
@@ -376,7 +448,7 @@ func (m *Model) failureLines() []string {
 	if reason == "" {
 		reason = "The update did not finish."
 	}
-	out := []string{strings.TrimSpace(reason), "Still on " + m.running() + "."}
+	out := []string{strings.TrimSpace(reason), "Still on version " + m.running() + "."}
 	if log != "" {
 		out = append(out, "Log: "+log)
 	}

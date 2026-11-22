@@ -41,15 +41,17 @@ type PolicyInfo struct {
 // StageInfo is the live stage of an update, as the service writes it (internal/update Stage).
 // The update window reads it; an older service leaves it out.
 type StageInfo struct {
-	Name    string `json:"name"` // downloading, waiting_for_jobs, installing, waiting_installer, restarting, done, failed
-	Percent int    `json:"percent"`
-	Version string `json:"version,omitempty"`
-	Error   string `json:"error,omitempty"`
-	LogPath string `json:"log_path,omitempty"`
+	Name      string `json:"name"` // downloading, waiting_for_jobs, verifying, installing, waiting_installer, restarting, testing, done, failed, rolling_back, rolled_back, refused, skipped
+	Percent   int    `json:"percent"`
+	Version   string `json:"version,omitempty"`
+	Error     string `json:"error,omitempty"`
+	LogPath   string `json:"log_path,omitempty"`
+	FailedAt  string `json:"failed_at,omitempty"`
+	StartedBy string `json:"started_by,omitempty"` // auto, tray or console
 	// WaitingFor names the other installer (waiting_installer only).
 	WaitingFor string `json:"waiting_for,omitempty"`
-	FailedAt   string `json:"failed_at,omitempty"`
-	StartedBy  string `json:"started_by,omitempty"` // auto, tray or console
+	Previous   string `json:"previous,omitempty"` // rolling_back, rolled_back: the version that runs again
+	RetryAt    string `json:"retry_at,omitempty"` // rolled_back: RFC 3339 time of the next try; empty after the third failure
 }
 
 // Response is one JSON line answered by the service.

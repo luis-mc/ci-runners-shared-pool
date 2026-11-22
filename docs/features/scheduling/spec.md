@@ -612,3 +612,11 @@ Source: `internal/scheduler/slots/config.go`, `internal/scheduler/slots/order.go
 - `internal/jobsize`: the scan, the stack and cost tables, the precedence and the 2x reset (OPS67); `internal/store/jobsizes.go` keeps its rows; `internal/api/handlers_jobsizes.go` serves them; `cmd/crsp/jobsize_wiring.go` starts the scan from job events.
 
 Planned, not built: `demand.go`, `windows.go` (M2 and M3); placement across machines (R5.48, R5.49). Built in CRSP50: `placement.go` (one machine). The tables are those of `internal/store/migrations/00006_scheduling.sql`.
+
+## Design-system proof
+
+A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
+
+Proof: UX-6, UX-14, UX-19, UX-26, UX-28, UX-29, UX-34, UX-41, UX-52, UX-53, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-38 `scripts/design/wizard-behaviour.test.ts`

@@ -194,3 +194,87 @@ func TestMSINeverRemovesTheDataFolderOnUpgrade(t *testing.T) {
 		t.Error("RemoveData must not run on an upgrade: it needs NOT UPGRADINGPRODUCTCODE")
 	}
 }
+
+// OPS69: remove asks through the native window, passes PURGE through, unregisters the runners and audits.
+func TestMSIRemoveAsksPassesPurgeAndUnregistersRunners(t *testing.T) {
+	s := wxs(t)
+	for _, want := range []string{
+		// the question is the native window, through the CLI; a cancel (exit 1) fails the action
+		`uninstall --ask-to`,
+		`Id="AskRemove"`,
+		// interactive only: a silent uninstall keeps the data
+		`UILevel&gt;=4`,
+		// PURGE reaches the CLI as --delete-data
+		`<Property Id="PURGE"`,
+		`Value="--delete-data "`,
+		`[PURGEARG]--actor`,
+		// the runners are unregistered while the controller still runs
+		`uninstall --runners-only`,
+		`<Custom Action="UnregisterRunners" Before="CloseTray"`,
+		// the older name keeps working
+		`Condition="REMOVEDATA=&quot;1&quot;"`,
+	} {
+		if !strings.Contains(s, want) {
+			t.Errorf("crsp.wxs lacks %s", want)
+		}
+	}
+	if strings.Contains(s, "RemoveDataDlg") || strings.Contains(s, `Type="CheckBox"`) {
+		t.Error("the check box dialog is replaced by the native remove window")
+	}
+	// A cancel must stop the uninstall: the ask action returns "check", never "ignore".
+	i := strings.Index(s, `Id="AskRemove"`)
+	if i < 0 || !strings.Contains(s[i:i+400], `Return="check"`) {
+		t.Error("AskRemove must be Return=check so Cancel ends the uninstall")
+	}
+	// The remove step never runs on an upgrade.
+	i = strings.Index(s, `<Custom Action="RemoveData"`)
+	if i < 0 || !strings.Contains(s[i:i+250], "NOT UPGRADINGPRODUCTCODE") {
+		t.Error("RemoveData must not run on an upgrade")
+	}
+}
+
+// An XML comment cannot hold two hyphens in a row (WiX error WIX0104): a command line flag in a comment broke the build.
+func TestMSIComments(t *testing.T) {
+	b, err := os.ReadFile("crsp.wxs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range regexp.MustCompile(`(?s)<!--(.*?)-->`).FindAllStringSubmatch(string(b), -1) {
+		if strings.Contains(m[1], "--") || strings.HasSuffix(m[1], "-") {
+			t.Errorf("an XML comment holds two hyphens in a row or ends in one: %.70q", m[1])
+		}
+	}
+}
+
+// ICE43, ICE57, ICE69: the Start Menu shortcut is a component of its own with an HKCU key path (the WiX
+// pattern), pointing at crsp.exe through the CRSPEXE property; the tray's Run value stays with crsp.exe.
+func TestMSIShortcutHasItsOwnComponentWithHKCUKeyPath(t *testing.T) {
+	s := wxs(t)
+	sc := regexp.MustCompile(`(?s)<Component Id="CrspShortcutComponent".*?\n      </Component>`).FindString(s)
+	if sc == "" {
+		t.Fatal("component CrspShortcutComponent not found")
+	}
+	for _, want := range []string{`<Shortcut Id="CrspShortcut"`, `Root="HKCU"`, `KeyPath="yes"`, `Target="[CRSPEXE]"`} {
+		if !strings.Contains(sc, want) {
+			t.Errorf("CrspShortcutComponent must hold %s", want)
+		}
+	}
+	if strings.Contains(sc, "[#CrspExe]") {
+		t.Error("the shortcut target must not name a file of another component (ICE69)")
+	}
+	prog := regexp.MustCompile(`(?s)<Component Id="CrspProgram">.*?\n      </Component>`).FindString(s)
+	if strings.Contains(prog, "<Shortcut") || !strings.Contains(prog, `Name="crsp-tray"`) {
+		t.Error("CrspProgram holds the Run value and no shortcut")
+	}
+}
+
+// LC-15: the purge removes the whole data folder (logs included) after the service is gone and the files are removed.
+func TestMSIPurgeRunsAfterTheServiceAndFilesAreGone(t *testing.T) {
+	s := wxs(t)
+	if !strings.Contains(s, `<Custom Action="PurgeFolder" After="RemoveFiles"`) {
+		t.Error("PurgeFolder must run after RemoveFiles (the service is stopped and deleted by then)")
+	}
+	if !strings.Contains(s, "Get-Process -Name crsp") || !strings.Contains(s, "Remove-Item -LiteralPath '[DATAFOLDER]' -Recurse -Force") {
+		t.Error("PurgeFolder must end crsp processes and remove the whole data folder")
+	}
+}
