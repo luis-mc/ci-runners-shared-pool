@@ -1356,6 +1356,42 @@ The measured block of the Job page, in the CPU and memory pane. `{n}` is a numbe
 | Job page, job key, not measured | Not measured yet: {runs} of 5 good runs. |
 | Job page, job key, no good run | No good run yet. |
 
+## Restart the service and Gate maximum wait words (CRSP235; machines R5.81, R5.82)
+
+The Service section of the machine page, the Restart the service wizard of an agent machine and the field Gate maximum wait. Built from the shared Section, Button, Cluster, Wizard, Facts, BulletList, Message, Text and NumberField parts. The action word is Restart the service, as in the action vocabulary; the same button is on Settings, Updates for the controller's own service.
+
+| Where | Words |
+|---|---|
+| Machine page, section title | Service |
+| Machine page and Settings, Updates, line | Stop and start the service after the running jobs end. No running job is stopped. |
+| Button | Restart the service |
+| Button, locked for an offline machine | The machine is offline. |
+| Wizard name and page title | Restart the service |
+| Wizard steps | Review, Restarting, Done |
+| Review text | Restart the service of {machine}. This machine takes no new jobs, waits for the running jobs to end (up to {n} minutes), then restarts its service. No running job is stopped. |
+| Review, jobs | These jobs run now and are waited for: |
+| Review, no job | No job runs on this machine now. |
+| Restarting, State | Waiting for {n} running jobs to end; Waiting for running jobs to end; Restarting the service |
+| Restarting, facts | State; Jobs still running; the jobs as rows with the value running |
+| Restarting, progress | {State}: {n} jobs left |
+| Restarting, console not answering | The console is not answering. This page waits for it. |
+| Paused (page reloaded while it runs) | Paused. The page closed while the service restarted. It goes on without this page. Start again to follow it. |
+| Offline, first run | {machine} is offline. Its service can restart only while it is connected. Try again when it is back. |
+| Offline, busy word | Looking |
+| Looking | Looking at {machine}. |
+| The controller's machine, stopped | Stopped. Nothing changed: {machine} is the controller. Its service restarts from Settings, Updates. |
+| Failed | The restart did not finish. {reason} The service keeps running. Try again. |
+| Failed, reasons | The service could not restart. Resume the machine, then try again. The service did not come back within 5 minutes. |
+| Done | The service of {machine} restarted. |
+| Done, facts | Version; Jobs stopped: 0 |
+| Done, next action | Open the machine |
+| Field label | Gate maximum wait |
+| Field unit | min |
+| Field help | How long a job may wait for a free slot before it starts. Never more than 2 minutes. |
+| Field mistake, on Save | Gate maximum wait must be from 1 to 2 minutes. |
+| Field note, a saved value above 2 | Saved as {n} minutes. The hook cuts the wait to 2. Set 2 or less and press Save. |
+| Doctor fix | On the machine page set Gate maximum wait to 2 minutes or less. (The Open button goes to the field.) |
+
 ## Disk floor words (OPS86, runners R5.83)
 
 The free disk a machine keeps before it starts a job or a VM, on the machine page under Disk (the Save bar saves it). `{x}` is a number of GB (1 decimal at most).

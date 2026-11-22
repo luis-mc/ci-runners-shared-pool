@@ -19,6 +19,15 @@ type fakeUpdater struct {
 	asked []string
 	st    update.Status
 	err   error
+	// restarts counts the Restart calls (CRSP235).
+	restarts int
+}
+
+func (f *fakeUpdater) Restart(context.Context) (update.Status, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.restarts++
+	return f.st, f.err
 }
 
 func (f *fakeUpdater) Follow(_ context.Context, v string) (update.Status, error) {
@@ -170,4 +179,33 @@ func TestUpdateDrainerTimeoutIsTheMachineSetting(t *testing.T) {
 	if got := d.DrainTimeoutMinutes(context.Background()); got != 60 {
 		t.Errorf("unset: %d, want 60", got)
 	}
+}
+
+// CRSP235: the console's Restart the service reaches the agent only after the
+// drain found the machine idle; the agent then asks its manager to restart.
+func TestAgentRestartsItsServiceWhenTheControllerAsks(t *testing.T) {
+	up := &fakeUpdater{}
+	c, id := joinedAgent(t, up)
+	if _, err := c.Svc.RestartService(context.Background(), "owner", id, true); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "the agent was asked to restart", func() bool {
+		up.mu.Lock()
+		defer up.mu.Unlock()
+		return up.restarts == 1
+	})
+}
+
+// A restart the agent cannot do is said, not left silent.
+func TestAgentSaysItCannotRestart(t *testing.T) {
+	up := &fakeUpdater{err: update.ErrUnprivileged}
+	c, id := joinedAgent(t, up)
+	if _, err := c.Svc.RestartService(context.Background(), "owner", id, true); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "unsupported", func() bool { return agentUpdate(c, id).State == "unsupported" })
+	waitFor(t, "the change needs the owner", func() bool {
+		v, _ := c.Svc.Get(context.Background(), id)
+		return v.PendingChange != nil && v.PendingChange.State == machines.ChangeNeedsYou
+	})
 }

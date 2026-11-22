@@ -38,6 +38,10 @@ const (
 	ChangeNeedsYou = "needs_you"
 )
 
+// MaxGateWaitMinutes is the longest hold the console may save: the 2 minute cap
+// of scheduling R5.75 (slots.MaxHoldMin; a test keeps them equal).
+const MaxGateWaitMinutes = 2
+
 // Errors the API maps to the error envelope.
 var (
 	ErrNotFound        = errors.New("machine not found")
@@ -247,15 +251,17 @@ func DefaultSettings() Settings {
 
 // SettingsUpdate is a partial change; nil fields stay as they are.
 type SettingsUpdate struct {
-	Name                *string
-	BudgetMemoryPct     *int
-	BudgetCPUPct        *int
-	JobSlots            *int
-	LightSlots          *int
-	HeavySlots          *int
-	LightJobs           *[]string
-	HeavyJobs           *[]string
-	GateOnTimeout       *string
+	Name            *string
+	BudgetMemoryPct *int
+	BudgetCPUPct    *int
+	JobSlots        *int
+	LightSlots      *int
+	HeavySlots      *int
+	LightJobs       *[]string
+	HeavyJobs       *[]string
+	GateOnTimeout   *string
+	// GateMaxWaitMinutes is 1 to MaxGateWaitMinutes (scheduling R5.75).
+	GateMaxWaitMinutes  *int
 	AllowedBackends     *[]string
 	CacheCapBytes       *int64
 	DrainTimeoutMinutes *int

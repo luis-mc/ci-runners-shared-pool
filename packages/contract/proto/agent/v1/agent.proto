@@ -170,6 +170,8 @@ message SessionResponse {
     RegistryToken registry_grant = 29;
     // OPS78: start, stop or read the listener of a gated persistent runner.
     ListenerControl listener_control = 30;
+    // CRSP235: restart the agent's service once no job runs (operations R5.15, machines R5.81).
+    RestartAgent restart_agent = 31;
   }
 }
 
@@ -787,6 +789,15 @@ message UpdateAgent {
   string command_id = 1;
   // The stable version to install, without the leading v: the controller's own.
   string version = 2;
+}
+
+// RestartAgent asks the agent to restart its own service. The controller sends it
+// when the drain of a service_restart change found the machine idle; the agent
+// holds new jobs, checks once more that none runs, and restarts. It never cuts a
+// job. The agent answers with UpdateReport states (waiting_for_jobs, restarting,
+// failed) and reconnects after the restart (CRSP235).
+message RestartAgent {
+  string command_id = 1;
 }
 
 // UpdateReport says where the agent's follow-the-controller update stands.
