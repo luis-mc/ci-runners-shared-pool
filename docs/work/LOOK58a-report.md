@@ -21,3 +21,7 @@ Branch LOOK58a-timeline-api (from LOOK58-timeline-machines). Contract unchanged,
 
 ## Checks
 go test ./internal/forecast/... ./internal/api/... ./internal/store/... green; golangci-lint 0 issues. docs_check: only W1 (docs/work files on branch, expected; pre-existing LOOK56 reports too).
+
+Push note: the pre-push guard test-guardrails (G1, G4) reports pre-existing breaks (conftest.py, ci.yml, go-test.sh, idle_cost_unix_test.go); mode warn, not mine.
+
+CODE DONE f1f2632
