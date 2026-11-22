@@ -29,3 +29,7 @@ Branch OPS78-listener-gate: origin/OPS77-integration, then OPS80-before-assignme
 4. A label change on a connected listener: does it apply and how fast (add a custom label, queue a job that needs it, time the pickup, remove the label).
 5. Windows: a LocalSystem agent stopping and starting a service of another account 50 times; time it, watch for logon errors (runners R5.89).
 6. Update at start, JIT removal timing, organization label endpoints.
+
+PR: https://github.com/luis-mc/ci-runners-shared-pool/pull/387 (draft)
+
+CODE DONE 696fdd12636467e5eb71beaab48c1950695ba31d (observe mode; report commit ba5a2fe)
