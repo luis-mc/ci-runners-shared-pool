@@ -69,6 +69,11 @@ var runtimeColumns = map[string]map[string]bool{
 	"repos_state": {"saved_at": true},
 }
 
+// removedTables are tables a migration drops on purpose, because the feature they served was removed. Their
+// rows are not data the user keeps in the new version, so an upgrade that drops one is not a loss.
+//   - access_credentials: migration 00042_drop_access_credentials (CRSP227 removed the access credentials).
+var removedTables = map[string]bool{"access_credentials": true}
+
 // dropColumns returns the table without the columns that are runtime state.
 func dropColumns(name string, td store.TableData) store.TableData {
 	skip := runtimeColumns[name]
@@ -120,6 +125,9 @@ func compareData(before, after map[string]store.TableData) []string {
 	sort.Strings(names)
 	var diffs []string
 	for _, n := range names {
+		if removedTables[n] {
+			continue
+		}
 		b := dropColumns(n, before[n])
 		a, ok := after[n]
 		if ok {

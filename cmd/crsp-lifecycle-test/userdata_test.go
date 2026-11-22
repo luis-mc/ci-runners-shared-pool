@@ -70,3 +70,19 @@ func TestCompareDataRuntimeColumn(t *testing.T) {
 		t.Fatalf("no other table is excluded: %v", d)
 	}
 }
+
+// A table a migration drops on purpose (CRSP227: access_credentials) is not a loss; any other missing table is.
+func TestCompareDataRemovedTable(t *testing.T) {
+	before := map[string]store.TableData{
+		"access_credentials": {Columns: []string{"id"}, Rows: [][]string{{"1"}}},
+		"settings":           {Columns: []string{"k"}, Rows: [][]string{{"a"}}},
+	}
+	after := map[string]store.TableData{"settings": {Columns: []string{"k"}, Rows: [][]string{{"a"}}}}
+	if d := compareData(before, after); len(d) != 0 {
+		t.Fatalf("a dropped access_credentials is not a loss: %v", d)
+	}
+	delete(after, "settings")
+	if d := compareData(before, after); len(d) != 1 || !strings.Contains(d[0], "settings") {
+		t.Fatalf("a missing settings table is a loss: %v", d)
+	}
+}
