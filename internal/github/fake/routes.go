@@ -1,7 +1,6 @@
 package fake
 
 import (
-	"crypto/rand"
 	"crypto/sha1" //nolint:gosec // git blob ids are SHA-1 by definition
 	"crypto/sha256"
 	"encoding/base64"
@@ -15,8 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/nacl/box"
 )
 
 // route runs with s.mu held.
@@ -362,10 +359,6 @@ func (s *Server) repoRoutes(w http.ResponseWriter, r *http.Request) {
 		s.runnerRoutes(w, r, full, strings.TrimPrefix(rest, "actions/runners"))
 	case rest == "actions/variables" || strings.HasPrefix(rest, "actions/variables/"):
 		s.variableRoutes(w, r, full, strings.TrimPrefix(strings.TrimPrefix(rest, "actions/variables"), "/"))
-	case rest == "actions/secrets/public-key" && r.Method == "GET":
-		s.secretPublicKey(w, full)
-	case strings.HasPrefix(rest, "actions/secrets/") && r.Method == "PUT":
-		s.putSecret(w, r, full, strings.TrimPrefix(rest, "actions/secrets/"))
 	case strings.HasPrefix(rest, "git/trees/"):
 		s.gitTree(w, full)
 	case strings.HasPrefix(rest, "contents/"):
@@ -602,62 +595,6 @@ func (s *Server) runnerRoutes(w http.ResponseWriter, r *http.Request, scope, res
 	default:
 		notFound(w)
 	}
-}
-
-func (s *Server) repoSecretKey(full string) *[2][32]byte {
-	if s.secretKeys == nil {
-		s.secretKeys = map[string]*[2][32]byte{}
-	}
-	k := s.secretKeys[full]
-	if k == nil {
-		pub, priv, err := box.GenerateKey(rand.Reader)
-		if err != nil {
-			panic(err) // no randomness: not a state a test can continue in
-		}
-		k = &[2][32]byte{*pub, *priv}
-		s.secretKeys[full] = k
-	}
-	return k
-}
-
-func (s *Server) secretPublicKey(w http.ResponseWriter, full string) {
-	k := s.repoSecretKey(full)
-	writeJSON(w, 200, map[string]string{"key_id": "fake-key-" + full, "key": base64.StdEncoding.EncodeToString(k[0][:])})
-}
-
-func (s *Server) putSecret(w http.ResponseWriter, r *http.Request, full, name string) {
-	var in struct {
-		Encrypted string `json:"encrypted_value"`
-		KeyID     string `json:"key_id"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&in); err != nil || in.KeyID != "fake-key-"+full {
-		writeJSON(w, 422, map[string]string{"message": "Bad key_id or body"})
-		return
-	}
-	sealed, err := base64.StdEncoding.DecodeString(in.Encrypted)
-	k := s.repoSecretKey(full)
-	if err != nil {
-		writeJSON(w, 422, map[string]string{"message": "Bad encrypted_value"})
-		return
-	}
-	plain, ok := box.OpenAnonymous(nil, sealed, &k[0], &k[1])
-	if !ok {
-		writeJSON(w, 422, map[string]string{"message": "The value was not sealed to this repository's key"})
-		return
-	}
-	if s.secrets == nil {
-		s.secrets = map[string]map[string]string{}
-	}
-	if s.secrets[full] == nil {
-		s.secrets[full] = map[string]string{}
-	}
-	_, existed := s.secrets[full][name]
-	s.secrets[full][name] = string(plain)
-	if existed {
-		w.WriteHeader(204)
-		return
-	}
-	w.WriteHeader(201)
 }
 
 func (s *Server) variableRoutes(w http.ResponseWriter, r *http.Request, full, name string) {

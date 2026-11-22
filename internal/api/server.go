@@ -109,17 +109,8 @@ type Options struct {
 	// JobRunners says who ran a job (runner origin, group, labels, steps source, checked at). Nil leaves
 	// those fields of a job absent (ci-run-insights R5.39 to R5.41).
 	JobRunners JobRunnerReader
-	// PublicHost is the name or address runners and machines reach this
-	// controller at (CRSP_PUBLIC_HOST), and ListenAddr the console address. The
-	// parity setup writes https://PublicHost:port; with none a runner can reach
-	// it refuses (CRSP141).
-	PublicHost string
-	ListenAddr string
 	// Listen serves the listen address routes (handlers_listen.go). Nil answers 501.
 	Listen ListenService
-	// ParityProbe calls the address the parity setup will write from the
-	// server side. Nil uses a call over https that trusts only the controller CA.
-	ParityProbe func(ctx context.Context, addr string) error
 	// Authn says who a request acts as. Nil uses the GitHub area's sessions and
 	// CLI tokens; with neither, every operation that needs a role answers 401.
 	// A test passes a fixed principal.

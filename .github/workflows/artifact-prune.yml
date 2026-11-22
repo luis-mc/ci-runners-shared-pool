@@ -8,7 +8,7 @@ name: Artifact prune
 #
 # The sweep reads the artifacts of the whole repository, so every workflow that
 # uploads one is covered. Workflows that upload artifacts here, as a note:
-# workflows: ["CI", "Release", "Package", "Package Windows", "Installer", "Installer packages", "Tray smoke", "Parity"]
+# workflows: ["CI", "Release", "Package", "Package Windows", "Installer", "Installer packages", "Tray smoke"]
 #
 # Artifact names are stable per kind (crsp-linux-amd64, never one with a version
 # or run number), or the grouping would not work.

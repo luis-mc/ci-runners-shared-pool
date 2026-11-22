@@ -57,12 +57,6 @@ func TestGrantPagesForAUserAndAnOrganization(t *testing.T) { // R5.86
 	}
 }
 
-func TestSecretsIsInTheManifestSet(t *testing.T) { // R5.85
-	if RequiredPermissions["secrets"] != "write" || RequiredPermissions["actions_variables"] != "write" {
-		t.Fatalf("parity writes a secret and variables, so the App asks for both: %v", RequiredPermissions)
-	}
-}
-
 func TestParseInstallationEvent(t *testing.T) { // R5.87
 	ev, err := ParseInstallationEvent([]byte(`{"action":"new_permissions_accepted","installation":{"id":42}}`))
 	if err != nil || ev.Action != NewPermissionsAccepted || ev.InstallationID != 42 {

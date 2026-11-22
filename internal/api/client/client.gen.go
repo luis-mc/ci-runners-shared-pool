@@ -20,21 +20,6 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for AccessScope.
-const (
-	Parity AccessScope = "parity"
-)
-
-// Valid indicates whether the value is a known member of the AccessScope enum.
-func (e AccessScope) Valid() bool {
-	switch e {
-	case Parity:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for AddUserRequestRole.
 const (
 	AddUserRequestRoleAdmin  AddUserRequestRole = "admin"
@@ -1763,48 +1748,6 @@ func (e OS) Valid() bool {
 	}
 }
 
-// Defines values for ParityAddressStatus.
-const (
-	ParityAddressStatusNeedsAddress ParityAddressStatus = "needs_address"
-	ParityAddressStatusOk           ParityAddressStatus = "ok"
-	ParityAddressStatusUnreachable  ParityAddressStatus = "unreachable"
-)
-
-// Valid indicates whether the value is a known member of the ParityAddressStatus enum.
-func (e ParityAddressStatus) Valid() bool {
-	switch e {
-	case ParityAddressStatusNeedsAddress:
-		return true
-	case ParityAddressStatusOk:
-		return true
-	case ParityAddressStatusUnreachable:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for ParitySetupStatus.
-const (
-	ParitySetupStatusDone            ParitySetupStatus = "done"
-	ParitySetupStatusNeedsAddress    ParitySetupStatus = "needs_address"
-	ParitySetupStatusNeedsPermission ParitySetupStatus = "needs_permission"
-)
-
-// Valid indicates whether the value is a known member of the ParitySetupStatus enum.
-func (e ParitySetupStatus) Valid() bool {
-	switch e {
-	case ParitySetupStatusDone:
-		return true
-	case ParitySetupStatusNeedsAddress:
-		return true
-	case ParitySetupStatusNeedsPermission:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for PauseReason.
 const (
 	PauseReasonBaseImageMissing PauseReason = "base_image_missing"
@@ -3154,22 +3097,22 @@ func (e SshJoinRequestOs) Valid() bool {
 
 // Defines values for StalenessReason.
 const (
-	StalenessReasonGithubError       StalenessReason = "github_error"
-	StalenessReasonPermissionMissing StalenessReason = "permission_missing"
-	StalenessReasonSessionExpired    StalenessReason = "session_expired"
-	StalenessReasonUnreachable       StalenessReason = "unreachable"
+	GithubError       StalenessReason = "github_error"
+	PermissionMissing StalenessReason = "permission_missing"
+	SessionExpired    StalenessReason = "session_expired"
+	Unreachable       StalenessReason = "unreachable"
 )
 
 // Valid indicates whether the value is a known member of the StalenessReason enum.
 func (e StalenessReason) Valid() bool {
 	switch e {
-	case StalenessReasonGithubError:
+	case GithubError:
 		return true
-	case StalenessReasonPermissionMissing:
+	case PermissionMissing:
 		return true
-	case StalenessReasonSessionExpired:
+	case SessionExpired:
 		return true
-	case StalenessReasonUnreachable:
+	case Unreachable:
 		return true
 	default:
 		return false
@@ -4066,43 +4009,6 @@ func (e ListRunsParamsState) Valid() bool {
 		return false
 	}
 }
-
-// AccessCredential defines model for AccessCredential.
-type AccessCredential struct {
-	CreatedAt  time.Time  `json:"created_at"`
-	CreatedBy  string     `json:"created_by"`
-	Id         string     `json:"id"`
-	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
-	Name       string     `json:"name"`
-	RevokedAt  *time.Time `json:"revoked_at,omitempty"`
-
-	// Scope `parity` is read only: the runner list and a doctor run.
-	Scope AccessScope `json:"scope"`
-}
-
-// AccessCredentialCreate defines model for AccessCredentialCreate.
-type AccessCredentialCreate struct {
-	Name string `json:"name"`
-
-	// Scope `parity` is read only: the runner list and a doctor run.
-	Scope AccessScope `json:"scope"`
-}
-
-// AccessCredentialCreated defines model for AccessCredentialCreated.
-type AccessCredentialCreated struct {
-	Info AccessCredential `json:"info"`
-
-	// Value The credential. Shown once.
-	Value string `json:"value"`
-}
-
-// AccessCredentialList defines model for AccessCredentialList.
-type AccessCredentialList struct {
-	Items []AccessCredential `json:"items"`
-}
-
-// AccessScope `parity` is read only: the runner list and a doctor run.
-type AccessScope string
 
 // AddUserRequest defines model for AddUserRequest.
 type AddUserRequest struct {
@@ -6098,49 +6004,6 @@ type Overview struct {
 	// Waiting Why each queued or held job waits, in words, first blocking reason only, in the order of the queue (scheduling R5.48, web-console R5.20).
 	Waiting *[]WaitingJob `json:"waiting,omitempty"`
 }
-
-// ParityAddress defines model for ParityAddress.
-type ParityAddress struct {
-	// Problem Why the address does not answer, or why the controller has none.
-	Problem *string `json:"problem,omitempty"`
-
-	// Setting The setting to fix when the controller has no address a runner can reach.
-	Setting *string             `json:"setting,omitempty"`
-	Status  ParityAddressStatus `json:"status"`
-
-	// Url The address that will be written as CRSP_URL. Empty with needs_address.
-	Url *string `json:"url,omitempty"`
-}
-
-// ParityAddressStatus defines model for ParityAddress.Status.
-type ParityAddressStatus string
-
-// ParitySetup defines model for ParitySetup.
-type ParitySetup struct {
-	// AccessId The id of the access credential that was made.
-	AccessId *string `json:"access_id,omitempty"`
-
-	// AccessName The name of the repository Actions value that holds the access, CRSP_ACCESS.
-	AccessName *string `json:"access_name,omitempty"`
-
-	// AddressProblem With needs_address, why the controller has no address a runner can reach.
-	AddressProblem *string `json:"address_problem,omitempty"`
-
-	// AddressSetting With needs_address, the setting to fix.
-	AddressSetting *string `json:"address_setting,omitempty"`
-
-	// Grant github-integration R5.86.
-	Grant              *GithubGrant      `json:"grant,omitempty"`
-	MissingPermissions *[]string         `json:"missing_permissions,omitempty"`
-	Status             ParitySetupStatus `json:"status"`
-	VariableNames      *[]string         `json:"variable_names,omitempty"`
-}
-
-// ParitySetupStatus defines model for ParitySetup.Status.
-type ParitySetupStatus string
-
-// ParitySetupRequest No fields. The address is the controller's own, never one the browser sends (CRSP141).
-type ParitySetupRequest = map[string]interface{}
 
 // PauseReason Why a machine takes no new job (machines R5.62). Other features read these exact names.
 type PauseReason string
@@ -8720,9 +8583,6 @@ type ReceiveGithubWebhookParams struct {
 	XHubSignature256 string `json:"X-Hub-Signature-256"`
 }
 
-// CreateAccessCredentialJSONRequestBody defines body for CreateAccessCredential for application/json ContentType.
-type CreateAccessCredentialJSONRequestBody = AccessCredentialCreate
-
 // ReplaceAppPrivateKeyJSONRequestBody defines body for ReplaceAppPrivateKey for application/json ContentType.
 type ReplaceAppPrivateKeyJSONRequestBody = AppKeyUpload
 
@@ -8812,9 +8672,6 @@ type RemoveCrspJSONRequestBody = RemoveRequest
 
 // SetRepositoryExtraPackagesJSONRequestBody defines body for SetRepositoryExtraPackages for application/json ContentType.
 type SetRepositoryExtraPackagesJSONRequestBody = ExtraPackagesUpdate
-
-// SetupRepositoryParityJSONRequestBody defines body for SetupRepositoryParity for application/json ContentType.
-type SetupRepositoryParityJSONRequestBody = ParitySetupRequest
 
 // UpdateRepositoryPolicyJSONRequestBody defines body for UpdateRepositoryPolicy for application/json ContentType.
 type UpdateRepositoryPolicyJSONRequestBody = RepositoryPolicyUpdate
@@ -8952,38 +8809,6 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 
 // The interface specification for the client above.
 type ClientInterface interface {
-
-	// ListAccessCredentials List access credentials for CI
-	//
-	// github-integration R5.82. Without their values.
-	//
-	// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-	ListAccessCredentials(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateAccessCredentialWithBody Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes any type of body and a specified content type.
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredentialWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateAccessCredential Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredential(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// RevokeAccessCredential Revoke an access credential
-	//
-	// github-integration R5.82. The next request with its value is refused.
-	//
-	// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-	RevokeAccessCredential(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
 	//
@@ -9893,13 +9718,6 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 	GetPackage(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetParityAddress The address the parity setup will write, and whether it answers
-	//
-	// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-	//
-	// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-	GetParityAddress(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// GetRegistrySettings Registry logins per backend and whether a private CA bundle is set
 	//
 	// runners R5.77, R5.78. No password is ever returned.
@@ -10186,24 +10004,6 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /api/v1/repositories/{repositoryId}/extra-packages (the `SetRepositoryExtraPackages` operationId).
 	SetRepositoryExtraPackages(ctx context.Context, repositoryId RepositoryId, body SetRepositoryExtraPackagesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// SetupRepositoryParityWithBody Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes any type of body and a specified content type.
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParityWithBody(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// SetupRepositoryParity Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParity(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdateRepositoryPolicyWithBody Change a repository's policy
 	//
@@ -10830,78 +10630,6 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /webhooks/github (the `ReceiveGithubWebhook` operationId).
 	ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-}
-
-// ListAccessCredentials List access credentials for CI
-//
-// github-integration R5.82. Without their values.
-//
-// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-func (c *Client) ListAccessCredentials(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListAccessCredentialsRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// CreateAccessCredentialWithBody Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes any type of body and a specified content type.
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *Client) CreateAccessCredentialWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAccessCredentialRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// CreateAccessCredential Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *Client) CreateAccessCredential(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAccessCredentialRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// RevokeAccessCredential Revoke an access credential
-//
-// github-integration R5.82. The next request with its value is refused.
-//
-// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-func (c *Client) RevokeAccessCredential(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRevokeAccessCredentialRequest(c.Server, credentialId)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
 }
 
 // ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
@@ -13012,23 +12740,6 @@ func (c *Client) GetPackage(ctx context.Context, name string, reqEditors ...Requ
 	return c.Client.Do(req)
 }
 
-// GetParityAddress The address the parity setup will write, and whether it answers
-//
-// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-//
-// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-func (c *Client) GetParityAddress(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetParityAddressRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // GetRegistrySettings Registry logins per backend and whether a private CA bundle is set
 //
 // runners R5.77, R5.78. No password is ever returned.
@@ -13676,44 +13387,6 @@ func (c *Client) SetRepositoryExtraPackagesWithBody(ctx context.Context, reposit
 // Corresponds with PUT /api/v1/repositories/{repositoryId}/extra-packages (the `SetRepositoryExtraPackages` operationId).
 func (c *Client) SetRepositoryExtraPackages(ctx context.Context, repositoryId RepositoryId, body SetRepositoryExtraPackagesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSetRepositoryExtraPackagesRequest(c.Server, repositoryId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// SetupRepositoryParityWithBody Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes any type of body and a specified content type.
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *Client) SetupRepositoryParityWithBody(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSetupRepositoryParityRequestWithBody(c.Server, repositoryId, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// SetupRepositoryParity Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *Client) SetupRepositoryParity(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSetupRepositoryParityRequest(c.Server, repositoryId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -15148,107 +14821,6 @@ func (c *Client) ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithub
 		return nil, err
 	}
 	return c.Client.Do(req)
-}
-
-// NewListAccessCredentialsRequest constructs an http.Request for the ListAccessCredentials method
-func NewListAccessCredentialsRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/access-credentials")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewCreateAccessCredentialRequest calls the generic CreateAccessCredential builder with application/json body
-func NewCreateAccessCredentialRequest(server string, body CreateAccessCredentialJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateAccessCredentialRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewCreateAccessCredentialRequestWithBody constructs an http.Request for the CreateAccessCredential method, with any body, and a specified content type
-func NewCreateAccessCredentialRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/access-credentials")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewRevokeAccessCredentialRequest constructs an http.Request for the RevokeAccessCredential method
-func NewRevokeAccessCredentialRequest(server string, credentialId string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "credentialId", credentialId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/access-credentials/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
 }
 
 // NewReplaceAppPrivateKeyRequest calls the generic ReplaceAppPrivateKey builder with application/json body
@@ -20285,33 +19857,6 @@ func NewGetPackageRequest(server string, name string) (*http.Request, error) {
 	return req, nil
 }
 
-// NewGetParityAddressRequest constructs an http.Request for the GetParityAddress method
-func NewGetParityAddressRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/parity-address")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewGetRegistrySettingsRequest constructs an http.Request for the GetRegistrySettings method
 func NewGetRegistrySettingsRequest(server string) (*http.Request, error) {
 	var err error
@@ -21437,53 +20982,6 @@ func NewSetRepositoryExtraPackagesRequestWithBody(server string, repositoryId Re
 	}
 
 	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewSetupRepositoryParityRequest calls the generic SetupRepositoryParity builder with application/json body
-func NewSetupRepositoryParityRequest(server string, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewSetupRepositoryParityRequestWithBody(server, repositoryId, "application/json", bodyReader)
-}
-
-// NewSetupRepositoryParityRequestWithBody constructs an http.Request for the SetupRepositoryParity method, with any body, and a specified content type
-func NewSetupRepositoryParityRequestWithBody(server string, repositoryId RepositoryId, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repositoryId", repositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/repositories/%s/parity-setup", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -24113,42 +23611,6 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
-	// ListAccessCredentialsWithResponse List access credentials for CI
-	//
-	// github-integration R5.82. Without their values.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-	ListAccessCredentialsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAccessCredentialsResponse, error)
-
-	// CreateAccessCredentialWithBodyWithResponse Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredentialWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error)
-
-	// CreateAccessCredentialWithResponse Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredentialWithResponse(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error)
-
-	// RevokeAccessCredentialWithResponse Revoke an access credential
-	//
-	// github-integration R5.82. The next request with its value is refused.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-	RevokeAccessCredentialWithResponse(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*RevokeAccessCredentialResponse, error)
-
 	// ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -25209,15 +24671,6 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 	GetPackageWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetPackageResponse, error)
 
-	// GetParityAddressWithResponse The address the parity setup will write, and whether it answers
-	//
-	// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-	GetParityAddressWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParityAddressResponse, error)
-
 	// GetRegistrySettingsWithResponse Registry logins per backend and whether a private CA bundle is set
 	//
 	// runners R5.77, R5.78. No password is ever returned.
@@ -25546,24 +24999,6 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /api/v1/repositories/{repositoryId}/extra-packages (the `SetRepositoryExtraPackages` operationId).
 	SetRepositoryExtraPackagesWithResponse(ctx context.Context, repositoryId RepositoryId, body SetRepositoryExtraPackagesJSONRequestBody, reqEditors ...RequestEditorFn) (*SetRepositoryExtraPackagesResponse, error)
-
-	// SetupRepositoryParityWithBodyWithResponse Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParityWithBodyWithResponse(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error)
-
-	// SetupRepositoryParityWithResponse Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParityWithResponse(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error)
 
 	// UpdateRepositoryPolicyWithBodyWithResponse Change a repository's policy
 	//
@@ -26266,143 +25701,6 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /webhooks/github (the `ReceiveGithubWebhook` operationId).
 	ReceiveGithubWebhookWithResponse(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*ReceiveGithubWebhookResponse, error)
-}
-
-type ListAccessCredentialsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *AccessCredentialList
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r ListAccessCredentialsResponse) GetJSON200() *AccessCredentialList {
-	return r.JSON200
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r ListAccessCredentialsResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r ListAccessCredentialsResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r ListAccessCredentialsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListAccessCredentialsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r ListAccessCredentialsResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type CreateAccessCredentialResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON201 the response for an HTTP 201 `application/json` response
-	JSON201 *AccessCredentialCreated
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON201 returns the response for an HTTP 201 `application/json` response
-func (r CreateAccessCredentialResponse) GetJSON201() *AccessCredentialCreated {
-	return r.JSON201
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r CreateAccessCredentialResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r CreateAccessCredentialResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateAccessCredentialResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateAccessCredentialResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r CreateAccessCredentialResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type RevokeAccessCredentialResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r RevokeAccessCredentialResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r RevokeAccessCredentialResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r RevokeAccessCredentialResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RevokeAccessCredentialResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r RevokeAccessCredentialResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
 }
 
 type ReplaceAppPrivateKeyResponse struct {
@@ -31093,54 +30391,6 @@ func (r GetPackageResponse) ContentType() string {
 	return ""
 }
 
-type GetParityAddressResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *ParityAddress
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetParityAddressResponse) GetJSON200() *ParityAddress {
-	return r.JSON200
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r GetParityAddressResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r GetParityAddressResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetParityAddressResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetParityAddressResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetParityAddressResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type GetRegistrySettingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -32506,54 +31756,6 @@ func (r SetRepositoryExtraPackagesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r SetRepositoryExtraPackagesResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type SetupRepositoryParityResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *ParitySetup
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r SetupRepositoryParityResponse) GetJSON200() *ParitySetup {
-	return r.JSON200
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r SetupRepositoryParityResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r SetupRepositoryParityResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r SetupRepositoryParityResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r SetupRepositoryParityResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r SetupRepositoryParityResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -35390,66 +34592,6 @@ func (r ReceiveGithubWebhookResponse) ContentType() string {
 	return ""
 }
 
-// ListAccessCredentialsWithResponse List access credentials for CI
-//
-// github-integration R5.82. Without their values.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-func (c *ClientWithResponses) ListAccessCredentialsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAccessCredentialsResponse, error) {
-	rsp, err := c.ListAccessCredentials(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseListAccessCredentialsResponse(rsp)
-}
-
-// CreateAccessCredentialWithBodyWithResponse Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *ClientWithResponses) CreateAccessCredentialWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error) {
-	rsp, err := c.CreateAccessCredentialWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAccessCredentialResponse(rsp)
-}
-
-// CreateAccessCredentialWithResponse Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *ClientWithResponses) CreateAccessCredentialWithResponse(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error) {
-	rsp, err := c.CreateAccessCredential(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAccessCredentialResponse(rsp)
-}
-
-// RevokeAccessCredentialWithResponse Revoke an access credential
-//
-// github-integration R5.82. The next request with its value is refused.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-func (c *ClientWithResponses) RevokeAccessCredentialWithResponse(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*RevokeAccessCredentialResponse, error) {
-	rsp, err := c.RevokeAccessCredential(ctx, credentialId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRevokeAccessCredentialResponse(rsp)
-}
-
 // ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 //
 // github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -37230,21 +36372,6 @@ func (c *ClientWithResponses) GetPackageWithResponse(ctx context.Context, name s
 	return ParseGetPackageResponse(rsp)
 }
 
-// GetParityAddressWithResponse The address the parity setup will write, and whether it answers
-//
-// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-func (c *ClientWithResponses) GetParityAddressWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParityAddressResponse, error) {
-	rsp, err := c.GetParityAddress(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetParityAddressResponse(rsp)
-}
-
 // GetRegistrySettingsWithResponse Registry logins per backend and whether a private CA bundle is set
 //
 // runners R5.77, R5.78. No password is ever returned.
@@ -37794,36 +36921,6 @@ func (c *ClientWithResponses) SetRepositoryExtraPackagesWithResponse(ctx context
 		return nil, err
 	}
 	return ParseSetRepositoryExtraPackagesResponse(rsp)
-}
-
-// SetupRepositoryParityWithBodyWithResponse Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *ClientWithResponses) SetupRepositoryParityWithBodyWithResponse(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error) {
-	rsp, err := c.SetupRepositoryParityWithBody(ctx, repositoryId, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseSetupRepositoryParityResponse(rsp)
-}
-
-// SetupRepositoryParityWithResponse Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *ClientWithResponses) SetupRepositoryParityWithResponse(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error) {
-	rsp, err := c.SetupRepositoryParity(ctx, repositoryId, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseSetupRepositoryParityResponse(rsp)
 }
 
 // UpdateRepositoryPolicyWithBodyWithResponse Change a repository's policy
@@ -39006,101 +38103,6 @@ func (c *ClientWithResponses) ReceiveGithubWebhookWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseReceiveGithubWebhookResponse(rsp)
-}
-
-// ParseListAccessCredentialsResponse parses an HTTP response from a ListAccessCredentialsWithResponse call
-func ParseListAccessCredentialsResponse(rsp *http.Response) (*ListAccessCredentialsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ListAccessCredentialsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AccessCredentialList
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateAccessCredentialResponse parses an HTTP response from a CreateAccessCredentialWithResponse call
-func ParseCreateAccessCredentialResponse(rsp *http.Response) (*CreateAccessCredentialResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateAccessCredentialResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest AccessCredentialCreated
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseRevokeAccessCredentialResponse parses an HTTP response from a RevokeAccessCredentialWithResponse call
-func ParseRevokeAccessCredentialResponse(rsp *http.Response) (*RevokeAccessCredentialResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &RevokeAccessCredentialResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case rsp.StatusCode == 204:
-		break // No content-type
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
 }
 
 // ParseReplaceAppPrivateKeyResponse parses an HTTP response from a ReplaceAppPrivateKeyWithResponse call
@@ -42394,39 +41396,6 @@ func ParseGetPackageResponse(rsp *http.Response) (*GetPackageResponse, error) {
 	return response, nil
 }
 
-// ParseGetParityAddressResponse parses an HTTP response from a GetParityAddressWithResponse call
-func ParseGetParityAddressResponse(rsp *http.Response) (*GetParityAddressResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetParityAddressResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ParityAddress
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseGetRegistrySettingsResponse parses an HTTP response from a GetRegistrySettingsWithResponse call
 func ParseGetRegistrySettingsResponse(rsp *http.Response) (*GetRegistrySettingsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -43355,39 +42324,6 @@ func ParseSetRepositoryExtraPackagesResponse(rsp *http.Response) (*SetRepository
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest ExtraPackages
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseSetupRepositoryParityResponse parses an HTTP response from a SetupRepositoryParityWithResponse call
-func ParseSetupRepositoryParityResponse(rsp *http.Response) (*SetupRepositoryParityResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &SetupRepositoryParityResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ParitySetup
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

@@ -46,15 +46,6 @@ type Store interface {
 	RevokeCLIToken(ctx context.Context, id string, at time.Time) error
 	RevokeUserCLITokens(ctx context.Context, userID int64, at time.Time) error
 
-	// Access credentials (CRSP134). Only hashes are kept.
-	InsertAccessCredential(ctx context.Context, c AccessCredential) error
-	// GetAccessCredential returns an unrevoked credential by the hash of its value.
-	GetAccessCredential(ctx context.Context, hash string) (AccessCredential, error)
-	TouchAccessCredential(ctx context.Context, id string, at time.Time) error
-	ListAccessCredentials(ctx context.Context) ([]AccessCredential, error)
-	GetAccessCredentialByID(ctx context.Context, id string) (AccessCredential, error)
-	RevokeAccessCredential(ctx context.Context, id string, at time.Time) error
-
 	InsertLinkCode(ctx context.Context, c LinkCode) error
 	// UseLinkCode marks a live code used and returns it.
 	UseLinkCode(ctx context.Context, hash string, now time.Time) (LinkCode, error)

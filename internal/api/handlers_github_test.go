@@ -111,7 +111,7 @@ func newHarnessWith(t *testing.T, wrap func(*secrets.Memory) secrets.Store, twea
 	asvc := auth.New(astore, auth.Config{GitHub: gh, Secrets: store, WebBase: f.URL,
 		OnApp: func(a auth.AppRecord) { gh.UseApp(a.ID, a.ClientID) }})
 	rcfg := repos.Config{Store: rstore, GitHub: gh, Tokens: asvc, Audit: asvc, Capacity: linuxOnly{}}
-	opts := Options{Version: "test", DB: okPinger{}, CA: fakeCA{}, PublicHost: "crsp.example", ListenAddr: "0.0.0.0:8460"}
+	opts := Options{Version: "test", DB: okPinger{}, CA: fakeCA{}}
 	for _, tw := range tweak {
 		tw(&rcfg, &opts)
 	}

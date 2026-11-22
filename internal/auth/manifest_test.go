@@ -21,7 +21,6 @@ func TestManifestPermissionsExact(t *testing.T) { // R5.23
 	want := map[string]string{
 		"administration": "write", "actions": "read", "actions_variables": "write",
 		"contents": "read", "metadata": "read", "organization_self_hosted_runners": "write",
-		"secrets": "write", // CRSP139: parity writes a secret, so the App asks for it from the start (R5.85)
 	}
 	if !reflect.DeepEqual(m.DefaultPermissions, want) {
 		t.Fatalf("permissions must be exactly the R5.23 set:\n got %v\nwant %v", m.DefaultPermissions, want)

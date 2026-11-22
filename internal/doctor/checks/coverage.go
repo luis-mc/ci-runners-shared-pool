@@ -14,7 +14,7 @@ import (
 )
 
 // capability is one thing a job can need from the pool (doctor R5.33). Release
-// is the release of the parity plan that adds it; Built says this build offers it.
+// is the release that adds it; Built says this build offers it.
 type capability struct {
 	Name    string
 	Release string
@@ -25,7 +25,7 @@ type capability struct {
 
 // capabilities is the table of the first version (v0.2.0): Windows jobs are
 // offered; every other need is listed with the release that adds it. Each
-// parity release flips Built for what it adds.
+// release flips Built for what it adds.
 var capabilities = []capability{
 	{Name: "database", Release: "v0.4.0", Words: []string{"pool-db-env", "crsp db-env", "database_url"}},
 	{Name: "browsers", Release: "v0.4.0", Words: []string{"playwright"}},
@@ -261,7 +261,7 @@ func coverageRows(r doctor.Repository, jobs []JobNeeds) []doctor.Finding {
 		}
 		f.Severity, f.Title = doctor.Info, "missing: "+strings.Join(names, ", ")
 		f.Detail = "These jobs need what the pool does not offer yet: " + strings.Join(parts, "; ") + "."
-		f.Fix = doctor.Fix{Text: "Keep the " + osTitle(os) + " jobs of this repository on the old pool until these releases (see the parity plan)."}
+		f.Fix = doctor.Fix{Text: "Keep the " + osTitle(os) + " jobs of this repository on the old pool until these releases (see the move runbook)."}
 		out = append(out, f)
 	}
 	if len(unknown) > 0 {

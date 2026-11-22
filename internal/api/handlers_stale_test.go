@@ -67,11 +67,11 @@ func TestStaleCauseNamesEachReason(t *testing.T) {
 		status int
 		msg    string
 	}{
-		{"the sign-in ended", fmt.Errorf("sync: %w", auth.ErrGitHubSessionExpired), gen.StalenessReasonSessionExpired, 0, "sign in with GitHub again"},
-		{"GitHub unreachable", fmt.Errorf("%w: connection refused", github.ErrUnavailable), gen.StalenessReasonUnreachable, 0, ""},
-		{"a permission is missing", api(403, "Resource not accessible by integration", github.ErrForbidden), gen.StalenessReasonPermissionMissing, 403, "Resource not accessible by integration"},
-		{"GitHub says 422", errors.New("github: status 422: Validation Failed"), gen.StalenessReasonGithubError, 0, "github: status 422: Validation Failed"},
-		{"GitHub answers 500", api(500, "Server Error", github.ErrUnavailable), gen.StalenessReasonGithubError, 500, "Server Error"},
+		{"the sign-in ended", fmt.Errorf("sync: %w", auth.ErrGitHubSessionExpired), gen.SessionExpired, 0, "sign in with GitHub again"},
+		{"GitHub unreachable", fmt.Errorf("%w: connection refused", github.ErrUnavailable), gen.Unreachable, 0, ""},
+		{"a permission is missing", api(403, "Resource not accessible by integration", github.ErrForbidden), gen.PermissionMissing, 403, "Resource not accessible by integration"},
+		{"GitHub says 422", errors.New("github: status 422: Validation Failed"), gen.GithubError, 0, "github: status 422: Validation Failed"},
+		{"GitHub answers 500", api(500, "Server Error", github.ErrUnavailable), gen.GithubError, 500, "Server Error"},
 	}
 	for _, c := range cases {
 		reason, status, msg := staleCause(c.err)

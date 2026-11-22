@@ -126,8 +126,6 @@ type Server struct {
 	Installs      map[int64]*Install
 	Repos         map[int64]*Repo
 	Variables     map[string]map[string]string // full repo name -> name -> value
-	secrets       map[string]map[string]string // full repo name -> name -> opened value (CRSP134)
-	secretKeys    map[string]*[2][32]byte      // full repo name -> public, private key
 	Runners       map[string][]*Runner         // scope ("owner/repo" or "org") -> runners
 	WorkflowFiles map[string]map[string]string // full repo name -> path -> content
 	TreeTruncated bool                         // the git tree answer says it was cut short
@@ -334,15 +332,6 @@ func (s *Server) VariableNames(fullName string) []string {
 	return out
 }
 
-// Secret reads a repository secret as the fake opened it with the repository's
-// private key: it proves the value was sealed to the right key.
-func (s *Server) Secret(fullName, name string) (string, bool) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	v, ok := s.secrets[fullName][name]
-	return v, ok
-}
-
 // SetAppPermissions sets what GET /app says the App asks for (CRSP139); nil
 // goes back to the fixture.
 func (s *Server) SetAppPermissions(m map[string]string) {
@@ -356,18 +345,6 @@ func (s *Server) TokensMade() int {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	return s.tokensMade
-}
-
-// SecretNames lists the secret names of a repository, sorted.
-func (s *Server) SecretNames(fullName string) []string {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	out := make([]string, 0, len(s.secrets[fullName]))
-	for n := range s.secrets[fullName] {
-		out = append(out, n)
-	}
-	sort.Strings(out)
-	return out
 }
 
 // SetVariable changes a variable "outside the product" (drift tests).

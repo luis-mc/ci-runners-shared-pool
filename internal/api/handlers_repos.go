@@ -56,16 +56,16 @@ func staleCause(err error) (gen.StalenessReason, int, string) {
 	}
 	switch {
 	case errors.Is(err, auth.ErrGitHubSessionExpired):
-		return gen.StalenessReasonSessionExpired, 0, "sign in with GitHub again"
+		return gen.SessionExpired, 0, "sign in with GitHub again"
 	case errors.Is(err, github.ErrUnavailable) && status == 0:
-		return gen.StalenessReasonUnreachable, 0, err.Error()
+		return gen.Unreachable, 0, err.Error()
 	case errors.Is(err, github.ErrForbidden) && status == http.StatusForbidden:
-		return gen.StalenessReasonPermissionMissing, status, msg
+		return gen.PermissionMissing, status, msg
 	}
 	if msg == "" {
 		msg = err.Error()
 	}
-	return gen.StalenessReasonGithubError, status, msg
+	return gen.GithubError, status, msg
 }
 
 // refresh syncs the user's listing when it is old or never made. A failure

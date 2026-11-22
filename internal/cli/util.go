@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"bytes"
-	"encoding/json"
 	"sort"
 	"strconv"
 	"strings"
@@ -57,10 +55,3 @@ func asExit(err error, target **exitError) bool {
 func clientListParams() client.ListRepositoriesParams { return client.ListRepositoriesParams{} }
 
 func clientRunnersParams() client.ListRunnersParams { return client.ListRunnersParams{} }
-
-// decodeStrict decodes JSON and refuses a field the type does not have.
-func decodeStrict(b []byte, v any) error {
-	dec := json.NewDecoder(bytes.NewReader(b))
-	dec.DisallowUnknownFields()
-	return dec.Decode(v)
-}

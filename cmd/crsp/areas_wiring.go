@@ -63,7 +63,7 @@ type controllerDeps struct {
 	// Machines is the machines service; CA the controller's certificate authority.
 	Machines *machines.Service
 	CA       api.CAProvider
-	// PublicHost is the name runners reach the controller at; the parity setup writes it (CRSP141).
+	// PublicHost is the name runners reach the controller at; machines and runners join at it.
 	PublicHost string
 	// Packages serves the release packages to new machines (machines R5.65); nil for a development build.
 	Packages api.PackageServer
@@ -354,7 +354,6 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Remove = newRemoveService(d.Ops.Audit, d.Machines, func(err error) { logger.Warn("audit the remove", "err", err) })
 	}
 	c.Options.Packages = d.Packages
-	c.Options.PublicHost, c.Options.ListenAddr = d.PublicHost, d.Cfg.ListenAddr
 	if d.Listen != nil {
 		c.Options.Listen = d.Listen
 	}

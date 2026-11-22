@@ -355,133 +355,6 @@ paths:
           description: Revoked.
         default:
           $ref: '#/components/responses/Error'
-  /api/v1/access-credentials:
-    get:
-      operationId: listAccessCredentials
-      x-cli: none
-      x-cli-reason: 'Made, listed and revoked in the web console only (owner rule: everything from the web console).'
-      tags: [auth]
-      summary: List access credentials for CI
-      description: github-integration R5.82. Without their values.
-      x-auth: admin
-      x-rate-limit: 600/minute/user
-      responses:
-        '200':
-          description: The credentials.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessCredentialList'
-        default:
-          $ref: '#/components/responses/Error'
-    post:
-      operationId: createAccessCredential
-      x-cli: none
-      x-cli-reason: 'Made, listed and revoked in the web console only (owner rule: everything from the web console).'
-      tags: [auth]
-      summary: Make an access credential for CI
-      description: >-
-        github-integration R5.82. The value is in the answer once; only its
-        hash is kept and the audit row never holds it. A credential has one
-        scope; `parity` allows only what `crsp parity check` calls.
-      x-auth: admin
-      x-rate-limit: 30/minute/user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccessCredentialCreate'
-      responses:
-        '201':
-          description: The credential and its value. Shown once.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessCredentialCreated'
-        default:
-          $ref: '#/components/responses/Error'
-  /api/v1/access-credentials/{credentialId}:
-    delete:
-      operationId: revokeAccessCredential
-      x-cli: none
-      x-cli-reason: 'Made, listed and revoked in the web console only (owner rule: everything from the web console).'
-      tags: [auth]
-      summary: Revoke an access credential
-      description: github-integration R5.82. The next request with its value is refused.
-      x-auth: admin
-      x-rate-limit: 60/minute/user
-      parameters:
-        - name: credentialId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Revoked.
-        default:
-          $ref: '#/components/responses/Error'
-  /api/v1/parity-address:
-    get:
-      operationId: getParityAddress
-      x-cli: none
-      x-cli-reason: 'A console check: it shows what the parity setup will write (owner rule: everything from the web console).'
-      tags: [repositories]
-      summary: The address the parity setup will write, and whether it answers
-      description: >-
-        github-integration R5.84 (CRSP141). The address a runner uses to reach
-        the controller: https, the public host and the console port, the same
-        address machines join at. The controller calls it from the server side
-        with its own CA and says whether it answers. A controller with no such
-        address answers `needs_address` with the setting to fix.
-      x-auth: admin
-      x-rate-limit: 10/minute/user
-      responses:
-        '200':
-          description: The address and the result of calling it.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ParityAddress'
-        default:
-          $ref: '#/components/responses/Error'
-  /api/v1/repositories/{repositoryId}/parity-setup:
-    post:
-      operationId: setupRepositoryParity
-      x-cli: none
-      x-cli-reason: 'A console action: it writes to GitHub through the App (owner rule: everything from the web console).'
-      tags: [repositories]
-      summary: Set up parity for this repository
-      description: >-
-        github-integration R5.84. Makes a `parity` access credential and writes
-        it as the repository Actions secret CRSP_ACCESS, and the controller
-        address and CA fingerprint as the variables CRSP_URL and
-        CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one
-        machines use to join (https, the controller CA), never the address of
-        the browser, never loopback or http (CRSP141); when the controller has
-        none the answer is `needs_address` and nothing is made. When the App lacks the
-        `secrets` or `actions_variables` write permission nothing is made: the
-        answer is `needs_permission` with the GitHub pages that grant it.
-      x-auth: admin
-      x-rate-limit: 10/minute/user
-      parameters:
-        - $ref: '#/components/parameters/RepositoryId'
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ParitySetupRequest'
-      responses:
-        '200':
-          description: Done, or the permission the App lacks.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ParitySetup'
-        default:
-          $ref: '#/components/responses/Error'
   /api/v1/auth/logout:
     post:
       operationId: signOut
@@ -5653,57 +5526,6 @@ components:
           type: string
           description: A label for the token list, such as the host name.
           example: laptop
-    AccessCredential:
-      type: object
-      required: [id, name, scope, created_by, created_at]
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        scope:
-          $ref: '#/components/schemas/AccessScope'
-        created_by:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        last_used_at:
-          type: string
-          format: date-time
-        revoked_at:
-          type: string
-          format: date-time
-    AccessScope:
-      type: string
-      enum: [parity]
-      description: '`parity` is read only: the runner list and a doctor run.'
-    AccessCredentialList:
-      type: object
-      required: [items]
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccessCredential'
-    AccessCredentialCreate:
-      type: object
-      required: [name, scope]
-      properties:
-        name:
-          type: string
-          maxLength: 80
-        scope:
-          $ref: '#/components/schemas/AccessScope'
-    AccessCredentialCreated:
-      type: object
-      required: [value, info]
-      properties:
-        value:
-          type: string
-          description: The credential. Shown once.
-        info:
-          $ref: '#/components/schemas/AccessCredential'
     GithubGrant:
       type: object
       required: [ready, steps, missing]
@@ -5745,9 +5567,6 @@ components:
         url:
           type: string
           description: The GitHub page of the step. Absent when the step has none.
-    ParitySetupRequest:
-      type: object
-      description: No fields. The address is the controller's own, never one the browser sends (CRSP141).
     ListenAddressCandidate:
       type: object
       required: [id, label, who]
@@ -5818,51 +5637,6 @@ components:
           type: string
         restarting:
           type: boolean
-    ParityAddress:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [ok, unreachable, needs_address]
-        url:
-          type: string
-          description: The address that will be written as CRSP_URL. Empty with needs_address.
-        problem:
-          type: string
-          description: Why the address does not answer, or why the controller has none.
-        setting:
-          type: string
-          description: The setting to fix when the controller has no address a runner can reach.
-    ParitySetup:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [done, needs_permission, needs_address]
-        missing_permissions:
-          type: array
-          items:
-            type: string
-        grant:
-          $ref: '#/components/schemas/GithubGrant'
-        access_name:
-          type: string
-          description: The name of the repository Actions value that holds the access, CRSP_ACCESS.
-        variable_names:
-          type: array
-          items:
-            type: string
-        access_id:
-          type: string
-          description: The id of the access credential that was made.
-        address_problem:
-          type: string
-          description: With needs_address, why the controller has no address a runner can reach.
-        address_setting:
-          type: string
-          description: With needs_address, the setting to fix.
     CliToken:
       type: object
       required: [id, name, user_id, user_login, created_at, expires_at]
