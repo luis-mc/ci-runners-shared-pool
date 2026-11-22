@@ -54,7 +54,7 @@ Specs: machines R5.81, R5.82; operations R5.127; web-console R5.157; doctor R5.6
 - `go test` machines, agent, api, update, doctor, scheduler, cmd: pass.
 - `pnpm -r typecheck`, `pnpm -r lint`, `pnpm run lint:root`: clean. Web tests of the touched screens (machines, settings Updates, wizards) and `scripts/design`: pass.
 - `python3 scripts/delivery/fast_guards.py --base-ref auto`: secret-scan, change-notes, guards PASS.
-- e2e gate: see the last section.
+- e2e gate (`branch_gate.py --e2e-only --no-setup --no-publish`): PASS, 3247 passed, 2 skipped, 23.8 min, including `machine-restart-gate.spec.ts` and `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
 ## Environment notes
 
