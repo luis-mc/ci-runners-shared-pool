@@ -1,6 +1,6 @@
 // Reads `go list ./...` (import paths) on stdin and prints the packages of one tier,
-// one per line, as ./relative paths: node scripts/ci/go-tiers.mjs unit|integration|slow
-// The tiers are in scripts/ci/go-tiers.json. A package that is in no list is in the unit
+// one per line, as ./relative paths: node scripts/ci/go-tiers.mjs unit|integration|slow|chunks
+// `chunks` prints `package count` for each slow package. The tiers are in scripts/ci/go-tiers.json. A package that is in no list is in the unit
 // tier (the strictest), so a new package gets the 10 s limit until someone measures it.
 // A listed package that no longer exists is an error: the file must not rot.
 import { readFileSync } from 'node:fs';
@@ -9,8 +9,8 @@ import { fileURLToPath } from 'node:url';
 import { createInterface } from 'node:readline';
 
 const tier = process.argv[2];
-if (!['unit', 'integration', 'slow'].includes(tier)) {
-  console.error('usage: go-tiers.mjs unit|integration|slow < go-list-output');
+if (!['unit', 'integration', 'slow', 'chunks'].includes(tier)) {
+  console.error('usage: go-tiers.mjs unit|integration|slow|chunks < go-list-output');
   process.exit(2);
 }
 const tiers = JSON.parse(
@@ -47,5 +47,7 @@ for (const p of listed.keys()) {
 }
 for (const p of rels) {
   const t = listed.get(p) ?? 'unit';
-  if (t === tier) console.log(p);
+  if (tier === 'chunks') {
+    if (t === 'slow') console.log(`${p} ${tiers.chunks?.[p] ?? 2}`);
+  } else if (t === tier) console.log(p);
 }

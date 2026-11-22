@@ -22,7 +22,13 @@ class GoTiers(unittest.TestCase):
 
     def test_only_two_tiers_are_listed(self):
         tiers = json.loads((ROOT / "scripts/ci/go-tiers.json").read_text())
-        self.assertEqual({k for k in tiers if not k.startswith("_")}, {"integration", "slow"})
+        self.assertEqual({k for k in tiers if not k.startswith("_")}, {"integration", "slow", "chunks"})
+
+    def test_every_slow_package_has_a_chunk_count(self):
+        tiers = json.loads((ROOT / "scripts/ci/go-tiers.json").read_text())
+        self.assertEqual(sorted(tiers["chunks"]), sorted(tiers["slow"]))
+        for pkg, n in tiers["chunks"].items():
+            self.assertGreaterEqual(n, 2, pkg)
 
 
 class E2eWeights(unittest.TestCase):
