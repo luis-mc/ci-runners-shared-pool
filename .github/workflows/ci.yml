@@ -414,7 +414,7 @@ jobs:
           driver-opts: network=host
       # The slow part: the tools stage (apt, node, gh, the Actions runner).
       - name: docker build base tools stage (no publish)
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/linux-base
           target: tools
@@ -430,7 +430,7 @@ jobs:
           cache-from: type=gha,scope=base-${{ matrix.arch }}
           cache-to: type=gha,mode=max,scope=base-${{ matrix.arch }}
       - name: docker build base image (no push)
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/linux-base
           build-args: TARGETARCH=${{ matrix.arch }}
@@ -451,7 +451,7 @@ jobs:
       # launches each browser headless as the self-check). Build only, no push.
       - name: docker build browsers layer (no push)
         if: ${{ matrix.all }}
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/layers/browsers
           build-args: BASE_IMAGE=${{ env.REG }}/crsp-linux-base-tools:ci
@@ -467,7 +467,7 @@ jobs:
       # The build runs the layer's self-check, so a missing tool fails here.
       - name: docker build windows-packaging layer (no push)
         if: ${{ matrix.all }}
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/layers/windows-packaging
           build-args: |
@@ -480,7 +480,7 @@ jobs:
       # The extra packages layer builds on this one, so it goes to the registry.
       - name: docker build linux-packaging layer (no push)
         if: ${{ matrix.all }}
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/layers/linux-packaging
           build-args: |
@@ -495,7 +495,7 @@ jobs:
       # CRSP209: its own cache scope (llvm-<arch>) read and written here; with the
       # base digest should now be stable (provenance off above) the 10.7 min layer is a cache hit.
       - name: docker build llvm layer (no push)
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/layers/llvm
           provenance: false
@@ -509,7 +509,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=llvm-${{ matrix.arch }}
       - name: docker build kvm layer (no push)
         if: ${{ matrix.all }}
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/layers/kvm
           build-args: |
@@ -523,7 +523,7 @@ jobs:
       # layer, with a list of names (CRSP60). Build only, no push.
       - name: docker build extra packages layer (no push)
         if: ${{ matrix.all }}
-        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         with:
           context: images/layers/extra-packages
           build-args: |
