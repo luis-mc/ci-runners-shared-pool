@@ -127,8 +127,6 @@ func CheckRoom(in RoomInput) RoomDecision {
 		if !need.Fits(room) {
 			return RoomDecision{Why: RoomPool, Text: fmt.Sprintf("waiting for room on %s: needs %s", in.Machine, needText(need, free, false))}
 		}
-		// The job fits only with the warm runners gone: what remains held.
-		free = room
 	}
 
 	// A reserved job keeps the room for itself; any other job starts only as

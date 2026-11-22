@@ -628,7 +628,7 @@ func (c *Controller) launch(ctx context.Context, l *Lease, v *machineView, d sch
 	if len(d.Release) > 0 {
 		var keep []scheduler.RoomHeld
 		for _, h := range v.held {
-			if !(h.Warm && releasing[h.ID]) {
+			if !h.Warm || !releasing[h.ID] {
 				keep = append(keep, h)
 			}
 		}

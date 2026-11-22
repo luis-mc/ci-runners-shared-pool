@@ -81,7 +81,6 @@ func (f *fakeRunners) RemoveIdleRunner(_ context.Context, id, _ string) error {
 	return nil
 }
 
-type note struct{ job int64 }
 type fakeNotify struct{ texts []string }
 
 func (n *fakeNotify) Notify(_ context.Context, l Lease, text string) {
