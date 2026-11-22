@@ -50,14 +50,7 @@
     {
       "name": "unit",
       "scope": "changed",
-      "run": "bash scripts/ci/go-test.sh -short"
-    },
-    {
-      "name": "e2e",
-      "scope": "ui-changed",
-      "run": "{ [ -n \"${E2E_CHROMIUM_PATH:-}\" ] && [ -x \"$E2E_CHROMIUM_PATH\" ]; } || pnpm exec playwright install chromium && pnpm exec playwright test {e2e_specs}",
-      "run_full": "{ [ -n \"${E2E_CHROMIUM_PATH:-}\" ] && [ -x \"$E2E_CHROMIUM_PATH\" ]; } || pnpm exec playwright install chromium && pnpm exec playwright test",
-      "env": {"CI": "true"}
+      "run": "go test -short ./..."
     }
   ]
 }

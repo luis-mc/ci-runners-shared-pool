@@ -16,7 +16,7 @@
 | --- | --- | --- |
 | `.gitleaks.toml` | template | Owner: as-is. Drops crsp allowlist entries `s3cret-signing-key`, `whsec-(api-)?0123456789[0-9a-f]*-SIGNING`, `MIN_SECRET = 16;` (see "Risks"). |
 | `.github/workflows/package.yml` | template + per-repo value | Build line set to `-o dist/crsp ./cmd/crsp` (PRODUCT value, matches `smoke.json`). Checkout and setup-python pins go back to the template's `v4`/`v5` pins. |
-| `scripts/delivery/gate.json` | template + per-repo value | `ui_paths: ["apps/web/", "packages/ui/"]`. Drops crsp's `-timeout 10s` on the guards step, `bash scripts/ci/go-test.sh -short` as unit step, and the `e2e` step (see "Risks"). |
+| `scripts/delivery/gate.json` | template + per-repo value | `ui_paths: ["apps/web/", "packages/ui/"]`. Keeps `-timeout 10s` on the guards step (not weakening G1). Drops `bash scripts/ci/go-test.sh -short` as unit step, and the `e2e` step (see "Risks"). |
 | `scripts/delivery/smoke.json` | template + per-repo values | `build`, `start`, `expect`, `health` restored (the template says "Fill start..."). Only `_note` text and `example_start` differ from before. |
 | `.github/workflows/artifact-prune.yml` | template + crsp edit | New header comments and the "Check the workflow list" step from the template. Edit kept: runs `scripts/ci/artifact-prune.sh` with `GH_REPO` instead of `artifact_prune.py`; the workflow list note is crsp's 8 workflows; checkout pin stays `v7.0.1`. |
 | `.githooks/commit-msg` | kept (= template + crsp edit) | Missing `.delivery/config.json` still enforces the no-attribution rule. Template has no newer content. |
@@ -37,7 +37,7 @@ That is 15 files that differ; 12 carry a crsp edit once pin-only and format-only
 
 ## Risks from taking the four template files as-is (owner decision)
 
-- `gate.json` no longer has the `e2e` step, so the pre-push hook no longer asks for the e2e gate, and the `guards` step has no `-timeout 10s`.
+- `gate.json` no longer has the `e2e` step, so the pre-push hook no longer asks for the e2e gate, and the `unit` step is the template's `go test -short ./...` (G1 warns on it, as it did on crsp's 150 s script).
   CI (`ci.yml`) still runs e2e and tests on its own. The guardrail check below says whether G1 still passes.
 - `.gitleaks.toml` has no allowlist for the three fake values; the check below says whether the history scan still passes.
 - `package.yml` uses the template's older action pins.
