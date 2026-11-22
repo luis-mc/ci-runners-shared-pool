@@ -369,17 +369,11 @@ for (const width of [1232, 1300, 393, 360]) {
 }
 
 // CRSP140: every titled part of a page is a pane with its title in the top border.
-test('settings access for CI shows panes and the form only on demand', async ({
-  page,
-}) => {
+test('settings access shows panes', async ({ page }) => {
   const mock = jobsAndDoctor(signedIn());
   await mock.install(page);
   await page.goto('/settings/access');
-  await expect(page.getByRole('region', { name: 'Access for CI' })).toBeVisible();
   await expect(page.locator('.ds-pane').first()).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Make an access' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Make an access' }).click();
-  await expect(page.getByRole('region', { name: 'Make an access' })).toBeVisible();
 });
 
 // CRSP159, UX-15, UX-16: on a phone the areas are one Menu button, not four rows of links; every area is

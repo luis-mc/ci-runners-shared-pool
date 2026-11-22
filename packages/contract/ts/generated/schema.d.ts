@@ -261,90 +261,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/access-credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List access credentials for CI
-         * @description github-integration R5.82. Without their values.
-         */
-        get: operations["listAccessCredentials"];
-        put?: never;
-        /**
-         * Make an access credential for CI
-         * @description github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-         */
-        post: operations["createAccessCredential"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/access-credentials/{credentialId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Revoke an access credential
-         * @description github-integration R5.82. The next request with its value is refused.
-         */
-        delete: operations["revokeAccessCredential"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/parity-address": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * The address the parity setup will write, and whether it answers
-         * @description github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-         */
-        get: operations["getParityAddress"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/repositories/{repositoryId}/parity-setup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set up parity for this repository
-         * @description github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-         */
-        post: operations["setupRepositoryParity"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -4150,35 +4066,6 @@ export interface components {
              */
             name: string;
         };
-        AccessCredential: {
-            id: string;
-            name: string;
-            scope: components["schemas"]["AccessScope"];
-            created_by: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            last_used_at?: string;
-            /** Format: date-time */
-            revoked_at?: string;
-        };
-        /**
-         * @description `parity` is read only: the runner list and a doctor run.
-         * @enum {string}
-         */
-        AccessScope: "parity";
-        AccessCredentialList: {
-            items: components["schemas"]["AccessCredential"][];
-        };
-        AccessCredentialCreate: {
-            name: string;
-            scope: components["schemas"]["AccessScope"];
-        };
-        AccessCredentialCreated: {
-            /** @description The credential. Shown once. */
-            value: string;
-            info: components["schemas"]["AccessCredential"];
-        };
         /** @description github-integration R5.86. */
         GithubGrant: {
             /** @description Every needed permission is accepted by the installation. */
@@ -4203,8 +4090,6 @@ export interface components {
             /** @description The GitHub page of the step. Absent when the step has none. */
             url?: string;
         };
-        /** @description No fields. The address is the controller's own, never one the browser sends (CRSP141). */
-        ParitySetupRequest: Record<string, never>;
         ListenAddressCandidate: {
             /** @enum {string} */
             id: "pc" | "docker" | "other";
@@ -4244,31 +4129,6 @@ export interface components {
         ListenAddressChosen: {
             address: string;
             restarting: boolean;
-        };
-        ParityAddress: {
-            /** @enum {string} */
-            status: "ok" | "unreachable" | "needs_address";
-            /** @description The address that will be written as CRSP_URL. Empty with needs_address. */
-            url?: string;
-            /** @description Why the address does not answer, or why the controller has none. */
-            problem?: string;
-            /** @description The setting to fix when the controller has no address a runner can reach. */
-            setting?: string;
-        };
-        ParitySetup: {
-            /** @enum {string} */
-            status: "done" | "needs_permission" | "needs_address";
-            missing_permissions?: string[];
-            grant?: components["schemas"]["GithubGrant"];
-            /** @description The name of the repository Actions value that holds the access, CRSP_ACCESS. */
-            access_name?: string;
-            variable_names?: string[];
-            /** @description The id of the access credential that was made. */
-            access_id?: string;
-            /** @description With needs_address, why the controller has no address a runner can reach. */
-            address_problem?: string;
-            /** @description With needs_address, the setting to fix. */
-            address_setting?: string;
         };
         CliToken: {
             id: string;
@@ -8332,122 +8192,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    listAccessCredentials: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The credentials. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessCredentialList"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    createAccessCredential: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccessCredentialCreate"];
-            };
-        };
-        responses: {
-            /** @description The credential and its value. Shown once. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessCredentialCreated"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    revokeAccessCredential: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Revoked. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    getParityAddress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The address and the result of calling it. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParityAddress"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    setupRepositoryParity: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The numeric GitHub repository id. */
-                repositoryId: components["parameters"]["RepositoryId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["ParitySetupRequest"];
-            };
-        };
-        responses: {
-            /** @description Done, or the permission the App lacks. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParitySetup"];
-                };
             };
             default: components["responses"]["Error"];
         };

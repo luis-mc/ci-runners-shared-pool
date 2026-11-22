@@ -260,12 +260,6 @@ type InstallationClient interface {
 	SetVariable(ctx context.Context, installationID int64, owner, repo string, v Variable) error
 	DeleteVariable(ctx context.Context, installationID int64, owner, repo, name string) error
 
-	// SetSecret writes a repository Actions secret (CRSP134). The value is
-	// sealed with the repository's public key before it leaves the process;
-	// it is never logged. The name must not end in _KEY, _TOKEN, _SECRET or
-	// _PASS (the owner's naming rule).
-	SetSecret(ctx context.Context, installationID int64, owner, repo, name, value string) error
-
 	// ListWorkflowFiles reads .github/workflows with ETags (R5.30). A file whose
 	// ETag matches etags is returned without Content.
 	ListWorkflowFiles(ctx context.Context, installationID int64, owner, repo string, etags map[string]string) ([]WorkflowFile, error)

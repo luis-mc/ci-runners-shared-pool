@@ -30,7 +30,7 @@ func tree(env *Env) *command {
 		cmdVersion(env),
 		cmdLogin(), cmdLogout(), cmdOpen(), cmdContext(),
 		cmdApp(), cmdRepo(), cmdRepos(), cmdOrgPool(), cmdSettings(), cmdTrial(), cmdMachine(), cmdRunner(), cmdJob(),
-		cmdDoctor(), cmdParity(), cmdCompare(),
+		cmdDoctor(), cmdCompare(),
 		unbuilt("config", "configuration as a file (export, import, apply)", "M8", "export|import|apply"),
 		cmdBackup(), cmdRestore(),
 		cmdUpdate(), cmdRestart(),

@@ -201,9 +201,6 @@
     "internal/overview/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/parity/**": [
-      "docs/features/cli/spec.md"
-    ],
     "internal/power/**": [
       "docs/features/machines/spec.md"
     ],

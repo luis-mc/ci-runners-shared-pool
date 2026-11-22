@@ -2,7 +2,6 @@ package github
 
 import (
 	"context"
-	"crypto/rand"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -12,8 +11,6 @@ import (
 	"path"
 	"strings"
 	"time"
-
-	"golang.org/x/crypto/nacl/box"
 )
 
 func scopePath(scope RunnerScope) string {
@@ -441,38 +438,3 @@ func (c *REST) GetJob(ctx context.Context, id int64, owner, repo string, jobID i
 }
 
 var _ Client = (*REST)(nil)
-
-// SetSecret implements InstallationClient (CRSP134): fetch the repository's
-// Actions public key, seal the value to it (libsodium sealed box) and put it.
-// The plain value is not logged and not part of any error.
-func (c *REST) SetSecret(ctx context.Context, id int64, owner, repo, name, value string) error {
-	base := "/repos/" + url.PathEscape(owner) + "/" + url.PathEscape(repo) + "/actions/secrets"
-	r, err := c.installationReq(ctx, id, req{path: base + "/public-key"})
-	if err != nil {
-		return err
-	}
-	var pk struct {
-		KeyID string `json:"key_id"`
-		Key   string `json:"key"`
-	}
-	if _, err := c.do(ctx, r, &pk); err != nil {
-		return err
-	}
-	raw, err := base64.StdEncoding.DecodeString(pk.Key)
-	if err != nil || len(raw) != 32 {
-		return fmt.Errorf("github: the repository public key is not a 32-byte key")
-	}
-	var pub [32]byte
-	copy(pub[:], raw)
-	sealed, err := box.SealAnonymous(nil, []byte(value), &pub, rand.Reader)
-	if err != nil {
-		return fmt.Errorf("github: could not seal the secret: %w", err)
-	}
-	put, err := c.installationReq(ctx, id, req{method: "PUT", path: base + "/" + url.PathEscape(name), write: true,
-		body: map[string]string{"encrypted_value": base64.StdEncoding.EncodeToString(sealed), "key_id": pk.KeyID}})
-	if err != nil {
-		return err
-	}
-	_, err = c.do(ctx, put, nil)
-	return err
-}

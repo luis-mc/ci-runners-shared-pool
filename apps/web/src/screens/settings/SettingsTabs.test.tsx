@@ -31,7 +31,7 @@ describe('Settings tabs (D8)', () => {
   });
 
   it.each([
-    ['access', ['users', 'github-app', 'access-for-ci']],
+    ['access', ['users', 'github-app', 'webhooks']],
     ['repositories', ['public-repositories', 'budgets']],
     ['console', ['appearance', 'notifications', 'network']],
     ['updates', ['updates']],

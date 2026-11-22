@@ -627,17 +627,17 @@ func TestDeviceFlowDenied(t *testing.T) {
 
 func TestMissingPermissions(t *testing.T) { // R5.24
 	full := map[string]string{"administration": "write", "actions": "read", "actions_variables": "write",
-		"contents": "read", "metadata": "read", "organization_self_hosted_runners": "write", "secrets": "write"}
+		"contents": "read", "metadata": "read", "organization_self_hosted_runners": "write"}
 	if m := MissingPermissions(full); len(m) != 0 {
 		t.Fatalf("%v", m)
 	}
 	weak := map[string]string{"administration": "read", "actions": "write", "contents": "read", "metadata": "read"}
 	got := MissingPermissions(weak)
-	want := []string{"actions_variables", "administration", "organization_self_hosted_runners", "secrets"}
+	want := []string{"actions_variables", "administration", "organization_self_hosted_runners"}
 	if fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Fatalf("got %v want %v (a stronger grant counts, a weaker one is missing)", got, want)
 	}
-	if len(RequiredPermissions) != 7 {
+	if len(RequiredPermissions) != 6 {
 		t.Fatal("the set is exactly the R5.23 table")
 	}
 }
@@ -707,33 +707,6 @@ func TestOpenJobsUsesETag(t *testing.T) {
 	jobs, err := e.client.ListOpenJobs(ctx, 10, "alice", "demo")
 	if err != nil || len(jobs) != 2 {
 		t.Fatalf("a new run must be seen: %+v %v", jobs, err)
-	}
-}
-
-func TestSetSecretSealsTheValueToTheRepositoryKey(t *testing.T) { // CRSP134
-	e := newEnv(t)
-	ctx := context.Background()
-	e.fake.AddInstall(10, "alice", "User")
-	e.fake.AddRepo(100, 10, "alice", "demo", true)
-	if err := e.client.SetSecret(ctx, 10, "alice", "demo", "CRSP_ACCESS", "crsp_acc_value"); err != nil {
-		t.Fatal(err)
-	}
-	// The fake opens the sealed box with the repository's private key: the plain
-	// value only comes out if it was sealed to that key.
-	if v, ok := e.fake.Secret("alice/demo", "CRSP_ACCESS"); !ok || v != "crsp_acc_value" {
-		t.Fatalf("secret = %q %v", v, ok)
-	}
-	if err := e.client.SetSecret(ctx, 10, "alice", "demo", "CRSP_ACCESS", "second"); err != nil {
-		t.Fatalf("replacing a secret: %v", err)
-	}
-	if v, _ := e.fake.Secret("alice/demo", "CRSP_ACCESS"); v != "second" {
-		t.Fatalf("replace: %q", v)
-	}
-	// A failure never carries the value.
-	e.fake.FailMatching("/repos/alice/demo/actions/secrets", 500, 10)
-	err := e.client.SetSecret(ctx, 10, "alice", "demo", "CRSP_ACCESS", "never-in-an-error")
-	if err == nil || strings.Contains(err.Error(), "never-in-an-error") {
-		t.Fatalf("err = %v", err)
 	}
 }
 

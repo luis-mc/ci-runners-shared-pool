@@ -77,19 +77,6 @@ func roleFor(op string) (string, bool) {
 	return r, ok
 }
 
-// scopeOps lists, per access scope, the only operations an access credential of
-// that scope may call (CRSP134). The scope is the whole authorization: the
-// credential has no user and no role beyond it. `parity` is what `crsp parity
-// check` calls: the runner list and a doctor run with its result. A doctor run
-// writes one history row and changes nothing in the pool.
-var scopeOps = map[string]map[string]bool{
-	auth.ScopeParity: {"listRunners": true, "runDoctor": true, "getDoctorRun": true},
-}
-
-// scopeAllows reports whether an access scope may call an operation. An
-// unknown scope allows nothing.
-func scopeAllows(scope, op string) bool { return scopeOps[scope][op] }
-
 // roleAllows reports whether p may call an operation that needs `need`.
 func roleAllows(p auth.Principal, need string) bool {
 	switch need {
@@ -171,14 +158,7 @@ func (z *authz) middleware() gen.StrictMiddlewareFunc {
 				}
 				return nil, nil
 			}
-			if p.Scope != "" {
-				// An access credential: its scope names the operations, and the
-				// role table does not apply (it has no user behind it).
-				if !scopeAllows(p.Scope, op) {
-					WriteError(w, http.StatusForbidden, CodeForbidden, "this access credential cannot do that")
-					return nil, nil
-				}
-			} else if !roleAllows(p, need) {
+			if !roleAllows(p, need) {
 				WriteError(w, http.StatusForbidden, CodeForbidden, "your role does not allow this")
 				return nil, nil
 			}
