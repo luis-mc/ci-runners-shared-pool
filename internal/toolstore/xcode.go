@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"path/filepath"
+	"path"
 	"sort"
 	"strconv"
 	"strings"
@@ -23,7 +23,7 @@ type XcodeApp struct {
 }
 
 // DeveloperDir is the value of DEVELOPER_DIR that selects this Xcode.
-func (x XcodeApp) DeveloperDir() string { return filepath.Join(x.App, "Contents", "Developer") }
+func (x XcodeApp) DeveloperDir() string { return path.Join(x.App, "Contents", "Developer") }
 
 // ErrXcodeMissing says the Xcode a job needs is not installed on this Mac.
 var ErrXcodeMissing = errors.New("toolstore: the Xcode a job needs is not installed")
