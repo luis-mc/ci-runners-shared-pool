@@ -6,7 +6,6 @@ import (
 	"context"
 	"fmt"
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -37,8 +36,6 @@ func run(env Env, argv ...string) (string, bool) {
 	}
 	return r.Out, true
 }
-
-var numRe = regexp.MustCompile(`-?\d+(\.\d+)?`)
 
 func atoi64(s string) (int64, bool) {
 	n, err := strconv.ParseInt(strings.TrimSpace(s), 10, 64)
