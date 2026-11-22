@@ -18,6 +18,10 @@ const PoolLive = later(() => import('../pool/PoolLive').then((m) => m.PoolLive))
 const PoolMachines = later(() =>
   import('../pool/PoolMachines').then((m) => m.PoolMachines),
 );
+const PoolMachineDetail = later(
+  () => import('../pool/PoolMachineDetail').then((m) => m.PoolMachineDetail),
+  true,
+);
 const QueuePlan = later(() => import('../pool/QueuePlan').then((m) => m.QueuePlan));
 const Insights = later(() => import('../analytics/Insights').then((m) => m.Insights));
 const ChartsTab = later(() => import('./Charts').then((m) => m.ChartsTab));
@@ -55,6 +59,7 @@ export const jobsRoutes = (
     <Route element={<EverySecond />}>
       <Route path="pool/runs/:runId" element={<RunPage />} />
       <Route path="pool/jobs/:id" element={<JobPage />} />
+      <Route path="pool/machines/:machineId" element={<PoolMachineDetail />} />
     </Route>
     <Route path="analytics" element={<AnalyticsLayout />}>
       <Route element={<InsightsLayout />}>
