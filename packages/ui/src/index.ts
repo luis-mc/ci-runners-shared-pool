@@ -41,6 +41,7 @@ export * from './components/Rows';
 export * from './components/ShortText';
 export * from './components/RowAction';
 export * from './components/Waterfall';
+export * from './components/Timeline';
 export * from './components/JobGraph';
 export * from './components/Charts';
 export type * from './components/Viz.types';
