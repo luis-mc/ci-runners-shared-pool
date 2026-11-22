@@ -1,4 +1,4 @@
-// The Jobs Overview (UX-75): four tiles with their change, the findings strip and the cards that link.
+// Analytics > Insights (UX-75): four tiles with their change and the cards that link.
 import { cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp } from '../../testing/mock';
@@ -43,7 +43,7 @@ describe('the numbers', () => {
 });
 
 describe('the Overview', () => {
-  it('shows four tiles that lead to a list, the Needs you strip and the cards', async () => {
+  it('shows four tiles that lead to a list, the cards', async () => {
     renderApp(
       jobsApi({
         stats: { days, hours: [], forecast_points: [] },
@@ -64,16 +64,15 @@ describe('the Overview', () => {
           },
         ],
       }),
-      '/jobs',
+      '/analytics/insights',
     );
     const waiting = await screen.findByRole('link', { name: /^Waiting now 1 job/ });
-    expect(waiting.getAttribute('href')).toBe('/jobs/live?state=queued');
+    expect(waiting.getAttribute('href')).toBe('/pool/jobs?state=queued');
     expect(
       screen.getByRole('link', { name: /^Wait slow end \(p90\) 3 min up 2 min/ }),
     ).toBeTruthy();
     expect(screen.getByRole('link', { name: /^Jobs that passed 70%/ })).toBeTruthy();
     expect(screen.getByRole('link', { name: /^Pool busy/ })).toBeTruthy();
-    expect(await screen.findByRole('region', { name: 'Needs you' })).toBeTruthy();
     const bars = await screen.findByRole('list', { name: 'Busiest repositories' });
     expect(
       within(bars).getByRole('link', { name: /Open the jobs of octo\/app/ }),

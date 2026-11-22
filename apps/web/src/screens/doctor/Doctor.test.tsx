@@ -24,7 +24,7 @@ function finding(over: Partial<Finding> = {}): Finding {
     severity: 'fail',
     title: 'No online runner carries [self-hosted, linux, arm64]',
     detail: '.github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]',
-    fix: { text: 'Add a runner with these labels.', link: '/pool/runners' },
+    fix: { text: 'Add a runner with these labels.', link: '/setup/runners' },
     needs_admin: false,
     milestone: 1,
     checked_at: '2026-11-14T10:00:12Z',
@@ -80,7 +80,7 @@ describe('the logon right finding (runners R5.89, doctor R5.45)', () => {
     subject: { kind: 'runner', id: 'r1', name: 'crsp-a' },
     fix: {
       text: 'Press Start. The agent gives the account the right again.',
-      link: '/machines/m9',
+      link: '/setup/machines/m9',
     },
   });
 
@@ -151,7 +151,7 @@ describe('Doctor screen', () => {
     );
     expect(
       within(labels).getByRole('button', { name: 'Open' }).getAttribute('href'),
-    ).toBe('/pool/runners');
+    ).toBe('/setup/runners');
     expect(
       screen.getByText(/Last run \d{4}-\d{2}-\d{2} \d{2}:\d{2} \(5 min ago\)\./),
     ).toBeTruthy();
@@ -257,7 +257,7 @@ describe('Doctor screen', () => {
 
   it('keeps Run checks again as the one primary, in the bar; a fix button in a row stays normal (D27)', async () => {
     const api = signedIn().on('GET', '/api/v1/doctor/findings', {
-      items: [finding({ fix: { text: 'Open it.', link: '/machines' } })],
+      items: [finding({ fix: { text: 'Open it.', link: '/setup/machines' } })],
       last_run_at: lastRun,
     });
     renderApp(api, '/doctor');

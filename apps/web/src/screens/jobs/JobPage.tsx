@@ -31,6 +31,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Load } from '../common';
 import type { Schemas } from '../../api/api';
 import { useJobDetail, useRun } from './api';
+import { SlotTimeline } from '../pool/SlotTimeline';
 import { ResourcesPane, StepsSource, runsOnFact } from '../insights/JobInsights';
 import { graphSource } from './runBasis';
 import { edgesOf, graphNodes, stepRows } from './runViews';
@@ -74,15 +75,15 @@ export function JobPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/jobs', label: 'Jobs' },
+          { to: '/pool', label: 'Jobs' },
           ...(j
             ? [
                 {
-                  to: `/jobs/done?repository=${encodeURIComponent(j.repository)}`,
+                  to: `/pool/jobs?repository=${encodeURIComponent(j.repository)}`,
                   label: j.repository,
                 },
                 {
-                  to: `/jobs/run/${j.run_id}?attempt=${j.run_attempt}`,
+                  to: `/pool/runs/${j.run_id}?attempt=${j.run_attempt}`,
                   label: `Run #${j.run_id}, attempt ${j.run_attempt}`,
                 },
               ]
@@ -178,6 +179,7 @@ function JobBody({ j }: { j: JobDetail }) {
               },
             ]}
           />
+          <SlotTimeline compact machineId={j.machine_id} label="Where this job waits" />
         </Section>
       ) : null}
       <Section title="Project and code">
@@ -210,7 +212,7 @@ function JobBody({ j }: { j: JobDetail }) {
                 label: `Attempt ${a.attempt}${a.result ? `, ${a.result === 'success' ? 'success' : a.result.replace('_', ' ')}` : ''}`,
               }))}
               current={String(j.id)}
-              onChange={(id) => void navigate(`/jobs/${id}`)}
+              onChange={(id) => void navigate(`/pool/jobs/${id}`)}
             />
           ) : null}
           <Text tone="muted">
@@ -218,7 +220,7 @@ function JobBody({ j }: { j: JobDetail }) {
           </Text>
           <RunGraph job={j} />
           <Cluster>
-            <LinkButton to={`/jobs/run/${j.run_id}?attempt=${j.run_attempt}`}>
+            <LinkButton to={`/pool/runs/${j.run_id}?attempt=${j.run_attempt}`}>
               Open the whole run
             </LinkButton>
           </Cluster>
@@ -398,7 +400,7 @@ function RunGraph({ job }: { job: Job }) {
             nodes={graphNodes(
               run,
               Date.now(),
-              (x) => void navigate(`/jobs/${x.id}`),
+              (x) => void navigate(`/pool/jobs/${x.id}`),
               job.id,
             )}
             edges={edgesOf(run)}

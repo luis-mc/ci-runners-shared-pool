@@ -13,7 +13,7 @@ const repos = (api: MockApi): MockApi =>
 
 describe('List toolbar (CRSP132)', () => {
   it('puts search, the Pool filter, selection words, count and Add in one toolbar', async () => {
-    renderApp(repos(signedIn()), '/repositories');
+    renderApp(repos(signedIn()), '/setup/pool');
     const bar = await screen.findByRole('group', { name: 'Repositories toolbar' });
     expect(
       within(bar).getByRole('textbox', { name: 'Search repositories' }),
@@ -33,7 +33,7 @@ describe('List toolbar (CRSP132)', () => {
   });
 
   it('shows the two-state Pool filter as one joined choice with All', async () => {
-    renderApp(repos(signedIn()), '/repositories');
+    renderApp(repos(signedIn()), '/setup/pool');
     const group = await screen.findByRole('group', { name: 'Pool' });
     const names = within(group)
       .getAllByRole('button')
@@ -43,7 +43,7 @@ describe('List toolbar (CRSP132)', () => {
   });
 
   it('is on the machines list too', async () => {
-    renderApp(signedIn(), '/pool/machines');
+    renderApp(signedIn(), '/setup/machines');
     expect(await screen.findByRole('group', { name: 'Machines toolbar' })).toBeTruthy();
   });
 });

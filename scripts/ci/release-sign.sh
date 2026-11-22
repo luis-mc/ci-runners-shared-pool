@@ -9,7 +9,7 @@ manifest="${1:?manifest path}"
 sigout="${2:?signature path}"
 pubfile="${CRSP_UPDATE_PUBLIC_KEY_FILE:-internal/update/keys/release-ed25519.pub}"
 
-if [ -z "${CRSP_UPDATE_SIGNING_KEY:-}" ]; then
+if [ -z "${CRSP_UPDATE_SIGNING_KEY:-}" ]; then  # secret-scan:ignore (env var name, no value)
   echo "::error::the secret CRSP_UPDATE_SIGNING_KEY is missing; the release cannot be signed" >&2
   exit 1
 fi

@@ -264,7 +264,7 @@ export function runWhen(r: RunRow): string {
 
 /** Where a run row opens: the Run page of that attempt. */
 export function runPath(r: Pick<RunRow, 'id' | 'attempt'>): string {
-  return `/jobs/run/${r.id}?attempt=${r.attempt}`;
+  return `/pool/runs/${r.id}?attempt=${r.attempt}`;
 }
 
 export { runKey };

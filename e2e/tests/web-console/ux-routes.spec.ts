@@ -23,8 +23,8 @@ import {
 // A tab is a state of a route, not a route of its own: the Registry tab (REG5) is checked like a screen.
 const TABS = [
   {
-    pattern: '/pool/images?tab=registry',
-    url: '/pool/images?tab=registry',
+    pattern: '/setup/images?tab=registry',
+    url: '/setup/images?tab=registry',
     signedOut: false,
   },
 ];
@@ -147,7 +147,7 @@ for (const route of routes) {
 
 // N5 (RES21): a frame with no key-hint bar (the setup page) has no `--ds-keyhints-height`; the bar still sticks.
 // A short window makes the page scroll, so the walk has something to judge.
-for (const url of ['/setup', '/update']) {
+for (const url of ['/setup?wizard=1', '/update']) {
   for (const mode of MODES) {
     for (const w of TEXT_WIDTHS) {
       test(`ux stickyWalk: ${url} in a short window (${mode}, ${w.width}px)`, async ({

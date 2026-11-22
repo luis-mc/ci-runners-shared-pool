@@ -9,7 +9,7 @@ for (const width of [360, 393, 1300]) {
 
     test('the list is one pane titled Machines, with one primary', async ({ page }) => {
       await signedIn().install(page);
-      await page.goto('/pool/machines');
+      await page.goto('/setup/machines');
       const pane = page.getByRole('region', { name: 'Machines' });
       await expect(pane.getByRole('table', { name: 'Machines' })).toBeVisible();
       await expect(pane.getByRole('textbox', { name: 'Search machines' })).toBeVisible();
@@ -25,7 +25,7 @@ for (const width of [360, 393, 1300]) {
       page,
     }) => {
       await signedIn().install(page);
-      await page.goto('/pool/machines/m1');
+      await page.goto('/setup/machines/m1');
       await expect(
         page.getByRole('heading', { level: 1, name: 'build-1' }),
       ).toBeVisible();
@@ -51,14 +51,14 @@ for (const width of [360, 393, 1300]) {
         failure(500, 'internal', 'The controller could not answer.'),
       );
       await mock.install(page);
-      await page.goto('/pool/machines/m1');
+      await page.goto('/setup/machines/m1');
       await expect(page.locator('h1')).toHaveCount(1);
       await expect(page.getByText(/Could not load the machine/)).toBeVisible();
     });
 
     test('add a machine is inside a pane', async ({ page }) => {
       await signedIn().install(page);
-      await page.goto('/pool/machines/add');
+      await page.goto('/setup/machines/add');
       await expect(page.getByRole('region', { name: 'New machine' })).toBeVisible();
     });
   });

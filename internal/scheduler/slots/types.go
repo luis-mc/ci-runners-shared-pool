@@ -154,6 +154,30 @@ type Tx interface {
 	// Enqueue adds a follow-up row to the background job_queue in this
 	// transaction (R5.54).
 	Enqueue(kind, payload string) error
+
+	// Reservation returns the reserved job of the machine; ok is false when none
+	// (R5.93). SetReservation replaces it, ClearReservation removes it.
+	Reservation(machineID string) (r Reservation, ok bool, err error)
+	SetReservation(r Reservation) error
+	ClearReservation(machineID string) error
+	// Passes returns the passes counted for the tickets of the machine, by
+	// ticket id. AddPass counts one more; DropPasses forgets a ticket's.
+	Passes(machineID string) (map[string]int, error)
+	AddPass(machineID, ticketID string) error
+	DropPasses(ticketID string) error
+}
+
+// Reservation is the one reserved job of a machine (scheduling R5.93): a
+// waiting job that was passed too often or waited too long. Expected is the
+// expected start; zero when no forecast gives it.
+type Reservation struct {
+	MachineID string
+	TicketID  string
+	CPUs      int
+	MemoryGiB int
+	Class     string
+	Since     time.Time
+	Expected  time.Time
 }
 
 // Store runs scheduler work in transactions.

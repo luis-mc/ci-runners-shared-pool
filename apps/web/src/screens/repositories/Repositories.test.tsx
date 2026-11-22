@@ -20,7 +20,7 @@ const on = repository({
   full_name: 'octo/site',
   name: 'site',
   pool_on: true,
-  variables: [{ name: 'RUNS_ON_LINUX', status: 'wrong', value: 'old' }],
+  variables: [{ name: 'CRSP_RUNS_ON_LINUX', status: 'wrong', value: 'old' }],
 });
 const page = (items = [repository(), on]) => ({ items, stale: { stale: false } });
 
@@ -37,7 +37,7 @@ async function repoHeading(name: string) {
 
 describe('Repositories list', () => {
   it('shows four columns, and limits and variable status as a muted line under the name (LOOK29)', async () => {
-    renderApp(withRepos(signedIn()), '/repositories');
+    renderApp(withRepos(signedIn()), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     expect(
       within(table)
@@ -54,7 +54,7 @@ describe('Repositories list', () => {
   });
 
   it('filters by pool state and by search', async () => {
-    renderApp(withRepos(signedIn()), '/repositories');
+    renderApp(withRepos(signedIn()), '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('button', { name: 'Pool on' }));
     expect(screen.queryByRole('link', { name: 'app' })).toBeNull();
@@ -67,7 +67,7 @@ describe('Repositories list', () => {
   });
 
   it('shows the action bar with the count, and Use pool waits for a selection (UX-4, UX-7, UX-12, UX-71)', async () => {
-    renderApp(withRepos(signedIn()), '/repositories');
+    renderApp(withRepos(signedIn()), '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     const bar = screen.getByRole('region', { name: 'Actions' });
     expect(within(bar).getByText('Nothing selected')).toBeTruthy();
@@ -86,7 +86,7 @@ describe('Repositories list', () => {
   });
 
   it('turns Use pool into Stop using pool when every selected repository uses the pool', async () => {
-    renderApp(withRepos(signedIn()), '/repositories');
+    renderApp(withRepos(signedIn()), '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/site' }));
     const bar = screen.getByRole('region', { name: 'Actions' });
@@ -98,7 +98,7 @@ describe('Repositories list', () => {
   it('disables turn-on for a repository without GitHub admin rights and says why (UX-38)', async () => {
     renderApp(
       withRepos(signedIn(), [repository({ user_is_github_admin: false })]),
-      '/repositories',
+      '/setup/pool',
     );
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/app' }));
@@ -112,7 +112,7 @@ describe('Repositories list', () => {
       withRepos(signedIn(), [
         repository({ user_is_github_admin: false, user_admin_known: false }),
       ]),
-      '/repositories',
+      '/setup/pool',
     );
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/app' }));
@@ -147,7 +147,7 @@ describe('Repositories list', () => {
         created_by: 'octo',
         steps: [],
       });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/site' }));
     fireEvent.click(screen.getByRole('button', { name: 'Stop using pool' }));
@@ -155,7 +155,9 @@ describe('Repositories list', () => {
       name: 'Turn off these repositories?',
     });
     expect(within(dialog).getByText('octo/site: pool off')).toBeTruthy();
-    expect(within(dialog).getByText('octo/site: variable RUNS_ON_LINUX')).toBeTruthy();
+    expect(
+      within(dialog).getByText('octo/site: variable CRSP_RUNS_ON_LINUX'),
+    ).toBeTruthy();
     expect(api.count('POST', '/api/v1/repository-plans')).toBe(0);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off' }));
     await waitFor(() =>
@@ -171,7 +173,7 @@ describe('Repositories list', () => {
   });
 
   it('says what to do when the App is on no repository', async () => {
-    renderApp(withRepos(signedIn(), []), '/repositories');
+    renderApp(withRepos(signedIn(), []), '/setup/pool');
     expect(
       await screen.findByText(
         'No repositories yet. Install the App on a repository to start.',
@@ -184,7 +186,7 @@ describe('Repositories list', () => {
       items: [repository()],
       stale: { stale: true, as_of: '2026-11-14T08:00:00Z', reason: 'unreachable' },
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     expect(
       await screen.findByText(
         /GitHub could not be reached\. The list is the last copy, from 2026-11-14/,
@@ -198,7 +200,7 @@ describe('Repositories list', () => {
       items: [repository()],
       stale: { stale: true, reason: 'session_expired' },
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     expect(await screen.findByText(/Your GitHub sign-in ended/)).toBeTruthy();
     expect(screen.queryByText(/not answering/)).toBeNull();
   });
@@ -211,11 +213,11 @@ describe('Repositories list', () => {
         items: [repository()],
         stale: { stale: true, reason: 'session_expired' },
       });
-      renderApp(api, '/repositories?q=web');
+      renderApp(api, '/setup/pool?q=web');
       await screen.findByText(/Your GitHub sign-in ended/);
       fireEvent.click(screen.getByRole('button', { name: 'Sign in with GitHub again' }));
       expect(assign).toHaveBeenCalledWith(
-        '/auth/github/login?return_to=' + encodeURIComponent('/repositories?q=web'),
+        '/auth/github/login?return_to=' + encodeURIComponent('/setup/pool?q=web'),
       );
     } finally {
       vi.unstubAllGlobals();
@@ -227,7 +229,7 @@ describe('Repositories list', () => {
       items: [repository()],
       stale: { stale: true, reason: 'unreachable' },
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     await screen.findByText(/GitHub could not be reached/);
     expect(
       screen.queryByRole('button', { name: 'Sign in with GitHub again' }),
@@ -244,7 +246,7 @@ describe('Repositories list', () => {
         message: 'Validation Failed',
       },
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     expect(
       await screen.findByText(/GitHub answered 422: Validation Failed\./),
     ).toBeTruthy();
@@ -255,7 +257,7 @@ describe('Repositories list', () => {
       items: [repository({ user_is_github_admin: false })],
       stale: { stale: true, reason: 'session_expired' },
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     await screen.findByText(/Your GitHub sign-in ended/);
     expect(screen.queryByText(/You need admin rights/)).toBeNull();
   });
@@ -264,7 +266,7 @@ describe('Repositories list', () => {
     const api = signedIn().on('GET', '/api/v1/github/repositories', () =>
       apiError(502, 'github_unavailable', 'GitHub says no.'),
     );
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     expect(await screen.findByText(/Could not load repositories\./)).toBeTruthy();
     expect(screen.getByText(/GitHub is not answering\. Try again\./)).toBeTruthy();
   });
@@ -273,7 +275,7 @@ describe('Repositories list', () => {
     const api = withRepos(signedIn()).on('GET', '/api/v1/github/install-url', {
       url: 'https://github.example/apps/x/installations/new',
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     fireEvent.click(screen.getByRole('button', { name: 'Add a repository' }));
     await waitFor(() => expect(api.count('GET', '/api/v1/github/install-url')).toBe(1));
@@ -287,15 +289,15 @@ describe('Repository detail', () => {
     );
 
   it('shows state, variables and the policy form', async () => {
-    renderApp(api(), '/repositories/octo/site');
+    renderApp(api(), '/setup/pool/octo/site');
     expect(await repoHeading('octo/site')).toBeTruthy();
-    expect(screen.getByText('RUNS_ON_LINUX')).toBeTruthy();
+    expect(screen.getByText('CRSP_RUNS_ON_LINUX')).toBeTruthy();
     expect(screen.getByRole('textbox', { name: 'Labels' })).toBeTruthy();
   });
 
   it('asks first before jobs from public forks are turned on (UX-9)', async () => {
     const a = api().on('PATCH', '/api/v1/repositories/:id/policy', on.policy);
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     fireEvent.click(screen.getByRole('checkbox', { name: 'Run jobs from public forks' }));
     expect(
@@ -336,7 +338,7 @@ describe('Repository detail', () => {
         used_minutes: 0,
       },
     });
-    renderApp(withRepos(signedIn(), [hosted, waiting]), '/repositories');
+    renderApp(withRepos(signedIn(), [hosted, waiting]), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     expect(within(table).getByText('GitHub-hosted runners')).toBeTruthy();
     expect(within(table).getByText('waiting for a machine')).toBeTruthy();
@@ -354,7 +356,7 @@ describe('Repository detail', () => {
     });
     renderApp(
       withRepos(signedIn(), [wait]).on('GET', '/api/v1/repositories/:id', wait),
-      '/repositories/octo/app',
+      '/setup/pool/octo/app',
     );
     await repoHeading('octo/app');
     expect(
@@ -366,7 +368,7 @@ describe('Repository detail', () => {
 
   it('asks first before the hosted fallback is turned on (UX-9, R5.42)', async () => {
     const a = api().on('PATCH', '/api/v1/repositories/:id/policy', on.policy);
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     fireEvent.click(screen.getByRole('radio', { name: 'Run on GitHub-hosted runners' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -391,7 +393,7 @@ describe('Repository detail', () => {
     const pub = repository({ visibility: 'public' });
     renderApp(
       withRepos(signedIn(), [pub]).on('GET', '/api/v1/repositories/:id', pub),
-      '/repositories/octo/app',
+      '/setup/pool/octo/app',
     );
     await repoHeading('octo/app');
     const r = screen.getByRole('radio', { name: /Run on GitHub-hosted runners/ });
@@ -399,14 +401,14 @@ describe('Repository detail', () => {
   });
 
   it('has no light runner setting in the policy form (OPS49)', async () => {
-    renderApp(api(), '/repositories/octo/app');
+    renderApp(api(), '/setup/pool/octo/app');
     await repoHeading('octo/app');
     expect(screen.queryByRole('checkbox', { name: /light runner/i })).toBeNull();
     expect(screen.queryByText(/RUNS_ON_LIGHT/)).toBeNull();
   });
 
   it('shows every mistake above its box and in a list after Save (UX-21)', async () => {
-    renderApp(api(), '/repositories/octo/app');
+    renderApp(api(), '/setup/pool/octo/app');
     await repoHeading('octo/app');
     fireEvent.change(screen.getByRole('textbox', { name: 'Labels' }), {
       target: { value: '' },
@@ -431,7 +433,7 @@ describe('Repository detail', () => {
         packages: ['zlib1g-dev'],
         text: 'zlib1g-dev',
       });
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     const box = screen.getByRole<HTMLTextAreaElement>('textbox', {
       name: /Extra packages/,
@@ -451,7 +453,7 @@ describe('Repository detail', () => {
       packages: [],
       text: '',
     });
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     fireEvent.change(screen.getByRole('textbox', { name: /Extra packages/ }), {
       target: { value: 'zlib1g-dev\n# a note\n-evil' },
@@ -469,7 +471,7 @@ describe('Repository detail', () => {
       '/api/v1/repositories/:id/extra-packages',
       apiError(400, 'invalid', 'line 1: "a b" is not a package name'),
     );
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     fireEvent.change(screen.getByRole('textbox', { name: /Extra packages/ }), {
       target: { value: 'ok-name' },
@@ -484,7 +486,7 @@ describe('Repository detail', () => {
       '/api/v1/repositories/:id',
       repository({ user_is_github_admin: false }),
     );
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     const button = await screen.findByRole<HTMLButtonElement>('button', {
       name: 'Use pool',
     });
@@ -500,7 +502,7 @@ describe('Repository detail', () => {
       '/api/v1/repositories/:id',
       repository(),
     );
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Save' }).disabled).toBe(
       true,
@@ -538,7 +540,7 @@ describe('Webhook health (RES14)', () => {
   });
 
   it('shows the last delivery result per repository in the list', async () => {
-    renderApp(withRepos(signedIn(), [polling, healthy, repository()]), '/repositories');
+    renderApp(withRepos(signedIn(), [polling, healthy, repository()]), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     expect(within(table).getByText('delivery failed')).toBeTruthy();
     expect(within(table).getByText('delivered')).toBeTruthy();
@@ -560,7 +562,7 @@ describe('Webhook health (RES14)', () => {
       },
     });
     const a = withRepos(signedIn(), [none]).on('GET', '/api/v1/repositories/:id', none);
-    renderApp(a, '/repositories/octo/nohook');
+    renderApp(a, '/setup/pool/octo/nohook');
     expect(
       await screen.findByText(/has no webhook, so GitHub tells crsp nothing/),
     ).toBeTruthy();
@@ -590,7 +592,7 @@ describe('Webhook health (RES14)', () => {
       '/api/v1/repositories/:id',
       missed,
     );
-    renderApp(a, '/repositories/octo/late');
+    renderApp(a, '/setup/pool/octo/late');
     expect(await screen.findByText(/did not tell crsp about a job/)).toBeTruthy();
   });
 
@@ -601,7 +603,7 @@ describe('Webhook health (RES14)', () => {
         mode: 'webhook',
         failures_in_a_row: 0,
       });
-    renderApp(a, '/repositories/octo/slow');
+    renderApp(a, '/setup/pool/octo/slow');
     expect(await screen.findByText(/now polls GitHub for its jobs/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Switch back to webhooks' }));
     await waitFor(() =>
@@ -616,7 +618,7 @@ describe('Webhook health (RES14)', () => {
       '/api/v1/repositories/:id',
       healthy,
     );
-    renderApp(a, '/repositories/octo/fine');
+    renderApp(a, '/setup/pool/octo/fine');
     await repoHeading('octo/fine');
     expect(screen.queryByText(/now polls GitHub/)).toBeNull();
     expect(screen.getByText('Last webhook delivery')).toBeTruthy();
@@ -635,14 +637,14 @@ describe('A repository that left the installation (github-integration R5.22)', (
     "This repository left the GitHub App's installation, so its pool was turned off.";
 
   it('says in the list that it left the installation', async () => {
-    renderApp(withRepos(signedIn(), [left, repository()]), '/repositories');
+    renderApp(withRepos(signedIn(), [left, repository()]), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     expect(within(table).getByText('left the installation')).toBeTruthy();
   });
 
   it('gives the reason on the repository page', async () => {
     const a = withRepos(signedIn(), [left]).on('GET', '/api/v1/repositories/:id', left);
-    renderApp(a, '/repositories/octo/gone');
+    renderApp(a, '/setup/pool/octo/gone');
     expect(await screen.findByText(reason)).toBeTruthy();
   });
 
@@ -652,7 +654,7 @@ describe('A repository that left the installation (github-integration R5.22)', (
       '/api/v1/repositories/:id',
       repository(),
     );
-    renderApp(a, '/repositories/octo/app');
+    renderApp(a, '/setup/pool/octo/app');
     await repoHeading('octo/app');
     expect(screen.queryByText(reason)).toBeNull();
   });
@@ -692,7 +694,7 @@ describe('Missing App permission on Repositories (R5.86)', () => {
         stale: { stale: false },
       })
       .on('GET', '/api/v1/github/grant', grant);
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     const open = await screen.findByRole('button', { name: 'Accept it on GitHub' });
     expect(open.getAttribute('href')).toBe(
       'https://github.com/settings/installations/10',
@@ -717,7 +719,7 @@ describe('Missing App permission on Repositories (R5.86)', () => {
       ],
       stale: { stale: false },
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     await waitFor(() =>
       expect(api.count('GET', '/api/v1/github/installations')).toBeGreaterThan(0),

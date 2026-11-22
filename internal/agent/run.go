@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"errors"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/agent/health"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -115,6 +116,13 @@ type Config struct {
 	// finds it.
 	Registry *RegistryClient
 
+	// Health reads the machine's health for the HealthReport (OPS83); nil makes
+	// one from this config. HealthEvery is how often it is sent (default 1 minute).
+	Health      *health.Monitor
+	HealthEvery time.Duration
+	// RunnerWorkDirs are the runner work folders whose free space is reported.
+	RunnerWorkDirs []string
+
 	// Intervals; the defaults are the spec's (R5.35, R5.13, R5.16).
 	HeartbeatEvery time.Duration // 10 s
 	LoadEvery      time.Duration // 15 s
@@ -184,6 +192,12 @@ func (c *Config) defaults() {
 	if c.Backoff == nil {
 		c.Backoff = &Backoff{}
 	}
+	if c.HealthEvery == 0 {
+		c.HealthEvery = time.Minute
+	}
+	if c.Health == nil {
+		c.Health = c.newHealth()
+	}
 	if c.Sleep == nil {
 		c.Sleep = func(ctx context.Context, d time.Duration) error {
 			t := time.NewTimer(d)
@@ -217,7 +231,7 @@ func SettingsFromProto(p *agentv1.MachineSettings) machines.Settings {
 		DrainTimeoutMinutes: int(p.GetDrainTimeoutMinutes()), WindowsSymlinkRight: p.GetWindowsSymlinkRight(),
 		PoolMemoryGiB: p.GetPoolMemoryGib(), PoolCPUs: int(p.GetPoolCpus()),
 		Mode: p.GetMode(), PauseOnBattery: p.GetPauseOnBattery(), PauseUntil: untilTime(p.GetPauseUntilUnixMs()),
-		PausedUntilResumed: p.GetPauseUntilResumed(), CPUCapPct: int(p.GetCpuCapPct()),
+		PausedUntilResumed: p.GetPauseUntilResumed(), CPUCapPct: int(p.GetCpuCapPct()), DiskFloorGiB: int(p.GetDiskFloorGib()),
 	}
 }
 
@@ -464,9 +478,13 @@ func runSession(ctx context.Context, cfg Config, key, id, pin string) error {
 	}
 	cfg.Backoff.Reset() // a successful session resets the backoff (R5.36)
 	cfg.Logger.Info("session open")
+	if cfg.Health != nil {
+		cfg.Health.Beats().Opened()
+	}
 
 	lastRecv := newStamp()
 	go l.sendLoop(ctx, cancel, lastRecv)
+	go l.healthLoop(ctx)
 	go l.cacheLoop(ctx)
 	go l.machineReportLoop(ctx)
 	go l.budgetLoop(ctx)
@@ -549,6 +567,9 @@ func (l *link) sendLoop(ctx context.Context, cancel context.CancelFunc, lastRecv
 				cancel()
 				return
 			}
+			if cfg.Health != nil {
+				cfg.Health.Beats().Sent()
+			}
 			if fail(l.send(&agentv1.SessionRequest{Message: &agentv1.SessionRequest_Heartbeat{Heartbeat: &agentv1.Heartbeat{SentAtUnixMs: time.Now().UnixMilli()}}})) {
 				return
 			}
@@ -602,6 +623,10 @@ func (l *link) reportDrain() error {
 func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 	cfg := l.cfg
 	switch m := msg.GetMessage().(type) {
+	case *agentv1.SessionResponse_Heartbeat:
+		if cfg.Health != nil {
+			cfg.Health.Beats().Replied(m.Heartbeat.GetSentAtUnixMs())
+		}
 	case *agentv1.SessionResponse_Settings:
 		applySettings(cfg, m.Settings)
 		l.kickPolicy()
@@ -621,6 +646,8 @@ func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 	case *agentv1.SessionResponse_AddRunner, *agentv1.SessionResponse_StopRunner,
 		*agentv1.SessionResponse_RemoveRunner, *agentv1.SessionResponse_DrainRunner:
 		l.runnerCmd(ctx, msg)
+	case *agentv1.SessionResponse_ListenerControl:
+		l.listenerControl(ctx, m.ListenerControl)
 	case *agentv1.SessionResponse_UpdateRunnerFiles:
 		go l.updateFiles(ctx, m.UpdateRunnerFiles)
 	case *agentv1.SessionResponse_RunHostCommand:

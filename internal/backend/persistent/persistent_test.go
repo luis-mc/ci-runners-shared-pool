@@ -97,7 +97,7 @@ func TestDownloadDeletesOnMismatch(t *testing.T) {
 	}
 }
 
-// R5.37, parity row 31: a wrong hash is deleted and fetched once more; the
+// R5.37: a wrong hash is deleted and fetched once more; the
 // second download that matches is kept.
 func TestDownloadFixesAWrongHashByRedownload(t *testing.T) {
 	f := sysfake.NewFS()

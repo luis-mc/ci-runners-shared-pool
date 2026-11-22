@@ -30,7 +30,7 @@ All five are one Go binary, `crsp` (decision 0001).
 - The web console is reachable on the local network over TLS. Every user signs in with GitHub. The tray's one-time link also works on the controller's machine.
 - Users: the first person to sign in becomes the owner. The owner allows other GitHub users as admin or viewer. Turning the pool on for a repository also needs admin rights on that repository in GitHub.
 - Ports: 8460 for the console and API (plain HTTP on 127.0.0.1 and ::1, HTTPS on every other address), 8461 for the agent link (gRPC over TLS). Both can be changed in config.
-- Repository variables the product writes: `RUNS_ON_LINUX`, `RUNS_ON_WINDOWS`, `RUNS_ON_MACOS` (JSON lists of lowercase labels, such as `["self-hosted","linux","x64"]`). A variable exists only while the repository has a crsp runner for that OS and the pool is on for it; unset means GitHub-hosted. Workflows say `runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}`.
+- Repository variables the product writes: `CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`, `CRSP_RUNS_ON_MACOS` (JSON lists of lowercase labels, such as `["self-hosted","linux","x64"]`). A variable exists only while the repository has a crsp runner for that OS and the pool is on for it; unset means GitHub-hosted. Workflows say `runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}`.
 - Milestone 1 builds persistent runners for Windows, Linux and macOS together.
 - Task IDs and branches: `CRSP<n>-<slug>`. CRP1 to CRP14 keep their labels.
 
@@ -48,7 +48,7 @@ All five are one Go binary, `crsp` (decision 0001).
 - Console sessions never expire by time. They end at sign-out.
 - The tray's Open link signs in as the GitHub user bound to that OS user. The binding is made once, by a GitHub sign-in from the tray. Loopback only.
 - Join codes and the install command are in M1. The M1 agent on the controller's machine uses the same join path.
-- Turning the pool off for a repository deletes its `RUNS_ON_*` variables after a yes. The question names the variables and the workflows still using them.
+- Turning the pool off for a repository deletes its `CRSP_RUNS_ON_*` variables after a yes. The question names the variables and the workflows still using them.
 - The doctor starts in M1 with core checks: machine, agent, persistent runners, GitHub App, variables, workflow labels. Each later milestone adds its checks.
 - CLI and console use the verb "add", never "create" (`crsp runner add`, `crsp machine add`).
 - Retention: job history 90 days, logs 14 days and 512 MiB per machine, audit log 400 days. Viewers may read logs and the audit log. All changeable in Settings.

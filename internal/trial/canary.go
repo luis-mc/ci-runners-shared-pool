@@ -6,8 +6,14 @@ import (
 	"strings"
 )
 
-// CanaryPrefix starts every variable a canary writes.
-const CanaryPrefix = "RUNS_ON_CANARY_"
+// CanaryPrefix starts every variable a canary writes. It sits under the pool
+// prefix CRSP_RUNS_ON_ (routing.PoolVarPrefix), so no job takes the name as its
+// per-job variable and the routing sync never deletes it as a stale one.
+const CanaryPrefix = "CRSP_RUNS_ON_CANARY_"
+
+// LegacyCanaryPrefix started the canary variables of older versions (before
+// CRSP229); a canary started then is still stopped by name.
+const LegacyCanaryPrefix = "RUNS_ON_CANARY_"
 
 // Selected says whether a job name is in the canary. The choice depends on the
 // job name alone, so it is the same on every run and only grows when the
@@ -25,7 +31,7 @@ func Selected(job string, percent int, named []string) bool {
 
 // CanaryVariable is the variable name for a job: upper case letters and digits,
 // every other character an underscore. A workflow reads it as
-// `runs-on: ${{ fromJSON(vars.RUNS_ON_CANARY_BUILD || '["ubuntu-latest"]') }}`.
+// `runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_CANARY_BUILD || '["ubuntu-latest"]') }}`.
 func CanaryVariable(job string) string {
 	var b strings.Builder
 	b.WriteString(CanaryPrefix)
@@ -39,9 +45,9 @@ func CanaryVariable(job string) string {
 	return b.String()
 }
 
-var osVariable = map[string]string{"linux": "RUNS_ON_LINUX", "windows": "RUNS_ON_WINDOWS", "macos": "RUNS_ON_MACOS"}
+var osVariable = map[string]string{"linux": "CRSP_RUNS_ON_LINUX", "windows": "CRSP_RUNS_ON_WINDOWS", "macos": "CRSP_RUNS_ON_MACOS"}
 
-// applyCanary snapshots the RUNS_ON family variables, then writes one variable
+// applyCanary snapshots the CRSP_RUNS_ON family variables, then writes one variable
 // per selected job through the owner code.
 func (m *Manager) applyCanary(ctx context.Context, s *State) error {
 	before, err := m.vars.Variables(ctx, s.Repo)

@@ -42,7 +42,6 @@ import { useSession } from '../../auth/session';
 import { Ask, Load } from '../common';
 import { TabForm, useTabPart } from './TabForm';
 import { SECTIONS, settingsPath } from './sections';
-import { AccessForCiSettings } from './AccessForCi';
 import { AuditLogSettings, ConfigExportSettings } from './AuditLog';
 import { InsightsUpdateSettings } from './InsightsUpdate';
 import { BudgetsSettings } from './Budgets';
@@ -115,9 +114,6 @@ export function AccessTab() {
       </At>
       <At id="webhooks">
         <WebhooksSettings />
-      </At>
-      <At id="access-for-ci">
-        <AccessForCiSettings />
       </At>
     </TabForm>
   );

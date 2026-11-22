@@ -9,16 +9,16 @@ afterEach(cleanup);
 describe('TopMenu', () => {
   it('marks the open item with aria-current and never adds the class active', () => {
     render(
-      <MemoryRouter initialEntries={['/jobs']}>
+      <MemoryRouter initialEntries={['/pool']}>
         <TopMenu
           items={[
             { to: '/', label: 'Overview', end: true },
-            { to: '/jobs', label: 'Jobs' },
+            { to: '/pool', label: 'Pool' },
           ]}
         />
       </MemoryRouter>,
     );
-    const open = screen.getByRole('link', { name: 'Jobs' });
+    const open = screen.getByRole('link', { name: 'Pool' });
     const other = screen.getByRole('link', { name: 'Overview' });
     expect(open.getAttribute('aria-current')).toBe('page');
     expect(other.getAttribute('aria-current')).toBeNull();

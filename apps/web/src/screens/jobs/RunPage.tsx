@@ -50,11 +50,11 @@ export function RunPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/jobs', label: 'Jobs' },
+          { to: '/pool', label: 'Jobs' },
           ...(run
             ? [
                 {
-                  to: `/jobs/done?repository=${encodeURIComponent(run.repository)}`,
+                  to: `/pool/jobs?repository=${encodeURIComponent(run.repository)}`,
                   label: run.repository,
                 },
                 { label: `Run #${run.id}, attempt ${run.attempt}` },
@@ -84,7 +84,7 @@ export function RunPage() {
 function RunBody({ run, onAttempt }: { run: RunItem; onAttempt: (a: number) => void }) {
   const navigate = useNavigate();
   const now = Date.now();
-  const open = (j: { id: number }) => void navigate(`/jobs/${j.id}`);
+  const open = (j: { id: number }) => void navigate(`/pool/jobs/${j.id}`);
   const view = runRows(run, now, open);
   const { kind, word } = jobStatus(run);
   return (
@@ -139,7 +139,7 @@ function RunBody({ run, onAttempt }: { run: RunItem; onAttempt: (a: number) => v
                         <Stack>
                           {run.started_next.map((f) => (
                             <Text key={f.run_id}>
-                              <TextLink to={`/jobs/run/${f.run_id}`}>
+                              <TextLink to={`/pool/runs/${f.run_id}`}>
                                 {f.workflow_name}
                               </TextLink>
                               {followUpWords(f).slice(f.workflow_name.length)}

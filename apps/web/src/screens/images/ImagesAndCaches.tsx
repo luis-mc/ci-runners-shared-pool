@@ -85,7 +85,7 @@ export function ImagesAndCaches() {
       {session.can('admin') && tab !== 'registry' ? (
         <ActionBar
           primary={
-            <Button kind="primary" onPress={() => void navigate('/pool/runners/add')}>
+            <Button kind="primary" onPress={() => void navigate('/setup/runners/add')}>
               Add runners
             </Button>
           }
@@ -178,7 +178,7 @@ function ImagesTab({ nameOf }: { nameOf: (id: string) => string }) {
                       : 'base only'
                   }
                   onOpen={() =>
-                    void navigate(`/pool/images/${encodeURIComponent(img.id)}`)
+                    void navigate(`/setup/images/${encodeURIComponent(img.id)}`)
                   }
                 />
               );

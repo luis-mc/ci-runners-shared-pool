@@ -64,7 +64,7 @@ export function PullingStep({
     return (
       <Message
         tone="problem"
-        action={<LinkButton to="/pool/images">Build it here instead</LinkButton>}
+        action={<LinkButton to="/setup/images">Build it here instead</LinkButton>}
       >
         {`The job image could not be pulled, so no runner was added. Nothing was changed on ${machineName}. ${pull.error ?? ''}`.trim()}
       </Message>

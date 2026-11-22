@@ -20,17 +20,19 @@ import {
   minutesWords,
   projectOf,
   ranked,
+  titleWithRepository,
   type Finding,
 } from './words';
 
 export const findingPath = (f: Pick<Finding, 'id'>): string =>
-  `/jobs/insights/finding/${f.id}`;
+  `/analytics/finding/${f.id}`;
 
 export const doNextColumns: Column<Finding>[] = [
   {
     id: 'what',
     header: 'What to do',
-    cell: (f) => (f.guardrail ? `${f.guardrail}: ${f.title}` : f.title),
+    cell: (f) =>
+      f.guardrail ? `${f.guardrail}: ${titleWithRepository(f)}` : titleWithRepository(f),
     sort: (f) => f.title,
     kind: 'grow',
     grow: 3,

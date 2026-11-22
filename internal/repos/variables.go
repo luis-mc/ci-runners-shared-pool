@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"regexp"
 	"sort"
 	"strconv"
 	"strings"
@@ -16,53 +17,78 @@ import (
 
 // variableOrder is the fixed order of operating systems and their variable.
 var variableOrder = []struct{ OS, Var string }{
-	{"linux", "RUNS_ON_LINUX"},
-	{"windows", "RUNS_ON_WINDOWS"},
-	{"macos", "RUNS_ON_MACOS"},
+	{"linux", "CRSP_RUNS_ON_LINUX"},
+	{"windows", "CRSP_RUNS_ON_WINDOWS"},
+	{"macos", "CRSP_RUNS_ON_MACOS"},
 }
 
-// legacyVariableNames are the names older versions wrote (CRSP25). They are
-// deleted on upgrade, only where the store knows the controller created them.
-var legacyVariableNames = []string{"CRSP_RUNS_ON_LINUX", "CRSP_RUNS_ON_WINDOWS", "CRSP_RUNS_ON_MACOS"}
-
-// legacyAlias maps a managed variable to the old dev-standards name written for
-// it while a repository's legacy_vars setting is on (R5.39). NIGHTLY_RUNS_ON is
-// never written; the owner sets it by hand.
-var legacyAlias = []struct{ Var, Old string }{
-	{"RUNS_ON_LINUX", "CI_RUNS_ON"},
-	{"RUNS_ON_WINDOWS", "CI_RUNS_ON_WINDOWS"},
+// legacyVariableNames are the plain names older versions wrote (before
+// CRSP229), each with the name that replaces it ("" for RUNS_ON_LIGHT, which
+// has none: light runners are gone). CI_RUNS_ON and CI_RUNS_ON_WINDOWS are the
+// old dev-standards names the removed legacy_vars setting wrote. They are
+// deleted on upgrade, only where the store lists them as written by crsp and
+// only after the new names are written (migrateLegacy). NIGHTLY_RUNS_ON is
+// never touched; the owner sets it by hand.
+var legacyVariableNames = []struct{ Old, New string }{
+	{"RUNS_ON_LINUX", "CRSP_RUNS_ON_LINUX"},
+	{"RUNS_ON_WINDOWS", "CRSP_RUNS_ON_WINDOWS"},
+	{"RUNS_ON_MACOS", "CRSP_RUNS_ON_MACOS"},
+	{VarLight, ""},
+	{"CI_RUNS_ON", "CRSP_RUNS_ON_LINUX"},
+	{"CI_RUNS_ON_WINDOWS", "CRSP_RUNS_ON_WINDOWS"},
 }
 
-// LegacyAliasNames lists the old names legacy_vars writes.
-func LegacyAliasNames() []string {
-	out := make([]string, 0, len(legacyAlias))
-	for _, a := range legacyAlias {
-		out = append(out, a.Old)
-	}
-	return out
-}
+// legacySizeVarRE is a size variable an older version wrote, such as
+// RUNS_ON_LINUX_LARGE (scheduling R5.67).
+var legacySizeVarRE = regexp.MustCompile(`^RUNS_ON_(LINUX|WINDOWS|MACOS)_([A-Z][A-Z0-9]*)$`)
 
-func isAlias(name string) bool {
-	for _, a := range legacyAlias {
-		if a.Old == name {
-			return true
+// legacyReplacement says whether name is a name an older version wrote, and
+// which name replaces it ("" when none does).
+func legacyReplacement(name string) (replacement string, ok bool) {
+	for _, n := range legacyVariableNames {
+		if n.Old == name {
+			return n.New, true
 		}
 	}
-	return false
+	if legacySizeVarRE.MatchString(name) {
+		return "CRSP_" + name, true
+	}
+	return "", false
 }
 
-// keptNames is every variable the controller may write: the three managed ones,
-// then the old aliases.
-func keptNames() []string { return append(VariableNames(), LegacyAliasNames()...) }
+// isLegacyVariable says whether name is a name an older version wrote.
+func isLegacyVariable(name string) bool {
+	_, ok := legacyReplacement(name)
+	return ok
+}
 
-// mayDelete says whether the controller may delete name from r. An old alias is
-// deleted only when the store lists it as written by the controller: the old
-// pool may have written CI_RUNS_ON, and that one is not ours to touch (R5.39).
+// legacyOS is the OS of a plain or size name an older version wrote, "" for
+// any other (RUNS_ON_LIGHT has none).
+func legacyOS(name string) string {
+	if n, ok := legacyReplacement(name); ok && n != "" {
+		return varOS(n)
+	}
+	return ""
+}
+
+// keptNames is every plain variable the controller may write.
+func keptNames() []string { return VariableNames() }
+
+// mayDelete says whether the controller may delete name from r. A size
+// variable, or a name an older version wrote, is deleted only when the store
+// lists it as written by crsp: the old pool may have written CI_RUNS_ON, and a
+// person may have set RUNS_ON_LINUX by hand; those are not ours to touch.
 func (s *Service) mayDelete(ctx context.Context, r Repository, name string) (bool, error) {
-	if !isAlias(name) && !isSizeVar(name) {
+	if !isLegacyVariable(name) && !isSizeVar(name) {
 		return true, nil
 	}
-	rows, err := s.cfg.Store.ListManagedVariables(ctx, r.ID)
+	return s.managed(ctx, r.ID, name)
+}
+
+// managed says whether the store lists name as written by crsp for the
+// repository.
+func (s *Service) managed(ctx context.Context, repoID int64, name string) (bool, error) {
+	rows, err := s.cfg.Store.ListManagedVariables(ctx, repoID)
 	if err != nil {
 		return false, err
 	}
@@ -203,13 +229,6 @@ func (s *Service) desired(ctx context.Context, pol Policy, hosted map[string]str
 		b, _ := json.Marshal(list)
 		out[name] = string(b)
 	}
-	if pol.LegacyVars {
-		for _, a := range legacyAlias {
-			if val, ok := out[a.Var]; ok {
-				out[a.Old] = val
-			}
-		}
-	}
 	return out, nil
 }
 
@@ -230,13 +249,10 @@ func (s *Service) osCapacity(ctx context.Context) (map[string][]string, error) {
 // syncVariables makes the repository's variables what Desired says (R5.28):
 // it writes the ones wanted and deletes the ones not wanted, which are the
 // ones for an OS the repository has no runner for or the policy turns off.
-// Old CRSP_RUNS_ON_* variables are deleted first.
+// The names an older version wrote are deleted once the new ones are written.
 func (s *Service) syncVariables(ctx context.Context, actor auth.Principal, r Repository, pol Policy) error {
 	want, err := s.desiredFor(ctx, r, pol)
 	if err != nil {
-		return err
-	}
-	if err := s.migrateLegacy(ctx, actor, r); err != nil {
 		return err
 	}
 	have, err := s.cfg.GitHub.ListVariables(ctx, r.InstallationID, r.Owner, r.Name)
@@ -284,7 +300,8 @@ func (s *Service) syncVariables(ctx context.Context, actor auth.Principal, r Rep
 		}
 		s.cfg.Audit.Audit(ctx, actor, "variable.written", "repository", r.FullName, name+" = "+val)
 	}
-	return nil
+	_, err = s.migrateLegacy(ctx, actor, r, allWritten)
+	return err
 }
 
 const (
@@ -293,20 +310,15 @@ const (
 	// intervals (agents detect again every 10 minutes).
 	CapacitySettle = 20 * time.Minute
 	// DeleteHold is how long the capacity of an OS must stay absent, over two
-	// syncs at least this far apart, before its RUNS_ON variable is deleted.
+	// syncs at least this far apart, before its CRSP_RUNS_ON variable is deleted.
 	DeleteHold = 15 * time.Minute
 )
 
-// varOS is the OS a managed or alias variable or size variable belongs to, "" for any other.
+// varOS is the OS a managed variable or size variable belongs to, "" for any other.
 func varOS(name string) string {
 	for _, v := range variableOrder {
 		if v.Var == name {
 			return v.OS
-		}
-	}
-	for _, a := range legacyAlias {
-		if a.Old == name {
-			return varOS(a.Var)
 		}
 	}
 	if os, _, ok := ParseSizeVariable(name); ok {
@@ -403,30 +415,40 @@ func (s *Service) deleteVariableWhy(ctx context.Context, actor auth.Principal, r
 	return nil
 }
 
-// migrateLegacy deletes the CRSP_RUNS_ON_* variables an older version wrote.
-// Only a name the store lists as written by the controller is deleted.
-func (s *Service) migrateLegacy(ctx context.Context, actor auth.Principal, r Repository) error {
+// allWritten is the written test of migrateLegacy once every wanted variable
+// is written.
+func allWritten(string) bool { return true }
+
+// migrateLegacy deletes the names an older version wrote (RUNS_ON_<OS>,
+// RUNS_ON_LIGHT, RUNS_ON_<OS>_<SIZE>, CI_RUNS_ON, CI_RUNS_ON_WINDOWS; CRSP229).
+// Only a name the store lists as written by crsp is deleted, and only once
+// written says its new name is written (a name with no new one goes with the
+// first write), so a workflow that reads the old name with the new one as
+// fallback never sees neither. It returns the names it deleted.
+func (s *Service) migrateLegacy(ctx context.Context, actor auth.Principal, r Repository, written func(string) bool) ([]string, error) {
 	rows, err := s.cfg.Store.ListManagedVariables(ctx, r.ID)
 	if err != nil {
-		return err
+		return nil, err
 	}
+	var gone []string
 	for _, row := range rows {
-		if isLegacyVariable(row.Name) {
-			if err := s.deleteVariable(ctx, actor, r, row.Name); err != nil {
-				return err
-			}
+		repl, ok := legacyReplacement(row.Name)
+		if !ok || !written(repl) {
+			continue
 		}
+		if err := s.deleteVariableWhy(ctx, actor, r, row.Name, "(old name; "+orNone(repl)+" replaces it)"); err != nil {
+			return gone, err
+		}
+		gone = append(gone, row.Name)
 	}
-	return nil
+	return gone, nil
 }
 
-func isLegacyVariable(name string) bool {
-	for _, n := range legacyVariableNames {
-		if n == name {
-			return true
-		}
+func orNone(name string) string {
+	if name == "" {
+		return "no variable"
 	}
-	return false
+	return name
 }
 
 func (s *Service) recordVariable(ctx context.Context, repoID int64, name, value, status string, written bool) error {
@@ -451,14 +473,12 @@ func (s *Service) recordVariable(ctx context.Context, repoID int64, name, value,
 // value changed outside the product is restored, written to the audit log, and
 // shown as drift until the next check finds it correct. A missing variable is
 // written back the same way. A variable that should not exist (no runner for
-// its OS, or the pool off for it) is deleted. Old CRSP_RUNS_ON_* variables are
-// deleted whatever the pool state.
+// its OS, or the pool off for it) is deleted. The names an older version wrote
+// are deleted once the new ones are written; a repository with the pool off
+// keeps them, and turning the pool off names them.
 func (s *Service) ReconcileVariables(ctx context.Context, repoID int64) error {
 	r, err := s.cfg.Store.GetRepository(ctx, repoID)
 	if err != nil {
-		return err
-	}
-	if err := s.migrateLegacy(github.Background(ctx), System, r); err != nil {
 		return err
 	}
 	if !r.PoolOn {
@@ -529,9 +549,13 @@ func (s *Service) ReconcileVariables(ctx context.Context, repoID int64) error {
 			return err
 		}
 	}
+	gone, err := s.migrateLegacy(bg, System, r, allWritten)
+	if err != nil {
+		return err
+	}
 	// A variable an older version wrote for light jobs must not point at the
 	// removed light runner label (R5.65).
-	return s.migrateLightVariable(bg, System, r, want, have)
+	return s.migrateLightVariable(bg, System, r, want, without(have, gone))
 }
 
 func driftWas(exists bool, got string) string {
@@ -567,7 +591,7 @@ func (s *Service) ReconcileAllVariables(ctx context.Context) error {
 	return errors.Join(errs...)
 }
 
-// withEphemeral adds the ephemeral label to a RUNS_ON list when the
+// withEphemeral adds the ephemeral label to a CRSP_RUNS_ON list when the
 // repository's jobs go to ephemeral runners only. GitHub offers a job only to a
 // runner that has every label of its runs-on, and no persistent runner carries
 // the label, so a persistent runner can never take the job (R5.60).
@@ -576,4 +600,18 @@ func withEphemeral(list []string, on bool) []string {
 		return list
 	}
 	return append(list, runners.EphemeralLabel)
+}
+
+// without is have less the names in gone.
+func without(have []github.Variable, gone []string) []github.Variable {
+	if len(gone) == 0 {
+		return have
+	}
+	var out []github.Variable
+	for _, v := range have {
+		if !inList(gone, v.Name) {
+			out = append(out, v)
+		}
+	}
+	return out
 }

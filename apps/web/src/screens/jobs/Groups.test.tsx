@@ -24,7 +24,7 @@ const row = (over: Record<string, unknown>) => ({
 
 describe('Jobs by group', () => {
   it('shows running, queued, done, failed, median wait, median and slow-end run time and a trend', async () => {
-    renderApp(jobsApi({ groups: [row({})] }), '/jobs/runner');
+    renderApp(jobsApi({ groups: [row({})] }), '/pool/jobs?group=runner');
     const table = await screen.findByRole('table', { name: 'Jobs by runner' });
     const cells = within(table.querySelectorAll('tbody tr')[0] as HTMLElement)
       .getAllByRole('cell')
@@ -46,7 +46,7 @@ describe('Jobs by group', () => {
           }),
         ],
       }),
-      '/jobs/runner-type',
+      '/pool/jobs?group=runner-type',
     );
     const table = await screen.findByRole('table', { name: 'Jobs by runner type' });
     expect(within(table).getByText('ephemeral')).toBeTruthy();
@@ -61,7 +61,7 @@ describe('Jobs by group', () => {
           row({ name: 'build', filter: 'job_type=build', light: false }),
         ],
       }),
-      '/jobs/job-type',
+      '/pool/jobs?group=job-type',
     );
     const table = await screen.findByRole('table', { name: 'Jobs by job type' });
     expect(within(table).getByText('Light')).toBeTruthy();
@@ -71,18 +71,18 @@ describe('Jobs by group', () => {
   it('shows a machine by its name and a repository by its full name', async () => {
     renderApp(
       jobsApi({ groups: [row({ name: 'build-1', filter: 'machine=m1' })] }),
-      '/jobs/machine',
+      '/pool/jobs?group=machine',
     );
     expect(await screen.findByText('build-1')).toBeTruthy();
   });
 
   it('says so when no job has run yet, and when the groups could not load', async () => {
-    renderApp(jobsApi(), '/jobs/repository');
+    renderApp(jobsApi(), '/pool/jobs?group=repository');
     expect(await screen.findByText(/No jobs yet/)).toBeTruthy();
     cleanup();
     renderApp(
       jobsApi().on('GET', '/api/v1/jobs/groups', apiError(500, 'internal', 'busy')),
-      '/jobs/repository',
+      '/pool/jobs?group=repository',
     );
     expect(await screen.findByText(/Could not load the jobs by repository/)).toBeTruthy();
   });
@@ -93,10 +93,10 @@ describe('Jobs by group', () => {
     );
     expect(filterQuery('repository=octo/app')).toBe('repository=octo%2Fapp');
     expect(groupLink('repository', row({ filter: 'repository=octo/app' }) as never)).toBe(
-      '/jobs/done?repository=octo%2Fapp',
+      '/pool/jobs?repository=octo%2Fapp',
     );
     expect(groupLink('runner', row({}) as never)).toBe(
-      '/jobs/done?view=jobs&runner=runner-1',
+      '/pool/jobs?view=jobs&runner=runner-1',
     );
   });
 });

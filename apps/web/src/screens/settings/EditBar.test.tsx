@@ -113,24 +113,11 @@ describe('Settings tab: the leave guard (LOOK21)', () => {
 });
 
 describe('Access tab: one Save (LOOK21)', () => {
-  const credentials = { items: [] };
   const access = () =>
     signedIn(owner)
       .on('GET', '/api/v1/users', { items: [owner] })
-      .on('GET', '/api/v1/access-credentials', credentials)
       .on('GET', '/api/v1/github/repositories', { items: [] })
-      .on('GET', '/api/v1/parity-address', { status: 'ok', url: 'https://x' })
-      .on('POST', '/api/v1/users', { ...owner, id: 9, login: 'bob', role: 'viewer' })
-      .on('POST', '/api/v1/access-credentials', {
-        value: 'crsp_acc_once',
-        info: {
-          id: 'ac_9',
-          name: 'ci',
-          scope: 'parity',
-          created_by: 'owner',
-          created_at: '2026-01-01T00:00:00Z',
-        },
-      });
+      .on('POST', '/api/v1/users', { ...owner, id: 9, login: 'bob', role: 'viewer' });
 
   it('has one Save, off until a field is filled, and marks the filled field only', async () => {
     renderApp(access(), '/settings/access');
@@ -145,26 +132,5 @@ describe('Access tab: one Save (LOOK21)', () => {
     const marks = document.querySelectorAll('.ds-field__changed');
     expect(marks).toHaveLength(1);
     expect(marks[0]?.closest('.ds-field')?.textContent).toContain('GitHub login');
-  });
-
-  it('one Save adds the user and makes the access, and the one-time value still shows', async () => {
-    const a = access();
-    renderApp(a, '/settings/access');
-    await screen.findByRole('table', { name: 'Users' });
-    fireEvent.change(screen.getByRole('textbox', { name: 'GitHub login' }), {
-      target: { value: 'bob' },
-    });
-    fireEvent.click(await screen.findByRole('button', { name: 'Make an access' }));
-    fireEvent.change(screen.getByRole('textbox', { name: 'Name' }), {
-      target: { value: 'ci' },
-    });
-    expect(within(bar()).getByText('Unsaved changes (2)')).toBeTruthy();
-    fireEvent.click(save());
-    const dialog = await screen.findByRole('dialog', { name: 'Access ci is made' });
-    expect(within(dialog).getByLabelText('Access value').textContent).toBe(
-      'crsp_acc_once',
-    );
-    expect(a.count('POST', '/api/v1/users')).toBe(1);
-    expect(a.count('POST', '/api/v1/access-credentials')).toBe(1);
   });
 });

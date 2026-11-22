@@ -11,15 +11,15 @@ import (
 const covWorkflow = `name: ci
 jobs:
   win-test:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_WINDOWS) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_WINDOWS) }}
     steps:
       - run: cargo test
   win-old-name:
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }}
+    runs-on: ${{ fromJSON(vars.RUNS_ON_WINDOWS) }}
     steps:
       - run: cargo build
   lint:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}
     steps:
       - run: pnpm lint
   e2e:
@@ -66,6 +66,10 @@ func TestCapabilitiesFromWorkflowText(t *testing.T) {
 	if j := needsOf(js, "win-old-name"); j.OS != "windows" || len(j.Missing) != 0 {
 		t.Errorf("old variable name is read: %+v", j)
 	}
+	// CI_RUNS_ON and CI_RUNS_ON_WINDOWS are not crsp's names (R5.39 removed, CRSP229).
+	if osOfVariable("CI_RUNS_ON") != "" || osOfVariable("CI_RUNS_ON_WINDOWS") != "" {
+		t.Error("the old dev-standards names are read as crsp's")
+	}
 	if j := needsOf(js, "lint"); j.OS != "linux" || strings.Join(j.Missing, ",") != "linux-container (v0.3.0)" {
 		t.Errorf("lint: %+v", j)
 	}
@@ -95,7 +99,7 @@ func TestUnknownJobIsInfo(t *testing.T) {
 		t.Fatalf("matrix runs-on is unknown: %+v", j)
 	}
 	g := newGH()
-	g.vars["o/r"] = []github.Variable{{Name: "RUNS_ON_WINDOWS", Value: `["self-hosted","windows"]`}}
+	g.vars["o/r"] = []github.Variable{{Name: "CRSP_RUNS_ON_WINDOWS", Value: `["self-hosted","windows"]`}}
 	g.files["o/r"] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte(covWorkflow)}}
 	env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", nil)}}}
 	fs := run(t, env, "repo.coverage")

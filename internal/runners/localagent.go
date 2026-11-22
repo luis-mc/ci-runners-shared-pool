@@ -178,3 +178,33 @@ func (l *LocalAgent) Services(ctx context.Context) ([]backend.Found, error) {
 	}
 	return append(out, got...), nil
 }
+
+// ControlListener starts, stops or reads the listener of a persistent runner
+// on this machine (runners R5.134). action is start, stop or status. A backend
+// that cannot do it (a container runner, a VM) says so.
+func (l *LocalAgent) ControlListener(ctx context.Context, action, service string, jobAssigned, maintenance bool) (backend.ListenerState, error) {
+	if isContainerRef(service) {
+		return "", errors.New("only a persistent runner on the machine itself has a gated listener")
+	}
+	b, err := l.persistent()
+	if err != nil {
+		return "", err
+	}
+	lc, ok := b.(backend.ListenerControl)
+	if !ok {
+		return "", errors.New("this backend cannot control a runner listener")
+	}
+	switch action {
+	case "start":
+		err = lc.StartListener(ctx, service, maintenance)
+	case "stop":
+		err = lc.StopListener(ctx, service, jobAssigned)
+	case "status":
+	default:
+		return "", errors.New("unknown listener action " + action)
+	}
+	if err != nil {
+		return "", err
+	}
+	return lc.ListenerState(ctx, service)
+}

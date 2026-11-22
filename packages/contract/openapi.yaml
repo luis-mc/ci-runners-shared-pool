@@ -355,133 +355,6 @@ paths:
           description: Revoked.
         default:
           $ref: '#/components/responses/Error'
-  /api/v1/access-credentials:
-    get:
-      operationId: listAccessCredentials
-      x-cli: none
-      x-cli-reason: 'Made, listed and revoked in the web console only (owner rule: everything from the web console).'
-      tags: [auth]
-      summary: List access credentials for CI
-      description: github-integration R5.82. Without their values.
-      x-auth: admin
-      x-rate-limit: 600/minute/user
-      responses:
-        '200':
-          description: The credentials.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessCredentialList'
-        default:
-          $ref: '#/components/responses/Error'
-    post:
-      operationId: createAccessCredential
-      x-cli: none
-      x-cli-reason: 'Made, listed and revoked in the web console only (owner rule: everything from the web console).'
-      tags: [auth]
-      summary: Make an access credential for CI
-      description: >-
-        github-integration R5.82. The value is in the answer once; only its
-        hash is kept and the audit row never holds it. A credential has one
-        scope; `parity` allows only what `crsp parity check` calls.
-      x-auth: admin
-      x-rate-limit: 30/minute/user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/AccessCredentialCreate'
-      responses:
-        '201':
-          description: The credential and its value. Shown once.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessCredentialCreated'
-        default:
-          $ref: '#/components/responses/Error'
-  /api/v1/access-credentials/{credentialId}:
-    delete:
-      operationId: revokeAccessCredential
-      x-cli: none
-      x-cli-reason: 'Made, listed and revoked in the web console only (owner rule: everything from the web console).'
-      tags: [auth]
-      summary: Revoke an access credential
-      description: github-integration R5.82. The next request with its value is refused.
-      x-auth: admin
-      x-rate-limit: 60/minute/user
-      parameters:
-        - name: credentialId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '204':
-          description: Revoked.
-        default:
-          $ref: '#/components/responses/Error'
-  /api/v1/parity-address:
-    get:
-      operationId: getParityAddress
-      x-cli: none
-      x-cli-reason: 'A console check: it shows what the parity setup will write (owner rule: everything from the web console).'
-      tags: [repositories]
-      summary: The address the parity setup will write, and whether it answers
-      description: >-
-        github-integration R5.84 (CRSP141). The address a runner uses to reach
-        the controller: https, the public host and the console port, the same
-        address machines join at. The controller calls it from the server side
-        with its own CA and says whether it answers. A controller with no such
-        address answers `needs_address` with the setting to fix.
-      x-auth: admin
-      x-rate-limit: 10/minute/user
-      responses:
-        '200':
-          description: The address and the result of calling it.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ParityAddress'
-        default:
-          $ref: '#/components/responses/Error'
-  /api/v1/repositories/{repositoryId}/parity-setup:
-    post:
-      operationId: setupRepositoryParity
-      x-cli: none
-      x-cli-reason: 'A console action: it writes to GitHub through the App (owner rule: everything from the web console).'
-      tags: [repositories]
-      summary: Set up parity for this repository
-      description: >-
-        github-integration R5.84. Makes a `parity` access credential and writes
-        it as the repository Actions secret CRSP_ACCESS, and the controller
-        address and CA fingerprint as the variables CRSP_URL and
-        CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one
-        machines use to join (https, the controller CA), never the address of
-        the browser, never loopback or http (CRSP141); when the controller has
-        none the answer is `needs_address` and nothing is made. When the App lacks the
-        `secrets` or `actions_variables` write permission nothing is made: the
-        answer is `needs_permission` with the GitHub pages that grant it.
-      x-auth: admin
-      x-rate-limit: 10/minute/user
-      parameters:
-        - $ref: '#/components/parameters/RepositoryId'
-      requestBody:
-        required: false
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ParitySetupRequest'
-      responses:
-        '200':
-          description: Done, or the permission the App lacks.
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ParitySetup'
-        default:
-          $ref: '#/components/responses/Error'
   /api/v1/auth/logout:
     post:
       operationId: signOut
@@ -1231,6 +1104,60 @@ paths:
                 $ref: '#/components/schemas/RunsOnFindingList'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/runs-on-pr:
+    get:
+      operationId: previewRunsOnPullRequests
+      tags: [repositories]
+      summary: Preview the runs-on pull request of one repository or of every opted-in repository
+      description: >-
+        github-integration R5.113. Reads the workflow files and shows the files
+        and the diff of the change to the per-job runs-on form. Writes nothing
+        to GitHub. Without repository_id it covers every repository whose pool
+        is on.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - name: repository_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: One preview per repository.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunsOnPullRequestPreviewList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: openRunsOnPullRequests
+      tags: [repositories]
+      summary: Open the runs-on pull request of one repository or of every opted-in repository
+      description: >-
+        github-integration R5.113. Opens one pull request per repository; an
+        open crsp pull request is returned, never a second one. Writes one
+        audit row per pull request. Never merges. Only this call opens a pull
+        request: nothing opens one on a schedule.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenRunsOnPullRequestsRequest'
+      responses:
+        '200':
+          description: One result per repository.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunsOnPullRequestResultList'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/settings/queue:
     get:
       operationId: getQueueSettings
@@ -1629,6 +1556,192 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/LoadHistory'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/assign/leases:
+    get:
+      operationId: listAssignLeases
+      x-cli: none
+      x-cli-reason: 'Later: the queue view (OPS80 is back end only).'
+      tags: [jobs]
+      summary: Jobs that wait for a runner, start or run, with their reasons
+      description: >-
+        runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease
+        says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: state
+          in: query
+          required: false
+          description: Only leases in this state.
+          schema:
+            $ref: '#/components/schemas/AssignLeaseState'
+      responses:
+        '200':
+          description: The leases, oldest queued first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignLeaseList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/health:
+    get:
+      operationId: getMachineHealth
+      x-cli: none
+      x-cli-reason: 'Later: machine detail commands (cli open question 7).'
+      tags: [machines]
+      summary: The health of one machine
+      description: >-
+        machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of
+        date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its
+        `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+      responses:
+        '200':
+          description: The health.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachineHealth'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/job-stats:
+    get:
+      operationId: getMachineJobStats
+      x-cli: none
+      x-cli-reason: 'Later: machine detail commands (cli open question 7).'
+      tags: [machines]
+      summary: Job stats of one machine and of its runners
+      description: machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/StatsWindow'
+      responses:
+        '200':
+          description: The stats.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachineJobStats'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runners/{runnerId}/job-stats:
+    get:
+      operationId: getRunnerJobStats
+      x-cli: none
+      x-cli-reason: 'Later: runner detail commands (cli open question 7).'
+      tags: [runners]
+      summary: Job stats of one runner
+      description: machines R5.78, R5.79.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RunnerId'
+        - $ref: '#/components/parameters/StatsWindow'
+      responses:
+        '200':
+          description: The stats.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerJobStats'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/timeline:
+    get:
+      operationId: getTimeline
+      x-cli: none
+      x-cli-reason: 'Later: timeline commands (LOOK58).'
+      tags: [jobs]
+      summary: Jobs on machine runner slots over time, past, running and forecast
+      description: >-
+        LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot
+        they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40,
+        scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no
+        slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339)
+        returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h
+        from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once
+        24 hours are loaded.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: machine_id
+          in: query
+          required: false
+          description: Only the slots and jobs of this machine.
+          schema:
+            type: string
+        - name: before
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: hours
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 24
+            default: 6
+      responses:
+        '200':
+          description: The timeline.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Timeline'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/health-thresholds:
+    get:
+      operationId: getHealthThresholds
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [doctor]
+      summary: The limits of the machine health checks
+      description: doctor R5.66.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The limits in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthThresholds'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putHealthThresholds
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [doctor]
+      summary: Change the limits of the machine health checks
+      description: doctor R5.66. A value outside its range is refused with the range.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/HealthThresholds'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthThresholds'
         default:
           $ref: '#/components/responses/Error'
   /api/v1/machines/{machineId}/slots:
@@ -2091,7 +2204,7 @@ paths:
       description: >-
         github-integration R5.54 and R5.55. Switching off turns the pool off for
         every public repository that has it on (its settings stay), sets its
-        RUNS_ON variables to the hosted labels, drains and removes its runners,
+        CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners,
         and audits each. `stopped` is how many repositories that was. Switching
         on stops nothing and turns nothing on by itself.
       x-auth: owner
@@ -2491,6 +2604,326 @@ paths:
       responses:
         '204':
           description: Removed.
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runner-classes:
+    get:
+      operationId: getRunnerClasses
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: The size classes of runners and the reservation numbers
+      description: >-
+        scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with
+        CPUs and GiB of memory. A runner's class is the ceiling of the jobs it
+        takes and the hard memory cap of each job. Hints never block; a size
+        that no pool holds is listed in `unheld`.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerClasses'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putRunnerClasses
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: Save the size classes or the reservation numbers
+      description: >-
+        scheduling R5.91, R5.92. The save is refused with a 400 whose message is
+        in the owner's words when a number is not a whole number above 0, when
+        sizes do not grow from small to xl, or when a runner's class no longer
+        fits its machine's pool. Lowering a size that runners use answers 409
+        needs_confirmation until `confirm_lowering` is true.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunnerClassesInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunnerClasses'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/listener-gate:
+    get:
+      operationId: getListenerGate
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: The listener gate of persistent runners on the machine itself
+      description: >-
+        runners R5.134 to R5.140. `enforce` is false by default (observe mode):
+        crsp writes would_start and would_stop rows in the audit log and leaves
+        every listener as it is. Each runner shows `gated: offline by design`
+        while no job needs it, the day of its weekly wake-up, and why jobs wait.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The setting and the gated runners.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListenerGate'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putListenerGate
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [runners]
+      summary: Switch the listener gate between observe and enforce
+      description: >-
+        runners R5.138. Switching on parks the listeners nobody needs at the next
+        round; a runner that has a job is never touched.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ListenerGateInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListenerGate'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/timer-settings:
+    get:
+      operationId: getTimerSettings
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [settings]
+      summary: The job, run, hold, timeout, queued and start-up timers
+      description: >-
+        scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job),
+        45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up).
+        `enforce` is false by default: timers only report until the owner switches it on.
+        The grace of 30 s and the 10 minute extension are fixed.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The settings in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerSettings'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putTimerSettings
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [settings]
+      summary: Save timer settings
+      description: >-
+        scheduling R5.104. Only the fields given change. The save is refused with
+        a 400 whose `details` name each field and the message in the owner's
+        words when a value is not a whole number of minutes above 0, the hold is
+        above 2 minutes, or the job timer is not below the run timer.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimerSettingsInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerSettings'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/timer-settings/check:
+    post:
+      operationId: checkTimerSettings
+      x-cli: none
+      x-cli-reason: 'The console form runs this while the owner types; the CLI gets the same refusal from the save.'
+      tags: [settings]
+      summary: Check timer settings without saving them
+      description: >-
+        scheduling R5.104. The same check as the save, for check-while-typing,
+        like the pool size check. Nothing changes.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimerSettingsInput'
+      responses:
+        '200':
+          description: The check.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerSettingsCheck'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/timer:
+    get:
+      operationId: getJobTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The job timer of a job
+      description: >-
+        scheduling R5.100, R5.105. While the timer has run out and the grace
+        runs, `deadline` is when crsp acts and `text` counts down.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The timer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/timer/stop-now:
+    post:
+      operationId: stopJobNow
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Stop now, during the grace of the job timer
+      description: >-
+        scheduling R5.101. Stops that job's runner at once; only that job ends.
+        409 when the timer has not run out, or the run timer ran out too and the
+        run is cancelled instead. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The timer after the stop.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/timer/extend:
+    post:
+      operationId: extendJobTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Extend 10 min, during the grace of the job timer
+      description: >-
+        scheduling R5.101. Once per job. 409 when the timer has not run out or
+        was extended already. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The timer after the extension.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runs/{runId}/timer:
+    get:
+      operationId: getRunTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The run timer of a run attempt
+      description: scheduling R5.100, R5.105.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/TimerRunId'
+        - $ref: '#/components/parameters/TimerAttempt'
+      responses:
+        '200':
+          description: The timer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runs/{runId}/timer/cancel-now:
+    post:
+      operationId: cancelRunNow
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Cancel now, during the grace of the run timer
+      description: >-
+        scheduling R5.101. Cancels the whole run through GitHub
+        (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no
+        per-job cancel. 409 when the timer has not run out. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/TimerRunId'
+        - $ref: '#/components/parameters/TimerAttempt'
+      responses:
+        '200':
+          description: The timer after the cancel.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runs/{runId}/timer/extend:
+    post:
+      operationId: extendRunTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Extend 10 min, during the grace of the run timer
+      description: >-
+        scheduling R5.101. Once per run. 409 when the timer has not run out or
+        was extended already. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/TimerRunId'
+        - $ref: '#/components/parameters/TimerAttempt'
+      responses:
+        '200':
+          description: The timer after the extension.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunTimer'
         default:
           $ref: '#/components/responses/Error'
   /api/v1/registry:
@@ -5032,6 +5465,15 @@ components:
       required: true
       schema:
         type: string
+    StatsWindow:
+      name: window
+      in: query
+      required: false
+      description: The window of the stats, 24h (default) or 7d.
+      schema:
+        type: string
+        enum: [24h, 7d]
+        default: 24h
     MachineId:
       name: machineId
       in: path
@@ -5069,6 +5511,21 @@ components:
       schema:
         type: integer
         format: int64
+    TimerRunId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    TimerAttempt:
+      name: attempt
+      in: query
+      required: false
+      description: The attempt; the newest when absent.
+      schema:
+        type: integer
+        minimum: 1
     FindingId:
       name: findingId
       in: path
@@ -5344,6 +5801,256 @@ components:
         pattern: { type: string }
         class: { $ref: '#/components/schemas/JobSizeClass' }
         copy_line: { type: string }
+    RunnerClassSize:
+      type: object
+      required: [class, cpus, memory_gib]
+      properties:
+        class: { type: string, enum: [small, medium, large, xl] }
+        cpus: { type: integer, minimum: 1 }
+        memory_gib: { type: integer, minimum: 1 }
+    RunnerClasses:
+      type: object
+      required:
+        [
+          preset,
+          presets,
+          classes,
+          hints,
+          unheld,
+          reserve_after_passes,
+          reserve_after_minutes,
+        ]
+      properties:
+        preset:
+          type: string
+          description: The preset the table equals, or custom.
+        presets:
+          type: array
+          items: { type: string, enum: [standard, compact, memory-heavy, custom] }
+        classes:
+          type: array
+          description: small, medium, large, xl.
+          items: { $ref: '#/components/schemas/RunnerClassSize' }
+        hints:
+          type: array
+          description: Notes that never block a save.
+          items: { type: string }
+        unheld:
+          type: array
+          description: Classes no machine's pool can hold. A note, not an error.
+          items: { type: string }
+        reserve_after_passes: { type: integer, minimum: 1, description: Default 3. }
+        reserve_after_minutes: { type: integer, minimum: 1, description: Default 10. }
+    RunnerClassesInput:
+      type: object
+      properties:
+        preset:
+          type: string
+          enum: [standard, compact, memory-heavy, custom]
+          description: Sets the table to that preset. Ignored when `classes` is given.
+        classes:
+          type: array
+          items: { $ref: '#/components/schemas/RunnerClassSize' }
+        reserve_after_passes: { type: integer }
+        reserve_after_minutes: { type: integer }
+        confirm_lowering:
+          type: boolean
+          description: Needed when a size that runners use gets smaller.
+    ListenerGateInput:
+      type: object
+      required: [enforce]
+      properties:
+        enforce:
+          type: boolean
+          description: True switches the gate on; false is observe mode.
+    ListenerGateRunner:
+      type: object
+      required: [runner_name, machine_id, os, text, listener_on, next_wake]
+      properties:
+        runner_name: { type: string }
+        machine_id: { type: string }
+        os: { type: string }
+        text:
+          type: string
+          description: '`gated: offline by design`, or that the listener is on for an admitted job.'
+        listener_on: { type: boolean }
+        job_ids:
+          type: array
+          items: { type: integer, format: int64 }
+          description: The jobs that hold the listener.
+        last_wake:
+          type: string
+          format: date-time
+          description: Absent when the runner was never woken.
+        next_wake:
+          type: string
+          format: date-time
+          description: When the weekly wake-up is due.
+        queue_text:
+          type: string
+          description: Why jobs wait for this runner, in the owner's words. Absent when none wait.
+    ListenerGate:
+      type: object
+      required: [enforce, wake_every_days, runners]
+      properties:
+        enforce: { type: boolean }
+        wake_every_days: { type: integer, description: Fixed at 7. }
+        runners:
+          type: array
+          items:
+            $ref: '#/components/schemas/ListenerGateRunner'
+    TimerSettings:
+      type: object
+      required:
+        [
+          job_minutes,
+          run_minutes,
+          hold_minutes,
+          timeout_minutes,
+          queued_minutes,
+          startup_minutes,
+          enforce,
+          grace_seconds,
+          extend_minutes,
+        ]
+      properties:
+        job_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: 'The job timer, from the first real step. Default 30.',
+          }
+        run_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: "The run timer, from the first job's real start. Default 45.",
+          }
+        hold_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: 'The hold of the job-started hook, at most 2. Default 2.',
+          }
+        timeout_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: "timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60.",
+          }
+        queued_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: "Alert for a job that waits this long in GitHub's queue. Default 720 (12 h).",
+          }
+        startup_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: 'A runner that has not started its job in this time is removed and the job admitted again. Default 2.',
+          }
+        enforce:
+          {
+            type: boolean,
+            description: 'Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.',
+          }
+        grace_seconds: { type: integer, description: Fixed at 30. }
+        extend_minutes: { type: integer, description: Fixed at 10. }
+    TimerSettingsInput:
+      type: object
+      description: Only the fields given change.
+      properties:
+        job_minutes: { type: integer }
+        run_minutes: { type: integer }
+        hold_minutes: { type: integer }
+        timeout_minutes: { type: integer }
+        queued_minutes: { type: integer }
+        startup_minutes: { type: integer }
+        enforce: { type: boolean }
+    TimerSettingsProblem:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          {
+            type: string,
+            enum:
+              [
+                job_minutes,
+                run_minutes,
+                hold_minutes,
+                timeout_minutes,
+                queued_minutes,
+                startup_minutes,
+              ],
+          }
+        message: { type: string, description: In the owner's words. }
+    TimerSettingsCheck:
+      type: object
+      required: [ok, problems, settings]
+      properties:
+        ok: { type: boolean }
+        problems:
+          type: array
+          items: { $ref: '#/components/schemas/TimerSettingsProblem' }
+        settings:
+          description: The settings as they would be after the change.
+          allOf:
+            - $ref: '#/components/schemas/TimerSettings'
+    JobTimer:
+      type: object
+      required: [job_id, state, text, can_stop_now, can_extend, extended, covered_by_run]
+      properties:
+        job_id: { type: integer, format: int64 }
+        repository: { type: string }
+        run_id: { type: integer, format: int64 }
+        run_attempt: { type: integer }
+        state: { type: string, enum: [running, grace, stopped, ended] }
+        started_at:
+          { type: string, format: date-time, description: The job's first real step. }
+        limit_seconds: { type: integer }
+        elapsed_seconds: { type: integer }
+        deadline:
+          type: string
+          format: date-time
+          description: During the grace, when crsp acts. The countdown is deadline minus now.
+        text:
+          type: string
+          description: 'The state in words, for example "Job timer ran out at 30:00; stopping in 30 s".'
+        note:
+          type: string
+          description: 'What crsp did, for example "stopped by crsp: job timer 30:00".'
+        can_stop_now: { type: boolean }
+        can_extend: { type: boolean }
+        extended: { type: boolean }
+        covered_by_run:
+          type: boolean
+          description: The run timer ran out too; the run is cancelled and this job is not stopped on its own.
+    RunTimer:
+      type: object
+      required: [run_id, state, text, can_cancel_now, can_extend, extended]
+      properties:
+        run_id: { type: integer, format: int64 }
+        repository: { type: string }
+        run_attempt: { type: integer }
+        state: { type: string, enum: [running, grace, stopped, ended] }
+        started_at:
+          { type: string, format: date-time, description: The first job's real start. }
+        limit_seconds: { type: integer }
+        elapsed_seconds: { type: integer }
+        deadline: { type: string, format: date-time }
+        text:
+          type: string
+          description: 'For example "Run timer ran out at 45:00; cancelling in 30 s".'
+        note:
+          {
+            type: string,
+            description: 'For example "cancelled by crsp: run timer 45:00".',
+          }
+        can_cancel_now: { type: boolean }
+        can_extend: { type: boolean }
+        extended: { type: boolean }
     EnvSetList:
       type: object
       required: [items]
@@ -5523,6 +6230,7 @@ components:
           load_not_measured,
           paused,
           on_battery,
+          over_memory,
           unknown,
         ]
     Severity:
@@ -5653,57 +6361,6 @@ components:
           type: string
           description: A label for the token list, such as the host name.
           example: laptop
-    AccessCredential:
-      type: object
-      required: [id, name, scope, created_by, created_at]
-      properties:
-        id:
-          type: string
-        name:
-          type: string
-        scope:
-          $ref: '#/components/schemas/AccessScope'
-        created_by:
-          type: string
-        created_at:
-          type: string
-          format: date-time
-        last_used_at:
-          type: string
-          format: date-time
-        revoked_at:
-          type: string
-          format: date-time
-    AccessScope:
-      type: string
-      enum: [parity]
-      description: '`parity` is read only: the runner list and a doctor run.'
-    AccessCredentialList:
-      type: object
-      required: [items]
-      properties:
-        items:
-          type: array
-          items:
-            $ref: '#/components/schemas/AccessCredential'
-    AccessCredentialCreate:
-      type: object
-      required: [name, scope]
-      properties:
-        name:
-          type: string
-          maxLength: 80
-        scope:
-          $ref: '#/components/schemas/AccessScope'
-    AccessCredentialCreated:
-      type: object
-      required: [value, info]
-      properties:
-        value:
-          type: string
-          description: The credential. Shown once.
-        info:
-          $ref: '#/components/schemas/AccessCredential'
     GithubGrant:
       type: object
       required: [ready, steps, missing]
@@ -5745,9 +6402,6 @@ components:
         url:
           type: string
           description: The GitHub page of the step. Absent when the step has none.
-    ParitySetupRequest:
-      type: object
-      description: No fields. The address is the controller's own, never one the browser sends (CRSP141).
     ListenAddressCandidate:
       type: object
       required: [id, label, who]
@@ -5818,51 +6472,6 @@ components:
           type: string
         restarting:
           type: boolean
-    ParityAddress:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [ok, unreachable, needs_address]
-        url:
-          type: string
-          description: The address that will be written as CRSP_URL. Empty with needs_address.
-        problem:
-          type: string
-          description: Why the address does not answer, or why the controller has none.
-        setting:
-          type: string
-          description: The setting to fix when the controller has no address a runner can reach.
-    ParitySetup:
-      type: object
-      required: [status]
-      properties:
-        status:
-          type: string
-          enum: [done, needs_permission, needs_address]
-        missing_permissions:
-          type: array
-          items:
-            type: string
-        grant:
-          $ref: '#/components/schemas/GithubGrant'
-        access_name:
-          type: string
-          description: The name of the repository Actions value that holds the access, CRSP_ACCESS.
-        variable_names:
-          type: array
-          items:
-            type: string
-        access_id:
-          type: string
-          description: The id of the access credential that was made.
-        address_problem:
-          type: string
-          description: With needs_address, why the controller has no address a runner can reach.
-        address_setting:
-          type: string
-          description: With needs_address, the setting to fix.
     CliToken:
       type: object
       required: [id, name, user_id, user_login, created_at, expires_at]
@@ -6319,7 +6928,7 @@ components:
         user_is_github_admin: true
         user_admin_known: true
         variables:
-          - name: RUNS_ON_LINUX
+          - name: CRSP_RUNS_ON_LINUX
             status: ok
             value: '["self-hosted","linux","x64"]'
         policy:
@@ -6494,7 +7103,8 @@ components:
       properties:
         name:
           type: string
-          enum: [RUNS_ON_LINUX, RUNS_ON_WINDOWS, RUNS_ON_MACOS, RUNS_ON_LIGHT]
+          enum:
+            [CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS, CRSP_RUNS_ON_MACOS, RUNS_ON_LIGHT]
         status:
           $ref: '#/components/schemas/VariableStatus'
         value:
@@ -6540,9 +7150,6 @@ components:
         runner_kinds_set:
           type: boolean
           description: True when the owner chose runner_kinds; false while it is the default of the repository's visibility.
-        legacy_vars:
-          type: boolean
-          description: Also write CI_RUNS_ON and CI_RUNS_ON_WINDOWS with the same labels as RUNS_ON_LINUX and RUNS_ON_WINDOWS, for workflows that still follow the old dev-standards templates (github-integration R5.39). Off by default; for the move from the old pool.
         budget_memory_pct:
           type: integer
           description: May lower the machine budget for this repository's jobs, never raise it (scheduling R5.4).
@@ -6591,9 +7198,6 @@ components:
           type: string
           enum: [ephemeral_only, any_runner, default]
           description: Set which runners take the repository's jobs (github-integration R5.60). default clears the owner's choice, so the default of the visibility applies.
-        legacy_vars:
-          type: boolean
-          description: Turn the old variable names CI_RUNS_ON and CI_RUNS_ON_WINDOWS on or off (github-integration R5.39).
         confirm_fork_risk:
           type: boolean
           description: Needed to turn fork jobs on (github-integration R5.26).
@@ -6718,6 +7322,84 @@ components:
         checked_at:
           type: string
           format: date-time
+    RunsOnPullRequestFile:
+      type: object
+      required: [path, changes, diff]
+      properties:
+        path:
+          type: string
+        changes:
+          type: integer
+        diff:
+          type: string
+    RunsOnPullRequestPreview:
+      type: object
+      required: [repository_id, full_name, state, files, diff, skipped]
+      properties:
+        repository_id:
+          type: integer
+          format: int64
+        full_name:
+          type: string
+        state:
+          type: string
+          enum: [change, nothing_to_change, not_owned, error]
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunsOnPullRequestFile'
+        diff:
+          type: string
+          description: The whole change as a unified diff.
+        skipped:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+    RunsOnPullRequestPreviewList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunsOnPullRequestPreview'
+    OpenRunsOnPullRequestsRequest:
+      type: object
+      description: Name one repository, or set all to cover every repository whose pool is on.
+      properties:
+        repository_id:
+          type: integer
+          format: int64
+        all:
+          type: boolean
+    RunsOnPullRequestResult:
+      type: object
+      required: [repository_id, full_name, state]
+      properties:
+        repository_id:
+          type: integer
+          format: int64
+        full_name:
+          type: string
+        state:
+          type: string
+          enum: [opened, existing, nothing_to_change, not_owned, error]
+        number:
+          type: integer
+        url:
+          type: string
+        message:
+          type: string
+    RunsOnPullRequestResultList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunsOnPullRequestResult'
     QueueSettings:
       type: object
       required: [order, fair_share, no_runner_wait_minutes]
@@ -7135,6 +7817,8 @@ components:
           description: Automatic pauses while the machine runs on battery. On by default; Always ignores it (machines R5.61, R5.63).
         cpu_cap_pct:
           $ref: '#/components/schemas/CpuCapPct'
+        disk_floor_gib:
+          $ref: '#/components/schemas/DiskFloorGib'
         pause_until:
           type: string
           format: date-time
@@ -7200,6 +7884,11 @@ components:
       type: integer
       description: The share of the whole machine's CPU the runner processes may use, in percent (machines R5.64). Separate from the load budget. 100 is no cap.
       enum: [25, 50, 75, 100]
+    DiskFloorGib:
+      type: integer
+      minimum: 0
+      maximum: 2000
+      description: The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
     PauseReason:
       type: string
       description: Why a machine takes no new job (machines R5.62). Other features read these exact names.
@@ -7244,6 +7933,13 @@ components:
         cpu_cap_detail:
           type: string
           description: Why the cap is not applied, in words fit to show.
+        disk_floor_gib:
+          type: integer
+          minimum: 0
+          description: The free-disk floor in force on the agent, in GiB (runners R5.83). 0 while it is off or the agent has not reported it.
+        disk_floor_off:
+          type: boolean
+          description: The floor is off because config.toml or the agent flag says so. The console shows it read-only; a console value is refused.
     PoolSizeCheckRequest:
       type: object
       required: [pool_memory_gib, pool_cpus]
@@ -7442,6 +8138,8 @@ components:
           type: boolean
         cpu_cap_pct:
           $ref: '#/components/schemas/CpuCapPct'
+        disk_floor_gib:
+          $ref: '#/components/schemas/DiskFloorGib'
         docker_compact:
           $ref: '#/components/schemas/DockerCompactMode'
         docker_compact_threshold_gib:
@@ -8694,6 +9392,101 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/HistoryPoint'
+    TimelineBarState:
+      type: string
+      description: How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+      enum:
+        [
+          running,
+          waiting_runner,
+          waiting_room,
+          reserved,
+          forecast,
+          no_runner_fits,
+          timer_ran_out,
+          done,
+          failed,
+        ]
+    TimelineRow:
+      type: object
+      required: [key, machine_id, machine_name, label]
+      properties:
+        key:
+          type: string
+          description: '`<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet.'
+        machine_id:
+          type: string
+        machine_name:
+          type: string
+        slot:
+          type: integer
+          description: 1-based. Absent on the waiting row.
+        label:
+          type: string
+          description: 'For example `M1 slot 1`.'
+    TimelineBar:
+      type: object
+      required: [id, row_id, state, label, start]
+      properties:
+        id:
+          type: string
+        job_id:
+          type: integer
+          format: int64
+          description: Absent when the bar is a forecast of a job that has no record yet.
+        row_id:
+          type: string
+        state:
+          $ref: '#/components/schemas/TimelineBarState'
+        label:
+          type: string
+        repository:
+          type: string
+        start:
+          type: string
+          format: date-time
+        end:
+          type: string
+          format: date-time
+          description: Absent while the job runs; the chart ends the bar at now.
+        end_lo:
+          type: string
+          format: date-time
+        end_hi:
+          type: string
+          format: date-time
+        wait_from:
+          type: string
+          format: date-time
+          description: When the job began to wait (the light part before the bar).
+        detail:
+          type: string
+          description: The words of the bar for a screen reader and the tooltip.
+    Timeline:
+      type: object
+      required: [now, from, to, rows, bars, more_before]
+      properties:
+        now:
+          type: string
+          format: date-time
+        from:
+          type: string
+          format: date-time
+          description: The earliest time loaded.
+        to:
+          type: string
+          format: date-time
+          description: The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+        rows:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineRow'
+        bars:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineBar'
+        more_before:
+          type: boolean
     Slot:
       type: object
       required: [kind, number, taken_at, repository, run_id, run_attempt, job]
@@ -8752,6 +9545,71 @@ components:
           description: 1 is first in line.
         wait_reason:
           $ref: '#/components/schemas/WaitReason'
+    AssignLeaseState:
+      type: string
+      enum: [waiting, starting, running, done, gone]
+    AssignReasonCode:
+      type: string
+      description: >-
+        Why a waiting job has no runner: pool (CPU or memory not free), load (over
+        budget or not measured), reserved (another job holds the machine's room),
+        never (no runner of the machine is big enough), no_machine (no machine has
+        its labels or OS), start_failed (the start failed, retried later), starting.
+      enum: [pool, load, reserved, never, no_machine, start_failed, starting]
+    AssignLease:
+      type: object
+      required: [job_id, repository, state, queued_at]
+      properties:
+        job_id:
+          type: integer
+          format: int64
+        run_id:
+          type: integer
+          format: int64
+        repository:
+          type: string
+        job:
+          type: string
+        labels:
+          type: array
+          items:
+            type: string
+        job_label:
+          type: string
+          description: The job-name routing label; empty when the job has none.
+        state:
+          $ref: '#/components/schemas/AssignLeaseState'
+        machine_id:
+          type: string
+        runner_name:
+          type: string
+        cpus:
+          type: integer
+        memory_gib:
+          type: integer
+        class:
+          type: string
+        queued_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          description: The console reason of a waiting job.
+        reason_code:
+          $ref: '#/components/schemas/AssignReasonCode'
+        passes:
+          type: integer
+        reserved_since:
+          type: string
+          format: date-time
+    AssignLeaseList:
+      type: object
+      required: [leases]
+      properties:
+        leases:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignLease'
     SlotStatus:
       type: object
       required: [machine_id, slots, tickets]
@@ -9152,7 +10010,7 @@ components:
         title: No online runner carries [self-hosted, linux, arm64]
         detail: .github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]
         fix:
-          text: Add a runner with these labels, or use fromJSON(vars.RUNS_ON_LINUX).
+          text: Add a runner with these labels, or use fromJSON(vars.CRSP_RUNS_ON_LINUX).
           link: /runners
         needs_admin: false
         milestone: 1
@@ -11219,3 +12077,339 @@ components:
         cpu_p90_cores: { type: number }
         memory_p90_bytes: { type: integer, format: int64 }
         measured: { type: boolean, description: 'True from 5 good runs on.' }
+    HealthThresholds:
+      type: object
+      required:
+        [
+          disk_days_under,
+          disk_free_pct_under,
+          no_heartbeat_seconds,
+          clock_skew_seconds,
+          oom_window_minutes,
+        ]
+      properties:
+        disk_days_under:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 365,
+            description: 'A disk that fills in fewer days is a finding (default 3).',
+          }
+        disk_free_pct_under:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 90,
+            description: 'A disk with less free space is a finding (default 10).',
+          }
+        no_heartbeat_seconds:
+          {
+            type: integer,
+            minimum: 30,
+            maximum: 3600,
+            description: 'No heartbeat for this long is a finding (default 120).',
+          }
+        clock_skew_seconds:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 3600,
+            description: 'A clock this far from the controller is a finding (default 30).',
+          }
+        oom_window_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            maximum: 1440,
+            description: 'An OOM kill this recent is a finding (default 60).',
+          }
+    MachineHealth:
+      type: object
+      required: [machine_id, reported, stale, volumes]
+      description: A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
+      properties:
+        machine_id: { type: string }
+        reported:
+          {
+            type: boolean,
+            description: 'False until the first report arrives; every other field is absent then.',
+          }
+        received_at: { type: string, format: date-time }
+        stale: { type: boolean, description: 'The last report is older than 3 minutes.' }
+        boot: { $ref: '#/components/schemas/HealthBoot' }
+        volumes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthVolume'
+        swap: { $ref: '#/components/schemas/HealthSwap' }
+        oom: { $ref: '#/components/schemas/HealthOom' }
+        connectivity: { $ref: '#/components/schemas/HealthConnectivity' }
+        versions: { $ref: '#/components/schemas/HealthVersions' }
+        updates: { $ref: '#/components/schemas/HealthUpdates' }
+        power: { $ref: '#/components/schemas/HealthPower' }
+        docker_use: { $ref: '#/components/schemas/HealthDockerUse' }
+        thermal: { $ref: '#/components/schemas/HealthThermal' }
+        load: { $ref: '#/components/schemas/HealthLoad' }
+    HealthBoot:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        uptime_seconds: { type: integer, format: int64 }
+        last_boot_at: { type: string, format: date-time }
+        unexpected_restart:
+          {
+            type: boolean,
+            description: 'Booted in the last 24 hours without a restart crsp asked for.',
+          }
+    HealthVolume:
+      type: object
+      required: [role, path]
+      properties:
+        role: { type: string, enum: [system, data_dir, docker, runner_work] }
+        path: { type: string }
+        unknown_reason: { type: string }
+        total_bytes: { type: integer, format: int64 }
+        free_bytes: { type: integer, format: int64 }
+        free_pct: { type: number }
+        days_until_full:
+          {
+            type: number,
+            description: 'From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.',
+          }
+        days_note: { type: string, description: 'Why days_until_full is absent.' }
+    HealthSwap:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        total_bytes: { type: integer, format: int64 }
+        used_bytes: { type: integer, format: int64 }
+    HealthOomScope:
+      type: object
+      required: [scope, name, kills]
+      properties:
+        scope: { type: string, enum: [pool, job] }
+        name: { type: string }
+        kills: { type: integer, format: int64 }
+    HealthOom:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        total_kills: { type: integer, format: int64 }
+        last_kill_at: { type: string, format: date-time }
+        recent:
+          {
+            type: boolean,
+            description: 'A kill inside the Doctor window (default 1 hour).',
+          }
+        scopes:
+          type: array
+          items:
+            $ref: '#/components/schemas/HealthOomScope'
+    HealthGithub:
+      type: object
+      properties:
+        reachable: { type: boolean }
+        latency_ms: { type: integer, format: int64 }
+        checked_at: { type: string, format: date-time }
+        error: { type: string }
+    HealthDns:
+      type: object
+      properties:
+        ok: { type: boolean }
+        error: { type: string }
+    HealthConnectivity:
+      type: object
+      properties:
+        rtt_ms:
+          {
+            type: integer,
+            format: int64,
+            description: 'Agent to controller round trip, from the heartbeats.',
+          }
+        last_heartbeat_at: { type: string, format: date-time }
+        reconnects_24h: { type: integer }
+        clock_skew_seconds:
+          {
+            type: number,
+            description: 'Agent clock minus controller clock; positive means the agent is ahead.',
+          }
+        github: { $ref: '#/components/schemas/HealthGithub' }
+        dns: { $ref: '#/components/schemas/HealthDns' }
+    HealthVersions:
+      type: object
+      properties:
+        agent: { type: string }
+        controller: { type: string }
+        agent_out_of_date: { type: boolean }
+        runner_app: { type: string, description: 'The oldest runner app on the machine.' }
+        latest_runner: { type: string }
+        runner_out_of_date: { type: boolean }
+        docker_kind: { type: string }
+        docker: { type: string }
+        wsl: { type: string }
+    HealthUpdates:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        restart_pending: { type: boolean }
+        restart_reasons: { type: array, items: { type: string } }
+        pending_update_count: { type: integer }
+        active_hours_start:
+          {
+            type: integer,
+            description: 'Windows Update active hours, local hour 0 to 23.',
+          }
+        active_hours_end: { type: integer }
+        auto_update_state: { type: string }
+        restart_may_happen_now:
+          { type: boolean, description: 'A restart is pending and the OS may do it now.' }
+        restart_may_hit_jobs:
+          {
+            type: boolean,
+            description: 'It may happen now and the machine runs or takes jobs.',
+          }
+    HealthPower:
+      type: object
+      properties:
+        on_battery: { type: boolean }
+        source_unknown_reason: { type: string }
+        sleep_enabled:
+          {
+            type: boolean,
+            description: 'A setting can suspend or hibernate the machine.',
+          }
+        sleep_modes: { type: array, items: { type: string } }
+        sleep_unknown_reason: { type: string }
+        last_wake_at: { type: string, format: date-time }
+    HealthDockerUse:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        images_bytes: { type: integer, format: int64 }
+        build_cache_bytes: { type: integer, format: int64 }
+        volumes_bytes: { type: integer, format: int64 }
+        containers_bytes: { type: integer, format: int64 }
+        read_at: { type: string, format: date-time }
+    HealthThermal:
+      type: object
+      properties:
+        unknown_reason: { type: string }
+        max_temp_celsius: { type: number }
+        throttled: { type: boolean }
+        throttle_detail: { type: string }
+    HealthLoad:
+      type: object
+      properties:
+        load_unknown_reason: { type: string }
+        load1: { type: number }
+        load5: { type: number }
+        load15: { type: number }
+        steal_unknown_reason: { type: string }
+        steal_pct: { type: number }
+    JobStatsCounts:
+      type: object
+      required:
+        [succeeded, failed, cancelled, timed_out, over_memory, stopped, other, total]
+      properties:
+        succeeded: { type: integer, format: int64 }
+        failed: { type: integer, format: int64 }
+        cancelled: { type: integer, format: int64 }
+        timed_out:
+          {
+            type: integer,
+            format: int64,
+            description: 'Ended by the crsp job timer, or by GitHub as timed out.',
+          }
+        over_memory: { type: integer, format: int64 }
+        stopped:
+          {
+            type: integer,
+            format: int64,
+            description: 'Stopped by crsp (a drain, a Stop, a removal).',
+          }
+        other:
+          {
+            type: integer,
+            format: int64,
+            description: 'No known result (a job crsp lost).',
+          }
+        total: { type: integer, format: int64 }
+    JobStatsRates:
+      type: object
+      description: The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+      properties:
+        succeeded: { type: number }
+        failed: { type: number }
+        cancelled: { type: number }
+        timed_out: { type: number }
+        over_memory: { type: number }
+        stopped: { type: number }
+    JobStatsFailure:
+      type: object
+      required: [job_id, repository, job, run_id, class, at]
+      properties:
+        job_id: { type: integer, format: int64 }
+        repository: { type: string }
+        job: { type: string }
+        run_id: { type: integer, format: int64 }
+        class: { type: string, enum: [failed, timed_out, over_memory, stopped] }
+        at: { type: string, format: date-time }
+        job_url: { type: string }
+        run_url: { type: string }
+    JobStatsFailingJob:
+      type: object
+      required: [repository, job, failures, last_at]
+      properties:
+        repository: { type: string }
+        job: { type: string }
+        failures: { type: integer, format: int64 }
+        last_at: { type: string, format: date-time }
+    JobStatsSet:
+      type: object
+      required: [counts, top_failing]
+      properties:
+        counts: { $ref: '#/components/schemas/JobStatsCounts' }
+        rates: { $ref: '#/components/schemas/JobStatsRates' }
+        avg_run_seconds:
+          { type: number, description: 'Absent when no job in the window has times.' }
+        avg_queue_wait_seconds: { type: number }
+        busy_seconds:
+          { type: number, description: 'Time jobs ran inside the window, summed.' }
+        busy_pct:
+          {
+            type: number,
+            description: 'Busy seconds over the window times the slots (a runner has one), 0 to 100.',
+          }
+        last_failure: { $ref: '#/components/schemas/JobStatsFailure' }
+        top_failing:
+          type: array
+          items:
+            $ref: '#/components/schemas/JobStatsFailingJob'
+    RunnerJobStatsEntry:
+      type: object
+      required: [runner_id, runner_name, stats]
+      properties:
+        runner_id: { type: string }
+        runner_name: { type: string }
+        stats: { $ref: '#/components/schemas/JobStatsSet' }
+    MachineJobStats:
+      type: object
+      required: [window, from, to, machine, runners]
+      properties:
+        window: { type: string, enum: [24h, 7d] }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        machine: { $ref: '#/components/schemas/JobStatsSet' }
+        runners:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunnerJobStatsEntry'
+    RunnerJobStats:
+      type: object
+      required: [window, from, to, runner_id, stats]
+      properties:
+        window: { type: string, enum: [24h, 7d] }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        runner_id: { type: string }
+        stats: { $ref: '#/components/schemas/JobStatsSet' }

@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 describe('Run page', () => {
   it('shows the facts, the breadcrumb and the one h1', async () => {
-    renderApp(jobsApi({ run: runItem() }), '/jobs/run/100?attempt=1');
+    renderApp(jobsApi({ run: runItem() }), '/pool/runs/100?attempt=1');
     expect(await screen.findByText('ci.yml on OPS34-jobs-section')).toBeTruthy();
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
     const crumbs = screen.getByRole('navigation', { name: 'You are here' });
@@ -21,7 +21,7 @@ describe('Run page', () => {
 
   it('asks for the attempt named in the address', async () => {
     const api = jobsApi({ run: runItem({ attempt: 2, attempts: [1, 2] }) });
-    renderApp(api, '/jobs/run/100?attempt=2');
+    renderApp(api, '/pool/runs/100?attempt=2');
     await screen.findByText('ci.yml on OPS34-jobs-section');
     const call = api.calls.find((c) => c.path === '/api/v1/runs/100');
     expect(call?.query.get('attempt')).toBe('2');
@@ -29,7 +29,7 @@ describe('Run page', () => {
   });
 
   it('draws the jobs as a graph from the workflow file and marks a matrix as expanding at run time', async () => {
-    renderApp(jobsApi({ run: runItem() }), '/jobs/run/100');
+    renderApp(jobsApi({ run: runItem() }), '/pool/runs/100');
     await screen.findByText('ci.yml on OPS34-jobs-section');
     expect(
       screen.getByText(/Arrows come from the workflow file at commit a1b2c3d/),
@@ -47,7 +47,7 @@ describe('Run page', () => {
           graph: { source: 'timing_overlap', dynamic_nodes: [] },
         }),
       }),
-      '/jobs/run/100',
+      '/pool/runs/100',
     );
     expect(
       await screen.findByText(/could not be read, so no arrows are drawn/),
@@ -65,7 +65,7 @@ describe('Run page', () => {
           eta: { p50: 420, lo: 360, hi: 540 },
         }),
       }),
-      '/jobs/run/100',
+      '/pool/runs/100',
     );
     expect(
       await screen.findByText(/in about 6 to 9 min, along the longest chain of 2 jobs/),
@@ -73,7 +73,7 @@ describe('Run page', () => {
   });
 
   it('opens a job of the run on the Job page', async () => {
-    renderApp(jobsApi({ run: runItem() }), '/jobs/run/100');
+    renderApp(jobsApi({ run: runItem() }), '/pool/runs/100');
     await screen.findByText('ci.yml on OPS34-jobs-section');
     const timeline = screen.getByRole('region', { name: 'Timeline' });
     fireEvent.click(
@@ -90,7 +90,7 @@ describe('Run page', () => {
       '/api/v1/runs/:runId',
       apiError(404, 'not_found', 'No such run.'),
     );
-    renderApp(api, '/jobs/run/9');
+    renderApp(api, '/pool/runs/9');
     expect(await screen.findByText(/Could not load the run/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
   });
@@ -98,7 +98,7 @@ describe('Run page', () => {
   it('says a run with no jobs has none', async () => {
     renderApp(
       jobsApi({ run: runItem({ jobs: [], edges: [], critical_path: [] }) }),
-      '/jobs/run/100',
+      '/pool/runs/100',
     );
     expect((await screen.findAllByText('This run has no jobs.')).length).toBeGreaterThan(
       0,
@@ -106,7 +106,7 @@ describe('Run page', () => {
   });
 
   it('lists every job once in one Jobs table that the graph and the timeline point to', async () => {
-    renderApp(jobsApi({ run: runItem() }), '/jobs/run/100');
+    renderApp(jobsApi({ run: runItem() }), '/pool/runs/100');
     await screen.findByText('ci.yml on OPS34-jobs-section');
     expect(screen.queryByText('Show as table')).toBeNull();
     const jobs = screen.getByRole('region', { name: 'Jobs' });
@@ -143,7 +143,7 @@ describe('Run page', () => {
       jobsApi({
         run: runItem({ jobs: [one.jobs[0] as (typeof one.jobs)[number]], edges: [] }),
       }),
-      '/jobs/run/100',
+      '/pool/runs/100',
     );
     expect(await screen.findByText(/This run has 1 job;/)).toBeTruthy();
     expect(screen.queryByText(/1 jobs/)).toBeNull();
@@ -154,7 +154,7 @@ describe('Run page', () => {
       jobsApi({
         run: runItem({ pull_request: 52, worktree: 'OPS34-jobs-section' }),
       }),
-      '/jobs/run/100',
+      '/pool/runs/100',
     );
     await screen.findByText('ci.yml on OPS34-jobs-section');
     expect(screen.getAllByText('#52')).toHaveLength(1);

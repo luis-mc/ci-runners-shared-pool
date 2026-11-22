@@ -13,6 +13,7 @@ code:
   - internal/load/**
   - internal/power/**
   - internal/cpucap/**
+  - internal/machinehealth/**
   - internal/dockercompact/**
 design_system: [UX-4, UX-5, UX-6, UX-9, UX-13, UX-16, UX-17, UX-18, UX-19, UX-22, UX-26, UX-29, UX-30, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62]
 last_verified: 2026-11-21
@@ -94,6 +95,7 @@ The Machines screen and the Add machine wizard follow design system v1 ([ux-rule
 | Machine detail | Facts, backends with their reason when not usable, settings, running jobs, the install command again | UX-25, UX-22, UX-61 |
 | Machine detail, When it works | The mode (Automatic, Always, Paused), the Pause on battery switch, the CPU cap (25, 50, 75, 100%), the power source, and the reason when the machine takes no new job. Each control saves at once. A pause from the tray shows with its end and a Resume | UX-13, UX-22, UX-38, UX-58 |
 | Machine detail, Budget and slots | The four fields (Memory budget, CPU budget, Job slots, Time to finish running jobs) top-align in one row with their boxes on one line; the help of a field sits under its box, so a long name or help never moves the other boxes | UX-23, UX-78 |
+| Machine detail, Disk | The field Free disk to keep (GB), what the machine does under it (new jobs wait with `disk_low`, running jobs finish) and the free space now; the Save bar saves it. A floor that config turned off is shown as Off, read-only | UX-22, UX-23, CORE-1, CORE-5; `apps/web/src/screens/machines/MachineDiskFloor.test.tsx` |
 | Machines, list column Takes jobs | The word Taking jobs, Paused, On battery or Busy | UX-58 |
 | Add machine | Wizard: pick the OS, copy the command, wait for the machine to join, Done | UX-5, UX-29, UX-30, UX-54 |
 | Waiting for join | Names what it waits for and when the code expires | UX-29, UX-6 |
@@ -153,7 +155,7 @@ Ported from dev-standards `claude/plugins/delivery/scripts/load.py` and `load_gu
 
 **R5.15** (M1) — The agent measures total memory use % and total CPU use % of the machine. Windows: `GlobalMemoryStatusEx` and `GetSystemTimes`. Linux: `/proc/meminfo` and `/proc/stat`. macOS: `vm_stat` with `hw.memsize`, and CPU from `host_processor_info` or `top`. CPU is the delta of raw counters between two samples, never a sleep inside a hook.
 
-**R5.16** (M1) — The agent samples every 5 seconds. The figure that decides is the median of the last 5 samples, so one spike does not decide (DL176). The one-shot job hooks use their own cached mean of up to 3 samples in 30 s (scheduling R5.42, D7); both rules are built and apply to different readers.
+**R5.16** (M1) — The agent samples every 2 seconds. The figure that decides is the median of the last 5 samples, so one spike does not decide (DL176). The one-shot job hooks use their own cached mean of up to 3 samples in 30 s (scheduling R5.42, D7); both rules are built and apply to different readers.
 
 **R5.17** (M1) — On Windows with WSL2, the WSL VM's memory is the larger of the `vmmem` or `vmmemWSL` working set and its private bytes, and at least the memory its containers use (DL177). Windows trims the working set, so it alone reads too low.
 
@@ -182,6 +184,7 @@ Ported from dev-standards `claude/plugins/delivery/scripts/load.py` and `load_gu
 | Mode | automatic | automatic, always, paused (R5.61) |
 | Pause on battery | on | on or off (R5.63) |
 | CPU cap for runners | 100% | 25, 50, 75, 100% (R5.64) |
+| Free disk to keep, `disk_floor_gib` | none set in the console: the machine keeps the value of its start (10 GiB) | 1 to 2000 GiB (R5.80) |
 
 **R5.22a** (M1) (built, CRSP37) — The pool has its own defaults for a machine that joins: memory budget (10 to 95%, default 85%), CPU budget (10 to 95%, default 60%), whether slots are sized from the machine's cores and memory within the budget (default yes), job slots when they are not sized or the machine does not report its size (0 to 64, default 2) and the drain timeout (5 to 1440 minutes, default 60). An admin changes them in Settings, Budgets (`getPoolSettings`, `updatePoolSettings`); each change writes one audit row. A change reaches only machines that join afterwards. A machine that already joined keeps its own settings, so the change restarts no runner and waits for no running job (UX-62). A machine that already joined is changed in its own settings (R5.22).
 
@@ -307,11 +310,42 @@ The controller serves the packages of the release it was built from at `GET /api
 
 **R5.71** (M1, built OPS61; owner decision 21 Nov, dev-standards report) — **The pool is sized from the PC's own measured use.** Fixed shares squeezed the owner's own work on a busy PC and were too small on an idle one, so the recommended pool size rests on what the PC itself uses.
 
+**R5.80** (M1, built OPS86; owner decision 22 Nov) — **The free-disk floor is a machine setting.** Each machine's settings carry `disk_floor_gib` (runners R5.83): 1 to 2000 GiB, 0 or absent meaning none set in the console. The API refuses a value outside the range with 400, and an admin changes it from the machine page. A change is saved at once, needs no drain, and the audit entry `machine.settings` names it. The controller pushes it with the other settings (`MachineSettings.disk_floor_gib`) and the agent applies it live to its gate. The console value wins over `disk_floor_gib` in `config.toml` and `--disk-floor-gib`, which stay the first value of the agent; the default for a new machine is not changed. The agent reports the floor in force and whether it is off (`AcceptingReport.disk_floor_gib`, `disk_floor_off`). A floor that `config.toml` or the flag turned off (a negative value) stays off: the agent ignores a console value, the API refuses one with 400, and the console shows it read-only. The machine settings are stored as a document in `ctl_machine_settings` (R5.68), so the field needs no new table or column.
+
 - **Measure.** The agent samples the memory the host uses without crsp's pool (`load.Sampler.hostOwnBytes`): the used memory less crsp's own processes and less the pool. On Windows the pool is the WSL VM (`vmmem` and `vmmemWSL`, at the working set the host figure counts, R5.17); on Linux and macOS it is the pool's containers (label `dev.luismc.crsp`; a runner VM guest is not subtracted until the backend reports it, M-7). It keeps one point per 5 minutes (the peak of the step) in `load.HostUse`, a rolling 7 days, saved to `hostuse.json` in the agent's data folder every 5 minutes so a restart keeps the week. The p95 is the nearest rank and counts only when the samples cover at least 24 hours (`HostUseMinSpan`); the agent sends it in `LoadReport.host_use_p95_bytes`, `host_use_ready` and `host_use_span_seconds`, and the controller ignores a ready flag whose span is under 24 hours.
 - **Recommend.** With a measured p95, the room for the pool is `total RAM × memory budget − host p95 − poolsize.SafetyMarginGiB` (1 GiB), never below 0 (`poolsize.MeasuredRoom`). The Recommended half and three quarters take their share of the smaller of that room and the room right now (R5.58), so a spike at this moment never gives a size the hard check refuses. Until 24 hours are measured the shares stay today's: of the room now. `PoolSizeCheck` says which (`basis`: `measured` or `measuring`) with `host_p95_gib`, `host_span_hours`, `measured_room_gib`, `preset_room_gib` and `safety_margin_gib`. The Pool size block shows the basis ("Windows and your apps use up to 10.2 GiB (p95, 7 days)", or "measuring, 6 h of 24").
 - **Custom.** The hard check of R5.58 is unchanged (a refusal above the room now). Against the measured figure a Custom size that leaves the PC less than the host p95 (`total − size < p95`) is a warning, `leaves_less_than_host`, shown as a needs-you line; it never blocks Save.
 - **WSL.** When the pool runs in WSL2 (`.wslconfig` is present or the WSL VM is up), the block shows the cap `.wslconfig` declares (`wsl_cap_gib`, or "not set" when WSL takes its half), the cap that matches the pool, and the lines `[wsl2]` and `memory=<pool>GB` to copy. There is no apply path in the product (the agent only reads `.wslconfig`, R5.54), so it is a recommendation with Copy: crsp never edits the file, and the block says WSL must restart (`wsl --shutdown`) for a change to apply. A declared cap above total RAM less the p95 is flagged (`wsl_cap_above_pc`) and the Doctor says so (doctor R5.64).
 - **Screen.** Only shared parts (Facts, Message, Text, Stack, CodeBlock): CORE-1 to CORE-7 checked, UX-4, UX-10, UX-17, UX-71; the words are in the design system `next-version` content (Pool size words, C12). Layout is proven at 360, 393 and 1300 px.
+
+**R5.72** (M1, built OPS83; owner decision 22 Nov, back end only) — **The agent reports the machine's own health.** A new message `HealthReport` (agent protocol field 32 of `SessionRequest`, additive) goes to the controller with Hello and then every minute. It is built by `internal/agent/health`: one `Monitor`, collectors per OS (`linux.go`, `windows.go`, `darwin.go`) that read through one `Env` interface, so tests feed fixed answers. Each cheap collector has a time budget (5 s) and gives up with an unknown reason when it takes longer. The slow ones (OS updates, Docker disk use, power, GitHub reachability) run off the hot path at their own pace and the report repeats their last answer. **A value an OS cannot give is reported as unknown with the reason (`known=false`, `unknown_reason`), never as 0**; the API leaves the field out and names the reason.
+
+**R5.73** (M1, built OPS83) — **The cheap items, read every minute, on Linux, Windows and macOS.**
+
+| Item | Linux | Windows | macOS |
+|---|---|---|---|
+| Uptime, last boot | `/proc/uptime` | `GetTickCount64` | `sysctl kern.boottime` |
+| Unexpected restart | a boot in the last 24 h that crsp did not ask for (state file `health-state.json` in the data dir; `health.MarkExpectedRestart` is the hook a restart command calls; no crsp command restarts a machine yet, so every boot counts as unexpected) | same | same |
+| Disk free | system volume, crsp data dir, Docker or WSL data, runner work dirs | same | same |
+| Swap | `/proc/meminfo` | page file (`Win32_PageFileUsage`) | `sysctl vm.swapusage` |
+| OOM kills | cgroup v2 `memory.events` `oom_kill` of `/sys/fs/cgroup/crsp*` (pool) and `crsp*/*` (job) | System event 2004 (Resource-Exhaustion-Detector), last 24 h | unknown: no count crsp can read |
+| Agent to controller round trip, last heartbeat, reconnects in 24 h, clock skew | from the heartbeats: the round trip is the time from sending a heartbeat to its answer, the skew is the agent clock at the middle of the trip minus the controller time in the answer (`health.Beats`) | same | same |
+| GitHub reachable and latency, DNS | a HEAD to the configured GitHub address (`internal/addresses`) every 5 minutes, and a lookup of its host | same | same |
+| Versions | agent, oldest runner app, Docker engine, WSL (Windows) | same | same |
+| CPU temperature and throttling | thermal zones, `core_throttle_count` | unknown (needs admin) | unknown (needs admin, unreliable) |
+| Load average, CPU steal | `/proc/loadavg`, `/proc/stat` | unknown | load average; steal unknown |
+
+**R5.74** (M1, built OPS83) — **The slower items.** Restart pending and OS updates: Windows reads `RebootRequired`, `RebootPending`, `PendingFileRenameOperations`, the pending update count and the Windows Update active hours; Linux reads `/var/run/reboot-required` (Debian, Ubuntu) or `needs-restarting -r` (RHEL) and the unattended-upgrades state; macOS runs `softwareupdate --list` at most hourly, in the background, with a timeout. Sleep and power: on AC or battery, the sleep and hibernate settings that can suspend the machine (`powercfg /q` idle times on Windows, `pmset -g` on macOS, unmasked systemd sleep targets plus a logind idle action or a lid on Linux), and the last wake where the OS keeps it. Docker disk use (`docker system df`: images, build cache, volumes) every 10 minutes.
+
+**R5.75** (M1, built OPS83) — **Disk samples and the days until full.** The controller keeps the last HealthReport of each machine (table `machine_health`, protojson) and 24 hours of free-space samples per volume (`machine_disk_samples`), pruned at most hourly. The days until full are a least-squares line through the samples, from 30 minutes of samples on; free space that is not falling gives no figure and a note.
+
+**R5.76** (M1, built OPS83) — **Say whether a restart may happen while jobs run.** `restart_may_happen_now` is true when a restart is pending and the OS may do it now (automatic restart on and, on Windows, the time is outside the active hours). `restart_may_hit_jobs` is true when that holds and the machine runs jobs or takes new ones.
+
+**R5.77** (M1, built OPS83) — **Out of date is flagged.** The agent is out of date when older than the controller; the runner app when older than the latest pinned runner. A version that is not numbers (a development build) is never out of date. An OOM kill is recent when it is inside the OOM window (default 1 hour); the controller sees a kill as a rise of the OOM count between two reports.
+
+**R5.78** (M1, built OPS83) — **Job stats per machine and per runner, over 24 hours and 7 days.** For the jobs that completed in the window: counts and rates of succeeded, failed, cancelled, timed out (the crsp job timer, or GitHub's timed out), over memory and stopped by crsp; the average run time and queue wait; the busy percent (job time inside the window over the window times the slots, 1 for a runner); the last failure with its job and run link; the top failing jobs. A job crsp ended itself has a row in `job_end_reasons` (`timeout`, `over_memory`, `stopped`; migration 00040; the timer, the memory guard and the stop paths call `Store.RecordJobEndReason`) and counts by that reason, the rest by GitHub's result. An average with no job behind it is absent, not 0. The queries are four indexed reads (`jobs_machine_done`, `jobs_runner_done`).
+
+**R5.79** (M1, built OPS83) — **The API.** `GET /api/v1/machines/{id}/health` (`getMachineHealth`), `GET /api/v1/machines/{id}/job-stats?window=24h|7d` (`getMachineJobStats`, the machine and each runner that ran on it), `GET /api/v1/runners/{id}/job-stats?window=24h|7d` (`getRunnerJobStats`), and the Doctor limits `GET` and `PUT /api/v1/health-thresholds` (doctor R5.66). The console screens are built by LOOK56 on these routes.
 
 ## 6. Non-functional requirements
 
@@ -358,7 +392,7 @@ flowchart LR
 ```mermaid
 flowchart TD
   total[Total RAM] --> budget["× memory budget (85%) = budget"]
-  host["Host own use: used − vmmem or pool containers − crsp<br/>sampled every 5 s, one point per 5 min, 7 days"] --> p95["p95 (needs 24 h of samples)"]
+  host["Host own use: used − vmmem or pool containers − crsp<br/>sampled every 2 s, one point per 5 min, 7 days"] --> p95["p95 (needs 24 h of samples)"]
   budget --> room["Measured room = budget − p95 − 1 GiB safety margin"]
   p95 --> room
   p95 -. fewer than 24 h .-> fixed["Measuring: today's room = budget − used now"]
@@ -376,7 +410,7 @@ flowchart TD
 **Packages.**
 
 - `internal/machines`: join codes, keys, the machine record, settings, drain and removal, offline detection. Controller side.
-- `internal/agent`: the agent mode. Link, reconnect, facts and backend detection, settings cache, drain execution, service install and uninstall.
+- `internal/agent`: the agent mode. Link, reconnect, facts and backend detection, settings cache, drain execution, service install and uninstall, and the job tool flow of a Windows or macOS machine (`toolstore.go`: tool store, private job home, tool plan probe; runners R5.110 to R5.119).
 - `internal/load`: the load measurement per OS, medians, WSL VM and Docker reads, cgroup v2. Pure functions over parsed input, with the OS calls behind one probe interface so tests feed fixed output (as `load.py` does with its test seams).
 
 **Agent link contract.** `packages/contract/proto/agent/v1/agent.proto` grows:
@@ -501,6 +535,15 @@ Every test below is planned and NOT YET IMPLEMENTED. Paths are where the tests w
 | R5.69 | cmd/crsp/machines_wiring.go auditedRepo (console audit); internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine (machine.rejoin entry) | built (OPS59) |
 | R5.70 | internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine, TestAgentRejoinMatchesHostOSArch; internal/machines/join_test.go TestJoinMakesNamesUnique | built (OPS59) |
 | R5.71 | `internal/load/hostuse_test.go` TestHostUseNeedsADayOfSamples, TestHostUseP95IsTheNearestRank, TestHostUseForgetsAfterAWeek, TestHostUseKeepsThePeakOfAStep, TestHostUseSaveRestore, TestParsePSOwnCountsOnlyCrsp, TestHostOwnBytesPerOS (linux, darwin, windows, floor), TestSamplerReportsHostUse, TestRefreshReadsPoolContainersAndOwnUse; `internal/poolsize/poolsize_test.go` TestMeasuredRoomTable, TestRecommendedBasisTable, TestLeavesLessThanHostIsAWarningNotABlock, TestWSLCapIsShown; `internal/api/machines_pool_size_test.go` TestPoolSizeCheckSaysMeasuredOrMeasuring; `apps/web/src/screens/machines/PoolSizeMeasured.test.tsx`; `e2e/tests/web-console/ux-pool-size.spec.ts` (DOM layout at 360, 393 and 1300 px) | built (OPS61) |
+| R5.72 | `internal/agent/health/other_test.go` TestMonitorCollect, TestMonitorBudgetAndSlowOffPath; `internal/agent/health/linux_test.go` TestLinuxUnknownIsNotZero | built (OPS83) |
+| R5.73 | `internal/agent/health/linux_test.go` TestLinuxBootSwapLoad, TestLinuxOOMTargets, TestLinuxThermalThrottle, TestLinuxCPUTimes; `internal/agent/health/other_test.go` TestWindowsBootSwapOOM, TestDarwin, TestBootTracking, TestBeats, TestMonitorGitHubDownAndOOMDelta | built (OPS83) |
+| R5.74 | `internal/agent/health/linux_test.go` TestLinuxUpdatesDebian, TestLinuxUpdatesRHEL, TestLinuxPower; `internal/agent/health/other_test.go` TestParseWindowsUpdates, TestHourInRange, TestWindowsPower, TestWindowsWSLVersion, TestDarwinUpdatesAndPower, TestParseDockerDF | built (OPS83) |
+| R5.75 | `internal/machinehealth/service_test.go` TestIngestAndDaysUntilFull, TestTrendNeedsData; `internal/store/jobstats_test.go` TestMachineHealthRowsAndDiskSamples | built (OPS83) |
+| R5.76 | `internal/machinehealth/service_test.go` TestRestartMayHitJobs | built (OPS83) |
+| R5.77 | `internal/machinehealth/service_test.go` TestOutOfDate, TestOOMStateAndVersions | built (OPS83) |
+| R5.78 | `internal/store/jobstats_test.go` TestJobStatsCountsAveragesAndFailures, TestJobStatsAveragesRunnerAndEmpty, TestJobStatsBusyClipsToWindow, TestJobStatsUseTheIndexes; `internal/machinehealth/service_test.go` TestJobStatsWindowsAndRates | built (OPS83) |
+| R5.79 | `internal/api/handlers_machinehealth_test.go` TestMachineHealthRoute, TestJobStatsRoutes, TestHealthThresholdsRoutes, TestHealthRoutesOffAnswer501 | built (OPS83) |
+| R5.80 | `internal/machines/disk_floor_test.go` TestDiskFloorIsUnsetByDefault, TestDiskFloorRange, TestDiskFloorReachesTheAgent, TestDiskFloorOffInConfigRefusesTheConsole; `internal/machines/settings_survive_test.go` TestUserSettingsNeverRevertAfterReconnectOrSync; `internal/agent/disk_floor_test.go` TestConsoleFloorAppliesLive, TestFloorOverTheWire; `internal/api/machines_disk_floor_test.go` TestMachineDiskFloorThroughTheAPI; `apps/web/src/screens/machines/MachineDiskFloor.test.tsx` |
 
 ## 10. Decisions
 

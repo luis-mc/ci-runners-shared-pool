@@ -24,10 +24,10 @@ const SCREENS: {
   tweak?: (m: ReturnType<typeof signedIn>) => unknown;
 }[] = [
   { name: 'sign-in', path: '/sign-in', ready: 'Sign in', signedOut: true },
-  { name: 'first-run wizard', path: '/setup', ready: 'Set up the pool' },
+  { name: 'first-run wizard', path: '/setup?wizard=1', ready: 'Set up the pool' },
   {
     name: 'first-run without a setup link',
-    path: '/setup',
+    path: '/setup?wizard=1',
     ready: 'Set up the pool',
     tweak: (m: ReturnType<typeof signedIn>) =>
       m.on('GET', '/api/v1/setup', {
@@ -42,49 +42,54 @@ const SCREENS: {
       }),
   },
   { name: 'overview', path: '/', ready: 'Overview' },
-  { name: 'repositories', path: '/repositories', ready: 'Repositories' },
+  { name: 'repositories', path: '/setup/pool', ready: 'Repositories' },
   {
     name: 'repositories with a public row while the setting is off',
-    path: '/repositories',
+    path: '/setup/pool',
     ready: 'Repositories',
     publicRows: true,
   },
-  { name: 'repository detail', path: '/repositories/octo/app', ready: 'octo/app' },
+  { name: 'repository detail', path: '/setup/pool/octo/app', ready: 'octo/app' },
   {
     name: 'repository policy',
-    path: '/repositories/octo/app',
+    path: '/setup/pool/octo/app',
     ready: 'octo/app',
     policy: true,
   },
-  { name: 'turn on the pool', path: '/repositories/turn-on', ready: 'Turn on the pool' },
-  { name: 'machines', path: '/pool/machines', ready: 'Machines' },
-  { name: 'machine detail', path: '/pool/machines/m1', ready: 'build-1' },
+  { name: 'turn on the pool', path: '/setup/pool/turn-on', ready: 'Turn on the pool' },
+  { name: 'machines', path: '/setup/machines', ready: 'Machines' },
+  { name: 'machine detail', path: '/setup/machines/m1', ready: 'build-1' },
   {
     name: 'machine detail stopped',
-    path: '/pool/machines/m1',
+    path: '/setup/machines/m1',
     ready: 'build-1',
     stopped: true,
   },
   {
     name: 'machine detail needing recovery',
-    path: '/pool/machines/m1',
+    path: '/setup/machines/m1',
     ready: 'build-1',
     recovery: true,
   },
-  { name: 'add a machine', path: '/pool/machines/add', ready: 'Add a machine' },
-  { name: 'runners', path: '/pool/runners', ready: 'Runners' },
-  { name: 'jobs', path: '/jobs', ready: 'Jobs' },
-  { name: 'jobs live', path: '/jobs/live', ready: 'Jobs' },
-  { name: 'jobs done', path: '/jobs/done', ready: 'Jobs' },
-  { name: 'jobs run elsewhere', path: '/jobs/elsewhere', ready: 'Jobs' },
+  { name: 'add a machine', path: '/setup/machines/add', ready: 'Add a machine' },
+  { name: 'runners', path: '/setup/runners', ready: 'Runners' },
+  { name: 'pool overview', path: '/pool', ready: 'Pool' },
+  { name: 'pool live', path: '/pool/live', ready: 'Pool' },
+  { name: 'pool queue analysis', path: '/pool/queue', ready: 'Pool' },
+  { name: 'pool jobs', path: '/pool/jobs', ready: 'Pool' },
+  { name: 'pool machines', path: '/pool/machines', ready: 'Pool' },
+  { name: 'analytics suggestions', path: '/analytics', ready: 'Analytics' },
+  { name: 'analytics insights', path: '/analytics/insights', ready: 'Analytics' },
+  { name: 'analytics run elsewhere', path: '/analytics/elsewhere', ready: 'Analytics' },
+  { name: 'help where', path: '/help/where', ready: 'Help' },
   {
-    name: 'jobs empty',
-    path: '/jobs',
-    ready: 'Jobs',
+    name: 'pool jobs empty',
+    path: '/pool/jobs',
+    ready: 'Pool',
     tweak: (m: ReturnType<typeof signedIn>) =>
       m.on('GET', '/api/v1/jobs', { items: [], stale: { stale: false } }),
   },
-  { name: 'job detail', path: '/jobs/2', ready: 'test-2' },
+  { name: 'job detail', path: '/pool/jobs/2', ready: 'test-2' },
   { name: 'doctor', path: '/doctor', ready: 'Doctor' },
   {
     name: 'doctor with runner leftovers',
@@ -122,10 +127,10 @@ const SCREENS: {
         last_run_at: '2026-11-14T10:00:12Z',
       }),
   },
-  { name: 'add runners', path: '/pool/runners/add', ready: 'Add runners' },
-  { name: 'images', path: '/pool/images', ready: 'Images and caches' },
-  { name: 'image detail', path: '/pool/images/img_m1_linux', ready: 'build-1' },
-  { name: 'caches', path: '/pool/images?tab=caches', ready: 'Images and caches' },
+  { name: 'add runners', path: '/setup/runners/add', ready: 'Add runners' },
+  { name: 'images', path: '/setup/images', ready: 'Images and caches' },
+  { name: 'image detail', path: '/setup/images/img_m1_linux', ready: 'build-1' },
+  { name: 'caches', path: '/setup/images?tab=caches', ready: 'Images and caches' },
   { name: 'settings access', path: '/settings/access', ready: 'Settings' },
   {
     name: 'settings repositories',
@@ -272,7 +277,7 @@ for (const width of [1300, 393, 360]) {
     await mock.install(page);
     await page.setViewportSize({ width, height: 900 });
     const measure = async (word: string) => {
-      await page.goto('/pool/machines/m1');
+      await page.goto('/setup/machines/m1');
       const button = page.getByRole('button', { name: word, exact: true });
       await expect(button).toBeVisible();
       const header = (await page.locator('.ds-page-header').boundingBox())!;
@@ -296,7 +301,7 @@ for (const width of [1300, 393, 360]) {
 }
 
 // UX-15: on a wide screen the step bar of a wizard is one row, not a wrapped narrow column (CRSP124).
-for (const path of ['/repositories/turn-on', '/pool/runners/add', '/pool/machines/add']) {
+for (const path of ['/setup/pool/turn-on', '/setup/runners/add', '/setup/machines/add']) {
   test(`step bar is one row at 1300 px: ${path}`, async ({ page }) => {
     const mock = jobsAndDoctor(signedIn());
     await mock.install(page);
@@ -314,11 +319,11 @@ for (const path of ['/repositories/turn-on', '/pool/runners/add', '/pool/machine
 }
 
 // CRSP132, UX-11: on a wide screen the toolbar above a list is one row (search, filters, selection, count, actions).
-for (const path of ['/repositories', '/pool/machines', '/pool/runners', '/jobs/live']) {
+for (const path of ['/setup/pool', '/setup/machines', '/setup/runners', '/pool/jobs']) {
   test(`list toolbar is one row at 1300 px: ${path}`, async ({ page }) => {
     // The Repositories toolbar (search, Pool, Active types, Select all, count, Add) no longer fits one row inside its pane.
     test.fixme(
-      path === '/repositories',
+      path === '/setup/pool',
       'CRSP162 toolbar wraps inside the pane at 1300 px',
     );
     const mock = jobsAndDoctor(signedIn());
@@ -364,17 +369,11 @@ for (const width of [1232, 1300, 393, 360]) {
 }
 
 // CRSP140: every titled part of a page is a pane with its title in the top border.
-test('settings access for CI shows panes and the form only on demand', async ({
-  page,
-}) => {
+test('settings access shows panes', async ({ page }) => {
   const mock = jobsAndDoctor(signedIn());
   await mock.install(page);
   await page.goto('/settings/access');
-  await expect(page.getByRole('region', { name: 'Access for CI' })).toBeVisible();
   await expect(page.locator('.ds-pane').first()).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Make an access' })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Make an access' }).click();
-  await expect(page.getByRole('region', { name: 'Make an access' })).toBeVisible();
 });
 
 // CRSP159, UX-15, UX-16: on a phone the areas are one Menu button, not four rows of links; every area is
@@ -401,7 +400,7 @@ test('setup done: one primary, Open the overview, and no terminal words', async 
   page,
 }) => {
   await jobsAndDoctor(signedIn()).install(page);
-  await page.goto('/setup');
+  await page.goto('/setup?wizard=1');
   const go = page.getByRole('button', { name: 'Open the overview' });
   await expect(go).toBeVisible();
   await expect(page.locator('[data-kind="primary"]')).toHaveCount(1);
@@ -420,7 +419,7 @@ test('setup without a link names the tray, not a terminal', async ({ page }) => 
     steps: { connect_github: 'todo', first_machine: 'todo', first_repository: 'todo' },
   });
   await mock.install(page);
-  await page.goto('/setup');
+  await page.goto('/setup?wizard=1');
   await expect(page.getByText(/Open in the tray menu/)).toBeVisible();
   await expect(page.locator('main')).not.toContainText(/crsp open|terminal/i);
 });
@@ -428,7 +427,7 @@ test('setup without a link names the tray, not a terminal', async ({ page }) => 
 // LOOK36, UX-69, tokens (spacing): a tab row and the page under it. At every width the page title is one section gap
 // (--ds-space-6) under the tab row, and the phone's Menu button, the first tab label of every row and the title
 // start on the frame's one left edge. A tab row follows component 3: it wraps onto more rows, no label is cut.
-for (const path of ['/pool', '/pool/machines', '/settings']) {
+for (const path of ['/setup/summary', '/setup/machines', '/settings']) {
   for (const width of [1300, 393, 360]) {
     test(`tab row, title gap and left edges at ${width} px: ${path}`, async ({
       page,
@@ -567,7 +566,7 @@ for (const width of [1300, 393, 360]) {
     const mock = jobsAndDoctor(signedIn());
     await mock.install(page);
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/pool/machines/m1');
+    await page.goto('/setup/machines/m1');
     await expect(page.getByRole('heading', { level: 1, name: 'build-1' })).toBeVisible();
     await expect(page.getByText('Time to finish running jobs')).toBeVisible();
     const rows = await page.evaluate(() => {

@@ -12,23 +12,10 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/client"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/cli/contexts"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/secrets"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/tlsca"
-)
-
-// The environment variables that sign the CLI in when no login context exists
-// (cli R5.60). The names do not end in _KEY, _TOKEN, _SECRET or _PASS, so CI
-// logs and secret scanners that key on those endings do not hide them wrongly.
-const (
-	envURL         = "CRSP_URL"
-	envAccess      = "CRSP_ACCESS"
-	envFingerprint = "CRSP_CA_FINGERPRINT"
-	// envContextName names the in-memory context of an environment sign-in.
-	envContextName = "env"
 )
 
 // session is a context with its token and a client bound to it.
@@ -73,66 +60,6 @@ func newPinnedTransport(fingerprint string) *http.Transport {
 	}
 }
 
-// newCAPinnedTransport builds an HTTPS transport for an environment sign-in:
-// the controller must present a chain that holds the CA with the pinned
-// fingerprint (the pin the agents use), or a certificate that is the pin
-// itself (the pin `crsp login` makes). There is no flag that turns it off.
-func newCAPinnedTransport(fingerprint string) *http.Transport {
-	return &http.Transport{
-		Proxy: http.ProxyFromEnvironment,
-		TLSClientConfig: &tls.Config{
-			MinVersion: tls.VersionTLS12,
-			// The controller's certificate is its own, not CA-signed by a public
-			// root. The chain check is replaced by the pin check below.
-			InsecureSkipVerify: true, //nolint:gosec // see above
-			VerifyPeerCertificate: func(raw [][]byte, _ [][]*x509.Certificate) error {
-				if len(raw) == 0 {
-					return errors.New("the controller sent no certificate")
-				}
-				if err := tlsca.VerifyPin(fingerprint, raw, time.Now()); err != nil {
-					return errors.New("the controller certificate does not match the pinned fingerprint")
-				}
-				return nil
-			},
-		},
-	}
-}
-
-// envSession signs in from the environment (cli R5.60). It returns ok false
-// when none of the three variables is set, so the caller keeps the usual
-// "Not signed in" answer; a partial set is an error that names what is missing.
-func (c *call) envSession() (s *session, ok bool, err error) {
-	url0 := strings.TrimSpace(c.env.Getenv(envURL))
-	access := strings.TrimSpace(c.env.Getenv(envAccess))
-	fp := normFingerprint(c.env.Getenv(envFingerprint))
-	if url0 == "" && access == "" && fp == "" {
-		return nil, false, nil
-	}
-	var missing []string
-	if url0 == "" {
-		missing = append(missing, envURL)
-	}
-	if access == "" {
-		missing = append(missing, envAccess)
-	}
-	if len(missing) > 0 {
-		return nil, true, fail(ExitAuth, "Not signed in. The environment sign-in needs %s too. Set up parity from the web console (Settings, Access for CI), or run crsp login URL.", strings.Join(missing, " and "))
-	}
-	u, perr := url.Parse(url0)
-	if perr != nil || !controllerSchemeOK(u) {
-		return nil, true, fail(ExitUsage, "%s %q must start with https:// (http:// only for 127.0.0.1 or [::1]).", envURL, url0)
-	}
-	if u.Scheme == "https" && len(fp) != 64 {
-		return nil, true, fail(ExitUsage, "%s must be the 64-character SHA-256 fingerprint of the controller's CA certificate. The environment sign-in has no way to skip the check.", envFingerprint)
-	}
-	sess, err := c.newSessionWith(contexts.Context{Name: envContextName, URL: strings.TrimRight(url0, "/"), Fingerprint: fp},
-		storedToken{Token: access}, func() http.RoundTripper { return newCAPinnedTransport(fp) })
-	if err != nil {
-		return nil, true, err
-	}
-	return sess, true, nil
-}
-
 // open returns the session for this call: context, token and client.
 func (c *call) open() (*session, error) {
 	if c.cached != nil {
@@ -153,15 +80,7 @@ func (c *call) open() (*session, error) {
 		ctx, err = cf.Pick(c.g.context, c.env.Getenv("CRSP_CONTEXT"))
 		if err != nil {
 			if errors.Is(err, contexts.ErrNoContext) {
-				// No login context: the environment may sign in (R5.60).
-				if es, ok, eerr := c.envSession(); ok {
-					if eerr != nil {
-						return nil, eerr
-					}
-					c.cached = es
-					return es, nil
-				}
-				return nil, fail(ExitAuth, "Not signed in. Run crsp login URL, or set %s, %s and %s (from the web console: Settings, Access for CI).", envURL, envAccess, envFingerprint)
+				return nil, fail(ExitAuth, "Not signed in. Run crsp login URL.")
 			}
 			return nil, fail(ExitUsage, "%v. Run crsp context list.", err)
 		}

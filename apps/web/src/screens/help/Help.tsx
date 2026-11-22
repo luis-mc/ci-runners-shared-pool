@@ -23,6 +23,9 @@ import {
   PictureSlots,
   PictureTray,
   HelpQuestionCard,
+  SideMenu,
+  Table,
+  type Column,
   Text,
   TextLink,
 } from '@crsp/ui';
@@ -30,7 +33,17 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Load } from '../common';
 import { useMachines } from '../../api/machines';
-import { boxOf, CARDS, HELP_WORDS, PART_CARD } from './helpContent';
+import {
+  boxOf,
+  CARDS,
+  HELP_WORDS,
+  PART_CARD,
+  TOPICS,
+  WHERE_AREAS,
+  WHERE_TABS,
+} from './helpContent';
+import { WithOverview } from '../pool/OverviewState';
+import { needsYou, startsAbout, waitWords } from '../pool/poolWords';
 import { JobPathPicture } from './JobPathPicture';
 import { useHelpData, type HelpData } from './useHelpData';
 
@@ -42,7 +55,7 @@ function MachineNumbers({ kind }: { kind: 'slots' | 'budget' }) {
       {(data) =>
         data.items.length === 0 ? (
           <Text tone="muted">
-            No machine yet. <TextLink to="/pool/machines/add">Add a machine</TextLink> to
+            No machine yet. <TextLink to="/setup/machines/add">Add a machine</TextLink> to
             see its {kind === 'slots' ? 'slots' : 'load budget'}.
           </Text>
         ) : data.items.length === 1 ? null : (
@@ -67,17 +80,17 @@ function extra(id: string): ReactNode {
       return (
         <>
           <MachineNumbers kind="slots" />
-          <TextLink to="/pool/size">Open Pool size</TextLink>
+          <TextLink to="/setup/size">Open Pool size</TextLink>
         </>
       );
     case 'q-budget':
       return <MachineNumbers kind="budget" />;
     case 'q-waiting':
-      return <TextLink to="/jobs">Open Jobs</TextLink>;
+      return <TextLink to="/pool/queue">Open Queue Analysis</TextLink>;
     case 'q-doctor':
       return <TextLink to="/doctor">Open the Doctor</TextLink>;
     case 'q-images':
-      return <TextLink to="/pool/images">Open Images and caches</TextLink>;
+      return <TextLink to="/setup/images">Open Images and caches</TextLink>;
     default:
       return null;
   }
@@ -136,7 +149,7 @@ function picture(id: string, d: HelpData): ReactNode {
   }
 }
 
-export function HelpScreen() {
+function StartHere() {
   const { hash } = useLocation();
   const data = useHelpData();
   const [lit, setLit] = useState<string[] | undefined>(undefined);
@@ -153,8 +166,7 @@ export function HelpScreen() {
   }, [hash]);
 
   return (
-    <Page>
-      <PageHeader title="Help" lead={HELP_WORDS.lead} />
+    <>
       <Pane title="How a job gets run">
         <JobPathPicture
           lit={lit}
@@ -190,6 +202,96 @@ export function HelpScreen() {
           ))}
         </CardGrid>
       </Pane>
+    </>
+  );
+}
+
+type Area = (typeof WHERE_AREAS)[number];
+type Tab = (typeof WHERE_TABS)[number];
+
+const areaColumns: Column<Area>[] = [
+  { id: 'name', header: 'Part', cell: (a) => <TextLink to={a.to}>{a.name}</TextLink> },
+  { id: 'line', header: 'What it is for', cell: (a) => a.line, kind: 'grow', grow: 3 },
+];
+const tabColumns: Column<Tab>[] = [
+  { id: 'section', header: 'Part', cell: (t) => t.section },
+  { id: 'tab', header: 'Tab', cell: (t) => <TextLink to={t.to}>{t.tab}</TextLink> },
+  { id: 'line', header: 'Use it to', cell: (t) => t.line, kind: 'grow', grow: 3 },
+];
+
+function WhereThingsAre() {
+  return (
+    <>
+      <Text>{HELP_WORDS.whereLead}</Text>
+      <Table
+        caption="The parts of the console"
+        columns={areaColumns}
+        rows={WHERE_AREAS}
+        rowKey={(a) => a.name}
+      />
+      <Table
+        caption="Setup and Pool tabs"
+        columns={tabColumns}
+        rows={WHERE_TABS}
+        rowKey={(t) => `${t.section}-${t.tab}`}
+      />
+    </>
+  );
+}
+
+/** Option F: the guide reads the pool as it is now. */
+function ReadingQueue() {
+  return (
+    <>
+      <Text>{HELP_WORDS.queueLead}</Text>
+      <Pane title="In your pool right now">
+        <WithOverview>
+          {(o, readAt) => {
+            const first = [...(o.queued ?? [])].sort(
+              (a, b) => (a.queue_position ?? 1e9) - (b.queue_position ?? 1e9),
+            )[0];
+            return first ? (
+              <Facts
+                items={[
+                  {
+                    name: 'Next to start',
+                    value: `${first.job_name} ${first.repository}`,
+                  },
+                  { name: 'Why it waits', value: waitWords(first) },
+                  {
+                    name: 'Start',
+                    value: needsYou(first)
+                      ? 'Does not start by itself'
+                      : startsAbout(first.queue_eta, readAt),
+                  },
+                ]}
+              />
+            ) : (
+              <Text tone="muted">Nothing is waiting. Every job has a slot.</Text>
+            );
+          }}
+        </WithOverview>
+        <TextLink to="/pool/queue">See it live in Pool &gt; Queue Analysis</TextLink>
+      </Pane>
+    </>
+  );
+}
+
+export function HelpScreen() {
+  const { pathname } = useLocation();
+  const topic = pathname.replace(/\/+$/, '').split('/')[2];
+  return (
+    <Page>
+      <PageHeader title="Help" lead={HELP_WORDS.lead} />
+      <SideMenu label="Help topics" items={TOPICS}>
+        {topic === 'where' ? (
+          <WhereThingsAre />
+        ) : topic === 'queue' ? (
+          <ReadingQueue />
+        ) : (
+          <StartHere />
+        )}
+      </SideMenu>
     </Page>
   );
 }

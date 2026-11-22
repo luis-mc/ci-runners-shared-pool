@@ -151,7 +151,7 @@ func findings(r Repo, results []Result, over map[string]int) []insights.Finding 
 
 func title(c CheckID, repo string, n int) string {
 	what := map[CheckID]string{
-		CheckTimeout:       "without timeout-minutes or over 30",
+		CheckTimeout:       "without timeout-minutes or over 60",
 		CheckRetry:         "that retry tests",
 		CheckMatrixAxis:    "with a matrix that grew",
 		CheckStepOrder:     "that run lint or type checks too late",

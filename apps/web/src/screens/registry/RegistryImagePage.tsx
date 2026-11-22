@@ -58,7 +58,7 @@ export function RegistryImagePage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/images?tab=registry', label: '‹ Registry' },
+          { to: '/setup/images?tab=registry', label: '‹ Registry' },
           { label: 'Image' },
         ]}
       />
@@ -77,7 +77,7 @@ function ImageBody({ image }: { image: Image }) {
   const inUse = image.in_use === true;
   const word = stateOf(image, { inUse });
   const path = { params: { path: { registryImageId: image.id } } };
-  const backToList = () => void navigate('/pool/images?tab=registry');
+  const backToList = () => void navigate('/setup/images?tab=registry');
   const { ask, probe } = useAskFirst({
     // An image a runner uses is refused with `conflict` and the job named: the question card opens all the same and
     // names the job it waits for, and stays open (UX-73).
@@ -111,7 +111,7 @@ function ImageBody({ image }: { image: Image }) {
         body: { new_image_id: image.id },
       }),
     );
-    void navigate(`/pool/images/registry/${image.id}/replace?plan=${plan.id}`);
+    void navigate(`/setup/images/registry/${image.id}/replace?plan=${plan.id}`);
   });
   const lineage = image.lineage.filter((l) => l.image_id !== image.id);
   const relation = (l: Lineage) =>
@@ -287,7 +287,7 @@ function ImageBody({ image }: { image: Image }) {
               oneLine
               action={{
                 label: 'Open',
-                to: (l) => `/pool/images/registry/${l.image_id}`,
+                to: (l) => `/setup/images/registry/${l.image_id}`,
                 name: (l) => `${relation(l)} ${shortKey(l.key)}`,
               }}
             />
@@ -413,12 +413,12 @@ function ImageBody({ image }: { image: Image }) {
         <ActionBar
           status="Nothing changes until you confirm."
           secondary={
-            <LinkButton to="/pool/images?tab=registry">Open the registry</LinkButton>
+            <LinkButton to="/setup/images?tab=registry">Open the registry</LinkButton>
           }
           primary={
             <Button
               kind="primary"
-              onPress={() => void navigate(`/pool/images/registry/${image.id}/replace`)}
+              onPress={() => void navigate(`/setup/images/registry/${image.id}/replace`)}
             >
               Review the replacement
             </Button>
@@ -428,7 +428,7 @@ function ImageBody({ image }: { image: Image }) {
         <ActionBar
           status="Nothing changes until you confirm."
           secondary={
-            <LinkButton to="/pool/images?tab=registry">Open the registry</LinkButton>
+            <LinkButton to="/setup/images?tab=registry">Open the registry</LinkButton>
           }
           primary={
             <Button

@@ -1,4 +1,4 @@
-// Settings > Console > Network, and the dialog the Needs-you box of Access for CI opens (operations R5.90).
+// Settings > Console > Network, and the dialog that chooses the console address (operations R5.90).
 // The owner chooses the address the controller listens on in the console, never with a terminal. The choice is
 // kept and the controller restarts once through the drain path (running jobs finish first); the dialog waits and
 // says when the controller answers on the new address. Only shared parts of @crsp/ui are used (UX-9, UX-13,

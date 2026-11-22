@@ -53,11 +53,14 @@ func (t *TrialVars) Repository(ctx context.Context, full string) (trial.Repo, er
 	return trial.Repo{FullName: r.FullName, Public: r.Visibility == "public"}, nil
 }
 
+// trialName says whether name is a canary variable: CRSP_RUNS_ON_CANARY_<JOB>,
+// or RUNS_ON_CANARY_<JOB> that an older version wrote, so a canary started
+// before the upgrade still stops cleanly.
 func trialName(name string) bool {
-	return strings.HasPrefix(name, trial.CanaryPrefix) && !inList(keptNames(), name)
+	return (strings.HasPrefix(name, trial.CanaryPrefix) || strings.HasPrefix(name, trial.LegacyCanaryPrefix)) && !inList(keptNames(), name)
 }
 
-// Variables implements trial.Variables: the RUNS_ON family set now.
+// Variables implements trial.Variables: the CRSP_RUNS_ON family set now.
 func (t *TrialVars) Variables(ctx context.Context, full string) (map[string]string, error) {
 	r, err := t.find(ctx, full)
 	if err != nil {
@@ -69,7 +72,7 @@ func (t *TrialVars) Variables(ctx context.Context, full string) (map[string]stri
 	}
 	out := map[string]string{}
 	for _, v := range have {
-		if strings.HasPrefix(v.Name, "RUNS_ON") || strings.HasPrefix(v.Name, "CI_RUNS_ON") {
+		if strings.HasPrefix(v.Name, "CRSP_RUNS_ON") || strings.HasPrefix(v.Name, "RUNS_ON") || strings.HasPrefix(v.Name, "CI_RUNS_ON") {
 			out[v.Name] = v.Value
 		}
 	}

@@ -235,7 +235,7 @@ describe('the ? beside a term (LOOK44)', () => {
   it('opens a short answer with a link to the Help card and closes with Escape', async () => {
     renderApp(
       withBudget().on('GET', '/api/v1/machines/:id', machine()),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     const ask = await screen.findByRole('button', { name: 'What does Slots mean?' });
     expect(ask.getAttribute('aria-expanded')).toBe('false');

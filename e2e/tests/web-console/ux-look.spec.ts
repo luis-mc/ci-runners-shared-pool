@@ -90,7 +90,7 @@ for (const [id, modes] of Object.entries(look)) {
     test(`look parity: ${id} ${mode}`, async ({ page }) => {
       await openRoute(
         page,
-        { url: '/pool/machines', signedOut: false },
+        { url: '/setup/machines', signedOut: false },
         { mode, themeName: id },
       );
       await page.evaluate(

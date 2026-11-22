@@ -11,22 +11,22 @@ import { registryApi } from './registry-fixtures';
 const WIDTHS = [360, 393, 1300] as const;
 
 const SCREENS: { name: string; path: string; h1: string }[] = [
-  { name: 'registry tab', path: '/pool/images?tab=registry', h1: 'Images and caches' },
-  { name: 'image page', path: '/pool/images/registry/img_docsv4', h1: 'Node web' },
-  { name: 'budgets', path: '/pool/images/registry/budgets', h1: 'Registry budgets' },
+  { name: 'registry tab', path: '/setup/images?tab=registry', h1: 'Images and caches' },
+  { name: 'image page', path: '/setup/images/registry/img_docsv4', h1: 'Node web' },
+  { name: 'budgets', path: '/setup/images/registry/budgets', h1: 'Registry budgets' },
   {
     name: 'mirror',
-    path: '/pool/images/registry/mirror',
+    path: '/setup/images/registry/mirror',
     h1: 'Mirror of upstream images',
   },
   {
     name: 'replace, compare',
-    path: '/pool/images/registry/img_docsv4/replace',
+    path: '/setup/images/registry/img_docsv4/replace',
     h1: 'Replace an image',
   },
   {
     name: 'replace, done after reload',
-    path: '/pool/images/registry/img_docsv4/replace?plan=plan_1',
+    path: '/setup/images/registry/img_docsv4/replace?plan=plan_1',
     h1: 'Replace an image',
   },
 ];
@@ -58,7 +58,7 @@ test('the registry answering 501 shows the failed state, not a blank page', asyn
     failure(501, 'not_implemented', 'Not built yet.'),
   );
   await mock.install(page);
-  await page.goto('/pool/images?tab=registry');
+  await page.goto('/setup/images?tab=registry');
   await expect(page.getByText('Could not load the registry.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible();
 });
@@ -66,7 +66,7 @@ test('the registry answering 501 shows the failed state, not a blank page', asyn
 // UX-4: the registry tab has one primary, the first recommendation that waits for the owner.
 test('the registry tab has one primary: the newer image', async ({ page }) => {
   await jobsAndDoctor(signedIn()).install(page);
-  await page.goto('/pool/images?tab=registry');
+  await page.goto('/setup/images?tab=registry');
   const bar = page.locator('.ds-action-bar');
   await expect(bar.getByRole('button', { name: 'Review the newer image' })).toBeVisible();
   await expect(bar.locator('[data-kind="primary"]')).toHaveCount(1);
@@ -76,7 +76,7 @@ test('the registry tab has one primary: the newer image', async ({ page }) => {
 // R5.40: a list never deletes.
 test('no row of the registry lists has a Delete button', async ({ page }) => {
   await jobsAndDoctor(signedIn()).install(page);
-  await page.goto('/pool/images?tab=registry');
+  await page.goto('/setup/images?tab=registry');
   await expect(
     page.getByRole('heading', { name: 'Images in the registry' }),
   ).toBeVisible();
@@ -86,7 +86,7 @@ test('no row of the registry lists has a Delete button', async ({ page }) => {
 // D18: an image a runner uses is never deleted; the question card stays open and names the job.
 test('the registry refuses to delete an image a runner uses', async ({ page }) => {
   await jobsAndDoctor(signedIn()).install(page);
-  await page.goto('/pool/images/registry/img_goold');
+  await page.goto('/setup/images/registry/img_goold');
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   const card = page.getByRole('dialog');
   await expect(card.getByText(/job 8133 of octo\/app/)).toBeVisible();
@@ -101,7 +101,7 @@ test('the registry deletes an unused image after a yes and goes back to the tab'
 }) => {
   const mock = jobsAndDoctor(signedIn());
   await mock.install(page);
-  await page.goto('/pool/images/registry/img_mobile');
+  await page.goto('/setup/images/registry/img_mobile');
   await page.getByRole('button', { name: 'Delete', exact: true }).click();
   const card = page.getByRole('dialog');
   await expect(card.getByText(/3\.9 GB freed/)).toBeVisible();
@@ -118,7 +118,7 @@ test('the replace wizard names both images, keeps the old one for N days and end
 }) => {
   const mock = registryApi(jobsAndDoctor(signedIn()));
   await mock.install(page);
-  await page.goto('/pool/images/registry/img_docsv4/replace');
+  await page.goto('/setup/images/registry/img_docsv4/replace');
   await expect(page.getByText('pnpm-lock.yaml')).toBeVisible();
   await expect(
     page.getByRole('button', { name: /^Keep the old image for/ }),
@@ -133,7 +133,7 @@ test('the replace wizard names both images, keeps the old one for N days and end
 // UX-104 style edit page: the budgets count their changes.
 test('the budgets page counts unsaved changes', async ({ page }) => {
   await jobsAndDoctor(signedIn()).install(page);
-  await page.goto('/pool/images/registry/budgets');
+  await page.goto('/setup/images/registry/budgets');
   await page.getByRole('button', { name: /^Custom images\s*15/ }).click();
   for (const key of ['2', '5'])
     await page.getByRole('button', { name: key, exact: true }).click();

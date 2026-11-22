@@ -113,7 +113,7 @@ func jobWord(n int) string {
 func fixText(id workflows.CheckID) string {
 	switch id {
 	case workflows.CheckTimeout:
-		return "Add `timeout-minutes: 30` or less to each job."
+		return "Add `timeout-minutes: 60` or less to each job."
 	case workflows.CheckRetry:
 		return "Remove the test retry and fix or quarantine the flaky test."
 	case workflows.CheckMatrixAxis:

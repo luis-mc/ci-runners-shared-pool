@@ -25,12 +25,14 @@ function Waiting({ heading, compact = false }: LaterOptions) {
 
 export function later<P extends object>(
   load: () => Promise<ComponentType<P>>,
-  options: LaterOptions,
+  options?: LaterOptions,
 ) {
   const Screen = lazy(() => load().then((component) => ({ default: component })));
   return function Later(props: P) {
     return (
-      <Suspense fallback={<Waiting {...options} />}>
+      <Suspense
+        fallback={options ? <Waiting {...options} /> : <Loading what="Loading" />}
+      >
         <Screen {...props} />
       </Suspense>
     );
