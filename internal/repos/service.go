@@ -24,7 +24,7 @@ type Config struct {
 	Audit     Auditor
 	Capacity  Capacity
 	// Sizes lists the machines with their pool size, for the size variables
-	// such as RUNS_ON_LINUX_LARGE (scheduling R5.67); nil writes none.
+	// such as CRSP_RUNS_ON_LINUX_LARGE (scheduling R5.67); nil writes none.
 	Sizes SizeCapacity
 	// SizeFloors is the owner's map of size name to floor; nil or empty means
 	// the size class table (DefaultSizeFloors).
@@ -522,9 +522,6 @@ func describePolicy(a, b Policy) string {
 	}
 	if strings.Join(a.ExtraPackages, ",") != strings.Join(b.ExtraPackages, ",") {
 		d = append(d, "extra packages "+strings.Join(b.ExtraPackages, ","))
-	}
-	if a.LegacyVars != b.LegacyVars {
-		d = append(d, fmt.Sprintf("old variable names %t to %t", a.LegacyVars, b.LegacyVars))
 	}
 	if a.HostedFallback != b.HostedFallback {
 		d = append(d, fmt.Sprintf("hosted fallback %t to %t", a.HostedFallback, b.HostedFallback))

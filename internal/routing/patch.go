@@ -10,8 +10,11 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/doctor/runson"
 )
 
-// RoutedJob is a job whose runs-on reads a pool variable (RUNS_ON_<OS>, or a
-// size variable such as RUNS_ON_LINUX_LARGE), or already a per-job variable.
+// RoutedJob is a job whose runs-on reads a pool variable (CRSP_RUNS_ON_<OS>, or a
+// size variable such as CRSP_RUNS_ON_LINUX_LARGE), or already a per-job variable.
+// A job that still reads a name older versions wrote (RUNS_ON_<OS>,
+// RUNS_ON_<OS>_<SIZE>) is routed too: Base is then the new name and OldBase is
+// set, so the patch rewrites it to the new name.
 type RoutedJob struct {
 	Path string
 	Key  string
@@ -19,13 +22,17 @@ type RoutedJob struct {
 	OS   string
 	// Base is the pool variable the job falls back to, "" when none.
 	Base string
+	// OldBase is true when the runs-on reads the old name of Base (RUNS_ON_<OS>).
+	OldBase bool
 	// PerJob is true when the runs-on already reads a CRSP_ variable first.
 	PerJob bool
 	// Default is the labels after the last ||, empty when the job has none.
 	Default []string
 }
 
-var sizeVarRE = regexp.MustCompile(`^RUNS_ON_(LINUX|WINDOWS|MACOS)(_[A-Z][A-Z0-9]*)?$`)
+// sizeVarRE is a pool variable: CRSP_RUNS_ON_<OS> or CRSP_RUNS_ON_<OS>_<SIZE>,
+// or the same without CRSP_, the name older versions wrote (CRSP229).
+var sizeVarRE = regexp.MustCompile(`^(CRSP_)?RUNS_ON_(LINUX|WINDOWS|MACOS)(_[A-Z][A-Z0-9]*)?$`)
 
 // Routed reads the routed jobs of a set of workflow files, sorted by path and
 // line. A job with literal labels, a matrix value or no variable is not routed.
@@ -52,7 +59,7 @@ func Routed(files map[string][]byte) []RoutedJob {
 			}
 			for _, v := range chain {
 				if m := sizeVarRE.FindStringSubmatch(v); m != nil {
-					rj.OS, rj.Base = strings.ToLower(m[1]), v
+					rj.OS, rj.Base, rj.OldBase = strings.ToLower(m[2]), PoolVarPrefix+m[2]+m[3], m[1] == ""
 				} else if IsJobVar(v) {
 					rj.PerJob = true
 				}
@@ -96,7 +103,7 @@ func (p Patch) Empty() bool { return len(p.Files) == 0 }
 
 var hostedFor = map[string]string{"linux": "ubuntu-latest", "windows": "windows-latest", "macos": "macos-latest"}
 
-// Expression is the per-job runs-on: fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '"ubuntu-latest"').
+// Expression is the per-job runs-on: fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"').
 // A default the job already had stays the last fallback.
 func Expression(varName, base, os string, def []string) string {
 	last := `'"` + hostedFor[os] + `"'`
@@ -146,7 +153,7 @@ func MakePatch(files map[string][]byte) Patch {
 		lines := strings.Split(string(old), "\n")
 		fp := FilePatch{Path: p, Old: old}
 		for _, r := range byPath[p] {
-			if r.PerJob {
+			if r.PerJob && !r.OldBase {
 				continue
 			}
 			if r.Line < 1 || r.Line > len(lines) {

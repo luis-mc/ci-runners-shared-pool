@@ -27,7 +27,7 @@ func runnerAccepts(runnerLabels, runsOn []string) bool {
 func linuxList(t *testing.T, e *env, repo string) []string {
 	t.Helper()
 	var v string
-	e.fake.Lock(func() { v = e.fake.Variables[repo]["RUNS_ON_LINUX"] })
+	e.fake.Lock(func() { v = e.fake.Variables[repo]["CRSP_RUNS_ON_LINUX"] })
 	var out []string
 	if err := json.Unmarshal([]byte(v), &out); err != nil {
 		t.Fatalf("variable %q: %v", v, err)

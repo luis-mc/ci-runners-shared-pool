@@ -76,7 +76,7 @@ const steps = (stopped: boolean) => [
   {
     id: 's2',
     action: 'write_variable',
-    text: 'Write RUNS_ON_LINUX',
+    text: 'Write CRSP_RUNS_ON_LINUX',
     needs_yes: false,
     state: stopped ? 'skipped' : 'planned',
   },

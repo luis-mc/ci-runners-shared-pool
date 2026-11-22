@@ -40,34 +40,24 @@ func (s *Service) migrateLightVariable(ctx context.Context, actor auth.Principal
 	if !ok {
 		return nil
 	}
-	if got != LightValue {
-		managed, err := s.lightVariableManaged(ctx, r.ID)
-		if err != nil || !managed || sameLabels(got, target) {
-			return err
-		}
+	managed, err := s.managed(ctx, r.ID, VarLight)
+	if err != nil {
+		return err
+	}
+	if got != LightValue && (!managed || sameLabels(got, target)) {
+		return nil
 	}
 	if err := s.cfg.GitHub.SetVariable(ctx, r.InstallationID, r.Owner, r.Name, github.Variable{Name: VarLight, Value: target}); err != nil {
 		return err
 	}
-	if err := s.recordVariable(ctx, r.ID, VarLight, target, VarOK, true); err != nil {
-		return err
+	// A copy the store does not list stays unlisted, so the upgrade to the
+	// CRSP_RUNS_ON_* names (CRSP229) never deletes it.
+	if managed {
+		if err := s.recordVariable(ctx, r.ID, VarLight, target, VarOK, true); err != nil {
+			return err
+		}
 	}
 	s.cfg.Audit.Audit(ctx, actor, "variable.migrated", "repository", r.FullName,
 		VarLight+" pointed at the removed light runner label; set to "+target)
 	return nil
-}
-
-// lightVariableManaged says whether the store lists RUNS_ON_LIGHT as written by
-// the controller.
-func (s *Service) lightVariableManaged(ctx context.Context, repoID int64) (bool, error) {
-	rows, err := s.cfg.Store.ListManagedVariables(ctx, repoID)
-	if err != nil {
-		return false, err
-	}
-	for _, row := range rows {
-		if row.Name == VarLight {
-			return true, nil
-		}
-	}
-	return false, nil
 }

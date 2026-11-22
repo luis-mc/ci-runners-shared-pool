@@ -124,7 +124,17 @@ func (s *Service) OnPush(ctx context.Context, r Repo, ref, sha string) (Result, 
 	return s.Sync(ctx, r, sha)
 }
 
-func osVar(os string) string { return "RUNS_ON_" + strings.ToUpper(os) }
+func osVar(os string) string { return PoolVarPrefix + strings.ToUpper(os) }
+
+// poolValue is the value of the pool variable of an OS; while an upgrade has
+// not written CRSP_RUNS_ON_<OS> yet, the name older versions wrote
+// (RUNS_ON_<OS>) stands in.
+func poolValue(have map[string]string, os string) string {
+	if v, ok := have[osVar(os)]; ok {
+		return v
+	}
+	return have[strings.TrimPrefix(osVar(os), VarPrefix)]
+}
 
 func sameList(a, b []string) bool {
 	if len(a) != len(b) {
@@ -212,7 +222,7 @@ func (s *Service) Sync(ctx context.Context, r Repo, sha string) (Result, error) 
 		}
 		b, ok := base[j.OS]
 		if !ok {
-			b = StripLabels(parseList(have[osVar(j.OS)]))
+			b = StripLabels(parseList(poolValue(have, j.OS)))
 			base[j.OS] = b
 		}
 		if !hasSelfHosted(b) {
@@ -263,6 +273,9 @@ func (s *Service) Sync(ctx context.Context, r Repo, sha string) (Result, error) 
 		for _, p := range prev.Jobs {
 			if _, ok := next[p.Key]; ok {
 				continue
+			}
+			if IsPoolVar(p.Var) {
+				continue // a pool variable is never a stale per-job one
 			}
 			if _, exists := have[p.Var]; exists {
 				if err := s.wait(ctx); err != nil {
@@ -603,7 +616,7 @@ const (
 func prBody(p Patch) string {
 	var b strings.Builder
 	b.WriteString("crsp gives each job its own routing label and repository variable, so it can place the job on a runner of the right size.\n\n")
-	b.WriteString("Each routed `runs-on` now reads the variable of its job first, then `RUNS_ON_<OS>`, then a hosted label, so a job with no variable yet runs as before:\n\n")
+	b.WriteString("Each routed `runs-on` now reads the variable of its job first, then `CRSP_RUNS_ON_<OS>`, then a hosted label, so a job with no variable yet runs as before:\n\n")
 	for _, f := range p.Files {
 		for _, c := range f.Changes {
 			fmt.Fprintf(&b, "- `%s` job `%s` (line %d)\n", f.Path, c.Job, c.Line)

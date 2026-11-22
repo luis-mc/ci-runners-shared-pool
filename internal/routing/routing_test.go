@@ -111,3 +111,33 @@ func TestThrottleSpacesWrites(t *testing.T) {
 		t.Fatalf("hold ignored: %v", slept)
 	}
 }
+
+// CRSP229: CRSP_RUNS_ON_ is the reserved pool prefix. A job whose name would
+// fall under it gets CRSP_JOB_<NAME>_<hash>, and IsJobVar is false for every
+// pool variable, the canary ones included.
+func TestVarNamesReservePoolPrefix(t *testing.T) {
+	got := routing.VarNames([]string{"runs-on-linux", "runs_on_canary_build", "e2e"})
+	if got["e2e"] != "CRSP_E2E" {
+		t.Fatalf("names %v", got)
+	}
+	for _, k := range []string{"runs-on-linux", "runs_on_canary_build"} {
+		n := got[k]
+		if routing.IsPoolVar(n) || !routing.IsJobVar(n) || !strings.HasPrefix(n, routing.JobVarPrefix) {
+			t.Fatalf("%s took %s", k, n)
+		}
+	}
+	if !strings.HasPrefix(got["runs-on-linux"], "CRSP_JOB_RUNS_ON_LINUX_") || len(got["runs-on-linux"]) != len("CRSP_JOB_RUNS_ON_LINUX_")+4 {
+		t.Fatalf("name %s", got["runs-on-linux"])
+	}
+	if again := routing.VarNames([]string{"e2e", "runs-on-linux"}); again["runs-on-linux"] != got["runs-on-linux"] {
+		t.Fatalf("name depends on the other keys: %s %s", again["runs-on-linux"], got["runs-on-linux"])
+	}
+	for _, n := range []string{"CRSP_RUNS_ON_LINUX", "CRSP_RUNS_ON_LINUX_LARGE", "CRSP_RUNS_ON_CANARY_BUILD"} {
+		if !routing.IsPoolVar(n) || routing.IsJobVar(n) {
+			t.Fatalf("%s is a pool variable", n)
+		}
+	}
+	if routing.IsPoolVar("RUNS_ON_LINUX") || routing.IsJobVar("RUNS_ON_LINUX") || !routing.IsJobVar("CRSP_E2E") {
+		t.Fatal("IsPoolVar and IsJobVar")
+	}
+}

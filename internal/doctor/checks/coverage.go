@@ -89,7 +89,7 @@ func CapabilitiesFromWorkflow(file string, content []byte, vars map[string]strin
 			n.OS = osOfLabels(labels)
 		case rj.Kind == runson.Variable:
 			n.OS = osOfVariable(rj.Var)
-			for _, v := range rj.Vars { // fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || ...)
+			for _, v := range rj.Vars { // fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || ...)
 				if n.OS == "" {
 					n.OS = osOfVariable(v)
 				}
@@ -174,18 +174,14 @@ func osOfLabels(labels []string) string {
 	return ""
 }
 
-// osOfVariable knows RUNS_ON_<OS> and the old names of github-integration R5.39.
+// osOfVariable knows CRSP_RUNS_ON_<OS> and RUNS_ON_<OS>, the name older
+// versions wrote (CRSP229). CI_RUNS_ON and CI_RUNS_ON_WINDOWS are not crsp's:
+// the legacy_vars setting that wrote them is gone (github-integration R5.39).
 func osOfVariable(name string) string {
 	if os := runson.OSOfVariable(name); os != "" {
 		return os
 	}
-	switch name {
-	case "CI_RUNS_ON":
-		return "linux"
-	case "CI_RUNS_ON_WINDOWS":
-		return "windows"
-	}
-	return ""
+	return runson.OSOfVariable("CRSP_" + name)
 }
 
 func coverageSubject(r doctor.Repository, os string) doctor.Subject {
@@ -274,7 +270,7 @@ func coverageRows(r doctor.Repository, jobs []JobNeeds) []doctor.Finding {
 		out = append(out, doctor.Finding{Check: "repo.coverage", Subject: repoSubject(r), Severity: doctor.Info,
 			Title:  "not checked",
 			Detail: "The doctor cannot tell what these jobs need: " + strings.Join(unknown, ", ") + ".",
-			Fix:    doctor.Fix{Text: "Write runs-on with a variable (fromJSON(vars.RUNS_ON_<OS>)) or labels so the job can be read."}})
+			Fix:    doctor.Fix{Text: "Write runs-on with a variable (fromJSON(vars.CRSP_RUNS_ON_<OS>)) or labels so the job can be read."}})
 	}
 	return out
 }

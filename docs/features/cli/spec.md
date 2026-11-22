@@ -405,4 +405,4 @@ Source: packages/contract/oapi-codegen-client.yaml
 
 Tests: internal/cli/*_test.go, internal/cli/contexts/contexts_test.go, internal/cli/output/output_test.go.
 
-Controller wiring note (CRSP127): `cmd/crsp` treats a Windows machine whose engine runs Linux containers, with the container backend allowed, as serving Linux for container runner hosts and for `RUNS_ON_LINUX` (runners R5.47). No command or flag changed.
+Controller wiring note (CRSP127): `cmd/crsp` treats a Windows machine whose engine runs Linux containers, with the container backend allowed, as serving Linux for container runner hosts and for `CRSP_RUNS_ON_LINUX` (runners R5.47). No command or flag changed.

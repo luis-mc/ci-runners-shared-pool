@@ -19,16 +19,16 @@ func TestDesiredVariables(t *testing.T) { // R5.28
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(got) != 2 || got["RUNS_ON_LINUX"] != `["self-hosted","linux","x64","crsp-home"]` ||
-		got["RUNS_ON_WINDOWS"] != `["self-hosted","windows","x64","crsp-home"]` {
+	if len(got) != 2 || got["CRSP_RUNS_ON_LINUX"] != `["self-hosted","linux","x64","crsp-home"]` ||
+		got["CRSP_RUNS_ON_WINDOWS"] != `["self-hosted","windows","x64","crsp-home"]` {
 		t.Fatalf("%v", got)
 	}
-	if _, ok := got["RUNS_ON_MACOS"]; ok {
+	if _, ok := got["CRSP_RUNS_ON_MACOS"]; ok {
 		t.Fatal("no variable for an OS no machine serves")
 	}
 	// The policy enables only the OS it names.
 	got, _ = e.svc.Desired(ctx, Policy{Labels: []string{"windows", "gpu"}})
-	if len(got) != 1 || got["RUNS_ON_WINDOWS"] != `["self-hosted","windows","x64","crsp-home","gpu"]` {
+	if len(got) != 1 || got["CRSP_RUNS_ON_WINDOWS"] != `["self-hosted","windows","x64","crsp-home","gpu"]` {
 		t.Fatalf("%v", got)
 	}
 	// Policy that names an OS no machine serves: nothing to write.
@@ -50,7 +50,7 @@ func TestVariableDriftRestoredAndAudited(t *testing.T) { // R5.28
 	e.world()
 	e.turnOn(101)
 	ctx := context.Background()
-	good, _ := e.fake.Variable("alice/secret", "RUNS_ON_LINUX")
+	good, _ := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX")
 
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
@@ -60,11 +60,11 @@ func TestVariableDriftRestoredAndAudited(t *testing.T) { // R5.28
 	}
 	writes := e.fake.Count("PATCH", "/repos/alice/secret/actions/variables")
 
-	e.fake.SetVariable("alice/secret", "RUNS_ON_LINUX", `["ubuntu-latest"]`) // changed outside the product
+	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX", `["ubuntu-latest"]`) // changed outside the product
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := e.fake.Variable("alice/secret", "RUNS_ON_LINUX"); v != good {
+	if v, _ := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); v != good {
 		t.Fatalf("restored: %s", v)
 	}
 	if e.fake.Count("PATCH", "/repos/alice/secret/actions/variables") != writes+1 {
@@ -100,11 +100,11 @@ func TestMissingVariableRestored(t *testing.T) { // R5.28
 	e.world()
 	e.turnOn(101)
 	ctx := context.Background()
-	e.fake.Lock(func() { delete(e.fake.Variables["alice/secret"], "RUNS_ON_LINUX") })
+	e.fake.Lock(func() { delete(e.fake.Variables["alice/secret"], "CRSP_RUNS_ON_LINUX") })
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX"); !ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); !ok {
 		t.Fatal("deleted outside the product: written back")
 	}
 	if mv, _ := e.store.ListManagedVariables(ctx, 101); mv[0].Status != VarMissing {
@@ -131,13 +131,13 @@ func TestReconcileAllStopsAtRateLimit(t *testing.T) { // R6.6
 	e.fake.Lock(func() { e.fake.RateRemaining = 100 })
 	// One user-driven call records the low budget.
 	_, _ = e.gh.ListVariables(context.Background(), 10, "alice", "web")
-	e.fake.SetVariable("alice/web", "RUNS_ON_LINUX", "[]")
+	e.fake.SetVariable("alice/web", "CRSP_RUNS_ON_LINUX", "[]")
 	err := e.svc.ReconcileAllVariables(context.Background())
 	var rl *github.RateLimitError
 	if !errors.As(err, &rl) {
 		t.Fatalf("background work stops past half the limit: %v", err)
 	}
-	if v, _ := e.fake.Variable("alice/web", "RUNS_ON_LINUX"); v != "[]" {
+	if v, _ := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX"); v != "[]" {
 		t.Fatal("no write while the budget is spent")
 	}
 	e.advance(3 * time.Hour)
@@ -145,7 +145,7 @@ func TestReconcileAllStopsAtRateLimit(t *testing.T) { // R6.6
 	if err := e.svc.ReconcileAllVariables(context.Background()); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := e.fake.Variable("alice/web", "RUNS_ON_LINUX"); v == "[]" {
+	if v, _ := e.fake.Variable("alice/web", "CRSP_RUNS_ON_LINUX"); v == "[]" {
 		t.Fatal("restored after the reset")
 	}
 }
@@ -159,7 +159,7 @@ func TestVariableSetAndDeletedPerOS(t *testing.T) { // R5.28
 	e.world()
 	e.cap.m = map[string][]string{"Linux": {"X64"}}
 	e.turnOn(101)
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("one runner OS, one variable: %s", got)
 	}
 	ctx := context.Background()
@@ -169,7 +169,7 @@ func TestVariableSetAndDeletedPerOS(t *testing.T) { // R5.28
 	if err := e.svc.RunnersChanged(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX,RUNS_ON_WINDOWS" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX,CRSP_RUNS_ON_WINDOWS" {
 		t.Fatalf("runner added: %s", got)
 	}
 	// The last Linux runner goes: its variable is deleted, not left unset-looking.
@@ -181,10 +181,10 @@ func TestVariableSetAndDeletedPerOS(t *testing.T) { // R5.28
 		}
 		e.advance(DeleteHold)
 	}
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_WINDOWS" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_WINDOWS" {
 		t.Fatalf("runner removed: %s", got)
 	}
-	if mv, _ := e.store.ListManagedVariables(ctx, 101); len(mv) != 1 || mv[0].Name != "RUNS_ON_WINDOWS" {
+	if mv, _ := e.store.ListManagedVariables(ctx, 101); len(mv) != 1 || mv[0].Name != "CRSP_RUNS_ON_WINDOWS" {
 		t.Fatalf("the store forgets a deleted variable: %+v", mv)
 	}
 	if !e.audit.has("variable.deleted") {
@@ -208,21 +208,21 @@ func TestVariableDeletedWhenPoolTurnedOffForAnOS(t *testing.T) { // R5.28
 	e.world()
 	e.cap.m = map[string][]string{"Linux": {"X64"}, "Windows": {"X64"}}
 	e.turnOn(101)
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX,RUNS_ON_WINDOWS" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX,CRSP_RUNS_ON_WINDOWS" {
 		t.Fatalf("%s", got)
 	}
 	// The policy now enables Windows only: the pool is off for Linux.
 	if _, err := e.svc.UpdatePolicy(context.Background(), adminP, 101, PolicyUpdate{Labels: sp("windows")}); err != nil {
 		t.Fatal(err)
 	}
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_WINDOWS" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_WINDOWS" {
 		t.Fatalf("pool off for Linux: %s", got)
 	}
 	// Back to every OS: the variable returns.
 	if _, err := e.svc.UpdatePolicy(context.Background(), adminP, 101, PolicyUpdate{Labels: sp()}); err != nil {
 		t.Fatal(err)
 	}
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX,RUNS_ON_WINDOWS" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX,CRSP_RUNS_ON_WINDOWS" {
 		t.Fatalf("pool on again: %s", got)
 	}
 }
@@ -250,32 +250,75 @@ func TestVariablesDeletedWhenPoolOff(t *testing.T) { // R5.28, R5.29
 	}
 }
 
-func TestLegacyVariablesMigrated(t *testing.T) { // R5.28 (CRSP25)
+// CRSP229: the names older versions wrote (RUNS_ON_<OS>, RUNS_ON_LIGHT,
+// RUNS_ON_<OS>_<SIZE>, CI_RUNS_ON, CI_RUNS_ON_WINDOWS) are deleted only where
+// the store lists them as written by crsp, and only after the new
+// CRSP_RUNS_ON_* names are written. A name crsp never wrote, a repository with
+// the pool off and NIGHTLY_RUNS_ON are left alone.
+func TestLegacyVariablesMigrated(t *testing.T) { // R5.28
 	e := newEnv(t)
 	e.world()
+	e.cap.m = map[string][]string{"Linux": {"X64"}, "Windows": {"X64"}}
 	ctx := context.Background()
-	// An older version wrote CRSP_RUNS_ON_LINUX and recorded it; the user also
-	// has a variable of their own with a similar name that crsp never wrote.
-	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX", `["self-hosted","Linux"]`)
-	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_WINDOWS", `["mine"]`)
-	_ = e.store.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 101, Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","Linux"]`, Status: VarOK})
 	e.turnOn(101)
-	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_WINDOWS,RUNS_ON_LINUX" {
-		t.Fatalf("old name deleted, new written, foreign one kept: %s", got)
+	// An older version wrote these and recorded them.
+	for _, n := range []string{"RUNS_ON_LINUX", "RUNS_ON_LIGHT", "RUNS_ON_LINUX_LARGE", "CI_RUNS_ON", "CI_RUNS_ON_WINDOWS"} {
+		e.fake.SetVariable("alice/secret", n, `["self-hosted","linux"]`)
+		_ = e.store.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 101, Name: n, Value: `["self-hosted","linux"]`, Status: VarOK})
+	}
+	// The user's own: same old shape, never recorded as crsp's.
+	e.fake.SetVariable("alice/secret", "RUNS_ON_WINDOWS", `["mine"]`)
+	e.fake.SetVariable("alice/secret", "NIGHTLY_RUNS_ON", `["mine"]`)
+	// The new names are deleted first: the old ones must wait for them.
+	e.fake.Lock(func() {
+		delete(e.fake.Variables["alice/secret"], "CRSP_RUNS_ON_LINUX")
+		delete(e.fake.Variables["alice/secret"], "CRSP_RUNS_ON_WINDOWS")
+	})
+	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
+		t.Fatal(err)
+	}
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX,CRSP_RUNS_ON_WINDOWS,NIGHTLY_RUNS_ON,RUNS_ON_WINDOWS" {
+		t.Fatalf("old names deleted, new written, foreign ones kept: %s", got)
 	}
 	mv, _ := e.store.ListManagedVariables(ctx, 101)
-	if len(mv) != 1 || mv[0].Name != "RUNS_ON_LINUX" {
-		t.Fatalf("%+v", mv)
+	for _, v := range mv {
+		if !strings.HasPrefix(v.Name, "CRSP_RUNS_ON_") {
+			t.Fatalf("store still lists %s", v.Name)
+		}
+	}
+	// A second pass finds nothing to do.
+	deletes := e.fake.Count("DELETE", "/repos/alice/secret/actions/variables")
+	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
+		t.Fatal(err)
+	}
+	if e.fake.Count("DELETE", "/repos/alice/secret/actions/variables") != deletes {
+		t.Fatal("a second pass deleted again")
 	}
 
-	// The upgrade also reaches a repository whose pool is off.
-	e.fake.SetVariable("alice/web", "CRSP_RUNS_ON_MACOS", `["self-hosted","macOS"]`)
-	_ = e.store.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 100, Name: "CRSP_RUNS_ON_MACOS", Value: "x", Status: VarOK})
+	// A repository whose pool is off writes nothing, so it keeps its old names
+	// until the pool is turned on again or off with a yes.
+	e.fake.SetVariable("alice/web", "RUNS_ON_MACOS", `["self-hosted","macos"]`)
+	_ = e.store.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 100, Name: "RUNS_ON_MACOS", Value: "x", Status: VarOK})
 	if err := e.svc.ReconcileAllVariables(ctx); err != nil {
 		t.Fatal(err)
 	}
-	if got := varNames(e, "alice/web"); got != "" {
+	if got := varNames(e, "alice/web"); got != "RUNS_ON_MACOS" {
 		t.Fatalf("pool-off repository: %s", got)
+	}
+}
+
+// CRSP229: turning the pool on writes the new name before it deletes the old
+// one, so a workflow never finds neither.
+func TestLegacyVariableGoesAfterItsNewNameOnPoolOn(t *testing.T) { // R5.28
+	e := newEnv(t)
+	e.world()
+	e.cap.m = map[string][]string{"Linux": {"X64"}}
+	ctx := context.Background()
+	e.fake.SetVariable("alice/secret", "RUNS_ON_LINUX", `["self-hosted","linux"]`)
+	_ = e.store.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 101, Name: "RUNS_ON_LINUX", Value: `["self-hosted","linux"]`, Status: VarOK})
+	e.turnOn(101)
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
+		t.Fatalf("pool on: %s", got)
 	}
 }
 
@@ -290,7 +333,7 @@ func TestLabelsCompareCaseInsensitively(t *testing.T) { // R5.28
 	e.world()
 	e.turnOn(101)
 	// Changed outside the product only in case: not drift, no write.
-	e.fake.SetVariable("alice/secret", "RUNS_ON_LINUX", `["Self-Hosted","LINUX","X64","docker","crsp-home"]`)
+	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX", `["Self-Hosted","LINUX","X64","docker","crsp-home"]`)
 	writes := e.fake.Count("PATCH", "/repos/alice/secret/actions/variables")
 	if err := e.svc.ReconcileVariables(context.Background(), 101); err != nil {
 		t.Fatal(err)
@@ -304,70 +347,54 @@ func TestLabelsCompareCaseInsensitively(t *testing.T) { // R5.28
 	// Labels are written lowercase whatever case the machine reports.
 	e.cap.m = map[string][]string{"Linux": {"X64", "Crsp-Home"}}
 	got, _ := e.svc.Desired(context.Background(), DefaultPolicy())
-	if got["RUNS_ON_LINUX"] != `["self-hosted","linux","x64","crsp-home"]` {
+	if got["CRSP_RUNS_ON_LINUX"] != `["self-hosted","linux","x64","crsp-home"]` {
 		t.Fatalf("%v", got)
 	}
 }
 
-// R5.39: legacy_vars writes the old names with the same labels, removes them
-// with the setting, and never touches a CI_RUNS_ON the controller did not write.
-func TestLegacyNamesWrittenAndRemovedWithSetting(t *testing.T) {
+// CRSP229 replaces the CRSP25 migration, which deleted CRSP_RUNS_ON_*: a
+// CRSP_RUNS_ON_* name the store lists (as a version before CRSP25 wrote it) is
+// now the current name, and neither the plan nor the reconcile deletes it.
+func TestPlanNeverDeletesCrspRunsOn(t *testing.T) { // R5.28
+	e := newEnv(t)
+	e.world()
+	e.cap.m = map[string][]string{"Linux": {"X64"}}
+	ctx := context.Background()
+	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX", `["self-hosted","Linux"]`)
+	_ = e.store.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 101, Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","Linux"]`, Status: VarOK})
+	plan := e.turnOn(101)
+	for _, st := range plan.Steps {
+		if st.Action == ActDeleteVariable {
+			t.Fatalf("the plan deletes %s", st.Target)
+		}
+	}
+	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
+		t.Fatal(err)
+	}
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
+		t.Fatalf("%s", got)
+	}
+	if n := e.fake.Count("DELETE", "/repos/alice/secret/actions/variables"); n != 0 {
+		t.Fatalf("%d deletes", n)
+	}
+}
+
+// R5.39 is removed (CRSP229): crsp no longer writes CI_RUNS_ON or
+// CI_RUNS_ON_WINDOWS, and never touches one the old pool wrote, nor
+// NIGHTLY_RUNS_ON.
+func TestOldDevStandardsNamesNotWritten(t *testing.T) {
 	e := newEnv(t)
 	e.world()
 	e.cap.m = map[string][]string{"Linux": {"X64"}, "Windows": {"X64"}}
 	ctx := context.Background()
 	e.turnOn(101)
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX,RUNS_ON_WINDOWS" {
-		t.Fatalf("off by default: %s", got)
-	}
-	// NIGHTLY_RUNS_ON is the owner's: never touched.
 	e.fake.SetVariable("alice/secret", "NIGHTLY_RUNS_ON", `["mine"]`)
-
-	on := true
-	if _, err := e.svc.UpdatePolicy(ctx, adminP, 101, PolicyUpdate{LegacyVars: &on}); err != nil {
-		t.Fatal(err)
-	}
-	if got := varNames(e, "alice/secret"); got != "CI_RUNS_ON,CI_RUNS_ON_WINDOWS,NIGHTLY_RUNS_ON,RUNS_ON_LINUX,RUNS_ON_WINDOWS" {
-		t.Fatalf("on: %s", got)
-	}
-	lin, _ := e.fake.Variable("alice/secret", "RUNS_ON_LINUX")
-	old, _ := e.fake.Variable("alice/secret", "CI_RUNS_ON")
-	win, _ := e.fake.Variable("alice/secret", "RUNS_ON_WINDOWS")
-	oldWin, _ := e.fake.Variable("alice/secret", "CI_RUNS_ON_WINDOWS")
-	if lin != old || win != oldWin || lin == "" {
-		t.Fatalf("same labels: %q %q %q %q", lin, old, win, oldWin)
-	}
-
-	// Drift in an old name is put back.
-	e.fake.SetVariable("alice/secret", "CI_RUNS_ON", `["x"]`)
-	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
-		t.Fatal(err)
-	}
-	if got, _ := e.fake.Variable("alice/secret", "CI_RUNS_ON"); got != lin {
-		t.Fatalf("restored: %q", got)
-	}
-
-	// The OS loses its policy: its old name goes with it (same rules as R5.28).
-	if _, err := e.svc.UpdatePolicy(ctx, adminP, 101, PolicyUpdate{Labels: sp("windows")}); err != nil {
-		t.Fatal(err)
-	}
-	if got := varNames(e, "alice/secret"); got != "CI_RUNS_ON_WINDOWS,NIGHTLY_RUNS_ON,RUNS_ON_WINDOWS" {
-		t.Fatalf("linux gone: %s", got)
-	}
-
-	// Setting off: the old names go, the new ones stay.
-	off := false
-	if _, err := e.svc.UpdatePolicy(ctx, adminP, 101, PolicyUpdate{Labels: sp(), LegacyVars: &off}); err != nil {
-		t.Fatal(err)
-	}
-	if got := varNames(e, "alice/secret"); got != "NIGHTLY_RUNS_ON,RUNS_ON_LINUX,RUNS_ON_WINDOWS" {
-		t.Fatalf("off: %s", got)
-	}
-
-	// An old name the old pool wrote (not in the store) is left alone.
 	e.fake.SetVariable("alice/secret", "CI_RUNS_ON", `["old-pool"]`)
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
+	}
+	if got := varNames(e, "alice/secret"); got != "CI_RUNS_ON,CRSP_RUNS_ON_LINUX,CRSP_RUNS_ON_WINDOWS,NIGHTLY_RUNS_ON" {
+		t.Fatalf("%s", got)
 	}
 	if got, _ := e.fake.Variable("alice/secret", "CI_RUNS_ON"); got != `["old-pool"]` {
 		t.Fatalf("not ours: %q", got)
@@ -379,7 +406,7 @@ func TestRestartWithNoFactsDeletesNothing(t *testing.T) { // R5.28
 	e.world()
 	e.turnOn(101)
 	ctx := context.Background()
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("setup: %s", got)
 	}
 	// Restart: a new service, no machine has reported yet, so no capacity.
@@ -393,7 +420,7 @@ func TestRestartWithNoFactsDeletesNothing(t *testing.T) { // R5.28
 		}
 		e.advance(CapacitySettle / 6)
 	}
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("deleted before capacity was known: %q", got)
 	}
 	// Facts arrive late: nothing was deleted, so nothing is restored.
@@ -404,7 +431,7 @@ func TestRestartWithNoFactsDeletesNothing(t *testing.T) { // R5.28
 	if e.audit.count("variable.deleted") != before || e.audit.has("variable.restored") {
 		t.Fatalf("a delete or restore happened: %v", e.audit.events)
 	}
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("after facts: %q", got)
 	}
 }
@@ -422,12 +449,12 @@ func TestRealLossDeletesOnlyAfterHold(t *testing.T) { // R5.28
 		}
 	}
 	sync() // first missing reading
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("one reading deleted: %q", got)
 	}
 	e.advance(DeleteHold - time.Minute)
 	sync()
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("deleted before the hold: %q", got)
 	}
 	// The OS comes back for one reading: the count starts again.
@@ -436,7 +463,7 @@ func TestRealLossDeletesOnlyAfterHold(t *testing.T) { // R5.28
 	e.cap.m = map[string][]string{}
 	e.advance(DeleteHold)
 	sync()
-	if got := varNames(e, "alice/secret"); got != "RUNS_ON_LINUX" {
+	if got := varNames(e, "alice/secret"); got != "CRSP_RUNS_ON_LINUX" {
 		t.Fatalf("a flap deleted: %q", got)
 	}
 	e.advance(DeleteHold)

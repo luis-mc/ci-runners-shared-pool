@@ -188,7 +188,7 @@ func ParseDefault(s string) ([]string, bool) {
 	return nil, false
 }
 
-// ParseLabelList reads a JSON list of strings, the form of a RUNS_ON_* variable.
+// ParseLabelList reads a JSON list of strings, the form of a CRSP_RUNS_ON_* variable.
 func ParseLabelList(v string) ([]string, bool) {
 	var l []string
 	if err := json.Unmarshal([]byte(v), &l); err != nil || len(l) == 0 {
@@ -260,21 +260,21 @@ func Carries(runner, need []string) bool {
 	return true
 }
 
-// OSOfVariable maps RUNS_ON_<OS> to the OS name, "" for any other name.
+// OSOfVariable maps CRSP_RUNS_ON_<OS> to the OS name, "" for any other name.
 func OSOfVariable(name string) string {
 	switch name {
-	case "RUNS_ON_LINUX":
+	case "CRSP_RUNS_ON_LINUX":
 		return "linux"
-	case "RUNS_ON_WINDOWS":
+	case "CRSP_RUNS_ON_WINDOWS":
 		return "windows"
-	case "RUNS_ON_MACOS":
+	case "CRSP_RUNS_ON_MACOS":
 		return "macos"
 	}
 	return ""
 }
 
 // VariableOfOS is the inverse of OSOfVariable.
-func VariableOfOS(os string) string { return "RUNS_ON_" + strings.ToUpper(os) }
+func VariableOfOS(os string) string { return "CRSP_RUNS_ON_" + strings.ToUpper(os) }
 
 // ParseChain reads ${{ fromJSON(vars.A || vars.B || 'default') }}: a chain of
 // one or more variables, then an optional default, inside the call or after it.

@@ -21,7 +21,7 @@ type RunsOnJob struct {
 	// Var names the variable of a fromJSON(vars.NAME) expression, if any.
 	Var string
 	// Vars holds every variable of a fallback chain, in order:
-	// fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '"ubuntu-latest"').
+	// fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"').
 	Vars []string
 	// Default holds the labels of `|| '[...]'` after the variable.
 	Default []string
@@ -143,9 +143,9 @@ func (r *RunsOnJob) fill(v string) {
 //
 //   - self-hosted labels that no runner of the pool carries: fail
 //     (no_runner_with_labels);
-//   - self-hosted labels written out instead of fromJSON(vars.RUNS_ON_<OS>):
+//   - self-hosted labels written out instead of fromJSON(vars.CRSP_RUNS_ON_<OS>):
 //     warning (not_generic);
-//   - a RUNS_ON_<OS> variable the workflow reads that is not set: fail
+//   - a CRSP_RUNS_ON_<OS> variable the workflow reads that is not set: fail
 //     (uses_variable).
 //
 // vars are the repository's variables as GitHub holds them; pool lists the
@@ -187,6 +187,9 @@ func Check(path string, jobs []RunsOnJob, vars map[string]string, pool [][]strin
 				if isPoolVar(j.Var) {
 					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar,
 						Text: "job " + j.Job + " reads " + j.Var + ", which is not set; turn the pool on for this repository or set it"})
+				} else if repl, old := legacyReplacement(j.Var); old && repl != "" {
+					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar,
+						Text: "job " + j.Job + " reads " + j.Var + ", an old name crsp no longer writes; read " + repl + " instead"})
 				} else if _, size, ok := ParseSizeVariable(j.Var); ok {
 					out = append(out, Finding{Path: path, Line: j.Line, Kind: KindUsesVar, Text: sizeNotSetText(j.Job, j.Var, size)})
 				}
@@ -219,17 +222,17 @@ func sizeNotSetText(job, name, size string) string {
 }
 
 func isPoolVar(n string) bool {
-	return n == "RUNS_ON_LINUX" || n == "RUNS_ON_WINDOWS" || n == "RUNS_ON_MACOS"
+	return n == "CRSP_RUNS_ON_LINUX" || n == "CRSP_RUNS_ON_WINDOWS" || n == "CRSP_RUNS_ON_MACOS"
 }
 
 func varFor(labels []string) string {
 	switch {
 	case hasLabel(labels, "windows"):
-		return "RUNS_ON_WINDOWS"
+		return "CRSP_RUNS_ON_WINDOWS"
 	case hasLabel(labels, "macos"):
-		return "RUNS_ON_MACOS"
+		return "CRSP_RUNS_ON_MACOS"
 	}
-	return "RUNS_ON_LINUX"
+	return "CRSP_RUNS_ON_LINUX"
 }
 
 func hasLabel(labels []string, want string) bool {
@@ -258,7 +261,7 @@ func carried(want []string, pool [][]string) bool {
 	return false
 }
 
-// VariablesRead lists, per RUNS_ON_* variable, the workflow files that
+// VariablesRead lists, per CRSP_RUNS_ON_* variable, the workflow files that
 // read it, for the question that names them when the pool is turned off
 // (R5.29).
 func VariablesRead(files map[string][]byte) map[string][]string {
@@ -269,10 +272,16 @@ func VariablesRead(files map[string][]byte) map[string][]string {
 				out[j.Var] = appendUnique(out[j.Var], path)
 			}
 		}
-		// A variable read outside runs-on (a matrix, a step) still counts.
+		// A variable read outside runs-on (a matrix, a step) still counts, and
+		// so does a name an older version wrote.
 		for v := range pools {
 			if strings.Contains(string(content), "vars."+v) {
 				out[v] = appendUnique(out[v], path)
+			}
+		}
+		for _, n := range legacyVariableNames {
+			if containsVar(string(content), n.Old) {
+				out[n.Old] = appendUnique(out[n.Old], path)
 			}
 		}
 	}
@@ -282,7 +291,29 @@ func VariablesRead(files map[string][]byte) map[string][]string {
 	return out
 }
 
-var pools = map[string]bool{"RUNS_ON_LINUX": true, "RUNS_ON_WINDOWS": true, "RUNS_ON_MACOS": true, VarLight: true}
+var pools = map[string]bool{"CRSP_RUNS_ON_LINUX": true, "CRSP_RUNS_ON_WINDOWS": true, "CRSP_RUNS_ON_MACOS": true}
+
+// containsVar says whether content reads vars.<name> as a whole name, so
+// vars.CI_RUNS_ON does not count for vars.CI_RUNS_ON_WINDOWS.
+func containsVar(content, name string) bool {
+	needle := "vars." + name
+	for i := strings.Index(content, needle); i >= 0; {
+		end := i + len(needle)
+		if end == len(content) || !isNameByte(content[end]) {
+			return true
+		}
+		next := strings.Index(content[end:], needle)
+		if next < 0 {
+			return false
+		}
+		i = end + next
+	}
+	return false
+}
+
+func isNameByte(c byte) bool {
+	return c == '_' || (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')
+}
 
 func appendUnique(s []string, v string) []string {
 	for _, x := range s {

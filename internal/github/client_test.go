@@ -344,23 +344,23 @@ func TestVariables(t *testing.T) { // R5.28, R5.29
 	ctx := context.Background()
 	e.fake.AddInstall(10, "alice", "User")
 	e.fake.AddRepo(100, 10, "alice", "demo", true)
-	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "RUNS_ON_LINUX", Value: `["self-hosted","Linux"]`}); err != nil {
+	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","Linux"]`}); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := e.fake.Variable("alice/demo", "RUNS_ON_LINUX"); v != `["self-hosted","Linux"]` {
+	if v, _ := e.fake.Variable("alice/demo", "CRSP_RUNS_ON_LINUX"); v != `["self-hosted","Linux"]` {
 		t.Fatalf("create: %q", v)
 	}
-	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "RUNS_ON_LINUX", Value: `["x"]`}); err != nil {
+	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "CRSP_RUNS_ON_LINUX", Value: `["x"]`}); err != nil {
 		t.Fatal(err)
 	}
 	vs, err := e.client.ListVariables(ctx, 10, "alice", "demo")
 	if err != nil || len(vs) != 1 || vs[0].Value != `["x"]` {
 		t.Fatalf("update: %+v %v", vs, err)
 	}
-	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "RUNS_ON_LINUX"); err != nil {
+	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "CRSP_RUNS_ON_LINUX"); err != nil {
 		t.Fatal(err)
 	}
-	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "RUNS_ON_LINUX"); err != nil {
+	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "CRSP_RUNS_ON_LINUX"); err != nil {
 		t.Fatalf("deleting a missing variable is not an error: %v", err)
 	}
 }

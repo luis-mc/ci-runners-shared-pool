@@ -490,29 +490,29 @@ func TestAppRateLimitIsSkipWithResetTime(t *testing.T) {
 func TestRepoVars(t *testing.T) {
 	g := newGH()
 	exp := map[string]string{
-		"RUNS_ON_LINUX":   `["self-hosted","linux","crsp-home"]`,
-		"RUNS_ON_WINDOWS": `["self-hosted","windows","crsp-home"]`,
-		"RUNS_ON_MACOS":   `["self-hosted","macos","crsp-home"]`,
+		"CRSP_RUNS_ON_LINUX":   `["self-hosted","linux","crsp-home"]`,
+		"CRSP_RUNS_ON_WINDOWS": `["self-hosted","windows","crsp-home"]`,
+		"CRSP_RUNS_ON_MACOS":   `["self-hosted","macos","crsp-home"]`,
 	}
 	g.vars["o/r"] = []github.Variable{
-		{Name: "RUNS_ON_LINUX", Value: `["crsp-home","Linux","self-hosted"]`}, // same set, other order and case: fine
-		{Name: "RUNS_ON_WINDOWS", Value: `not json`},
+		{Name: "CRSP_RUNS_ON_LINUX", Value: `["crsp-home","Linux","self-hosted"]`}, // same set, other order and case: fine
+		{Name: "CRSP_RUNS_ON_WINDOWS", Value: `not json`},
 	} // MACOS unset
-	g.files["o/r"] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_MACOS) }}\n")}}
+	g.files["o/r"] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_MACOS) }}\n")}}
 	fs := run(t, doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", exp)}}}, "repo.vars")
 	fs = forCheck(fs, "repo.vars")
 	sev := map[string]doctor.Severity{}
 	for _, f := range fs {
 		sev[f.Subject.ID] = f.Severity
 	}
-	if sev["1:RUNS_ON_LINUX"] != doctor.OK || sev["1:RUNS_ON_WINDOWS"] != doctor.Fail || sev["1:RUNS_ON_MACOS"] != doctor.Fail {
+	if sev["1:CRSP_RUNS_ON_LINUX"] != doctor.OK || sev["1:CRSP_RUNS_ON_WINDOWS"] != doctor.Fail || sev["1:CRSP_RUNS_ON_MACOS"] != doctor.Fail {
 		t.Fatalf("severities = %v", sev)
 	}
 	// Different from the product's value is warn; unset and unused is warn.
 	g2 := newGH()
-	g2.vars["o/r"] = []github.Variable{{Name: "RUNS_ON_LINUX", Value: `["self-hosted","linux"]`}}
+	g2.vars["o/r"] = []github.Variable{{Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","linux"]`}}
 	fs = run(t, doctor.Env{GitHub: g2, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", map[string]string{
-		"RUNS_ON_LINUX": exp["RUNS_ON_LINUX"], "RUNS_ON_MACOS": exp["RUNS_ON_MACOS"]})}}}, "repo.vars")
+		"CRSP_RUNS_ON_LINUX": exp["CRSP_RUNS_ON_LINUX"], "CRSP_RUNS_ON_MACOS": exp["CRSP_RUNS_ON_MACOS"]})}}}, "repo.vars")
 	fs = forCheck(fs, "repo.vars")
 	for _, f := range fs {
 		if f.Severity != doctor.Warn || f.Fix.Command == "" || !strings.Contains(f.Fix.Command, "gh variable set") {
@@ -524,8 +524,8 @@ func TestRepoVars(t *testing.T) {
 func TestRepoVarsRunner(t *testing.T) {
 	g := newGH()
 	g.vars["o/r"] = []github.Variable{
-		{Name: "RUNS_ON_LINUX", Value: `["self-hosted","linux"]`},
-		{Name: "RUNS_ON_WINDOWS", Value: `["self-hosted","windows"]`},
+		{Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","linux"]`},
+		{Name: "CRSP_RUNS_ON_WINDOWS", Value: `["self-hosted","windows"]`},
 	}
 	g.runners["o/r"] = []github.Runner{
 		{Name: "a", Status: "online", Labels: []string{"self-hosted", "Linux", "X64"}},
@@ -536,7 +536,7 @@ func TestRepoVarsRunner(t *testing.T) {
 	for _, f := range fs {
 		sev[f.Subject.ID] = f.Severity
 	}
-	if sev["1:RUNS_ON_LINUX"] != doctor.OK || sev["1:RUNS_ON_WINDOWS"] != doctor.Fail {
+	if sev["1:CRSP_RUNS_ON_LINUX"] != doctor.OK || sev["1:CRSP_RUNS_ON_WINDOWS"] != doctor.Fail {
 		t.Fatalf("severities = %v", sev)
 	}
 }
@@ -549,16 +549,16 @@ jobs:
   literal:
     runs-on: [self-hosted, linux, arm64]
   viavar:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}
   matrix:
     runs-on: ${{ matrix.os }}
   unsetvar:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_WINDOWS) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_WINDOWS) }}
 `
 
 func workflowEnv() (doctor.Env, *gh) {
 	g := newGH()
-	g.vars["o/r"] = []github.Variable{{Name: "RUNS_ON_LINUX", Value: `["self-hosted","linux"]`}}
+	g.vars["o/r"] = []github.Variable{{Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","linux"]`}}
 	g.runners["o/r"] = []github.Runner{
 		{Name: "a", Status: "online", Labels: []string{"self-hosted", "Linux", "X64"}},
 		{Name: "off", Status: "offline", Labels: []string{"self-hosted", "Linux", "ARM64"}},
@@ -596,7 +596,7 @@ func TestWorkflowLabels(t *testing.T) {
 func TestWorkflowGeneric(t *testing.T) {
 	env, _ := workflowEnv()
 	f := only(t, run(t, env, "workflow.generic"), "workflow.generic")
-	if f.Severity != doctor.Warn || !strings.Contains(f.Detail, "literal") || strings.Contains(f.Detail, "viavar") || !strings.Contains(f.Fix.Text, "fromJSON(vars.RUNS_ON") {
+	if f.Severity != doctor.Warn || !strings.Contains(f.Detail, "literal") || strings.Contains(f.Detail, "viavar") || !strings.Contains(f.Fix.Text, "fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || ") {
 		t.Fatalf("got %+v", f)
 	}
 }
@@ -607,7 +607,7 @@ func TestWorkflowUnresolved(t *testing.T) {
 	if f.Severity != doctor.Info {
 		t.Fatalf("got %+v", f)
 	}
-	for _, want := range []string{"matrix.os", "RUNS_ON_WINDOWS, which is not set", "broken.yml is not valid YAML"} {
+	for _, want := range []string{"matrix.os", "CRSP_RUNS_ON_WINDOWS, which is not set", "broken.yml is not valid YAML"} {
 		if !strings.Contains(f.Detail, want) {
 			t.Errorf("detail lacks %q:\n%s", want, f.Detail)
 		}
@@ -629,7 +629,7 @@ func TestCallCountBudget(t *testing.T) {
 	env, g := workflowEnv()
 	g.inst[7] = github.Installation{ID: 7, AccountLogin: "o", AccountType: "User", Permissions: RequiredPermissions}
 	f := env.Fleet.(*fleet)
-	f.repos[0].Expected = map[string]string{"RUNS_ON_LINUX": `["self-hosted","linux"]`}
+	f.repos[0].Expected = map[string]string{"CRSP_RUNS_ON_LINUX": `["self-hosted","linux"]`}
 	reg := doctor.NewRegistry()
 	Register(reg)
 	e := &doctor.Engine{Registry: reg, Store: doctor.NewMemStore(), Now: func() time.Time { return now },
@@ -989,13 +989,18 @@ func TestRunnerCacheWrite(t *testing.T) {
 // shared variable is info; on the owner's repository crsp opens the pull
 // request, on another one the finding carries the patch.
 func TestWorkflowPerJob(t *testing.T) {
-	const old = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n"
-	const done = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	const old = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}\n"
+	const done = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	// CRSP229: a workflow that still reads RUNS_ON_LINUX, the name older
+	// versions wrote, is routed too, alone or as the fallback of the per-job form.
+	const oldName = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n"
+	const oldFallback = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
 	for _, tc := range []struct {
 		full, src string
 		sev       doctor.Severity
 		patch     bool
-	}{{"luis-mc/app", old, doctor.Info, false}, {"other/app", old, doctor.Info, true}, {"other/app", done, doctor.OK, false}} {
+	}{{"luis-mc/app", old, doctor.Info, false}, {"other/app", old, doctor.Info, true}, {"other/app", done, doctor.OK, false},
+		{"other/app", oldName, doctor.Info, true}, {"other/app", oldFallback, doctor.Info, true}} {
 		g := newGH()
 		g.files[tc.full] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte(tc.src)}}
 		env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, tc.full, nil)}}}
@@ -1003,7 +1008,7 @@ func TestWorkflowPerJob(t *testing.T) {
 		if f.Severity != tc.sev || (f.Fix.Command != "") != tc.patch {
 			t.Fatalf("%s: %+v", tc.full, f)
 		}
-		if tc.patch && !strings.Contains(f.Fix.Command, "+    runs-on: ${{ fromJSON(vars.CRSP_E2E") {
+		if tc.patch && !strings.Contains(f.Fix.Command, "+    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || ") {
 			t.Fatalf("patch %q", f.Fix.Command)
 		}
 	}
@@ -1053,7 +1058,7 @@ func TestAssignQueueChecks(t *testing.T) {
 }
 
 func TestRunsOnAlwaysExistsForARoutedRepository(t *testing.T) {
-	const routed = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	const routed = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
 	for _, tc := range []struct {
 		val   *string
 		src   string
@@ -1064,9 +1069,9 @@ func TestRunsOnAlwaysExistsForARoutedRepository(t *testing.T) {
 		g := newGH()
 		g.files["o/r"] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte(tc.src)}}
 		if tc.val != nil {
-			g.vars["o/r"] = []github.Variable{{Name: "RUNS_ON_LINUX", Value: *tc.val}}
+			g.vars["o/r"] = []github.Variable{{Name: "CRSP_RUNS_ON_LINUX", Value: *tc.val}}
 		}
-		env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", map[string]string{"RUNS_ON_LINUX": `["self-hosted","linux"]`})}}}
+		env := doctor.Env{GitHub: g, Fleet: &fleet{repos: []doctor.Repository{repo(1, "o/r", map[string]string{"CRSP_RUNS_ON_LINUX": `["self-hosted","linux"]`})}}}
 		fs := repoRunsOnAlways(context.Background(), env)
 		if !tc.wants {
 			if len(fs) != 0 {

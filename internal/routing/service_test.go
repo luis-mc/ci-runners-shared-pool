@@ -83,15 +83,15 @@ func (f *fakeGH) OpenRunStarts(context.Context, routing.Repo) ([]time.Time, erro
 
 const wf = `jobs:
   e2e:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}
   unit:
-    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}
 `
 
 func newSvc(t *testing.T) (*routing.Service, *fakeGH, *time.Time) {
 	t.Helper()
 	now := t0
-	f := &fakeGH{vars: map[string]string{"RUNS_ON_LINUX": `["self-hosted","Linux"]`}, head: "abc123", files: map[string][]byte{".github/workflows/ci.yml": []byte(wf)},
+	f := &fakeGH{vars: map[string]string{"CRSP_RUNS_ON_LINUX": `["self-hosted","Linux"]`}, head: "abc123", files: map[string][]byte{".github/workflows/ci.yml": []byte(wf)},
 		rows: []jobsize.ScanRow{{Job: "e2e", Class: jobsize.Heavy}, {Job: "unit", Class: jobsize.Light}}}
 	s := &routing.Service{Store: &routing.MemStore{}, Scans: f, Vars: f, Files: f, Runs: f, Labeler: f, PRs: f,
 		Throttle: &routing.Throttle{Now: func() time.Time { return now }, Sleep: func(_ context.Context, d time.Duration) error { now = now.Add(d); return nil }},
@@ -117,8 +117,8 @@ func TestOptInWritesVariablesOnlyOnChange(t *testing.T) {
 	if err := json.Unmarshal([]byte(f.vars["CRSP_E2E"]), &list); err != nil || len(list) != 3 || list[0] != "self-hosted" || list[2] != routing.JobLabel("luis-mc/app", "e2e") {
 		t.Fatalf("value %q", f.vars["CRSP_E2E"])
 	}
-	if f.vars["RUNS_ON_LINUX"] != `["self-hosted","Linux"]` {
-		t.Fatal("RUNS_ON_LINUX must stay as it was")
+	if f.vars["CRSP_RUNS_ON_LINUX"] != `["self-hosted","Linux"]` {
+		t.Fatal("CRSP_RUNS_ON_LINUX must stay as it was")
 	}
 	f.sets = nil
 	res, _ = s.Sync(context.Background(), repo, "abc124")
@@ -139,7 +139,7 @@ func TestOnPush(t *testing.T) {
 }
 
 // R5.105: a job with no scan row, or on an OS the pool does not serve, keeps
-// the fallback and is never blocked; a hosted RUNS_ON_<OS> is left alone.
+// the fallback and is never blocked; a hosted CRSP_RUNS_ON_<OS> is left alone.
 func TestFirstRunJobIsNeverBlocked(t *testing.T) {
 	s, f, _ := newSvc(t)
 	f.rows = f.rows[:1] // unit has no scan row yet
@@ -150,7 +150,7 @@ func TestFirstRunJobIsNeverBlocked(t *testing.T) {
 	if _, ok, _ := s.Label(context.Background(), "luis-mc/app", "unit"); ok {
 		t.Fatal("unit must have no label yet")
 	}
-	f.vars["RUNS_ON_LINUX"] = `["ubuntu-latest"]` // hosted fallback is on
+	f.vars["CRSP_RUNS_ON_LINUX"] = `["ubuntu-latest"]` // hosted fallback is on
 	f.rows = append(f.rows, jobsize.ScanRow{Job: "unit", Class: jobsize.Light})
 	res, _ = s.Sync(context.Background(), repo, "b")
 	if len(res.Skipped) != 2 {
@@ -163,7 +163,7 @@ func TestFirstRunJobIsNeverBlocked(t *testing.T) {
 func TestChangedLabelRetiresOnlyWhenOldRunsAreDone(t *testing.T) {
 	s, f, now := newSvc(t)
 	ctx := context.Background()
-	f.files[".github/workflows/ci.yml"] = []byte(wf + "  lint:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n")
+	f.files[".github/workflows/ci.yml"] = []byte(wf + "  lint:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}\n")
 	f.rows = append(f.rows, jobsize.ScanRow{Job: "lint", Class: jobsize.Light})
 	if _, err := s.Sync(ctx, repo, "a"); err != nil {
 		t.Fatal(err)
@@ -240,7 +240,7 @@ func TestGoneJobLosesVariable(t *testing.T) {
 	s, f, _ := newSvc(t)
 	ctx := context.Background()
 	_, _ = s.Sync(ctx, repo, "a")
-	f.files[".github/workflows/ci.yml"] = []byte("jobs:\n  unit:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n")
+	f.files[".github/workflows/ci.yml"] = []byte("jobs:\n  unit:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}\n")
 	f.rows = f.rows[1:]
 	res, err := s.Sync(ctx, repo, "b")
 	if err != nil || len(res.Deleted) != 1 || res.Deleted[0] != "CRSP_E2E" {
@@ -276,5 +276,28 @@ func TestOpenPROnceAndOnlyForOwner(t *testing.T) {
 	f.files = map[string][]byte{"x.yml": []byte("jobs:\n  a:\n    runs-on: ubuntu-latest\n")}
 	if res, err := s.OpenPR(ctx, routing.Repo{Installation: 3, Owner: "luis-mc", Name: "plain", DefaultBranch: "main"}); err != nil || !res.Empty || len(f.prs) != 1 {
 		t.Fatalf("nothing to change must open nothing: %+v %v", res, err)
+	}
+}
+
+// CRSP229: the sync never deletes a pool variable as a stale per-job one,
+// such as CRSP_RUNS_ON_LINUX that an older version recorded as the variable of
+// a job named runs-on-linux.
+func TestSyncNeverDeletesAPoolVariable(t *testing.T) {
+	s, f, _ := newSvc(t)
+	ctx := context.Background()
+	f.vars["CRSP_RUNS_ON_CANARY_BUILD"] = `["self-hosted","linux"]`
+	if err := s.Store.Save(ctx, repo.Full(), routing.State{Jobs: []routing.JobState{
+		{Key: "runs-on-linux", Var: "CRSP_RUNS_ON_LINUX"}, {Key: "build", Var: "CRSP_RUNS_ON_CANARY_BUILD"}}}); err != nil {
+		t.Fatal(err)
+	}
+	res, err := s.Sync(ctx, repo, "a")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(res.Deleted) != 0 || len(f.deletes) != 0 {
+		t.Fatalf("deleted %v %v", res.Deleted, f.deletes)
+	}
+	if _, ok := f.vars["CRSP_RUNS_ON_LINUX"]; !ok {
+		t.Fatal("CRSP_RUNS_ON_LINUX must stay")
 	}
 }

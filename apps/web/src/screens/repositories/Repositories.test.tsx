@@ -20,7 +20,7 @@ const on = repository({
   full_name: 'octo/site',
   name: 'site',
   pool_on: true,
-  variables: [{ name: 'RUNS_ON_LINUX', status: 'wrong', value: 'old' }],
+  variables: [{ name: 'CRSP_RUNS_ON_LINUX', status: 'wrong', value: 'old' }],
 });
 const page = (items = [repository(), on]) => ({ items, stale: { stale: false } });
 
@@ -155,7 +155,9 @@ describe('Repositories list', () => {
       name: 'Turn off these repositories?',
     });
     expect(within(dialog).getByText('octo/site: pool off')).toBeTruthy();
-    expect(within(dialog).getByText('octo/site: variable RUNS_ON_LINUX')).toBeTruthy();
+    expect(
+      within(dialog).getByText('octo/site: variable CRSP_RUNS_ON_LINUX'),
+    ).toBeTruthy();
     expect(api.count('POST', '/api/v1/repository-plans')).toBe(0);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off' }));
     await waitFor(() =>
@@ -289,7 +291,7 @@ describe('Repository detail', () => {
   it('shows state, variables and the policy form', async () => {
     renderApp(api(), '/setup/pool/octo/site');
     expect(await repoHeading('octo/site')).toBeTruthy();
-    expect(screen.getByText('RUNS_ON_LINUX')).toBeTruthy();
+    expect(screen.getByText('CRSP_RUNS_ON_LINUX')).toBeTruthy();
     expect(screen.getByRole('textbox', { name: 'Labels' })).toBeTruthy();
   });
 

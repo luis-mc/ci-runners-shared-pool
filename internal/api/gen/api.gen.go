@@ -2751,22 +2751,22 @@ func (e RepositoryRoutingWhy) Valid() bool {
 
 // Defines values for RepositoryVariableName.
 const (
-	RUNSONLIGHT   RepositoryVariableName = "RUNS_ON_LIGHT"
-	RUNSONLINUX   RepositoryVariableName = "RUNS_ON_LINUX"
-	RUNSONMACOS   RepositoryVariableName = "RUNS_ON_MACOS"
-	RUNSONWINDOWS RepositoryVariableName = "RUNS_ON_WINDOWS"
+	CRSPRUNSONLINUX   RepositoryVariableName = "CRSP_RUNS_ON_LINUX"
+	CRSPRUNSONMACOS   RepositoryVariableName = "CRSP_RUNS_ON_MACOS"
+	CRSPRUNSONWINDOWS RepositoryVariableName = "CRSP_RUNS_ON_WINDOWS"
+	RUNSONLIGHT       RepositoryVariableName = "RUNS_ON_LIGHT"
 )
 
 // Valid indicates whether the value is a known member of the RepositoryVariableName enum.
 func (e RepositoryVariableName) Valid() bool {
 	switch e {
+	case CRSPRUNSONLINUX:
+		return true
+	case CRSPRUNSONMACOS:
+		return true
+	case CRSPRUNSONWINDOWS:
+		return true
 	case RUNSONLIGHT:
-		return true
-	case RUNSONLINUX:
-		return true
-	case RUNSONMACOS:
-		return true
-	case RUNSONWINDOWS:
 		return true
 	default:
 		return false
@@ -7744,11 +7744,8 @@ type RepositoryPolicy struct {
 	HostedLabels *map[string]string `json:"hosted_labels,omitempty"`
 
 	// Labels Generic labels only (github-integration R5.27).
-	Labels []string `json:"labels"`
-
-	// LegacyVars Also write CI_RUNS_ON and CI_RUNS_ON_WINDOWS with the same labels as RUNS_ON_LINUX and RUNS_ON_WINDOWS, for workflows that still follow the old dev-standards templates (github-integration R5.39). Off by default; for the move from the old pool.
-	LegacyVars      *bool `json:"legacy_vars,omitempty"`
-	MaxParallelJobs int   `json:"max_parallel_jobs"`
+	Labels          []string `json:"labels"`
+	MaxParallelJobs int      `json:"max_parallel_jobs"`
 
 	// Priority Higher goes first (scheduling R5.8).
 	Priority     int      `json:"priority"`
@@ -7785,14 +7782,11 @@ type RepositoryPolicyUpdate struct {
 	HostedFallback *bool `json:"hosted_fallback,omitempty"`
 
 	// HostedLabels Hosted label per operating system (linux, windows, macos); an empty value puts the default back.
-	HostedLabels *map[string]string `json:"hosted_labels,omitempty"`
-	Labels       *[]string          `json:"labels,omitempty"`
-
-	// LegacyVars Turn the old variable names CI_RUNS_ON and CI_RUNS_ON_WINDOWS on or off (github-integration R5.39).
-	LegacyVars      *bool     `json:"legacy_vars,omitempty"`
-	MaxParallelJobs *int      `json:"max_parallel_jobs,omitempty"`
-	Priority        *int      `json:"priority,omitempty"`
-	RunnerGroups    *[]string `json:"runner_groups,omitempty"`
+	HostedLabels    *map[string]string `json:"hosted_labels,omitempty"`
+	Labels          *[]string          `json:"labels,omitempty"`
+	MaxParallelJobs *int               `json:"max_parallel_jobs,omitempty"`
+	Priority        *int               `json:"priority,omitempty"`
+	RunnerGroups    *[]string          `json:"runner_groups,omitempty"`
 
 	// RunnerKinds Set which runners take the repository's jobs (github-integration R5.60). default clears the owner's choice, so the default of the visibility applies.
 	RunnerKinds *RepositoryPolicyUpdateRunnerKinds `json:"runner_kinds,omitempty"`

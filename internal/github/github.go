@@ -254,7 +254,7 @@ type InstallationClient interface {
 	// DeleteRunner removes an offline runner whose agent cannot (R5.33).
 	DeleteRunner(ctx context.Context, installationID int64, scope RunnerScope, runnerID int64) error
 
-	// ListVariables, SetVariable and DeleteVariable keep RUNS_ON_* correct
+	// ListVariables, SetVariable and DeleteVariable keep CRSP_RUNS_ON_* correct
 	// (R5.28, R5.29).
 	ListVariables(ctx context.Context, installationID int64, owner, repo string) ([]Variable, error)
 	SetVariable(ctx context.Context, installationID int64, owner, repo string, v Variable) error

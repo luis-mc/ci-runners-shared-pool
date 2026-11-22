@@ -7,11 +7,11 @@
 //	shadow   a copy of selected jobs runs on crsp through a workflow_dispatch of
 //	         a shadow workflow; results are recorded; the real job stays hosted
 //	canary   a percentage of the jobs, or named jobs, read crsp labels from
-//	         RUNS_ON_CANARY_<JOB> variables; the rest stay hosted
+//	         CRSP_RUNS_ON_CANARY_<JOB> variables; the rest stay hosted
 //	off      no trial; a canary is undone and the earlier variables come back
 //
 // The package keeps its state in a small key-value store and reaches GitHub
-// only through the Variables and Dispatcher interfaces; the RUNS_ON variable
+// only through the Variables and Dispatcher interfaces; the CRSP_RUNS_ON variable
 // writing stays in package repos.
 package trial
 
@@ -60,14 +60,14 @@ type Repo struct {
 }
 
 // Variables is the variable access; package repos provides it, so the writing
-// of RUNS_ON variables stays in the owner code.
+// of CRSP_RUNS_ON variables stays in the owner code.
 type Variables interface {
 	Repository(ctx context.Context, full string) (Repo, error)
-	// Variables lists the RUNS_ON family variables now set on the repository.
+	// Variables lists the CRSP_RUNS_ON family variables now set on the repository.
 	Variables(ctx context.Context, full string) (map[string]string, error)
 	Write(ctx context.Context, full, name, value string) error
 	Remove(ctx context.Context, full, name string) error
-	// Desired is what the controller would write for the repository (RUNS_ON_<OS>).
+	// Desired is what the controller would write for the repository (CRSP_RUNS_ON_<OS>).
 	Desired(ctx context.Context, full string) (map[string]string, error)
 }
 
@@ -97,7 +97,7 @@ type State struct {
 	ShadowJobs     []string `json:"shadow_jobs,omitempty"`
 	// Seen is every job name observed, with its operating system.
 	Seen map[string]string `json:"seen,omitempty"`
-	// Before is the RUNS_ON family variables as they were before the canary;
+	// Before is the CRSP_RUNS_ON family variables as they were before the canary;
 	// Written is the names the canary wrote.
 	Before  map[string]string `json:"before,omitempty"`
 	Written []string          `json:"written,omitempty"`
