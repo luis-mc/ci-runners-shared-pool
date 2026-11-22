@@ -1,4 +1,4 @@
-// Component 72: the slot timeline. One part draws every "jobs over time" chart: rows are runner slots grouped by
+// Component 77: the slot timeline. One part draws every "jobs over time" chart: rows are runner slots grouped by
 // machine, bars sit in their row by time, a now line and an axis of clock times run across, and a legend names the
 // nine states with a glyph and words (a state is never colour alone, UX-58). Only the chart scrolls sideways, in its
 // own focusable box (UX-49); the row labels stay at the inline start. The scale is fixed pixels per minute, so

@@ -35,7 +35,7 @@ body {
   }
 }
 
-/* Links (UX-80): no anchor ever shows the browser's blue or purple. The base rule has no specificity (`:where`), so a
+/* Links (UX-85): no anchor ever shows the browser's blue or purple. The base rule has no specificity (`:where`), so a
    class below always wins; a link with no class is still a themed link in every state. */
 :where(a),
 :where(a:visited) {
@@ -2224,7 +2224,7 @@ legend > .ds-field__changed {
   }
 }
 
-/* component 72: the slot timeline. Only .ds-timeline__scroll scrolls sideways; the page never does (UX-49). */
+/* component 77: the slot timeline. Only .ds-timeline__scroll scrolls sideways; the page never does (UX-49). */
 .ds-timeline {
   display: grid;
   gap: var(--ds-space-2);
@@ -3464,7 +3464,7 @@ a.ds-stat:focus-visible {
   color: var(--ds-color-text-muted);
 }
 
-/* Component 70: numbered steps. */
+/* Component 75: numbered steps. */
 .ds-steps {
   display: grid;
   gap: var(--ds-space-3);
@@ -3486,7 +3486,7 @@ a.ds-stat:focus-visible {
   overflow-wrap: anywhere;
 }
 
-/* Component 71: side menu. Every link state uses tokens (UX-80). */
+/* Component 76: side menu. Every link state uses tokens (UX-85). */
 .ds-sidemenu-layout {
   display: grid;
   gap: var(--ds-space-5);

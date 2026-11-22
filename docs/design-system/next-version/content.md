@@ -878,7 +878,7 @@ The fixed words of the waterfall, job graph and charts (components 50 to 55, RES
 
 ## Timeline words
 
-The fixed words of the slot timeline (component 72, LOOK58). Every other word comes in through props.
+The fixed words of the slot timeline (component 77, LOOK58). Every other word comes in through props.
 
 | Word                                                                                                                                      | Where                                                                           |
 | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |

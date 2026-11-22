@@ -321,7 +321,7 @@ const MEASURES = {
     }
     return bad;`,
   /** UX-4: one primary button on the screen (a screen that offers an action has exactly one). The tabs and
-   *  segmented switches that switch the section, the filter chips, the sort buttons of a table head, the row buttons of a table, the boxes of the job path (they jump to a card), the bars of the slot timeline (component 72: they open a job, like a row button) and the ? term-help buttons (component 66) are not the screen's actions. */
+   *  segmented switches that switch the section, the filter chips, the sort buttons of a table head, the row buttons of a table, the boxes of the job path (they jump to a card), the bars of the slot timeline (component 77: they open a job, like a row button) and the ? term-help buttons (component 66) are not the screen's actions. */
   primary: `${VISIBLE}
     const all = Array.from(document.querySelectorAll('[data-primary], button[data-kind=primary], a[data-button][data-kind=primary]')).filter(visible);
     const names = all.map(label);
