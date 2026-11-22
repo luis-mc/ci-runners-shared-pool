@@ -6,3 +6,5 @@
 - Slowest unit-tier tests: 5.1 s (agent TestAcceptingReportAndCPUCapOverTheLink), 3.3 s, 3.0 s. None over 10 s; no test moved.
 - Guard: G1 PASS. G4 (idle_cost_unix_test.go:42 sleep) is not in scope.
 - No test files of other agents touched.
+- CI: ci.yml run 44972454678 on 1a7d4eb green (first run failed prettier on .pytest_cache; fixed with -p no:cacheprovider).
+CODE DONE 1a7d4eb320bfcb15afcee0027b7753e8cccea559
