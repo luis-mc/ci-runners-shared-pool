@@ -1504,3 +1504,36 @@ The numbered steps of a suggestion, by its kind. `{repository}` is the repositor
 | test.duplicate          | 1. Open the tests named {subject} in {repository}. 2. Keep the one that checks more, and delete the other. 3. Merge the change, then read this suggestion again after the next runs.                                                                                                                                                            |
 | test.no_assertions      | 1. Open the test {subject} in {repository}. 2. Add a check of what it should do, or delete it if it checks nothing. 3. Merge the change, then read this suggestion again after the next runs.                                                                                                                                                   |
 | (any other kind)        | 1. Read the fix on this page and the evidence under it for {repository}. 2. Make the change it names, in the place it names. 3. Read this suggestion again after the next runs: it goes away when the change works.                                                                                                                             |
+
+## Machine health words (LOOK58c, machines R5.72 to R5.79, web-console R5.154, R5.155)
+
+Pool > Machines and the machine page (`/pool/machines/{id}`). `{os}` is the machine's own system name (_Linux_, _Windows_, _macOS_), `{x}` the reason the API gives, `{n}` a number, `{name}` a machine name. A value the API leaves out reads _unknown on {os}_; on the machine page the reason follows after a colon. It is never blank and never 0.
+
+| Where | Words |
+| --- | --- |
+| Unknown value | unknown on {os}; on the page: unknown on {os}: {x} |
+| Health badges (a status, UX-58) | healthy, health not reported yet, report is old, disk almost full, disk fills soon, ran out of memory, cannot reach GitHub, DNS fails, restarted unexpectedly, restart may stop jobs, restart pending, clock is off, agent out of date, runner app out of date, slowed by heat, on battery, can go to sleep |
+| Key numbers, names | Uptime, Disk free, Days until full, Swap, Connectivity, Restart pending, Power, Sleep, Clock skew, Versions, Docker disk, Temperature, Load (1, 5, 15 min) |
+| Key numbers, values | {n} days {n} h; {n}% on the {disk}; about {n} days ({disk}); none set up; {n} GB of {n} GB used; reaches GitHub in {n} ms; cannot reach GitHub; {n} ms to the controller; yes; yes, and it may stop running jobs; no; on battery; on mains power; can go to sleep; never goes to sleep; in sync with the controller; {time} ahead of the controller; {time} behind the controller; {n} GB in use; {n} °C; {n} °C, slowed by heat |
+| Days until full, no figure | The API's note (for example: free space is not falling); not enough samples yet |
+| Disk names | system disk, crsp data disk, Docker disk, runner work disk |
+| Job stats, switch | Name: Job stats window. Choices: 24 h, 7 days |
+| Job stats, lines | Succeeded, Failed, Cancelled, Timed out, Over memory, Stopped by crsp, Average run time, Average queue wait, Busy |
+| Job stats, no average | no jobs yet |
+| Job stats, last failure | Last failure: {job} in {repository}, {failed, timed out, ran over memory, stopped by crsp} {time ago}; none in the last 24 hours; none in the last 7 days |
+| Job stats, top failing | {repository} {job}: {n} failure, {n} failures (a link to Pool > Jobs); No job failed in {window}. |
+| Job stats, window words | the last 24 hours, the last 7 days |
+| Runner line | {n} jobs, {n} failed or cut short, average run {time}, busy {n}%; no jobs in this window; No runner is on this machine. |
+| Load, could not load | Could not load the health of {name}. Could not load the job stats of {name}. |
+| Machine page, notes | This machine has not reported its health yet. Every value reads unknown until it does. The last report is from {time ago}. These values may be out of date. |
+| Machine page, line | Health, job stats and runners of this machine. To change it, go to Setup > Machines. |
+| Machine page, panes | Key numbers; Disks; Memory and swap; Network and clock; Restarts, sleep and power; Versions and Docker; Heat and load; Job stats; Jobs over time |
+| Job stats, pane note | Jobs that finished in {window}. |
+| Jobs over time, note | The jobs of each slot over time will be shown here. |
+| Disks, table | Disk, Path, Free, Size, Days until full |
+| Memory and swap, facts | Swap, Memory kills ({n}, {n}, one recently), Last memory kill (none); table Scope, Name, Kills (Pool, Job) |
+| Network and clock, facts | Round trip to the controller, Last heartbeat, Reconnects in 24 h, GitHub (reachable, not reachable), DNS (works, fails), Clock skew |
+| Restarts, sleep, power, facts | Uptime, Last boot, Restarted without being asked, Restart pending, Why it is pending (not pending), May restart now, May stop running jobs, Updates waiting, Update active hours ({hh}:00 to {hh}:00), Automatic updates, Power, Sleep, Last wake |
+| Versions and Docker, facts | Agent, Controller, Runner app ({v} (out of date)), Docker, WSL, Docker disk; table What, Size (Images, Build cache, Volumes, Containers) |
+| Heat and load, facts | Temperature, Slowed by heat, Load 1 min, Load 5 min, Load 15 min, CPU taken by the host |
+| Job stats, runner table | Runner, Jobs, Succeeded, Failed or cut short, Average run time, Busy |

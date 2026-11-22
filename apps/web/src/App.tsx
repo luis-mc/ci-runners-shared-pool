@@ -63,11 +63,13 @@ const RegistryReplacePage = later(
     import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
   true,
 );
-const RepositoriesList = later(() =>
-  import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
+const RepositoriesList = later(
+  () => import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
+  true,
 );
-const RepositoryDetail = later(() =>
-  import('./screens/repositories/Repositories').then((m) => m.RepositoryDetail),
+const RepositoryDetail = later(
+  () => import('./screens/repositories/Repositories').then((m) => m.RepositoryDetail),
+  true,
 );
 const AddMachinePage = later(
   () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
