@@ -4,15 +4,11 @@
 import {
   Breadcrumbs,
   BulletList,
-  Button,
-  Cluster,
   Facts,
   Message,
   Page,
   PageHeader,
-  Section,
   Stack,
-  Switch,
   Text,
   Wizard,
   formatDateTime,
@@ -21,10 +17,7 @@ import {
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
-import { useCommand, useLoad } from '../../api/hooks';
-import { useSession } from '../../auth/session';
 import { TIMING } from '../../timing';
-import { Load } from '../common';
 import { settingsPath } from './sections';
 
 type UpdateStatus = Schemas['UpdateStatus'];
@@ -133,94 +126,6 @@ const STATE_WORDS: Record<Exclude<UpdateStatus['state'], 'idle'>, string> = {
 
 function stateWord(s: UpdateStatus): string {
   return s.state === 'idle' ? idleWord(s) : STATE_WORDS[s.state];
-}
-
-export function UpdatesSettings() {
-  const client = useClient();
-  const session = useSession();
-  const navigate = useNavigate();
-  const { result, reload } = useLoad(() => unwrap(client.GET('/api/v1/update')), []);
-  const toggle = useCommand(async (on: boolean) => {
-    await unwrap(client.PATCH('/api/v1/settings', { body: { auto_update: on } }));
-    reload();
-  });
-  const look = useCommand(async () => {
-    await unwrap(client.POST('/api/v1/update/check'));
-    reload();
-  });
-  return (
-    <Section title="Updates">
-      <Load result={result} what="the update status" reload={reload}>
-        {(u) => (
-          <Stack>
-            <Facts
-              items={[
-                { name: 'Version', value: u.current_version },
-                {
-                  name: 'Newest stable release',
-                  value: u.latest_version ?? 'Not looked for yet',
-                },
-                { name: 'State', value: stateWord(u) },
-                ...(u.checked_at
-                  ? [{ name: 'Last look', value: formatDateTime(u.checked_at) }]
-                  : []),
-              ]}
-            />
-            <Switch
-              label="Automatic updates"
-              on={u.auto_update}
-              busy={toggle.busy}
-              disabledReason={session.whyNot('owner')}
-              onChange={(on) => void toggle.run(on)}
-            />
-            <Text>
-              {u.auto_update
-                ? 'On: the regular check installs a newer stable release by itself once the running jobs have ended. Looking for updates yourself only looks.'
-                : 'Off: a newer stable release waits for your yes on the Review step.'}
-            </Text>
-            {u.state === 'failed' && u.error ? (
-              <Message tone="problem">{u.error}</Message>
-            ) : null}
-            {toggle.error ? (
-              <Message tone="problem">
-                Could not save Automatic updates. {toggle.error}
-              </Message>
-            ) : null}
-            {look.error ? (
-              <Message tone="problem">Could not look for updates. {look.error}</Message>
-            ) : null}
-            <Cluster>
-              <Button
-                onPress={() => void look.run()}
-                busy={look.busy}
-                busyLabel="Looking"
-                disabled={!session.can('admin')}
-                reason={session.whyNot('admin')}
-              >
-                Look for updates
-              </Button>
-              {offered(u) ? (
-                <Button
-                  onPress={() => void navigate('/settings/updates/review?kind=update')}
-                  disabled={!session.can('admin')}
-                  reason={session.whyNot('admin')}
-                >
-                  {`Update to ${u.latest_version ?? ''}`}
-                </Button>
-              ) : null}
-              <Button
-                onPress={() => void navigate('/settings/updates/review?kind=restart')}
-                disabled={!session.can('admin')}
-                reason={session.whyNot('admin')}
-              >
-                Restart the service
-              </Button>
-            </Cluster>
-          </Stack>
-        )}
-      </Load>
-    </Section>
-  );
 }
 
 // ------------------------------------------------------------------------------------------ the Review step

@@ -51,12 +51,13 @@ Exit codes: `0` done; `1603` refused (a newer version is installed, the log has 
 
 ```text
 msiexec /x crsp-windows-<amd64|arm64>.msi /qn /norestart /l*v <log>                 keeps the data folder
-msiexec /x crsp-windows-<amd64|arm64>.msi /qn /norestart REMOVEDATA=1 /l*v <log>    also deletes it
-msiexec /x crsp-windows-<amd64|arm64>.msi                                           full dialogs, with the "Also delete my data" box
+msiexec /x crsp-windows-<amd64|arm64>.msi /qn /norestart PURGE=1 /l*v <log>         also deletes it (REMOVEDATA=1 is the older name)
+msiexec /x crsp-windows-<amd64|arm64>.msi                                           asks "Keep my data" or "Delete my data too" in the native remove window (no default; Cancel changes nothing)
+crsp uninstall [--delete-data]                                                      the same from the command line (PURGE=1 is honoured)
 ```
 
 Settings > Apps > crsp > Uninstall runs the last form (the package adds its own Apps entry that starts it with the dialogs).
 
 ## Tests
 
-`smoke.ps1` (elevated) installs, checks the service, PATH, firewall rule, shortcut and autostart, upgrades, refuses a downgrade, uninstalls (data kept), reinstalls, uninstalls with `REMOVEDATA=1`, and checks that nothing is left. CI runs it for x64 on every pull request that touches `installer/**` (`.github/workflows/installer.yml`). `ui-test.ps1` drives the uninstall dialog (local, interactive desktop).
+`smoke.ps1` (elevated) installs, checks the service, PATH, firewall rule, shortcut and autostart, upgrades, refuses a downgrade, uninstalls (data kept), reinstalls, uninstalls with `REMOVEDATA=1`, and checks that nothing is left. CI runs it for x64 on every pull request that touches `installer/**` (`.github/workflows/installer.yml`). The remove window is the native window of TRAY12 (`crsp lifecycle-window remove`); the lifecycle lanes (`.github/workflows/lifecycle.yml`, `scripts/lifecycle/`) test install, upgrade, rollback, downgrade, remove, purge and leftovers on windows-latest and windows-11-arm.

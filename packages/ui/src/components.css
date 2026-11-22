@@ -1211,8 +1211,8 @@ legend > .ds-field__changed {
   cursor: pointer;
 }
 .ds-choice__row[data-card]:has(input:checked) {
-  border: 2px solid var(--ds-color-primary);
-  padding: calc(var(--ds-space-3) - 1px);
+  border: var(--ds-border-medium) solid var(--ds-color-primary);
+  padding: calc(var(--ds-space-3) - var(--ds-border-width));
 }
 .ds-choice__row[data-card]:has(input:focus-visible) {
   outline: var(--ds-border-medium) solid var(--ds-color-focus);

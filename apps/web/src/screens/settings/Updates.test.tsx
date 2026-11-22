@@ -4,7 +4,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { TIMING } from '../../timing';
-import { renderApp, signedIn, viewer } from '../../testing/mock';
+import { renderApp, signedIn } from '../../testing/mock';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -21,66 +21,6 @@ const status = (extra: object = {}) => ({
   running_jobs: [{ repository: 'octo/app', workflow: 'ci', run_id: 7, job: 'test' }],
   drain_timeout_minutes: 60,
   ...extra,
-});
-
-describe('Updates settings', () => {
-  it('offers no update when the latest version is not newer than the running one (TRAY8)', async () => {
-    renderApp(
-      signedIn().on(
-        'GET',
-        '/api/v1/update',
-        status({ current_version: '1.5.0', latest_version: '1.5.0' }),
-      ),
-      '/settings/updates',
-    );
-    await screen.findByRole('switch', { name: 'Automatic updates' });
-    expect(screen.queryByRole('button', { name: /Update to/ })).toBeNull();
-    expect(screen.queryByText(/is waiting for your yes/)).toBeNull();
-  });
-
-  it('shows Automatic updates on by default and the versions', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/update', status()), '/settings/updates');
-    const sw = await screen.findByRole('switch', { name: 'Automatic updates' });
-    expect(sw.getAttribute('aria-checked')).toBe('true');
-    expect(screen.getByText('1.4.0')).toBeTruthy();
-    expect(screen.getByText('1.5.0')).toBeTruthy();
-    expect(
-      screen.getByText(
-        /installs a newer stable release by itself once the running jobs have ended/,
-      ),
-    ).toBeTruthy();
-  });
-
-  it('turns Automatic updates off and on, saved at once', async () => {
-    const a = signedIn()
-      .on('GET', '/api/v1/update', status())
-      .on('PATCH', '/api/v1/settings', (c) => c.body);
-    renderApp(a, '/settings/updates');
-    const sw = await screen.findByRole('switch', { name: 'Automatic updates' });
-    fireEvent.click(sw);
-    await waitFor(() => expect(a.count('PATCH', '/api/v1/settings')).toBe(1));
-    expect(a.calls.find((c) => c.method === 'PATCH')?.body).toEqual({
-      auto_update: false,
-    });
-  });
-
-  it('a viewer cannot change it and is told why', async () => {
-    renderApp(
-      signedIn(viewer).on('GET', '/api/v1/update', status()),
-      '/settings/updates',
-    );
-    const sw = await screen.findByRole('switch', { name: 'Automatic updates' });
-    expect((sw as HTMLButtonElement).disabled).toBe(true);
-  });
-
-  it('Look for updates asks the service to look', async () => {
-    const a = signedIn()
-      .on('GET', '/api/v1/update', status())
-      .on('POST', '/api/v1/update/check', status());
-    renderApp(a, '/settings/updates');
-    fireEvent.click(await screen.findByRole('button', { name: 'Look for updates' }));
-    await waitFor(() => expect(a.count('POST', '/api/v1/update/check')).toBe(1));
-  });
 });
 
 describe('Review step', () => {
@@ -263,21 +203,5 @@ describe('Restart the service judges its own attempt (CRSP205)', () => {
     expect(await screen.findByRole('button', { name: 'Update to 1.5.0' })).toBeTruthy();
     expect(screen.queryByText(/did not finish/)).toBeNull();
     expect(screen.queryByText(/0\.1\.13/)).toBeNull();
-  });
-});
-
-describe('Update state words', () => {
-  it('says which of the two idle cases is true', async () => {
-    const waiting = signedIn().on('GET', '/api/v1/update', status());
-    renderApp(waiting, '/settings/updates');
-    expect(await screen.findByText('Version 1.5.0 is waiting for your yes')).toBeTruthy();
-    cleanup();
-    const current = signedIn().on(
-      'GET',
-      '/api/v1/update',
-      status({ update_available: false }),
-    );
-    renderApp(current, '/settings/updates');
-    expect(await screen.findByText('Up to date')).toBeTruthy();
   });
 });

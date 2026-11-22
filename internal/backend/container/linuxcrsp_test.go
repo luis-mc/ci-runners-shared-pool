@@ -143,7 +143,7 @@ func TestLinuxCrspRefusals(t *testing.T) {
 		{"no sums asset", func(f *fakeRelease, _ *LinuxCrspSource) { delete(f.assets, "SHA256SUMS") }, "no SHA256SUMS"},
 		{"no linux asset", func(f *fakeRelease, _ *LinuxCrspSource) {
 			delete(f.assets, "crsp-linux-amd64_0.1.18.tar.gz")
-		}, "has no crsp-linux-amd64"},
+		}, "has no Crsp-0.1.18-linux-x64"},
 		{"sum mismatch", func(f *fakeRelease, _ *LinuxCrspSource) {
 			f.sums = strings.Repeat("a", 64) + "  crsp-linux-amd64_0.1.18.tar.gz\n"
 		}, "does not match the checksum"},

@@ -50,6 +50,11 @@ type Options struct {
 	Events events.Publisher
 	// Update serves the update and restart routes (handlers_update.go). Nil answers 501.
 	Update UpdateService
+	// Lifecycle serves the lifecycle update routes (handlers_lifecycle.go); Fleet lists and asks
+	// the other machines; Remove runs a remove. Nil answers 501.
+	Lifecycle LifecycleService
+	Fleet     FleetService
+	Remove    RemoveService
 	// GitHub is the GitHub integration area (setup, sign-in, users,
 	// repositories). Nil leaves its operations without a backend.
 	GitHub *GitHubArea

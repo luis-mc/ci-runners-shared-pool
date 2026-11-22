@@ -207,11 +207,11 @@ test('Escape closes the question and nothing changes (UX-46)', async ({ page }) 
   const mock = signedIn();
   await mock.install(page);
   await page.goto('/pool/machines/m1');
-  await page.getByRole('button', { name: 'Remove' }).click();
-  await expect(page.getByRole('dialog', { name: 'Remove build-1?' })).toBeVisible();
+  await page.getByRole('button', { name: 'Remove crsp' }).click();
+  await expect(page.getByRole('dialog', { name: 'Remove crsp' })).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  expect(mock.count('DELETE', '/api/v1/machines/m1')).toBe(0);
+  expect(mock.count('POST', '/api/v1/remove')).toBe(0);
 });
 
 test('Delete runners names each runner and its job, then deletes with the yes', async ({

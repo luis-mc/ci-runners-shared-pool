@@ -21,13 +21,13 @@ func TestEveryStageMapsToItsView(t *testing.T) {
 		want  State
 		heads string
 	}{
-		{"nothing running, offered", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.12"}, StateReview, "Update to 0.1.13"},
-		{"download", ModeLive, snap("downloading", 42), StateDownloading, "Downloading 0.1.13"},
-		{"waiting", ModeLive, snap("waiting_for_jobs", -1), StateWaiting, "Waiting for jobs"},
-		{"installing", ModeLive, snap("installing", 30), StateInstalling, "Installing 0.1.13"},
+		{"nothing running, offered", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.12"}, StateReview, "Version 0.1.13 is ready."},
+		{"download", ModeLive, snap("downloading", 42), StateDownloading, "Downloading"},
+		{"waiting", ModeLive, snap("waiting_for_jobs", -1), StateWaiting, "Waiting for running jobs"},
+		{"installing", ModeLive, snap("installing", 30), StateInstalling, "Installing"},
 		{"waiting for another installer", ModeLive, snap("waiting_installer", -1), StateWaitingInstaller, "Waiting for another installer"},
 		{"restarting", ModeLive, snap("restarting", -1), StateRestarting, "Restarting the service"},
-		{"done (reopened from the toast)", ModeLive, snap("done", 100), StateDone, "Updated"},
+		{"done (reopened from the toast)", ModeLive, snap("done", 100), StateDone, "Updated to version 0.1.13."},
 		{"failed", ModeLive, snap("failed", -1), StateFailed, "The update failed"},
 	}
 	for _, c := range cases {
@@ -147,7 +147,7 @@ func TestRequestFlow(t *testing.T) {
 	m2.Requested()
 	m2.RequestReturned(errors.New("an update or restart is already running"))
 	v := m2.View()
-	if v.State != StateFailed || !strings.Contains(strings.Join(v.Body, "\n"), "Still on 0.1.12.") || !strings.Contains(v.Body[0], "already running") {
+	if v.State != StateFailed || !strings.Contains(strings.Join(v.Body, "\n"), "Still on version 0.1.12.") || !strings.Contains(v.Body[0], "already running") {
 		t.Fatalf("%+v", v)
 	}
 }
@@ -181,12 +181,12 @@ func TestDoneAfterTheRestart(t *testing.T) {
 	back.ServiceVersion = "0.1.13"
 	m.Observe(back)
 	v := m.View()
-	if v.State != StateDone || v.Body[0] != "Now running 0.1.13." {
+	if v.State != StateDone || v.Heading != "Updated to version 0.1.13." {
 		t.Fatalf("%+v", v)
 	}
 	// a stage of done wins the same way
 	m.Observe(Snapshot{ServiceUp: true, ServiceVersion: "0.1.13", Stage: &tray.StageInfo{Name: "done", Version: "0.1.13"}})
-	if v := m.View(); v.State != StateDone || v.Body[0] != "Now running 0.1.13." {
+	if v := m.View(); v.State != StateDone || v.Heading != "Updated to version 0.1.13." {
 		t.Fatalf("%+v", v)
 	}
 	// and a service that never answers stays on Restarting
@@ -206,7 +206,7 @@ func TestFailedShowsReasonStillOnAndLog(t *testing.T) {
 	m.Observe(s)
 	v := m.View()
 	got := strings.Join(v.Body, "\n")
-	for _, want := range []string{"did not report healthy", "Still on 0.1.12.", `Log: C:\ProgramData\crsp\logs\msi-update.log`} {
+	for _, want := range []string{"did not report healthy", "Still on version 0.1.12.", `Log: C:\ProgramData\crsp\logs\msi-update.log`} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in %q", want, got)
 		}
@@ -280,7 +280,7 @@ func TestReviewBodyWrapsWithoutCutting(t *testing.T) {
 				joined += strings.Join(it.Lines, " ") + " "
 			}
 		}
-		if !strings.Contains(joined, "No job is stopped.") {
+		if !strings.Contains(joined, "Jobs are never stopped by an update.") {
 			t.Fatalf("text cut: %q", joined)
 		}
 	}
@@ -297,13 +297,13 @@ func TestLeftoverDoneStageTable(t *testing.T) {
 		want         State
 		heading, msg string
 	}{
-		{"review: leftover done 0.1.17", "0.1.17", "0.1.18", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17", Stage: stage("done", "0.1.17")}, StateReview, "Update to 0.1.18", ""},
-		{"live: leftover done 0.1.17", "0.1.17", "0.1.18", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17", Stage: stage("done", "0.1.17")}, StateReview, "Update to 0.1.18", ""},
-		{"live: real done 0.1.18", "0.1.17", "0.1.18", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.18", Stage: stage("done", "0.1.18")}, StateDone, "Updated", "Now running 0.1.18."},
-		{"live: done after restart, window opened on new version", "0.1.18", "", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.18", Stage: stage("done", "0.1.18")}, StateDone, "Updated", "Now running 0.1.18."},
-		{"live: done, same version, nothing newer offered", "0.1.18", "0.1.18", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.18", Stage: stage("done", "0.1.18")}, StateDone, "Updated", "Now running 0.1.18."},
-		{"review: no stage", "0.1.17", "0.1.18", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17"}, StateReview, "Update to 0.1.18", ""},
-		{"review: old failed stage", "0.1.17", "0.1.18", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17", Stage: stage("failed", "0.1.17")}, StateReview, "Update to 0.1.18", ""},
+		{"review: leftover done 0.1.17", "0.1.17", "0.1.18", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17", Stage: stage("done", "0.1.17")}, StateReview, "Version 0.1.18 is ready.", ""},
+		{"live: leftover done 0.1.17", "0.1.17", "0.1.18", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17", Stage: stage("done", "0.1.17")}, StateReview, "Version 0.1.18 is ready.", ""},
+		{"live: real done 0.1.18", "0.1.17", "0.1.18", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.18", Stage: stage("done", "0.1.18")}, StateDone, "Updated to version 0.1.18.", ""},
+		{"live: done after restart, window opened on new version", "0.1.18", "", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.18", Stage: stage("done", "0.1.18")}, StateDone, "Updated to version 0.1.18.", ""},
+		{"live: done, same version, nothing newer offered", "0.1.18", "0.1.18", ModeLive, Snapshot{ServiceUp: true, ServiceVersion: "0.1.18", Stage: stage("done", "0.1.18")}, StateDone, "Updated to version 0.1.18.", ""},
+		{"review: no stage", "0.1.17", "0.1.18", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17"}, StateReview, "Version 0.1.18 is ready.", ""},
+		{"review: old failed stage", "0.1.17", "0.1.18", ModeReview, Snapshot{ServiceUp: true, ServiceVersion: "0.1.17", Stage: stage("failed", "0.1.17")}, StateReview, "Version 0.1.18 is ready.", ""},
 	}
 	for _, c := range cases {
 		m := NewModel(c.from, c.to, c.mode)

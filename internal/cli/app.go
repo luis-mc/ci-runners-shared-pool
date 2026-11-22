@@ -8,6 +8,7 @@
 package cli
 
 import (
+	"bufio"
 	"context"
 	"errors"
 	"flag"
@@ -62,6 +63,8 @@ type Env struct {
 	Modes map[string]ModeFunc
 	// Context is cancelled on Ctrl+C.
 	Context context.Context
+	// Uninstall replaces the machine-touching parts of `crsp uninstall` (tests); nil is the real thing.
+	Uninstall *UninstallHooks
 }
 
 func (e *Env) defaults() {
@@ -138,6 +141,16 @@ type call struct {
 	cached *session
 	// after holds the arguments after a bare `--`, for a command with dashdash.
 	after []string
+	// in is the one reader of stdin for this call, so two questions in a row do not lose input to buffering.
+	in *bufio.Reader
+}
+
+// stdin returns the call's reader of stdin.
+func (c *call) stdin() *bufio.Reader {
+	if c.in == nil {
+		c.in = bufio.NewReader(c.env.Stdin)
+	}
+	return c.in
 }
 
 // command is a node of the command tree.

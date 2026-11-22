@@ -17,7 +17,7 @@ var dpiUnits = map[string]int{"100%": 15, "125%": 19, "150%": 23, "200%": 30}
 // D14: every state, at every DPI, nothing is clipped.
 func TestNothingIsClippedAtAnyDPI(t *testing.T) {
 	views := SampleViews()
-	if len(views) != len(AllStates) {
+	if len(views) != len(AllStates)+2 { // plus the remove question, nothing chosen and chosen
 		t.Fatalf("%d views", len(views))
 	}
 	for name, unit := range dpiUnits {
@@ -46,7 +46,7 @@ func TestLayoutScalesWithTheFontHeight(t *testing.T) {
 }
 
 func TestLongTextWrapsAndTheWindowGrowsTaller(t *testing.T) {
-	short := View{State: StateFailed, Heading: "The update failed", Body: []string{"Short."}, Buttons: []Button{{BtnClose, "Close", true}}}
+	short := View{State: StateFailed, Heading: "The update failed", Body: []string{"Short."}, Buttons: []Button{{ID: BtnClose, Label: "Close", Primary: true}}}
 	long := short
 	long.Body = []string{strings.Repeat("a long reason ", 30), `C:\ProgramData\crsp\logs\` + strings.Repeat("x", 120)}
 	m := fake(15)
@@ -114,7 +114,7 @@ func TestWrapBreaksAPathThatIsTooWide(t *testing.T) {
 func TestClippedFlagsALineWiderThanItsBoxAndAFailedMeasure(t *testing.T) {
 	m := fake(15)
 	l := Compute(m, View{State: StateInstalling, Heading: "Installing 0.1.20", Body: []string{"Short."}, Bar: BarDeterminate, Percent: 0,
-		Buttons: []Button{{BtnClose, "Hide", true}}})
+		Buttons: []Button{{ID: BtnClose, Label: "Hide", Primary: true}}})
 	if bad := Clipped(m, l); len(bad) > 0 {
 		t.Fatalf("clean layout flagged: %v", bad)
 	}
@@ -128,7 +128,7 @@ func TestClippedFlagsALineWiderThanItsBoxAndAFailedMeasure(t *testing.T) {
 		t.Fatal("a line wider than its box was not flagged")
 	}
 	zero := Metrics{Unit: 15, Measure: func(string, bool) int { return 0 }}
-	if bad := Clipped(zero, Compute(m, View{State: StateInstalling, Heading: "H", Buttons: []Button{{BtnClose, "Hide", true}}})); len(bad) == 0 {
+	if bad := Clipped(zero, Compute(m, View{State: StateInstalling, Heading: "H", Buttons: []Button{{ID: BtnClose, Label: "Hide", Primary: true}}})); len(bad) == 0 {
 		t.Fatal("a measure of 0 for text was not flagged")
 	}
 }
@@ -140,7 +140,7 @@ func TestInstallingBodyWrapsAtEveryDPI(t *testing.T) {
 	for name, unit := range dpiUnits {
 		m := fake(unit)
 		l := Compute(m, View{State: StateInstalling, Heading: "Installing 0.1.20", Body: []string{body}, Bar: BarDeterminate, Percent: 0,
-			Buttons: []Button{{BtnClose, "Hide", true}}})
+			Buttons: []Button{{ID: BtnClose, Label: "Hide", Primary: true}}})
 		for _, it := range l.Items {
 			if it.Kind == KindBody && len(it.Lines) < 2 {
 				t.Errorf("%s: body did not wrap: %v", name, it.Lines)
