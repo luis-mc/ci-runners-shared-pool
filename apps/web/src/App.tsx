@@ -29,7 +29,6 @@ import { MachineDetail, MachinesList } from './screens/machines/Machines';
 import { Overview } from './screens/overview/Overview';
 import { RepositoriesList, RepositoryDetail } from './screens/repositories/Repositories';
 import { RunnersList } from './screens/runners/Runners';
-import { RunnerPage } from './screens/runners/RunnerPage';
 import {
   AccessTab,
   AuditTab,

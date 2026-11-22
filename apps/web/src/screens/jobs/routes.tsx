@@ -27,11 +27,11 @@ const Guardrails = later(() =>
 );
 const FindingPage = later(
   () => import('../insights/Finding').then((m) => m.FindingPage),
-  true,
+  { heading: 'Finding' },
 );
 const ActionWizard = later(
   () => import('../insights/ActionWizard').then((m) => m.ActionWizard),
-  true,
+  { heading: 'Review the change' },
 );
 
 /** The run and job pages count their timers every second (R5.150). */
