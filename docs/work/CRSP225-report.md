@@ -21,3 +21,4 @@ vocabulary (`idle`, `waiting_for_jobs`, ...), so `lw('state.up_to_date')` had no
 
 ## Not touched
 `/api/v1/update` (old compact update page) uses a different vocabulary; out of scope. Update key and delivery scripts untouched.
+CODE DONE d6cb469e886aa33f0451a17368183286e09f5297
