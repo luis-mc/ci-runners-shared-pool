@@ -151,3 +151,24 @@ func (s *Store) RecordJobEndReason(ctx context.Context, jobID int64, reason, det
 	}
 	return nil
 }
+
+// RawSetting reads one stored setting value (JSON); ok is false when it is not stored.
+func (s *Store) RawSetting(ctx context.Context, key string) (string, bool, error) {
+	var v string
+	err := s.db.QueryRowContext(ctx, `SELECT value FROM settings WHERE key = ?`, key).Scan(&v)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	return v, err == nil, err
+}
+
+// PutRawSetting writes one setting value (JSON).
+func (s *Store) PutRawSetting(ctx context.Context, key, jsonValue, by string) error {
+	_, err := s.db.ExecContext(ctx, `INSERT INTO settings (key, value, updated_by) VALUES (?, ?, ?)
+ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), updated_by = excluded.updated_by`,
+		key, jsonValue, by)
+	if err != nil {
+		return fmt.Errorf("put setting %s: %w", key, err)
+	}
+	return nil
+}
