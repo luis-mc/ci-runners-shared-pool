@@ -844,6 +844,8 @@ A rule this spec cites is proven by a test that exists. A rule whose guard is st
 Proof: CORE-1, CORE-5, CORE-7, UX-1, UX-2, UX-3, UX-5, UX-6, UX-7, UX-8, UX-11, UX-14, UX-18, UX-19, UX-20, UX-21, UX-22, UX-24, UX-25, UX-26, UX-27, UX-28, UX-29, UX-30, UX-31, UX-33, UX-34, UX-35, UX-36, UX-39, UX-41, UX-43, UX-44, UX-46, UX-52, UX-53, UX-54, UX-56, UX-58, UX-59, UX-61, UX-62, UX-75 `scripts/design/design-system-follow.test.ts`
 Proof: UX-4, UX-10, UX-12, UX-15, UX-16, UX-17, UX-42, UX-49, UX-51 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-85 `packages/ui/src/components/link-frame.test.tsx`
+Proof: CORE-3 `apps/web/src/screens/pool/PoolMachines.test.tsx`
 Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
 Proof: UX-55 `e2e/tests/web-console/ux-look.spec.ts`
 Proof: UX-57 `e2e/tests/web-console/ux-keyboard.spec.ts`

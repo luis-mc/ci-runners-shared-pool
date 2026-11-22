@@ -439,7 +439,7 @@ Owner decision 21 Nov 2026 (job sizing wave 1, T9): a persistent Windows or macO
 
 **R5.140** (OPS78) — **The console says what the gate does.** The runner page of a gated persistent runner has a *Listener* section: *gated: offline by design* (so nobody reads it as a fault), the day of the weekly wake-up, and why jobs wait for the runner (the scheduler's queue reason). In observe mode a note says so. The words are in `content.md` (Listener gate words), the parts are the shared Section, Facts, Message and Text. The settings screen does not exist yet (LOOK56); the Doctor fix links to `/settings`.
 
-**R5.141** (OPS78) — **Open checks for the owner.** The listener tests of the research (session create and delete, the second-job race, stop during a job, a label change on a connected listener, Windows service control 50 times, update at start) need a real runner and are not run by crsp's tests; `docs/work/OPS78-report.md` lists them. Every rule above is tested on fakes (the labels client, the service manager of each OS, the injected clock).
+**R5.141** (OPS78) — **Open checks for the owner.** The listener tests of the research (session create and delete, the second-job race, stop during a job, a label change on a connected listener, Windows service control 50 times, update at start) need a real runner and are not run by crsp's tests; the owner runs them by hand on a real runner. Every rule above is tested on fakes (the labels client, the service manager of each OS, the injected clock).
 
 ## 6. Non-functional requirements
 
@@ -650,7 +650,7 @@ Rows that name a test file are built and run in CI; rows that say `planned:` are
 | R5.138 | `internal/listenergate/gate_test.go` TestObserveWritesWouldRowsAndChangesNothing; `internal/listenergate/sweep_test.go` TestObserveSweepLeavesListenersAlone, TestSweepParksAnIdleListenerButNeverABusyOne; `internal/listenergate/service_test.go` TestServiceStartsInObserveModeAndSavesEnforce; `internal/api/handlers_listenergate_test.go` TestListenerGateRoutes |
 | R5.139 | `apps/web/src/screens/runners/Kinds.test.tsx` (Persistent only where it runs on the machine itself) |
 | R5.140 | `internal/listenergate/gate_test.go` TestStatusSaysOfflineByDesign; `apps/web/src/screens/runners/Kinds.test.tsx` (gated: offline by design) |
-| R5.141 | Open checks: none run by tests; listed in `docs/work/OPS78-report.md` |
+| R5.141 | Open checks: none run by tests; the owner runs the listed checks by hand on a real runner |
 | R5.102 | `internal/agent/runnertools_test.go` TestProbeRunnerToolsFindsOnRunnerPath, TestProbeRunnerToolsWindowsExtensionsAndMissingPathFile |
 | R5.110 | `internal/toolstore/plan_test.go` TestBuildPlan, TestParseToolsErrors |
 | R5.111 | `internal/toolstore/store_test.go` TestEnsureInstalledOnce, TestEnsureInstalledConcurrentOnce, TestEnsureInstalledFailureLeavesNothing, TestSideBySideAndMarker |
