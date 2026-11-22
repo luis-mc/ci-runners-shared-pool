@@ -44,6 +44,7 @@ import { signInUrl } from '../../auth/session';
 import { ApiError, unwrap, useClient } from '../../api/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useSession } from '../../auth/session';
+import { RunsOnPrPane } from './RunsOnPr';
 import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import {
@@ -493,6 +494,7 @@ export function RepositoriesList() {
       </Pane>
       <MissingPermissionsGuide onReady={reload} />
       <OrgPools version={v} />
+      {items?.items.some((r) => r.pool_on) ? <RunsOnPrPane /> : null}
       <ActionBar
         status={chosen.length === 0 ? 'Nothing selected' : selectedStatus(chosen.length)}
         primary={
@@ -953,6 +955,7 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
       <CiChecksPane repositoryId={r.id} />
       <GuardrailsPane fullName={r.full_name} />
       <JobSlotsPane repositoryId={r.id} />
+      {r.pool_on ? <RunsOnPrPane repositoryId={r.id} /> : null}
       <Suspense fallback={<Loading what="Loading job sizes" />}>
         <JobSizesPane fullName={r.full_name} />
       </Suspense>

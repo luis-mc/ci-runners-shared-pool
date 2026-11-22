@@ -458,4 +458,64 @@ func (s *server) GetRepositoryRunsOn(ctx context.Context, req gen.GetRepositoryR
 	return gen.GetRepositoryRunsOn200JSONResponse(out), nil
 }
 
+func runsOnPRFailure(err error) (int, gen.Error) {
+	if errors.Is(err, repos.ErrRunsOnPRUnavailable) {
+		return http.StatusNotImplemented, notImplemented()
+	}
+	return failure(err)
+}
+
+// PreviewRunsOnPullRequests implements GET /api/v1/runs-on-pr (github-integration
+// R5.113): the files and the diff, for one repository or every opted-in one.
+func (s *server) PreviewRunsOnPullRequests(ctx context.Context, req gen.PreviewRunsOnPullRequestsRequestObject) (gen.PreviewRunsOnPullRequestsResponseObject, error) {
+	t := repos.RunsOnPRTarget{All: req.Params.RepositoryId == nil}
+	if req.Params.RepositoryId != nil {
+		t.RepositoryID = *req.Params.RepositoryId
+	}
+	pvs, err := s.ghArea().Repos.PreviewRunsOnPR(ctx, s.principal(ctx), t)
+	if err != nil {
+		code, body := runsOnPRFailure(err)
+		return gen.PreviewRunsOnPullRequestsdefaultJSONResponse{StatusCode: code, Body: body}, nil
+	}
+	out := gen.RunsOnPullRequestPreviewList{Items: make([]gen.RunsOnPullRequestPreview, 0, len(pvs))}
+	for _, v := range pvs {
+		files := make([]gen.RunsOnPullRequestFile, 0, len(v.Files))
+		for _, f := range v.Files {
+			files = append(files, gen.RunsOnPullRequestFile{Path: f.Path, Changes: f.Changes, Diff: f.Diff})
+		}
+		out.Items = append(out.Items, gen.RunsOnPullRequestPreview{RepositoryId: v.RepositoryID, FullName: v.FullName,
+			State: gen.RunsOnPullRequestPreviewState(v.State), Files: files, Diff: v.Diff, Skipped: nonNil(v.Skipped), Message: optStr(v.Message)})
+	}
+	return gen.PreviewRunsOnPullRequests200JSONResponse(out), nil
+}
+
+// OpenRunsOnPullRequests implements POST /api/v1/runs-on-pr (github-integration
+// R5.113): only this call opens the pull request; nothing does it on a schedule.
+func (s *server) OpenRunsOnPullRequests(ctx context.Context, req gen.OpenRunsOnPullRequestsRequestObject) (gen.OpenRunsOnPullRequestsResponseObject, error) {
+	if req.Body == nil {
+		code, body := failure(auth.Invalid("the request is empty"))
+		return gen.OpenRunsOnPullRequestsdefaultJSONResponse{StatusCode: code, Body: body}, nil
+	}
+	t := repos.RunsOnPRTarget{All: req.Body.All != nil && *req.Body.All}
+	if req.Body.RepositoryId != nil {
+		t.RepositoryID = *req.Body.RepositoryId
+	}
+	rs, err := s.ghArea().Repos.OpenRunsOnPR(ctx, s.principal(ctx), t)
+	if err != nil {
+		code, body := runsOnPRFailure(err)
+		return gen.OpenRunsOnPullRequestsdefaultJSONResponse{StatusCode: code, Body: body}, nil
+	}
+	out := gen.RunsOnPullRequestResultList{Items: make([]gen.RunsOnPullRequestResult, 0, len(rs))}
+	for _, r := range rs {
+		it := gen.RunsOnPullRequestResult{RepositoryId: r.RepositoryID, FullName: r.FullName,
+			State: gen.RunsOnPullRequestResultState(r.State), Message: optStr(r.Message)}
+		if r.Number != 0 {
+			n, u := r.Number, r.URL
+			it.Number, it.Url = &n, &u
+		}
+		out.Items = append(out.Items, it)
+	}
+	return gen.OpenRunsOnPullRequests200JSONResponse(out), nil
+}
+
 var _ = http.StatusOK

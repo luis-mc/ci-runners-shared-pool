@@ -3290,6 +3290,57 @@ func (e RunsOnFindingKind) Valid() bool {
 	}
 }
 
+// Defines values for RunsOnPullRequestPreviewState.
+const (
+	RunsOnPullRequestPreviewStateChange          RunsOnPullRequestPreviewState = "change"
+	RunsOnPullRequestPreviewStateError           RunsOnPullRequestPreviewState = "error"
+	RunsOnPullRequestPreviewStateNotOwned        RunsOnPullRequestPreviewState = "not_owned"
+	RunsOnPullRequestPreviewStateNothingToChange RunsOnPullRequestPreviewState = "nothing_to_change"
+)
+
+// Valid indicates whether the value is a known member of the RunsOnPullRequestPreviewState enum.
+func (e RunsOnPullRequestPreviewState) Valid() bool {
+	switch e {
+	case RunsOnPullRequestPreviewStateChange:
+		return true
+	case RunsOnPullRequestPreviewStateError:
+		return true
+	case RunsOnPullRequestPreviewStateNotOwned:
+		return true
+	case RunsOnPullRequestPreviewStateNothingToChange:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunsOnPullRequestResultState.
+const (
+	RunsOnPullRequestResultStateError           RunsOnPullRequestResultState = "error"
+	RunsOnPullRequestResultStateExisting        RunsOnPullRequestResultState = "existing"
+	RunsOnPullRequestResultStateNotOwned        RunsOnPullRequestResultState = "not_owned"
+	RunsOnPullRequestResultStateNothingToChange RunsOnPullRequestResultState = "nothing_to_change"
+	RunsOnPullRequestResultStateOpened          RunsOnPullRequestResultState = "opened"
+)
+
+// Valid indicates whether the value is a known member of the RunsOnPullRequestResultState enum.
+func (e RunsOnPullRequestResultState) Valid() bool {
+	switch e {
+	case RunsOnPullRequestResultStateError:
+		return true
+	case RunsOnPullRequestResultStateExisting:
+		return true
+	case RunsOnPullRequestResultStateNotOwned:
+		return true
+	case RunsOnPullRequestResultStateNothingToChange:
+		return true
+	case RunsOnPullRequestResultStateOpened:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SettingsInsightsUpdatePeriod.
 const (
 	EveryNthRun SettingsInsightsUpdatePeriod = "every_nth_run"
@@ -6800,6 +6851,12 @@ type NotificationTestResult struct {
 // OS defines model for OS.
 type OS string
 
+// OpenRunsOnPullRequestsRequest Name one repository, or set all to cover every repository whose pool is on.
+type OpenRunsOnPullRequestsRequest struct {
+	All          *bool  `json:"all,omitempty"`
+	RepositoryId *int64 `json:"repository_id,omitempty"`
+}
+
 // OrgPool defines model for OrgPool.
 type OrgPool struct {
 	ChangedAt *time.Time `json:"changed_at,omitempty"`
@@ -8335,6 +8392,51 @@ type RunsOnFindingList struct {
 	Items     []RunsOnFinding `json:"items"`
 }
 
+// RunsOnPullRequestFile defines model for RunsOnPullRequestFile.
+type RunsOnPullRequestFile struct {
+	Changes int    `json:"changes"`
+	Diff    string `json:"diff"`
+	Path    string `json:"path"`
+}
+
+// RunsOnPullRequestPreview defines model for RunsOnPullRequestPreview.
+type RunsOnPullRequestPreview struct {
+	// Diff The whole change as a unified diff.
+	Diff         string                        `json:"diff"`
+	Files        []RunsOnPullRequestFile       `json:"files"`
+	FullName     string                        `json:"full_name"`
+	Message      *string                       `json:"message,omitempty"`
+	RepositoryId int64                         `json:"repository_id"`
+	Skipped      []string                      `json:"skipped"`
+	State        RunsOnPullRequestPreviewState `json:"state"`
+}
+
+// RunsOnPullRequestPreviewState defines model for RunsOnPullRequestPreview.State.
+type RunsOnPullRequestPreviewState string
+
+// RunsOnPullRequestPreviewList defines model for RunsOnPullRequestPreviewList.
+type RunsOnPullRequestPreviewList struct {
+	Items []RunsOnPullRequestPreview `json:"items"`
+}
+
+// RunsOnPullRequestResult defines model for RunsOnPullRequestResult.
+type RunsOnPullRequestResult struct {
+	FullName     string                       `json:"full_name"`
+	Message      *string                      `json:"message,omitempty"`
+	Number       *int                         `json:"number,omitempty"`
+	RepositoryId int64                        `json:"repository_id"`
+	State        RunsOnPullRequestResultState `json:"state"`
+	Url          *string                      `json:"url,omitempty"`
+}
+
+// RunsOnPullRequestResultState defines model for RunsOnPullRequestResult.State.
+type RunsOnPullRequestResultState string
+
+// RunsOnPullRequestResultList defines model for RunsOnPullRequestResultList.
+type RunsOnPullRequestResultList struct {
+	Items []RunsOnPullRequestResult `json:"items"`
+}
+
 // Session defines model for Session.
 type Session struct {
 	// Csrf Send as X-CSRF-Token on every change.
@@ -9603,6 +9705,11 @@ type ListRunsParams struct {
 // ListRunsParamsState defines parameters for ListRuns.
 type ListRunsParamsState string
 
+// PreviewRunsOnPullRequestsParams defines parameters for PreviewRunsOnPullRequests.
+type PreviewRunsOnPullRequestsParams struct {
+	RepositoryId *int64 `form:"repository_id,omitempty" json:"repository_id,omitempty"`
+}
+
 // GetRunParams defines parameters for GetRun.
 type GetRunParams struct {
 	// Attempt The attempt; the newest when absent.
@@ -9813,6 +9920,9 @@ type CreateRunnersJSONRequestBody = ApplyPlanRequest
 
 // UpdateRunnerSettingsJSONRequestBody defines body for UpdateRunnerSettings for application/json ContentType.
 type UpdateRunnerSettingsJSONRequestBody = RunnerSettingsUpdate
+
+// OpenRunsOnPullRequestsJSONRequestBody defines body for OpenRunsOnPullRequests for application/json ContentType.
+type OpenRunsOnPullRequestsJSONRequestBody = OpenRunsOnPullRequestsRequest
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody = Settings
@@ -11553,6 +11663,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/runs (the `ListRuns` operationId).
 	ListRuns(ctx context.Context, params *ListRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PreviewRunsOnPullRequests Preview the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.109. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+	//
+	// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+	PreviewRunsOnPullRequests(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpenRunsOnPullRequestsWithBody Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpenRunsOnPullRequests Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequests(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRun One run attempt with its jobs, needs graph and ETA
 	//
@@ -15721,6 +15856,61 @@ func (c *Client) UpdateRunnerSettings(ctx context.Context, runnerId RunnerId, bo
 // Corresponds with GET /api/v1/runs (the `ListRuns` operationId).
 func (c *Client) ListRuns(ctx context.Context, params *ListRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListRunsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PreviewRunsOnPullRequests Preview the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.109. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+//
+// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+func (c *Client) PreviewRunsOnPullRequests(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPreviewRunsOnPullRequestsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OpenRunsOnPullRequestsWithBody Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *Client) OpenRunsOnPullRequestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpenRunsOnPullRequestsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OpenRunsOnPullRequests Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *Client) OpenRunsOnPullRequests(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpenRunsOnPullRequestsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -24715,6 +24905,100 @@ func NewListRunsRequest(server string, params *ListRunsParams) (*http.Request, e
 	return req, nil
 }
 
+// NewPreviewRunsOnPullRequestsRequest constructs an http.Request for the PreviewRunsOnPullRequests method
+func NewPreviewRunsOnPullRequestsRequest(server string, params *PreviewRunsOnPullRequestsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs-on-pr")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.RepositoryId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "repository_id", *params.RepositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewOpenRunsOnPullRequestsRequest calls the generic OpenRunsOnPullRequests builder with application/json body
+func NewOpenRunsOnPullRequestsRequest(server string, body OpenRunsOnPullRequestsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewOpenRunsOnPullRequestsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewOpenRunsOnPullRequestsRequestWithBody constructs an http.Request for the OpenRunsOnPullRequests method, with any body, and a specified content type
+func NewOpenRunsOnPullRequestsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs-on-pr")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetRunRequest constructs an http.Request for the GetRun method
 func NewGetRunRequest(server string, runId int64, params *GetRunParams) (*http.Request, error) {
 	var err error
@@ -28382,6 +28666,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/runs (the `ListRuns` operationId).
 	ListRunsWithResponse(ctx context.Context, params *ListRunsParams, reqEditors ...RequestEditorFn) (*ListRunsResponse, error)
+
+	// PreviewRunsOnPullRequestsWithResponse Preview the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.109. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+	PreviewRunsOnPullRequestsWithResponse(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*PreviewRunsOnPullRequestsResponse, error)
+
+	// OpenRunsOnPullRequestsWithBodyWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error)
+
+	// OpenRunsOnPullRequestsWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequestsWithResponse(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error)
 
 	// GetRunWithResponse One run attempt with its jobs, needs graph and ETA
 	//
@@ -36903,6 +37214,102 @@ func (r ListRunsResponse) ContentType() string {
 	return ""
 }
 
+type PreviewRunsOnPullRequestsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunsOnPullRequestPreviewList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PreviewRunsOnPullRequestsResponse) GetJSON200() *RunsOnPullRequestPreviewList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PreviewRunsOnPullRequestsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PreviewRunsOnPullRequestsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PreviewRunsOnPullRequestsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PreviewRunsOnPullRequestsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PreviewRunsOnPullRequestsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type OpenRunsOnPullRequestsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunsOnPullRequestResultList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r OpenRunsOnPullRequestsResponse) GetJSON200() *RunsOnPullRequestResultList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r OpenRunsOnPullRequestsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r OpenRunsOnPullRequestsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r OpenRunsOnPullRequestsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpenRunsOnPullRequestsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r OpenRunsOnPullRequestsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetRunResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -42052,6 +42459,51 @@ func (c *ClientWithResponses) ListRunsWithResponse(ctx context.Context, params *
 		return nil, err
 	}
 	return ParseListRunsResponse(rsp)
+}
+
+// PreviewRunsOnPullRequestsWithResponse Preview the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.109. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+func (c *ClientWithResponses) PreviewRunsOnPullRequestsWithResponse(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*PreviewRunsOnPullRequestsResponse, error) {
+	rsp, err := c.PreviewRunsOnPullRequests(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePreviewRunsOnPullRequestsResponse(rsp)
+}
+
+// OpenRunsOnPullRequestsWithBodyWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *ClientWithResponses) OpenRunsOnPullRequestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error) {
+	rsp, err := c.OpenRunsOnPullRequestsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpenRunsOnPullRequestsResponse(rsp)
+}
+
+// OpenRunsOnPullRequestsWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *ClientWithResponses) OpenRunsOnPullRequestsWithResponse(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error) {
+	rsp, err := c.OpenRunsOnPullRequests(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpenRunsOnPullRequestsResponse(rsp)
 }
 
 // GetRunWithResponse One run attempt with its jobs, needs graph and ETA
@@ -48463,6 +48915,72 @@ func ParseListRunsResponse(rsp *http.Response) (*ListRunsResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RunPage
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePreviewRunsOnPullRequestsResponse parses an HTTP response from a PreviewRunsOnPullRequestsWithResponse call
+func ParsePreviewRunsOnPullRequestsResponse(rsp *http.Response) (*PreviewRunsOnPullRequestsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PreviewRunsOnPullRequestsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunsOnPullRequestPreviewList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOpenRunsOnPullRequestsResponse parses an HTTP response from a OpenRunsOnPullRequestsWithResponse call
+func ParseOpenRunsOnPullRequestsResponse(rsp *http.Response) (*OpenRunsOnPullRequestsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpenRunsOnPullRequestsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunsOnPullRequestResultList
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

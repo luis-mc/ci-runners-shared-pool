@@ -69,6 +69,7 @@ var githubAreaAuth = map[string]string{
 	"listInstallations": authUser, "listOrgPools": authUser, "setOrgPool": authAdmin, "getAppInstallUrl": authAdmin, "getAppHealth": authUser, "listRepositories": authUser,
 	"planRepositoryChanges": authAdmin, "stopRepositoryPlan": authAdmin, "getRepositoryPlan": authUser, "applyRepositoryChanges": authAdmin,
 	"getRepository": authUser, "updateRepositoryPolicy": authAdmin, "getRepositoryRunsOn": authUser,
+	"previewRunsOnPullRequests": authAdmin, "openRunsOnPullRequests": authAdmin,
 	"getRepositoryExtraPackages": authUser, "setRepositoryExtraPackages": authAdmin,
 	"getRepositoryTrial": authUser, "setRepositoryTrial": authAdmin, "setRepositoryWebhookMode": authAdmin,
 	"getAppWebhook": authAdmin, "setAppWebhook": authOwner, "clearAppWebhook": authOwner,

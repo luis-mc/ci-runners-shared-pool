@@ -3289,6 +3289,57 @@ func (e RunsOnFindingKind) Valid() bool {
 	}
 }
 
+// Defines values for RunsOnPullRequestPreviewState.
+const (
+	RunsOnPullRequestPreviewStateChange          RunsOnPullRequestPreviewState = "change"
+	RunsOnPullRequestPreviewStateError           RunsOnPullRequestPreviewState = "error"
+	RunsOnPullRequestPreviewStateNotOwned        RunsOnPullRequestPreviewState = "not_owned"
+	RunsOnPullRequestPreviewStateNothingToChange RunsOnPullRequestPreviewState = "nothing_to_change"
+)
+
+// Valid indicates whether the value is a known member of the RunsOnPullRequestPreviewState enum.
+func (e RunsOnPullRequestPreviewState) Valid() bool {
+	switch e {
+	case RunsOnPullRequestPreviewStateChange:
+		return true
+	case RunsOnPullRequestPreviewStateError:
+		return true
+	case RunsOnPullRequestPreviewStateNotOwned:
+		return true
+	case RunsOnPullRequestPreviewStateNothingToChange:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunsOnPullRequestResultState.
+const (
+	RunsOnPullRequestResultStateError           RunsOnPullRequestResultState = "error"
+	RunsOnPullRequestResultStateExisting        RunsOnPullRequestResultState = "existing"
+	RunsOnPullRequestResultStateNotOwned        RunsOnPullRequestResultState = "not_owned"
+	RunsOnPullRequestResultStateNothingToChange RunsOnPullRequestResultState = "nothing_to_change"
+	RunsOnPullRequestResultStateOpened          RunsOnPullRequestResultState = "opened"
+)
+
+// Valid indicates whether the value is a known member of the RunsOnPullRequestResultState enum.
+func (e RunsOnPullRequestResultState) Valid() bool {
+	switch e {
+	case RunsOnPullRequestResultStateError:
+		return true
+	case RunsOnPullRequestResultStateExisting:
+		return true
+	case RunsOnPullRequestResultStateNotOwned:
+		return true
+	case RunsOnPullRequestResultStateNothingToChange:
+		return true
+	case RunsOnPullRequestResultStateOpened:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SettingsInsightsUpdatePeriod.
 const (
 	EveryNthRun SettingsInsightsUpdatePeriod = "every_nth_run"
@@ -6799,6 +6850,12 @@ type NotificationTestResult struct {
 // OS defines model for OS.
 type OS string
 
+// OpenRunsOnPullRequestsRequest Name one repository, or set all to cover every repository whose pool is on.
+type OpenRunsOnPullRequestsRequest struct {
+	All          *bool  `json:"all,omitempty"`
+	RepositoryId *int64 `json:"repository_id,omitempty"`
+}
+
 // OrgPool defines model for OrgPool.
 type OrgPool struct {
 	ChangedAt *time.Time `json:"changed_at,omitempty"`
@@ -8334,6 +8391,51 @@ type RunsOnFindingList struct {
 	Items     []RunsOnFinding `json:"items"`
 }
 
+// RunsOnPullRequestFile defines model for RunsOnPullRequestFile.
+type RunsOnPullRequestFile struct {
+	Changes int    `json:"changes"`
+	Diff    string `json:"diff"`
+	Path    string `json:"path"`
+}
+
+// RunsOnPullRequestPreview defines model for RunsOnPullRequestPreview.
+type RunsOnPullRequestPreview struct {
+	// Diff The whole change as a unified diff.
+	Diff         string                        `json:"diff"`
+	Files        []RunsOnPullRequestFile       `json:"files"`
+	FullName     string                        `json:"full_name"`
+	Message      *string                       `json:"message,omitempty"`
+	RepositoryId int64                         `json:"repository_id"`
+	Skipped      []string                      `json:"skipped"`
+	State        RunsOnPullRequestPreviewState `json:"state"`
+}
+
+// RunsOnPullRequestPreviewState defines model for RunsOnPullRequestPreview.State.
+type RunsOnPullRequestPreviewState string
+
+// RunsOnPullRequestPreviewList defines model for RunsOnPullRequestPreviewList.
+type RunsOnPullRequestPreviewList struct {
+	Items []RunsOnPullRequestPreview `json:"items"`
+}
+
+// RunsOnPullRequestResult defines model for RunsOnPullRequestResult.
+type RunsOnPullRequestResult struct {
+	FullName     string                       `json:"full_name"`
+	Message      *string                      `json:"message,omitempty"`
+	Number       *int                         `json:"number,omitempty"`
+	RepositoryId int64                        `json:"repository_id"`
+	State        RunsOnPullRequestResultState `json:"state"`
+	Url          *string                      `json:"url,omitempty"`
+}
+
+// RunsOnPullRequestResultState defines model for RunsOnPullRequestResult.State.
+type RunsOnPullRequestResultState string
+
+// RunsOnPullRequestResultList defines model for RunsOnPullRequestResultList.
+type RunsOnPullRequestResultList struct {
+	Items []RunsOnPullRequestResult `json:"items"`
+}
+
 // Session defines model for Session.
 type Session struct {
 	// Csrf Send as X-CSRF-Token on every change.
@@ -9602,6 +9704,11 @@ type ListRunsParams struct {
 // ListRunsParamsState defines parameters for ListRuns.
 type ListRunsParamsState string
 
+// PreviewRunsOnPullRequestsParams defines parameters for PreviewRunsOnPullRequests.
+type PreviewRunsOnPullRequestsParams struct {
+	RepositoryId *int64 `form:"repository_id,omitempty" json:"repository_id,omitempty"`
+}
+
 // GetRunParams defines parameters for GetRun.
 type GetRunParams struct {
 	// Attempt The attempt; the newest when absent.
@@ -9812,6 +9919,9 @@ type CreateRunnersJSONRequestBody = ApplyPlanRequest
 
 // UpdateRunnerSettingsJSONRequestBody defines body for UpdateRunnerSettings for application/json ContentType.
 type UpdateRunnerSettingsJSONRequestBody = RunnerSettingsUpdate
+
+// OpenRunsOnPullRequestsJSONRequestBody defines body for OpenRunsOnPullRequests for application/json ContentType.
+type OpenRunsOnPullRequestsJSONRequestBody = OpenRunsOnPullRequestsRequest
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody = Settings
@@ -10364,6 +10474,12 @@ type ServerInterface interface {
 	// ListRuns Workflow runs, newest first
 	// (GET /api/v1/runs)
 	ListRuns(w http.ResponseWriter, r *http.Request, params ListRunsParams)
+	// PreviewRunsOnPullRequests Preview the runs-on pull request of one repository or of every opted-in repository
+	// (GET /api/v1/runs-on-pr)
+	PreviewRunsOnPullRequests(w http.ResponseWriter, r *http.Request, params PreviewRunsOnPullRequestsParams)
+	// OpenRunsOnPullRequests Open the runs-on pull request of one repository or of every opted-in repository
+	// (POST /api/v1/runs-on-pr)
+	OpenRunsOnPullRequests(w http.ResponseWriter, r *http.Request)
 	// GetRun One run attempt with its jobs, needs graph and ETA
 	// (GET /api/v1/runs/{runId})
 	GetRun(w http.ResponseWriter, r *http.Request, runId int64, params GetRunParams)
@@ -15833,6 +15949,53 @@ func (siw *ServerInterfaceWrapper) ListRuns(w http.ResponseWriter, r *http.Reque
 	handler.ServeHTTP(w, r)
 }
 
+// PreviewRunsOnPullRequests operation middleware
+func (siw *ServerInterfaceWrapper) PreviewRunsOnPullRequests(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params PreviewRunsOnPullRequestsParams
+
+	// ------------- Optional query parameter "repository_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "repository_id", r.URL.Query(), &params.RepositoryId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "repository_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repository_id", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PreviewRunsOnPullRequests(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// OpenRunsOnPullRequests operation middleware
+func (siw *ServerInterfaceWrapper) OpenRunsOnPullRequests(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpenRunsOnPullRequests(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetRun operation middleware
 func (siw *ServerInterfaceWrapper) GetRun(w http.ResponseWriter, r *http.Request) {
 
@@ -17016,6 +17179,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/repositories/{repositoryId}/extra-packages", wrapper.SetRepositoryExtraPackages)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/repositories/{repositoryId}/webhook-mode", wrapper.SetRepositoryWebhookMode)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/repositories/{repositoryId}/runs-on", wrapper.GetRepositoryRunsOn)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs-on-pr", wrapper.PreviewRunsOnPullRequests)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runs-on-pr", wrapper.OpenRunsOnPullRequests)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/settings/queue", wrapper.GetQueueSettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/settings/queue", wrapper.UpdateQueueSettings)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines", wrapper.ListMachines)
@@ -23914,6 +24079,84 @@ func (response ListRunsdefaultJSONResponse) VisitListRunsResponse(w http.Respons
 	return err
 }
 
+type PreviewRunsOnPullRequestsRequestObject struct {
+	Params PreviewRunsOnPullRequestsParams
+}
+
+type PreviewRunsOnPullRequestsResponseObject interface {
+	VisitPreviewRunsOnPullRequestsResponse(w http.ResponseWriter) error
+}
+
+type PreviewRunsOnPullRequests200JSONResponse RunsOnPullRequestPreviewList
+
+func (response PreviewRunsOnPullRequests200JSONResponse) VisitPreviewRunsOnPullRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PreviewRunsOnPullRequestsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PreviewRunsOnPullRequestsdefaultJSONResponse) VisitPreviewRunsOnPullRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type OpenRunsOnPullRequestsRequestObject struct {
+	Body *OpenRunsOnPullRequestsJSONRequestBody
+}
+
+type OpenRunsOnPullRequestsResponseObject interface {
+	VisitOpenRunsOnPullRequestsResponse(w http.ResponseWriter) error
+}
+
+type OpenRunsOnPullRequests200JSONResponse RunsOnPullRequestResultList
+
+func (response OpenRunsOnPullRequests200JSONResponse) VisitOpenRunsOnPullRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type OpenRunsOnPullRequestsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response OpenRunsOnPullRequestsdefaultJSONResponse) VisitOpenRunsOnPullRequestsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetRunRequestObject struct {
 	RunId  int64 `json:"runId"`
 	Params GetRunParams
@@ -26031,6 +26274,12 @@ type StrictServerInterface interface {
 	// ListRuns Workflow runs, newest first
 	// (GET /api/v1/runs)
 	ListRuns(ctx context.Context, request ListRunsRequestObject) (ListRunsResponseObject, error)
+	// PreviewRunsOnPullRequests Preview the runs-on pull request of one repository or of every opted-in repository
+	// (GET /api/v1/runs-on-pr)
+	PreviewRunsOnPullRequests(ctx context.Context, request PreviewRunsOnPullRequestsRequestObject) (PreviewRunsOnPullRequestsResponseObject, error)
+	// OpenRunsOnPullRequests Open the runs-on pull request of one repository or of every opted-in repository
+	// (POST /api/v1/runs-on-pr)
+	OpenRunsOnPullRequests(ctx context.Context, request OpenRunsOnPullRequestsRequestObject) (OpenRunsOnPullRequestsResponseObject, error)
 	// GetRun One run attempt with its jobs, needs graph and ETA
 	// (GET /api/v1/runs/{runId})
 	GetRun(ctx context.Context, request GetRunRequestObject) (GetRunResponseObject, error)
@@ -30774,6 +31023,63 @@ func (sh *strictHandler) ListRuns(w http.ResponseWriter, r *http.Request, params
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ListRunsResponseObject); ok {
 		if err := validResponse.VisitListRunsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PreviewRunsOnPullRequests operation middleware
+func (sh *strictHandler) PreviewRunsOnPullRequests(w http.ResponseWriter, r *http.Request, params PreviewRunsOnPullRequestsParams) {
+	var request PreviewRunsOnPullRequestsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PreviewRunsOnPullRequests(ctx, request.(PreviewRunsOnPullRequestsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PreviewRunsOnPullRequests")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PreviewRunsOnPullRequestsResponseObject); ok {
+		if err := validResponse.VisitPreviewRunsOnPullRequestsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// OpenRunsOnPullRequests operation middleware
+func (sh *strictHandler) OpenRunsOnPullRequests(w http.ResponseWriter, r *http.Request) {
+	var request OpenRunsOnPullRequestsRequestObject
+
+	var body OpenRunsOnPullRequestsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.OpenRunsOnPullRequests(ctx, request.(OpenRunsOnPullRequestsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "OpenRunsOnPullRequests")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(OpenRunsOnPullRequestsResponseObject); ok {
+		if err := validResponse.VisitOpenRunsOnPullRequestsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
