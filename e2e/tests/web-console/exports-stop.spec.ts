@@ -217,7 +217,7 @@ test('Add runners: Linux on a Windows machine is planned and added to the pool',
   await page.goto('/pool/runners/add');
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByText('Add ephemeral runner crsp-pool-1')).toBeVisible();
-  await page.getByRole('button', { name: 'Add 1 runner' }).click();
+  await page.getByRole('button', { name: 'Allow 1 ephemeral runner' }).click();
   await expect(page.getByText('The runners are added.')).toBeVisible({ timeout: 10_000 });
   expect(mock.count('POST', '/api/v1/runner-plans')).toBe(1);
 });
@@ -239,7 +239,7 @@ test('Add runners: a failed runner ends at Done with its reason and a next step'
   await mock.install(page);
   await page.goto('/pool/runners/add');
   await page.getByRole('button', { name: 'Next' }).click();
-  await page.getByRole('button', { name: 'Add 1 runner' }).click();
+  await page.getByRole('button', { name: 'Allow 1 ephemeral runner' }).click();
   await expect(
     page.getByText(/1 failed, 0 done\. build failed \(exit 1\)\./),
   ).toBeVisible({
@@ -319,6 +319,8 @@ test('Add runners: a pool of private repositories preselects Persistent and keep
   const mock = addApi('private');
   await mock.install(page);
   await page.goto('/pool/runners/add');
+  // Persistent runs on the machine itself (runners R5.134): on this Windows machine that is a Windows runner.
+  await page.getByRole('radio', { name: /^Windows/ }).click();
   await expect(page.getByRole('radio', { name: /^Persistent/ })).toBeChecked();
   await expect(
     page.getByText('Persistent is chosen because no public repository uses the pool.'),
@@ -333,7 +335,7 @@ test('Add runners: a pool of private repositories preselects Persistent and keep
   await page.getByRole('button', { name: 'Add 1 runner' }).click();
   await expect(page.getByText('The runners are added.')).toBeVisible({ timeout: 10_000 });
   expect(planned(mock)).toMatchObject({
-    os: 'linux',
+    os: 'windows',
     kind: 'persistent',
     keep_dependencies: true,
   });
