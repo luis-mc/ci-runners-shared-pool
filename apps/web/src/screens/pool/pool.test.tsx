@@ -45,9 +45,10 @@ describe('the seven areas and the old addresses (D24)', () => {
     expect(
       within(nav).getByRole('link', { name: 'Shared Pool' }).getAttribute('aria-current'),
     ).toBe('page');
-    expect(screen.getByRole('link', { name: 'Runners' }).getAttribute('href')).toBe(
-      '/pool/runners',
-    );
+    // The heading shows while the screen loads; its breadcrumb link comes with the screen.
+    expect(
+      (await screen.findByRole('link', { name: 'Runners' })).getAttribute('href'),
+    ).toBe('/pool/runners');
   });
 
   it.each([

@@ -37,9 +37,9 @@ concurrency:
   # a dispatch run (ref refs/heads/<branch>) never cancel each other, and on main
   # a dispatch cannot replace a pending push run.
   group: ci-${{ github.event_name }}-${{ github.ref }}
-  # CRSP209 (DL-97/DL-98): a release run (head branch *-integration) is never cancelled
+  # CRSP209 (DL-97/DL-98): a release run (head branch *-integration or *-release-N) is never cancelled
   # while its jobs run, red or green; a newer push waits in the group instead.
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !endsWith(github.head_ref, '-integration') && !endsWith(github.ref, '-integration') }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' && !endsWith(github.head_ref, '-integration') && !endsWith(github.ref, '-integration') && !contains(github.head_ref, '-release-') && !contains(github.ref, '-release-') }}
 
 permissions:
   contents: read
@@ -70,7 +70,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: python3 scripts/ci/ci_skip_check.py
       # OPS41: the base image build is slow. It runs on a release pull request
-      # (head branch *-integration), on main and on a manual run; on any other
+      # (head branch *-integration or *-release-N), on main and on a manual run; on any other
       # pull request only when images/** or the build or ci workflow changed.
       - id: image-scope
         env:
@@ -79,7 +79,7 @@ jobs:
           PR_HEAD_REF: ${{ github.head_ref }}
         run: python3 scripts/ci/image_scope.py
       # CRSP209 (DL-97/DL-98): a release pull request is a ready pull request whose head
-      # branch ends in -integration. Its run never stops at the first failure and never
+      # branch ends in -integration or -release-N. Its run never stops at the first failure and never
       # skips a job: e2e and the image do not wait for format, lint and types to pass.
       # Every other run (agent branch, draft made ready, dispatch) lets lint and types
       # gate those two jobs, so a typo does not cost a 30-minute run.
@@ -90,7 +90,7 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           release=false
-          if [ "$EVENT" = "pull_request" ] && [ "$DRAFT" != "true" ] && [[ "$HEAD_REF" == *-integration ]]; then
+          if [ "$EVENT" = "pull_request" ] && [ "$DRAFT" != "true" ] && { [[ "$HEAD_REF" == *-integration ]] || [[ "$HEAD_REF" =~ -release-[0-9]+$ ]]; }; then
             release=true
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
@@ -131,8 +131,8 @@ jobs:
       # ships shellcheck). Pinned release, checksum verified, same as gitleaks.
       - name: Workflow lint (actionlint)
         env:
-          ACTIONLINT_VERSION: 1.7.7
-          ACTIONLINT_SHA256: 023070a287cd8cccd71515fedc843f1985bf96c436b7effaecce67290e7e0757
+          ACTIONLINT_VERSION: 1.7.12
+          ACTIONLINT_SHA256: 8aca8db96f1b94770f1b0d72b6dddcb1ebb8123cb3712530b08cc387b349a3d8
         run: |
           curl -fsSL -o actionlint.tgz "https://github.com/rhysd/actionlint/releases/download/v${ACTIONLINT_VERSION}/actionlint_${ACTIONLINT_VERSION}_linux_amd64.tar.gz"
           echo "${ACTIONLINT_SHA256}  actionlint.tgz" | sha256sum -c -
@@ -266,6 +266,15 @@ jobs:
         env:
           CGO_ENABLED: '1'
         run: bash scripts/ci/go-test.sh -race
+      # OPS68: the updater passes the lifecycle conformance runner (LC-3 to LC-7, LC-25, LC-26, LC-28).
+      # The test interface is its own command, built only here and never shipped.
+      - name: Lifecycle conformance (updater)
+        run: |
+          CGO_ENABLED=0 go build -o "$RUNNER_TEMP/crsp-lifecycle-test" ./cmd/crsp-lifecycle-test
+          "$RUNNER_TEMP/crsp-lifecycle-test" --addr 127.0.0.1:7391 &
+          pid=$!
+          trap 'kill "$pid"' EXIT
+          python3 scripts/delivery/lifecycle_conformance.py --url http://127.0.0.1:7391
       # CRSP201: go-test.sh logs only failures and a summary; the JSON keeps every
       # test's time. The name is stable, so artifact-prune keeps the newest of each.
       - name: Upload Go test times
@@ -334,6 +343,16 @@ jobs:
         run: |
           reg add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' //t REG_DWORD //f //v AllowDevelopmentWithoutDevLicense //d 1
           go test -timeout 10s -count=1 -v -run '^TestProbeSymlinkReal$' ./internal/agent/
+
+  # OPS69: the Windows MSI lifecycle lanes (x64 on windows-latest, arm64 on windows-11-arm) and the
+  # release check. A release pull request fails unless every target lane passed.
+  lifecycle:
+    name: lifecycle
+    needs: decide
+    if: ${{ always() && needs.decide.outputs.release == 'true' && needs.decide.outputs.skip != 'true' }}
+    uses: ./.github/workflows/lifecycle.yml
+    with:
+      release: true
 
   build:
     name: build

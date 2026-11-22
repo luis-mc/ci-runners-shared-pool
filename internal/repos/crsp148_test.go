@@ -219,3 +219,29 @@ func TestGitHubErrorKeepsStatusAndMessage(t *testing.T) {
 		t.Fatalf("sync error %v, want an APIError with status 422", err)
 	}
 }
+
+// The saved bytes depend on the state only, not on the order a map gave its entries (CRSP222: a reinstall must
+// not change the repos_state row).
+func TestEncodeIsDeterministic(t *testing.T) {
+	m := NewMemStore()
+	ctx := context.Background()
+	for i := int64(1); i <= 20; i++ {
+		_ = m.UpsertInstallation(ctx, Installation{ID: i})
+		_ = m.UpsertRepository(ctx, Repository{ID: 100 + i, InstallationID: i})
+		_ = m.UpsertManagedVariable(ctx, ManagedVariable{RepositoryID: 100 + i, Name: "V"})
+	}
+	m.mu.Lock()
+	first, err := m.encode()
+	m.mu.Unlock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for n := 0; n < 20; n++ {
+		m.mu.Lock()
+		again, err := m.encode()
+		m.mu.Unlock()
+		if err != nil || string(again) != string(first) {
+			t.Fatalf("encode changed between two saves of the same state: %v", err)
+		}
+	}
+}

@@ -36,6 +36,13 @@ class ShouldBuild(unittest.TestCase):
     def test_release_pull_request_builds(self):
         self.assertTrue(s.should_build("pull_request", REPO, "7", "CRSP184b-integration", self.no_api)[0])
 
+    def test_release_n_pull_request_builds(self):
+        self.assertTrue(s.should_build("pull_request", REPO, "7", "CRSP222-release-2", self.no_api)[0])
+
+    def test_release_word_alone_is_not_a_release(self):
+        get = files_api([named("docs/a.md")])
+        self.assertFalse(s.should_build("pull_request", REPO, "7", "OPS1-release-notes", get)[0])
+
     def test_unrelated_branch_skips(self):
         get = files_api([named("internal/x.go", "docs/a.md")])
         self.assertFalse(s.should_build("pull_request", REPO, "7", "OPS1-x", get)[0])

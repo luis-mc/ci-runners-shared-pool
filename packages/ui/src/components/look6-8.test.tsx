@@ -34,7 +34,7 @@ describe('theme cards (LOOK6)', () => {
     expect(card.querySelectorAll('.ds-theme-preview')).toHaveLength(2);
     expect(css).toContain('repeat(3, minmax(0, 1fr))');
     expect(css).toContain('repeat(2, minmax(0, 1fr))');
-    expect(css).toContain('2px solid var(--ds-color-primary)');
+    expect(css).toContain('var(--ds-border-medium) solid var(--ds-color-primary)');
   });
 });
 

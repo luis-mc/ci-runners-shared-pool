@@ -124,25 +124,21 @@ func (p *pathTargets) LinkTo(_ context.Context, target string) (string, error) {
 	return "http://127.0.0.1:8460/auth/link?code=9", p.err
 }
 
-// Offer opens the console page first: the page asks, so neither the box nor an install happens in the tray.
-func TestOfferOpensTheUpdatePageAndAsksNothingNatively(t *testing.T) {
-	inst, asked, opened := &fakeInstaller{}, 0, ""
+// Offer opens the console page first: the page asks, so no box and no install happen in the tray.
+func TestOfferOpensTheUpdatePage(t *testing.T) {
+	opened := ""
 	tg := &pathTargets{}
-	o := &Opener{
-		Targets: tg, Installer: inst, Notify: func(string, string) {},
-		Window: func(u string) error { opened = u; return nil },
-		Ask:    func(UpdatePrompt, Launcher) (bool, error) { asked++; return true, nil },
-	}
+	o := &Opener{Targets: tg, Notify: func(string, string) {}, Window: func(u string) error { opened = u; return nil }}
 	if err := o.Offer(context.Background(), found); err != nil {
 		t.Fatal(err)
 	}
-	if tg.got != "/update" || opened != "http://127.0.0.1:8460/auth/link?code=9" || asked != 0 || inst.calls != 0 {
-		t.Fatalf("target=%q opened=%q asked=%d installs=%d", tg.got, opened, asked, inst.calls)
+	if tg.got != "/update" || opened != "http://127.0.0.1:8460/auth/link?code=9" {
+		t.Fatalf("target=%q opened=%q", tg.got, opened)
 	}
 }
 
-// No window can open: the native two-button box asks, and Not now starts nothing.
-func TestOfferFallsBackToTheNativeBox(t *testing.T) {
+// No window can open: the tray shows a notice with no button, and nothing starts.
+func TestOfferFallsBackToANoticeNeverABox(t *testing.T) {
 	for _, c := range []struct {
 		name   string
 		window Launcher
@@ -152,22 +148,11 @@ func TestOfferFallsBackToTheNativeBox(t *testing.T) {
 		{"no link", func(string) error { return nil }, &pathTargets{err: errors.New("service down")}},
 		{"no target links", func(string) error { return nil }, nil},
 	} {
-		for _, yes := range []bool{false, true} {
-			inst, asked := &fakeInstaller{}, 0
-			o := &Opener{
-				Targets: c.tg, Installer: inst, Notify: func(string, string) {}, Window: c.window,
-				Ask: func(p UpdatePrompt, _ Launcher) (bool, error) { asked++; return yes, nil },
-			}
-			if err := o.Offer(context.Background(), found); err != nil {
-				t.Fatalf("%s: %v", c.name, err)
-			}
-			want := 0
-			if yes {
-				want = 1
-			}
-			if asked != 1 || inst.calls != want {
-				t.Fatalf("%s yes=%v: asked=%d installs=%d", c.name, yes, asked, inst.calls)
-			}
+		n := &notices{}
+		o := &Opener{Targets: c.tg, Notify: n.add, Window: c.window}
+		_ = o.Offer(context.Background(), found)
+		if len(n.titles) != 1 {
+			t.Fatalf("%s: %v", c.name, n.titles)
 		}
 	}
 }

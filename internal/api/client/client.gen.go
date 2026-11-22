@@ -1286,6 +1286,78 @@ func (e JoinCodeState) Valid() bool {
 	}
 }
 
+// Defines values for LifecycleStatusPolicy.
+const (
+	LifecycleStatusPolicyAskFirst          LifecycleStatusPolicy = "ask_first"
+	LifecycleStatusPolicyAutomaticWhenIdle LifecycleStatusPolicy = "automatic_when_idle"
+)
+
+// Valid indicates whether the value is a known member of the LifecycleStatusPolicy enum.
+func (e LifecycleStatusPolicy) Valid() bool {
+	switch e {
+	case LifecycleStatusPolicyAskFirst:
+		return true
+	case LifecycleStatusPolicyAutomaticWhenIdle:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for LifecycleStatusState.
+const (
+	LifecycleStatusStateAvailable   LifecycleStatusState = "available"
+	LifecycleStatusStateDownloading LifecycleStatusState = "downloading"
+	LifecycleStatusStateInstalling  LifecycleStatusState = "installing"
+	LifecycleStatusStateRefused     LifecycleStatusState = "refused"
+	LifecycleStatusStateReview      LifecycleStatusState = "review"
+	LifecycleStatusStateRolledBack  LifecycleStatusState = "rolled_back"
+	LifecycleStatusStateRollingBack LifecycleStatusState = "rolling_back"
+	LifecycleStatusStateSkipped     LifecycleStatusState = "skipped"
+	LifecycleStatusStateTesting     LifecycleStatusState = "testing"
+	LifecycleStatusStateUnpaired    LifecycleStatusState = "unpaired"
+	LifecycleStatusStateUpToDate    LifecycleStatusState = "up_to_date"
+	LifecycleStatusStateUpdated     LifecycleStatusState = "updated"
+	LifecycleStatusStateVerifying   LifecycleStatusState = "verifying"
+	LifecycleStatusStateWaiting     LifecycleStatusState = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the LifecycleStatusState enum.
+func (e LifecycleStatusState) Valid() bool {
+	switch e {
+	case LifecycleStatusStateAvailable:
+		return true
+	case LifecycleStatusStateDownloading:
+		return true
+	case LifecycleStatusStateInstalling:
+		return true
+	case LifecycleStatusStateRefused:
+		return true
+	case LifecycleStatusStateReview:
+		return true
+	case LifecycleStatusStateRolledBack:
+		return true
+	case LifecycleStatusStateRollingBack:
+		return true
+	case LifecycleStatusStateSkipped:
+		return true
+	case LifecycleStatusStateTesting:
+		return true
+	case LifecycleStatusStateUnpaired:
+		return true
+	case LifecycleStatusStateUpToDate:
+		return true
+	case LifecycleStatusStateUpdated:
+		return true
+	case LifecycleStatusStateVerifying:
+		return true
+	case LifecycleStatusStateWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ListenAddressCandidateId.
 const (
 	ListenAddressCandidateIdDocker ListenAddressCandidateId = "docker"
@@ -3338,6 +3410,48 @@ func (e UpdateAttemptKind) Valid() bool {
 	}
 }
 
+// Defines values for UpdateHistoryRowAction.
+const (
+	UpdateHistoryRowActionCheck    UpdateHistoryRowAction = "check"
+	UpdateHistoryRowActionInstall  UpdateHistoryRowAction = "install"
+	UpdateHistoryRowActionRemove   UpdateHistoryRowAction = "remove"
+	UpdateHistoryRowActionRollback UpdateHistoryRowAction = "rollback"
+)
+
+// Valid indicates whether the value is a known member of the UpdateHistoryRowAction enum.
+func (e UpdateHistoryRowAction) Valid() bool {
+	switch e {
+	case UpdateHistoryRowActionCheck:
+		return true
+	case UpdateHistoryRowActionInstall:
+		return true
+	case UpdateHistoryRowActionRemove:
+		return true
+	case UpdateHistoryRowActionRollback:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for UpdatePolicyRequestPolicy.
+const (
+	UpdatePolicyRequestPolicyAskFirst          UpdatePolicyRequestPolicy = "ask_first"
+	UpdatePolicyRequestPolicyAutomaticWhenIdle UpdatePolicyRequestPolicy = "automatic_when_idle"
+)
+
+// Valid indicates whether the value is a known member of the UpdatePolicyRequestPolicy enum.
+func (e UpdatePolicyRequestPolicy) Valid() bool {
+	switch e {
+	case UpdatePolicyRequestPolicyAskFirst:
+		return true
+	case UpdatePolicyRequestPolicyAutomaticWhenIdle:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for UpdateStageFailedAt.
 const (
 	UpdateStageFailedAtDownloading      UpdateStageFailedAt = "downloading"
@@ -4947,6 +5061,15 @@ type InstallCommands struct {
 	} `json:"items"`
 }
 
+// InstallUpdateRequest defines model for InstallUpdateRequest.
+type InstallUpdateRequest struct {
+	// MachineId Install on this machine instead of this one (a remote install).
+	MachineId *string `json:"machine_id,omitempty"`
+
+	// Version The version to install; it must be the one on offer.
+	Version *string `json:"version,omitempty"`
+}
+
 // Installation defines model for Installation.
 type Installation struct {
 	AccountLogin string                  `json:"account_login"`
@@ -5437,6 +5560,37 @@ type LayerNeededBy struct {
 	// Repositories Full names of the repositories.
 	Repositories []string `json:"repositories"`
 }
+
+// LifecycleStatus The update state by the lifecycle standard.
+type LifecycleStatus struct {
+	// Available The version on offer; null when none.
+	Available *string `json:"available"`
+	Current   string  `json:"current"`
+
+	// Failures The failed installs of the version on offer, or null.
+	Failures *struct {
+		Count   int        `json:"count"`
+		RetryAt *time.Time `json:"retry_at"`
+		Version string     `json:"version"`
+	} `json:"failures"`
+	NextCheckAt    *time.Time            `json:"next_check_at"`
+	Policy         LifecycleStatusPolicy `json:"policy"`
+	Required       bool                  `json:"required"`
+	State          LifecycleStatusState  `json:"state"`
+	WaitingForJobs bool                  `json:"waiting_for_jobs"`
+
+	// Window The daily install window in UTC, or null for any time.
+	Window *struct {
+		End   string `json:"end"`
+		Start string `json:"start"`
+	} `json:"window"`
+}
+
+// LifecycleStatusPolicy defines model for LifecycleStatus.Policy.
+type LifecycleStatusPolicy string
+
+// LifecycleStatusState defines model for LifecycleStatus.State.
+type LifecycleStatusState string
 
 // ListenAddress defines model for ListenAddress.
 type ListenAddress struct {
@@ -6758,6 +6912,15 @@ type RemoveRegistrationResult struct {
 	Removed bool   `json:"removed"`
 }
 
+// RemoveRequest defines model for RemoveRequest.
+type RemoveRequest struct {
+	// DeleteData Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default.
+	DeleteData *bool `json:"delete_data"`
+
+	// MachineId Remove from this machine instead of this one.
+	MachineId *string `json:"machine_id,omitempty"`
+}
+
 // RemoveRunnerLeftoversRequest defines model for RemoveRunnerLeftoversRequest.
 type RemoveRunnerLeftoversRequest struct {
 	Items []struct {
@@ -7741,6 +7904,26 @@ type UpdateAttempt struct {
 // UpdateAttemptKind defines model for UpdateAttempt.Kind.
 type UpdateAttemptKind string
 
+// UpdateFleetMachine defines model for UpdateFleetMachine.
+type UpdateFleetMachine struct {
+	MachineId string `json:"machine_id"`
+	Name      string `json:"name"`
+	State     string `json:"state"`
+	Version   string `json:"version"`
+}
+
+// UpdateHistoryRow defines model for UpdateHistoryRow.
+type UpdateHistoryRow struct {
+	Action  UpdateHistoryRowAction `json:"action"`
+	Actor   string                 `json:"actor"`
+	At      time.Time              `json:"at"`
+	Result  string                 `json:"result"`
+	Version string                 `json:"version"`
+}
+
+// UpdateHistoryRowAction defines model for UpdateHistoryRow.Action.
+type UpdateHistoryRowAction string
+
 // UpdateImageLayersRequest defines model for UpdateImageLayersRequest.
 type UpdateImageLayersRequest struct {
 	// EnabledLayers Ids of the layers that are on. Every other layer is off.
@@ -7754,6 +7937,17 @@ type UpdateJob struct {
 	RunId      int64   `json:"run_id"`
 	Workflow   *string `json:"workflow,omitempty"`
 }
+
+// UpdatePolicyRequest defines model for UpdatePolicyRequest.
+type UpdatePolicyRequest struct {
+	Policy UpdatePolicyRequestPolicy `json:"policy"`
+
+	// Window The daily install window in UTC, or null for any time.
+	Window *UpdateWindow `json:"window,omitempty"`
+}
+
+// UpdatePolicyRequestPolicy defines model for UpdatePolicyRequest.Policy.
+type UpdatePolicyRequestPolicy string
 
 // UpdateStage The live stage of the last or running update (TRAY4). It is kept in a file, so it survives the service restart.
 type UpdateStage struct {
@@ -7831,6 +8025,12 @@ type UpdateUserRoleRequest struct {
 	// Confirm Needed to hand over the owner role.
 	Confirm *bool `json:"confirm,omitempty"`
 	Role    Role  `json:"role"`
+}
+
+// UpdateWindow A daily install window, in UTC.
+type UpdateWindow struct {
+	End   string `json:"end"`
+	Start string `json:"start"`
 }
 
 // User defines model for User.
@@ -8607,6 +8807,9 @@ type CreateRegistryReplacePlanJSONRequestBody = RegistryReplacePlanInput
 // PutRegistryStoreSettingsJSONRequestBody defines body for PutRegistryStoreSettings for application/json ContentType.
 type PutRegistryStoreSettingsJSONRequestBody = RegistryStoreSettingsInput
 
+// RemoveCrspJSONRequestBody defines body for RemoveCrsp for application/json ContentType.
+type RemoveCrspJSONRequestBody = RemoveRequest
+
 // SetRepositoryExtraPackagesJSONRequestBody defines body for SetRepositoryExtraPackages for application/json ContentType.
 type SetRepositoryExtraPackagesJSONRequestBody = ExtraPackagesUpdate
 
@@ -8660,6 +8863,12 @@ type StartAppManifestJSONRequestBody = StartAppManifestRequest
 
 // RedeemSetupLinkJSONRequestBody defines body for RedeemSetupLink for application/json ContentType.
 type RedeemSetupLinkJSONRequestBody = RedeemSetupLinkRequest
+
+// InstallUpdateJSONRequestBody defines body for InstallUpdate for application/json ContentType.
+type InstallUpdateJSONRequestBody = InstallUpdateRequest
+
+// SetUpdatePolicyJSONRequestBody defines body for SetUpdatePolicy for application/json ContentType.
+type SetUpdatePolicyJSONRequestBody = UpdatePolicyRequest
 
 // AddUserJSONRequestBody defines body for AddUser for application/json ContentType.
 type AddUserJSONRequestBody = AddUserRequest
@@ -9928,6 +10137,24 @@ type ClientInterface interface {
 	// Corresponds with PUT /api/v1/registry/settings (the `PutRegistryStoreSettings` operationId).
 	PutRegistryStoreSettings(ctx context.Context, body PutRegistryStoreSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// RemoveCrspWithBody Remove crsp from a machine, keeping or deleting its data
+	//
+	// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+	RemoveCrspWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RemoveCrsp Remove crsp from a machine, keeping or deleting its data
+	//
+	// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+	RemoveCrsp(ctx context.Context, body RemoveCrspJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetRepository One repository with its policy and variable status
 	//
 	// github-integration R5.18, R5.25 and R5.28.
@@ -10442,6 +10669,59 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/update/check (the `CheckForUpdate` operationId).
 	CheckForUpdate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListUpdateFleet The version and update state of every machine
+	//
+	// Corresponds with GET /api/v1/update/fleet (the `ListUpdateFleet` operationId).
+	ListUpdateFleet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListUpdateHistory Every check, install, rollback and remove, newest first
+	//
+	// Corresponds with GET /api/v1/update/history (the `ListUpdateHistory` operationId).
+	ListUpdateHistory(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// InstallUpdateWithBody Install the offered version now, here or on another machine
+	//
+	// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+	InstallUpdateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// InstallUpdate Install the offered version now, here or on another machine
+	//
+	// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+	InstallUpdate(ctx context.Context, body InstallUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetUpdatePolicyWithBody Choose when updates install
+	//
+	// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+	SetUpdatePolicyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetUpdatePolicy Choose when updates install
+	//
+	// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+	SetUpdatePolicy(ctx context.Context, body SetUpdatePolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetLifecycleStatus The update state of this machine, by the lifecycle states
+	//
+	// lifecycle standard (LC-3 to LC-7). The state is one of unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped.
+	//
+	// Corresponds with GET /api/v1/update/status (the `GetLifecycleStatus` operationId).
+	GetLifecycleStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListUsers Users allowed to sign in, with their roles
 	//
@@ -13296,6 +13576,44 @@ func (c *Client) PutRegistryStoreSettings(ctx context.Context, body PutRegistryS
 	return c.Client.Do(req)
 }
 
+// RemoveCrspWithBody Remove crsp from a machine, keeping or deleting its data
+//
+// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+func (c *Client) RemoveCrspWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveCrspRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RemoveCrsp Remove crsp from a machine, keeping or deleting its data
+//
+// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+func (c *Client) RemoveCrsp(ctx context.Context, body RemoveCrspJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRemoveCrspRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetRepository One repository with its policy and variable status
 //
 // github-integration R5.18, R5.25 and R5.28.
@@ -14451,6 +14769,129 @@ func (c *Client) ApplyUpdate(ctx context.Context, params *ApplyUpdateParams, req
 // Corresponds with POST /api/v1/update/check (the `CheckForUpdate` operationId).
 func (c *Client) CheckForUpdate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCheckForUpdateRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListUpdateFleet The version and update state of every machine
+//
+// Corresponds with GET /api/v1/update/fleet (the `ListUpdateFleet` operationId).
+func (c *Client) ListUpdateFleet(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListUpdateFleetRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListUpdateHistory Every check, install, rollback and remove, newest first
+//
+// Corresponds with GET /api/v1/update/history (the `ListUpdateHistory` operationId).
+func (c *Client) ListUpdateHistory(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListUpdateHistoryRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// InstallUpdateWithBody Install the offered version now, here or on another machine
+//
+// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+func (c *Client) InstallUpdateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInstallUpdateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// InstallUpdate Install the offered version now, here or on another machine
+//
+// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+func (c *Client) InstallUpdate(ctx context.Context, body InstallUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewInstallUpdateRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetUpdatePolicyWithBody Choose when updates install
+//
+// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+func (c *Client) SetUpdatePolicyWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetUpdatePolicyRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetUpdatePolicy Choose when updates install
+//
+// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+func (c *Client) SetUpdatePolicy(ctx context.Context, body SetUpdatePolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetUpdatePolicyRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetLifecycleStatus The update state of this machine, by the lifecycle states
+//
+// lifecycle standard (LC-3 to LC-7). The state is one of unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped.
+//
+// Corresponds with GET /api/v1/update/status (the `GetLifecycleStatus` operationId).
+func (c *Client) GetLifecycleStatus(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetLifecycleStatusRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -20850,6 +21291,46 @@ func NewPutRegistryStoreSettingsRequestWithBody(server string, contentType strin
 	return req, nil
 }
 
+// NewRemoveCrspRequest calls the generic RemoveCrsp builder with application/json body
+func NewRemoveCrspRequest(server string, body RemoveCrspJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewRemoveCrspRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewRemoveCrspRequestWithBody constructs an http.Request for the RemoveCrsp method, with any body, and a specified content type
+func NewRemoveCrspRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/remove")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetRepositoryRequest constructs an http.Request for the GetRepository method
 func NewGetRepositoryRequest(server string, repositoryId RepositoryId) (*http.Request, error) {
 	var err error
@@ -22891,6 +23372,167 @@ func NewCheckForUpdateRequest(server string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewListUpdateFleetRequest constructs an http.Request for the ListUpdateFleet method
+func NewListUpdateFleetRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/update/fleet")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewListUpdateHistoryRequest constructs an http.Request for the ListUpdateHistory method
+func NewListUpdateHistoryRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/update/history")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewInstallUpdateRequest calls the generic InstallUpdate builder with application/json body
+func NewInstallUpdateRequest(server string, body InstallUpdateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewInstallUpdateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewInstallUpdateRequestWithBody constructs an http.Request for the InstallUpdate method, with any body, and a specified content type
+func NewInstallUpdateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/update/install")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewSetUpdatePolicyRequest calls the generic SetUpdatePolicy builder with application/json body
+func NewSetUpdatePolicyRequest(server string, body SetUpdatePolicyJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetUpdatePolicyRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSetUpdatePolicyRequestWithBody constructs an http.Request for the SetUpdatePolicy method, with any body, and a specified content type
+func NewSetUpdatePolicyRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/update/policy")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetLifecycleStatusRequest constructs an http.Request for the GetLifecycleStatus method
+func NewGetLifecycleStatusRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/update/status")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListUsersRequest constructs an http.Request for the ListUsers method
 func NewListUsersRequest(server string) (*http.Request, error) {
 	var err error
@@ -24851,6 +25493,24 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /api/v1/registry/settings (the `PutRegistryStoreSettings` operationId).
 	PutRegistryStoreSettingsWithResponse(ctx context.Context, body PutRegistryStoreSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRegistryStoreSettingsResponse, error)
 
+	// RemoveCrspWithBodyWithResponse Remove crsp from a machine, keeping or deleting its data
+	//
+	// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+	RemoveCrspWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveCrspResponse, error)
+
+	// RemoveCrspWithResponse Remove crsp from a machine, keeping or deleting its data
+	//
+	// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+	RemoveCrspWithResponse(ctx context.Context, body RemoveCrspJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveCrspResponse, error)
+
 	// GetRepositoryWithResponse One repository with its policy and variable status
 	//
 	// github-integration R5.18, R5.25 and R5.28.
@@ -25423,6 +26083,65 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/update/check (the `CheckForUpdate` operationId).
 	CheckForUpdateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*CheckForUpdateResponse, error)
+
+	// ListUpdateFleetWithResponse The version and update state of every machine
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/update/fleet (the `ListUpdateFleet` operationId).
+	ListUpdateFleetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListUpdateFleetResponse, error)
+
+	// ListUpdateHistoryWithResponse Every check, install, rollback and remove, newest first
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/update/history (the `ListUpdateHistory` operationId).
+	ListUpdateHistoryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListUpdateHistoryResponse, error)
+
+	// InstallUpdateWithBodyWithResponse Install the offered version now, here or on another machine
+	//
+	// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+	InstallUpdateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallUpdateResponse, error)
+
+	// InstallUpdateWithResponse Install the offered version now, here or on another machine
+	//
+	// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+	InstallUpdateWithResponse(ctx context.Context, body InstallUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*InstallUpdateResponse, error)
+
+	// SetUpdatePolicyWithBodyWithResponse Choose when updates install
+	//
+	// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+	SetUpdatePolicyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetUpdatePolicyResponse, error)
+
+	// SetUpdatePolicyWithResponse Choose when updates install
+	//
+	// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+	SetUpdatePolicyWithResponse(ctx context.Context, body SetUpdatePolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*SetUpdatePolicyResponse, error)
+
+	// GetLifecycleStatusWithResponse The update state of this machine, by the lifecycle states
+	//
+	// lifecycle standard (LC-3 to LC-7). The state is one of unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/update/status (the `GetLifecycleStatus` operationId).
+	GetLifecycleStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLifecycleStatusResponse, error)
 
 	// ListUsersWithResponse Users allowed to sign in, with their roles
 	//
@@ -31608,6 +32327,47 @@ func (r PutRegistryStoreSettingsResponse) ContentType() string {
 	return ""
 }
 
+type RemoveCrspResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r RemoveCrspResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r RemoveCrspResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RemoveCrspResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RemoveCrspResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RemoveCrspResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetRepositoryResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -33865,6 +34625,246 @@ func (r CheckForUpdateResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r CheckForUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListUpdateFleetResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]UpdateFleetMachine
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListUpdateFleetResponse) GetJSON200() *[]UpdateFleetMachine {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListUpdateFleetResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListUpdateFleetResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListUpdateFleetResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListUpdateFleetResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListUpdateFleetResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListUpdateHistoryResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]UpdateHistoryRow
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListUpdateHistoryResponse) GetJSON200() *[]UpdateHistoryRow {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListUpdateHistoryResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListUpdateHistoryResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListUpdateHistoryResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListUpdateHistoryResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListUpdateHistoryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type InstallUpdateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *LifecycleStatus
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r InstallUpdateResponse) GetJSON202() *LifecycleStatus {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r InstallUpdateResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r InstallUpdateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r InstallUpdateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r InstallUpdateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r InstallUpdateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SetUpdatePolicyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LifecycleStatus
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SetUpdatePolicyResponse) GetJSON200() *LifecycleStatus {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SetUpdatePolicyResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SetUpdatePolicyResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SetUpdatePolicyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetUpdatePolicyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SetUpdatePolicyResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetLifecycleStatusResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LifecycleStatus
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetLifecycleStatusResponse) GetJSON200() *LifecycleStatus {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetLifecycleStatusResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetLifecycleStatusResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetLifecycleStatusResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetLifecycleStatusResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetLifecycleStatusResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -36706,6 +37706,36 @@ func (c *ClientWithResponses) PutRegistryStoreSettingsWithResponse(ctx context.C
 	return ParsePutRegistryStoreSettingsResponse(rsp)
 }
 
+// RemoveCrspWithBodyWithResponse Remove crsp from a machine, keeping or deleting its data
+//
+// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+func (c *ClientWithResponses) RemoveCrspWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*RemoveCrspResponse, error) {
+	rsp, err := c.RemoveCrspWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveCrspResponse(rsp)
+}
+
+// RemoveCrspWithResponse Remove crsp from a machine, keeping or deleting its data
+//
+// delete_data is required, with no default; without it the answer is 400 and the message is 'Choose what happens to your data first.' Both choices unregister crsp's runners from GitHub and remove the program and service. Every remove is audited with its actor and result.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/remove (the `RemoveCrsp` operationId).
+func (c *ClientWithResponses) RemoveCrspWithResponse(ctx context.Context, body RemoveCrspJSONRequestBody, reqEditors ...RequestEditorFn) (*RemoveCrspResponse, error) {
+	rsp, err := c.RemoveCrsp(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRemoveCrspResponse(rsp)
+}
+
 // GetRepositoryWithResponse One repository with its policy and variable status
 //
 // github-integration R5.18, R5.25 and R5.28.
@@ -37667,6 +38697,107 @@ func (c *ClientWithResponses) CheckForUpdateWithResponse(ctx context.Context, re
 		return nil, err
 	}
 	return ParseCheckForUpdateResponse(rsp)
+}
+
+// ListUpdateFleetWithResponse The version and update state of every machine
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/update/fleet (the `ListUpdateFleet` operationId).
+func (c *ClientWithResponses) ListUpdateFleetWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListUpdateFleetResponse, error) {
+	rsp, err := c.ListUpdateFleet(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListUpdateFleetResponse(rsp)
+}
+
+// ListUpdateHistoryWithResponse Every check, install, rollback and remove, newest first
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/update/history (the `ListUpdateHistory` operationId).
+func (c *ClientWithResponses) ListUpdateHistoryWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListUpdateHistoryResponse, error) {
+	rsp, err := c.ListUpdateHistory(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListUpdateHistoryResponse(rsp)
+}
+
+// InstallUpdateWithBodyWithResponse Install the offered version now, here or on another machine
+//
+// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+func (c *ClientWithResponses) InstallUpdateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*InstallUpdateResponse, error) {
+	rsp, err := c.InstallUpdateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInstallUpdateResponse(rsp)
+}
+
+// InstallUpdateWithResponse Install the offered version now, here or on another machine
+//
+// With machine_id it is a remote install, started from any signed-in device. Every install is audited with its actor and result.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/update/install (the `InstallUpdate` operationId).
+func (c *ClientWithResponses) InstallUpdateWithResponse(ctx context.Context, body InstallUpdateJSONRequestBody, reqEditors ...RequestEditorFn) (*InstallUpdateResponse, error) {
+	rsp, err := c.InstallUpdate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseInstallUpdateResponse(rsp)
+}
+
+// SetUpdatePolicyWithBodyWithResponse Choose when updates install
+//
+// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+func (c *ClientWithResponses) SetUpdatePolicyWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetUpdatePolicyResponse, error) {
+	rsp, err := c.SetUpdatePolicyWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetUpdatePolicyResponse(rsp)
+}
+
+// SetUpdatePolicyWithResponse Choose when updates install
+//
+// automatic_when_idle (the default; installs when no job runs here, inside the window when one is set) or ask_first. A required update installs under either.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/update/policy (the `SetUpdatePolicy` operationId).
+func (c *ClientWithResponses) SetUpdatePolicyWithResponse(ctx context.Context, body SetUpdatePolicyJSONRequestBody, reqEditors ...RequestEditorFn) (*SetUpdatePolicyResponse, error) {
+	rsp, err := c.SetUpdatePolicy(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetUpdatePolicyResponse(rsp)
+}
+
+// GetLifecycleStatusWithResponse The update state of this machine, by the lifecycle states
+//
+// lifecycle standard (LC-3 to LC-7). The state is one of unpaired, up_to_date, available, review, waiting, downloading, verifying, refused, installing, testing, updated, rolling_back, rolled_back, skipped.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/update/status (the `GetLifecycleStatus` operationId).
+func (c *ClientWithResponses) GetLifecycleStatusWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetLifecycleStatusResponse, error) {
+	rsp, err := c.GetLifecycleStatus(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetLifecycleStatusResponse(rsp)
 }
 
 // ListUsersWithResponse Users allowed to sign in, with their roles
@@ -42113,6 +43244,35 @@ func ParsePutRegistryStoreSettingsResponse(rsp *http.Response) (*PutRegistryStor
 	return response, nil
 }
 
+// ParseRemoveCrspResponse parses an HTTP response from a RemoveCrspWithResponse call
+func ParseRemoveCrspResponse(rsp *http.Response) (*RemoveCrspResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RemoveCrspResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case rsp.StatusCode == 202:
+		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetRepositoryResponse parses an HTTP response from a GetRepositoryWithResponse call
 func ParseGetRepositoryResponse(rsp *http.Response) (*GetRepositoryResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -43660,6 +44820,171 @@ func ParseCheckForUpdateResponse(rsp *http.Response) (*CheckForUpdateResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest UpdateStatus
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListUpdateFleetResponse parses an HTTP response from a ListUpdateFleetWithResponse call
+func ParseListUpdateFleetResponse(rsp *http.Response) (*ListUpdateFleetResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListUpdateFleetResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []UpdateFleetMachine
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListUpdateHistoryResponse parses an HTTP response from a ListUpdateHistoryWithResponse call
+func ParseListUpdateHistoryResponse(rsp *http.Response) (*ListUpdateHistoryResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListUpdateHistoryResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []UpdateHistoryRow
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseInstallUpdateResponse parses an HTTP response from a InstallUpdateWithResponse call
+func ParseInstallUpdateResponse(rsp *http.Response) (*InstallUpdateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &InstallUpdateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest LifecycleStatus
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetUpdatePolicyResponse parses an HTTP response from a SetUpdatePolicyWithResponse call
+func ParseSetUpdatePolicyResponse(rsp *http.Response) (*SetUpdatePolicyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetUpdatePolicyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LifecycleStatus
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetLifecycleStatusResponse parses an HTTP response from a GetLifecycleStatusWithResponse call
+func ParseGetLifecycleStatusResponse(rsp *http.Response) (*GetLifecycleStatusResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetLifecycleStatusResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LifecycleStatus
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

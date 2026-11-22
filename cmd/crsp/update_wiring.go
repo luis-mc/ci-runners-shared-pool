@@ -6,9 +6,11 @@ import (
 	"log/slog"
 	"net"
 	"path/filepath"
+	"runtime"
 	"sync/atomic"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
@@ -125,12 +127,18 @@ func healthURL(listen string) string {
 
 // startUpdates builds the update manager, binds it to the machines drain and
 // starts the 6-hourly check (operations R5.11).
-func startUpdates(ctx context.Context, cfg config.Config, logger *slog.Logger, mr *machinesRuntime, set *settings.Service, idle *idleHook) *update.Manager {
+func startUpdates(ctx context.Context, cfg config.Config, logger *slog.Logger, mr *machinesRuntime, set *settings.Service, idle *idleHook, log *audit.Log) (*update.Manager, *update.Service) {
 	exe, err := update.ExecutablePath()
 	if err != nil {
 		logger.Warn("self-update: cannot find the running binary", "err", err)
 	}
+	key, keyErr := update.ReleaseKey()
+	if keyErr != nil {
+		// No release key is committed yet: every manifest is refused, so no update installs (a missing key is a missing signature).
+		logger.Warn("self-update: no release key; updates are refused until one is committed", "err", keyErr)
+	}
 	m := update.New(update.Options{
+		Key: key, RequireManifest: true,
 		Current:  version,
 		Source:   update.GitHubSource{Base: cfg.Addresses.GitHubAPIURL},
 		Attester: update.SigstoreAttester{APIBase: cfg.Addresses.GitHubAPIURL},
@@ -166,11 +174,29 @@ func startUpdates(ctx context.Context, cfg config.Config, logger *slog.Logger, m
 		return nil
 	}
 	idle.fn.Store(&fn)
-	go m.Run(ctx, time.Minute, 6*time.Hour)
+	drainer := machineDrainer{svc: mr.Service}
+	target := ""
+	if runtime.GOOS == "windows" { // the manifest lists the Windows packages: an arm64 machine takes its own
+		target = update.TargetKey(update.AssetName(runtime.GOOS, runtime.GOARCH))
+	}
+	svc := update.NewService(ctx, update.ServiceOptions{
+		Engine: m, Current: version, Key: key, Dir: filepath.Join(cfg.DataDir, "updates"), Target: target,
+		// No check runs before this machine has joined the pool.
+		Paired: func(ctx context.Context) bool { _, ok := drainer.policy(ctx); return ok },
+		Idle: func(ctx context.Context) bool {
+			jobs, err := drainer.RunningJobs(ctx)
+			return err == nil && len(jobs) == 0
+		},
+		Audit:   lifecycleAudit(log, func(err error) { logger.Warn("update audit write failed", "err", err) }),
+		History: lifecycleHistory(log),
+		Logger:  logger.With("component", "update-lifecycle"),
+	})
+	// The state machine checks every 6 h +/- 20%, the first 1 to 10 min after start, and backs off after a failed check.
+	go svc.Run(ctx, 15*time.Second)
 	// Connected agent machines follow the controller's version (operations R5.39).
 	fol := &update.Follower{Fleet: machineFleet{svc: mr.Service}, Current: version, Logger: logger.With("component", "follow")}
 	go fol.Run(ctx, 2*time.Minute)
-	return m
+	return m, svc
 }
 
 // machineFleet shows the machines service to the follower.
