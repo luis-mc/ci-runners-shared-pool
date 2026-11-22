@@ -6,18 +6,51 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sync"
 )
 
 // LinkCloner clones a tree with hard links: folders are made new, files are linked. The source must be
 // read-only for the job's identity (it is sealed, R5.115), because a write through a link changes the source.
-// A file that cannot be linked (another volume) is copied.
-type LinkCloner struct{}
+// A file that cannot be linked (another volume, a file system with no hard links) is copied instead, and the
+// first time that happens for a cache OnFallback is called once, so the owner can read why it is slower.
+type LinkCloner struct {
+	// Link makes a hard link; nil means os.Link. Tests give a fake linker.
+	Link func(from, to string) error
+	// OnFallback is called with the cache folder and the link error, once per cache folder for the cloner's
+	// life when the cloner came from NewLinkCloner, else once per Clone call. Nil logs nothing.
+	OnFallback func(cache string, err error)
+
+	logged *sync.Map
+}
 
 var _ Cloner = LinkCloner{}
 
+// NewLinkCloner returns a LinkCloner that reports the copy fallback once per cache folder.
+func NewLinkCloner(link func(from, to string) error, onFallback func(cache string, err error)) LinkCloner {
+	return LinkCloner{Link: link, OnFallback: onFallback, logged: &sync.Map{}}
+}
+
 // Clone implements Cloner.
-func (LinkCloner) Clone(ctx context.Context, src, dst string) error {
-	return walkClone(ctx, src, dst, os.Link)
+func (l LinkCloner) Clone(ctx context.Context, src, dst string) error {
+	link := l.Link
+	if link == nil {
+		link = os.Link
+	}
+	var once sync.Once
+	return walkClone(ctx, src, dst, func(from, to string) error {
+		err := link(from, to)
+		if err != nil && l.OnFallback != nil {
+			once.Do(func() {
+				if l.logged != nil {
+					if _, seen := l.logged.LoadOrStore(src, true); seen {
+						return
+					}
+				}
+				l.OnFallback(src, err)
+			})
+		}
+		return err // walkClone copies the file when the link failed
+	})
 }
 
 // CopyCloner copies every file byte for byte, so the copy shares nothing with the source.

@@ -183,11 +183,15 @@ func runnerToolsPlan(ctx context.Context, env doctor.Env) []doctor.Finding {
 			out = append(out, skip(id, sub, "The tool plan of "+r.Name+" was not compared", p.Err))
 			continue
 		}
-		var lacks, have []string
+		var lacks, have, install []string
 		for _, it := range p.Items {
-			if it.Present {
+			switch {
+			case it.Present:
 				have = append(have, it.Tool+" "+it.Version)
-			} else {
+			case it.Hint != "":
+				install = append(install, it.Hint)
+				lacks = append(lacks, it.Tool+" "+it.Version)
+			default:
 				lacks = append(lacks, it.Tool+" "+it.Version)
 			}
 		}
@@ -203,6 +207,15 @@ func runnerToolsPlan(ctx context.Context, env doctor.Env) []doctor.Finding {
 		}
 		f.Detail += " The next job that needs it installs it first, so that job starts late, and fails if the install fails."
 		f.Fix = doctor.Fix{Text: "Let the agent install it now by running a job of the repository, or change the version in the workflow, a version file or the tools: list of .crsp.yml.", Link: "/runners"}
+		if len(install) > 0 {
+			// Xcode is installed by the owner; a job that needs a missing one fails, it never waits for a download.
+			f.Detail = "The tool store on " + m.Name + " has no " + strings.Join(lacks, ", ") + "."
+			if len(have) > 0 {
+				f.Detail += " It has " + strings.Join(have, ", ") + "."
+			}
+			f.Detail += " " + strings.Join(install, " ") + ". A job that needs it fails until it is installed."
+			f.Fix = doctor.Fix{Text: strings.Join(install, " ") + ", or change the version in the workflow, a version file or the tools: list of .crsp.yml.", Link: "/runners"}
+		}
 		out = append(out, f)
 	}
 	return out

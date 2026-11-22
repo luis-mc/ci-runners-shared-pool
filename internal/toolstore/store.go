@@ -23,9 +23,6 @@ type Tool = registry.Toolchain
 // setting; this is its default.
 const DefaultUnusedDays = 30
 
-// DefaultKeepXcode is how many Xcode versions housekeeping keeps at least: each is 10 to 15 GB.
-const DefaultKeepXcode = 2
-
 const (
 	markerDir  = ".installed"
 	usageDir   = ".usage"
@@ -64,6 +61,9 @@ type Store struct {
 	// OS default (seal_*.go).
 	Seal, Unseal func(dir string) error
 	Now          func() time.Time
+	// Xcodes finds the Xcodes the owner installed; the zero value looks in /Applications. Xcode is never in
+	// Root: the store neither downloads nor removes it.
+	Xcodes XcodeFinder
 
 	mu sync.Mutex
 }
@@ -87,6 +87,10 @@ func (s *Store) Dir(t Tool) string { return filepath.Join(s.Root, t.Tool, t.Vers
 func (s *Store) Has(t Tool) bool {
 	if !ValidVersion(t.Version) || CanonTool(t.Tool) != t.Tool {
 		return false
+	}
+	if t.Tool == ToolXcode {
+		_, err := s.Xcodes.Find(context.Background(), t.Version)
+		return err == nil
 	}
 	_, err := os.Stat(s.markerPath(t))
 	return err == nil
@@ -121,13 +125,20 @@ var ErrNeedsInstall = errors.New("toolstore: the store lacks a tool of the plan"
 // skipped; two callers asking for the same version install it once because the lock is held across the check
 // and the install. Each version is installed into a staging folder, marked, sealed and moved into place, so
 // a failed install leaves nothing a job could use. The error names every tool that failed; the others are
-// still installed.
+// still installed. Xcode is never installed: a plan that names one the Mac lacks fails with the words for
+// the owner (ErrXcodeMissing).
 func (s *Store) EnsureInstalled(ctx context.Context, in Installer, p Plan) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	var failed []string
 	for _, t := range p {
 		if s.Has(t) {
+			continue
+		}
+		if t.Tool == ToolXcode {
+			// The owner installs Xcode; the job fails with the reason, and the doctor says which one.
+			_, err := s.Xcodes.Find(ctx, t.Version)
+			failed = append(failed, fmt.Sprintf("%s %s: %v", t.Tool, t.Version, err))
 			continue
 		}
 		if err := s.install(ctx, in, t); err != nil {
@@ -267,8 +278,7 @@ func (s *Store) List() ([]Installed, error) {
 type PruneOptions struct {
 	// MaxUnused is how long a version can stay unused; 0 means DefaultUnusedDays days.
 	MaxUnused time.Duration
-	// KeepAtLeast is the number of newest-used versions of a tool that stay even when unused; Xcode defaults
-	// to DefaultKeepXcode when the tool is not in the map.
+	// KeepAtLeast is the number of newest-used versions of a tool that stay even when unused.
 	KeepAtLeast map[string]int
 	// InUse are versions a running job or a planned job needs; they are never removed.
 	InUse Plan
@@ -303,12 +313,8 @@ func (s *Store) Prune(opt PruneOptions) ([]Tool, error) {
 			return vs[i].Tool.Version > vs[j].Tool.Version
 		})
 		keep := opt.KeepAtLeast[tool]
-		if _, set := opt.KeepAtLeast[tool]; !set && tool == ToolXcode {
-			keep = DefaultKeepXcode
-		}
 		for i, it := range vs {
 			stale := s.now().Sub(it.LastUsed) > max
-			// Xcode keeps its newest versions even when stale only up to KeepAtLeast; others only when asked.
 			if !stale || busy[it.Tool] || i < keep {
 				continue
 			}

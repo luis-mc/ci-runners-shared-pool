@@ -110,3 +110,18 @@ func TestRunnerToolsPlan(t *testing.T) {
 		t.Errorf("r2 %+v r3 %+v", by["r2"], by["r3"])
 	}
 }
+
+// OPS75 R5.65 (owner decision 22 Nov): a missing Xcode is installed by the owner, so the warning says which one.
+func TestRunnerToolsPlanSaysWhichXcodeToInstall(t *testing.T) {
+	r := toolRunner("r1", "m1", appRepo, winLbl)
+	hint := "Xcode 16.2 is not installed on this Mac. Install Xcode 16.2 in /Applications (Xcode-16.2.app); the runner never downloads Xcode"
+	r.ToolPlan = &doctor.ToolPlanProbe{Items: []doctor.ToolPlanItem{{Tool: "xcode", Version: "16.2", Hint: hint}, {Tool: "node", Version: "22.1.0", Present: true}}}
+	env := doctor.Env{Now: now, Fleet: &fleet{machines: twoMachines(), runners: []doctor.Runner{r}}}
+	fs := forCheck(run(t, env, "runner.tools.plan"), "runner.tools.plan")
+	if len(fs) != 1 || fs[0].Severity != doctor.Warn || fs[0].Title != "r1 lacks xcode 16.2, which the workflow uses" {
+		t.Fatalf("findings = %+v", fs)
+	}
+	if !strings.Contains(fs[0].Fix.Text, "Install Xcode 16.2 in /Applications") || strings.Contains(fs[0].Detail, "installs it first") {
+		t.Errorf("fix %q detail %q", fs[0].Fix.Text, fs[0].Detail)
+	}
+}

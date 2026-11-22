@@ -43,9 +43,23 @@ func (e *ExecInstaller) Install(ctx context.Context, r Recipe, dest string) (Res
 			if err != nil {
 				return res, fmt.Errorf("download %s: %w", st.URL, err)
 			}
-			if st.ChecksumSuffix == "" {
+			switch {
+			case st.SumsURL != "":
+				list, err := e.Fetch.Text(ctx, st.SumsURL)
+				if err != nil {
+					return res, fmt.Errorf("checksums of %s: %w", st.To, err)
+				}
+				want, err := SumFromList(list, st.SumsName)
+				if err == nil {
+					err = VerifySHA256(file, want)
+				}
+				if err != nil {
+					_ = os.Remove(file)
+					return res, err
+				}
+			case st.ChecksumSuffix == "":
 				res.Unchecked = append(res.Unchecked, st.To)
-			} else {
+			default:
 				sum, err := e.Fetch.Text(ctx, final+st.ChecksumSuffix)
 				if err != nil {
 					return res, fmt.Errorf("checksum of %s: %w", st.To, err)

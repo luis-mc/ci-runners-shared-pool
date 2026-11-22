@@ -40,6 +40,8 @@ const (
 	DefaultAdoptiumURL      = "https://api.adoptium.net/v3/binary/version"
 	DefaultDotnetInstallURL = "https://dot.net/v1"
 	DefaultPnpmReleaseURL   = "https://github.com/pnpm/pnpm/releases/download"
+	// DefaultNodeDistURL holds one folder per Node version (v22.1.0/) with the archives and SHASUMS256.txt.
+	DefaultNodeDistURL = "https://nodejs.org/dist"
 
 	// runnerReleasePath is where the GitHub Actions runner releases live under
 	// the GitHub address.

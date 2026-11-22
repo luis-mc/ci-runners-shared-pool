@@ -67,7 +67,7 @@ func (h HTTPFetcher) Text(ctx context.Context, url string) (string, error) {
 		return "", err
 	}
 	defer func() { _ = resp.Body.Close() }()
-	b, err := io.ReadAll(io.LimitReader(resp.Body, 4096))
+	b, err := io.ReadAll(io.LimitReader(resp.Body, 64<<10))
 	return string(b), err
 }
 

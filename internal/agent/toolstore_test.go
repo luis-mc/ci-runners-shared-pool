@@ -3,6 +3,7 @@ package agent
 import (
 	"context"
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -140,5 +141,32 @@ func TestToolFlowProbeAndHousekeep(t *testing.T) {
 	}
 	if rm, err := f.Housekeep(nil); err != nil || len(rm) != 0 {
 		t.Fatalf("housekeep: %v %v", rm, err)
+	}
+}
+
+// R5.112 (owner decision 22 Nov): a job that needs an Xcode the Mac lacks fails before it starts, with the
+// words for the owner; nothing is installed and no home is built. The doctor probe says which one to install.
+func TestToolFlowMissingXcodeFailsWithReason(t *testing.T) {
+	f, in, _, _ := toolFlow(t, "darwin", fakePlans{yml: "tools:\n  - xcode 16.2\n"})
+	f.Store.Xcodes = toolstore.XcodeFinder{
+		Glob:    func(string) ([]string, error) { return nil, nil },
+		Version: func(context.Context, string) (string, error) { return "", errors.New("none") },
+	}
+	_, err := f.Prepare(context.Background(), ToolJob{Repository: "o/r", Commit: "c1", JobID: "job1", BaseEnv: map[string]string{"PATH": "/usr/bin"}})
+	if !strings.Contains(fmt.Sprint(err), "Install Xcode 16.2 in /Applications") || in.Calls != 0 {
+		t.Fatalf("error = %v calls %d", err, in.Calls)
+	}
+	if _, serr := os.Stat(filepath.Join(f.JobsRoot, "job1")); serr == nil {
+		t.Fatal("a home was built")
+	}
+	rep := f.ProbeToolPlan(context.Background(), "o/r", "c1")
+	var hint string
+	for _, it := range rep.Items {
+		if it.Tool == "xcode" {
+			hint = it.Hint
+		}
+	}
+	if !strings.Contains(hint, "Install Xcode 16.2") {
+		t.Fatalf("probe = %+v", rep)
 	}
 }

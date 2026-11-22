@@ -106,14 +106,13 @@ func TestSideBySideAndMarker(t *testing.T) {
 	}
 }
 
-// R5.118: a version unused for 30 days goes; one in use, one used lately and the newest Xcodes stay.
+// R5.118: a version unused for 30 days goes; one in use, and one used lately stay (Xcode is never in the store, so never pruned).
 func TestPrune(t *testing.T) {
 	s, in := newStore(t), &FakeInstaller{}
 	day := func(n int) time.Time { return t0.Add(-time.Duration(n) * 24 * time.Hour) }
 	old, busy, fresh := Tool{Tool: ToolGo, Version: "1.20.0"}, Tool{Tool: ToolGo, Version: "1.21.0"}, Tool{Tool: ToolGo, Version: "1.24.0"}
-	x1, x2, x3 := Tool{Tool: ToolXcode, Version: "15.4"}, Tool{Tool: ToolXcode, Version: "16.0"}, Tool{Tool: ToolXcode, Version: "16.2"}
 	s.Now = func() time.Time { return day(60) }
-	if err := s.EnsureInstalled(context.Background(), in, Plan{old, busy, x1, x2, x3}); err != nil {
+	if err := s.EnsureInstalled(context.Background(), in, Plan{old, busy}); err != nil {
 		t.Fatal(err)
 	}
 	s.Now = func() time.Time { return day(5) }
@@ -121,16 +120,15 @@ func TestPrune(t *testing.T) {
 		t.Fatal(err)
 	}
 	s.Now = func() time.Time { return day(45) }
-	_ = s.Touch(x3)
 	s.Now = func() time.Time { return t0 }
 	removed, err := s.Prune(PruneOptions{InUse: Plan{busy}})
 	if err != nil {
 		t.Fatal(err)
 	}
-	if planStr(Plan(removed)) != "go 1.20.0,xcode 15.4" {
+	if planStr(Plan(removed)) != "go 1.20.0" {
 		t.Fatalf("removed %v", removed)
 	}
-	if !s.Has(busy) || !s.Has(fresh) || !s.Has(x2) || !s.Has(x3) || s.Has(old) || s.Has(x1) {
+	if !s.Has(busy) || !s.Has(fresh) || s.Has(old) {
 		t.Fatal("store state wrong")
 	}
 }
@@ -140,7 +138,7 @@ func TestProbeLacks(t *testing.T) {
 	_ = s.EnsureInstalled(context.Background(), in, Plan{{Tool: ToolGo, Version: "1.24.0"}})
 	items := s.Probe(Plan{{Tool: ToolGo, Version: "1.24.0"}, rust185})
 	l := Lacks(items)
-	if len(items) != 2 || len(l) != 1 || l[0] != (Lack{ToolRust, "1.85.0"}) {
+	if len(items) != 2 || len(l) != 1 || l[0] != (Lack{Tool: ToolRust, Version: "1.85.0"}) {
 		t.Fatalf("items %+v lacks %+v", items, l)
 	}
 	if in.Calls != 1 {

@@ -339,6 +339,9 @@ type ToolPlanProbe struct {
 type ToolPlanItem struct {
 	Tool, Version string
 	Present       bool
+	// Hint says what the owner does when the tool is missing and only the owner can add it: which Xcode to
+	// install (the store never downloads Xcode).
+	Hint string
 }
 
 // ToolProbe is one tool: found or not, and the first line of its version output.

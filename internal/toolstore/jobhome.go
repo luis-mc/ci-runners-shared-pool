@@ -1,6 +1,7 @@
 package toolstore
 
 import (
+	"context"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -61,6 +62,15 @@ func (s *Store) BuildJobHome(jobsRoot, jobID string, p Plan, base map[string]str
 		}
 	}
 	for _, t := range p {
+		if t.Tool == ToolXcode {
+			// Selected for this job only, in its private environment: no global xcode-select.
+			x, err := s.Xcodes.Find(context.Background(), t.Version)
+			if err != nil {
+				return JobHome{}, err
+			}
+			env["DEVELOPER_DIR"] = x.DeveloperDir()
+			continue
+		}
 		l := LayoutFor(g, t, s.Dir(t))
 		jh.Path = append(jh.Path, l.Path...)
 		for k, v := range l.Env {

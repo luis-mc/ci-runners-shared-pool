@@ -42,13 +42,16 @@ type Step struct {
 	// the project publishes a checksum file next to the archive; "" when it publishes none, and the marker
 	// then records "unchecked".
 	URL, ChecksumSuffix, To string
+	// SumsURL and SumsName replace ChecksumSuffix when the project publishes one list of checksums for a
+	// version (Node's SHASUMS256.txt): the SHA-256 is the line of that list whose file name is SumsName.
+	SumsURL, SumsName string
 	// File and StripDirs belong to StepUnpack.
 	File      string
 	StripDirs int
 }
 
 // Recipe is how one tool version is installed into a staging folder Dest: the manager's name and its steps.
-// Every manager home (NVM_DIR, PYENV_ROOT, VOLTA_HOME, SDKMAN_DIR, RUSTUP_HOME) is inside Dest, so a
+// Every manager home (PYENV_ROOT, SDKMAN_DIR, RUSTUP_HOME) is inside Dest, so a
 // version folder holds everything its tool needs and removing the folder removes the version.
 type Recipe struct {
 	Manager string
@@ -65,20 +68,23 @@ func archSuffix(arch string) string {
 // Sources are the base addresses the recipes download from. DefaultSources gives the official ones from
 // internal/addresses; an owner's mirror replaces them. No base has a trailing slash.
 type Sources struct {
-	RustupDist, GoDownload, Adoptium, DotnetInstall, PnpmReleases string
+	RustupDist, GoDownload, Adoptium, DotnetInstall, PnpmReleases, NodeDist string
 }
 
 // DefaultSources are the official download addresses.
 func DefaultSources() Sources {
 	return Sources{RustupDist: addresses.DefaultRustupDistURL, GoDownload: addresses.DefaultGoDownloadURL,
-		Adoptium: addresses.DefaultAdoptiumURL, DotnetInstall: addresses.DefaultDotnetInstallURL, PnpmReleases: addresses.DefaultPnpmReleaseURL}
+		Adoptium: addresses.DefaultAdoptiumURL, DotnetInstall: addresses.DefaultDotnetInstallURL, PnpmReleases: addresses.DefaultPnpmReleaseURL,
+		NodeDist: addresses.DefaultNodeDistURL}
 }
 
 // RecipeFor builds the install recipe of tool for goos and arch ("amd64" or "arm64") into dest, a staging
 // folder. It is pure: it reads and runs nothing. The managers are the tool's own (owner decision 21 Nov):
-// rustup, nvm (nvm-windows on Windows), pyenv (pyenv-win), SDKMAN on macOS, the official archive for Go,
-// the dotnet-install script for .NET, the official JDK archive on Windows, xcodes for Xcode on macOS. A
-// tool with no manager on an OS is unpacked from the official archive, checked where a checksum is published.
+// rustup, pyenv (pyenv-win), SDKMAN on macOS, the official archive for Go, the dotnet-install script for
+// .NET, the official JDK archive on Windows. Node is the official nodejs.org archive of the version, checked
+// against that version's SHASUMS256.txt, with no version manager (owner decision 22 Nov). Xcode has no recipe
+// on any OS: the owner installs it and the store only finds it (xcode.go). A tool with no manager on an OS
+// is unpacked from the official archive, checked where a checksum is published.
 func RecipeFor(goos, arch string, src Sources, t Tool, dest string) (Recipe, error) {
 	if !ValidVersion(t.Version) {
 		return Recipe{}, fmt.Errorf("toolstore: %q is not a valid version", t.Version)
@@ -109,12 +115,17 @@ func RecipeFor(goos, arch string, src Sources, t Tool, dest string) (Recipe, err
 			{Kind: StepRun, Argv: []string{j(exe), "-y", "--no-modify-path", "--profile", "minimal", "--default-toolchain", v}, Env: env},
 		}}, nil
 	case ToolNode:
+		osName, ext := "darwin", ".tar.gz"
 		if win {
-			env := map[string]string{"NVM_HOME": j("nvm"), "NVM_SYMLINK": j("nvm", "current")}
-			return Recipe{"nvm-windows", []Step{{Kind: StepRun, Argv: []string{"nvm", "install", v}, Env: env}}}, nil
+			osName, ext = "win", ".zip"
 		}
-		env := map[string]string{"NVM_DIR": j("nvm")}
-		return Recipe{"nvm", []Step{sh(env, `. "$NVM_DIR/nvm.sh" && nvm install `+v)}}, nil
+		cpu := map[bool]string{true: "arm64", false: "x64"}[arch == "arm64"]
+		file := "node-v" + v + "-" + osName + "-" + cpu + ext
+		base := src.NodeDist + "/v" + v
+		return Recipe{"archive", []Step{
+			{Kind: StepDownload, URL: base + "/" + file, SumsURL: base + "/SHASUMS256.txt", SumsName: file, To: file},
+			{Kind: StepUnpack, File: file, StripDirs: 1},
+		}}, nil
 	case ToolPython:
 		if win {
 			env := map[string]string{"PYENV": j("pyenv-win"), "PYENV_ROOT": j("pyenv-win"), "PYENV_HOME": j("pyenv-win")}
@@ -159,9 +170,7 @@ func RecipeFor(goos, arch string, src Sources, t Tool, dest string) (Recipe, err
 		to := map[bool]string{true: "pnpm.exe", false: "pnpm"}[win]
 		return Recipe{"archive", []Step{{Kind: StepDownload, URL: src.PnpmReleases + "/v" + v + "/" + file, To: to}}}, nil
 	case ToolXcode:
-		if !win {
-			return Recipe{"xcodes", []Step{{Kind: StepRun, Argv: []string{"xcodes", "install", v, "--directory", dest, "--no-superuser"}}}}, nil
-		}
+		return Recipe{}, fmt.Errorf("%w: Xcode is installed by the owner, never by the store", ErrNoRecipe)
 	}
 	return Recipe{}, fmt.Errorf("%w: %s on %s", ErrNoRecipe, t.Tool, goos)
 }
@@ -184,9 +193,9 @@ func LayoutFor(goos string, t Tool, dir string) Layout {
 		return Layout{Path: []string{j("cargo", "bin")}, Env: map[string]string{"RUSTUP_HOME": j("rustup"), "RUSTUP_TOOLCHAIN": v, "RUSTUP_AUTO_INSTALL": "0"}}
 	case ToolNode:
 		if win {
-			return Layout{Path: []string{j("nvm", "v"+v)}}
+			return Layout{Path: []string{dir}}
 		}
-		return Layout{Path: []string{j("nvm", "versions", "node", "v"+v, "bin")}}
+		return Layout{Path: []string{j("bin")}}
 	case ToolPython:
 		if win {
 			return Layout{Path: []string{j("pyenv-win", "versions", v), j("pyenv-win", "versions", v, "Scripts")}}
@@ -204,10 +213,8 @@ func LayoutFor(goos string, t Tool, dir string) Layout {
 		return Layout{Path: []string{j("dotnet")}, Env: map[string]string{"DOTNET_ROOT": j("dotnet"), "DOTNET_CLI_TELEMETRY_OPTOUT": "1"}}
 	case ToolPnpm:
 		return Layout{Path: []string{dir}}
-	case ToolXcode:
-		return Layout{Env: map[string]string{"DEVELOPER_DIR": j("Xcode-"+v+".app", "Contents", "Developer")}}
 	}
-	return Layout{}
+	return Layout{} // Xcode has no folder in the store: BuildJobHome sets DEVELOPER_DIR from the Xcode found
 }
 
 // join joins path parts with the separator of goos, so a test on Linux can check a Windows path.

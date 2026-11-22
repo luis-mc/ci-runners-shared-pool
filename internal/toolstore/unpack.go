@@ -44,6 +44,18 @@ func VerifySHA256(file, expected string) error {
 	return nil
 }
 
+// SumFromList finds the SHA-256 of a file in a checksum list ("<hex>  <name>" per line, as Node's
+// SHASUMS256.txt). A file that is not in the list is an error: the download is then refused.
+func SumFromList(list, name string) (string, error) {
+	for _, line := range strings.Split(list, "\n") {
+		w := strings.Fields(line)
+		if len(w) == 2 && strings.TrimPrefix(w[1], "*") == name {
+			return w[0], nil
+		}
+	}
+	return "", fmt.Errorf("toolstore: no SHA-256 for %s in the checksum list", name)
+}
+
 // cleanEntry strips strip leading folders from an archive path and refuses unsafe ones. An empty result
 // means "skip this entry" (it was inside the stripped folders).
 func cleanEntry(name string, strip int) (string, error) {

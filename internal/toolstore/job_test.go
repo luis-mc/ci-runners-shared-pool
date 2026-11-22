@@ -28,6 +28,7 @@ func envMap(env []string) map[string]string {
 // R5.114: a private home with its own HOME, CARGO_HOME and caches; PATH from the plan; no manager variable.
 func TestBuildJobHome(t *testing.T) {
 	s, in := newStore(t), &FakeInstaller{}
+	s.Xcodes = fakeXcodes("16.2")
 	plan := Plan{rust185, {Tool: ToolXcode, Version: "16.2"}}
 	if _, err := s.BuildJobHome(t.TempDir(), "j1", plan, nil); !errors.Is(err, ErrNeedsInstall) {
 		t.Fatalf("job home before install: %v", err)
@@ -274,5 +275,84 @@ func TestUnpackRefusesUnsafe(t *testing.T) {
 	_ = os.WriteFile(tp, buf.Bytes(), 0o644)
 	if err := Unpack(tp, filepath.Join(dir, "o2"), 1); !errors.Is(err, ErrUnsafeArchive) {
 		t.Errorf("tar link: %v", err)
+	}
+}
+
+// R5.113: the Node archive is accepted only when its line in SHASUMS256.txt matches; a missing line or a wrong
+// sum refuses it and nothing is unpacked.
+func TestNodeArchiveChecksAgainstShasums(t *testing.T) {
+	file := "node-v22.1.0-win-x64.zip"
+	archive := zipOf(t, map[string]string{"node-v22.1.0-win-x64/node.exe": "exe"})
+	rec, _ := RecipeFor(Windows, "amd64", DefaultSources(), Tool{Tool: ToolNode, Version: "22.1.0"}, "x")
+	run := func(list string) (string, error) {
+		f := &FakeFetcher{Files: map[string][]byte{rec.Steps[0].URL: archive}, Texts: map[string]string{rec.Steps[0].SumsURL: list}}
+		dest := t.TempDir()
+		_, err := (&ExecInstaller{Fetch: f, Run: &FakeRunner{}}).Install(context.Background(), rec, dest)
+		return dest, err
+	}
+	other := strings.Repeat("a", 64) + "  node-v22.1.0-linux-x64.tar.gz\n"
+	dest, err := run(other + sum(archive) + "  " + file + "\n")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if b, err := os.ReadFile(filepath.Join(dest, "node.exe")); err != nil || string(b) != "exe" {
+		t.Fatalf("unpacked: %q %v", b, err)
+	}
+	for name, list := range map[string]string{"wrong sum": strings.Repeat("0", 64) + "  " + file + "\n", "not listed": other} {
+		d, err := run(list)
+		if err == nil {
+			t.Errorf("%s accepted", name)
+		}
+		if _, serr := os.Stat(filepath.Join(d, "node.exe")); serr == nil {
+			t.Errorf("%s: unpacked", name)
+		}
+	}
+}
+
+// R5.115 (owner decision 22 Nov): a cache goes into the job home by hard link; when a link fails the files are
+// copied, and the fallback is logged once per cache, not once per file or per restore.
+func TestLinkClonerHardLinkThenCopyFallback(t *testing.T) {
+	src := t.TempDir()
+	for _, n := range []string{"a", "b", "c"} {
+		_ = os.WriteFile(filepath.Join(src, n), []byte("data-"+n), 0o644)
+	}
+	same := func(dst string) (links int) {
+		for _, n := range []string{"a", "b", "c"} {
+			x, _ := os.Stat(filepath.Join(src, n))
+			y, err := os.Stat(filepath.Join(dst, n))
+			if err != nil {
+				t.Fatalf("%s missing in %s: %v", n, dst, err)
+			}
+			if os.SameFile(x, y) {
+				links++
+			}
+			if b, _ := os.ReadFile(filepath.Join(dst, n)); string(b) != "data-"+n {
+				t.Fatalf("%s content %q", n, b)
+			}
+		}
+		return links
+	}
+	var logged []string
+	ok := NewLinkCloner(func(from, to string) error { return os.Link(from, to) }, func(c string, _ error) { logged = append(logged, c) })
+	d1 := filepath.Join(t.TempDir(), "d")
+	if err := ok.Clone(context.Background(), src, d1); err != nil || same(d1) != 3 || len(logged) != 0 {
+		t.Fatalf("link path: %v links %d logged %v", err, same(d1), logged)
+	}
+	fails := 0
+	bad := NewLinkCloner(func(string, string) error { fails++; return errors.New("cross-device link") }, func(c string, _ error) { logged = append(logged, c) })
+	for i := 0; i < 2; i++ { // two jobs restore the same cache
+		d := filepath.Join(t.TempDir(), "d")
+		if err := bad.Clone(context.Background(), src, d); err != nil || same(d) != 0 {
+			t.Fatalf("copy path: %v", err)
+		}
+	}
+	if fails != 6 || len(logged) != 1 || logged[0] != src {
+		t.Fatalf("fails %d logged %v: want a copy of every file and one log for the cache", fails, logged)
+	}
+	// A cache that is a different folder is logged on its own.
+	src2 := t.TempDir()
+	_ = os.WriteFile(filepath.Join(src2, "z"), []byte("z"), 0o644)
+	if err := bad.Clone(context.Background(), src2, filepath.Join(t.TempDir(), "d")); err != nil || len(logged) != 2 {
+		t.Fatalf("second cache: %v logged %v", err, logged)
 	}
 }
