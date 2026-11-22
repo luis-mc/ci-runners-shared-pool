@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { ref: '${{ inputs.sha }}', fetch-depth: 1 }
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: '3.12' }
       # Project setup (same pins as ci.yml): Go, pnpm, node, frozen install. Before the claim.
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
