@@ -1,5 +1,6 @@
 // Pool > Machines (LOOK56): what runs where. It only shows, and links to Setup > Machines, where machines change.
 import {
+  ActionBar,
   CardGrid,
   ClampText,
   Empty,
@@ -45,9 +46,6 @@ export function PoolMachines() {
         This page shows what runs where. To change a machine, its pool size or its load
         budget, go to <TextLink to="/setup/machines">Setup &gt; Machines</TextLink>.
       </Message>
-      <LinkButton to="/setup/machines" kind="primary">
-        Open Setup &gt; Machines
-      </LinkButton>
       <Load result={machines.result} what="machines" reload={machines.reload}>
         {(d) =>
           d.items.length === 0 ? (
@@ -82,6 +80,13 @@ export function PoolMachines() {
           )
         }
       </Load>
+      <ActionBar
+        primary={
+          <LinkButton to="/setup/machines" kind="primary">
+            Open Setup &gt; Machines
+          </LinkButton>
+        }
+      />
     </Stack>
   );
 }
