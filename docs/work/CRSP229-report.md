@@ -8,3 +8,10 @@ Status: Part 1 (join) done locally and checked; pushing before Part 2.
 - listAssignLeases default response restored; code, docs index and design-system visuals regenerated.
 - `later(load, options?)`: options optional; pages that used `true` now pass a heading.
 - Checks green: go build, vet (and GOOS=windows), go test ./..., golangci-lint, pnpm typecheck and lint, web (776) and ui (297) tests, actionlint, fast_guards. docs_check: W1 only (docs/work).
+
+## Part 2 (renamed to CRSP_RUNS_ON_*, legacy_vars dropped)
+- Part 1 pushed as 7a31bcde after the e2e gate (3195 passed). The first gate run had 2 load flakes that pass alone; the rerun was green.
+- Commits: rename RUNS_ON_* to CRSP_RUNS_ON_* and drop legacy_vars; migration 00043_drop_legacy_vars; prettier; specs, six CRSP229 change notes, design-system "Variable name words" and CHANGES C35.
+- Tests: TestLegacyVariablesMigrated, TestPlanNeverDeletesCrspRunsOn, TestVarNamesReservePoolPrefix, TestMakePatchWritesTheNewPoolNames, TestWorkflowPerJob, TestIntegrationDropLegacyVarsMigration (plus four extra).
+- Deviations: RUNS_ON_LIGHT keeps its old name (no replacement; listed as an old name). Old names are deleted only where the store lists them as crsp's and after the new ones are written. Canary prefix is CRSP_RUNS_ON_CANARY_ (reserved pool prefix; LegacyCanaryPrefix stops old canaries). Design-system entry is C35 (C22 was taken by LOOK56).
+- Checks: go build, vet (and GOOS=windows), golangci-lint, go test ./..., pnpm typecheck and lint, web and ui tests, actionlint, fast_guards, docs_check (W1 only).
