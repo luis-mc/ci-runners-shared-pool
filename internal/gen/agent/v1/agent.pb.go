@@ -4626,7 +4626,11 @@ type MachineSettings struct {
 	// A pause from the tray until the user resumes.
 	PauseUntilResumed bool `protobuf:"varint,23,opt,name=pause_until_resumed,json=pauseUntilResumed,proto3" json:"pause_until_resumed,omitempty"`
 	// The CPU cap for runner processes in percent: 25, 50, 75 or 100. 0 means 100.
-	CpuCapPct     int32 `protobuf:"varint,24,opt,name=cpu_cap_pct,json=cpuCapPct,proto3" json:"cpu_cap_pct,omitempty"`
+	CpuCapPct int32 `protobuf:"varint,24,opt,name=cpu_cap_pct,json=cpuCapPct,proto3" json:"cpu_cap_pct,omitempty"`
+	// The free disk in GiB the machine keeps before it starts a job or a VM
+	// (runners R5.83, OPS86). 0 means the console set none: the agent keeps the
+	// value of its own start (config.toml or flag). The agent applies it live.
+	DiskFloorGib  int32 `protobuf:"varint,25,opt,name=disk_floor_gib,json=diskFloorGib,proto3" json:"disk_floor_gib,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4825,6 +4829,13 @@ func (x *MachineSettings) GetPauseUntilResumed() bool {
 func (x *MachineSettings) GetCpuCapPct() int32 {
 	if x != nil {
 		return x.CpuCapPct
+	}
+	return 0
+}
+
+func (x *MachineSettings) GetDiskFloorGib() int32 {
+	if x != nil {
+		return x.DiskFloorGib
 	}
 	return 0
 }
@@ -7478,8 +7489,14 @@ type AcceptingReport struct {
 	CpuCapDetail string `protobuf:"bytes,7,opt,name=cpu_cap_detail,json=cpuCapDetail,proto3" json:"cpu_cap_detail,omitempty"`
 	// When a timed pause from the tray ends; 0 when none or until resumed.
 	PauseUntilUnixMs int64 `protobuf:"varint,8,opt,name=pause_until_unix_ms,json=pauseUntilUnixMs,proto3" json:"pause_until_unix_ms,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// The free-disk floor in force on the agent, in GiB (runners R5.83, OPS86);
+	// 0 when it is off or an older agent sent nothing.
+	DiskFloorGib int32 `protobuf:"varint,9,opt,name=disk_floor_gib,json=diskFloorGib,proto3" json:"disk_floor_gib,omitempty"`
+	// The floor is off because config.toml or the flag says so; the console shows
+	// the field read-only and the agent ignores a console value.
+	DiskFloorOff  bool `protobuf:"varint,10,opt,name=disk_floor_off,json=diskFloorOff,proto3" json:"disk_floor_off,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AcceptingReport) Reset() {
@@ -7566,6 +7583,20 @@ func (x *AcceptingReport) GetPauseUntilUnixMs() int64 {
 		return x.PauseUntilUnixMs
 	}
 	return 0
+}
+
+func (x *AcceptingReport) GetDiskFloorGib() int32 {
+	if x != nil {
+		return x.DiskFloorGib
+	}
+	return 0
+}
+
+func (x *AcceptingReport) GetDiskFloorOff() bool {
+	if x != nil {
+		return x.DiskFloorOff
+	}
+	return false
 }
 
 // EnsureImage asks: does the registry have key K for arch A?
@@ -10343,7 +10374,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"slotsFreed\"b\n" +
 	"\fHolderReport\x12&\n" +
 	"\x05alive\x18\x01 \x03(\v2\x10.agent.v1.HolderR\x05alive\x12*\n" +
-	"\arunning\x18\x02 \x03(\v2\x10.agent.v1.JobRefR\arunning\"\xa5\a\n" +
+	"\arunning\x18\x02 \x03(\v2\x10.agent.v1.JobRefR\arunning\"\xcb\a\n" +
 	"\x0fMachineSettings\x12\x18\n" +
 	"\aversion\x18\x01 \x01(\x03R\aversion\x12\x14\n" +
 	"\x05state\x18\x02 \x01(\tR\x05state\x12*\n" +
@@ -10373,7 +10404,8 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x10pause_on_battery\x18\x15 \x01(\bR\x0epauseOnBattery\x12-\n" +
 	"\x13pause_until_unix_ms\x18\x16 \x01(\x03R\x10pauseUntilUnixMs\x12.\n" +
 	"\x13pause_until_resumed\x18\x17 \x01(\bR\x11pauseUntilResumed\x12\x1e\n" +
-	"\vcpu_cap_pct\x18\x18 \x01(\x05R\tcpuCapPct\"\x93\x01\n" +
+	"\vcpu_cap_pct\x18\x18 \x01(\x05R\tcpuCapPct\x12$\n" +
+	"\x0edisk_floor_gib\x18\x19 \x01(\x05R\fdiskFloorGib\"\x93\x01\n" +
 	"\x05Drain\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x1f\n" +
@@ -10605,7 +10637,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x02os\x18\x03 \x01(\tR\x02os\x12\x16\n" +
 	"\x06layers\x18\x04 \x03(\tR\x06layers\x12\x17\n" +
 	"\asize_mb\x18\x05 \x01(\x03R\x06sizeMb\x12&\n" +
-	"\x0fcreated_unix_ms\x18\x06 \x01(\x03R\rcreatedUnixMs\"\xaf\x02\n" +
+	"\x0fcreated_unix_ms\x18\x06 \x01(\x03R\rcreatedUnixMs\"\xfb\x02\n" +
 	"\x0fAcceptingReport\x12\x1c\n" +
 	"\taccepting\x18\x01 \x01(\bR\taccepting\x12!\n" +
 	"\fpause_reason\x18\x02 \x01(\tR\vpauseReason\x12\x1d\n" +
@@ -10615,7 +10647,10 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\vcpu_cap_pct\x18\x05 \x01(\x05R\tcpuCapPct\x12\"\n" +
 	"\rcpu_cap_state\x18\x06 \x01(\tR\vcpuCapState\x12$\n" +
 	"\x0ecpu_cap_detail\x18\a \x01(\tR\fcpuCapDetail\x12-\n" +
-	"\x13pause_until_unix_ms\x18\b \x01(\x03R\x10pauseUntilUnixMs\"\xaf\x01\n" +
+	"\x13pause_until_unix_ms\x18\b \x01(\x03R\x10pauseUntilUnixMs\x12$\n" +
+	"\x0edisk_floor_gib\x18\t \x01(\x05R\fdiskFloorGib\x12$\n" +
+	"\x0edisk_floor_off\x18\n" +
+	" \x01(\bR\fdiskFloorOff\"\xaf\x01\n" +
 	"\vEnsureImage\x12\x1d\n" +
 	"\n" +
 	"request_id\x18\x01 \x01(\tR\trequestId\x12\x10\n" +

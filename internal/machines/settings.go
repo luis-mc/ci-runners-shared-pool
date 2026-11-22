@@ -240,6 +240,9 @@ func (s *Service) UpdateSettings(ctx context.Context, actor, id string, u Settin
 	if err != nil {
 		return View{}, nil, err
 	}
+	if u.DiskFloorGiB != nil && s.Policy(id).DiskFloorOff {
+		return View{}, nil, fmt.Errorf("%w: the free disk floor is off in config.toml on this machine; change it there", ErrInvalid)
+	}
 	if err := validate(next, m.Facts, m.Backends); err != nil {
 		return View{}, nil, err
 	}
@@ -313,6 +316,7 @@ func settingsDiff(a, b Settings) string {
 	add("mode", a.EffectiveMode(), b.EffectiveMode())
 	add("pause on battery", a.PauseOnBattery, b.PauseOnBattery)
 	add("CPU cap", a.EffectiveCPUCap(), b.EffectiveCPUCap())
+	add("disk floor GiB", a.DiskFloorGiB, b.DiskFloorGiB)
 	add("docker compact", a.CompactMode, b.CompactMode)
 	add("docker compact threshold GiB", a.CompactThresholdGiB, b.CompactThresholdGiB)
 	add("docker compact idle minutes", a.CompactIdleMinutes, b.CompactIdleMinutes)
@@ -335,6 +339,7 @@ func ProtoSettings(st Settings, state string) *agentv1.MachineSettings {
 		PoolMemoryGib: st.PoolMemoryGiB, PoolCpus: int32(st.PoolCPUs), //nolint:gosec // validated
 		Mode: st.EffectiveMode(), PauseOnBattery: st.PauseOnBattery, PauseUntilResumed: st.PausedUntilResumed,
 		PauseUntilUnixMs: untilMs(st.PauseUntil), CpuCapPct: int32(st.EffectiveCPUCap()), //nolint:gosec // validated
+		DiskFloorGib: int32(st.DiskFloorGiB), //nolint:gosec // validated to 2000
 	}
 }
 

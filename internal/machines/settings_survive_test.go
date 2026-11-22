@@ -22,7 +22,7 @@ func userSet(t *testing.T, e *env, id string) machines.Settings {
 	u := machines.SettingsUpdate{
 		BudgetMemoryPct: ptr(70), BudgetCPUPct: ptr(45), JobSlots: ptr(3), DrainTimeoutMinutes: ptr(95),
 		CacheCapBytes: ptr(int64(7 << 30)), Mode: ptr(machines.ModeAlways), CPUCapPct: ptr(50), PauseOnBattery: ptr(false),
-		PoolCPUs: ptr(2), PoolMemoryGiB: ptr(8.0),
+		PoolCPUs: ptr(2), PoolMemoryGiB: ptr(8.0), DiskFloorGiB: ptr(150),
 	}
 	if _, _, err := e.Svc.UpdateSettings(context.Background(), "owner", id, u); err != nil {
 		t.Fatalf("user settings: %v", err)
@@ -31,7 +31,7 @@ func userSet(t *testing.T, e *env, id string) machines.Settings {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if s.BudgetMemoryPct != 70 || s.DrainTimeoutMinutes != 95 || s.CPUCapPct != 50 || s.PoolCPUs != 2 {
+	if s.BudgetMemoryPct != 70 || s.DrainTimeoutMinutes != 95 || s.CPUCapPct != 50 || s.PoolCPUs != 2 || s.DiskFloorGiB != 150 {
 		t.Fatalf("the update did not land: %+v", s)
 	}
 	return s

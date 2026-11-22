@@ -4851,6 +4851,9 @@ type DayValue struct {
 	Value float32            `json:"value"`
 }
 
+// DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
+type DiskFloorGib = int
+
 // DockerCompactMode The automatic compact of Docker's disk file. auto (default) is on for a Windows machine with a Docker Desktop disk file and off elsewhere (caches R5.51 to R5.54).
 type DockerCompactMode string
 
@@ -6599,7 +6602,13 @@ type MachinePolicy struct {
 
 	// CpuCapState What the agent did with the CPU cap. not_supported is macOS (machines R5.64). applying is the wait until the agent reports the result for the chosen percent.
 	CpuCapState *CpuCapState `json:"cpu_cap_state,omitempty"`
-	OnBattery   bool         `json:"on_battery"`
+
+	// DiskFloorGib The free-disk floor in force on the agent, in GiB (runners R5.83). 0 while it is off or the agent has not reported it.
+	DiskFloorGib *int `json:"disk_floor_gib,omitempty"`
+
+	// DiskFloorOff The floor is off because config.toml or the agent flag says so. The console shows it read-only; a console value is refused.
+	DiskFloorOff *bool `json:"disk_floor_off,omitempty"`
+	OnBattery    bool  `json:"on_battery"`
 }
 
 // MachineRecovery Present only when the agent of the machine needs recovery (operations R5.44, web-console R5.33).
@@ -6634,6 +6643,9 @@ type MachineSettings struct {
 
 	// CpuCapPct The share of the whole machine's CPU the runner processes may use, in percent (machines R5.64). Separate from the load budget. 100 is no cap.
 	CpuCapPct *CpuCapPct `json:"cpu_cap_pct,omitempty"`
+
+	// DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
+	DiskFloorGib *DiskFloorGib `json:"disk_floor_gib,omitempty"`
 
 	// DockerCompact The automatic compact of Docker's disk file. auto (default) is on for a Windows machine with a Docker Desktop disk file and off elsewhere (caches R5.51 to R5.54).
 	DockerCompact *DockerCompactMode `json:"docker_compact,omitempty"`
@@ -6694,6 +6706,9 @@ type MachineSettingsUpdate struct {
 
 	// CpuCapPct The share of the whole machine's CPU the runner processes may use, in percent (machines R5.64). Separate from the load budget. 100 is no cap.
 	CpuCapPct *CpuCapPct `json:"cpu_cap_pct,omitempty"`
+
+	// DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
+	DiskFloorGib *DiskFloorGib `json:"disk_floor_gib,omitempty"`
 
 	// DockerCompact The automatic compact of Docker's disk file. auto (default) is on for a Windows machine with a Docker Desktop disk file and off elsewhere (caches R5.51 to R5.54).
 	DockerCompact *DockerCompactMode `json:"docker_compact,omitempty"`

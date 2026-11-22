@@ -896,7 +896,7 @@ func TestDiskFloorNamesWhatToClean(t *testing.T) {
 			t.Errorf("%s: %v", f.Subject.Name, f.Severity)
 		}
 		if f.Subject.Name == "held" {
-			for _, w := range []string{"docker image prune", "clean-work", "4.0 GiB", "disk_floor_gib"} {
+			for _, w := range []string{"docker image prune", "clean-work", "4.0 GiB", "10 GiB", "Free disk to keep"} {
 				if !strings.Contains(f.Fix.Text+f.Detail, w) {
 					t.Errorf("the finding does not name %q: %+v", w, f)
 				}
@@ -905,6 +905,16 @@ func TestDiskFloorNamesWhatToClean(t *testing.T) {
 	}
 	if len(fs) != 4 {
 		t.Errorf("%d findings", len(fs))
+	}
+}
+
+// OPS86: the finding names the floor of the machine, not the default.
+func TestDiskFloorUsesTheMachineValue(t *testing.T) {
+	held := healthyMachine()
+	held.ID, held.Name, held.PauseReason, held.DiskFreeBytes, held.DiskFloorGiB = "h", "held", "disk_low", i64(82*gib), 150
+	fs := run(t, doctor.Env{Fleet: &fleet{machines: []doctor.Machine{held}}}, "machine.floor.disk")
+	if len(fs) != 1 || fs[0].Severity != doctor.Fail || !strings.Contains(fs[0].Detail, "floor of 150 GiB") || strings.Contains(fs[0].Detail, "10 GiB") {
+		t.Errorf("%+v", fs)
 	}
 }
 

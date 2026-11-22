@@ -20,6 +20,7 @@ import {
   Status,
   Table,
   Breadcrumbs,
+  Text,
   TextLink,
   formatPast,
   formatPercent,
@@ -245,6 +246,10 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
   const [slots, setSlots] = useState(m.settings.job_slots);
   const [drain, setDrain] = useState(m.settings.drain_timeout_minutes);
   const [allowed, setAllowed] = useState<string[]>(m.settings.allowed_backends);
+  // The floor in force: the console value, else what the agent started with (runners R5.83, OPS86).
+  const floorOff = m.policy?.disk_floor_off === true;
+  const floorSaved = m.settings.disk_floor_gib || m.policy?.disk_floor_gib || 10;
+  const [floor, setFloor] = useState(floorSaved);
   const [errors, setErrors] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
 
@@ -254,6 +259,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     (cpu !== m.settings.budget_cpu_pct ? 1 : 0) +
     (slots !== m.settings.job_slots ? 1 : 0) +
     (drain !== m.settings.drain_timeout_minutes ? 1 : 0) +
+    (!floorOff && floor !== floorSaved ? 1 : 0) +
     (allowed.slice().sort().join() !== m.settings.allowed_backends.slice().sort().join()
       ? 1
       : 0);
@@ -265,8 +271,10 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
       job_slots: slots,
       drain_timeout_minutes: drain,
       allowed_backends: allowed as Schemas['BackendName'][],
+      // Sent only when changed: saving other fields must not pin the value of the start.
+      ...(!floorOff && floor !== floorSaved ? { disk_floor_gib: floor } : {}),
     }),
-    [mem, cpu, slots, drain, allowed],
+    [mem, cpu, slots, drain, allowed, floor, floorOff, floorSaved],
   );
 
   const saveAsk = useQuestion(
@@ -287,6 +295,8 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     if (mem < 1 || mem > 100) problems.push('Memory budget must be from 1% to 100%.');
     if (cpu < 1 || cpu > 100) problems.push('CPU budget must be from 1% to 100%.');
     if (slots < 1) problems.push('Job slots must be at least 1.');
+    if (!floorOff && (floor < 1 || floor > 2000))
+      problems.push('Free disk to keep must be from 1 GB to 2000 GB.');
     setErrors(problems);
     if (problems.length) return;
     if (!(await poolSize.save())) return;
@@ -504,6 +514,40 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
               />
             </FieldGrid>
           </Section>
+          <Section title="Disk">
+            <Stack>
+              {floorOff ? (
+                <Facts
+                  items={[
+                    {
+                      name: 'Free disk to keep',
+                      value: 'Off',
+                    },
+                  ]}
+                />
+              ) : (
+                <NumberField
+                  label="Free disk to keep"
+                  help="Under this much free space new jobs wait (disk_low). Running jobs finish."
+                  value={floor}
+                  unit=" GB"
+                  min={1}
+                  max={2000}
+                  changed={floor !== floorSaved}
+                  onChange={setFloor}
+                />
+              )}
+              {floorOff ? (
+                <Text>
+                  The floor is off in config.toml on this machine. It cannot be changed
+                  here.
+                </Text>
+              ) : null}
+              {f?.disk_free_bytes !== undefined ? (
+                <Text>{`${Math.round((f.disk_free_bytes / 2 ** 30) * 10) / 10} GB free now.`}</Text>
+              ) : null}
+            </Stack>
+          </Section>
           {poolSize.section}
         </Stack>
       </form>
@@ -526,6 +570,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           setCpu(m.settings.budget_cpu_pct);
           setSlots(m.settings.job_slots);
           setDrain(m.settings.drain_timeout_minutes);
+          setFloor(floorSaved);
           setAllowed(m.settings.allowed_backends);
           setErrors([]);
           poolSize.reset();

@@ -666,6 +666,10 @@ message MachineSettings {
   bool pause_until_resumed = 23;
   // The CPU cap for runner processes in percent: 25, 50, 75 or 100. 0 means 100.
   int32 cpu_cap_pct = 24;
+  // The free disk in GiB the machine keeps before it starts a job or a VM
+  // (runners R5.83, OPS86). 0 means the console set none: the agent keeps the
+  // value of its own start (config.toml or flag). The agent applies it live.
+  int32 disk_floor_gib = 25;
 }
 
 // Drain stops new jobs on the machine for a change that restarts runners or
@@ -1114,6 +1118,12 @@ message AcceptingReport {
   string cpu_cap_detail = 7;
   // When a timed pause from the tray ends; 0 when none or until resumed.
   int64 pause_until_unix_ms = 8;
+  // The free-disk floor in force on the agent, in GiB (runners R5.83, OPS86);
+  // 0 when it is off or an older agent sent nothing.
+  int32 disk_floor_gib = 9;
+  // The floor is off because config.toml or the flag says so; the console shows
+  // the field read-only and the agent ignores a console value.
+  bool disk_floor_off = 10;
 }
 
 // ---------------------------------------------------------------- image registry (REG10, protocol version 3)

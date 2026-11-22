@@ -12,7 +12,7 @@ import (
 func IsDefaultSettings(s Settings) bool {
 	d := DefaultSettings()
 	return slices.Equal(s.AllowedBackends, d.AllowedBackends) && s.PoolMemoryGiB == 0 && s.PoolCPUs == 0 &&
-		s.EffectiveMode() == d.Mode && s.EffectiveCPUCap() == d.CPUCapPct && s.PauseOnBattery == d.PauseOnBattery &&
+		s.EffectiveMode() == d.Mode && s.EffectiveCPUCap() == d.CPUCapPct && s.PauseOnBattery == d.PauseOnBattery && s.DiskFloorGiB == 0 &&
 		s.CompactMode == "" && s.CompactThresholdGiB == 0 && s.CompactIdleMinutes == 0
 }
 
