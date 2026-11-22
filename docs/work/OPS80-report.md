@@ -19,3 +19,8 @@ Branch OPS80-before-assignment: merge commits of OPS73 and OPS74 on origin/main,
 
 ## Checks run
 go vet linux, windows, darwin; golangci-lint on touched packages; tests of assign, scheduler, runners, store, github, api, doctor, repos, routing; codegen drift none; docs_check (only W1).
+
+## CI
+Draft PR #379. ci.yml on ba5ab94 (dispatch and PR runs): green. The `dev-standards` run fails only on docs_check W1 (docs/work reports on the branch: OPS74's and this one); `docs_work.py strip` at the join clears it.
+
+CODE DONE ba5ab941041bb055a06abf70cbb918c8892c7a19
