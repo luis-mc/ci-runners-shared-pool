@@ -25,7 +25,7 @@ const lastPatch = (api: ReturnType<typeof open>) =>
 
 describe('Free disk to keep', () => {
   it('shows the value in force, the free space and what happens under it', async () => {
-    renderApp(open(withDisk({}, { disk_floor_gib: 10 })), '/pool/machines/m1');
+    renderApp(open(withDisk({}, { disk_floor_gib: 10 })), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(
       screen.getByRole('button', { name: /Free disk to keep/ }).textContent,
@@ -38,7 +38,7 @@ describe('Free disk to keep', () => {
 
   it('prefers the console value and saves a new one with Save', async () => {
     const api = open(withDisk({ disk_floor_gib: 100 }, { disk_floor_gib: 100 }));
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getByRole('button', { name: /Free disk to keep/ }));
     const dialog = await screen.findByRole('dialog');
@@ -52,7 +52,7 @@ describe('Free disk to keep', () => {
 
   it('does not send the floor when only another field changed', async () => {
     const api = open(withDisk({}, { disk_floor_gib: 10 }));
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getAllByRole('checkbox')[0]!);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -61,7 +61,7 @@ describe('Free disk to keep', () => {
   });
 
   it('shows a floor that is off in config read-only', async () => {
-    renderApp(open(withDisk({}, { disk_floor_off: true })), '/pool/machines/m1');
+    renderApp(open(withDisk({}, { disk_floor_off: true })), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.queryByRole('button', { name: /Free disk to keep/ })).toBeNull();
     expect(screen.getByText(/The floor is off in config\.toml/)).toBeTruthy();

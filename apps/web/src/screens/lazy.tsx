@@ -30,7 +30,9 @@ export function later<P extends object>(
   const Screen = lazy(() => load().then((component) => ({ default: component })));
   return function Later(props: P) {
     return (
-      <Suspense fallback={options ? <Waiting {...options} /> : <Loading what="Loading" />}>
+      <Suspense
+        fallback={options ? <Waiting {...options} /> : <Loading what="Loading" />}
+      >
         <Screen {...props} />
       </Suspense>
     );

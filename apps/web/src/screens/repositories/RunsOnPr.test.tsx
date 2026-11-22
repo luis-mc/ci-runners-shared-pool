@@ -36,7 +36,7 @@ const pane = async () =>
 describe('Switch to crsp runners', () => {
   it('on the list: shows the diff first and opens nothing', async () => {
     const api = world().on('GET', '/api/v1/runs-on-pr', { items: [change] });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     const p = await pane();
     fireEvent.click(
       within(p).getByRole('button', { name: 'Switch all to crsp runners' }),
@@ -58,7 +58,7 @@ describe('Switch to crsp runners', () => {
     const api = world()
       .on('GET', '/api/v1/runs-on-pr', { items: [change] })
       .on('POST', '/api/v1/runs-on-pr', () => new Promise((r) => (release = r)));
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     const p = await pane();
     fireEvent.click(
       within(p).getByRole('button', { name: 'Switch all to crsp runners' }),
@@ -83,7 +83,7 @@ describe('Switch to crsp runners', () => {
       .on('GET', '/api/v1/repositories/:id', repository({ pool_on: true }))
       .on('GET', '/api/v1/runs-on-pr', { items: [change] })
       .on('POST', '/api/v1/runs-on-pr', { items: [{ ...opened, state: 'existing' }] });
-    renderApp(api, '/repositories/octo/app');
+    renderApp(api, '/setup/pool/octo/app');
     const p = await pane();
     fireEvent.click(within(p).getByRole('button', { name: 'Switch to crsp runners' }));
     fireEvent.click(
@@ -106,7 +106,7 @@ describe('Switch to crsp runners', () => {
     const api = world().on('GET', '/api/v1/runs-on-pr', {
       items: [{ ...change, state: 'nothing_to_change', files: [], diff: '' }],
     });
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     const p = await pane();
     fireEvent.click(
       within(p).getByRole('button', { name: 'Switch all to crsp runners' }),
@@ -123,7 +123,7 @@ describe('Switch to crsp runners', () => {
         '/api/v1/runs-on-pr',
         apiError(403, 'forbidden', 'you do not have admin rights on octo/app in GitHub'),
       );
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     const p = await pane();
     fireEvent.click(
       within(p).getByRole('button', { name: 'Switch all to crsp runners' }),
@@ -144,7 +144,7 @@ describe('Switch to crsp runners', () => {
   });
 
   it('is disabled for a viewer and says why (UX-38)', async () => {
-    renderApp(world(signedIn(viewer)), '/repositories');
+    renderApp(world(signedIn(viewer)), '/setup/pool');
     const p = await pane();
     expect(
       within(p).getByRole<HTMLButtonElement>('button', {

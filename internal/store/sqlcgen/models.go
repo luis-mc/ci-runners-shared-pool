@@ -8,18 +8,6 @@ import (
 	"database/sql"
 )
 
-type AccessCredential struct {
-	ID             string
-	Hash           string
-	Name           string
-	Scope          string
-	CreatedByID    int64
-	CreatedByLogin string
-	CreatedAt      string
-	LastUsedAt     sql.NullString
-	RevokedAt      sql.NullString
-}
-
 type AssignLabelset struct {
 	LabelKey   string
 	Repository string

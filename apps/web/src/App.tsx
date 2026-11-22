@@ -69,11 +69,11 @@ const ImageDetail = later(
 );
 const RepositoriesList = later(
   () => import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
-  true,
+  { heading: 'Repositories' },
 );
 const RepositoryDetail = later(
   () => import('./screens/repositories/Repositories').then((m) => m.RepositoryDetail),
-  true,
+  { heading: 'Repository' },
 );
 const AddMachinePage = later(
   () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),

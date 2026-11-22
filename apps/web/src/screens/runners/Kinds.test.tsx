@@ -223,7 +223,7 @@ describe('Runner page (runners R5.89, R5.90)', () => {
         },
       ],
     });
-    renderApp(api, '/pool/runners/r1');
+    renderApp(api, '/setup/runners/r1');
     expect(await screen.findByText('gated: offline by design')).toBeTruthy();
     expect(screen.getByText('Weekly wake-up')).toBeTruthy();
     expect(screen.getByText('waiting for room on M1: needs 6 CPU, 5 free')).toBeTruthy();
@@ -236,7 +236,7 @@ describe('Runner page (runners R5.89, R5.90)', () => {
       wake_every_days: 7,
       runners: [],
     });
-    renderApp(api, '/pool/runners/r1');
+    renderApp(api, '/setup/runners/r1');
     await screen.findByText('Dependency cache size');
     expect(screen.queryByText('Weekly wake-up')).toBeNull();
   });

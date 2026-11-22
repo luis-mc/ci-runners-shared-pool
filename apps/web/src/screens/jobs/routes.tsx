@@ -20,7 +20,7 @@ const PoolMachines = later(() =>
 );
 const PoolMachineDetail = later(
   () => import('../pool/PoolMachineDetail').then((m) => m.PoolMachineDetail),
-  true,
+  { heading: 'Machine' },
 );
 const QueuePlan = later(() => import('../pool/QueuePlan').then((m) => m.QueuePlan));
 const Insights = later(() => import('../analytics/Insights').then((m) => m.Insights));

@@ -555,7 +555,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
         <MachineRemove
           machineId={m.id}
           disabled={!admin}
-          onRemoved={() => void navigate('/pool/machines')}
+          onRemoved={() => void navigate('/setup/machines')}
         />
       </Suspense>
       {saved ? <Message tone="done">Settings saved.</Message> : null}

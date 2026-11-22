@@ -775,13 +775,13 @@ export interface paths {
         };
         /**
          * Preview the runs-on pull request of one repository or of every opted-in repository
-         * @description github-integration R5.109. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+         * @description github-integration R5.113. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
          */
         get: operations["previewRunsOnPullRequests"];
         put?: never;
         /**
          * Open the runs-on pull request of one repository or of every opted-in repository
-         * @description github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+         * @description github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
          */
         post: operations["openRunsOnPullRequests"];
         delete?: never;
