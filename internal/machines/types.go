@@ -233,7 +233,7 @@ func DefaultSettings() Settings {
 		Version: 1, State: StateActive,
 		BudgetMemoryPct: 85, BudgetCPUPct: 60, JobSlots: 2, LightSlots: 1, HeavySlots: 1,
 		LightJobs: []string{}, HeavyJobs: []string{},
-		SlotMaxAgeMinutes: 120, GatePollSeconds: 15, GateMaxWaitMinutes: 10, GateOnTimeout: "fail",
+		SlotMaxAgeMinutes: 120, GatePollSeconds: 15, GateMaxWaitMinutes: 2, GateOnTimeout: "fail",
 		AllowedBackends: []string{"persistent"}, CacheCapBytes: 20 << 30, DrainTimeoutMinutes: 60,
 		Mode: ModeAutomatic, PauseOnBattery: true, CPUCapPct: 100,
 	}

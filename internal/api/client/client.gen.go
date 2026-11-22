@@ -1301,6 +1301,30 @@ func (e JobSizeSource) Valid() bool {
 	}
 }
 
+// Defines values for JobTimerState.
+const (
+	JobTimerStateEnded   JobTimerState = "ended"
+	JobTimerStateGrace   JobTimerState = "grace"
+	JobTimerStateRunning JobTimerState = "running"
+	JobTimerStateStopped JobTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the JobTimerState enum.
+func (e JobTimerState) Valid() bool {
+	switch e {
+	case JobTimerStateEnded:
+		return true
+	case JobTimerStateGrace:
+		return true
+	case JobTimerStateRunning:
+		return true
+	case JobTimerStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -2599,28 +2623,28 @@ func (e RepositoryRoutingWhere) Valid() bool {
 
 // Defines values for RepositoryRoutingWhy.
 const (
-	CapReached       RepositoryRoutingWhy = "cap_reached"
-	FallbackOff      RepositoryRoutingWhy = "fallback_off"
-	FallbackOn       RepositoryRoutingWhy = "fallback_on"
-	Grace            RepositoryRoutingWhy = "grace"
-	MachineUp        RepositoryRoutingWhy = "machine_up"
-	PublicRepository RepositoryRoutingWhy = "public_repository"
+	RepositoryRoutingWhyCapReached       RepositoryRoutingWhy = "cap_reached"
+	RepositoryRoutingWhyFallbackOff      RepositoryRoutingWhy = "fallback_off"
+	RepositoryRoutingWhyFallbackOn       RepositoryRoutingWhy = "fallback_on"
+	RepositoryRoutingWhyGrace            RepositoryRoutingWhy = "grace"
+	RepositoryRoutingWhyMachineUp        RepositoryRoutingWhy = "machine_up"
+	RepositoryRoutingWhyPublicRepository RepositoryRoutingWhy = "public_repository"
 )
 
 // Valid indicates whether the value is a known member of the RepositoryRoutingWhy enum.
 func (e RepositoryRoutingWhy) Valid() bool {
 	switch e {
-	case CapReached:
+	case RepositoryRoutingWhyCapReached:
 		return true
-	case FallbackOff:
+	case RepositoryRoutingWhyFallbackOff:
 		return true
-	case FallbackOn:
+	case RepositoryRoutingWhyFallbackOn:
 		return true
-	case Grace:
+	case RepositoryRoutingWhyGrace:
 		return true
-	case MachineUp:
+	case RepositoryRoutingWhyMachineUp:
 		return true
-	case PublicRepository:
+	case RepositoryRoutingWhyPublicRepository:
 		return true
 	default:
 		return false
@@ -2816,6 +2840,30 @@ func (e RunSummaryState) Valid() bool {
 	case RunSummaryStateQueued:
 		return true
 	case RunSummaryStateRunning:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunTimerState.
+const (
+	RunTimerStateEnded   RunTimerState = "ended"
+	RunTimerStateGrace   RunTimerState = "grace"
+	RunTimerStateRunning RunTimerState = "running"
+	RunTimerStateStopped RunTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the RunTimerState enum.
+func (e RunTimerState) Valid() bool {
+	switch e {
+	case RunTimerStateEnded:
+		return true
+	case RunTimerStateGrace:
+		return true
+	case RunTimerStateRunning:
+		return true
+	case RunTimerStateStopped:
 		return true
 	default:
 		return false
@@ -3398,6 +3446,36 @@ func (e TimelineSegmentMarkers) Valid() bool {
 	case AfterMergeWork:
 		return true
 	case IdleWhileWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TimerSettingsProblemField.
+const (
+	HoldMinutes    TimerSettingsProblemField = "hold_minutes"
+	JobMinutes     TimerSettingsProblemField = "job_minutes"
+	QueuedMinutes  TimerSettingsProblemField = "queued_minutes"
+	RunMinutes     TimerSettingsProblemField = "run_minutes"
+	StartupMinutes TimerSettingsProblemField = "startup_minutes"
+	TimeoutMinutes TimerSettingsProblemField = "timeout_minutes"
+)
+
+// Valid indicates whether the value is a known member of the TimerSettingsProblemField enum.
+func (e TimerSettingsProblemField) Valid() bool {
+	switch e {
+	case HoldMinutes:
+		return true
+	case JobMinutes:
+		return true
+	case QueuedMinutes:
+		return true
+	case RunMinutes:
+		return true
+	case StartupMinutes:
+		return true
+	case TimeoutMinutes:
 		return true
 	default:
 		return false
@@ -5552,6 +5630,38 @@ type JobSummaryList struct {
 	Items []JobSummary `json:"items"`
 }
 
+// JobTimer defines model for JobTimer.
+type JobTimer struct {
+	CanExtend  bool `json:"can_extend"`
+	CanStopNow bool `json:"can_stop_now"`
+
+	// CoveredByRun The run timer ran out too; the run is cancelled and this job is not stopped on its own.
+	CoveredByRun bool `json:"covered_by_run"`
+
+	// Deadline During the grace, when crsp acts. The countdown is deadline minus now.
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	JobId          int64      `json:"job_id"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note What crsp did, for example "stopped by crsp: job timer 30:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      *int64  `json:"run_id,omitempty"`
+
+	// StartedAt The job's first real step.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     JobTimerState `json:"state"`
+
+	// Text The state in words, for example "Job timer ran out at 30:00; stopping in 30 s".
+	Text string `json:"text"`
+}
+
+// JobTimerState defines model for JobTimer.State.
+type JobTimerState string
+
 // JoinCode defines model for JoinCode.
 type JoinCode struct {
 	CreatedAt time.Time `json:"created_at"`
@@ -7327,6 +7437,32 @@ type RunSummaryOverallState string
 // RunSummaryState defines model for RunSummary.State.
 type RunSummaryState string
 
+// RunTimer defines model for RunTimer.
+type RunTimer struct {
+	CanCancelNow   bool       `json:"can_cancel_now"`
+	CanExtend      bool       `json:"can_extend"`
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note For example "cancelled by crsp: run timer 45:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      int64   `json:"run_id"`
+
+	// StartedAt The first job's real start.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     RunTimerState `json:"state"`
+
+	// Text For example "Run timer ran out at 45:00; cancelling in 30 s".
+	Text string `json:"text"`
+}
+
+// RunTimerState defines model for RunTimer.State.
+type RunTimerState string
+
 // RunWaste defines model for RunWaste.
 type RunWaste struct {
 	Kind    RunWasteKind `json:"kind"`
@@ -7897,6 +8033,67 @@ type TimelineSegmentKind string
 // TimelineSegmentMarkers defines model for TimelineSegment.Markers.
 type TimelineSegmentMarkers string
 
+// TimerSettings defines model for TimerSettings.
+type TimerSettings struct {
+	// Enforce Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.
+	Enforce bool `json:"enforce"`
+
+	// ExtendMinutes Fixed at 10.
+	ExtendMinutes int `json:"extend_minutes"`
+
+	// GraceSeconds Fixed at 30.
+	GraceSeconds int `json:"grace_seconds"`
+
+	// HoldMinutes The hold of the job-started hook, at most 2. Default 2.
+	HoldMinutes int `json:"hold_minutes"`
+
+	// JobMinutes The job timer, from the first real step. Default 30.
+	JobMinutes int `json:"job_minutes"`
+
+	// QueuedMinutes Alert for a job that waits this long in GitHub's queue. Default 720 (12 h).
+	QueuedMinutes int `json:"queued_minutes"`
+
+	// RunMinutes The run timer, from the first job's real start. Default 45.
+	RunMinutes int `json:"run_minutes"`
+
+	// StartupMinutes A runner that has not started its job in this time is removed and the job admitted again. Default 2.
+	StartupMinutes int `json:"startup_minutes"`
+
+	// TimeoutMinutes timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60.
+	TimeoutMinutes int `json:"timeout_minutes"`
+}
+
+// TimerSettingsCheck defines model for TimerSettingsCheck.
+type TimerSettingsCheck struct {
+	Ok       bool                   `json:"ok"`
+	Problems []TimerSettingsProblem `json:"problems"`
+
+	// Settings The settings as they would be after the change.
+	Settings TimerSettings `json:"settings"`
+}
+
+// TimerSettingsInput Only the fields given change.
+type TimerSettingsInput struct {
+	Enforce        *bool `json:"enforce,omitempty"`
+	HoldMinutes    *int  `json:"hold_minutes,omitempty"`
+	JobMinutes     *int  `json:"job_minutes,omitempty"`
+	QueuedMinutes  *int  `json:"queued_minutes,omitempty"`
+	RunMinutes     *int  `json:"run_minutes,omitempty"`
+	StartupMinutes *int  `json:"startup_minutes,omitempty"`
+	TimeoutMinutes *int  `json:"timeout_minutes,omitempty"`
+}
+
+// TimerSettingsProblem defines model for TimerSettingsProblem.
+type TimerSettingsProblem struct {
+	Field TimerSettingsProblemField `json:"field"`
+
+	// Message In the owner's words.
+	Message string `json:"message"`
+}
+
+// TimerSettingsProblemField defines model for TimerSettingsProblem.Field.
+type TimerSettingsProblemField string
+
 // Trial defines model for Trial.
 type Trial struct {
 	CanaryJobs     *[]string  `json:"canary_jobs,omitempty"`
@@ -8265,6 +8462,12 @@ type RunnerId = string
 
 // SetName defines model for SetName.
 type SetName = string
+
+// TimerAttempt defines model for TimerAttempt.
+type TimerAttempt = int
+
+// TimerRunId defines model for TimerRunId.
+type TimerRunId = int64
 
 // To defines model for To.
 type To = time.Time
@@ -8697,6 +8900,24 @@ type GetRunSavingsParams struct {
 	Attempt *int `form:"attempt,omitempty" json:"attempt,omitempty"`
 }
 
+// GetRunTimerParams defines parameters for GetRunTimer.
+type GetRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// CancelRunNowParams defines parameters for CancelRunNow.
+type CancelRunNowParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// ExtendRunTimerParams defines parameters for ExtendRunTimer.
+type ExtendRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
 // RestartServiceParams defines parameters for RestartService.
 type RestartServiceParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
@@ -8893,6 +9114,12 @@ type StartAppManifestJSONRequestBody = StartAppManifestRequest
 
 // RedeemSetupLinkJSONRequestBody defines body for RedeemSetupLink for application/json ContentType.
 type RedeemSetupLinkJSONRequestBody = RedeemSetupLinkRequest
+
+// PutTimerSettingsJSONRequestBody defines body for PutTimerSettings for application/json ContentType.
+type PutTimerSettingsJSONRequestBody = TimerSettingsInput
+
+// CheckTimerSettingsJSONRequestBody defines body for CheckTimerSettings for application/json ContentType.
+type CheckTimerSettingsJSONRequestBody = TimerSettingsInput
 
 // AddUserJSONRequestBody defines body for AddUser for application/json ContentType.
 type AddUserJSONRequestBody = AddUserRequest
@@ -9562,6 +9789,27 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/jobs/{jobId}/resources (the `GetJobResources` operationId).
 	GetJobResources(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetJobTimer The job timer of a job
+	//
+	// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+	//
+	// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+	GetJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExtendJobTimer Extend 10 min, during the grace of the job timer
+	//
+	// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+	ExtendJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StopJobNow Stop now, during the grace of the job timer
+	//
+	// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+	StopJobNow(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// CreateJoinCodeWithBody Make a one-time join code and the install commands
 	//
@@ -10502,6 +10750,27 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/runs/{runId}/savings (the `GetRunSavings` operationId).
 	GetRunSavings(ctx context.Context, runId RunId, params *GetRunSavingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetRunTimer The run timer of a run attempt
+	//
+	// scheduling R5.100, R5.105.
+	//
+	// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+	GetRunTimer(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CancelRunNow Cancel now, during the grace of the run timer
+	//
+	// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+	CancelRunNow(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExtendRunTimer Extend 10 min, during the grace of the run timer
+	//
+	// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+	ExtendRunTimer(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// RestartService Restart the service after a drain
 	//
 	// tray R5.15 to R5.17. Same confirmation rule as applyUpdate.
@@ -10686,6 +10955,49 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+	//
+	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+	//
+	// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+	GetTimerSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutTimerSettingsWithBody Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutTimerSettings Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettings(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CheckTimerSettingsWithBody Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CheckTimerSettings Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettings(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	//
@@ -12193,6 +12505,57 @@ func (c *Client) GetJob(ctx context.Context, jobId JobId, reqEditors ...RequestE
 // Corresponds with GET /api/v1/jobs/{jobId}/resources (the `GetJobResources` operationId).
 func (c *Client) GetJobResources(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetJobResourcesRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetJobTimer The job timer of a job
+//
+// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+//
+// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+func (c *Client) GetJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobTimerRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExtendJobTimer Extend 10 min, during the grace of the job timer
+//
+// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+func (c *Client) ExtendJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExtendJobTimerRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StopJobNow Stop now, during the grace of the job timer
+//
+// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+func (c *Client) StopJobNow(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStopJobNowRequest(c.Server, jobId)
 	if err != nil {
 		return nil, err
 	}
@@ -14332,6 +14695,57 @@ func (c *Client) GetRunSavings(ctx context.Context, runId RunId, params *GetRunS
 	return c.Client.Do(req)
 }
 
+// GetRunTimer The run timer of a run attempt
+//
+// scheduling R5.100, R5.105.
+//
+// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+func (c *Client) GetRunTimer(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunTimerRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CancelRunNow Cancel now, during the grace of the run timer
+//
+// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+func (c *Client) CancelRunNow(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelRunNowRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExtendRunTimer Extend 10 min, during the grace of the run timer
+//
+// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+func (c *Client) ExtendRunTimer(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExtendRunTimerRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // RestartService Restart the service after a drain
 //
 // tray R5.15 to R5.17. Same confirmation rule as applyUpdate.
@@ -14737,6 +15151,99 @@ func (c *Client) RedeemSetupLinkWithBody(ctx context.Context, contentType string
 // Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 func (c *Client) RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRedeemSetupLinkRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+//
+// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+//
+// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+func (c *Client) GetTimerSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTimerSettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutTimerSettingsWithBody Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *Client) PutTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTimerSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutTimerSettings Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *Client) PutTimerSettings(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTimerSettingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CheckTimerSettingsWithBody Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *Client) CheckTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCheckTimerSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CheckTimerSettings Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *Client) CheckTimerSettings(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCheckTimerSettingsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -18887,6 +19394,108 @@ func NewGetJobResourcesRequest(server string, jobId JobId) (*http.Request, error
 	return req, nil
 }
 
+// NewGetJobTimerRequest constructs an http.Request for the GetJobTimer method
+func NewGetJobTimerRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/timer", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewExtendJobTimerRequest constructs an http.Request for the ExtendJobTimer method
+func NewExtendJobTimerRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/timer/extend", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStopJobNowRequest constructs an http.Request for the StopJobNow method
+func NewStopJobNowRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/timer/stop-now", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreateJoinCodeRequest calls the generic CreateJoinCode builder with application/json body
 func NewCreateJoinCodeRequest(server string, body CreateJoinCodeJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -22705,6 +23314,189 @@ func NewGetRunSavingsRequest(server string, runId RunId, params *GetRunSavingsPa
 	return req, nil
 }
 
+// NewGetRunTimerRequest constructs an http.Request for the GetRunTimer method
+func NewGetRunTimerRequest(server string, runId TimerRunId, params *GetRunTimerParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runId", runId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs/%s/timer", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Attempt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "attempt", *params.Attempt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCancelRunNowRequest constructs an http.Request for the CancelRunNow method
+func NewCancelRunNowRequest(server string, runId TimerRunId, params *CancelRunNowParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runId", runId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs/%s/timer/cancel-now", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Attempt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "attempt", *params.Attempt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewExtendRunTimerRequest constructs an http.Request for the ExtendRunTimer method
+func NewExtendRunTimerRequest(server string, runId TimerRunId, params *ExtendRunTimerParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runId", runId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs/%s/timer/extend", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Attempt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "attempt", *params.Attempt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewRestartServiceRequest constructs an http.Request for the RestartService method
 func NewRestartServiceRequest(server string, params *RestartServiceParams) (*http.Request, error) {
 	var err error
@@ -23222,6 +24014,113 @@ func NewRedeemSetupLinkRequestWithBody(server string, contentType string, body i
 	}
 
 	operationPath := fmt.Sprintf("/api/v1/setup/redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetTimerSettingsRequest constructs an http.Request for the GetTimerSettings method
+func NewGetTimerSettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timer-settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutTimerSettingsRequest calls the generic PutTimerSettings builder with application/json body
+func NewPutTimerSettingsRequest(server string, body PutTimerSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutTimerSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutTimerSettingsRequestWithBody constructs an http.Request for the PutTimerSettings method, with any body, and a specified content type
+func NewPutTimerSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timer-settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCheckTimerSettingsRequest calls the generic CheckTimerSettings builder with application/json body
+func NewCheckTimerSettingsRequest(server string, body CheckTimerSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCheckTimerSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCheckTimerSettingsRequestWithBody constructs an http.Request for the CheckTimerSettings method, with any body, and a specified content type
+func NewCheckTimerSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timer-settings/check")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -24635,6 +25534,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/jobs/{jobId}/resources (the `GetJobResources` operationId).
 	GetJobResourcesWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobResourcesResponse, error)
 
+	// GetJobTimerWithResponse The job timer of a job
+	//
+	// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+	GetJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobTimerResponse, error)
+
+	// ExtendJobTimerWithResponse Extend 10 min, during the grace of the job timer
+	//
+	// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+	ExtendJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*ExtendJobTimerResponse, error)
+
+	// StopJobNowWithResponse Stop now, during the grace of the job timer
+	//
+	// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+	StopJobNowWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*StopJobNowResponse, error)
+
 	// CreateJoinCodeWithBodyWithResponse Make a one-time join code and the install commands
 	//
 	// machines R5.3 to R5.6 (M1 by owner decision). The code shows once, in this answer only. A new code makes the old unused one invalid.
@@ -25692,6 +26618,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/runs/{runId}/savings (the `GetRunSavings` operationId).
 	GetRunSavingsWithResponse(ctx context.Context, runId RunId, params *GetRunSavingsParams, reqEditors ...RequestEditorFn) (*GetRunSavingsResponse, error)
 
+	// GetRunTimerWithResponse The run timer of a run attempt
+	//
+	// scheduling R5.100, R5.105.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+	GetRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*GetRunTimerResponse, error)
+
+	// CancelRunNowWithResponse Cancel now, during the grace of the run timer
+	//
+	// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+	CancelRunNowWithResponse(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*CancelRunNowResponse, error)
+
+	// ExtendRunTimerWithResponse Extend 10 min, during the grace of the run timer
+	//
+	// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+	ExtendRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*ExtendRunTimerResponse, error)
+
 	// RestartServiceWithResponse Restart the service after a drain
 	//
 	// tray R5.15 to R5.17. Same confirmation rule as applyUpdate.
@@ -25890,6 +26843,51 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLinkWithResponse(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*RedeemSetupLinkResponse, error)
+
+	// GetTimerSettingsWithResponse The job, run, hold, timeout, queued and start-up timers
+	//
+	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+	GetTimerSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTimerSettingsResponse, error)
+
+	// PutTimerSettingsWithBodyWithResponse Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error)
+
+	// PutTimerSettingsWithResponse Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettingsWithResponse(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error)
+
+	// CheckTimerSettingsWithBodyWithResponse Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error)
+
+	// CheckTimerSettingsWithResponse Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettingsWithResponse(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error)
 
 	// GetUpdateStatusWithResponse The running version, the newest stable release, and the state of an update
 	//
@@ -29397,6 +30395,150 @@ func (r GetJobResourcesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetJobResourcesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetJobTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetJobTimerResponse) GetJSON200() *JobTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetJobTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetJobTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetJobTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ExtendJobTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExtendJobTimerResponse) GetJSON200() *JobTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ExtendJobTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ExtendJobTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExtendJobTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExtendJobTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExtendJobTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StopJobNowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r StopJobNowResponse) GetJSON200() *JobTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StopJobNowResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StopJobNowResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StopJobNowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StopJobNowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StopJobNowResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -33638,6 +34780,150 @@ func (r GetRunSavingsResponse) ContentType() string {
 	return ""
 }
 
+type GetRunTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunTimerResponse) GetJSON200() *RunTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CancelRunNowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CancelRunNowResponse) GetJSON200() *RunTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CancelRunNowResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CancelRunNowResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CancelRunNowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CancelRunNowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CancelRunNowResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ExtendRunTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExtendRunTimerResponse) GetJSON200() *RunTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ExtendRunTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ExtendRunTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExtendRunTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExtendRunTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExtendRunTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type RestartServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -34359,6 +35645,150 @@ func (r RedeemSetupLinkResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r RedeemSetupLinkResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTimerSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TimerSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTimerSettingsResponse) GetJSON200() *TimerSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTimerSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTimerSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTimerSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTimerSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTimerSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutTimerSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TimerSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutTimerSettingsResponse) GetJSON200() *TimerSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutTimerSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutTimerSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutTimerSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutTimerSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutTimerSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CheckTimerSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TimerSettingsCheck
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CheckTimerSettingsResponse) GetJSON200() *TimerSettingsCheck {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CheckTimerSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CheckTimerSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CheckTimerSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CheckTimerSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CheckTimerSettingsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -36214,6 +37644,51 @@ func (c *ClientWithResponses) GetJobResourcesWithResponse(ctx context.Context, j
 	return ParseGetJobResourcesResponse(rsp)
 }
 
+// GetJobTimerWithResponse The job timer of a job
+//
+// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+func (c *ClientWithResponses) GetJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobTimerResponse, error) {
+	rsp, err := c.GetJobTimer(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobTimerResponse(rsp)
+}
+
+// ExtendJobTimerWithResponse Extend 10 min, during the grace of the job timer
+//
+// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+func (c *ClientWithResponses) ExtendJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*ExtendJobTimerResponse, error) {
+	rsp, err := c.ExtendJobTimer(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExtendJobTimerResponse(rsp)
+}
+
+// StopJobNowWithResponse Stop now, during the grace of the job timer
+//
+// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+func (c *ClientWithResponses) StopJobNowWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*StopJobNowResponse, error) {
+	rsp, err := c.StopJobNow(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStopJobNowResponse(rsp)
+}
+
 // CreateJoinCodeWithBodyWithResponse Make a one-time join code and the install commands
 //
 // machines R5.3 to R5.6 (M1 by owner decision). The code shows once, in this answer only. A new code makes the old unused one invalid.
@@ -37985,6 +39460,51 @@ func (c *ClientWithResponses) GetRunSavingsWithResponse(ctx context.Context, run
 	return ParseGetRunSavingsResponse(rsp)
 }
 
+// GetRunTimerWithResponse The run timer of a run attempt
+//
+// scheduling R5.100, R5.105.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+func (c *ClientWithResponses) GetRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*GetRunTimerResponse, error) {
+	rsp, err := c.GetRunTimer(ctx, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunTimerResponse(rsp)
+}
+
+// CancelRunNowWithResponse Cancel now, during the grace of the run timer
+//
+// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+func (c *ClientWithResponses) CancelRunNowWithResponse(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*CancelRunNowResponse, error) {
+	rsp, err := c.CancelRunNow(ctx, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelRunNowResponse(rsp)
+}
+
+// ExtendRunTimerWithResponse Extend 10 min, during the grace of the run timer
+//
+// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+func (c *ClientWithResponses) ExtendRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*ExtendRunTimerResponse, error) {
+	rsp, err := c.ExtendRunTimer(ctx, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExtendRunTimerResponse(rsp)
+}
+
 // RestartServiceWithResponse Restart the service after a drain
 //
 // tray R5.15 to R5.17. Same confirmation rule as applyUpdate.
@@ -38320,6 +39840,81 @@ func (c *ClientWithResponses) RedeemSetupLinkWithResponse(ctx context.Context, b
 		return nil, err
 	}
 	return ParseRedeemSetupLinkResponse(rsp)
+}
+
+// GetTimerSettingsWithResponse The job, run, hold, timeout, queued and start-up timers
+//
+// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+func (c *ClientWithResponses) GetTimerSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTimerSettingsResponse, error) {
+	rsp, err := c.GetTimerSettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTimerSettingsResponse(rsp)
+}
+
+// PutTimerSettingsWithBodyWithResponse Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *ClientWithResponses) PutTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error) {
+	rsp, err := c.PutTimerSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutTimerSettingsResponse(rsp)
+}
+
+// PutTimerSettingsWithResponse Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *ClientWithResponses) PutTimerSettingsWithResponse(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error) {
+	rsp, err := c.PutTimerSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutTimerSettingsResponse(rsp)
+}
+
+// CheckTimerSettingsWithBodyWithResponse Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *ClientWithResponses) CheckTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error) {
+	rsp, err := c.CheckTimerSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCheckTimerSettingsResponse(rsp)
+}
+
+// CheckTimerSettingsWithResponse Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *ClientWithResponses) CheckTimerSettingsWithResponse(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error) {
+	rsp, err := c.CheckTimerSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCheckTimerSettingsResponse(rsp)
 }
 
 // GetUpdateStatusWithResponse The running version, the newest stable release, and the state of an update
@@ -40922,6 +42517,105 @@ func ParseGetJobResourcesResponse(rsp *http.Response) (*GetJobResourcesResponse,
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest JobResources
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetJobTimerResponse parses an HTTP response from a GetJobTimerWithResponse call
+func ParseGetJobTimerResponse(rsp *http.Response) (*GetJobTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExtendJobTimerResponse parses an HTTP response from a ExtendJobTimerWithResponse call
+func ParseExtendJobTimerResponse(rsp *http.Response) (*ExtendJobTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExtendJobTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStopJobNowResponse parses an HTTP response from a StopJobNowWithResponse call
+func ParseStopJobNowResponse(rsp *http.Response) (*StopJobNowResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StopJobNowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobTimer
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -43867,6 +45561,105 @@ func ParseGetRunSavingsResponse(rsp *http.Response) (*GetRunSavingsResponse, err
 	return response, nil
 }
 
+// ParseGetRunTimerResponse parses an HTTP response from a GetRunTimerWithResponse call
+func ParseGetRunTimerResponse(rsp *http.Response) (*GetRunTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCancelRunNowResponse parses an HTTP response from a CancelRunNowWithResponse call
+func ParseCancelRunNowResponse(rsp *http.Response) (*CancelRunNowResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CancelRunNowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExtendRunTimerResponse parses an HTTP response from a ExtendRunTimerWithResponse call
+func ParseExtendRunTimerResponse(rsp *http.Response) (*ExtendRunTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExtendRunTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseRestartServiceResponse parses an HTTP response from a RestartServiceWithResponse call
 func ParseRestartServiceResponse(rsp *http.Response) (*RestartServiceResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -44370,6 +46163,105 @@ func ParseRedeemSetupLinkResponse(rsp *http.Response) (*RedeemSetupLinkResponse,
 			headers.SetCookie = &value
 		}
 		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetTimerSettingsResponse parses an HTTP response from a GetTimerSettingsWithResponse call
+func ParseGetTimerSettingsResponse(rsp *http.Response) (*GetTimerSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTimerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimerSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutTimerSettingsResponse parses an HTTP response from a PutTimerSettingsWithResponse call
+func ParsePutTimerSettingsResponse(rsp *http.Response) (*PutTimerSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutTimerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimerSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCheckTimerSettingsResponse parses an HTTP response from a CheckTimerSettingsWithResponse call
+func ParseCheckTimerSettingsResponse(rsp *http.Response) (*CheckTimerSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CheckTimerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimerSettingsCheck
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil

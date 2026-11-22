@@ -2573,6 +2573,225 @@ paths:
                 $ref: '#/components/schemas/RunnerClasses'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/timer-settings:
+    get:
+      operationId: getTimerSettings
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [settings]
+      summary: The job, run, hold, timeout, queued and start-up timers
+      description: >-
+        scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job),
+        45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up).
+        `enforce` is false by default: timers only report until the owner switches it on.
+        The grace of 30 s and the 10 minute extension are fixed.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The settings in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerSettings'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putTimerSettings
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [settings]
+      summary: Save timer settings
+      description: >-
+        scheduling R5.104. Only the fields given change. The save is refused with
+        a 400 whose `details` name each field and the message in the owner's
+        words when a value is not a whole number of minutes above 0, the hold is
+        above 2 minutes, or the job timer is not below the run timer.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimerSettingsInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerSettings'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/timer-settings/check:
+    post:
+      operationId: checkTimerSettings
+      x-cli: none
+      x-cli-reason: 'The console form runs this while the owner types; the CLI gets the same refusal from the save.'
+      tags: [settings]
+      summary: Check timer settings without saving them
+      description: >-
+        scheduling R5.104. The same check as the save, for check-while-typing,
+        like the pool size check. Nothing changes.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimerSettingsInput'
+      responses:
+        '200':
+          description: The check.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimerSettingsCheck'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/timer:
+    get:
+      operationId: getJobTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The job timer of a job
+      description: >-
+        scheduling R5.100, R5.105. While the timer has run out and the grace
+        runs, `deadline` is when crsp acts and `text` counts down.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The timer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/timer/stop-now:
+    post:
+      operationId: stopJobNow
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Stop now, during the grace of the job timer
+      description: >-
+        scheduling R5.101. Stops that job's runner at once; only that job ends.
+        409 when the timer has not run out, or the run timer ran out too and the
+        run is cancelled instead. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The timer after the stop.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/timer/extend:
+    post:
+      operationId: extendJobTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Extend 10 min, during the grace of the job timer
+      description: >-
+        scheduling R5.101. Once per job. 409 when the timer has not run out or
+        was extended already. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The timer after the extension.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runs/{runId}/timer:
+    get:
+      operationId: getRunTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The run timer of a run attempt
+      description: scheduling R5.100, R5.105.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/TimerRunId'
+        - $ref: '#/components/parameters/TimerAttempt'
+      responses:
+        '200':
+          description: The timer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runs/{runId}/timer/cancel-now:
+    post:
+      operationId: cancelRunNow
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Cancel now, during the grace of the run timer
+      description: >-
+        scheduling R5.101. Cancels the whole run through GitHub
+        (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no
+        per-job cancel. 409 when the timer has not run out. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/TimerRunId'
+        - $ref: '#/components/parameters/TimerAttempt'
+      responses:
+        '200':
+          description: The timer after the cancel.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunTimer'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runs/{runId}/timer/extend:
+    post:
+      operationId: extendRunTimer
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: Extend 10 min, during the grace of the run timer
+      description: >-
+        scheduling R5.101. Once per run. 409 when the timer has not run out or
+        was extended already. The use is an audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/TimerRunId'
+        - $ref: '#/components/parameters/TimerAttempt'
+      responses:
+        '200':
+          description: The timer after the extension.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunTimer'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/registry:
     get:
       operationId: getRegistrySettings
@@ -5019,6 +5238,21 @@ components:
       schema:
         type: integer
         format: int64
+    TimerRunId:
+      name: runId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    TimerAttempt:
+      name: attempt
+      in: query
+      required: false
+      description: The attempt; the newest when absent.
+      schema:
+        type: integer
+        minimum: 1
     FindingId:
       name: findingId
       in: path
@@ -5349,6 +5583,158 @@ components:
         confirm_lowering:
           type: boolean
           description: Needed when a size that runners use gets smaller.
+    TimerSettings:
+      type: object
+      required:
+        [
+          job_minutes,
+          run_minutes,
+          hold_minutes,
+          timeout_minutes,
+          queued_minutes,
+          startup_minutes,
+          enforce,
+          grace_seconds,
+          extend_minutes,
+        ]
+      properties:
+        job_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: 'The job timer, from the first real step. Default 30.',
+          }
+        run_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: "The run timer, from the first job's real start. Default 45.",
+          }
+        hold_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: 'The hold of the job-started hook, at most 2. Default 2.',
+          }
+        timeout_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: "timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60.",
+          }
+        queued_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: "Alert for a job that waits this long in GitHub's queue. Default 720 (12 h).",
+          }
+        startup_minutes:
+          {
+            type: integer,
+            minimum: 1,
+            description: 'A runner that has not started its job in this time is removed and the job admitted again. Default 2.',
+          }
+        enforce:
+          {
+            type: boolean,
+            description: 'Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.',
+          }
+        grace_seconds: { type: integer, description: Fixed at 30. }
+        extend_minutes: { type: integer, description: Fixed at 10. }
+    TimerSettingsInput:
+      type: object
+      description: Only the fields given change.
+      properties:
+        job_minutes: { type: integer }
+        run_minutes: { type: integer }
+        hold_minutes: { type: integer }
+        timeout_minutes: { type: integer }
+        queued_minutes: { type: integer }
+        startup_minutes: { type: integer }
+        enforce: { type: boolean }
+    TimerSettingsProblem:
+      type: object
+      required: [field, message]
+      properties:
+        field:
+          {
+            type: string,
+            enum:
+              [
+                job_minutes,
+                run_minutes,
+                hold_minutes,
+                timeout_minutes,
+                queued_minutes,
+                startup_minutes,
+              ],
+          }
+        message: { type: string, description: In the owner's words. }
+    TimerSettingsCheck:
+      type: object
+      required: [ok, problems, settings]
+      properties:
+        ok: { type: boolean }
+        problems:
+          type: array
+          items: { $ref: '#/components/schemas/TimerSettingsProblem' }
+        settings:
+          description: The settings as they would be after the change.
+          allOf:
+            - $ref: '#/components/schemas/TimerSettings'
+    JobTimer:
+      type: object
+      required: [job_id, state, text, can_stop_now, can_extend, extended, covered_by_run]
+      properties:
+        job_id: { type: integer, format: int64 }
+        repository: { type: string }
+        run_id: { type: integer, format: int64 }
+        run_attempt: { type: integer }
+        state: { type: string, enum: [running, grace, stopped, ended] }
+        started_at:
+          { type: string, format: date-time, description: The job's first real step. }
+        limit_seconds: { type: integer }
+        elapsed_seconds: { type: integer }
+        deadline:
+          type: string
+          format: date-time
+          description: During the grace, when crsp acts. The countdown is deadline minus now.
+        text:
+          type: string
+          description: 'The state in words, for example "Job timer ran out at 30:00; stopping in 30 s".'
+        note:
+          type: string
+          description: 'What crsp did, for example "stopped by crsp: job timer 30:00".'
+        can_stop_now: { type: boolean }
+        can_extend: { type: boolean }
+        extended: { type: boolean }
+        covered_by_run:
+          type: boolean
+          description: The run timer ran out too; the run is cancelled and this job is not stopped on its own.
+    RunTimer:
+      type: object
+      required: [run_id, state, text, can_cancel_now, can_extend, extended]
+      properties:
+        run_id: { type: integer, format: int64 }
+        repository: { type: string }
+        run_attempt: { type: integer }
+        state: { type: string, enum: [running, grace, stopped, ended] }
+        started_at:
+          { type: string, format: date-time, description: The first job's real start. }
+        limit_seconds: { type: integer }
+        elapsed_seconds: { type: integer }
+        deadline: { type: string, format: date-time }
+        text:
+          type: string
+          description: 'For example "Run timer ran out at 45:00; cancelling in 30 s".'
+        note:
+          {
+            type: string,
+            description: 'For example "cancelled by crsp: run timer 45:00".',
+          }
+        can_cancel_now: { type: boolean }
+        can_extend: { type: boolean }
+        extended: { type: boolean }
     EnvSetList:
       type: object
       required: [items]
