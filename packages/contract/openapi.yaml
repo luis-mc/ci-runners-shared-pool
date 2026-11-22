@@ -8752,7 +8752,7 @@ components:
       properties:
         key:
           type: string
-          description: "`<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet."
+          description: '`<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet.'
         machine_id:
           type: string
         machine_name:
@@ -8762,7 +8762,7 @@ components:
           description: 1-based. Absent on the waiting row.
         label:
           type: string
-          description: "For example `M1 slot 1`."
+          description: 'For example `M1 slot 1`.'
     TimelineBar:
       type: object
       required: [id, row_id, state, label, start]
