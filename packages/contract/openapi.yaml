@@ -1231,6 +1231,60 @@ paths:
                 $ref: '#/components/schemas/RunsOnFindingList'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/runs-on-pr:
+    get:
+      operationId: previewRunsOnPullRequests
+      tags: [repositories]
+      summary: Preview the runs-on pull request of one repository or of every opted-in repository
+      description: >-
+        github-integration R5.109. Reads the workflow files and shows the files
+        and the diff of the change to the per-job runs-on form. Writes nothing
+        to GitHub. Without repository_id it covers every repository whose pool
+        is on.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - name: repository_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: One preview per repository.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunsOnPullRequestPreviewList'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: openRunsOnPullRequests
+      tags: [repositories]
+      summary: Open the runs-on pull request of one repository or of every opted-in repository
+      description: >-
+        github-integration R5.109. Opens one pull request per repository; an
+        open crsp pull request is returned, never a second one. Writes one
+        audit row per pull request. Never merges. Only this call opens a pull
+        request: nothing opens one on a schedule.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenRunsOnPullRequestsRequest'
+      responses:
+        '200':
+          description: One result per repository.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunsOnPullRequestResultList'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/settings/queue:
     get:
       operationId: getQueueSettings
@@ -6696,6 +6750,84 @@ components:
         checked_at:
           type: string
           format: date-time
+    RunsOnPullRequestFile:
+      type: object
+      required: [path, changes, diff]
+      properties:
+        path:
+          type: string
+        changes:
+          type: integer
+        diff:
+          type: string
+    RunsOnPullRequestPreview:
+      type: object
+      required: [repository_id, full_name, state, files, diff, skipped]
+      properties:
+        repository_id:
+          type: integer
+          format: int64
+        full_name:
+          type: string
+        state:
+          type: string
+          enum: [change, nothing_to_change, not_owned, error]
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunsOnPullRequestFile'
+        diff:
+          type: string
+          description: The whole change as a unified diff.
+        skipped:
+          type: array
+          items:
+            type: string
+        message:
+          type: string
+    RunsOnPullRequestPreviewList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunsOnPullRequestPreview'
+    OpenRunsOnPullRequestsRequest:
+      type: object
+      description: Name one repository, or set all to cover every repository whose pool is on.
+      properties:
+        repository_id:
+          type: integer
+          format: int64
+        all:
+          type: boolean
+    RunsOnPullRequestResult:
+      type: object
+      required: [repository_id, full_name, state]
+      properties:
+        repository_id:
+          type: integer
+          format: int64
+        full_name:
+          type: string
+        state:
+          type: string
+          enum: [opened, existing, nothing_to_change, not_owned, error]
+        number:
+          type: integer
+        url:
+          type: string
+        message:
+          type: string
+    RunsOnPullRequestResultList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/RunsOnPullRequestResult'
     QueueSettings:
       type: object
       required: [order, fair_share, no_runner_wait_minutes]

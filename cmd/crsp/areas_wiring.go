@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/routing"
 	"log/slog"
 	"net/url"
 	"os"
@@ -154,6 +155,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
 		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
 		FallbackGrace: fallbackGrace(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
+	// The runs-on pull request (R5.109): built and opened only by the owner's
+	// explicit call; no loop or webhook of this wiring opens one.
+	rsvc.SetRunsOnPullRequests(&routing.Service{Store: d.DB.Routing(), Files: workflowFileReader{gh: gh}, PRs: gh, Now: d.Now})
 	// An App made without a webhook has no webhook secret in the store (R5.3):
 	// no delivery can arrive, so polling finding a job is not a missed delivery.
 	health.HooksOn = func() bool {
@@ -668,4 +672,20 @@ func publicRepositories(d controllerDeps) func(context.Context) (bool, error) {
 		return nil
 	}
 	return d.Ops.Settings.PublicRepositoriesOn
+}
+
+// workflowFileReader reads the workflow files of a repository's default branch
+// for the routing service.
+type workflowFileReader struct{ gh *github.REST }
+
+func (w workflowFileReader) WorkflowFiles(ctx context.Context, r routing.Repo) (map[string][]byte, error) {
+	fs, err := w.gh.ListWorkflowFiles(ctx, r.Installation, r.Owner, r.Name, nil)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string][]byte, len(fs))
+	for _, f := range fs {
+		out[f.Path] = f.Content
+	}
+	return out, nil
 }

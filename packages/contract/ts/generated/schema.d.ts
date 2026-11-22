@@ -850,6 +850,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runs-on-pr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview the runs-on pull request of one repository or of every opted-in repository
+         * @description github-integration R5.109. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+         */
+        get: operations["previewRunsOnPullRequests"];
+        put?: never;
+        /**
+         * Open the runs-on pull request of one repository or of every opted-in repository
+         * @description github-integration R5.109. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+         */
+        post: operations["openRunsOnPullRequests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/queue": {
         parameters: {
             query?: never;
@@ -4255,6 +4279,45 @@ export interface components {
             items: components["schemas"]["RunsOnFinding"][];
             /** Format: date-time */
             checked_at?: string;
+        };
+        RunsOnPullRequestFile: {
+            path: string;
+            changes: number;
+            diff: string;
+        };
+        RunsOnPullRequestPreview: {
+            /** Format: int64 */
+            repository_id: number;
+            full_name: string;
+            /** @enum {string} */
+            state: "change" | "nothing_to_change" | "not_owned" | "error";
+            files: components["schemas"]["RunsOnPullRequestFile"][];
+            /** @description The whole change as a unified diff. */
+            diff: string;
+            skipped: string[];
+            message?: string;
+        };
+        RunsOnPullRequestPreviewList: {
+            items: components["schemas"]["RunsOnPullRequestPreview"][];
+        };
+        /** @description Name one repository, or set all to cover every repository whose pool is on. */
+        OpenRunsOnPullRequestsRequest: {
+            /** Format: int64 */
+            repository_id?: number;
+            all?: boolean;
+        };
+        RunsOnPullRequestResult: {
+            /** Format: int64 */
+            repository_id: number;
+            full_name: string;
+            /** @enum {string} */
+            state: "opened" | "existing" | "nothing_to_change" | "not_owned" | "error";
+            number?: number;
+            url?: string;
+            message?: string;
+        };
+        RunsOnPullRequestResultList: {
+            items: components["schemas"]["RunsOnPullRequestResult"][];
         };
         /**
          * @example {
@@ -8127,6 +8190,54 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunsOnFindingList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    previewRunsOnPullRequests: {
+        parameters: {
+            query?: {
+                repository_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One preview per repository. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsOnPullRequestPreviewList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    openRunsOnPullRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenRunsOnPullRequestsRequest"];
+            };
+        };
+        responses: {
+            /** @description One result per repository. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsOnPullRequestResultList"];
                 };
             };
             default: components["responses"]["Error"];

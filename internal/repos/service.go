@@ -62,6 +62,9 @@ type Config struct {
 	// OnProgress, when set, is called with the plan after each step and when
 	// the plan ends or is stopped (the plan.progress event).
 	OnProgress func(Plan)
+	// RunsOnPR builds and opens the runs-on pull request (R5.109); nil means
+	// the feature is off.
+	RunsOnPR RunsOnPullRequests
 }
 
 // Service is the pool switch, policy, variables and runs-on check.

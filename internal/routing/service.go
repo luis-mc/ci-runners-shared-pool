@@ -559,6 +559,9 @@ func (s *Service) ServedLabels(ctx context.Context, repository, job string) ([]s
 	return out, nil
 }
 
+// CanOpenPR says whether crsp opens pull requests on this owner's repositories.
+func (s *Service) CanOpenPR(owner string) bool { return s.canOpenPR(owner) }
+
 func (s *Service) canOpenPR(owner string) bool {
 	owners := s.PROwners
 	if len(owners) == 0 {
