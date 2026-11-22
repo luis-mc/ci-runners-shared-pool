@@ -623,10 +623,9 @@ function MachineBody({ m }: { m: Machine }) {
         )}
       </Load>
       <StatsSection m={m} runners={own} />
-      {/* LOOK58: the shared Timeline of this machine's slots is mounted inside MachineTimeline. */}
       <Section
         title="Jobs over time"
-        hint="The jobs of each slot over time will be shown here."
+        hint="Each row is a slot of this machine. Scroll left for the past, right for the forecast."
       >
         <MachineTimeline machineId={m.id} />
       </Section>

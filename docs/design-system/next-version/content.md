@@ -1463,7 +1463,7 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | Queue Analysis, filter                         | All {n}, Waiting for room, No runner fits                                                                                                                                                                                 |
 | Queue Analysis, panes                          | Queue, in start order; Where running jobs are going                                                                                                                                                                       |
 | Queue Analysis, an entry                       | {place}. {job} {repository} #{run}; the wait words; Plan: {machine} · {runner}.; Label {labels}.                                                                                                                          |
-| Pool > Live, panes                             | Jobs over time (Each row is a job. The light part is waiting. A bracket is the forecast of the end.), Machines                                                                                                            |
+| Pool > Live, panes                             | Jobs over time (Each row is a slot of a machine. Scroll left for the past 24 hours, right for the forecast.), Machines                                                                                                            |
 | Pool > Live, empty                             | No job runs or waits. Jobs show here as they come.                                                                                                                                                                        |
 | Pool > Machines, note                          | This page shows what runs where. To change a machine, its pool size or its load budget, go to Setup > Machines.                                                                                                           |
 | Pool > Machines, link                          | Change {machine} in Setup > Machines                                                                                                                                                                                      |
@@ -1529,7 +1529,12 @@ Pool > Machines and the machine page (`/pool/machines/{id}`). `{os}` is the mach
 | Machine page, line | Health, job stats and runners of this machine. To change it, go to Setup > Machines. |
 | Machine page, panes | Key numbers; Disks; Memory and swap; Network and clock; Restarts, sleep and power; Versions and Docker; Heat and load; Job stats; Jobs over time |
 | Job stats, pane note | Jobs that finished in {window}. |
-| Jobs over time, note | The jobs of each slot over time will be shown here. |
+| Jobs over time, note | Each row is a slot of this machine. Scroll left for the past, right for the forecast. |
+| Pool > Overview and Pool > Live, Jobs over time, note | Each row is a slot of a machine. Scroll left for the past, right for the forecast. |
+| Queue Analysis, section | Where the queue lands on the slots (Waiting jobs are placed on the slots the scheduler gives them. A forecast is not a promise.) |
+| Job page, waiting, chart label | Where this job waits |
+| Slot timeline, labels | Jobs of the pool; Jobs of this machine; Loading the jobs over time; Could not load the jobs over time. |
+| Slot timeline, empty | No job ran, runs or waits in the last 24 hours. |
 | Disks, table | Disk, Path, Free, Size, Days until full |
 | Memory and swap, facts | Swap, Memory kills ({n}, {n}, one recently), Last memory kill (none); table Scope, Name, Kills (Pool, Job) |
 | Network and clock, facts | Round trip to the controller, Last heartbeat, Reconnects in 24 h, GitHub (reachable, not reachable), DNS (works, fails), Clock skew |

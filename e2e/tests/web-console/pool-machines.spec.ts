@@ -70,7 +70,7 @@ for (const width of [360, 393, 1300]) {
       await signedIn().install(page);
       await page.goto('/pool/machines');
       await page.getByRole('link', { name: 'build-1' }).click();
-      await expect(page).toHaveURL(/\/pool\/machines\/m1$/);
+      expect(new URL(page.url()).pathname).toBe('/pool/machines/m1');
       await expect(
         page.getByRole('heading', { level: 1, name: 'build-1' }),
       ).toBeVisible();

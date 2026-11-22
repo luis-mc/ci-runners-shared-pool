@@ -1,5 +1,6 @@
-// The slot for the "Jobs over time" section of the machine page (LOOK58c). It renders nothing for now: the shared
-// Timeline of this machine's slots is mounted here later (LOOK58). The page already mounts it under its own heading.
-export function MachineTimeline(_props: { machineId: string }) {
-  return null;
+// "Jobs over time" of the machine page (LOOK58): the shared slot timeline filtered to this machine.
+import { SlotTimeline } from './SlotTimeline';
+
+export function MachineTimeline({ machineId }: { machineId: string }) {
+  return <SlotTimeline machineId={machineId} label="Jobs of this machine" />;
 }

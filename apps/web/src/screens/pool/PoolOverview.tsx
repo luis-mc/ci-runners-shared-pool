@@ -15,6 +15,7 @@ import { useNow } from '@crsp/ui';
 import { Load } from '../common';
 import { jobStatus, ranSeconds, type Job } from '../jobs/words';
 import { WithOverview } from './OverviewState';
+import { SlotTimeline } from './SlotTimeline';
 import { needsYou, placeWords, startsAbout, waitWords } from './poolWords';
 
 type Runner = Schemas['Runner'];
@@ -24,6 +25,12 @@ export function PoolOverview() {
     <WithOverview>
       {(o, readAt) => (
         <>
+          <Section
+            title="Jobs over time"
+            hint="Each row is a slot of a machine. Scroll left for the past, right for the forecast."
+          >
+            <SlotTimeline compact />
+          </Section>
           <QueuePlanTable queued={o.queued ?? []} readAt={readAt} />
           <RunningTable running={o.running} />
           <RoutingLabels jobs={[...o.running, ...(o.queued ?? [])]} />

@@ -155,6 +155,70 @@ export const overview = (machines: unknown[] = [machine()]) => ({
   last_event_id: '1',
 });
 
+/** The slot timeline (LOOK58): two slots of build-1, a finished job, a running job and a forecast job. */
+export const timeline = () => {
+  const now = Date.now();
+  const at = (min: number) => new Date(now + min * 60_000).toISOString();
+  return {
+    now: at(0),
+    from: at(-360),
+    to: at(90),
+    more_before: true,
+    rows: [
+      {
+        key: 'm1:1',
+        machine_id: 'm1',
+        machine_name: 'build-1',
+        slot: 1,
+        label: 'build-1 slot 1',
+      },
+      {
+        key: 'm1:2',
+        machine_id: 'm1',
+        machine_name: 'build-1',
+        slot: 2,
+        label: 'build-1 slot 2',
+      },
+    ],
+    bars: [
+      {
+        id: 'b1',
+        job_id: 11,
+        row_id: 'm1:1',
+        state: 'done',
+        label: 'unit tests',
+        repository: 'acme/app',
+        start: at(-120),
+        end: at(-60),
+        detail: 'finished',
+      },
+      {
+        id: 'b2',
+        job_id: 12,
+        row_id: 'm1:1',
+        state: 'running',
+        label: 'build',
+        repository: 'acme/app',
+        start: at(-20),
+        detail: 'running',
+      },
+      {
+        id: 'b3',
+        job_id: 13,
+        row_id: 'm1:2',
+        state: 'forecast',
+        label: 'deploy',
+        repository: 'acme/app',
+        start: at(10),
+        end: at(60),
+        end_lo: at(50),
+        end_hi: at(70),
+        detail: 'starts in about 10 min',
+      },
+    ],
+  };
+};
+
 /** The health a machine reports (LOOK58c, machines R5.72 to R5.79): everything known, or a Windows machine that could not say. */
 export const machineHealth = (over: Record<string, unknown> = {}) => ({
   machine_id: 'm1',
@@ -413,6 +477,7 @@ function signedInBase(user: unknown): Mock {
     .on('GET', '/api/v1/app/webhook', { state: 'off' })
     .on('GET', '/api/v1/machines', { items: [machine()] })
     .on('GET', '/api/v1/machines/:id', machine())
+    .on('GET', '/api/v1/timeline', timeline())
     .on('GET', '/api/v1/machines/:id/health', machineHealth())
     .on('GET', '/api/v1/machines/:id/job-stats', (c: { query: URLSearchParams }) =>
       machineStats(c.query.get('window') ?? '24h'),
