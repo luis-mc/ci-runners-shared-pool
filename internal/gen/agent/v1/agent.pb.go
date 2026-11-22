@@ -9202,8 +9202,11 @@ type UpdateHealth struct {
 	// Whether the OS may restart by itself while jobs run.
 	AutoRestartPossible bool   `protobuf:"varint,10,opt,name=auto_restart_possible,json=autoRestartPossible,proto3" json:"auto_restart_possible,omitempty"`
 	AutoUpdateState     string `protobuf:"bytes,11,opt,name=auto_update_state,json=autoUpdateState,proto3" json:"auto_update_state,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// True when the OS may restart by itself now: automatic restart is on and
+	// the time is outside the active hours.
+	RestartAllowedNow bool `protobuf:"varint,12,opt,name=restart_allowed_now,json=restartAllowedNow,proto3" json:"restart_allowed_now,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *UpdateHealth) Reset() {
@@ -9311,6 +9314,13 @@ func (x *UpdateHealth) GetAutoUpdateState() string {
 		return x.AutoUpdateState
 	}
 	return ""
+}
+
+func (x *UpdateHealth) GetRestartAllowedNow() bool {
+	if x != nil {
+		return x.RestartAllowedNow
+	}
+	return false
 }
 
 type PowerHealth struct {
@@ -10702,7 +10712,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\vdocker_kind\x18\x04 \x01(\tR\n" +
 	"dockerKind\x12\x1f\n" +
 	"\vwsl_version\x18\x05 \x01(\tR\n" +
-	"wslVersion\"\xe3\x03\n" +
+	"wslVersion\"\x93\x04\n" +
 	"\fUpdateHealth\x12\x14\n" +
 	"\x05known\x18\x01 \x01(\bR\x05known\x12%\n" +
 	"\x0eunknown_reason\x18\x02 \x01(\tR\runknownReason\x12'\n" +
@@ -10715,7 +10725,8 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x10active_hours_end\x18\t \x01(\x05R\x0eactiveHoursEnd\x122\n" +
 	"\x15auto_restart_possible\x18\n" +
 	" \x01(\bR\x13autoRestartPossible\x12*\n" +
-	"\x11auto_update_state\x18\v \x01(\tR\x0fautoUpdateState\"\xe6\x02\n" +
+	"\x11auto_update_state\x18\v \x01(\tR\x0fautoUpdateState\x12.\n" +
+	"\x13restart_allowed_now\x18\f \x01(\bR\x11restartAllowedNow\"\xe6\x02\n" +
 	"\vPowerHealth\x12!\n" +
 	"\fsource_known\x18\x01 \x01(\bR\vsourceKnown\x122\n" +
 	"\x15source_unknown_reason\x18\x02 \x01(\tR\x13sourceUnknownReason\x12\x1d\n" +

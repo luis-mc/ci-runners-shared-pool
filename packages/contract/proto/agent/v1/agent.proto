@@ -1406,6 +1406,9 @@ message UpdateHealth {
   // Whether the OS may restart by itself while jobs run.
   bool auto_restart_possible = 10;
   string auto_update_state = 11;
+  // True when the OS may restart by itself now: automatic restart is on and
+  // the time is outside the active hours.
+  bool restart_allowed_now = 12;
 }
 
 message PowerHealth {
