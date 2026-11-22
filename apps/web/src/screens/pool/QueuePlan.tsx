@@ -5,6 +5,7 @@ import { useState } from 'react';
 import type { Schemas } from '../../api/api';
 import { type Job } from '../jobs/words';
 import { RunningTable } from './PoolOverview';
+import { SlotTimeline } from './SlotTimeline';
 import { WithOverview } from './OverviewState';
 import { needsYou, needsYouWords, placeWords, startsAbout, waitWords } from './poolWords';
 
@@ -53,6 +54,12 @@ export function QueuePlan() {
                   ))}
                 </Stack>
               )}
+            </Section>
+            <Section
+              title="Where the queue lands on the slots"
+              hint="Waiting jobs are placed on the slots the scheduler gives them. A forecast is not a promise."
+            >
+              <SlotTimeline compact />
             </Section>
             <RunningTable title="Where running jobs are going" running={o.running} />
           </Stack>

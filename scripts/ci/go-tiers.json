@@ -13,6 +13,7 @@
     "./internal/hooks",
     "./internal/insights/collect",
     "./internal/listenaddr",
+    "./internal/machinehealth",
     "./internal/machines",
     "./internal/registry/core",
     "./internal/registry/records",

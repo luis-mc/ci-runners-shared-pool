@@ -27,7 +27,6 @@ import { NotFound } from './screens/Later';
 import { ImagesAndCaches } from './screens/images/ImagesAndCaches';
 import { MachineDetail, MachinesList } from './screens/machines/Machines';
 import { Overview } from './screens/overview/Overview';
-import { RepositoriesList, RepositoryDetail } from './screens/repositories/Repositories';
 import { RunnersList } from './screens/runners/Runners';
 import {
   AccessTab,
@@ -67,6 +66,14 @@ const RegistryReplacePage = later(
 const ImageDetail = later(
   () => import('./screens/images/ImageDetail').then((m) => m.ImageDetail),
   { heading: 'Image' },
+);
+const RepositoriesList = later(
+  () => import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
+  true,
+);
+const RepositoryDetail = later(
+  () => import('./screens/repositories/Repositories').then((m) => m.RepositoryDetail),
+  true,
 );
 const AddMachinePage = later(
   () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),

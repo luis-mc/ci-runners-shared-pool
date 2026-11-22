@@ -17,6 +17,7 @@ const SAMPLE: Record<string, string> = {
   name: 'app',
   id: '1',
   imageId: 'img_m1_linux',
+  machineId: 'm1',
 };
 export const NOT_FOUND_URL = '/no/such/page';
 

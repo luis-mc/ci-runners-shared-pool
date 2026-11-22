@@ -17,7 +17,8 @@ import { useLoad } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
 import { useLiveState } from '../../live/LiveProvider';
 import { Load } from '../common';
-import { MachineCard, withLiveLoad } from '../overview/Overview';
+import { withLiveLoad } from '../overview/Overview';
+import { PoolMachineCard } from './PoolMachineCard';
 
 type Runner = Schemas['Runner'];
 
@@ -55,7 +56,15 @@ export function PoolMachines() {
               <Section title="Machines" count={d.items.length}>
                 <CardGrid>
                   {d.items.map((m) => (
-                    <MachineCard key={m.id} m={withLiveLoad(m, live.overview)} />
+                    <PoolMachineCard
+                      key={m.id}
+                      m={withLiveLoad(m, live.overview)}
+                      runners={
+                        runners.result.state === 'ready'
+                          ? runners.result.data.items.filter((r) => r.machine_id === m.id)
+                          : []
+                      }
+                    />
                   ))}
                 </CardGrid>
               </Section>

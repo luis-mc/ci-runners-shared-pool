@@ -788,6 +788,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `internal/updatewindow`, `internal/tray`, `internal/trayserver`
 - **Rules:** UX-83, UX-79, UX-80, CORE-3, CORE-4.
 - **Guard:** `scripts/design/guards/lifecycle/tray-modal.mjs` (LC-22, LC-30) and `scripts/design/guards/lifecycle/states-render.mjs` (LC-30).
+
 ## 75. Numbered steps
 
 - **Used for:** the path forward of a suggestion: the steps the user takes, in order (LOOK56, owner change 2).
@@ -811,6 +812,20 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `packages/ui/src/components/SideMenu.tsx`, `packages/ui/src/components.css`
 - **Rules:** UX-85, UX-16, UX-69, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/link-frame.test.tsx`, `apps/web/src/screens/help/Help.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
+
+## 77. Slot timeline
+
+- **Used for:** every "jobs over time" chart: Pool > Live, Queue Analysis, Pool Overview, the why-waiting inspector of a job and the machine page (LOOK58). A row is a runner slot, rows are grouped by machine; a bar is a job in its slot, placed by time. It takes the place of the lanes of component 61.
+- **Anatomy:** a bar of notes above the chart (the `Back to now` button when the chart is not following; _Loading older jobs_ or _Showing the last 24 hours_), the chart in its own scroll box, a line of key hints, the legend of the nine states and _Show as table_. In the chart: an axis of clock times (one label an hour, a date at midnight), the now line (dashed, with its time on the axis), the sticky row labels at the inline start with a group heading per machine, and the bars. The scale is fixed: 240 px an hour (`TIMELINE_PX_PER_MIN`), so history is scrolled, not squeezed; the content is as wide as the range from `fromMs` to `toMs`. A running bar ends at now; a bar may have a light hatched wait part before it (`waitFromMs`) and a forecast bracket after it (`endLoMs` to `endHiMs`).
+- **States of a bar** (each has a glyph, words and its own fill or line; never colour alone, UX-58): _running_ ▶ solid primary; _waiting for a runner_ ◷ light fill, dashed line; _waiting for room_ ▤ dotted line, vertical stripes; _reserved_ ◆ light fill, solid note line; _forecast_ ≈ diagonal hatch, dashed grey line; _no runner fits_ ⊘ light fill, dashed problem line; _timer ran out_ ◔ cross stripes, problem line; _done_ ✓ solid done colour; _failed_ ✕ solid problem colour with a thick end. The legend lists all nine with the same swatch, glyph and words. **Compact** (`compact`): shorter rows, no legend.
+- **Follow:** the chart is pinned to now by default: now sits at 75 % of the box, and stays there as now advances and when the box is resized. Scrolling away stops it and shows `Back to now` (the shared Button); pressing it, or the Home key, pins again. The part reads only `nowMs`, never the clock.
+- **Paging:** at the left edge, with `moreBefore`, the part calls `onLoadBefore` once per load (not while `loadingBefore`); when older time is added the view stays on what it showed. With nothing older the note says so.
+- **Keyboard and screen reader:** the scroll box is a region named by the label, takes Tab (`tabindex="0"`), and says its keys: Left and Right scroll one hour, Home goes to now, End goes to the end of the forecast. A bar with `onOpen` is a real button, a list row for `j` and `k` (UX-57). Every bar says its label, state words and `detail` as text. _Show as table_ lists every bar: slot, job, state, start, end or forecast (UX-17).
+- **Phone (360, 393 px) and wide (1300, 1920 px):** only the chart box scrolls sideways; the page never does (UX-49). The row labels stay in view while the bars scroll under them; the legend wraps. The box fills the pane at every width.
+- **Tokens:** `--ds-color-primary`, `--ds-color-done`, `--ds-color-problem`, `--ds-color-problem-bg`, `--ds-color-needs-you`, `--ds-color-needs-you-bg`, `--ds-color-note`, `--ds-color-note-bg`, `--ds-color-text`, `--ds-color-text-muted`, `--ds-color-divider`, `--ds-color-surface`, the `--ds-color-on-*` pairs, `--ds-space-1` to `--ds-space-7`, `--ds-border-*`, `--ds-size-1`. No new token.
+- **Source:** `packages/ui/src/components/Timeline.tsx` (`Timeline`), `packages/ui/src/components/Timeline.types.ts`, `packages/ui/src/components/VizAlt.tsx`, `packages/ui/src/components.css` (`ds-timeline`). A page passes data only.
+- **Rules:** UX-41, UX-17, UX-18, UX-49, UX-57, UX-58, UX-16, UX-77, CORE-1, CORE-2, CORE-3.
+- **Guard:** `packages/ui/src/components/Timeline.test.tsx`; the DOM layout checks at 360, 393 and 1300 px (and no sideways scroll of the page at 1920 px) on the screens that use it.
 
 ## How to add a component
 

@@ -31,6 +31,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Load } from '../common';
 import type { Schemas } from '../../api/api';
 import { useJobDetail, useRun } from './api';
+import { SlotTimeline } from '../pool/SlotTimeline';
 import { ResourcesPane, StepsSource, runsOnFact } from '../insights/JobInsights';
 import { graphSource } from './runBasis';
 import { edgesOf, graphNodes, stepRows } from './runViews';
@@ -178,6 +179,7 @@ function JobBody({ j }: { j: JobDetail }) {
               },
             ]}
           />
+          <SlotTimeline compact machineId={j.machine_id} label="Where this job waits" />
         </Section>
       ) : null}
       <Section title="Project and code">

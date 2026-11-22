@@ -53,14 +53,13 @@ export function withLiveLoad(m: Machine, live: Schemas['Overview'] | undefined):
   return l ? { ...m, ...(l.load ? { load: l.load } : {}), slots_used: l.slots_used } : m;
 }
 
-export function MachineCard({ m }: { m: Machine }) {
-  const s = machineStatus(m);
+/** The memory, CPU and slot bars of a machine (shared by the Overview card and the Pool > Machines card). */
+export function MachineLoadBars({ m }: { m: Machine }) {
   const mem = m.load?.memory_pct;
   const cpu = m.load?.cpu_pct;
   const budget = m.settings;
   return (
-    <Card title={m.name} to={`/setup/machines/${m.id}`}>
-      <Status kind={s.kind} word={s.word} />
+    <>
       <LevelBar
         label="Memory"
         value={mem ?? 0}
@@ -88,6 +87,16 @@ export function MachineCard({ m }: { m: Machine }) {
         max={Math.max(1, budget.job_slots)}
         text={`${m.slots_used} of ${budget.job_slots}`}
       />
+    </>
+  );
+}
+
+export function MachineCard({ m }: { m: Machine }) {
+  const s = machineStatus(m);
+  return (
+    <Card title={m.name} to={`/setup/machines/${m.id}`}>
+      <Status kind={s.kind} word={s.word} />
+      <MachineLoadBars m={m} />
     </Card>
   );
 }

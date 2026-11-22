@@ -155,6 +155,159 @@ export const overview = (machines: unknown[] = [machine()]) => ({
   last_event_id: '1',
 });
 
+/** The slot timeline (LOOK58): two slots of build-1, a finished job, a running job and a forecast job. */
+export const timeline = () => {
+  const now = Date.now();
+  const at = (min: number) => new Date(now + min * 60_000).toISOString();
+  return {
+    now: at(0),
+    from: at(-360),
+    to: at(90),
+    more_before: true,
+    rows: [
+      {
+        key: 'm1:1',
+        machine_id: 'm1',
+        machine_name: 'build-1',
+        slot: 1,
+        label: 'build-1 slot 1',
+      },
+      {
+        key: 'm1:2',
+        machine_id: 'm1',
+        machine_name: 'build-1',
+        slot: 2,
+        label: 'build-1 slot 2',
+      },
+    ],
+    bars: [
+      {
+        id: 'b1',
+        job_id: 11,
+        row_id: 'm1:1',
+        state: 'done',
+        label: 'unit tests',
+        repository: 'acme/app',
+        start: at(-120),
+        end: at(-60),
+        detail: 'finished',
+      },
+      {
+        id: 'b2',
+        job_id: 12,
+        row_id: 'm1:1',
+        state: 'running',
+        label: 'build',
+        repository: 'acme/app',
+        start: at(-20),
+        detail: 'running',
+      },
+      {
+        id: 'b3',
+        job_id: 13,
+        row_id: 'm1:2',
+        state: 'forecast',
+        label: 'deploy',
+        repository: 'acme/app',
+        start: at(10),
+        end: at(60),
+        end_lo: at(50),
+        end_hi: at(70),
+        detail: 'starts in about 10 min',
+      },
+    ],
+  };
+};
+
+/** The health a machine reports (LOOK58c, machines R5.72 to R5.79): everything known, or a Windows machine that could not say. */
+export const machineHealth = (over: Record<string, unknown> = {}) => ({
+  machine_id: 'm1',
+  reported: true,
+  received_at: '2026-11-22T10:00:00Z',
+  stale: false,
+  boot: { uptime_seconds: 270_000, last_boot_at: '2026-11-19T06:00:00Z' },
+  volumes: [
+    {
+      role: 'system',
+      path: '/',
+      total_bytes: 500_000_000_000,
+      free_bytes: 200_000_000_000,
+      free_pct: 40,
+      days_until_full: 12,
+    },
+    {
+      role: 'docker',
+      path: '/var/lib/docker',
+      total_bytes: 200_000_000_000,
+      free_bytes: 50_000_000_000,
+      free_pct: 25,
+      days_note: 'free space is not falling',
+    },
+  ],
+  swap: { total_bytes: 8_000_000_000, used_bytes: 1_000_000_000 },
+  oom: { total_kills: 0 },
+  connectivity: {
+    rtt_ms: 12,
+    clock_skew_seconds: 1.5,
+    reconnects_24h: 0,
+    github: { reachable: true, latency_ms: 80 },
+    dns: { ok: true },
+  },
+  versions: {
+    agent: '1.4.0',
+    controller: '1.4.0',
+    runner_app: '2.330.0',
+    docker: '27.1',
+  },
+  updates: { restart_pending: false },
+  power: { on_battery: false, sleep_enabled: false },
+  docker_use: { images_bytes: 20_000_000_000, build_cache_bytes: 5_000_000_000 },
+  thermal: { max_temp_celsius: 61.5, throttled: false },
+  load: { load1: 1.2, load5: 0.9, load15: 0.7 },
+  ...over,
+});
+
+const statsSet = () => ({
+  counts: {
+    succeeded: 18,
+    failed: 2,
+    cancelled: 1,
+    timed_out: 1,
+    over_memory: 1,
+    stopped: 1,
+    other: 0,
+    total: 24,
+  },
+  avg_run_seconds: 252,
+  avg_queue_wait_seconds: 40,
+  busy_seconds: 6000,
+  busy_pct: 35,
+  last_failure: {
+    job_id: 77,
+    repository: 'octo/app',
+    job: 'build',
+    run_id: 9,
+    class: 'failed',
+    at: '2026-11-14T08:00:00Z',
+  },
+  top_failing: [
+    {
+      repository: 'octo/app',
+      job: 'build',
+      failures: 3,
+      last_at: '2026-11-14T08:00:00Z',
+    },
+  ],
+});
+
+export const machineStats = (window = '24h') => ({
+  window,
+  from: '2026-11-13T10:00:00Z',
+  to: '2026-11-14T10:00:00Z',
+  machine: statsSet(),
+  runners: [{ runner_id: 'r1', runner_name: 'crsp-linux-1', stats: statsSet() }],
+});
+
 export class Mock {
   readonly calls: Call[] = [];
   private handlers: { method: string; parts: string[]; fn: Handler }[] = [];
@@ -347,6 +500,11 @@ function signedInBase(user: unknown): Mock {
     .on('GET', '/api/v1/app/webhook', { state: 'off' })
     .on('GET', '/api/v1/machines', { items: [machine()] })
     .on('GET', '/api/v1/machines/:id', machine())
+    .on('GET', '/api/v1/timeline', timeline())
+    .on('GET', '/api/v1/machines/:id/health', machineHealth())
+    .on('GET', '/api/v1/machines/:id/job-stats', (c: { query: URLSearchParams }) =>
+      machineStats(c.query.get('window') ?? '24h'),
+    )
     .on('GET', '/api/v1/repositories/:id', repository())
     .on('GET', '/api/v1/job-sizes', {
       repository: 'octo/app',
