@@ -474,7 +474,9 @@ export function FleetRows({
     {
       id: 'state',
       header: lw('updates.state'),
-      cell: (r) => <Status kind={FLEET_KIND[r.state] ?? 'off'} word={lw(`fleet.${r.state}`)} />,
+      cell: (r) => (
+        <Status kind={FLEET_KIND[r.state] ?? 'off'} word={lw(`fleet.${r.state}`)} />
+      ),
     },
   ];
   if (action) columns.push({ id: 'action', header: '', cell: (r) => action(r) });

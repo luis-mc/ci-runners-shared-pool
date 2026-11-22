@@ -2,8 +2,8 @@
 // card, history and machine list render each one without throwing. The values are read from openapi.yaml.
 import { UpdateHistory, FleetRows, UpdatesCard } from '@crsp/ui/lifecycle';
 import { cleanup, render } from '@testing-library/react';
-import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   ACTION_FROM_WIRE,
@@ -19,11 +19,18 @@ import {
 
 afterEach(cleanup);
 
-// vitest runs from apps/web (the package root).
-const yaml = readFileSync(
-  resolve(process.cwd(), '../../packages/contract/openapi.yaml'),
-  'utf8',
-);
+// vitest runs from apps/web or from the repository root: walk up to the contract.
+function findContract(): string {
+  let dir = process.cwd();
+  for (;;) {
+    const f = resolve(dir, 'packages/contract/openapi.yaml');
+    if (existsSync(f)) return f;
+    const up = dirname(dir);
+    if (up === dir) throw new Error('packages/contract/openapi.yaml not found');
+    dir = up;
+  }
+}
+const yaml = readFileSync(findContract(), 'utf8');
 
 /** The `enum: [a, b]` list under `prop:` inside the schema `name` (flow style, one or many lines). */
 function enumOf(schema: string, prop: string): string[] {
