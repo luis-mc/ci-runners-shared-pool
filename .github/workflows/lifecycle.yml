@@ -81,6 +81,17 @@ jobs:
             lifecycle-steps.txt
           if-no-files-found: ignore
 
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ always() }}
+        with:
+          # Verbose msiexec logs of the remove runs (LC-15 evidence); stable name, newest kept.
+          name: lifecycle-msi-logs-${{ matrix.arch }}
+          path: |
+            ${{ runner.temp }}/msi-remove-*.log
+            ${{ runner.temp }}/crsp-uninstall.log
+            ${{ env.TEMP }}/crsp-uninstall.log
+          if-no-files-found: ignore
+
   # Fills the results folder and runs the release check. A release pull request fails unless every target
   # lane passed. lifecycle.off in .delivery/config.json stays empty (scripts/delivery/lifecycle_optout.py).
   release-check:

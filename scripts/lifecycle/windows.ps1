@@ -42,9 +42,39 @@ function Get-ProductCode {
 function Remove-Msi([switch]$Purge) {
   $code = Get-ProductCode
   if (-not $code) { return 0 }  # nothing installed: nothing to remove
-  $a = @('/x', $code, '/qn', '/norestart')
+  $script:MsiRemoveCount++
+  $log = Join-Path $(if ($env:RUNNER_TEMP) { $env:RUNNER_TEMP } else { $env:TEMP }) ("msi-remove-{0}.log" -f $script:MsiRemoveCount)
+  $script:LastMsiRemoveLog = $log
+  $a = @('/x', $code, '/qn', '/norestart', '/l*v', $log)
   if ($Purge) { $a += 'PURGE=1' }
   return (Start-Process msiexec.exe -ArgumentList $a -Wait -PassThru).ExitCode
+}
+$script:MsiRemoveCount = 0
+$script:LastMsiRemoveLog = $null
+function Show-MsiLog($log) {
+  # LC-15 evidence: what the verbose log says about the purge actions (property value, whether it ran, return value).
+  if (-not $log -or -not (Test-Path $log)) { Write-Output "msi log: none ($log)"; return }
+  $lines = @(Get-Content -LiteralPath $log -ErrorAction SilentlyContinue)
+  $hits = for ($i = 0; $i -lt $lines.Count; $i++) { if ($lines[$i] -match 'PurgeFolder|SetPurgeFolder|PURGE|PurgeFolder:') { $i } }
+  $show = [System.Collections.Generic.SortedSet[int]]::new()
+  foreach ($h in $hits) { for ($j = [Math]::Max(0, $h - 1); $j -le [Math]::Min($lines.Count - 1, $h + 4); $j++) { [void]$show.Add($j) } }
+  Write-Output "msi log $log ($($lines.Count) lines), lines around PurgeFolder/SetPurgeFolder/PURGE:"
+  foreach ($j in ($show | Select-Object -First 120)) { Write-Output ("  {0}: {1}" -f ($j + 1), $lines[$j]) }
+}
+function Show-MsiAllUsers($file) {
+  # LC-18 evidence: the built MSI's ALLUSERS property (ICE43/ICE57 treat the Start menu as per-user unless it is 1).
+  try {
+    $inst = New-Object -ComObject WindowsInstaller.Installer
+    $db = $inst.GetType().InvokeMember('OpenDatabase', 'InvokeMethod', $null, $inst, @((Resolve-Path $file).Path, 0))
+    $v = $db.GetType().InvokeMember('OpenView', 'InvokeMethod', $null, $db, @("SELECT `Property`,`Value` FROM `Property` WHERE `Property`='ALLUSERS' OR `Property`='MSIINSTALLPERUSER'"))
+    $v.GetType().InvokeMember('Execute', 'InvokeMethod', $null, $v, $null)
+    $found = $false
+    while ($r = $v.GetType().InvokeMember('Fetch', 'InvokeMethod', $null, $v, $null)) {
+      $found = $true
+      Write-Output ('msi property {0}={1}' -f $r.GetType().InvokeMember('StringData', 'GetProperty', $null, $r, 1), $r.GetType().InvokeMember('StringData', 'GetProperty', $null, $r, 2))
+    }
+    if (-not $found) { Write-Output 'msi property ALLUSERS: not in the Property table' }
+  } catch { Write-Output "msi property read failed: $_" }
 }
 function Get-FileSha256($file) {
   # A file that is read while the service runs is never skipped: open with FileShare.ReadWrite.
@@ -246,8 +276,11 @@ function Lc14 {
 }
 function Lc15 {
   $rc = Remove-Msi -Purge
+  $log = $script:LastMsiRemoveLog
   $out = & pwsh -NoProfile -File (Join-Path $script:Here 'leftovers.ps1') -Lifecycle $Lifecycle
-  Out-Lc 'LC-15' (($rc -eq 0) -and ($LASTEXITCODE -eq 0)) $(if ($out) { 'leftovers: ' + ($out -join '; ') } else { 'purge leaves nothing' })
+  $ok = ($rc -eq 0) -and ($LASTEXITCODE -eq 0)
+  if (-not $ok) { Show-MsiLog $log }
+  Out-Lc 'LC-15' $ok $(if ($out) { 'leftovers: ' + ($out -join '; ') } else { 'purge leaves nothing' })
 }
 function Lc15Cli { # purge by the CLI: crsp uninstall --delete-data (OPS69)
   [void](Install-Msi $Pkg)
@@ -256,10 +289,16 @@ function Lc15Cli { # purge by the CLI: crsp uninstall --delete-data (OPS69)
   & $exe uninstall --delete-data --yes | Out-Null
   $rc = $LASTEXITCODE
   # The CLI hands the removal to Windows Installer, detached (it ends this very exe); wait until the product is gone.
-  [void](Wait-Until { -not (Get-ProductCode) } 300)
+  $gone = Wait-Until { -not (Get-ProductCode) } 300
+  # ...and until the msiexec it started has ended (the log it wrote says how it went).
+  [void](Wait-Until { -not (Get-CimInstance Win32_Process -Filter "Name='msiexec.exe'" -ErrorAction SilentlyContinue | Where-Object { $_.CommandLine -match '/x\s*\{.*PURGE=1' }) } 120)
   [void](Remove-Msi -Purge)
   $out = & pwsh -NoProfile -File (Join-Path $script:Here 'leftovers.ps1') -Lifecycle $Lifecycle
-  Out-Lc 'LC-15' (($rc -eq 0) -and ($LASTEXITCODE -eq 0)) $(if ($out) { 'cli leftovers: ' + ($out -join '; ') } else { 'crsp uninstall --delete-data leaves nothing' })
+  if (-not $gone -or $out) {
+    $cl = Join-Path $env:TEMP 'crsp-uninstall.log'
+    if (Test-Path $cl) { Show-MsiLog $cl }
+  }
+  Out-Lc 'LC-15' ($gone -and ($rc -eq 0) -and ($LASTEXITCODE -eq 0)) $(if ($out) { 'cli leftovers: ' + ($out -join '; ') } else { 'crsp uninstall --delete-data leaves nothing' })
 }
 function Lc16 {
   $exe = Join-Path $script:Install 'crsp.exe'
@@ -307,6 +346,7 @@ function Lint { # LC-18: WiX ICE validation and one Apps-list entry
   $wixOk = $false
   if ((Test-Path (Join-Path $installerDir 'dotnet-tools.json')) -and (Get-Command dotnet -ErrorAction SilentlyContinue)) {
     $pkgFull = (Resolve-Path $Pkg).Path
+    Show-MsiAllUsers $pkgFull
     Push-Location $installerDir
     try {
       & dotnet tool restore 2>&1 | Out-Host

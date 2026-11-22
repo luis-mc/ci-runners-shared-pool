@@ -246,24 +246,25 @@ func TestMSIComments(t *testing.T) {
 	}
 }
 
-// ICE43, ICE57, ICE69: the per-machine Start Menu shortcut and the tray's Run value sit in the component of
-// crsp.exe, whose key path is that file (a per-machine key path); no HKCU entry is authored anywhere.
-func TestMSIShortcutIsPerMachineAndInTheExeComponent(t *testing.T) {
+// ICE43, ICE57, ICE69: the Start Menu shortcut is a component of its own with an HKCU key path (the WiX
+// pattern), pointing at crsp.exe through the CRSPEXE property; the tray's Run value stays with crsp.exe.
+func TestMSIShortcutHasItsOwnComponentWithHKCUKeyPath(t *testing.T) {
 	s := wxs(t)
-	if strings.Contains(s, `Root="HKCU"`) {
-		t.Error("no HKCU entry: the package is per-machine")
+	sc := regexp.MustCompile(`(?s)<Component Id="CrspShortcutComponent".*?\n      </Component>`).FindString(s)
+	if sc == "" {
+		t.Fatal("component CrspShortcutComponent not found")
 	}
-	comp := regexp.MustCompile(`(?s)<Component Id="CrspProgram">.*?\n      </Component>`).FindString(s)
-	if comp == "" {
-		t.Fatal("component CrspProgram not found")
-	}
-	for _, want := range []string{`<File Id="CrspExe"`, `<Shortcut Id="CrspShortcut"`, `Name="crsp-tray"`} {
-		if !strings.Contains(comp, want) {
-			t.Errorf("CrspProgram must hold %s", want)
+	for _, want := range []string{`<Shortcut Id="CrspShortcut"`, `Root="HKCU"`, `KeyPath="yes"`, `Target="[CRSPEXE]"`} {
+		if !strings.Contains(sc, want) {
+			t.Errorf("CrspShortcutComponent must hold %s", want)
 		}
 	}
-	if strings.Contains(s, `Id="StartMenuShortcut"`) || strings.Contains(s, `Id="TrayAutostart"`) {
-		t.Error("the shortcut and the Run value must not be components of their own")
+	if strings.Contains(sc, "[#CrspExe]") {
+		t.Error("the shortcut target must not name a file of another component (ICE69)")
+	}
+	prog := regexp.MustCompile(`(?s)<Component Id="CrspProgram">.*?\n      </Component>`).FindString(s)
+	if strings.Contains(prog, "<Shortcut") || !strings.Contains(prog, `Name="crsp-tray"`) {
+		t.Error("CrspProgram holds the Run value and no shortcut")
 	}
 }
 
