@@ -47,6 +47,24 @@ func UserData(ctx context.Context, path string) (map[string]TableData, error) {
 	return out, nil
 }
 
+// UserDataVersion is the highest applied migration of the database file, read-only, without migrating it. The
+// lifecycle lane stores it with a snapshot, so a declared change (DeclaredChanges) applies only across its migration.
+func UserDataVersion(ctx context.Context, path string) (int64, error) {
+	ctx, cancel := withLongDeadline(ctx)
+	defer cancel()
+	slash := filepath.ToSlash(path)
+	if !strings.HasPrefix(slash, "/") {
+		slash = "/" + slash // Windows drive paths
+	}
+	db, err := sql.Open("sqlite", "file:"+slash+"?mode=ro")
+	if err != nil {
+		return 0, fmt.Errorf("schema version: %w", err)
+	}
+	defer func() { _ = db.Close() }()
+	db.SetMaxOpenConns(1)
+	return schemaVersion(ctx, db)
+}
+
 func readTable(ctx context.Context, db *sql.DB, name string) (TableData, error) {
 	rows, err := db.QueryContext(ctx, `SELECT * FROM "`+strings.ReplaceAll(name, `"`, `""`)+`"`)
 	if err != nil {

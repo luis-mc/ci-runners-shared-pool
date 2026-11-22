@@ -18,21 +18,35 @@ func dbSnapshot(dbPath, outPath string) error {
 	if err != nil {
 		return err
 	}
-	b, err := json.Marshal(data)
+	version, err := store.UserDataVersion(context.Background(), dbPath)
+	if err != nil {
+		return err
+	}
+	b, err := json.Marshal(snapshot{SchemaVersion: version, Tables: data})
 	if err != nil {
 		return err
 	}
 	return os.WriteFile(outPath, b, 0o600)
 }
 
-func loadSnapshot(path string) (map[string]store.TableData, error) {
+// snapshot is what --db-snapshot writes: the user tables and the migration version they were read at, which
+// decides whether a declared change (store.DeclaredChanges) applies between two snapshots.
+type snapshot struct {
+	SchemaVersion int64                      `json:"schema_version"`
+	Tables        map[string]store.TableData `json:"tables"`
+}
+
+func loadSnapshot(path string) (snapshot, error) {
 	b, err := os.ReadFile(path) //nolint:gosec // a path the lane chose
 	if err != nil {
-		return nil, err
+		return snapshot{}, err
 	}
-	var m map[string]store.TableData
+	var m snapshot
 	if err := json.Unmarshal(b, &m); err != nil {
-		return nil, fmt.Errorf("%s: %w", path, err)
+		return snapshot{}, fmt.Errorf("%s: %w", path, err)
+	}
+	if m.Tables == nil {
+		return snapshot{}, fmt.Errorf("%s: no tables in the snapshot", path)
 	}
 	return m, nil
 }
@@ -49,7 +63,11 @@ func dbCompare(beforePath, afterPath string) error {
 	if err != nil {
 		return err
 	}
-	diffs := compareData(before, after)
+	bt, at, notes, diffs := applyDeclared(before, after, store.DeclaredChanges)
+	for _, n := range notes {
+		fmt.Println(n) // the lane writes each accepted declared change to lifecycle-steps.txt
+	}
+	diffs = append(diffs, compareData(bt, at)...)
 	if len(diffs) == 0 {
 		return nil
 	}
@@ -57,6 +75,78 @@ func dbCompare(beforePath, afterPath string) error {
 		diffs = append(diffs[:5], fmt.Sprintf("and %d more", len(diffs)-5))
 	}
 	return fmt.Errorf("user data changed: %s", strings.Join(diffs, "; "))
+}
+
+// applyDeclared applies the declared changes whose migration lies between the two snapshots (before below it,
+// after at or above it) and returns the tables left to compare, one note per accepted change, and the failures
+// of a declaration that was not kept: a dropped table that is still there, even emptied.
+// A dropped table leaves the comparison; a rewritten column is compared with its JSON key removed on both
+// sides, so every row must still be there with the same other cells.
+func applyDeclared(before, after snapshot, decls []store.DeclaredChange) (bt, at map[string]store.TableData, notes, diffs []string) {
+	bt = make(map[string]store.TableData, len(before.Tables))
+	for k, v := range before.Tables {
+		bt[k] = v
+	}
+	at = make(map[string]store.TableData, len(after.Tables))
+	for k, v := range after.Tables {
+		at[k] = v
+	}
+	for _, d := range decls {
+		if before.SchemaVersion >= d.Migration || after.SchemaVersion < d.Migration {
+			continue
+		}
+		for _, t := range d.DropTables {
+			if _, had := bt[t]; !had {
+				continue
+			}
+			if _, still := at[t]; still {
+				diffs = append(diffs, fmt.Sprintf("table %s is declared dropped by migration %d (%s) but is still there", t, d.Migration, d.Task))
+				continue
+			}
+			delete(bt, t)
+			notes = append(notes, fmt.Sprintf("LC-11 note: declared by migration %d (%s): table %s dropped", d.Migration, d.Task, t))
+		}
+		for _, r := range d.Rewrites {
+			b, had := bt[r.Table]
+			a, ok := at[r.Table]
+			if !had || !ok {
+				continue // a table that is gone is reported by the comparison
+			}
+			bt[r.Table] = withoutJSONKey(b, r.Column, r.JSONKey)
+			at[r.Table] = withoutJSONKey(a, r.Column, r.JSONKey)
+			notes = append(notes, fmt.Sprintf("LC-11 note: declared by migration %d (%s): table %s rewritten, key %s removed from column %s", d.Migration, d.Task, r.Table, r.JSONKey, r.Column))
+		}
+	}
+	return bt, at, notes, diffs
+}
+
+// withoutJSONKey returns the table with the key removed from the JSON object in the column. A cell that is
+// not a JSON object (or NULL) is left as it is.
+func withoutJSONKey(td store.TableData, column, key string) store.TableData {
+	ci := -1
+	for i, c := range td.Columns {
+		if c == column {
+			ci = i
+		}
+	}
+	if ci < 0 {
+		return td
+	}
+	out := store.TableData{Columns: td.Columns, Rows: make([][]string, len(td.Rows))}
+	for i, row := range td.Rows {
+		r := append([]string(nil), row...)
+		if ci < len(r) && strings.HasPrefix(r[ci], "=") {
+			var obj map[string]json.RawMessage
+			if json.Unmarshal([]byte(r[ci][1:]), &obj) == nil && obj != nil {
+				delete(obj, key)
+				if b, err := json.Marshal(obj); err == nil {
+					r[ci] = "=" + string(b)
+				}
+			}
+		}
+		out.Rows[i] = r
+	}
+	return out
 }
 
 // runtimeColumns are columns the service rewrites by design on every save, by table. They are not config or data
