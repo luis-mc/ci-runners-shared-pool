@@ -17,4 +17,4 @@ Branch `LOOK58b-timeline-ui` (from `LOOK58-timeline-machines`). Scope: `packages
 - Component 61 (runner timeline, "to be built") is superseded in practice by 72; its entry was left for the owner to retire.
 - A tick every hour; bars wider than their text clip with an ellipsis; the state word and detail are visually hidden text in each bar.
 
-CODE DONE (sha below)
+CODE DONE deab11a
