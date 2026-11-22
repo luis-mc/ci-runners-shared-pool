@@ -683,38 +683,6 @@ The words of the first-run fixes (web-console 4.1 and 4.3, CRSP124). The console
 | Open Machines | The one primary on Done of Add a machine when it is not part of the first-run checklist. |
 | Runners are added to one repository. An organization appears here when the App is installed on one. | Note in Add runners when the App is on no organization. |
 
-## Access for CI words
-
-The words of the Settings section Access for CI and of the action that sets up parity for a repository (web-console R5.90 and R5.91, github-integration R5.82 to R5.84, CRSP134).
-
-| Word | Where and meaning |
-|---|---|
-| Access for CI | The Settings section, and the title of its table. |
-| Only an admin can make, see or revoke access for CI. Ask an admin to do it. | Needs-you message for a person who is not an admin. |
-| An access for CI is a value a CI job uses to read the pool. It can read the runners and run the doctor, which is all that the parity check needs. It cannot change a machine, a runner, a setting or a user. | Note above the table. |
-| No access yet. Set up parity for a repository below, or make one here. | Empty table. |
-| Name, Can do, Made by, Made, Last used, State, Actions | The columns. |
-| Read only: the checks of parity | The Can do cell. |
-| never, live, revoked, Revoked | Last used and State values, and the Actions cell of a revoked access. |
-| Revoke | The danger button of a row and of its question card. Busy: Revoking. |
-| Revoke {name}? / Access {name} stops working at once. A CI job that uses it is refused. | Title and line of the question card. |
-| Make an access | The section of the form. |
-| Write a name for the access, such as "parity CI". | Error when the name is empty. |
-| What it can do / Parity | The field and its one choice; description: Read the runners and run the doctor, nothing else. |
-| Make | The primary button of the form. Busy: Making. |
-| Could not make the access. {reason} | Problem message when making fails. |
-| Access {name} is made / I have it | Title and close button of the card that shows the value once. |
-| This is the only time the value is shown. crsp keeps no copy of it. Copy it now, or revoke this access and make another. | Needs-you message on that card. |
-| Access value | Label of the code block that holds the value. |
-| Set up parity | The section of the action. |
-| No repository yet. Install the App on a repository first (Repositories). | Empty state of the section. |
-| crsp writes the access as the secret CRSP_ACCESS, and its address and certificate fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, to the repository through the GitHub App. You copy nothing. The parity workflow reads them. | Note of the section. |
-| Repository | The field that chooses the repository. |
-| Set up parity | The primary button (one line at phone width). Busy: Setting up. Reason when none is chosen: Choose a repository first. |
-| Could not set up parity. Nothing was left behind. {reason} | Problem message when the setup fails. |
-| Parity is set up for {repository}. The workflow can run now. | Done message. |
-| The GitHub grant | See GitHub grant words: a missing App permission is shown by the shared part, not by words of this screen. |
-
 ## Docker disk words
 
 The words of the Docker disk section on the machine page (caches R5.51 to R5.54, machines R5.66). The section shows only for a machine whose agent found a Docker Desktop disk file, or whose choice is On or Off.
@@ -801,7 +769,7 @@ The words of the repositories page when the list is the last copy because the re
 
 ## Network words
 
-The words of Settings > Console > Network and of the dialog that chooses the controller address (operations R5.90, OPS14). Also opened from the Needs-you box of Access for CI.
+The words of Settings > Console > Network and of the dialog that chooses the controller address (operations R5.90, OPS14).
 
 | Word | Where and meaning |
 |---|---|
@@ -1145,7 +1113,6 @@ One word set for the button at the end of a table row. The guard reads this tabl
 | Edit | Row action of a user (Settings, Access): opens the change of its role. A press, not a link. Admin only. |
 | Replace | Button of an unmanaged runner (Runners): replaces it with one the pool manages, after a question. A press. Admin only (busy word: Replacing). |
 | Delete registration | Button of an offline managed runner (Runners): deletes its registration on GitHub, after a question. A press. Admin only (busy word: Deleting). |
-| Revoke | Row action of a live access for CI (Settings, Access): stops it working, after a question. A press. Admin only. |
 | Copy line | Row action of a job size (Repository page, Job sizes): copies the line for `.crsp.yml` and says what it copied. It changes nothing. A press. |
 | Copy | The button of a code block in a cell (Doctor, a finding's command): copies the text and says Copied. It changes nothing. A press. |
 | On, Off | The word of a switch in a cell (Repositories, the pool for a repository): it shows the state; pressing it changes the state. Admin only. |

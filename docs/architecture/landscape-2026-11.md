@@ -58,7 +58,7 @@ Status: **built**, **specified** (in a spec, not built), **partial**, **absent**
 | G14 | Warm pool: N ready runners or pre-booted VMs | absent | RunnerRunner, terraform-aws-github-runner |
 | G15 | Local Actions cache service and LAN sharing | specified (caches R5.1, M7); protocol is unofficial | runscaler, Unyoke |
 | G16 | Shared tool cache, package proxy (npm, PyPI, crates, apt) | partial: per-runner tool folder built; shared M2; proxy has no milestone | — |
-| G17 | Safe rollout of routing: observe, shadow, canary, then switch | partial: manual parity plan (decision D37) | Unyoke |
+| G17 | Safe rollout of routing: observe, shadow, canary, then switch | partial: manual move by the runbook; no parity gate (CRSP227) | Unyoke |
 | G18 | Backends as separate programs | partial: one in-process interface (runners R5.8) | garm |
 | G19 | Windows jobs in Hyper-V isolated containers | specified (M4 VMs); containers not considered | ephemerd |
 | G20 | Labels that size the runner (`cpu=4`, `ram=8`) | absent | RunsOn |
