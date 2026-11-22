@@ -59,7 +59,7 @@ The owner and the admins of a pool see what the pool is doing right now, what it
 ```mermaid
 flowchart LR
   subgraph machine[Each machine]
-    ag[Agent] -->|load every 5 s| ag
+    ag[Agent] -->|load every 2 s| ag
     ag -->|setup and agent log lines| ag
   end
   ag -->|gRPC agent link| ctl
@@ -78,7 +78,7 @@ flowchart LR
   ctl --> files[Log files and crash files on disk]
 ```
 
-1. Each agent samples its machine's memory and CPU every 5 seconds and sends the load and its slot use over the agent link (decision 0004).
+1. Each agent samples its machine's memory and CPU every 2 seconds and sends the load and its slot use over the agent link (decision 0004).
 2. The scheduler changes the queue: a job is queued, gets a slot, starts, ends. Each change goes to the event hub in the same step that writes it.
 3. GitHub tells the controller when a job is queued, starts and completes (decision 0002). The controller joins that with its own slot times to get the wait time and the run time.
 4. The event hub gives every change a number and pushes it to every open console over server-sent events (SSE). A console that reconnects gets what it missed, or a fresh snapshot.
@@ -196,6 +196,8 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.65** (OPS66) — **Read and show.** `GET /api/v1/jobs/{jobId}/resources` (`getJobResources`, viewer role) carries an optional `measured` object (`JobMeasured`: peak CPU, peak memory, sample count, duration, flags, source, runner, and `key`, the summary of R5.63). The job detail page shows "Measured peak CPU" and "Measured peak memory" with the shared UI parts only (design system v4), the OOM and cut-short flags, and the job key line. Built (OPS66). Source: `internal/api/handlers_insights.go` `GetJobResources`; `apps/web/src/screens/insights/JobInsights.tsx`.
 
+**R5.66** (LOOK58a) — **Slot timeline API.** `GET /api/v1/timeline` (user role; `machine_id`, `before`, `hours`) gives one row per machine job slot (`<machine_id>:<n>`, label "<machine name> slot <n>", n from 1 to the machine's `JobSlots`, the count the queue simulation of R5.43 uses) and a row `<machine_id>:waiting` only when a bar needs it. The store keeps no slot number of a finished job, so each job of the last 24 hours takes the lowest row whose last bar has ended, in order of start, the same on every page. A page holds the jobs that ended before `before` (default now) and at most `hours` back (default 6, at most 24, never older than 24 hours); `more_before` is true while older jobs within 24 hours exist. The first call adds the running bars and the forecast. Queued jobs are placed on slots by the queue simulation of scheduling R5.72 (`forecast.SimulateQueueSlots`): `forecast` from the median start to start plus the job's median, `end_lo` and `end_hi` from the low and high simulations, all clipped at now + 24 hours; a job that would start later waits in the waiting row. `to` is the end of the last forecast, or now. States: `running`, `done` (also cancelled), `failed`, `timer_ran_out` (a job that timed out), `forecast`, `no_runner_fits` and `waiting_room` (wait reasons `no_runner_with_labels` and `load_over_budget`, waiting row, no forecast), `waiting_runner` (a job with no history, or one the simulation cannot place). `reserved` is never sent: the scheduler has no slot reservation yet. A waiting bar starts now, has no end and carries `wait_from`. `detail` is plain words with relative times ("starts in about 12 min").
+
 ### Minutes saved
 
 **R5.15** — (M1) Minutes saved counts every job that ran on the pool. Each job counts its run time rounded up to the next whole minute, the way GitHub bills hosted jobs. The Overview shows today's minutes saved, split by OS.
@@ -250,7 +252,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R6.1** — (M1) A change on a machine or in the queue reaches an open console within 2 seconds at the 95th percentile on a local network.
 
-**R6.2** — (M1) Load is sampled every 5 seconds and reported as the median of the last 3 samples (medians, as the product brief's load-measurement port from dev-standards `scripts/load.py` and `load_guard.py` asks; the measuring itself is the machines feature's). The hub sends at most one load event per machine per 5 seconds.
+**R6.2** — (M1) Load is sampled every 2 seconds and reported as the median of the last 3 samples (medians, as the product brief's load-measurement port from dev-standards `scripts/load.py` and `load_guard.py` asks; the measuring itself is the machines feature's). The hub sends at most one load event per machine per 5 seconds.
 
 **R6.3** — (M1) Stream limits: a comment line every 15 seconds keeps the stream open; the hub keeps the last 2,000 events or 10 minutes for replay, whichever is less; one stream that falls 500 events behind is closed and reconnects to a snapshot; at most 50 open streams per controller (setting, ceiling 200). A slow stream never slows the scheduler.
 
@@ -267,7 +269,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 | Data | Default | Floor | Ceiling |
 |---|---|---|---|
 | Event replay buffer (memory) | 2,000 events or 10 min | n/a | 10,000 events |
-| Raw load samples (5 s) | 24 hours | 1 hour | 7 days |
+| Raw load samples (2 s) | 24 hours | 1 hour | 7 days |
 | Load per minute (median) | 30 days | 1 day | 400 days |
 | Job history rows (jobs, runs, attempts, forecast log) | 90 days | 7 days | 400 days, and at most 1,000,000 rows |
 | Job step rows | 30 days | 7 days | 90 days |
@@ -407,6 +409,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.63 | internal/jobsize/jobsize_test.go TestSummaryMeasuredAtFive, TestSummaryKeepsNewest30; internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary, TestMigrationJobRunPeaks |
 | R5.64 | internal/agent/jobsample/sampler_bench_test.go BenchmarkSample, BenchmarkRealReaders |
 | R5.65 | internal/api/handlers_insights_test.go TestJobResourcesMeasured; apps/web/src/screens/insights/JobInsights.test.tsx |
+| R5.66 | internal/forecast/forecast_test.go TestSimulateQueueSlots; internal/api/timeline_test.go TestTimelineRowsAndSlotAssignment, TestTimelineFinishedAndRunningStates, TestTimelinePagingByTime, TestTimelineKeepsTheRowAcrossPages, TestTimelineMachineFilter, TestTimelineForecastPlacementAndStates, TestTimelineForecastClipsAtTwentyFourHours, TestTimelineJobWithoutHistoryAndPoolJobs, TestGetTimelineHandler |
 | R6.1 | planned: internal/events/latency_test.go TestP95UnderTwoSeconds |
 | R6.2 | internal/events/hub_test.go TestLoadThrottlePerMachine (the median of three is the machines feature) |
 | R6.3 | internal/events/hub_test.go TestSSEFormatAndServe (heartbeat), TestSlowSubscriberIsClosedAndNeverBlocksPublisher, TestStreamCap; internal/api/handlers_live_test.go TestStreamEventsTooManyStreams |

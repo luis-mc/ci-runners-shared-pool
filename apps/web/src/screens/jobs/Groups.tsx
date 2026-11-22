@@ -48,7 +48,7 @@ export function filterQuery(filter: string): string {
 
 /** Where a group row goes: its jobs in the Done list (a repository opens its runs). */
 export function groupLink(by: GroupBy, row: Row): string {
-  return `/jobs/done?${by === 'repository' ? '' : 'view=jobs&'}${filterQuery(row.filter)}`;
+  return `/pool/jobs?${by === 'repository' ? '' : 'view=jobs&'}${filterQuery(row.filter)}`;
 }
 
 const secs = (s: number | undefined) =>

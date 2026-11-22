@@ -33,7 +33,7 @@ func engineRun(t *testing.T, src doctor.EngineSource) []doctor.Finding {
 
 type noEngineFleet struct{ doctor.Fleet }
 
-// TestMachineEngineSaysWhichEngineAndWhetherItAnswers: runners R5.47, parity row 14.
+// TestMachineEngineSaysWhichEngineAndWhetherItAnswers: runners R5.47.
 func TestMachineEngineSaysWhichEngineAndWhetherItAnswers(t *testing.T) {
 	fs := engineRun(t, engineFake{states: []doctor.EngineState{
 		{Machine: named(win(), "wsl"), Kind: "docker-wsl2-windows-cli", Usable: true, Version: "27.3.1"},

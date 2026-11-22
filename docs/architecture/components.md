@@ -15,7 +15,7 @@ flowchart LR
 
   subgraph github["GitHub"]
     app["GitHub App<br/>webhooks, API"]
-    repos["Repositories<br/>RUNS_ON_* variables, workflows"]
+    repos["Repositories<br/>CRSP_RUNS_ON_* variables, workflows"]
     actions["Actions service<br/>job queue, runner registrations"]
     releases["Releases<br/>installers, SHA256SUMS"]
   end
@@ -27,7 +27,7 @@ flowchart LR
     auth["Sign-in, users, sessions, CLI tokens"]
     sched["Scheduler<br/>slots, load budget, queue"]
     runnersvc["Runners service<br/>pool runners, plans, leftovers"]
-    reposvc["Repositories<br/>pool switch, policy, RUNS_ON_*"]
+    reposvc["Repositories<br/>pool switch, policy, CRSP_RUNS_ON_*"]
     jobs["Jobs data<br/>runs, jobs, steps, forecast"]
     doctor["Doctor<br/>health checks, findings"]
     caches["Caches<br/>per-runner caches"]
@@ -67,7 +67,7 @@ flowchart LR
   reposvc & runnersvc --> secrets
 
   app -->|webhooks: workflow_job| api
-  reposvc -->|set RUNS_ON_* variables| repos
+  reposvc -->|set CRSP_RUNS_ON_* variables| repos
   runnersvc -->|register and remove runners| actions
   jobs -->|read runs and jobs| actions
   update -->|check and download| releases
@@ -107,7 +107,7 @@ flowchart LR
 
 ## How a job reaches the pool
 
-1. A repository that opted in has `RUNS_ON_*` variables that crsp sets to the pool's labels; its workflow uses `runs-on: ${{ vars.RUNS_ON_LINUX }}`.
+1. A repository that opted in has `CRSP_RUNS_ON_*` variables that crsp sets to the pool's labels; its workflow uses `runs-on: ${{ vars.CRSP_RUNS_ON_LINUX }}`.
 2. GitHub queues the job and sends a `workflow_job` webhook to the controller through the GitHub App.
 3. The scheduler checks the slots and load budget; for an ephemeral runner the runners service tells an agent to start one.
 4. The runner picks the job from GitHub, the job hooks report start and end, and the Jobs section shows it.

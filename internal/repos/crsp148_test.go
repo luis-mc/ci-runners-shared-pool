@@ -121,7 +121,7 @@ func TestPoolOnAdoptedFromVariablesAfterUpgrade(t *testing.T) {
 	e, _ := persistentEnv(t)
 	e.world()
 	e.fake.SetVariable("alice/web", "RUNS_ON_LIGHT", "crsp-light")
-	e.fake.SetVariable("alice/secret", "RUNS_ON_LINUX", `["self-hosted","crsp-home","Linux"]`)
+	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX", `["self-hosted","crsp-home","Linux"]`)
 	// alice/other has no pool variable.
 	ctx := context.Background()
 	fresh := NewMemStore() // the empty store of the new process

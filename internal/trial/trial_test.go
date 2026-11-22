@@ -52,8 +52,8 @@ func (d *fakeDisp) Dispatch(_ context.Context, _, wf, ref string, in map[string]
 
 func setup(public bool) (*Manager, *fakeVars, *fakeDisp) {
 	fv := &fakeVars{repo: Repo{FullName: "o/r", Public: public},
-		vars: map[string]string{"RUNS_ON_LINUX": `["ubuntu-latest"]`, "CI_RUNS_ON": `["ubuntu-latest"]`},
-		want: map[string]string{"RUNS_ON_LINUX": `["self-hosted","linux"]`}}
+		vars: map[string]string{"CRSP_RUNS_ON_LINUX": `["ubuntu-latest"]`, "CI_RUNS_ON": `["ubuntu-latest"]`},
+		want: map[string]string{"CRSP_RUNS_ON_LINUX": `["self-hosted","linux"]`}}
 	fd := &fakeDisp{}
 	now := time.Date(2026, 11, 15, 10, 0, 0, 0, time.UTC)
 	return New(Config{Vars: fv, Dispatcher: fd, KV: &MemKV{}, Now: func() time.Time { return now }}), fv, fd
@@ -157,7 +157,7 @@ func TestShadowDispatchesOnceAndRecordsCopy(t *testing.T) {
 func TestCanaryWritesAndOffRestoresExactly(t *testing.T) {
 	ctx := context.Background()
 	m, fv, _ := setup(false)
-	fv.vars["RUNS_ON_CANARY_BUILD"] = `["old"]` // a name the canary will overwrite
+	fv.vars["CRSP_RUNS_ON_CANARY_BUILD"] = `["old"]` // a name the canary will overwrite
 	before := map[string]string{}
 	for k, v := range fv.vars {
 		before[k] = v
@@ -169,17 +169,17 @@ func TestCanaryWritesAndOffRestoresExactly(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if fv.vars["RUNS_ON_CANARY_BUILD"] != `["self-hosted","linux"]` || fv.vars["RUNS_ON_LINUX"] != before["RUNS_ON_LINUX"] {
+	if fv.vars["CRSP_RUNS_ON_CANARY_BUILD"] != `["self-hosted","linux"]` || fv.vars["CRSP_RUNS_ON_LINUX"] != before["CRSP_RUNS_ON_LINUX"] {
 		t.Fatalf("vars %v", fv.vars)
 	}
-	if _, ok := fv.vars["RUNS_ON_CANARY_TEST"]; ok || len(st.Written) != 1 {
+	if _, ok := fv.vars["CRSP_RUNS_ON_CANARY_TEST"]; ok || len(st.Written) != 1 {
 		t.Fatalf("test job selected: %v", fv.vars)
 	}
 	// Change the canary: still one snapshot, then off.
 	if _, err := m.Set(ctx, "o/r", Canary, Options{Percent: 100}); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := fv.vars["RUNS_ON_CANARY_TEST"]; !ok {
+	if _, ok := fv.vars["CRSP_RUNS_ON_CANARY_TEST"]; !ok {
 		t.Fatalf("100%% left a job out: %v", fv.vars)
 	}
 	if _, err := m.Set(ctx, "o/r", Off, Options{}); err != nil {

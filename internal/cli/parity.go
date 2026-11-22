@@ -15,6 +15,8 @@ var operationCommands = map[string]string{
 	"getRepositoryPlan":          "repo enable|disable",
 	"applyRepositoryChanges":     "repo enable|disable",
 	"updateRepositoryPolicy":     "repo policy",
+	"previewRunsOnPullRequests":  "repos runs-on-pr --preview",
+	"openRunsOnPullRequests":     "repos runs-on-pr",
 	"getRepositoryExtraPackages": "repo packages",
 	"setRepositoryExtraPackages": "repo packages --set",
 	"listOrgPools":               "org-pool list",

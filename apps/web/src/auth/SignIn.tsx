@@ -91,7 +91,7 @@ export function SignInPage() {
         ) : null}
         <Stack>
           <Text>Sign in with the GitHub account the owner allowed.</Text>
-          {noApp ? <TextLink to="/setup">Open the setup page</TextLink> : null}
+          {noApp ? <TextLink to="/setup?wizard=1">Open the setup page</TextLink> : null}
         </Stack>
         <ActionBar
           primary={

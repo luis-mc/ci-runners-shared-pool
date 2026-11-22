@@ -30,6 +30,12 @@ type Engine struct {
 	// them when a real job needs the budget (scheduling R5.66). Both nil: no warm pool.
 	warm        func(machineID string) []WarmRunner
 	warmRelease func(machineID string, names []string)
+	// runnerClass, forecastEnd and zone feed admission (scheduling R5.90 to R5.94).
+	runnerClass func(machineID, runnerName string) string
+	forecastEnd func(machineID string, job slots.Job, start time.Time) (time.Time, bool)
+	zone        *time.Location
+	// lifecycleState reports job starts and ends to the timers (SetLifecycle).
+	lifecycleState
 	// factsState reports job facts to the Jobs section (SetFacts).
 	factsState
 }
@@ -62,6 +68,13 @@ func WithAccepting(f func(machineID string) (ok bool, reason string)) Option {
 // reason its last clean-up failed, "" when it is clean. An unclean runner takes
 // no new job (runners R5.91). The runner registry answers it.
 func (e *Engine) SetUncleanLookup(f func(machineID, runnerName string) string) { e.unclean = f }
+
+// SetRunnerClass sets where the gate reads a runner's size class after the
+// engine was built (the runner registry is made later). See WithRunnerClass.
+func (e *Engine) SetRunnerClass(f func(machineID, runnerName string) string) { e.runnerClass = f }
+
+// SetZone sets the zone of the times in wait lines (see WithZone).
+func (e *Engine) SetZone(z *time.Location) { e.zone = z }
 
 // NewEngine returns the slot queue over a store.
 func NewEngine(store slots.Store, opts ...Option) *Engine {
@@ -227,6 +240,9 @@ func (e *Engine) staleSlots(tx slots.Tx, machine string, now time.Time) ([]Freed
 			return nil, err
 		} else if ok {
 			freed = append(freed, e.droppedRow(tx, t, reason, now))
+			if err := tx.DropPasses(t.ID); err != nil {
+				return nil, err
+			}
 		}
 	}
 	return freed, nil

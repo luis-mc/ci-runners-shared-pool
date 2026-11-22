@@ -57,7 +57,7 @@ async function check(page: Page, box: Locator): Promise<void> {
 test('Machines search: the block caret follows the text and goes on blur', async ({
   page,
 }) => {
-  await openRoute(page, { url: '/machines', signedOut: false });
+  await openRoute(page, { url: '/setup/machines', signedOut: false });
   await check(page, page.getByRole('textbox', { name: 'Search machines' }));
 });
 
@@ -74,7 +74,7 @@ test('Command palette: the block caret follows the text and goes on blur', async
 test('the block is steady under reduced motion and blinks otherwise', async ({
   page,
 }) => {
-  await openRoute(page, { url: '/machines', signedOut: false });
+  await openRoute(page, { url: '/setup/machines', signedOut: false });
   await page.getByRole('textbox', { name: 'Search machines' }).focus();
   const name = () =>
     page.locator(CARET).evaluate((e) => getComputedStyle(e).animationName);
@@ -95,7 +95,7 @@ test('screenshots', async ({ page }) => {
     for (const where of ['machines', 'palette']) {
       await openRoute(
         page,
-        { url: where === 'machines' ? '/machines' : '/', signedOut: false },
+        { url: where === 'machines' ? '/setup/machines' : '/', signedOut: false },
         { mode: c.mode, themeName: c.theme },
       );
       let box: Locator;

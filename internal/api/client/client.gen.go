@@ -20,21 +20,6 @@ import (
 	openapi_types "github.com/oapi-codegen/runtime/types"
 )
 
-// Defines values for AccessScope.
-const (
-	Parity AccessScope = "parity"
-)
-
-// Valid indicates whether the value is a known member of the AccessScope enum.
-func (e AccessScope) Valid() bool {
-	switch e {
-	case Parity:
-		return true
-	default:
-		return false
-	}
-}
-
 // Defines values for AddUserRequestRole.
 const (
 	AddUserRequestRoleAdmin  AddUserRequestRole = "admin"
@@ -107,6 +92,66 @@ func (e Arch) Valid() bool {
 	case ArchArm64:
 		return true
 	case ArchX64:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AssignLeaseState.
+const (
+	AssignLeaseStateDone     AssignLeaseState = "done"
+	AssignLeaseStateGone     AssignLeaseState = "gone"
+	AssignLeaseStateRunning  AssignLeaseState = "running"
+	AssignLeaseStateStarting AssignLeaseState = "starting"
+	AssignLeaseStateWaiting  AssignLeaseState = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the AssignLeaseState enum.
+func (e AssignLeaseState) Valid() bool {
+	switch e {
+	case AssignLeaseStateDone:
+		return true
+	case AssignLeaseStateGone:
+		return true
+	case AssignLeaseStateRunning:
+		return true
+	case AssignLeaseStateStarting:
+		return true
+	case AssignLeaseStateWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AssignReasonCode.
+const (
+	AssignReasonCodeLoad        AssignReasonCode = "load"
+	AssignReasonCodeNever       AssignReasonCode = "never"
+	AssignReasonCodeNoMachine   AssignReasonCode = "no_machine"
+	AssignReasonCodePool        AssignReasonCode = "pool"
+	AssignReasonCodeReserved    AssignReasonCode = "reserved"
+	AssignReasonCodeStartFailed AssignReasonCode = "start_failed"
+	AssignReasonCodeStarting    AssignReasonCode = "starting"
+)
+
+// Valid indicates whether the value is a known member of the AssignReasonCode enum.
+func (e AssignReasonCode) Valid() bool {
+	switch e {
+	case AssignReasonCodeLoad:
+		return true
+	case AssignReasonCodeNever:
+		return true
+	case AssignReasonCodeNoMachine:
+		return true
+	case AssignReasonCodePool:
+		return true
+	case AssignReasonCodeReserved:
+		return true
+	case AssignReasonCodeStartFailed:
+		return true
+	case AssignReasonCodeStarting:
 		return true
 	default:
 		return false
@@ -656,6 +701,48 @@ const (
 func (e HealthStatus) Valid() bool {
 	switch e {
 	case HealthStatusOk:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for HealthOomScopeScope.
+const (
+	HealthOomScopeScopeJob  HealthOomScopeScope = "job"
+	HealthOomScopeScopePool HealthOomScopeScope = "pool"
+)
+
+// Valid indicates whether the value is a known member of the HealthOomScopeScope enum.
+func (e HealthOomScopeScope) Valid() bool {
+	switch e {
+	case HealthOomScopeScopeJob:
+		return true
+	case HealthOomScopeScopePool:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for HealthVolumeRole.
+const (
+	HealthVolumeRoleDataDir    HealthVolumeRole = "data_dir"
+	HealthVolumeRoleDocker     HealthVolumeRole = "docker"
+	HealthVolumeRoleRunnerWork HealthVolumeRole = "runner_work"
+	HealthVolumeRoleSystem     HealthVolumeRole = "system"
+)
+
+// Valid indicates whether the value is a known member of the HealthVolumeRole enum.
+func (e HealthVolumeRole) Valid() bool {
+	switch e {
+	case HealthVolumeRoleDataDir:
+		return true
+	case HealthVolumeRoleDocker:
+		return true
+	case HealthVolumeRoleRunnerWork:
+		return true
+	case HealthVolumeRoleSystem:
 		return true
 	default:
 		return false
@@ -1241,6 +1328,54 @@ func (e JobSizeSource) Valid() bool {
 	}
 }
 
+// Defines values for JobStatsFailureClass.
+const (
+	JobStatsFailureClassFailed     JobStatsFailureClass = "failed"
+	JobStatsFailureClassOverMemory JobStatsFailureClass = "over_memory"
+	JobStatsFailureClassStopped    JobStatsFailureClass = "stopped"
+	JobStatsFailureClassTimedOut   JobStatsFailureClass = "timed_out"
+)
+
+// Valid indicates whether the value is a known member of the JobStatsFailureClass enum.
+func (e JobStatsFailureClass) Valid() bool {
+	switch e {
+	case JobStatsFailureClassFailed:
+		return true
+	case JobStatsFailureClassOverMemory:
+		return true
+	case JobStatsFailureClassStopped:
+		return true
+	case JobStatsFailureClassTimedOut:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for JobTimerState.
+const (
+	JobTimerStateEnded   JobTimerState = "ended"
+	JobTimerStateGrace   JobTimerState = "grace"
+	JobTimerStateRunning JobTimerState = "running"
+	JobTimerStateStopped JobTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the JobTimerState enum.
+func (e JobTimerState) Valid() bool {
+	switch e {
+	case JobTimerStateEnded:
+		return true
+	case JobTimerStateGrace:
+		return true
+	case JobTimerStateRunning:
+		return true
+	case JobTimerStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -1475,6 +1610,24 @@ func (e MachineChangeDecisionDecision) Valid() bool {
 	case MachineChangeDecisionDecisionStopJobs:
 		return true
 	case MachineChangeDecisionDecisionWaitLonger:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MachineJobStatsWindow.
+const (
+	MachineJobStatsWindowN24h MachineJobStatsWindow = "24h"
+	MachineJobStatsWindowN7d  MachineJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the MachineJobStatsWindow enum.
+func (e MachineJobStatsWindow) Valid() bool {
+	switch e {
+	case MachineJobStatsWindowN24h:
+		return true
+	case MachineJobStatsWindowN7d:
 		return true
 	default:
 		return false
@@ -1757,48 +1910,6 @@ func (e OS) Valid() bool {
 	case OSMacos:
 		return true
 	case OSWindows:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for ParityAddressStatus.
-const (
-	ParityAddressStatusNeedsAddress ParityAddressStatus = "needs_address"
-	ParityAddressStatusOk           ParityAddressStatus = "ok"
-	ParityAddressStatusUnreachable  ParityAddressStatus = "unreachable"
-)
-
-// Valid indicates whether the value is a known member of the ParityAddressStatus enum.
-func (e ParityAddressStatus) Valid() bool {
-	switch e {
-	case ParityAddressStatusNeedsAddress:
-		return true
-	case ParityAddressStatusOk:
-		return true
-	case ParityAddressStatusUnreachable:
-		return true
-	default:
-		return false
-	}
-}
-
-// Defines values for ParitySetupStatus.
-const (
-	ParitySetupStatusDone            ParitySetupStatus = "done"
-	ParitySetupStatusNeedsAddress    ParitySetupStatus = "needs_address"
-	ParitySetupStatusNeedsPermission ParitySetupStatus = "needs_permission"
-)
-
-// Valid indicates whether the value is a known member of the ParitySetupStatus enum.
-func (e ParitySetupStatus) Valid() bool {
-	switch e {
-	case ParitySetupStatusDone:
-		return true
-	case ParitySetupStatusNeedsAddress:
-		return true
-	case ParitySetupStatusNeedsPermission:
 		return true
 	default:
 		return false
@@ -2611,28 +2722,28 @@ func (e RepositoryRoutingWhere) Valid() bool {
 
 // Defines values for RepositoryRoutingWhy.
 const (
-	CapReached       RepositoryRoutingWhy = "cap_reached"
-	FallbackOff      RepositoryRoutingWhy = "fallback_off"
-	FallbackOn       RepositoryRoutingWhy = "fallback_on"
-	Grace            RepositoryRoutingWhy = "grace"
-	MachineUp        RepositoryRoutingWhy = "machine_up"
-	PublicRepository RepositoryRoutingWhy = "public_repository"
+	RepositoryRoutingWhyCapReached       RepositoryRoutingWhy = "cap_reached"
+	RepositoryRoutingWhyFallbackOff      RepositoryRoutingWhy = "fallback_off"
+	RepositoryRoutingWhyFallbackOn       RepositoryRoutingWhy = "fallback_on"
+	RepositoryRoutingWhyGrace            RepositoryRoutingWhy = "grace"
+	RepositoryRoutingWhyMachineUp        RepositoryRoutingWhy = "machine_up"
+	RepositoryRoutingWhyPublicRepository RepositoryRoutingWhy = "public_repository"
 )
 
 // Valid indicates whether the value is a known member of the RepositoryRoutingWhy enum.
 func (e RepositoryRoutingWhy) Valid() bool {
 	switch e {
-	case CapReached:
+	case RepositoryRoutingWhyCapReached:
 		return true
-	case FallbackOff:
+	case RepositoryRoutingWhyFallbackOff:
 		return true
-	case FallbackOn:
+	case RepositoryRoutingWhyFallbackOn:
 		return true
-	case Grace:
+	case RepositoryRoutingWhyGrace:
 		return true
-	case MachineUp:
+	case RepositoryRoutingWhyMachineUp:
 		return true
-	case PublicRepository:
+	case RepositoryRoutingWhyPublicRepository:
 		return true
 	default:
 		return false
@@ -2641,22 +2752,22 @@ func (e RepositoryRoutingWhy) Valid() bool {
 
 // Defines values for RepositoryVariableName.
 const (
-	RUNSONLIGHT   RepositoryVariableName = "RUNS_ON_LIGHT"
-	RUNSONLINUX   RepositoryVariableName = "RUNS_ON_LINUX"
-	RUNSONMACOS   RepositoryVariableName = "RUNS_ON_MACOS"
-	RUNSONWINDOWS RepositoryVariableName = "RUNS_ON_WINDOWS"
+	CRSPRUNSONLINUX   RepositoryVariableName = "CRSP_RUNS_ON_LINUX"
+	CRSPRUNSONMACOS   RepositoryVariableName = "CRSP_RUNS_ON_MACOS"
+	CRSPRUNSONWINDOWS RepositoryVariableName = "CRSP_RUNS_ON_WINDOWS"
+	RUNSONLIGHT       RepositoryVariableName = "RUNS_ON_LIGHT"
 )
 
 // Valid indicates whether the value is a known member of the RepositoryVariableName enum.
 func (e RepositoryVariableName) Valid() bool {
 	switch e {
+	case CRSPRUNSONLINUX:
+		return true
+	case CRSPRUNSONMACOS:
+		return true
+	case CRSPRUNSONWINDOWS:
+		return true
 	case RUNSONLIGHT:
-		return true
-	case RUNSONLINUX:
-		return true
-	case RUNSONMACOS:
-		return true
-	case RUNSONWINDOWS:
 		return true
 	default:
 		return false
@@ -2834,6 +2945,30 @@ func (e RunSummaryState) Valid() bool {
 	}
 }
 
+// Defines values for RunTimerState.
+const (
+	RunTimerStateEnded   RunTimerState = "ended"
+	RunTimerStateGrace   RunTimerState = "grace"
+	RunTimerStateRunning RunTimerState = "running"
+	RunTimerStateStopped RunTimerState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the RunTimerState enum.
+func (e RunTimerState) Valid() bool {
+	switch e {
+	case RunTimerStateEnded:
+		return true
+	case RunTimerStateGrace:
+		return true
+	case RunTimerStateRunning:
+		return true
+	case RunTimerStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunWasteKind.
 const (
 	RunWasteKindDuplicateEvent RunWasteKind = "duplicate_event"
@@ -2852,6 +2987,96 @@ func (e RunWasteKind) Valid() bool {
 	case RunWasteKindRetestedTree:
 		return true
 	case RunWasteKindSuperseded:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassSizeClass.
+const (
+	Large  RunnerClassSizeClass = "large"
+	Medium RunnerClassSizeClass = "medium"
+	Small  RunnerClassSizeClass = "small"
+	Xl     RunnerClassSizeClass = "xl"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassSizeClass enum.
+func (e RunnerClassSizeClass) Valid() bool {
+	switch e {
+	case Large:
+		return true
+	case Medium:
+		return true
+	case Small:
+		return true
+	case Xl:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassesPresets.
+const (
+	RunnerClassesPresetsCompact     RunnerClassesPresets = "compact"
+	RunnerClassesPresetsCustom      RunnerClassesPresets = "custom"
+	RunnerClassesPresetsMemoryHeavy RunnerClassesPresets = "memory-heavy"
+	RunnerClassesPresetsStandard    RunnerClassesPresets = "standard"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassesPresets enum.
+func (e RunnerClassesPresets) Valid() bool {
+	switch e {
+	case RunnerClassesPresetsCompact:
+		return true
+	case RunnerClassesPresetsCustom:
+		return true
+	case RunnerClassesPresetsMemoryHeavy:
+		return true
+	case RunnerClassesPresetsStandard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerClassesInputPreset.
+const (
+	RunnerClassesInputPresetCompact     RunnerClassesInputPreset = "compact"
+	RunnerClassesInputPresetCustom      RunnerClassesInputPreset = "custom"
+	RunnerClassesInputPresetMemoryHeavy RunnerClassesInputPreset = "memory-heavy"
+	RunnerClassesInputPresetStandard    RunnerClassesInputPreset = "standard"
+)
+
+// Valid indicates whether the value is a known member of the RunnerClassesInputPreset enum.
+func (e RunnerClassesInputPreset) Valid() bool {
+	switch e {
+	case RunnerClassesInputPresetCompact:
+		return true
+	case RunnerClassesInputPresetCustom:
+		return true
+	case RunnerClassesInputPresetMemoryHeavy:
+		return true
+	case RunnerClassesInputPresetStandard:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunnerJobStatsWindow.
+const (
+	RunnerJobStatsWindowN24h RunnerJobStatsWindow = "24h"
+	RunnerJobStatsWindowN7d  RunnerJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the RunnerJobStatsWindow enum.
+func (e RunnerJobStatsWindow) Valid() bool {
+	switch e {
+	case RunnerJobStatsWindowN24h:
+		return true
+	case RunnerJobStatsWindowN7d:
 		return true
 	default:
 		return false
@@ -3008,6 +3233,57 @@ func (e RunsOnFindingKind) Valid() bool {
 	}
 }
 
+// Defines values for RunsOnPullRequestPreviewState.
+const (
+	RunsOnPullRequestPreviewStateChange          RunsOnPullRequestPreviewState = "change"
+	RunsOnPullRequestPreviewStateError           RunsOnPullRequestPreviewState = "error"
+	RunsOnPullRequestPreviewStateNotOwned        RunsOnPullRequestPreviewState = "not_owned"
+	RunsOnPullRequestPreviewStateNothingToChange RunsOnPullRequestPreviewState = "nothing_to_change"
+)
+
+// Valid indicates whether the value is a known member of the RunsOnPullRequestPreviewState enum.
+func (e RunsOnPullRequestPreviewState) Valid() bool {
+	switch e {
+	case RunsOnPullRequestPreviewStateChange:
+		return true
+	case RunsOnPullRequestPreviewStateError:
+		return true
+	case RunsOnPullRequestPreviewStateNotOwned:
+		return true
+	case RunsOnPullRequestPreviewStateNothingToChange:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RunsOnPullRequestResultState.
+const (
+	RunsOnPullRequestResultStateError           RunsOnPullRequestResultState = "error"
+	RunsOnPullRequestResultStateExisting        RunsOnPullRequestResultState = "existing"
+	RunsOnPullRequestResultStateNotOwned        RunsOnPullRequestResultState = "not_owned"
+	RunsOnPullRequestResultStateNothingToChange RunsOnPullRequestResultState = "nothing_to_change"
+	RunsOnPullRequestResultStateOpened          RunsOnPullRequestResultState = "opened"
+)
+
+// Valid indicates whether the value is a known member of the RunsOnPullRequestResultState enum.
+func (e RunsOnPullRequestResultState) Valid() bool {
+	switch e {
+	case RunsOnPullRequestResultStateError:
+		return true
+	case RunsOnPullRequestResultStateExisting:
+		return true
+	case RunsOnPullRequestResultStateNotOwned:
+		return true
+	case RunsOnPullRequestResultStateNothingToChange:
+		return true
+	case RunsOnPullRequestResultStateOpened:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SettingsInsightsUpdatePeriod.
 const (
 	EveryNthRun SettingsInsightsUpdatePeriod = "every_nth_run"
@@ -3154,22 +3430,22 @@ func (e SshJoinRequestOs) Valid() bool {
 
 // Defines values for StalenessReason.
 const (
-	StalenessReasonGithubError       StalenessReason = "github_error"
-	StalenessReasonPermissionMissing StalenessReason = "permission_missing"
-	StalenessReasonSessionExpired    StalenessReason = "session_expired"
-	StalenessReasonUnreachable       StalenessReason = "unreachable"
+	GithubError       StalenessReason = "github_error"
+	PermissionMissing StalenessReason = "permission_missing"
+	SessionExpired    StalenessReason = "session_expired"
+	Unreachable       StalenessReason = "unreachable"
 )
 
 // Valid indicates whether the value is a known member of the StalenessReason enum.
 func (e StalenessReason) Valid() bool {
 	switch e {
-	case StalenessReasonGithubError:
+	case GithubError:
 		return true
-	case StalenessReasonPermissionMissing:
+	case PermissionMissing:
 		return true
-	case StalenessReasonSessionExpired:
+	case SessionExpired:
 		return true
-	case StalenessReasonUnreachable:
+	case Unreachable:
 		return true
 	default:
 		return false
@@ -3284,6 +3560,45 @@ func (e Theme) Valid() bool {
 	}
 }
 
+// Defines values for TimelineBarState.
+const (
+	TimelineBarStateDone          TimelineBarState = "done"
+	TimelineBarStateFailed        TimelineBarState = "failed"
+	TimelineBarStateForecast      TimelineBarState = "forecast"
+	TimelineBarStateNoRunnerFits  TimelineBarState = "no_runner_fits"
+	TimelineBarStateReserved      TimelineBarState = "reserved"
+	TimelineBarStateRunning       TimelineBarState = "running"
+	TimelineBarStateTimerRanOut   TimelineBarState = "timer_ran_out"
+	TimelineBarStateWaitingRoom   TimelineBarState = "waiting_room"
+	TimelineBarStateWaitingRunner TimelineBarState = "waiting_runner"
+)
+
+// Valid indicates whether the value is a known member of the TimelineBarState enum.
+func (e TimelineBarState) Valid() bool {
+	switch e {
+	case TimelineBarStateDone:
+		return true
+	case TimelineBarStateFailed:
+		return true
+	case TimelineBarStateForecast:
+		return true
+	case TimelineBarStateNoRunnerFits:
+		return true
+	case TimelineBarStateReserved:
+		return true
+	case TimelineBarStateRunning:
+		return true
+	case TimelineBarStateTimerRanOut:
+		return true
+	case TimelineBarStateWaitingRoom:
+		return true
+	case TimelineBarStateWaitingRunner:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for TimelineLaneOrigin.
 const (
 	TimelineLaneOriginCrsp   TimelineLaneOrigin = "crsp"
@@ -3338,6 +3653,36 @@ func (e TimelineSegmentMarkers) Valid() bool {
 	case AfterMergeWork:
 		return true
 	case IdleWhileWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for TimerSettingsProblemField.
+const (
+	HoldMinutes    TimerSettingsProblemField = "hold_minutes"
+	JobMinutes     TimerSettingsProblemField = "job_minutes"
+	QueuedMinutes  TimerSettingsProblemField = "queued_minutes"
+	RunMinutes     TimerSettingsProblemField = "run_minutes"
+	StartupMinutes TimerSettingsProblemField = "startup_minutes"
+	TimeoutMinutes TimerSettingsProblemField = "timeout_minutes"
+)
+
+// Valid indicates whether the value is a known member of the TimerSettingsProblemField enum.
+func (e TimerSettingsProblemField) Valid() bool {
+	switch e {
+	case HoldMinutes:
+		return true
+	case JobMinutes:
+		return true
+	case QueuedMinutes:
+		return true
+	case RunMinutes:
+		return true
+	case StartupMinutes:
+		return true
+	case TimeoutMinutes:
 		return true
 	default:
 		return false
@@ -3577,6 +3922,7 @@ const (
 	WaitReasonMachineDrained          WaitReason = "machine_drained"
 	WaitReasonNoRunnerWithLabels      WaitReason = "no_runner_with_labels"
 	WaitReasonOnBattery               WaitReason = "on_battery"
+	WaitReasonOverMemory              WaitReason = "over_memory"
 	WaitReasonPaused                  WaitReason = "paused"
 	WaitReasonRepositoryParallelLimit WaitReason = "repository_parallel_limit"
 	WaitReasonUnknown                 WaitReason = "unknown"
@@ -3596,6 +3942,8 @@ func (e WaitReason) Valid() bool {
 	case WaitReasonNoRunnerWithLabels:
 		return true
 	case WaitReasonOnBattery:
+		return true
+	case WaitReasonOverMemory:
 		return true
 	case WaitReasonPaused:
 		return true
@@ -3728,6 +4076,24 @@ func (e WorkflowCheckStatus) Valid() bool {
 	case WorkflowCheckStatusOk:
 		return true
 	case WorkflowCheckStatusSkip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for StatsWindow.
+const (
+	StatsWindowN24h StatsWindow = "24h"
+	StatsWindowN7d  StatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the StatsWindow enum.
+func (e StatsWindow) Valid() bool {
+	switch e {
+	case StatsWindowN24h:
+		return true
+	case StatsWindowN7d:
 		return true
 	default:
 		return false
@@ -4025,6 +4391,24 @@ func (e GetJobStatsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetMachineJobStatsParamsWindow.
+const (
+	GetMachineJobStatsParamsWindowN24h GetMachineJobStatsParamsWindow = "24h"
+	GetMachineJobStatsParamsWindowN7d  GetMachineJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetMachineJobStatsParamsWindow enum.
+func (e GetMachineJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetMachineJobStatsParamsWindowN24h:
+		return true
+	case GetMachineJobStatsParamsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DeleteRegistryLoginParamsKind.
 const (
 	DeleteRegistryLoginParamsKindContainer  DeleteRegistryLoginParamsKind = "container"
@@ -4040,6 +4424,24 @@ func (e DeleteRegistryLoginParamsKind) Valid() bool {
 	case DeleteRegistryLoginParamsKindPersistent:
 		return true
 	case DeleteRegistryLoginParamsKindVm:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetRunnerJobStatsParamsWindow.
+const (
+	GetRunnerJobStatsParamsWindowN24h GetRunnerJobStatsParamsWindow = "24h"
+	GetRunnerJobStatsParamsWindowN7d  GetRunnerJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetRunnerJobStatsParamsWindow enum.
+func (e GetRunnerJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetRunnerJobStatsParamsWindowN24h:
+		return true
+	case GetRunnerJobStatsParamsWindowN7d:
 		return true
 	default:
 		return false
@@ -4066,43 +4468,6 @@ func (e ListRunsParamsState) Valid() bool {
 		return false
 	}
 }
-
-// AccessCredential defines model for AccessCredential.
-type AccessCredential struct {
-	CreatedAt  time.Time  `json:"created_at"`
-	CreatedBy  string     `json:"created_by"`
-	Id         string     `json:"id"`
-	LastUsedAt *time.Time `json:"last_used_at,omitempty"`
-	Name       string     `json:"name"`
-	RevokedAt  *time.Time `json:"revoked_at,omitempty"`
-
-	// Scope `parity` is read only: the runner list and a doctor run.
-	Scope AccessScope `json:"scope"`
-}
-
-// AccessCredentialCreate defines model for AccessCredentialCreate.
-type AccessCredentialCreate struct {
-	Name string `json:"name"`
-
-	// Scope `parity` is read only: the runner list and a doctor run.
-	Scope AccessScope `json:"scope"`
-}
-
-// AccessCredentialCreated defines model for AccessCredentialCreated.
-type AccessCredentialCreated struct {
-	Info AccessCredential `json:"info"`
-
-	// Value The credential. Shown once.
-	Value string `json:"value"`
-}
-
-// AccessCredentialList defines model for AccessCredentialList.
-type AccessCredentialList struct {
-	Items []AccessCredential `json:"items"`
-}
-
-// AccessScope `parity` is read only: the runner list and a doctor run.
-type AccessScope string
 
 // AddUserRequest defines model for AddUserRequest.
 type AddUserRequest struct {
@@ -4177,6 +4542,44 @@ type ApplyPlanRequest struct {
 
 // Arch defines model for Arch.
 type Arch string
+
+// AssignLease defines model for AssignLease.
+type AssignLease struct {
+	Class *string `json:"class,omitempty"`
+	Cpus  *int    `json:"cpus,omitempty"`
+	Job   *string `json:"job,omitempty"`
+	JobId int64   `json:"job_id"`
+
+	// JobLabel The job-name routing label; empty when the job has none.
+	JobLabel  *string   `json:"job_label,omitempty"`
+	Labels    *[]string `json:"labels,omitempty"`
+	MachineId *string   `json:"machine_id,omitempty"`
+	MemoryGib *int      `json:"memory_gib,omitempty"`
+	Passes    *int      `json:"passes,omitempty"`
+	QueuedAt  time.Time `json:"queued_at"`
+
+	// Reason The console reason of a waiting job.
+	Reason *string `json:"reason,omitempty"`
+
+	// ReasonCode Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+	ReasonCode    *AssignReasonCode `json:"reason_code,omitempty"`
+	Repository    string            `json:"repository"`
+	ReservedSince *time.Time        `json:"reserved_since,omitempty"`
+	RunId         *int64            `json:"run_id,omitempty"`
+	RunnerName    *string           `json:"runner_name,omitempty"`
+	State         AssignLeaseState  `json:"state"`
+}
+
+// AssignLeaseList defines model for AssignLeaseList.
+type AssignLeaseList struct {
+	Leases []AssignLease `json:"leases"`
+}
+
+// AssignLeaseState defines model for AssignLeaseState.
+type AssignLeaseState string
+
+// AssignReasonCode Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+type AssignReasonCode string
 
 // AttemptRef defines model for AttemptRef.
 type AttemptRef struct {
@@ -4392,6 +4795,9 @@ type DayValue struct {
 	Day   openapi_types.Date `json:"day"`
 	Value float32            `json:"value"`
 }
+
+// DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
+type DiskFloorGib = int
 
 // DockerCompactMode The automatic compact of Docker's disk file. auto (default) is on for a Windows machine with a Docker Desktop disk file and off elsewhere (caches R5.51 to R5.54).
 type DockerCompactMode string
@@ -4761,6 +5167,181 @@ type Health struct {
 
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
+
+// HealthBoot defines model for HealthBoot.
+type HealthBoot struct {
+	LastBootAt *time.Time `json:"last_boot_at,omitempty"`
+
+	// UnexpectedRestart Booted in the last 24 hours without a restart crsp asked for.
+	UnexpectedRestart *bool   `json:"unexpected_restart,omitempty"`
+	UnknownReason     *string `json:"unknown_reason,omitempty"`
+	UptimeSeconds     *int64  `json:"uptime_seconds,omitempty"`
+}
+
+// HealthConnectivity defines model for HealthConnectivity.
+type HealthConnectivity struct {
+	// ClockSkewSeconds Agent clock minus controller clock; positive means the agent is ahead.
+	ClockSkewSeconds *float32      `json:"clock_skew_seconds,omitempty"`
+	Dns              *HealthDns    `json:"dns,omitempty"`
+	Github           *HealthGithub `json:"github,omitempty"`
+	LastHeartbeatAt  *time.Time    `json:"last_heartbeat_at,omitempty"`
+	Reconnects24h    *int          `json:"reconnects_24h,omitempty"`
+
+	// RttMs Agent to controller round trip, from the heartbeats.
+	RttMs *int64 `json:"rtt_ms,omitempty"`
+}
+
+// HealthDns defines model for HealthDns.
+type HealthDns struct {
+	Error *string `json:"error,omitempty"`
+	Ok    *bool   `json:"ok,omitempty"`
+}
+
+// HealthDockerUse defines model for HealthDockerUse.
+type HealthDockerUse struct {
+	BuildCacheBytes *int64     `json:"build_cache_bytes,omitempty"`
+	ContainersBytes *int64     `json:"containers_bytes,omitempty"`
+	ImagesBytes     *int64     `json:"images_bytes,omitempty"`
+	ReadAt          *time.Time `json:"read_at,omitempty"`
+	UnknownReason   *string    `json:"unknown_reason,omitempty"`
+	VolumesBytes    *int64     `json:"volumes_bytes,omitempty"`
+}
+
+// HealthGithub defines model for HealthGithub.
+type HealthGithub struct {
+	CheckedAt *time.Time `json:"checked_at,omitempty"`
+	Error     *string    `json:"error,omitempty"`
+	LatencyMs *int64     `json:"latency_ms,omitempty"`
+	Reachable *bool      `json:"reachable,omitempty"`
+}
+
+// HealthLoad defines model for HealthLoad.
+type HealthLoad struct {
+	Load1              *float32 `json:"load1,omitempty"`
+	Load15             *float32 `json:"load15,omitempty"`
+	Load5              *float32 `json:"load5,omitempty"`
+	LoadUnknownReason  *string  `json:"load_unknown_reason,omitempty"`
+	StealPct           *float32 `json:"steal_pct,omitempty"`
+	StealUnknownReason *string  `json:"steal_unknown_reason,omitempty"`
+}
+
+// HealthOom defines model for HealthOom.
+type HealthOom struct {
+	LastKillAt *time.Time `json:"last_kill_at,omitempty"`
+
+	// Recent A kill inside the Doctor window (default 1 hour).
+	Recent        *bool             `json:"recent,omitempty"`
+	Scopes        *[]HealthOomScope `json:"scopes,omitempty"`
+	TotalKills    *int64            `json:"total_kills,omitempty"`
+	UnknownReason *string           `json:"unknown_reason,omitempty"`
+}
+
+// HealthOomScope defines model for HealthOomScope.
+type HealthOomScope struct {
+	Kills int64               `json:"kills"`
+	Name  string              `json:"name"`
+	Scope HealthOomScopeScope `json:"scope"`
+}
+
+// HealthOomScopeScope defines model for HealthOomScope.Scope.
+type HealthOomScopeScope string
+
+// HealthPower defines model for HealthPower.
+type HealthPower struct {
+	LastWakeAt *time.Time `json:"last_wake_at,omitempty"`
+	OnBattery  *bool      `json:"on_battery,omitempty"`
+
+	// SleepEnabled A setting can suspend or hibernate the machine.
+	SleepEnabled        *bool     `json:"sleep_enabled,omitempty"`
+	SleepModes          *[]string `json:"sleep_modes,omitempty"`
+	SleepUnknownReason  *string   `json:"sleep_unknown_reason,omitempty"`
+	SourceUnknownReason *string   `json:"source_unknown_reason,omitempty"`
+}
+
+// HealthSwap defines model for HealthSwap.
+type HealthSwap struct {
+	TotalBytes    *int64  `json:"total_bytes,omitempty"`
+	UnknownReason *string `json:"unknown_reason,omitempty"`
+	UsedBytes     *int64  `json:"used_bytes,omitempty"`
+}
+
+// HealthThermal defines model for HealthThermal.
+type HealthThermal struct {
+	MaxTempCelsius *float32 `json:"max_temp_celsius,omitempty"`
+	ThrottleDetail *string  `json:"throttle_detail,omitempty"`
+	Throttled      *bool    `json:"throttled,omitempty"`
+	UnknownReason  *string  `json:"unknown_reason,omitempty"`
+}
+
+// HealthThresholds defines model for HealthThresholds.
+type HealthThresholds struct {
+	// ClockSkewSeconds A clock this far from the controller is a finding (default 30).
+	ClockSkewSeconds int `json:"clock_skew_seconds"`
+
+	// DiskDaysUnder A disk that fills in fewer days is a finding (default 3).
+	DiskDaysUnder int `json:"disk_days_under"`
+
+	// DiskFreePctUnder A disk with less free space is a finding (default 10).
+	DiskFreePctUnder int `json:"disk_free_pct_under"`
+
+	// NoHeartbeatSeconds No heartbeat for this long is a finding (default 120).
+	NoHeartbeatSeconds int `json:"no_heartbeat_seconds"`
+
+	// OomWindowMinutes An OOM kill this recent is a finding (default 60).
+	OomWindowMinutes int `json:"oom_window_minutes"`
+}
+
+// HealthUpdates defines model for HealthUpdates.
+type HealthUpdates struct {
+	ActiveHoursEnd *int `json:"active_hours_end,omitempty"`
+
+	// ActiveHoursStart Windows Update active hours, local hour 0 to 23.
+	ActiveHoursStart   *int    `json:"active_hours_start,omitempty"`
+	AutoUpdateState    *string `json:"auto_update_state,omitempty"`
+	PendingUpdateCount *int    `json:"pending_update_count,omitempty"`
+
+	// RestartMayHappenNow A restart is pending and the OS may do it now.
+	RestartMayHappenNow *bool `json:"restart_may_happen_now,omitempty"`
+
+	// RestartMayHitJobs It may happen now and the machine runs or takes jobs.
+	RestartMayHitJobs *bool     `json:"restart_may_hit_jobs,omitempty"`
+	RestartPending    *bool     `json:"restart_pending,omitempty"`
+	RestartReasons    *[]string `json:"restart_reasons,omitempty"`
+	UnknownReason     *string   `json:"unknown_reason,omitempty"`
+}
+
+// HealthVersions defines model for HealthVersions.
+type HealthVersions struct {
+	Agent          *string `json:"agent,omitempty"`
+	AgentOutOfDate *bool   `json:"agent_out_of_date,omitempty"`
+	Controller     *string `json:"controller,omitempty"`
+	Docker         *string `json:"docker,omitempty"`
+	DockerKind     *string `json:"docker_kind,omitempty"`
+	LatestRunner   *string `json:"latest_runner,omitempty"`
+
+	// RunnerApp The oldest runner app on the machine.
+	RunnerApp       *string `json:"runner_app,omitempty"`
+	RunnerOutOfDate *bool   `json:"runner_out_of_date,omitempty"`
+	Wsl             *string `json:"wsl,omitempty"`
+}
+
+// HealthVolume defines model for HealthVolume.
+type HealthVolume struct {
+	// DaysNote Why days_until_full is absent.
+	DaysNote *string `json:"days_note,omitempty"`
+
+	// DaysUntilFull From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.
+	DaysUntilFull *float32         `json:"days_until_full,omitempty"`
+	FreeBytes     *int64           `json:"free_bytes,omitempty"`
+	FreePct       *float32         `json:"free_pct,omitempty"`
+	Path          string           `json:"path"`
+	Role          HealthVolumeRole `json:"role"`
+	TotalBytes    *int64           `json:"total_bytes,omitempty"`
+	UnknownReason *string          `json:"unknown_reason,omitempty"`
+}
+
+// HealthVolumeRole defines model for HealthVolume.Role.
+type HealthVolumeRole string
 
 // HistoryPoint One earlier run of a job key.
 type HistoryPoint struct {
@@ -5484,6 +6065,77 @@ type JobStats struct {
 	Hours          []HourStat      `json:"hours"`
 }
 
+// JobStatsCounts defines model for JobStatsCounts.
+type JobStatsCounts struct {
+	Cancelled int64 `json:"cancelled"`
+	Failed    int64 `json:"failed"`
+
+	// Other No known result (a job crsp lost).
+	Other      int64 `json:"other"`
+	OverMemory int64 `json:"over_memory"`
+
+	// Stopped Stopped by crsp (a drain, a Stop, a removal).
+	Stopped   int64 `json:"stopped"`
+	Succeeded int64 `json:"succeeded"`
+
+	// TimedOut Ended by the crsp job timer, or by GitHub as timed out.
+	TimedOut int64 `json:"timed_out"`
+	Total    int64 `json:"total"`
+}
+
+// JobStatsFailingJob defines model for JobStatsFailingJob.
+type JobStatsFailingJob struct {
+	Failures   int64     `json:"failures"`
+	Job        string    `json:"job"`
+	LastAt     time.Time `json:"last_at"`
+	Repository string    `json:"repository"`
+}
+
+// JobStatsFailure defines model for JobStatsFailure.
+type JobStatsFailure struct {
+	At         time.Time            `json:"at"`
+	Class      JobStatsFailureClass `json:"class"`
+	Job        string               `json:"job"`
+	JobId      int64                `json:"job_id"`
+	JobUrl     *string              `json:"job_url,omitempty"`
+	Repository string               `json:"repository"`
+	RunId      int64                `json:"run_id"`
+	RunUrl     *string              `json:"run_url,omitempty"`
+}
+
+// JobStatsFailureClass defines model for JobStatsFailure.Class.
+type JobStatsFailureClass string
+
+// JobStatsRates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+type JobStatsRates struct {
+	Cancelled  *float32 `json:"cancelled,omitempty"`
+	Failed     *float32 `json:"failed,omitempty"`
+	OverMemory *float32 `json:"over_memory,omitempty"`
+	Stopped    *float32 `json:"stopped,omitempty"`
+	Succeeded  *float32 `json:"succeeded,omitempty"`
+	TimedOut   *float32 `json:"timed_out,omitempty"`
+}
+
+// JobStatsSet defines model for JobStatsSet.
+type JobStatsSet struct {
+	AvgQueueWaitSeconds *float32 `json:"avg_queue_wait_seconds,omitempty"`
+
+	// AvgRunSeconds Absent when no job in the window has times.
+	AvgRunSeconds *float32 `json:"avg_run_seconds,omitempty"`
+
+	// BusyPct Busy seconds over the window times the slots (a runner has one), 0 to 100.
+	BusyPct *float32 `json:"busy_pct,omitempty"`
+
+	// BusySeconds Time jobs ran inside the window, summed.
+	BusySeconds *float32         `json:"busy_seconds,omitempty"`
+	Counts      JobStatsCounts   `json:"counts"`
+	LastFailure *JobStatsFailure `json:"last_failure,omitempty"`
+
+	// Rates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+	Rates      *JobStatsRates       `json:"rates,omitempty"`
+	TopFailing []JobStatsFailingJob `json:"top_failing"`
+}
+
 // JobSummary One job type of one repository on one day (OPS34 D2).
 type JobSummary struct {
 	Day        string `json:"day"`
@@ -5501,6 +6153,38 @@ type JobSummary struct {
 type JobSummaryList struct {
 	Items []JobSummary `json:"items"`
 }
+
+// JobTimer defines model for JobTimer.
+type JobTimer struct {
+	CanExtend  bool `json:"can_extend"`
+	CanStopNow bool `json:"can_stop_now"`
+
+	// CoveredByRun The run timer ran out too; the run is cancelled and this job is not stopped on its own.
+	CoveredByRun bool `json:"covered_by_run"`
+
+	// Deadline During the grace, when crsp acts. The countdown is deadline minus now.
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	JobId          int64      `json:"job_id"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note What crsp did, for example "stopped by crsp: job timer 30:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      *int64  `json:"run_id,omitempty"`
+
+	// StartedAt The job's first real step.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     JobTimerState `json:"state"`
+
+	// Text The state in words, for example "Job timer ran out at 30:00; stopping in 30 s".
+	Text string `json:"text"`
+}
+
+// JobTimerState defines model for JobTimer.State.
+type JobTimerState string
 
 // JoinCode defines model for JoinCode.
 type JoinCode struct {
@@ -5635,6 +6319,43 @@ type ListenAddressChoice struct {
 type ListenAddressChosen struct {
 	Address    string `json:"address"`
 	Restarting bool   `json:"restarting"`
+}
+
+// ListenerGate defines model for ListenerGate.
+type ListenerGate struct {
+	Enforce bool                 `json:"enforce"`
+	Runners []ListenerGateRunner `json:"runners"`
+
+	// WakeEveryDays Fixed at 7.
+	WakeEveryDays int `json:"wake_every_days"`
+}
+
+// ListenerGateInput defines model for ListenerGateInput.
+type ListenerGateInput struct {
+	// Enforce True switches the gate on; false is observe mode.
+	Enforce bool `json:"enforce"`
+}
+
+// ListenerGateRunner defines model for ListenerGateRunner.
+type ListenerGateRunner struct {
+	// JobIds The jobs that hold the listener.
+	JobIds *[]int64 `json:"job_ids,omitempty"`
+
+	// LastWake Absent when the runner was never woken.
+	LastWake   *time.Time `json:"last_wake,omitempty"`
+	ListenerOn bool       `json:"listener_on"`
+	MachineId  string     `json:"machine_id"`
+
+	// NextWake When the weekly wake-up is due.
+	NextWake time.Time `json:"next_wake"`
+	Os       string    `json:"os"`
+
+	// QueueText Why jobs wait for this runner, in the owner's words. Absent when none wait.
+	QueueText  *string `json:"queue_text,omitempty"`
+	RunnerName string  `json:"runner_name"`
+
+	// Text `gated: offline by design`, or that the listener is on for an admitted job.
+	Text string `json:"text"`
 }
 
 // Load defines model for Load.
@@ -5773,6 +6494,41 @@ type MachineFacts struct {
 	Threads       *int    `json:"threads,omitempty"`
 }
 
+// MachineHealth A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
+type MachineHealth struct {
+	Boot         *HealthBoot         `json:"boot,omitempty"`
+	Connectivity *HealthConnectivity `json:"connectivity,omitempty"`
+	DockerUse    *HealthDockerUse    `json:"docker_use,omitempty"`
+	Load         *HealthLoad         `json:"load,omitempty"`
+	MachineId    string              `json:"machine_id"`
+	Oom          *HealthOom          `json:"oom,omitempty"`
+	Power        *HealthPower        `json:"power,omitempty"`
+	ReceivedAt   *time.Time          `json:"received_at,omitempty"`
+
+	// Reported False until the first report arrives; every other field is absent then.
+	Reported bool `json:"reported"`
+
+	// Stale The last report is older than 3 minutes.
+	Stale    bool            `json:"stale"`
+	Swap     *HealthSwap     `json:"swap,omitempty"`
+	Thermal  *HealthThermal  `json:"thermal,omitempty"`
+	Updates  *HealthUpdates  `json:"updates,omitempty"`
+	Versions *HealthVersions `json:"versions,omitempty"`
+	Volumes  []HealthVolume  `json:"volumes"`
+}
+
+// MachineJobStats defines model for MachineJobStats.
+type MachineJobStats struct {
+	From    time.Time             `json:"from"`
+	Machine JobStatsSet           `json:"machine"`
+	Runners []RunnerJobStatsEntry `json:"runners"`
+	To      time.Time             `json:"to"`
+	Window  MachineJobStatsWindow `json:"window"`
+}
+
+// MachineJobStatsWindow defines model for MachineJobStats.Window.
+type MachineJobStatsWindow string
+
 // MachineList defines model for MachineList.
 type MachineList struct {
 	Items []Machine `json:"items"`
@@ -5791,7 +6547,13 @@ type MachinePolicy struct {
 
 	// CpuCapState What the agent did with the CPU cap. not_supported is macOS (machines R5.64). applying is the wait until the agent reports the result for the chosen percent.
 	CpuCapState *CpuCapState `json:"cpu_cap_state,omitempty"`
-	OnBattery   bool         `json:"on_battery"`
+
+	// DiskFloorGib The free-disk floor in force on the agent, in GiB (runners R5.83). 0 while it is off or the agent has not reported it.
+	DiskFloorGib *int `json:"disk_floor_gib,omitempty"`
+
+	// DiskFloorOff The floor is off because config.toml or the agent flag says so. The console shows it read-only; a console value is refused.
+	DiskFloorOff *bool `json:"disk_floor_off,omitempty"`
+	OnBattery    bool  `json:"on_battery"`
 }
 
 // MachineRecovery Present only when the agent of the machine needs recovery (operations R5.44, web-console R5.33).
@@ -5826,6 +6588,9 @@ type MachineSettings struct {
 
 	// CpuCapPct The share of the whole machine's CPU the runner processes may use, in percent (machines R5.64). Separate from the load budget. 100 is no cap.
 	CpuCapPct *CpuCapPct `json:"cpu_cap_pct,omitempty"`
+
+	// DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
+	DiskFloorGib *DiskFloorGib `json:"disk_floor_gib,omitempty"`
 
 	// DockerCompact The automatic compact of Docker's disk file. auto (default) is on for a Windows machine with a Docker Desktop disk file and off elsewhere (caches R5.51 to R5.54).
 	DockerCompact *DockerCompactMode `json:"docker_compact,omitempty"`
@@ -5886,6 +6651,9 @@ type MachineSettingsUpdate struct {
 
 	// CpuCapPct The share of the whole machine's CPU the runner processes may use, in percent (machines R5.64). Separate from the load budget. 100 is no cap.
 	CpuCapPct *CpuCapPct `json:"cpu_cap_pct,omitempty"`
+
+	// DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
+	DiskFloorGib *DiskFloorGib `json:"disk_floor_gib,omitempty"`
 
 	// DockerCompact The automatic compact of Docker's disk file. auto (default) is on for a Windows machine with a Docker Desktop disk file and off elsewhere (caches R5.51 to R5.54).
 	DockerCompact *DockerCompactMode `json:"docker_compact,omitempty"`
@@ -6043,6 +6811,12 @@ type NotificationTestResult struct {
 // OS defines model for OS.
 type OS string
 
+// OpenRunsOnPullRequestsRequest Name one repository, or set all to cover every repository whose pool is on.
+type OpenRunsOnPullRequestsRequest struct {
+	All          *bool  `json:"all,omitempty"`
+	RepositoryId *int64 `json:"repository_id,omitempty"`
+}
+
 // OrgPool defines model for OrgPool.
 type OrgPool struct {
 	ChangedAt *time.Time `json:"changed_at,omitempty"`
@@ -6098,49 +6872,6 @@ type Overview struct {
 	// Waiting Why each queued or held job waits, in words, first blocking reason only, in the order of the queue (scheduling R5.48, web-console R5.20).
 	Waiting *[]WaitingJob `json:"waiting,omitempty"`
 }
-
-// ParityAddress defines model for ParityAddress.
-type ParityAddress struct {
-	// Problem Why the address does not answer, or why the controller has none.
-	Problem *string `json:"problem,omitempty"`
-
-	// Setting The setting to fix when the controller has no address a runner can reach.
-	Setting *string             `json:"setting,omitempty"`
-	Status  ParityAddressStatus `json:"status"`
-
-	// Url The address that will be written as CRSP_URL. Empty with needs_address.
-	Url *string `json:"url,omitempty"`
-}
-
-// ParityAddressStatus defines model for ParityAddress.Status.
-type ParityAddressStatus string
-
-// ParitySetup defines model for ParitySetup.
-type ParitySetup struct {
-	// AccessId The id of the access credential that was made.
-	AccessId *string `json:"access_id,omitempty"`
-
-	// AccessName The name of the repository Actions value that holds the access, CRSP_ACCESS.
-	AccessName *string `json:"access_name,omitempty"`
-
-	// AddressProblem With needs_address, why the controller has no address a runner can reach.
-	AddressProblem *string `json:"address_problem,omitempty"`
-
-	// AddressSetting With needs_address, the setting to fix.
-	AddressSetting *string `json:"address_setting,omitempty"`
-
-	// Grant github-integration R5.86.
-	Grant              *GithubGrant      `json:"grant,omitempty"`
-	MissingPermissions *[]string         `json:"missing_permissions,omitempty"`
-	Status             ParitySetupStatus `json:"status"`
-	VariableNames      *[]string         `json:"variable_names,omitempty"`
-}
-
-// ParitySetupStatus defines model for ParitySetup.Status.
-type ParitySetupStatus string
-
-// ParitySetupRequest No fields. The address is the controller's own, never one the browser sends (CRSP141).
-type ParitySetupRequest = map[string]interface{}
 
 // PauseReason Why a machine takes no new job (machines R5.62). Other features read these exact names.
 type PauseReason string
@@ -7014,11 +7745,8 @@ type RepositoryPolicy struct {
 	HostedLabels *map[string]string `json:"hosted_labels,omitempty"`
 
 	// Labels Generic labels only (github-integration R5.27).
-	Labels []string `json:"labels"`
-
-	// LegacyVars Also write CI_RUNS_ON and CI_RUNS_ON_WINDOWS with the same labels as RUNS_ON_LINUX and RUNS_ON_WINDOWS, for workflows that still follow the old dev-standards templates (github-integration R5.39). Off by default; for the move from the old pool.
-	LegacyVars      *bool `json:"legacy_vars,omitempty"`
-	MaxParallelJobs int   `json:"max_parallel_jobs"`
+	Labels          []string `json:"labels"`
+	MaxParallelJobs int      `json:"max_parallel_jobs"`
 
 	// Priority Higher goes first (scheduling R5.8).
 	Priority     int      `json:"priority"`
@@ -7055,14 +7783,11 @@ type RepositoryPolicyUpdate struct {
 	HostedFallback *bool `json:"hosted_fallback,omitempty"`
 
 	// HostedLabels Hosted label per operating system (linux, windows, macos); an empty value puts the default back.
-	HostedLabels *map[string]string `json:"hosted_labels,omitempty"`
-	Labels       *[]string          `json:"labels,omitempty"`
-
-	// LegacyVars Turn the old variable names CI_RUNS_ON and CI_RUNS_ON_WINDOWS on or off (github-integration R5.39).
-	LegacyVars      *bool     `json:"legacy_vars,omitempty"`
-	MaxParallelJobs *int      `json:"max_parallel_jobs,omitempty"`
-	Priority        *int      `json:"priority,omitempty"`
-	RunnerGroups    *[]string `json:"runner_groups,omitempty"`
+	HostedLabels    *map[string]string `json:"hosted_labels,omitempty"`
+	Labels          *[]string          `json:"labels,omitempty"`
+	MaxParallelJobs *int               `json:"max_parallel_jobs,omitempty"`
+	Priority        *int               `json:"priority,omitempty"`
+	RunnerGroups    *[]string          `json:"runner_groups,omitempty"`
 
 	// RunnerKinds Set which runners take the repository's jobs (github-integration R5.60). default clears the owner's choice, so the default of the visibility applies.
 	RunnerKinds *RepositoryPolicyUpdateRunnerKinds `json:"runner_kinds,omitempty"`
@@ -7317,6 +8042,32 @@ type RunSummaryOverallState string
 // RunSummaryState defines model for RunSummary.State.
 type RunSummaryState string
 
+// RunTimer defines model for RunTimer.
+type RunTimer struct {
+	CanCancelNow   bool       `json:"can_cancel_now"`
+	CanExtend      bool       `json:"can_extend"`
+	Deadline       *time.Time `json:"deadline,omitempty"`
+	ElapsedSeconds *int       `json:"elapsed_seconds,omitempty"`
+	Extended       bool       `json:"extended"`
+	LimitSeconds   *int       `json:"limit_seconds,omitempty"`
+
+	// Note For example "cancelled by crsp: run timer 45:00".
+	Note       *string `json:"note,omitempty"`
+	Repository *string `json:"repository,omitempty"`
+	RunAttempt *int    `json:"run_attempt,omitempty"`
+	RunId      int64   `json:"run_id"`
+
+	// StartedAt The first job's real start.
+	StartedAt *time.Time    `json:"started_at,omitempty"`
+	State     RunTimerState `json:"state"`
+
+	// Text For example "Run timer ran out at 45:00; cancelling in 30 s".
+	Text string `json:"text"`
+}
+
+// RunTimerState defines model for RunTimer.State.
+type RunTimerState string
+
 // RunWaste defines model for RunWaste.
 type RunWaste struct {
 	Kind    RunWasteKind `json:"kind"`
@@ -7380,10 +8131,80 @@ type Runner struct {
 	UncleanReason *string `json:"unclean_reason,omitempty"`
 }
 
+// RunnerClassSize defines model for RunnerClassSize.
+type RunnerClassSize struct {
+	Class     RunnerClassSizeClass `json:"class"`
+	Cpus      int                  `json:"cpus"`
+	MemoryGib int                  `json:"memory_gib"`
+}
+
+// RunnerClassSizeClass defines model for RunnerClassSize.Class.
+type RunnerClassSizeClass string
+
+// RunnerClasses defines model for RunnerClasses.
+type RunnerClasses struct {
+	// Classes small, medium, large, xl.
+	Classes []RunnerClassSize `json:"classes"`
+
+	// Hints Notes that never block a save.
+	Hints []string `json:"hints"`
+
+	// Preset The preset the table equals, or custom.
+	Preset  string                 `json:"preset"`
+	Presets []RunnerClassesPresets `json:"presets"`
+
+	// ReserveAfterMinutes Default 10.
+	ReserveAfterMinutes int `json:"reserve_after_minutes"`
+
+	// ReserveAfterPasses Default 3.
+	ReserveAfterPasses int `json:"reserve_after_passes"`
+
+	// Unheld Classes no machine's pool can hold. A note, not an error.
+	Unheld []string `json:"unheld"`
+}
+
+// RunnerClassesPresets defines model for RunnerClasses.Presets.
+type RunnerClassesPresets string
+
+// RunnerClassesInput defines model for RunnerClassesInput.
+type RunnerClassesInput struct {
+	Classes *[]RunnerClassSize `json:"classes,omitempty"`
+
+	// ConfirmLowering Needed when a size that runners use gets smaller.
+	ConfirmLowering *bool `json:"confirm_lowering,omitempty"`
+
+	// Preset Sets the table to that preset. Ignored when `classes` is given.
+	Preset              *RunnerClassesInputPreset `json:"preset,omitempty"`
+	ReserveAfterMinutes *int                      `json:"reserve_after_minutes,omitempty"`
+	ReserveAfterPasses  *int                      `json:"reserve_after_passes,omitempty"`
+}
+
+// RunnerClassesInputPreset Sets the table to that preset. Ignored when `classes` is given.
+type RunnerClassesInputPreset string
+
 // RunnerEnv defines model for RunnerEnv.
 type RunnerEnv struct {
 	RunnerId string           `json:"runner_id"`
 	Vars     []ResolvedEnvVar `json:"vars"`
+}
+
+// RunnerJobStats defines model for RunnerJobStats.
+type RunnerJobStats struct {
+	From     time.Time            `json:"from"`
+	RunnerId string               `json:"runner_id"`
+	Stats    JobStatsSet          `json:"stats"`
+	To       time.Time            `json:"to"`
+	Window   RunnerJobStatsWindow `json:"window"`
+}
+
+// RunnerJobStatsWindow defines model for RunnerJobStats.Window.
+type RunnerJobStatsWindow string
+
+// RunnerJobStatsEntry defines model for RunnerJobStatsEntry.
+type RunnerJobStatsEntry struct {
+	RunnerId   string      `json:"runner_id"`
+	RunnerName string      `json:"runner_name"`
+	Stats      JobStatsSet `json:"stats"`
 }
 
 // RunnerKind defines model for RunnerKind.
@@ -7480,6 +8301,51 @@ type RunsOnFindingKind string
 type RunsOnFindingList struct {
 	CheckedAt *time.Time      `json:"checked_at,omitempty"`
 	Items     []RunsOnFinding `json:"items"`
+}
+
+// RunsOnPullRequestFile defines model for RunsOnPullRequestFile.
+type RunsOnPullRequestFile struct {
+	Changes int    `json:"changes"`
+	Diff    string `json:"diff"`
+	Path    string `json:"path"`
+}
+
+// RunsOnPullRequestPreview defines model for RunsOnPullRequestPreview.
+type RunsOnPullRequestPreview struct {
+	// Diff The whole change as a unified diff.
+	Diff         string                        `json:"diff"`
+	Files        []RunsOnPullRequestFile       `json:"files"`
+	FullName     string                        `json:"full_name"`
+	Message      *string                       `json:"message,omitempty"`
+	RepositoryId int64                         `json:"repository_id"`
+	Skipped      []string                      `json:"skipped"`
+	State        RunsOnPullRequestPreviewState `json:"state"`
+}
+
+// RunsOnPullRequestPreviewState defines model for RunsOnPullRequestPreview.State.
+type RunsOnPullRequestPreviewState string
+
+// RunsOnPullRequestPreviewList defines model for RunsOnPullRequestPreviewList.
+type RunsOnPullRequestPreviewList struct {
+	Items []RunsOnPullRequestPreview `json:"items"`
+}
+
+// RunsOnPullRequestResult defines model for RunsOnPullRequestResult.
+type RunsOnPullRequestResult struct {
+	FullName     string                       `json:"full_name"`
+	Message      *string                      `json:"message,omitempty"`
+	Number       *int                         `json:"number,omitempty"`
+	RepositoryId int64                        `json:"repository_id"`
+	State        RunsOnPullRequestResultState `json:"state"`
+	Url          *string                      `json:"url,omitempty"`
+}
+
+// RunsOnPullRequestResultState defines model for RunsOnPullRequestResult.State.
+type RunsOnPullRequestResultState string
+
+// RunsOnPullRequestResultList defines model for RunsOnPullRequestResultList.
+type RunsOnPullRequestResultList struct {
+	Items []RunsOnPullRequestResult `json:"items"`
 }
 
 // Session defines model for Session.
@@ -7797,6 +8663,48 @@ type Ticket struct {
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 }
 
+// Timeline defines model for Timeline.
+type Timeline struct {
+	Bars []TimelineBar `json:"bars"`
+
+	// From The earliest time loaded.
+	From       time.Time     `json:"from"`
+	MoreBefore bool          `json:"more_before"`
+	Now        time.Time     `json:"now"`
+	Rows       []TimelineRow `json:"rows"`
+
+	// To The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+	To time.Time `json:"to"`
+}
+
+// TimelineBar defines model for TimelineBar.
+type TimelineBar struct {
+	// Detail The words of the bar for a screen reader and the tooltip.
+	Detail *string `json:"detail,omitempty"`
+
+	// End Absent while the job runs; the chart ends the bar at now.
+	End   *time.Time `json:"end,omitempty"`
+	EndHi *time.Time `json:"end_hi,omitempty"`
+	EndLo *time.Time `json:"end_lo,omitempty"`
+	Id    string     `json:"id"`
+
+	// JobId Absent when the bar is a forecast of a job that has no record yet.
+	JobId      *int64    `json:"job_id,omitempty"`
+	Label      string    `json:"label"`
+	Repository *string   `json:"repository,omitempty"`
+	RowId      string    `json:"row_id"`
+	Start      time.Time `json:"start"`
+
+	// State How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+	State TimelineBarState `json:"state"`
+
+	// WaitFrom When the job began to wait (the light part before the bar).
+	WaitFrom *time.Time `json:"wait_from,omitempty"`
+}
+
+// TimelineBarState How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+type TimelineBarState string
+
 // TimelineLane defines model for TimelineLane.
 type TimelineLane struct {
 	Labels      *[]string          `json:"labels,omitempty"`
@@ -7808,6 +8716,20 @@ type TimelineLane struct {
 
 // TimelineLaneOrigin defines model for TimelineLane.Origin.
 type TimelineLaneOrigin string
+
+// TimelineRow defines model for TimelineRow.
+type TimelineRow struct {
+	// Key `<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet.
+	Key string `json:"key"`
+
+	// Label For example `M1 slot 1`.
+	Label       string `json:"label"`
+	MachineId   string `json:"machine_id"`
+	MachineName string `json:"machine_name"`
+
+	// Slot 1-based. Absent on the waiting row.
+	Slot *int `json:"slot,omitempty"`
+}
 
 // TimelineSegment defines model for TimelineSegment.
 type TimelineSegment struct {
@@ -7835,6 +8757,67 @@ type TimelineSegmentKind string
 
 // TimelineSegmentMarkers defines model for TimelineSegment.Markers.
 type TimelineSegmentMarkers string
+
+// TimerSettings defines model for TimerSettings.
+type TimerSettings struct {
+	// Enforce Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes.
+	Enforce bool `json:"enforce"`
+
+	// ExtendMinutes Fixed at 10.
+	ExtendMinutes int `json:"extend_minutes"`
+
+	// GraceSeconds Fixed at 30.
+	GraceSeconds int `json:"grace_seconds"`
+
+	// HoldMinutes The hold of the job-started hook, at most 2. Default 2.
+	HoldMinutes int `json:"hold_minutes"`
+
+	// JobMinutes The job timer, from the first real step. Default 30.
+	JobMinutes int `json:"job_minutes"`
+
+	// QueuedMinutes Alert for a job that waits this long in GitHub's queue. Default 720 (12 h).
+	QueuedMinutes int `json:"queued_minutes"`
+
+	// RunMinutes The run timer, from the first job's real start. Default 45.
+	RunMinutes int `json:"run_minutes"`
+
+	// StartupMinutes A runner that has not started its job in this time is removed and the job admitted again. Default 2.
+	StartupMinutes int `json:"startup_minutes"`
+
+	// TimeoutMinutes timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60.
+	TimeoutMinutes int `json:"timeout_minutes"`
+}
+
+// TimerSettingsCheck defines model for TimerSettingsCheck.
+type TimerSettingsCheck struct {
+	Ok       bool                   `json:"ok"`
+	Problems []TimerSettingsProblem `json:"problems"`
+
+	// Settings The settings as they would be after the change.
+	Settings TimerSettings `json:"settings"`
+}
+
+// TimerSettingsInput Only the fields given change.
+type TimerSettingsInput struct {
+	Enforce        *bool `json:"enforce,omitempty"`
+	HoldMinutes    *int  `json:"hold_minutes,omitempty"`
+	JobMinutes     *int  `json:"job_minutes,omitempty"`
+	QueuedMinutes  *int  `json:"queued_minutes,omitempty"`
+	RunMinutes     *int  `json:"run_minutes,omitempty"`
+	StartupMinutes *int  `json:"startup_minutes,omitempty"`
+	TimeoutMinutes *int  `json:"timeout_minutes,omitempty"`
+}
+
+// TimerSettingsProblem defines model for TimerSettingsProblem.
+type TimerSettingsProblem struct {
+	Field TimerSettingsProblemField `json:"field"`
+
+	// Message In the owner's words.
+	Message string `json:"message"`
+}
+
+// TimerSettingsProblemField defines model for TimerSettingsProblem.Field.
+type TimerSettingsProblemField string
 
 // Trial defines model for Trial.
 type Trial struct {
@@ -8242,6 +9225,15 @@ type RunnerId = string
 // SetName defines model for SetName.
 type SetName = string
 
+// StatsWindow defines model for StatsWindow.
+type StatsWindow string
+
+// TimerAttempt defines model for TimerAttempt.
+type TimerAttempt = int
+
+// TimerRunId defines model for TimerRunId.
+type TimerRunId = int64
+
 // To defines model for To.
 type To = time.Time
 
@@ -8256,6 +9248,12 @@ type Error = ErrorEnvelope
 
 // ExportFile defines model for ExportFile.
 type ExportFile = string
+
+// ListAssignLeasesParams defines parameters for ListAssignLeases.
+type ListAssignLeasesParams struct {
+	// State Only leases in this state.
+	State *AssignLeaseState `form:"state,omitempty" json:"state,omitempty"`
+}
 
 // ListAuditEventsParams defines parameters for ListAuditEvents.
 type ListAuditEventsParams struct {
@@ -8563,6 +9561,15 @@ type StartDockerCompactParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetMachineJobStatsParams defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetMachineJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetMachineJobStatsParamsWindow defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParamsWindow string
+
 // GetMachineLoadParams defines parameters for GetMachineLoad.
 type GetMachineLoadParams struct {
 	From *From `form:"from,omitempty" json:"from,omitempty"`
@@ -8631,6 +9638,15 @@ type DeleteRunnerParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetRunnerJobStatsParams defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetRunnerJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetRunnerJobStatsParamsWindow defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParamsWindow string
+
 // DeleteRunnerRegistrationParams defines parameters for DeleteRunnerRegistration.
 type DeleteRunnerRegistrationParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -8656,6 +9672,11 @@ type ListRunsParams struct {
 // ListRunsParamsState defines parameters for ListRuns.
 type ListRunsParamsState string
 
+// PreviewRunsOnPullRequestsParams defines parameters for PreviewRunsOnPullRequests.
+type PreviewRunsOnPullRequestsParams struct {
+	RepositoryId *int64 `form:"repository_id,omitempty" json:"repository_id,omitempty"`
+}
+
 // GetRunParams defines parameters for GetRun.
 type GetRunParams struct {
 	// Attempt The attempt; the newest when absent.
@@ -8667,10 +9688,36 @@ type GetRunSavingsParams struct {
 	Attempt *int `form:"attempt,omitempty" json:"attempt,omitempty"`
 }
 
+// GetRunTimerParams defines parameters for GetRunTimer.
+type GetRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// CancelRunNowParams defines parameters for CancelRunNow.
+type CancelRunNowParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
+// ExtendRunTimerParams defines parameters for ExtendRunTimer.
+type ExtendRunTimerParams struct {
+	// Attempt The attempt; the newest when absent.
+	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
+}
+
 // RestartServiceParams defines parameters for RestartService.
 type RestartServiceParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
 	Confirmed *Confirmed `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
+// GetTimelineParams defines parameters for GetTimeline.
+type GetTimelineParams struct {
+	// MachineId Only the slots and jobs of this machine.
+	MachineId *string    `form:"machine_id,omitempty" json:"machine_id,omitempty"`
+	Before    *time.Time `form:"before,omitempty" json:"before,omitempty"`
+	Hours     *int       `form:"hours,omitempty" json:"hours,omitempty"`
 }
 
 // ApplyUpdateParams defines parameters for ApplyUpdate.
@@ -8720,9 +9767,6 @@ type ReceiveGithubWebhookParams struct {
 	XHubSignature256 string `json:"X-Hub-Signature-256"`
 }
 
-// CreateAccessCredentialJSONRequestBody defines body for CreateAccessCredential for application/json ContentType.
-type CreateAccessCredentialJSONRequestBody = AccessCredentialCreate
-
 // ReplaceAppPrivateKeyJSONRequestBody defines body for ReplaceAppPrivateKey for application/json ContentType.
 type ReplaceAppPrivateKeyJSONRequestBody = AppKeyUpload
 
@@ -8744,6 +9788,9 @@ type PutEnvSetJSONRequestBody = EnvSetInput
 // SetOrgPoolJSONRequestBody defines body for SetOrgPool for application/json ContentType.
 type SetOrgPoolJSONRequestBody = OrgPoolSet
 
+// PutHealthThresholdsJSONRequestBody defines body for PutHealthThresholds for application/json ContentType.
+type PutHealthThresholdsJSONRequestBody = HealthThresholds
+
 // UpdateImageLayersJSONRequestBody defines body for UpdateImageLayers for application/json ContentType.
 type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
 
@@ -8758,6 +9805,9 @@ type JoinMachineOverSshJSONRequestBody = SshJoinRequest
 
 // CreateJoinFileJSONRequestBody defines body for CreateJoinFile for application/json ContentType.
 type CreateJoinFileJSONRequestBody = CreateJoinFileRequest
+
+// PutListenerGateJSONRequestBody defines body for PutListenerGate for application/json ContentType.
+type PutListenerGateJSONRequestBody = ListenerGateInput
 
 // UpdateMachineJSONRequestBody defines body for UpdateMachine for application/json ContentType.
 type UpdateMachineJSONRequestBody = MachineSettingsUpdate
@@ -8813,9 +9863,6 @@ type RemoveCrspJSONRequestBody = RemoveRequest
 // SetRepositoryExtraPackagesJSONRequestBody defines body for SetRepositoryExtraPackages for application/json ContentType.
 type SetRepositoryExtraPackagesJSONRequestBody = ExtraPackagesUpdate
 
-// SetupRepositoryParityJSONRequestBody defines body for SetupRepositoryParity for application/json ContentType.
-type SetupRepositoryParityJSONRequestBody = ParitySetupRequest
-
 // UpdateRepositoryPolicyJSONRequestBody defines body for UpdateRepositoryPolicy for application/json ContentType.
 type UpdateRepositoryPolicyJSONRequestBody = RepositoryPolicyUpdate
 
@@ -8831,6 +9878,9 @@ type PlanRepositoryChangesJSONRequestBody = PlanRepositoryChangesRequest
 // ApplyRepositoryChangesJSONRequestBody defines body for ApplyRepositoryChanges for application/json ContentType.
 type ApplyRepositoryChangesJSONRequestBody = ApplyPlanRequest
 
+// PutRunnerClassesJSONRequestBody defines body for PutRunnerClasses for application/json ContentType.
+type PutRunnerClassesJSONRequestBody = RunnerClassesInput
+
 // PlanRunnersJSONRequestBody defines body for PlanRunners for application/json ContentType.
 type PlanRunnersJSONRequestBody = PlanRunnersRequest
 
@@ -8839,6 +9889,9 @@ type CreateRunnersJSONRequestBody = ApplyPlanRequest
 
 // UpdateRunnerSettingsJSONRequestBody defines body for UpdateRunnerSettings for application/json ContentType.
 type UpdateRunnerSettingsJSONRequestBody = RunnerSettingsUpdate
+
+// OpenRunsOnPullRequestsJSONRequestBody defines body for OpenRunsOnPullRequests for application/json ContentType.
+type OpenRunsOnPullRequestsJSONRequestBody = OpenRunsOnPullRequestsRequest
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody = Settings
@@ -8863,6 +9916,12 @@ type StartAppManifestJSONRequestBody = StartAppManifestRequest
 
 // RedeemSetupLinkJSONRequestBody defines body for RedeemSetupLink for application/json ContentType.
 type RedeemSetupLinkJSONRequestBody = RedeemSetupLinkRequest
+
+// PutTimerSettingsJSONRequestBody defines body for PutTimerSettings for application/json ContentType.
+type PutTimerSettingsJSONRequestBody = TimerSettingsInput
+
+// CheckTimerSettingsJSONRequestBody defines body for CheckTimerSettings for application/json ContentType.
+type CheckTimerSettingsJSONRequestBody = TimerSettingsInput
 
 // InstallUpdateJSONRequestBody defines body for InstallUpdate for application/json ContentType.
 type InstallUpdateJSONRequestBody = InstallUpdateRequest
@@ -8953,38 +10012,6 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 
-	// ListAccessCredentials List access credentials for CI
-	//
-	// github-integration R5.82. Without their values.
-	//
-	// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-	ListAccessCredentials(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateAccessCredentialWithBody Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes any type of body and a specified content type.
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredentialWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// CreateAccessCredential Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredential(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// RevokeAccessCredential Revoke an access credential
-	//
-	// github-integration R5.82. The next request with its value is refused.
-	//
-	// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-	RevokeAccessCredential(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -9034,6 +10061,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /api/v1/app/webhook (the `SetAppWebhook` operationId).
 	SetAppWebhook(ctx context.Context, body SetAppWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListAssignLeases Jobs that wait for a runner, start or run, with their reasons
+	//
+	// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+	//
+	// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+	ListAssignLeases(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListAuditEvents The audit log, newest first
 	//
@@ -9327,6 +10361,31 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/github/repositories (the `ListRepositories` operationId).
 	ListRepositories(ctx context.Context, params *ListRepositoriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetHealthThresholds The limits of the machine health checks
+	//
+	// doctor R5.66.
+	//
+	// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+	GetHealthThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutHealthThresholdsWithBody Change the limits of the machine health checks
+	//
+	// doctor R5.66. A value outside its range is refused with the range.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholdsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutHealthThresholds Change the limits of the machine health checks
+	//
+	// doctor R5.66. A value outside its range is refused with the range.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholds(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListImages Images per machine and OS, with layers and sizes
 	//
 	// web-console R5.25, runners R5.32 and R5.33.
@@ -9532,6 +10591,27 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/jobs/{jobId}/resources (the `GetJobResources` operationId).
 	GetJobResources(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetJobTimer The job timer of a job
+	//
+	// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+	//
+	// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+	GetJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExtendJobTimer Extend 10 min, during the grace of the job timer
+	//
+	// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+	ExtendJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StopJobNow Stop now, during the grace of the job timer
+	//
+	// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+	StopJobNow(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// CreateJoinCodeWithBody Make a one-time join code and the install commands
 	//
 	// machines R5.3 to R5.6 (M1 by owner decision). The code shows once, in this answer only. A new code makes the old unused one invalid.
@@ -9597,6 +10677,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/join-files (the `CreateJoinFile` operationId).
 	CreateJoinFile(ctx context.Context, body CreateJoinFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetListenerGate The listener gate of persistent runners on the machine itself
+	//
+	// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+	//
+	// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+	GetListenerGate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutListenerGateWithBody Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutListenerGate Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGate(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListMachines Every machine with state, backends, load and slots
 	//
@@ -9704,6 +10809,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/drain (the `DrainMachine` operationId).
 	DrainMachine(ctx context.Context, machineId MachineId, body DrainMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineHealth The health of one machine
+	//
+	// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+	GetMachineHealth(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineJobStats Job stats of one machine and of its runners
+	//
+	// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+	GetMachineJobStats(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMachineLoad Load history at 15-second steps, up to 24 hours
 	//
@@ -9892,13 +11011,6 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 	GetPackage(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// GetParityAddress The address the parity setup will write, and whether it answers
-	//
-	// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-	//
-	// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-	GetParityAddress(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRegistrySettings Registry logins per backend and whether a private CA bundle is set
 	//
@@ -10187,24 +11299,6 @@ type ClientInterface interface {
 	// Corresponds with PUT /api/v1/repositories/{repositoryId}/extra-packages (the `SetRepositoryExtraPackages` operationId).
 	SetRepositoryExtraPackages(ctx context.Context, repositoryId RepositoryId, body SetRepositoryExtraPackagesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// SetupRepositoryParityWithBody Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes any type of body and a specified content type.
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParityWithBody(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
-
-	// SetupRepositoryParity Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes a body of the `application/json` content type.
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParity(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
-
 	// UpdateRepositoryPolicyWithBody Change a repository's policy
 	//
 	// github-integration R5.25 to R5.27, scheduling R5.4, R5.8 to R5.10. Turning fork jobs on needs `confirm_fork_risk`.
@@ -10330,6 +11424,31 @@ type ClientInterface interface {
 	// Corresponds with POST /api/v1/repository-plans/{planId}/stop (the `StopRepositoryPlan` operationId).
 	StopRepositoryPlan(ctx context.Context, planId PlanId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetRunnerClasses The size classes of runners and the reservation numbers
+	//
+	// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+	//
+	// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+	GetRunnerClasses(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutRunnerClassesWithBody Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClassesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutRunnerClasses Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClasses(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// PlanRunnersWithBody Plan adding runners on a machine
 	//
 	// runners R5.1 and R5.36. Refuses a machine without an allowed backend for the OS and kind, or a label that is not generic, with the reason.
@@ -10411,6 +11530,13 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/runners/{runnerId}/env (the `GetRunnerEnv` operationId).
 	GetRunnerEnv(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetRunnerJobStats Job stats of one runner
+	//
+	// machines R5.78, R5.79.
+	//
+	// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+	GetRunnerJobStats(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 	//
 	// github-integration R5.33. For a runner GitHub lists as offline and not busy, when its machine cannot run the remove step. Without `confirm=true` it answers 409 needs_confirmation naming the runner. With it the controller deletes the registration at GitHub, then cleans the machine if it answers, and drops the record. An online or busy runner is refused with 409.
@@ -10450,6 +11576,31 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/runs (the `ListRuns` operationId).
 	ListRuns(ctx context.Context, params *ListRunsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// PreviewRunsOnPullRequests Preview the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.113. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+	//
+	// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+	PreviewRunsOnPullRequests(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpenRunsOnPullRequestsWithBody Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpenRunsOnPullRequests Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequests(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// GetRun One run attempt with its jobs, needs graph and ETA
 	//
 	// OPS34 D3, D4. The jobs carry their forecast and, when queued, their place and ETA. `edges` come from the workflow file when it was read, else from timing overlap (`graph.source`).
@@ -10463,6 +11614,27 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/runs/{runId}/savings (the `GetRunSavings` operationId).
 	GetRunSavings(ctx context.Context, runId RunId, params *GetRunSavingsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRunTimer The run timer of a run attempt
+	//
+	// scheduling R5.100, R5.105.
+	//
+	// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+	GetRunTimer(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CancelRunNow Cancel now, during the grace of the run timer
+	//
+	// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+	CancelRunNow(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExtendRunTimer Extend 10 min, during the grace of the run timer
+	//
+	// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+	ExtendRunTimer(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RestartService Restart the service after a drain
 	//
@@ -10551,7 +11723,7 @@ type ClientInterface interface {
 
 	// SetPublicRepositoriesWithBody Turn public repositories on or off
 	//
-	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -10560,7 +11732,7 @@ type ClientInterface interface {
 
 	// SetPublicRepositories Turn public repositories on or off
 	//
-	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -10648,6 +11820,56 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
+	//
+	// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+	//
+	// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+	GetTimeline(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+	//
+	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+	//
+	// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+	GetTimerSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutTimerSettingsWithBody Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutTimerSettings Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettings(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CheckTimerSettingsWithBody Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CheckTimerSettings Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettings(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetUpdateStatus The running version, the newest stable release, and the state of an update
 	//
@@ -10832,78 +12054,6 @@ type ClientInterface interface {
 	ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 }
 
-// ListAccessCredentials List access credentials for CI
-//
-// github-integration R5.82. Without their values.
-//
-// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-func (c *Client) ListAccessCredentials(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewListAccessCredentialsRequest(c.Server)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// CreateAccessCredentialWithBody Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes any type of body and a specified content type.
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *Client) CreateAccessCredentialWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAccessCredentialRequestWithBody(c.Server, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// CreateAccessCredential Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *Client) CreateAccessCredential(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewCreateAccessCredentialRequest(c.Server, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// RevokeAccessCredential Revoke an access credential
-//
-// github-integration R5.82. The next request with its value is refused.
-//
-// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-func (c *Client) RevokeAccessCredential(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewRevokeAccessCredentialRequest(c.Server, credentialId)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
 //
 // github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -11004,6 +12154,23 @@ func (c *Client) SetAppWebhookWithBody(ctx context.Context, contentType string, 
 // Corresponds with PUT /api/v1/app/webhook (the `SetAppWebhook` operationId).
 func (c *Client) SetAppWebhook(ctx context.Context, body SetAppWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewSetAppWebhookRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListAssignLeases Jobs that wait for a runner, start or run, with their reasons
+//
+// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+//
+// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+func (c *Client) ListAssignLeases(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAssignLeasesRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -11706,6 +12873,61 @@ func (c *Client) ListRepositories(ctx context.Context, params *ListRepositoriesP
 	return c.Client.Do(req)
 }
 
+// GetHealthThresholds The limits of the machine health checks
+//
+// doctor R5.66.
+//
+// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+func (c *Client) GetHealthThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHealthThresholdsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutHealthThresholdsWithBody Change the limits of the machine health checks
+//
+// doctor R5.66. A value outside its range is refused with the range.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *Client) PutHealthThresholdsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutHealthThresholdsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutHealthThresholds Change the limits of the machine health checks
+//
+// doctor R5.66. A value outside its range is refused with the range.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *Client) PutHealthThresholds(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutHealthThresholdsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListImages Images per machine and OS, with layers and sizes
 //
 // web-console R5.25, runners R5.32 and R5.33.
@@ -12201,6 +13423,57 @@ func (c *Client) GetJobResources(ctx context.Context, jobId JobId, reqEditors ..
 	return c.Client.Do(req)
 }
 
+// GetJobTimer The job timer of a job
+//
+// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+//
+// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+func (c *Client) GetJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobTimerRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExtendJobTimer Extend 10 min, during the grace of the job timer
+//
+// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+func (c *Client) ExtendJobTimer(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExtendJobTimerRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StopJobNow Stop now, during the grace of the job timer
+//
+// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+func (c *Client) StopJobNow(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStopJobNowRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // CreateJoinCodeWithBody Make a one-time join code and the install commands
 //
 // machines R5.3 to R5.6 (M1 by owner decision). The code shows once, in this answer only. A new code makes the old unused one invalid.
@@ -12337,6 +13610,61 @@ func (c *Client) CreateJoinFileWithBody(ctx context.Context, contentType string,
 // Corresponds with POST /api/v1/join-files (the `CreateJoinFile` operationId).
 func (c *Client) CreateJoinFile(ctx context.Context, body CreateJoinFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateJoinFileRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetListenerGate The listener gate of persistent runners on the machine itself
+//
+// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+//
+// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+func (c *Client) GetListenerGate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetListenerGateRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutListenerGateWithBody Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *Client) PutListenerGateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutListenerGateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutListenerGate Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *Client) PutListenerGate(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutListenerGateRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -12574,6 +13902,40 @@ func (c *Client) DrainMachineWithBody(ctx context.Context, machineId MachineId, 
 // Corresponds with POST /api/v1/machines/{machineId}/drain (the `DrainMachine` operationId).
 func (c *Client) DrainMachine(ctx context.Context, machineId MachineId, body DrainMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDrainMachineRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineHealth The health of one machine
+//
+// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+func (c *Client) GetMachineHealth(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineHealthRequest(c.Server, machineId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineJobStats Job stats of one machine and of its runners
+//
+// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+func (c *Client) GetMachineJobStats(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineJobStatsRequest(c.Server, machineId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -13002,23 +14364,6 @@ func (c *Client) GetOverview(ctx context.Context, reqEditors ...RequestEditorFn)
 // Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 func (c *Client) GetPackage(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetPackageRequest(c.Server, name)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// GetParityAddress The address the parity setup will write, and whether it answers
-//
-// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-//
-// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-func (c *Client) GetParityAddress(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewGetParityAddressRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -13686,44 +15031,6 @@ func (c *Client) SetRepositoryExtraPackages(ctx context.Context, repositoryId Re
 	return c.Client.Do(req)
 }
 
-// SetupRepositoryParityWithBody Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes any type of body and a specified content type.
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *Client) SetupRepositoryParityWithBody(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSetupRepositoryParityRequestWithBody(c.Server, repositoryId, contentType, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
-// SetupRepositoryParity Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes a body of the `application/json` content type.
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *Client) SetupRepositoryParity(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
-	req, err := NewSetupRepositoryParityRequest(c.Server, repositoryId, body)
-	if err != nil {
-		return nil, err
-	}
-	req = req.WithContext(ctx)
-	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
-		return nil, err
-	}
-	return c.Client.Do(req)
-}
-
 // UpdateRepositoryPolicyWithBody Change a repository's policy
 //
 // github-integration R5.25 to R5.27, scheduling R5.4, R5.8 to R5.10. Turning fork jobs on needs `confirm_fork_risk`.
@@ -13999,6 +15306,61 @@ func (c *Client) StopRepositoryPlan(ctx context.Context, planId PlanId, reqEdito
 	return c.Client.Do(req)
 }
 
+// GetRunnerClasses The size classes of runners and the reservation numbers
+//
+// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+//
+// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+func (c *Client) GetRunnerClasses(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunnerClassesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutRunnerClassesWithBody Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *Client) PutRunnerClassesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutRunnerClassesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutRunnerClasses Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *Client) PutRunnerClasses(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutRunnerClassesRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // PlanRunnersWithBody Plan adding runners on a machine
 //
 // runners R5.1 and R5.36. Refuses a machine without an allowed backend for the OS and kind, or a label that is not generic, with the reason.
@@ -14190,6 +15552,23 @@ func (c *Client) GetRunnerEnv(ctx context.Context, runnerId RunnerId, reqEditors
 	return c.Client.Do(req)
 }
 
+// GetRunnerJobStats Job stats of one runner
+//
+// machines R5.78, R5.79.
+//
+// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+func (c *Client) GetRunnerJobStats(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunnerJobStatsRequest(c.Server, runnerId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 //
 // github-integration R5.33. For a runner GitHub lists as offline and not busy, when its machine cannot run the remove step. Without `confirm=true` it answers 409 needs_confirmation naming the runner. With it the controller deletes the registration at GitHub, then cleans the machine if it answers, and drops the record. An online or busy runner is refused with 409.
@@ -14279,6 +15658,61 @@ func (c *Client) ListRuns(ctx context.Context, params *ListRunsParams, reqEditor
 	return c.Client.Do(req)
 }
 
+// PreviewRunsOnPullRequests Preview the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.113. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+//
+// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+func (c *Client) PreviewRunsOnPullRequests(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPreviewRunsOnPullRequestsRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OpenRunsOnPullRequestsWithBody Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *Client) OpenRunsOnPullRequestsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpenRunsOnPullRequestsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OpenRunsOnPullRequests Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *Client) OpenRunsOnPullRequests(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpenRunsOnPullRequestsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // GetRun One run attempt with its jobs, needs graph and ETA
 //
 // OPS34 D3, D4. The jobs carry their forecast and, when queued, their place and ETA. `edges` come from the workflow file when it was read, else from timing overlap (`graph.source`).
@@ -14303,6 +15737,57 @@ func (c *Client) GetRun(ctx context.Context, runId int64, params *GetRunParams, 
 // Corresponds with GET /api/v1/runs/{runId}/savings (the `GetRunSavings` operationId).
 func (c *Client) GetRunSavings(ctx context.Context, runId RunId, params *GetRunSavingsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRunSavingsRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRunTimer The run timer of a run attempt
+//
+// scheduling R5.100, R5.105.
+//
+// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+func (c *Client) GetRunTimer(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunTimerRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CancelRunNow Cancel now, during the grace of the run timer
+//
+// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+func (c *Client) CancelRunNow(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCancelRunNowRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExtendRunTimer Extend 10 min, during the grace of the run timer
+//
+// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+func (c *Client) ExtendRunTimer(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExtendRunTimerRequest(c.Server, runId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -14510,7 +15995,7 @@ func (c *Client) GetPublicRepositories(ctx context.Context, reqEditors ...Reques
 
 // SetPublicRepositoriesWithBody Turn public repositories on or off
 //
-// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 //
 // Takes any type of body and a specified content type.
 //
@@ -14529,7 +16014,7 @@ func (c *Client) SetPublicRepositoriesWithBody(ctx context.Context, contentType 
 
 // SetPublicRepositories Turn public repositories on or off
 //
-// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -14718,6 +16203,116 @@ func (c *Client) RedeemSetupLinkWithBody(ctx context.Context, contentType string
 // Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 func (c *Client) RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRedeemSetupLinkRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTimeline Jobs on machine runner slots over time, past, running and forecast
+//
+// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+//
+// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+func (c *Client) GetTimeline(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTimelineRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetTimerSettings The job, run, hold, timeout, queued and start-up timers
+//
+// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+//
+// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+func (c *Client) GetTimerSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetTimerSettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutTimerSettingsWithBody Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *Client) PutTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTimerSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutTimerSettings Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *Client) PutTimerSettings(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutTimerSettingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CheckTimerSettingsWithBody Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *Client) CheckTimerSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCheckTimerSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CheckTimerSettings Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *Client) CheckTimerSettings(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCheckTimerSettingsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -15150,107 +16745,6 @@ func (c *Client) ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithub
 	return c.Client.Do(req)
 }
 
-// NewListAccessCredentialsRequest constructs an http.Request for the ListAccessCredentials method
-func NewListAccessCredentialsRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/access-credentials")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewCreateAccessCredentialRequest calls the generic CreateAccessCredential builder with application/json body
-func NewCreateAccessCredentialRequest(server string, body CreateAccessCredentialJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewCreateAccessCredentialRequestWithBody(server, "application/json", bodyReader)
-}
-
-// NewCreateAccessCredentialRequestWithBody constructs an http.Request for the CreateAccessCredential method, with any body, and a specified content type
-func NewCreateAccessCredentialRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/access-credentials")
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
-// NewRevokeAccessCredentialRequest constructs an http.Request for the RevokeAccessCredential method
-func NewRevokeAccessCredentialRequest(server string, credentialId string) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "credentialId", credentialId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/access-credentials/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
 // NewReplaceAppPrivateKeyRequest calls the generic ReplaceAppPrivateKey builder with application/json body
 func NewReplaceAppPrivateKeyRequest(server string, body ReplaceAppPrivateKeyJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -15381,6 +16875,60 @@ func NewSetAppWebhookRequestWithBody(server string, contentType string, body io.
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListAssignLeasesRequest constructs an http.Request for the ListAssignLeases method
+func NewListAssignLeasesRequest(server string, params *ListAssignLeasesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/assign/leases")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.State != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "state", *params.State, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -17254,6 +18802,73 @@ func NewListRepositoriesRequest(server string, params *ListRepositoriesParams) (
 	return req, nil
 }
 
+// NewGetHealthThresholdsRequest constructs an http.Request for the GetHealthThresholds method
+func NewGetHealthThresholdsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/health-thresholds")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutHealthThresholdsRequest calls the generic PutHealthThresholds builder with application/json body
+func NewPutHealthThresholdsRequest(server string, body PutHealthThresholdsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutHealthThresholdsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutHealthThresholdsRequestWithBody constructs an http.Request for the PutHealthThresholds method, with any body, and a specified content type
+func NewPutHealthThresholdsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/health-thresholds")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListImagesRequest constructs an http.Request for the ListImages method
 func NewListImagesRequest(server string, params *ListImagesParams) (*http.Request, error) {
 	var err error
@@ -18937,6 +20552,108 @@ func NewGetJobResourcesRequest(server string, jobId JobId) (*http.Request, error
 	return req, nil
 }
 
+// NewGetJobTimerRequest constructs an http.Request for the GetJobTimer method
+func NewGetJobTimerRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/timer", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewExtendJobTimerRequest constructs an http.Request for the ExtendJobTimer method
+func NewExtendJobTimerRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/timer/extend", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStopJobNowRequest constructs an http.Request for the StopJobNow method
+func NewStopJobNowRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/timer/stop-now", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewCreateJoinCodeRequest calls the generic CreateJoinCode builder with application/json body
 func NewCreateJoinCodeRequest(server string, body CreateJoinCodeJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -19116,6 +20833,73 @@ func NewCreateJoinFileRequestWithBody(server string, contentType string, body io
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetListenerGateRequest constructs an http.Request for the GetListenerGate method
+func NewGetListenerGateRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/listener-gate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutListenerGateRequest calls the generic PutListenerGate builder with application/json body
+func NewPutListenerGateRequest(server string, body PutListenerGateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutListenerGateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutListenerGateRequestWithBody constructs an http.Request for the PutListenerGate method, with any body, and a specified content type
+func NewPutListenerGateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/listener-gate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
 	if err != nil {
 		return nil, err
 	}
@@ -19540,6 +21324,101 @@ func NewDrainMachineRequestWithBody(server string, machineId MachineId, contentT
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMachineHealthRequest constructs an http.Request for the GetMachineHealth method
+func NewGetMachineHealthRequest(server string, machineId MachineId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/health", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMachineJobStatsRequest constructs an http.Request for the GetMachineJobStats method
+func NewGetMachineJobStatsRequest(server string, machineId MachineId, params *GetMachineJobStatsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/job-stats", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -20268,33 +22147,6 @@ func NewGetPackageRequest(server string, name string) (*http.Request, error) {
 	}
 
 	operationPath := fmt.Sprintf("/api/v1/packages/%s", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	return req, nil
-}
-
-// NewGetParityAddressRequest constructs an http.Request for the GetParityAddress method
-func NewGetParityAddressRequest(server string) (*http.Request, error) {
-	var err error
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/parity-address")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -21446,53 +23298,6 @@ func NewSetRepositoryExtraPackagesRequestWithBody(server string, repositoryId Re
 	return req, nil
 }
 
-// NewSetupRepositoryParityRequest calls the generic SetupRepositoryParity builder with application/json body
-func NewSetupRepositoryParityRequest(server string, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody) (*http.Request, error) {
-	var bodyReader io.Reader
-	buf, err := json.Marshal(body)
-	if err != nil {
-		return nil, err
-	}
-	bodyReader = bytes.NewReader(buf)
-	return NewSetupRepositoryParityRequestWithBody(server, repositoryId, "application/json", bodyReader)
-}
-
-// NewSetupRepositoryParityRequestWithBody constructs an http.Request for the SetupRepositoryParity method, with any body, and a specified content type
-func NewSetupRepositoryParityRequestWithBody(server string, repositoryId RepositoryId, contentType string, body io.Reader) (*http.Request, error) {
-	var err error
-
-	var pathParam0 string
-
-	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repositoryId", repositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
-	if err != nil {
-		return nil, err
-	}
-
-	serverURL, err := url.Parse(server)
-	if err != nil {
-		return nil, err
-	}
-
-	operationPath := fmt.Sprintf("/api/v1/repositories/%s/parity-setup", pathParam0)
-	if operationPath[0] == '/' {
-		operationPath = "." + operationPath
-	}
-
-	queryURL, err := serverURL.Parse(operationPath)
-	if err != nil {
-		return nil, err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Add("Content-Type", contentType)
-
-	return req, nil
-}
-
 // NewUpdateRepositoryPolicyRequest calls the generic UpdateRepositoryPolicy builder with application/json body
 func NewUpdateRepositoryPolicyRequest(server string, repositoryId RepositoryId, body UpdateRepositoryPolicyJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -21918,6 +23723,73 @@ func NewStopRepositoryPlanRequest(server string, planId PlanId) (*http.Request, 
 	return req, nil
 }
 
+// NewGetRunnerClassesRequest constructs an http.Request for the GetRunnerClasses method
+func NewGetRunnerClassesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runner-classes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutRunnerClassesRequest calls the generic PutRunnerClasses builder with application/json body
+func NewPutRunnerClassesRequest(server string, body PutRunnerClassesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutRunnerClassesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutRunnerClassesRequestWithBody constructs an http.Request for the PutRunnerClasses method, with any body, and a specified content type
+func NewPutRunnerClassesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runner-classes")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewPlanRunnersRequest calls the generic PlanRunners builder with application/json body
 func NewPlanRunnersRequest(server string, body PlanRunnersJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -22326,6 +24198,67 @@ func NewGetRunnerEnvRequest(server string, runnerId RunnerId) (*http.Request, er
 	return req, nil
 }
 
+// NewGetRunnerJobStatsRequest constructs an http.Request for the GetRunnerJobStats method
+func NewGetRunnerJobStatsRequest(server string, runnerId RunnerId, params *GetRunnerJobStatsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runnerId", runnerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runners/%s/job-stats", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDeleteRunnerRegistrationRequest constructs an http.Request for the DeleteRunnerRegistration method
 func NewDeleteRunnerRegistrationRequest(server string, runnerId RunnerId, params *DeleteRunnerRegistrationParams) (*http.Request, error) {
 	var err error
@@ -22606,6 +24539,100 @@ func NewListRunsRequest(server string, params *ListRunsParams) (*http.Request, e
 	return req, nil
 }
 
+// NewPreviewRunsOnPullRequestsRequest constructs an http.Request for the PreviewRunsOnPullRequests method
+func NewPreviewRunsOnPullRequestsRequest(server string, params *PreviewRunsOnPullRequestsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs-on-pr")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.RepositoryId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "repository_id", *params.RepositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewOpenRunsOnPullRequestsRequest calls the generic OpenRunsOnPullRequests builder with application/json body
+func NewOpenRunsOnPullRequestsRequest(server string, body OpenRunsOnPullRequestsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewOpenRunsOnPullRequestsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewOpenRunsOnPullRequestsRequestWithBody constructs an http.Request for the OpenRunsOnPullRequests method, with any body, and a specified content type
+func NewOpenRunsOnPullRequestsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs-on-pr")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewGetRunRequest constructs an http.Request for the GetRun method
 func NewGetRunRequest(server string, runId int64, params *GetRunParams) (*http.Request, error) {
 	var err error
@@ -22721,6 +24748,189 @@ func NewGetRunSavingsRequest(server string, runId RunId, params *GetRunSavingsPa
 	}
 
 	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetRunTimerRequest constructs an http.Request for the GetRunTimer method
+func NewGetRunTimerRequest(server string, runId TimerRunId, params *GetRunTimerParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runId", runId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs/%s/timer", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Attempt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "attempt", *params.Attempt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewCancelRunNowRequest constructs an http.Request for the CancelRunNow method
+func NewCancelRunNowRequest(server string, runId TimerRunId, params *CancelRunNowParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runId", runId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs/%s/timer/cancel-now", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Attempt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "attempt", *params.Attempt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewExtendRunTimerRequest constructs an http.Request for the ExtendRunTimer method
+func NewExtendRunTimerRequest(server string, runId TimerRunId, params *ExtendRunTimerParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runId", runId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runs/%s/timer/extend", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Attempt != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "attempt", *params.Attempt, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -23245,6 +25455,191 @@ func NewRedeemSetupLinkRequestWithBody(server string, contentType string, body i
 	}
 
 	operationPath := fmt.Sprintf("/api/v1/setup/redeem")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetTimelineRequest constructs an http.Request for the GetTimeline method
+func NewGetTimelineRequest(server string, params *GetTimelineParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timeline")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.MachineId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "machine_id", *params.MachineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Before != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "before", *params.Before, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Hours != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "hours", *params.Hours, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetTimerSettingsRequest constructs an http.Request for the GetTimerSettings method
+func NewGetTimerSettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timer-settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutTimerSettingsRequest calls the generic PutTimerSettings builder with application/json body
+func NewPutTimerSettingsRequest(server string, body PutTimerSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutTimerSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutTimerSettingsRequestWithBody constructs an http.Request for the PutTimerSettings method, with any body, and a specified content type
+func NewPutTimerSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timer-settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewCheckTimerSettingsRequest calls the generic CheckTimerSettings builder with application/json body
+func NewCheckTimerSettingsRequest(server string, body CheckTimerSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCheckTimerSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewCheckTimerSettingsRequestWithBody constructs an http.Request for the CheckTimerSettings method, with any body, and a specified content type
+func NewCheckTimerSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/timer-settings/check")
 	if operationPath[0] == '/' {
 		operationPath = "." + operationPath
 	}
@@ -24113,42 +26508,6 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
-	// ListAccessCredentialsWithResponse List access credentials for CI
-	//
-	// github-integration R5.82. Without their values.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-	ListAccessCredentialsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAccessCredentialsResponse, error)
-
-	// CreateAccessCredentialWithBodyWithResponse Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredentialWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error)
-
-	// CreateAccessCredentialWithResponse Make an access credential for CI
-	//
-	// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-	CreateAccessCredentialWithResponse(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error)
-
-	// RevokeAccessCredentialWithResponse Revoke an access credential
-	//
-	// github-integration R5.82. The next request with its value is refused.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-	RevokeAccessCredentialWithResponse(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*RevokeAccessCredentialResponse, error)
-
 	// ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -24202,6 +26561,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /api/v1/app/webhook (the `SetAppWebhook` operationId).
 	SetAppWebhookWithResponse(ctx context.Context, body SetAppWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*SetAppWebhookResponse, error)
+
+	// ListAssignLeasesWithResponse Jobs that wait for a runner, start or run, with their reasons
+	//
+	// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+	ListAssignLeasesWithResponse(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*ListAssignLeasesResponse, error)
 
 	// ListAuditEventsWithResponse The audit log, newest first
 	//
@@ -24555,6 +26923,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/github/repositories (the `ListRepositories` operationId).
 	ListRepositoriesWithResponse(ctx context.Context, params *ListRepositoriesParams, reqEditors ...RequestEditorFn) (*ListRepositoriesResponse, error)
 
+	// GetHealthThresholdsWithResponse The limits of the machine health checks
+	//
+	// doctor R5.66.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+	GetHealthThresholdsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthThresholdsResponse, error)
+
+	// PutHealthThresholdsWithBodyWithResponse Change the limits of the machine health checks
+	//
+	// doctor R5.66. A value outside its range is refused with the range.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholdsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error)
+
+	// PutHealthThresholdsWithResponse Change the limits of the machine health checks
+	//
+	// doctor R5.66. A value outside its range is refused with the range.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholdsWithResponse(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error)
+
 	// ListImagesWithResponse Images per machine and OS, with layers and sizes
 	//
 	// web-console R5.25, runners R5.32 and R5.33.
@@ -24810,6 +27205,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/jobs/{jobId}/resources (the `GetJobResources` operationId).
 	GetJobResourcesWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobResourcesResponse, error)
 
+	// GetJobTimerWithResponse The job timer of a job
+	//
+	// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+	GetJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobTimerResponse, error)
+
+	// ExtendJobTimerWithResponse Extend 10 min, during the grace of the job timer
+	//
+	// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+	ExtendJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*ExtendJobTimerResponse, error)
+
+	// StopJobNowWithResponse Stop now, during the grace of the job timer
+	//
+	// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+	StopJobNowWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*StopJobNowResponse, error)
+
 	// CreateJoinCodeWithBodyWithResponse Make a one-time join code and the install commands
 	//
 	// machines R5.3 to R5.6 (M1 by owner decision). The code shows once, in this answer only. A new code makes the old unused one invalid.
@@ -24879,6 +27301,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/join-files (the `CreateJoinFile` operationId).
 	CreateJoinFileWithResponse(ctx context.Context, body CreateJoinFileJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateJoinFileResponse, error)
+
+	// GetListenerGateWithResponse The listener gate of persistent runners on the machine itself
+	//
+	// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+	GetListenerGateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListenerGateResponse, error)
+
+	// PutListenerGateWithBodyWithResponse Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error)
+
+	// PutListenerGateWithResponse Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGateWithResponse(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error)
 
 	// ListMachinesWithResponse Every machine with state, backends, load and slots
 	//
@@ -24996,6 +27445,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/drain (the `DrainMachine` operationId).
 	DrainMachineWithResponse(ctx context.Context, machineId MachineId, body DrainMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*DrainMachineResponse, error)
+
+	// GetMachineHealthWithResponse The health of one machine
+	//
+	// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+	GetMachineHealthWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineHealthResponse, error)
+
+	// GetMachineJobStatsWithResponse Job stats of one machine and of its runners
+	//
+	// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+	GetMachineJobStatsWithResponse(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*GetMachineJobStatsResponse, error)
 
 	// GetMachineLoadWithResponse Load history at 15-second steps, up to 24 hours
 	//
@@ -25208,15 +27675,6 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 	GetPackageWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetPackageResponse, error)
-
-	// GetParityAddressWithResponse The address the parity setup will write, and whether it answers
-	//
-	// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-	//
-	// Returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-	GetParityAddressWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParityAddressResponse, error)
 
 	// GetRegistrySettingsWithResponse Registry logins per backend and whether a private CA bundle is set
 	//
@@ -25547,24 +28005,6 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /api/v1/repositories/{repositoryId}/extra-packages (the `SetRepositoryExtraPackages` operationId).
 	SetRepositoryExtraPackagesWithResponse(ctx context.Context, repositoryId RepositoryId, body SetRepositoryExtraPackagesJSONRequestBody, reqEditors ...RequestEditorFn) (*SetRepositoryExtraPackagesResponse, error)
 
-	// SetupRepositoryParityWithBodyWithResponse Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParityWithBodyWithResponse(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error)
-
-	// SetupRepositoryParityWithResponse Set up parity for this repository
-	//
-	// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-	//
-	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-	//
-	// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-	SetupRepositoryParityWithResponse(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error)
-
 	// UpdateRepositoryPolicyWithBodyWithResponse Change a repository's policy
 	//
 	// github-integration R5.25 to R5.27, scheduling R5.4, R5.8 to R5.10. Turning fork jobs on needs `confirm_fork_risk`.
@@ -25700,6 +28140,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/v1/repository-plans/{planId}/stop (the `StopRepositoryPlan` operationId).
 	StopRepositoryPlanWithResponse(ctx context.Context, planId PlanId, reqEditors ...RequestEditorFn) (*StopRepositoryPlanResponse, error)
 
+	// GetRunnerClassesWithResponse The size classes of runners and the reservation numbers
+	//
+	// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+	GetRunnerClassesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRunnerClassesResponse, error)
+
+	// PutRunnerClassesWithBodyWithResponse Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClassesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error)
+
+	// PutRunnerClassesWithResponse Save the size classes or the reservation numbers
+	//
+	// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+	PutRunnerClassesWithResponse(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error)
+
 	// PlanRunnersWithBodyWithResponse Plan adding runners on a machine
 	//
 	// runners R5.1 and R5.36. Refuses a machine without an allowed backend for the OS and kind, or a label that is not generic, with the reason.
@@ -25795,6 +28262,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/runners/{runnerId}/env (the `GetRunnerEnv` operationId).
 	GetRunnerEnvWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*GetRunnerEnvResponse, error)
 
+	// GetRunnerJobStatsWithResponse Job stats of one runner
+	//
+	// machines R5.78, R5.79.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+	GetRunnerJobStatsWithResponse(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*GetRunnerJobStatsResponse, error)
+
 	// DeleteRunnerRegistrationWithResponse Delete the registration of an offline runner whose agent cannot remove it
 	//
 	// github-integration R5.33. For a runner GitHub lists as offline and not busy, when its machine cannot run the remove step. Without `confirm=true` it answers 409 needs_confirmation naming the runner. With it the controller deletes the registration at GitHub, then cleans the machine if it answers, and drops the record. An online or busy runner is refused with 409.
@@ -25840,6 +28316,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/runs (the `ListRuns` operationId).
 	ListRunsWithResponse(ctx context.Context, params *ListRunsParams, reqEditors ...RequestEditorFn) (*ListRunsResponse, error)
 
+	// PreviewRunsOnPullRequestsWithResponse Preview the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.113. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+	PreviewRunsOnPullRequestsWithResponse(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*PreviewRunsOnPullRequestsResponse, error)
+
+	// OpenRunsOnPullRequestsWithBodyWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error)
+
+	// OpenRunsOnPullRequestsWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+	//
+	// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+	OpenRunsOnPullRequestsWithResponse(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error)
+
 	// GetRunWithResponse One run attempt with its jobs, needs graph and ETA
 	//
 	// OPS34 D3, D4. The jobs carry their forecast and, when queued, their place and ETA. `edges` come from the workflow file when it was read, else from timing overlap (`graph.source`).
@@ -25857,6 +28360,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/runs/{runId}/savings (the `GetRunSavings` operationId).
 	GetRunSavingsWithResponse(ctx context.Context, runId RunId, params *GetRunSavingsParams, reqEditors ...RequestEditorFn) (*GetRunSavingsResponse, error)
+
+	// GetRunTimerWithResponse The run timer of a run attempt
+	//
+	// scheduling R5.100, R5.105.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+	GetRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*GetRunTimerResponse, error)
+
+	// CancelRunNowWithResponse Cancel now, during the grace of the run timer
+	//
+	// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+	CancelRunNowWithResponse(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*CancelRunNowResponse, error)
+
+	// ExtendRunTimerWithResponse Extend 10 min, during the grace of the run timer
+	//
+	// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+	ExtendRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*ExtendRunTimerResponse, error)
 
 	// RestartServiceWithResponse Restart the service after a drain
 	//
@@ -25955,7 +28485,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetPublicRepositoriesWithBodyWithResponse Turn public repositories on or off
 	//
-	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -25964,7 +28494,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetPublicRepositoriesWithResponse Turn public repositories on or off
 	//
-	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+	// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -26056,6 +28586,60 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLinkWithResponse(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*RedeemSetupLinkResponse, error)
+
+	// GetTimelineWithResponse Jobs on machine runner slots over time, past, running and forecast
+	//
+	// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+	GetTimelineWithResponse(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*GetTimelineResponse, error)
+
+	// GetTimerSettingsWithResponse The job, run, hold, timeout, queued and start-up timers
+	//
+	// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+	GetTimerSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTimerSettingsResponse, error)
+
+	// PutTimerSettingsWithBodyWithResponse Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error)
+
+	// PutTimerSettingsWithResponse Save timer settings
+	//
+	// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+	PutTimerSettingsWithResponse(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error)
+
+	// CheckTimerSettingsWithBodyWithResponse Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error)
+
+	// CheckTimerSettingsWithResponse Check timer settings without saving them
+	//
+	// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+	CheckTimerSettingsWithResponse(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error)
 
 	// GetUpdateStatusWithResponse The running version, the newest stable release, and the state of an update
 	//
@@ -26268,143 +28852,6 @@ type ClientWithResponsesInterface interface {
 	ReceiveGithubWebhookWithResponse(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*ReceiveGithubWebhookResponse, error)
 }
 
-type ListAccessCredentialsResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *AccessCredentialList
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r ListAccessCredentialsResponse) GetJSON200() *AccessCredentialList {
-	return r.JSON200
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r ListAccessCredentialsResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r ListAccessCredentialsResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r ListAccessCredentialsResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r ListAccessCredentialsResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r ListAccessCredentialsResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type CreateAccessCredentialResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON201 the response for an HTTP 201 `application/json` response
-	JSON201 *AccessCredentialCreated
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON201 returns the response for an HTTP 201 `application/json` response
-func (r CreateAccessCredentialResponse) GetJSON201() *AccessCredentialCreated {
-	return r.JSON201
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r CreateAccessCredentialResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r CreateAccessCredentialResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r CreateAccessCredentialResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r CreateAccessCredentialResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r CreateAccessCredentialResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type RevokeAccessCredentialResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r RevokeAccessCredentialResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r RevokeAccessCredentialResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r RevokeAccessCredentialResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r RevokeAccessCredentialResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r RevokeAccessCredentialResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type ReplaceAppPrivateKeyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -26584,6 +29031,54 @@ func (r SetAppWebhookResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r SetAppWebhookResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListAssignLeasesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AssignLeaseList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAssignLeasesResponse) GetJSON200() *AssignLeaseList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListAssignLeasesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAssignLeasesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAssignLeasesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAssignLeasesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAssignLeasesResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -28291,6 +30786,102 @@ func (r ListRepositoriesResponse) ContentType() string {
 	return ""
 }
 
+type GetHealthThresholdsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *HealthThresholds
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetHealthThresholdsResponse) GetJSON200() *HealthThresholds {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetHealthThresholdsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetHealthThresholdsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetHealthThresholdsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetHealthThresholdsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetHealthThresholdsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutHealthThresholdsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *HealthThresholds
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutHealthThresholdsResponse) GetJSON200() *HealthThresholds {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutHealthThresholdsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutHealthThresholdsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutHealthThresholdsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutHealthThresholdsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutHealthThresholdsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListImagesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -29580,6 +32171,150 @@ func (r GetJobResourcesResponse) ContentType() string {
 	return ""
 }
 
+type GetJobTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetJobTimerResponse) GetJSON200() *JobTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetJobTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetJobTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetJobTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ExtendJobTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExtendJobTimerResponse) GetJSON200() *JobTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ExtendJobTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ExtendJobTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExtendJobTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExtendJobTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExtendJobTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StopJobNowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r StopJobNowResponse) GetJSON200() *JobTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StopJobNowResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StopJobNowResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StopJobNowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StopJobNowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StopJobNowResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type CreateJoinCodeResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -29808,6 +32543,102 @@ func (r CreateJoinFileResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r CreateJoinFileResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetListenerGateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ListenerGate
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetListenerGateResponse) GetJSON200() *ListenerGate {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetListenerGateResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetListenerGateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetListenerGateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetListenerGateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetListenerGateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutListenerGateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ListenerGate
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutListenerGateResponse) GetJSON200() *ListenerGate {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutListenerGateResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutListenerGateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutListenerGateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutListenerGateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutListenerGateResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -30251,6 +33082,102 @@ func (r DrainMachineResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DrainMachineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineHealthResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MachineHealth
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineHealthResponse) GetJSON200() *MachineHealth {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineHealthResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineHealthResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineHealthResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineHealthResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineHealthResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineJobStatsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MachineJobStats
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineJobStatsResponse) GetJSON200() *MachineJobStats {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineJobStatsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineJobStatsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineJobStatsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineJobStatsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineJobStatsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -31087,54 +34014,6 @@ func (r GetPackageResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetPackageResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
-type GetParityAddressResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *ParityAddress
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r GetParityAddressResponse) GetJSON200() *ParityAddress {
-	return r.JSON200
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r GetParityAddressResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r GetParityAddressResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r GetParityAddressResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r GetParityAddressResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r GetParityAddressResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -32512,54 +35391,6 @@ func (r SetRepositoryExtraPackagesResponse) ContentType() string {
 	return ""
 }
 
-type SetupRepositoryParityResponse struct {
-	Body         []byte
-	HTTPResponse *http.Response
-	// JSON200 the response for an HTTP 200 `application/json` response
-	JSON200 *ParitySetup
-	// JSONDefault the response for an HTTP default `application/json` response
-	JSONDefault *Error
-}
-
-// GetJSON200 returns the response for an HTTP 200 `application/json` response
-func (r SetupRepositoryParityResponse) GetJSON200() *ParitySetup {
-	return r.JSON200
-}
-
-// GetJSONDefault returns the response for an HTTP default `application/json` response
-func (r SetupRepositoryParityResponse) GetJSONDefault() *Error {
-	return r.JSONDefault
-}
-
-// GetBody returns the raw response body bytes
-func (r SetupRepositoryParityResponse) GetBody() []byte {
-	return r.Body
-}
-
-// Status returns HTTPResponse.Status
-func (r SetupRepositoryParityResponse) Status() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Status
-	}
-	return http.StatusText(0)
-}
-
-// StatusCode returns HTTPResponse.StatusCode
-func (r SetupRepositoryParityResponse) StatusCode() int {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.StatusCode
-	}
-	return 0
-}
-
-// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
-func (r SetupRepositoryParityResponse) ContentType() string {
-	if r.HTTPResponse != nil {
-		return r.HTTPResponse.Header.Get("Content-Type")
-	}
-	return ""
-}
-
 type UpdateRepositoryPolicyResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -33040,6 +35871,102 @@ func (r StopRepositoryPlanResponse) ContentType() string {
 	return ""
 }
 
+type GetRunnerClassesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerClasses
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunnerClassesResponse) GetJSON200() *RunnerClasses {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunnerClassesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunnerClassesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunnerClassesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunnerClassesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunnerClassesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutRunnerClassesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerClasses
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutRunnerClassesResponse) GetJSON200() *RunnerClasses {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutRunnerClassesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutRunnerClassesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutRunnerClassesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutRunnerClassesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutRunnerClassesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type PlanRunnersResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -33472,6 +36399,54 @@ func (r GetRunnerEnvResponse) ContentType() string {
 	return ""
 }
 
+type GetRunnerJobStatsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerJobStats
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunnerJobStatsResponse) GetJSON200() *RunnerJobStats {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunnerJobStatsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunnerJobStatsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunnerJobStatsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunnerJobStatsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunnerJobStatsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DeleteRunnerRegistrationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -33664,6 +36639,102 @@ func (r ListRunsResponse) ContentType() string {
 	return ""
 }
 
+type PreviewRunsOnPullRequestsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunsOnPullRequestPreviewList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PreviewRunsOnPullRequestsResponse) GetJSON200() *RunsOnPullRequestPreviewList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PreviewRunsOnPullRequestsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PreviewRunsOnPullRequestsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PreviewRunsOnPullRequestsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PreviewRunsOnPullRequestsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PreviewRunsOnPullRequestsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type OpenRunsOnPullRequestsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunsOnPullRequestResultList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r OpenRunsOnPullRequestsResponse) GetJSON200() *RunsOnPullRequestResultList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r OpenRunsOnPullRequestsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r OpenRunsOnPullRequestsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r OpenRunsOnPullRequestsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpenRunsOnPullRequestsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r OpenRunsOnPullRequestsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetRunResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -33754,6 +36825,150 @@ func (r GetRunSavingsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetRunSavingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetRunTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunTimerResponse) GetJSON200() *RunTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunTimerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CancelRunNowResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CancelRunNowResponse) GetJSON200() *RunTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CancelRunNowResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CancelRunNowResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CancelRunNowResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CancelRunNowResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CancelRunNowResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ExtendRunTimerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunTimer
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExtendRunTimerResponse) GetJSON200() *RunTimer {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ExtendRunTimerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ExtendRunTimerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExtendRunTimerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExtendRunTimerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExtendRunTimerResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -34481,6 +37696,198 @@ func (r RedeemSetupLinkResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r RedeemSetupLinkResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTimelineResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Timeline
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTimelineResponse) GetJSON200() *Timeline {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTimelineResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTimelineResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTimelineResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTimelineResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTimelineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetTimerSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TimerSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetTimerSettingsResponse) GetJSON200() *TimerSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetTimerSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetTimerSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetTimerSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetTimerSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetTimerSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutTimerSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TimerSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutTimerSettingsResponse) GetJSON200() *TimerSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutTimerSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutTimerSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutTimerSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutTimerSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutTimerSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type CheckTimerSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *TimerSettingsCheck
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CheckTimerSettingsResponse) GetJSON200() *TimerSettingsCheck {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CheckTimerSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CheckTimerSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CheckTimerSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CheckTimerSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CheckTimerSettingsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -35390,66 +38797,6 @@ func (r ReceiveGithubWebhookResponse) ContentType() string {
 	return ""
 }
 
-// ListAccessCredentialsWithResponse List access credentials for CI
-//
-// github-integration R5.82. Without their values.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/v1/access-credentials (the `ListAccessCredentials` operationId).
-func (c *ClientWithResponses) ListAccessCredentialsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAccessCredentialsResponse, error) {
-	rsp, err := c.ListAccessCredentials(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseListAccessCredentialsResponse(rsp)
-}
-
-// CreateAccessCredentialWithBodyWithResponse Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *ClientWithResponses) CreateAccessCredentialWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error) {
-	rsp, err := c.CreateAccessCredentialWithBody(ctx, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAccessCredentialResponse(rsp)
-}
-
-// CreateAccessCredentialWithResponse Make an access credential for CI
-//
-// github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/access-credentials (the `CreateAccessCredential` operationId).
-func (c *ClientWithResponses) CreateAccessCredentialWithResponse(ctx context.Context, body CreateAccessCredentialJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateAccessCredentialResponse, error) {
-	rsp, err := c.CreateAccessCredential(ctx, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseCreateAccessCredentialResponse(rsp)
-}
-
-// RevokeAccessCredentialWithResponse Revoke an access credential
-//
-// github-integration R5.82. The next request with its value is refused.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with DELETE /api/v1/access-credentials/{credentialId} (the `RevokeAccessCredential` operationId).
-func (c *ClientWithResponses) RevokeAccessCredentialWithResponse(ctx context.Context, credentialId string, reqEditors ...RequestEditorFn) (*RevokeAccessCredentialResponse, error) {
-	rsp, err := c.RevokeAccessCredential(ctx, credentialId, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseRevokeAccessCredentialResponse(rsp)
-}
-
 // ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 //
 // github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -35538,6 +38885,21 @@ func (c *ClientWithResponses) SetAppWebhookWithResponse(ctx context.Context, bod
 		return nil, err
 	}
 	return ParseSetAppWebhookResponse(rsp)
+}
+
+// ListAssignLeasesWithResponse Jobs that wait for a runner, start or run, with their reasons
+//
+// runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/assign/leases (the `ListAssignLeases` operationId).
+func (c *ClientWithResponses) ListAssignLeasesWithResponse(ctx context.Context, params *ListAssignLeasesParams, reqEditors ...RequestEditorFn) (*ListAssignLeasesResponse, error) {
+	rsp, err := c.ListAssignLeases(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAssignLeasesResponse(rsp)
 }
 
 // ListAuditEventsWithResponse The audit log, newest first
@@ -36132,6 +39494,51 @@ func (c *ClientWithResponses) ListRepositoriesWithResponse(ctx context.Context, 
 	return ParseListRepositoriesResponse(rsp)
 }
 
+// GetHealthThresholdsWithResponse The limits of the machine health checks
+//
+// doctor R5.66.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+func (c *ClientWithResponses) GetHealthThresholdsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthThresholdsResponse, error) {
+	rsp, err := c.GetHealthThresholds(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetHealthThresholdsResponse(rsp)
+}
+
+// PutHealthThresholdsWithBodyWithResponse Change the limits of the machine health checks
+//
+// doctor R5.66. A value outside its range is refused with the range.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *ClientWithResponses) PutHealthThresholdsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error) {
+	rsp, err := c.PutHealthThresholdsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutHealthThresholdsResponse(rsp)
+}
+
+// PutHealthThresholdsWithResponse Change the limits of the machine health checks
+//
+// doctor R5.66. A value outside its range is refused with the range.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *ClientWithResponses) PutHealthThresholdsWithResponse(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error) {
+	rsp, err := c.PutHealthThresholds(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutHealthThresholdsResponse(rsp)
+}
+
 // ListImagesWithResponse Images per machine and OS, with layers and sizes
 //
 // web-console R5.25, runners R5.32 and R5.33.
@@ -36561,6 +39968,51 @@ func (c *ClientWithResponses) GetJobResourcesWithResponse(ctx context.Context, j
 	return ParseGetJobResourcesResponse(rsp)
 }
 
+// GetJobTimerWithResponse The job timer of a job
+//
+// scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/jobs/{jobId}/timer (the `GetJobTimer` operationId).
+func (c *ClientWithResponses) GetJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobTimerResponse, error) {
+	rsp, err := c.GetJobTimer(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobTimerResponse(rsp)
+}
+
+// ExtendJobTimerWithResponse Extend 10 min, during the grace of the job timer
+//
+// scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/extend (the `ExtendJobTimer` operationId).
+func (c *ClientWithResponses) ExtendJobTimerWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*ExtendJobTimerResponse, error) {
+	rsp, err := c.ExtendJobTimer(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExtendJobTimerResponse(rsp)
+}
+
+// StopJobNowWithResponse Stop now, during the grace of the job timer
+//
+// scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/timer/stop-now (the `StopJobNow` operationId).
+func (c *ClientWithResponses) StopJobNowWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*StopJobNowResponse, error) {
+	rsp, err := c.StopJobNow(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStopJobNowResponse(rsp)
+}
+
 // CreateJoinCodeWithBodyWithResponse Make a one-time join code and the install commands
 //
 // machines R5.3 to R5.6 (M1 by owner decision). The code shows once, in this answer only. A new code makes the old unused one invalid.
@@ -36677,6 +40129,51 @@ func (c *ClientWithResponses) CreateJoinFileWithResponse(ctx context.Context, bo
 		return nil, err
 	}
 	return ParseCreateJoinFileResponse(rsp)
+}
+
+// GetListenerGateWithResponse The listener gate of persistent runners on the machine itself
+//
+// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+func (c *ClientWithResponses) GetListenerGateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListenerGateResponse, error) {
+	rsp, err := c.GetListenerGate(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetListenerGateResponse(rsp)
+}
+
+// PutListenerGateWithBodyWithResponse Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *ClientWithResponses) PutListenerGateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error) {
+	rsp, err := c.PutListenerGateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutListenerGateResponse(rsp)
+}
+
+// PutListenerGateWithResponse Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *ClientWithResponses) PutListenerGateWithResponse(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error) {
+	rsp, err := c.PutListenerGate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutListenerGateResponse(rsp)
 }
 
 // ListMachinesWithResponse Every machine with state, backends, load and slots
@@ -36872,6 +40369,36 @@ func (c *ClientWithResponses) DrainMachineWithResponse(ctx context.Context, mach
 		return nil, err
 	}
 	return ParseDrainMachineResponse(rsp)
+}
+
+// GetMachineHealthWithResponse The health of one machine
+//
+// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+func (c *ClientWithResponses) GetMachineHealthWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineHealthResponse, error) {
+	rsp, err := c.GetMachineHealth(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineHealthResponse(rsp)
+}
+
+// GetMachineJobStatsWithResponse Job stats of one machine and of its runners
+//
+// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+func (c *ClientWithResponses) GetMachineJobStatsWithResponse(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*GetMachineJobStatsResponse, error) {
+	rsp, err := c.GetMachineJobStats(ctx, machineId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineJobStatsResponse(rsp)
 }
 
 // GetMachineLoadWithResponse Load history at 15-second steps, up to 24 hours
@@ -37228,21 +40755,6 @@ func (c *ClientWithResponses) GetPackageWithResponse(ctx context.Context, name s
 		return nil, err
 	}
 	return ParseGetPackageResponse(rsp)
-}
-
-// GetParityAddressWithResponse The address the parity setup will write, and whether it answers
-//
-// github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-//
-// Returns a wrapper object for the known response body format(s).
-//
-// Corresponds with GET /api/v1/parity-address (the `GetParityAddress` operationId).
-func (c *ClientWithResponses) GetParityAddressWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetParityAddressResponse, error) {
-	rsp, err := c.GetParityAddress(ctx, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseGetParityAddressResponse(rsp)
 }
 
 // GetRegistrySettingsWithResponse Registry logins per backend and whether a private CA bundle is set
@@ -37796,36 +41308,6 @@ func (c *ClientWithResponses) SetRepositoryExtraPackagesWithResponse(ctx context
 	return ParseSetRepositoryExtraPackagesResponse(rsp)
 }
 
-// SetupRepositoryParityWithBodyWithResponse Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *ClientWithResponses) SetupRepositoryParityWithBodyWithResponse(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error) {
-	rsp, err := c.SetupRepositoryParityWithBody(ctx, repositoryId, contentType, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseSetupRepositoryParityResponse(rsp)
-}
-
-// SetupRepositoryParityWithResponse Set up parity for this repository
-//
-// github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-//
-// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
-//
-// Corresponds with POST /api/v1/repositories/{repositoryId}/parity-setup (the `SetupRepositoryParity` operationId).
-func (c *ClientWithResponses) SetupRepositoryParityWithResponse(ctx context.Context, repositoryId RepositoryId, body SetupRepositoryParityJSONRequestBody, reqEditors ...RequestEditorFn) (*SetupRepositoryParityResponse, error) {
-	rsp, err := c.SetupRepositoryParity(ctx, repositoryId, body, reqEditors...)
-	if err != nil {
-		return nil, err
-	}
-	return ParseSetupRepositoryParityResponse(rsp)
-}
-
 // UpdateRepositoryPolicyWithBodyWithResponse Change a repository's policy
 //
 // github-integration R5.25 to R5.27, scheduling R5.4, R5.8 to R5.10. Turning fork jobs on needs `confirm_fork_risk`.
@@ -38051,6 +41533,51 @@ func (c *ClientWithResponses) StopRepositoryPlanWithResponse(ctx context.Context
 	return ParseStopRepositoryPlanResponse(rsp)
 }
 
+// GetRunnerClassesWithResponse The size classes of runners and the reservation numbers
+//
+// scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runner-classes (the `GetRunnerClasses` operationId).
+func (c *ClientWithResponses) GetRunnerClassesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetRunnerClassesResponse, error) {
+	rsp, err := c.GetRunnerClasses(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunnerClassesResponse(rsp)
+}
+
+// PutRunnerClassesWithBodyWithResponse Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *ClientWithResponses) PutRunnerClassesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error) {
+	rsp, err := c.PutRunnerClassesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutRunnerClassesResponse(rsp)
+}
+
+// PutRunnerClassesWithResponse Save the size classes or the reservation numbers
+//
+// scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/runner-classes (the `PutRunnerClasses` operationId).
+func (c *ClientWithResponses) PutRunnerClassesWithResponse(ctx context.Context, body PutRunnerClassesJSONRequestBody, reqEditors ...RequestEditorFn) (*PutRunnerClassesResponse, error) {
+	rsp, err := c.PutRunnerClasses(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutRunnerClassesResponse(rsp)
+}
+
 // PlanRunnersWithBodyWithResponse Plan adding runners on a machine
 //
 // runners R5.1 and R5.36. Refuses a machine without an allowed backend for the OS and kind, or a label that is not generic, with the reason.
@@ -38212,6 +41739,21 @@ func (c *ClientWithResponses) GetRunnerEnvWithResponse(ctx context.Context, runn
 	return ParseGetRunnerEnvResponse(rsp)
 }
 
+// GetRunnerJobStatsWithResponse Job stats of one runner
+//
+// machines R5.78, R5.79.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+func (c *ClientWithResponses) GetRunnerJobStatsWithResponse(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*GetRunnerJobStatsResponse, error) {
+	rsp, err := c.GetRunnerJobStats(ctx, runnerId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunnerJobStatsResponse(rsp)
+}
+
 // DeleteRunnerRegistrationWithResponse Delete the registration of an offline runner whose agent cannot remove it
 //
 // github-integration R5.33. For a runner GitHub lists as offline and not busy, when its machine cannot run the remove step. Without `confirm=true` it answers 409 needs_confirmation naming the runner. With it the controller deletes the registration at GitHub, then cleans the machine if it answers, and drops the record. An online or busy runner is refused with 409.
@@ -38287,6 +41829,51 @@ func (c *ClientWithResponses) ListRunsWithResponse(ctx context.Context, params *
 	return ParseListRunsResponse(rsp)
 }
 
+// PreviewRunsOnPullRequestsWithResponse Preview the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.113. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runs-on-pr (the `PreviewRunsOnPullRequests` operationId).
+func (c *ClientWithResponses) PreviewRunsOnPullRequestsWithResponse(ctx context.Context, params *PreviewRunsOnPullRequestsParams, reqEditors ...RequestEditorFn) (*PreviewRunsOnPullRequestsResponse, error) {
+	rsp, err := c.PreviewRunsOnPullRequests(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePreviewRunsOnPullRequestsResponse(rsp)
+}
+
+// OpenRunsOnPullRequestsWithBodyWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *ClientWithResponses) OpenRunsOnPullRequestsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error) {
+	rsp, err := c.OpenRunsOnPullRequestsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpenRunsOnPullRequestsResponse(rsp)
+}
+
+// OpenRunsOnPullRequestsWithResponse Open the runs-on pull request of one repository or of every opted-in repository
+//
+// github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs-on-pr (the `OpenRunsOnPullRequests` operationId).
+func (c *ClientWithResponses) OpenRunsOnPullRequestsWithResponse(ctx context.Context, body OpenRunsOnPullRequestsJSONRequestBody, reqEditors ...RequestEditorFn) (*OpenRunsOnPullRequestsResponse, error) {
+	rsp, err := c.OpenRunsOnPullRequests(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpenRunsOnPullRequestsResponse(rsp)
+}
+
 // GetRunWithResponse One run attempt with its jobs, needs graph and ETA
 //
 // OPS34 D3, D4. The jobs carry their forecast and, when queued, their place and ETA. `edges` come from the workflow file when it was read, else from timing overlap (`graph.source`).
@@ -38315,6 +41902,51 @@ func (c *ClientWithResponses) GetRunSavingsWithResponse(ctx context.Context, run
 		return nil, err
 	}
 	return ParseGetRunSavingsResponse(rsp)
+}
+
+// GetRunTimerWithResponse The run timer of a run attempt
+//
+// scheduling R5.100, R5.105.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runs/{runId}/timer (the `GetRunTimer` operationId).
+func (c *ClientWithResponses) GetRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *GetRunTimerParams, reqEditors ...RequestEditorFn) (*GetRunTimerResponse, error) {
+	rsp, err := c.GetRunTimer(ctx, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunTimerResponse(rsp)
+}
+
+// CancelRunNowWithResponse Cancel now, during the grace of the run timer
+//
+// scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/cancel-now (the `CancelRunNow` operationId).
+func (c *ClientWithResponses) CancelRunNowWithResponse(ctx context.Context, runId TimerRunId, params *CancelRunNowParams, reqEditors ...RequestEditorFn) (*CancelRunNowResponse, error) {
+	rsp, err := c.CancelRunNow(ctx, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCancelRunNowResponse(rsp)
+}
+
+// ExtendRunTimerWithResponse Extend 10 min, during the grace of the run timer
+//
+// scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
+func (c *ClientWithResponses) ExtendRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*ExtendRunTimerResponse, error) {
+	rsp, err := c.ExtendRunTimer(ctx, runId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExtendRunTimerResponse(rsp)
 }
 
 // RestartServiceWithResponse Restart the service after a drain
@@ -38480,7 +42112,7 @@ func (c *ClientWithResponses) GetPublicRepositoriesWithResponse(ctx context.Cont
 
 // SetPublicRepositoriesWithBodyWithResponse Turn public repositories on or off
 //
-// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -38495,7 +42127,7 @@ func (c *ClientWithResponses) SetPublicRepositoriesWithBodyWithResponse(ctx cont
 
 // SetPublicRepositoriesWithResponse Turn public repositories on or off
 //
-// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+// github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -38652,6 +42284,96 @@ func (c *ClientWithResponses) RedeemSetupLinkWithResponse(ctx context.Context, b
 		return nil, err
 	}
 	return ParseRedeemSetupLinkResponse(rsp)
+}
+
+// GetTimelineWithResponse Jobs on machine runner slots over time, past, running and forecast
+//
+// LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/timeline (the `GetTimeline` operationId).
+func (c *ClientWithResponses) GetTimelineWithResponse(ctx context.Context, params *GetTimelineParams, reqEditors ...RequestEditorFn) (*GetTimelineResponse, error) {
+	rsp, err := c.GetTimeline(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTimelineResponse(rsp)
+}
+
+// GetTimerSettingsWithResponse The job, run, hold, timeout, queued and start-up timers
+//
+// scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/timer-settings (the `GetTimerSettings` operationId).
+func (c *ClientWithResponses) GetTimerSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetTimerSettingsResponse, error) {
+	rsp, err := c.GetTimerSettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetTimerSettingsResponse(rsp)
+}
+
+// PutTimerSettingsWithBodyWithResponse Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *ClientWithResponses) PutTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error) {
+	rsp, err := c.PutTimerSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutTimerSettingsResponse(rsp)
+}
+
+// PutTimerSettingsWithResponse Save timer settings
+//
+// scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/timer-settings (the `PutTimerSettings` operationId).
+func (c *ClientWithResponses) PutTimerSettingsWithResponse(ctx context.Context, body PutTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutTimerSettingsResponse, error) {
+	rsp, err := c.PutTimerSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutTimerSettingsResponse(rsp)
+}
+
+// CheckTimerSettingsWithBodyWithResponse Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *ClientWithResponses) CheckTimerSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error) {
+	rsp, err := c.CheckTimerSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCheckTimerSettingsResponse(rsp)
+}
+
+// CheckTimerSettingsWithResponse Check timer settings without saving them
+//
+// scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/timer-settings/check (the `CheckTimerSettings` operationId).
+func (c *ClientWithResponses) CheckTimerSettingsWithResponse(ctx context.Context, body CheckTimerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*CheckTimerSettingsResponse, error) {
+	rsp, err := c.CheckTimerSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCheckTimerSettingsResponse(rsp)
 }
 
 // GetUpdateStatusWithResponse The running version, the newest stable release, and the state of an update
@@ -39008,101 +42730,6 @@ func (c *ClientWithResponses) ReceiveGithubWebhookWithResponse(ctx context.Conte
 	return ParseReceiveGithubWebhookResponse(rsp)
 }
 
-// ParseListAccessCredentialsResponse parses an HTTP response from a ListAccessCredentialsWithResponse call
-func ParseListAccessCredentialsResponse(rsp *http.Response) (*ListAccessCredentialsResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &ListAccessCredentialsResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest AccessCredentialList
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseCreateAccessCredentialResponse parses an HTTP response from a CreateAccessCredentialWithResponse call
-func ParseCreateAccessCredentialResponse(rsp *http.Response) (*CreateAccessCredentialResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &CreateAccessCredentialResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
-		var dest AccessCredentialCreated
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON201 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseRevokeAccessCredentialResponse parses an HTTP response from a RevokeAccessCredentialWithResponse call
-func ParseRevokeAccessCredentialResponse(rsp *http.Response) (*RevokeAccessCredentialResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &RevokeAccessCredentialResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case rsp.StatusCode == 204:
-		break // No content-type
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseReplaceAppPrivateKeyResponse parses an HTTP response from a ReplaceAppPrivateKeyWithResponse call
 func ParseReplaceAppPrivateKeyResponse(rsp *http.Response) (*ReplaceAppPrivateKeyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -39214,6 +42841,39 @@ func ParseSetAppWebhookResponse(rsp *http.Response) (*SetAppWebhookResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest AppWebhook
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListAssignLeasesResponse parses an HTTP response from a ListAssignLeasesWithResponse call
+func ParseListAssignLeasesResponse(rsp *http.Response) (*ListAssignLeasesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAssignLeasesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AssignLeaseList
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -40452,6 +44112,72 @@ func ParseListRepositoriesResponse(rsp *http.Response) (*ListRepositoriesRespons
 	return response, nil
 }
 
+// ParseGetHealthThresholdsResponse parses an HTTP response from a GetHealthThresholdsWithResponse call
+func ParseGetHealthThresholdsResponse(rsp *http.Response) (*GetHealthThresholdsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetHealthThresholdsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest HealthThresholds
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutHealthThresholdsResponse parses an HTTP response from a PutHealthThresholdsWithResponse call
+func ParsePutHealthThresholdsResponse(rsp *http.Response) (*PutHealthThresholdsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutHealthThresholdsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest HealthThresholds
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListImagesResponse parses an HTTP response from a ListImagesWithResponse call
 func ParseListImagesResponse(rsp *http.Response) (*ListImagesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -41339,6 +45065,105 @@ func ParseGetJobResourcesResponse(rsp *http.Response) (*GetJobResourcesResponse,
 	return response, nil
 }
 
+// ParseGetJobTimerResponse parses an HTTP response from a GetJobTimerWithResponse call
+func ParseGetJobTimerResponse(rsp *http.Response) (*GetJobTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExtendJobTimerResponse parses an HTTP response from a ExtendJobTimerWithResponse call
+func ParseExtendJobTimerResponse(rsp *http.Response) (*ExtendJobTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExtendJobTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStopJobNowResponse parses an HTTP response from a StopJobNowWithResponse call
+func ParseStopJobNowResponse(rsp *http.Response) (*StopJobNowResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StopJobNowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseCreateJoinCodeResponse parses an HTTP response from a CreateJoinCodeWithResponse call
 func ParseCreateJoinCodeResponse(rsp *http.Response) (*CreateJoinCodeResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -41508,6 +45333,72 @@ func ParseCreateJoinFileResponse(rsp *http.Response) (*CreateJoinFileResponse, e
 			headers.XJoinCodeId = value
 		}
 		response.Headers201 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetListenerGateResponse parses an HTTP response from a GetListenerGateWithResponse call
+func ParseGetListenerGateResponse(rsp *http.Response) (*GetListenerGateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetListenerGateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ListenerGate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutListenerGateResponse parses an HTTP response from a PutListenerGateWithResponse call
+func ParsePutListenerGateResponse(rsp *http.Response) (*PutListenerGateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutListenerGateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ListenerGate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil
@@ -41806,6 +45697,72 @@ func ParseDrainMachineResponse(rsp *http.Response) (*DrainMachineResponse, error
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineHealthResponse parses an HTTP response from a GetMachineHealthWithResponse call
+func ParseGetMachineHealthResponse(rsp *http.Response) (*GetMachineHealthResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineHealthResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MachineHealth
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineJobStatsResponse parses an HTTP response from a GetMachineJobStatsWithResponse call
+func ParseGetMachineJobStatsResponse(rsp *http.Response) (*GetMachineJobStatsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineJobStatsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MachineJobStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -42382,39 +46339,6 @@ func ParseGetPackageResponse(rsp *http.Response) (*GetPackageResponse, error) {
 	}
 
 	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
-// ParseGetParityAddressResponse parses an HTTP response from a GetParityAddressWithResponse call
-func ParseGetParityAddressResponse(rsp *http.Response) (*GetParityAddressResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &GetParityAddressResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ParityAddress
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
@@ -43372,39 +47296,6 @@ func ParseSetRepositoryExtraPackagesResponse(rsp *http.Response) (*SetRepository
 	return response, nil
 }
 
-// ParseSetupRepositoryParityResponse parses an HTTP response from a SetupRepositoryParityWithResponse call
-func ParseSetupRepositoryParityResponse(rsp *http.Response) (*SetupRepositoryParityResponse, error) {
-	bodyBytes, err := io.ReadAll(rsp.Body)
-	defer func() { _ = rsp.Body.Close() }()
-	if err != nil {
-		return nil, err
-	}
-
-	response := &SetupRepositoryParityResponse{
-		Body:         bodyBytes,
-		HTTPResponse: rsp,
-	}
-
-	switch {
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
-		var dest ParitySetup
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSON200 = &dest
-
-	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
-		var dest Error
-		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
-			return nil, err
-		}
-		response.JSONDefault = &dest
-
-	}
-
-	return response, nil
-}
-
 // ParseUpdateRepositoryPolicyResponse parses an HTTP response from a UpdateRepositoryPolicyWithResponse call
 func ParseUpdateRepositoryPolicyResponse(rsp *http.Response) (*UpdateRepositoryPolicyResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -43735,6 +47626,72 @@ func ParseStopRepositoryPlanResponse(rsp *http.Response) (*StopRepositoryPlanRes
 	return response, nil
 }
 
+// ParseGetRunnerClassesResponse parses an HTTP response from a GetRunnerClassesWithResponse call
+func ParseGetRunnerClassesResponse(rsp *http.Response) (*GetRunnerClassesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunnerClassesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerClasses
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutRunnerClassesResponse parses an HTTP response from a PutRunnerClassesWithResponse call
+func ParsePutRunnerClassesResponse(rsp *http.Response) (*PutRunnerClassesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutRunnerClassesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerClasses
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParsePlanRunnersResponse parses an HTTP response from a PlanRunnersWithResponse call
 func ParsePlanRunnersResponse(rsp *http.Response) (*PlanRunnersResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -44032,6 +47989,39 @@ func ParseGetRunnerEnvResponse(rsp *http.Response) (*GetRunnerEnvResponse, error
 	return response, nil
 }
 
+// ParseGetRunnerJobStatsResponse parses an HTTP response from a GetRunnerJobStatsWithResponse call
+func ParseGetRunnerJobStatsResponse(rsp *http.Response) (*GetRunnerJobStatsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunnerJobStatsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerJobStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseDeleteRunnerRegistrationResponse parses an HTTP response from a DeleteRunnerRegistrationWithResponse call
 func ParseDeleteRunnerRegistrationResponse(rsp *http.Response) (*DeleteRunnerRegistrationResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -44164,6 +48154,72 @@ func ParseListRunsResponse(rsp *http.Response) (*ListRunsResponse, error) {
 	return response, nil
 }
 
+// ParsePreviewRunsOnPullRequestsResponse parses an HTTP response from a PreviewRunsOnPullRequestsWithResponse call
+func ParsePreviewRunsOnPullRequestsResponse(rsp *http.Response) (*PreviewRunsOnPullRequestsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PreviewRunsOnPullRequestsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunsOnPullRequestPreviewList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOpenRunsOnPullRequestsResponse parses an HTTP response from a OpenRunsOnPullRequestsWithResponse call
+func ParseOpenRunsOnPullRequestsResponse(rsp *http.Response) (*OpenRunsOnPullRequestsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpenRunsOnPullRequestsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunsOnPullRequestResultList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseGetRunResponse parses an HTTP response from a GetRunWithResponse call
 func ParseGetRunResponse(rsp *http.Response) (*GetRunResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -44213,6 +48269,105 @@ func ParseGetRunSavingsResponse(rsp *http.Response) (*GetRunSavingsResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RunSavings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRunTimerResponse parses an HTTP response from a GetRunTimerWithResponse call
+func ParseGetRunTimerResponse(rsp *http.Response) (*GetRunTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCancelRunNowResponse parses an HTTP response from a CancelRunNowWithResponse call
+func ParseCancelRunNowResponse(rsp *http.Response) (*CancelRunNowResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CancelRunNowResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExtendRunTimerResponse parses an HTTP response from a ExtendRunTimerWithResponse call
+func ParseExtendRunTimerResponse(rsp *http.Response) (*ExtendRunTimerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExtendRunTimerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunTimer
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -44733,6 +48888,138 @@ func ParseRedeemSetupLinkResponse(rsp *http.Response) (*RedeemSetupLinkResponse,
 			headers.SetCookie = &value
 		}
 		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetTimelineResponse parses an HTTP response from a GetTimelineWithResponse call
+func ParseGetTimelineResponse(rsp *http.Response) (*GetTimelineResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTimelineResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Timeline
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetTimerSettingsResponse parses an HTTP response from a GetTimerSettingsWithResponse call
+func ParseGetTimerSettingsResponse(rsp *http.Response) (*GetTimerSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetTimerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimerSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutTimerSettingsResponse parses an HTTP response from a PutTimerSettingsWithResponse call
+func ParsePutTimerSettingsResponse(rsp *http.Response) (*PutTimerSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutTimerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimerSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseCheckTimerSettingsResponse parses an HTTP response from a CheckTimerSettingsWithResponse call
+func ParseCheckTimerSettingsResponse(rsp *http.Response) (*CheckTimerSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CheckTimerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest TimerSettingsCheck
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil

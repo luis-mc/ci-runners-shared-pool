@@ -126,3 +126,20 @@ func TestJitRunnerPoolSettingsFailureStartsNothing(t *testing.T) {
 		t.Fatal("a runner started with unknown pool settings")
 	}
 }
+
+func TestRoutingLabelPassesValidation(t *testing.T) {
+	got, err := ValidateLabels([]string{"self-hosted", "linux", "crsp-e2e-ab12"}, "crsp-home", nil)
+	if err != nil || len(got) != 3 {
+		t.Fatalf("a job's routing label is generic: %v %v", got, err)
+	}
+	if _, err := ValidateLabels([]string{"self-hosted", "my-project"}, "crsp-home", nil); err == nil {
+		t.Fatal("a project label stays refused")
+	}
+	many := make([]string, 0, MaxLabels+1)
+	for i := 0; i <= MaxLabels; i++ {
+		many = append(many, fmt.Sprintf("crsp-j%d-%04x", i, i))
+	}
+	if _, err := ValidateLabels(many, "", nil); err == nil {
+		t.Fatal("the 101st label is refused")
+	}
+}

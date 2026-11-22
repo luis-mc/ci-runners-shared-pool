@@ -3,7 +3,6 @@ export const SECTIONS: Record<string, { tab: string; section?: string }> = {
   users: { tab: 'access', section: 'users' },
   app: { tab: 'access', section: 'github-app' },
   webhooks: { tab: 'access', section: 'webhooks' },
-  access: { tab: 'access', section: 'access-for-ci' },
   repositories: { tab: 'repositories', section: 'public-repositories' },
   budgets: { tab: 'repositories', section: 'budgets' },
   appearance: { tab: 'console', section: 'appearance' },

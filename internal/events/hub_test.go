@@ -145,7 +145,7 @@ func TestLoadThrottlePerMachine(t *testing.T) {
 	h.Publish(MachineLoad, []byte(`{"machine_id":"a"}`))
 	h.Publish(MachineLoad, []byte(`{"machine_id":"a"}`)) // dropped
 	h.Publish(MachineLoad, []byte(`{"machine_id":"b"}`)) // other machine
-	now = now.Add(6 * time.Second)
+	now = now.Add(3 * time.Second)
 	h.Publish(MachineLoad, []byte(`{"machine_id":"a"}`))
 	if h.LastID() != 3 {
 		t.Fatalf("last id %d, want 3", h.LastID())

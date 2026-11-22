@@ -20,8 +20,6 @@ type PolicyUpdate struct {
 	RunnerGroups    *[]string
 	BudgetMemoryPct *int
 	BudgetCPUPct    *int
-	// LegacyVars turns the old variable names on or off (github-integration R5.39).
-	LegacyVars *bool
 	// ExtraPackages is the whole list as text, one name per line (runners
 	// R5.51). A bad name refuses the update with its line number.
 	ExtraPackages *string
@@ -92,9 +90,6 @@ func (u PolicyUpdate) Apply(p Policy) (Policy, error) {
 			return p, auth.Invalid("%s", err.Error())
 		}
 		p.ExtraPackages = names
-	}
-	if u.LegacyVars != nil {
-		p.LegacyVars = *u.LegacyVars
 	}
 	if u.HostedFallback != nil {
 		if *u.HostedFallback && !p.HostedFallback && !u.ConfirmFallbackCost {

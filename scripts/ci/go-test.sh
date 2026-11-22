@@ -9,17 +9,16 @@
 # go test's own; a run with no passing test exits 1.
 #
 # CRSP209 (G1): `go test -timeout` limits one package binary, not one test, so the
-# packages run in three tiers (scripts/ci/go-tiers.json, measured times in
-# docs/work/CRSP209-report.md): unit 10 s (every package not listed), integration
-# 60 s, and a slow run with the smallest safe limit for the packages that do not
-# fit 60 s yet. The three runs share one JSON file and one summary.
+# packages run in three tiers (scripts/ci/go-tiers.json): unit 10 s (every package
+# not listed), integration 60 s, and chunked (OPS82): the packages over 60 s run in
+# chunks of their tests, each with the 60 s limit. All runs share one JSON file and one summary.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 json="${GO_TEST_JSON:-test-results/go-test.json}"
 tiers() { go list ./... | node scripts/ci/go-tiers.mjs "$1"; }
 unit_pkgs=$(tiers unit)
 integration_pkgs=$(tiers integration)
-slow_pkgs=$(tiers slow)
+chunked_pkgs=$(tiers chunks)
 rc_file=$(mktemp)
 trap 'rm -f "$rc_file"' EXIT
 set +e
@@ -32,13 +31,18 @@ set +e
     # shellcheck disable=SC2086
     go test -json -timeout 60s "$@" $integration_pkgs || echo "$?" >> "$rc_file"
   fi
-  if [ -n "$slow_pkgs" ]; then
-    # Remaining G1 breaks: over 60 s under -race today. Do not raise this to hide a slow package.
-    # One at a time (-p 1): they share four cores, and scheduler and store (80 to 90 s alone) reached the
-    # 150 s limit with seven at once (CI run 44849018260) and store again with two at once (run 44851000439).
-    # shellcheck disable=SC2086
-    go test -json -timeout 150s -p 1 "$@" $slow_pkgs || echo "$?" >> "$rc_file"
-  fi
+  # OPS82 (G1): the timeout flag limits one package binary, so a package over 60 s runs in chunks:
+  # each chunk runs a share of its tests, with the integration limit of 60 s.
+  # The chunk count per package is in go-tiers.json; the packages run one at a time (-p 1).
+  while read -r pkg count; do
+    [ -n "$pkg" ] || continue
+    names=$(go test -timeout 10s -list '.' "$pkg" | grep -E '^(Test|Example|Fuzz)' || true)
+    for ((k = 0; k < count; k++)); do
+      integration_run=$(printf '%s\n' "$names" | awk -v n="$count" -v k="$k" 'NF && (NR - 1) % n == k { a = a (a ? "|" : "") $0 } END { if (a) print "^(" a ")$" }')
+      [ -n "$integration_run" ] || continue
+      go test -json -timeout 60s -p 1 "$@" -run "$integration_run" "$pkg" || echo "$?" >> "$rc_file"
+    done
+  done <<< "$chunked_pkgs"
 } | node scripts/ci/go-test-summary.mjs "$json"
 sum_rc=${PIPESTATUS[1]}
 set -e

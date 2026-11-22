@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/routing"
 	"log/slog"
 	"net/url"
 	"os"
@@ -43,7 +45,7 @@ import (
 const (
 	envPoolName     = "CRSP_POOL_NAME"
 	defaultPoolName = "crsp-home"
-	// runsOnRestoreEvery is how often the RUNS_ON variables are put back to
+	// runsOnRestoreEvery is how often the CRSP_RUNS_ON variables are put back to
 	// what the policy wants (github-integration R5.28).
 	runsOnRestoreEvery = 10 * time.Minute
 	// runsOnCheckEvery is how often the runs-on workflow check runs for every
@@ -63,7 +65,7 @@ type controllerDeps struct {
 	// Machines is the machines service; CA the controller's certificate authority.
 	Machines *machines.Service
 	CA       api.CAProvider
-	// PublicHost is the name runners reach the controller at; the parity setup writes it (CRSP141).
+	// PublicHost is the name runners reach the controller at; machines and runners join at it.
 	PublicHost string
 	// Packages serves the release packages to new machines (machines R5.65); nil for a development build.
 	Packages api.PackageServer
@@ -77,6 +79,8 @@ type controllerDeps struct {
 	Caches *caches.Service
 	// Link carries runner commands to remote machines and reports (CRSP63); nil keeps remote machines unreachable.
 	Link *agentlink.Link
+	// Health is the machine health service (OPS83); nil leaves the health routes and checks off.
+	Health *machinehealth.Service
 	// MachineSecrets is the secret source the config export reads (mr.Secrets).
 	MachineSecrets secrets.Store
 	// Backends are the runner backends of the controller's own OS; nil means none.
@@ -109,7 +113,7 @@ func (c *controller) Close() {
 
 // buildController wires the GitHub area, the runners service and the doctor
 // beside what runController made, and starts their background work under ctx
-// (the RUNS_ON restore loop, the first installation sync).
+// (the CRSP_RUNS_ON restore loop, the first installation sync).
 func buildController(ctx context.Context, d controllerDeps) (*controller, error) {
 	if d.Now == nil {
 		d.Now = time.Now
@@ -157,6 +161,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
 		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
 		FallbackGrace: fallbackGrace(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
+	// The runs-on pull request (R5.113): built and opened only by the owner's
+	// explicit call; no loop or webhook of this wiring opens one.
+	rsvc.SetRunsOnPullRequests(&routing.Service{Store: d.DB.Routing(), Files: workflowFileReader{gh: gh}, PRs: gh, Now: d.Now})
 	// An App made without a webhook has no webhook secret in the store (R5.3):
 	// no delivery can arrive, so polling finding a job is not a missed delivery.
 	health.HooksOn = func() bool {
@@ -297,6 +304,23 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}); ok {
 		q.SetUncleanLookup(func(machineID, name string) string { return runnerSvc.Unclean(ctx, machineID, name) })
 	}
+	// The gate reads a runner's size class: its job ceiling and memory cap (scheduling R5.90, R5.95).
+	if q, ok := d.Queue.(interface {
+		SetRunnerClass(func(machineID, runnerName string) string)
+	}); ok {
+		q.SetRunnerClass(func(machineID, name string) string { return runnerSvc.ClassOf(ctx, machineID, name) })
+	}
+	c.Options.RunnerClasses = newClassService(d.DB, runnerSvc, d.Machines)
+	// crsp's job and run timers with their 30 s grace (scheduling R5.99 to R5.106).
+	// The listener gate of persistent runners on the machine itself, in observe mode
+	// until the owner switches it on (runners R5.134). The assign.Gate it returns is
+	// what the assignment controller takes as its Gate.
+	var remoteLn remoteListener
+	if d.Link != nil {
+		remoteLn = &agentlink.Agent{L: d.Link}
+	}
+	gateSvc, _ := wireListenerGate(ctx, d.DB, logger, c, gh, runners.NewLocalAgent(reg), d.Machines, remoteLn, runnerSvc)
+	timerSvc := wireTimers(ctx, d.DB, logger, c, d.Queue, agent, gh, &repoLookup{store: repoStore}, runnerSvc)
 	// Long-lived runners serve every repository that uses the pool: one hidden
 	// registration for each pool repository, made and removed with the pool
 	// switch and by the reconcile loop (runners R5.88).
@@ -305,7 +329,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	rsvc.SetRegistrar(runnerSvc)
 	rsvc.SetFleet(runnerSvc)
 
-	// RUNS_ON variables: put back to the policy every 10 minutes, and once now.
+	// CRSP_RUNS_ON variables: put back to the policy every 10 minutes, and once now.
 	loopCtx, stopLoop := context.WithCancel(ctx)
 	loopDone := make(chan struct{})
 	go func() {
@@ -330,7 +354,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 
 	// Doctor: the M1 check registry over the controller's own data.
 	_, docSvc := wire.NewDoctor(wire.DoctorDeps{
-		Fleet: doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc},
+		Fleet: doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc, health: d.Health},
 		GitHub: func(context.Context) (doctor.GitHub, error) {
 			if gh.AppID() == 0 {
 				return nil, nil
@@ -338,11 +362,13 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			return gh, nil
 		},
 		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
-		KVM:       reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
-		Engines:   reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
-		Extra:     checks.KVMReportedChecks(),
-		Demand:    quietSource{wd: quietDemand},
-		Ephemeral: runnerSvc,
+		KVM:          reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
+		Engines:      reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
+		Extra:        append(checks.KVMReportedChecks(), checks.HealthChecks()...),
+		Demand:       quietSource{wd: quietDemand},
+		Ephemeral:    runnerSvc,
+		Timers:       timerSvc,
+		ListenerGate: gateSvc,
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger
@@ -353,8 +379,10 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Fleet = fleetView{svc: d.Machines, state: func(ctx context.Context) string { return d.Lifecycle.Status(ctx).State }}
 		c.Options.Remove = newRemoveService(d.Ops.Audit, d.Machines, func(err error) { logger.Warn("audit the remove", "err", err) })
 	}
+	if d.Health != nil {
+		c.Options.Health = d.Health
+	}
 	c.Options.Packages = d.Packages
-	c.Options.PublicHost, c.Options.ListenAddr = d.PublicHost, d.Cfg.ListenAddr
 	if d.Listen != nil {
 		c.Options.Listen = d.Listen
 	}
@@ -416,7 +444,7 @@ func (realClock) NewTicker(d time.Duration) (<-chan time.Time, func()) {
 type runsOnTasks struct {
 	// Ready is false until a GitHub App exists; the loops do nothing then.
 	Ready func() bool
-	// Reconcile syncs installations and puts the RUNS_ON variables back; it runs
+	// Reconcile syncs installations and puts the CRSP_RUNS_ON variables back; it runs
 	// every runsOnRestoreEvery.
 	Reconcile []func(ctx context.Context) (name string, err error)
 	// Check reads the workflow files of every enabled repository; it runs every
@@ -426,7 +454,7 @@ type runsOnTasks struct {
 	Fallback func(ctx context.Context) error
 }
 
-// runsOnLoop syncs installations and puts the RUNS_ON variables back every 10
+// runsOnLoop syncs installations and puts the CRSP_RUNS_ON variables back every 10
 // minutes, and runs the runs-on workflow check of every enabled repository
 // every hour, until ctx ends. It does nothing until a GitHub App exists.
 func runsOnLoop(ctx context.Context, logger *slog.Logger, clk loopClock, t runsOnTasks) {
@@ -522,7 +550,7 @@ func githubLoopTasks(gh *github.REST, rsvc *repos.Service, runnerSvc lightRemove
 				return "reconcile installations", rsvc.ReconcileInstallations(ctx)
 			},
 			func(ctx context.Context) (string, error) {
-				return "restore RUNS_ON variables", rsvc.ReconcileAllVariables(ctx)
+				return "restore CRSP_RUNS_ON variables", rsvc.ReconcileAllVariables(ctx)
 			},
 			// After the variables: no workflow points at a light runner while
 			// the runners are drained and removed (decision D110).
@@ -669,4 +697,20 @@ func publicRepositories(d controllerDeps) func(context.Context) (bool, error) {
 		return nil
 	}
 	return d.Ops.Settings.PublicRepositoriesOn
+}
+
+// workflowFileReader reads the workflow files of a repository's default branch
+// for the routing service.
+type workflowFileReader struct{ gh *github.REST }
+
+func (w workflowFileReader) WorkflowFiles(ctx context.Context, r routing.Repo) (map[string][]byte, error) {
+	fs, err := w.gh.ListWorkflowFiles(ctx, r.Installation, r.Owner, r.Name, nil)
+	if err != nil {
+		return nil, err
+	}
+	out := make(map[string][]byte, len(fs))
+	for _, f := range fs {
+		out[f.Path] = f.Content
+	}
+	return out, nil
 }

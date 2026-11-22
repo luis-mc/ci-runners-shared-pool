@@ -116,12 +116,25 @@ export const BANNED_WORDS = [
   'payload',
 ] as const;
 
+const warnedKeys = new Set<string>();
+
 /** A lifecycle word with its `{values}` filled in. */
 export function lw(
   key: LifecycleWord,
   values: Readonly<Record<string, string | number>> = {},
 ): string {
-  return LIFECYCLE_WORDS[key].replace(/\{(\w+)\}/g, (m, k: string) =>
+  const word: string | undefined = Object.hasOwn(LIFECYCLE_WORDS, key)
+    ? LIFECYCLE_WORDS[key]
+    : undefined;
+  if (word === undefined) {
+    // A missing word must never crash a page: show the key and say so once.
+    if (!warnedKeys.has(key)) {
+      warnedKeys.add(key);
+      console.warn(`lifecycle word missing: ${key}`);
+    }
+    return key;
+  }
+  return word.replace(/\{(\w+)\}/g, (m, k: string) =>
     k in values ? String(values[k]) : m,
   );
 }

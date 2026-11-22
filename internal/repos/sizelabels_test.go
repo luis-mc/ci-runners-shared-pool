@@ -37,16 +37,16 @@ func TestSizeVariableListsOnlyMachinesWithRoom(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got["RUNS_ON_LINUX"] != `["self-hosted","linux","x64","crsp-big","crsp-small"]` {
+	if got["CRSP_RUNS_ON_LINUX"] != `["self-hosted","linux","x64","crsp-big","crsp-small"]` {
 		t.Fatalf("plain variable changed: %v", got)
 	}
-	if v := got["RUNS_ON_LINUX_LARGE"]; strings.Contains(v, "crsp-small") || !strings.Contains(v, "crsp-big") {
+	if v := got["CRSP_RUNS_ON_LINUX_LARGE"]; strings.Contains(v, "crsp-small") || !strings.Contains(v, "crsp-big") {
 		t.Fatalf("large must list only the big machine: %s", v)
 	}
-	if v := got["RUNS_ON_LINUX_MEDIUM"]; !strings.Contains(v, "crsp-small") || !strings.Contains(v, "crsp-big") {
+	if v := got["CRSP_RUNS_ON_LINUX_MEDIUM"]; !strings.Contains(v, "crsp-small") || !strings.Contains(v, "crsp-big") {
 		t.Fatalf("medium fits both: %s", v)
 	}
-	if len(labelsOf(t, got["RUNS_ON_LINUX_XL"])) == 0 {
+	if len(labelsOf(t, got["CRSP_RUNS_ON_LINUX_XL"])) == 0 {
 		t.Fatal("xl is served by the big machine")
 	}
 }
@@ -56,21 +56,21 @@ func TestUnservableSizeIsNotWritten(t *testing.T) {
 	e := sizedEnv(t, MachineSize{OS: "linux", Labels: []string{"crsp-small"}, CPUs: 4, MemoryGiB: 8})
 	ctx := context.Background()
 	got, _ := e.svc.Desired(ctx, DefaultPolicy())
-	if _, ok := got["RUNS_ON_LINUX_LARGE"]; ok {
+	if _, ok := got["CRSP_RUNS_ON_LINUX_LARGE"]; ok {
 		t.Fatalf("large must not be written: %v", got)
 	}
-	if _, ok := got["RUNS_ON_LINUX_MEDIUM"]; !ok {
+	if _, ok := got["CRSP_RUNS_ON_LINUX_MEDIUM"]; !ok {
 		t.Fatalf("medium is served: %v", got)
 	}
 	un, err := e.svc.UnservedSizes(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(un) != 2 || !strings.HasPrefix(un[0], "RUNS_ON_LINUX_LARGE: no machine has 8 CPUs and 16 GiB") {
+	if len(un) != 2 || !strings.HasPrefix(un[0], "CRSP_RUNS_ON_LINUX_LARGE: no machine has 8 CPUs and 16 GiB") {
 		t.Fatalf("%v", un)
 	}
 	// A workflow that reads it gets a finding with the reason.
-	jobs := ParseRunsOn([]byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX_LARGE) }}\n"))
+	jobs := ParseRunsOn([]byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX_LARGE) }}\n"))
 	f := Check("w.yml", jobs, map[string]string{}, nil)
 	if len(f) != 1 || !strings.Contains(f[0].Text, "no machine has that much room") {
 		t.Fatalf("%+v", f)
@@ -84,10 +84,10 @@ func TestSizeLabelMapsToClass(t *testing.T) {
 			t.Fatalf("%q: %q %v", in, c, err)
 		}
 	}
-	if os, size, ok := ParseSizeVariable("RUNS_ON_MACOS_LARGE"); !ok || os != "macos" || size != "large" {
+	if os, size, ok := ParseSizeVariable("CRSP_RUNS_ON_MACOS_LARGE"); !ok || os != "macos" || size != "large" {
 		t.Fatal("parse")
 	}
-	if _, _, ok := ParseSizeVariable("RUNS_ON_LINUX"); ok {
+	if _, _, ok := ParseSizeVariable("CRSP_RUNS_ON_LINUX"); ok {
 		t.Fatal("the plain variable is not a size variable")
 	}
 }
@@ -103,7 +103,7 @@ func TestUnknownSizeLabelIsRefusedClearly(t *testing.T) {
 	if err := CheckSizeFloors(map[string]SizeFloor{"big": {CPUs: 0, MemoryGiB: 8}}); err == nil {
 		t.Fatal("a floor needs a CPU")
 	}
-	jobs := ParseRunsOn([]byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX_HUGE) }}\n"))
+	jobs := ParseRunsOn([]byte("jobs:\n  a:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX_HUGE) }}\n"))
 	f := Check("w.yml", jobs, map[string]string{}, nil)
 	if len(f) != 1 || !strings.Contains(f[0].Text, `size "huge" is not one of small, medium, large, xl`) {
 		t.Fatalf("%+v", f)
@@ -116,24 +116,24 @@ func TestSizeVariablesSyncAndOwnerVariableIsKept(t *testing.T) {
 	e.world()
 	e.turnOn(101)
 	ctx := context.Background()
-	if v, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX_LARGE"); !ok || !strings.Contains(v, "crsp-big") {
+	if v, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX_LARGE"); !ok || !strings.Contains(v, "crsp-big") {
 		t.Fatalf("size variable written: %q %v", v, ok)
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX_XL"); ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX_XL"); ok {
 		t.Fatal("xl is not served")
 	}
-	e.fake.SetVariable("alice/secret", "RUNS_ON_LINUX_MINE", "x") // owner's own, not ours
-	e.svc.cfg.Sizes = &sizes{}                                    // the machine is gone
+	e.fake.SetVariable("alice/secret", "CRSP_RUNS_ON_LINUX_MINE", "x") // owner's own, not ours
+	e.svc.cfg.Sizes = &sizes{}                                         // the machine is gone
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX_LARGE"); ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX_LARGE"); ok {
 		t.Fatal("stale size variable deleted")
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX_MINE"); !ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX_MINE"); !ok {
 		t.Fatal("the owner's variable stays")
 	}
-	if _, ok := e.fake.Variable("alice/secret", "RUNS_ON_LINUX"); !ok {
+	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); !ok {
 		t.Fatal("plain variable stays")
 	}
 }

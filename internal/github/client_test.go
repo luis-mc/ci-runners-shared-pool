@@ -344,23 +344,23 @@ func TestVariables(t *testing.T) { // R5.28, R5.29
 	ctx := context.Background()
 	e.fake.AddInstall(10, "alice", "User")
 	e.fake.AddRepo(100, 10, "alice", "demo", true)
-	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "RUNS_ON_LINUX", Value: `["self-hosted","Linux"]`}); err != nil {
+	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "CRSP_RUNS_ON_LINUX", Value: `["self-hosted","Linux"]`}); err != nil {
 		t.Fatal(err)
 	}
-	if v, _ := e.fake.Variable("alice/demo", "RUNS_ON_LINUX"); v != `["self-hosted","Linux"]` {
+	if v, _ := e.fake.Variable("alice/demo", "CRSP_RUNS_ON_LINUX"); v != `["self-hosted","Linux"]` {
 		t.Fatalf("create: %q", v)
 	}
-	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "RUNS_ON_LINUX", Value: `["x"]`}); err != nil {
+	if err := e.client.SetVariable(ctx, 10, "alice", "demo", Variable{Name: "CRSP_RUNS_ON_LINUX", Value: `["x"]`}); err != nil {
 		t.Fatal(err)
 	}
 	vs, err := e.client.ListVariables(ctx, 10, "alice", "demo")
 	if err != nil || len(vs) != 1 || vs[0].Value != `["x"]` {
 		t.Fatalf("update: %+v %v", vs, err)
 	}
-	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "RUNS_ON_LINUX"); err != nil {
+	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "CRSP_RUNS_ON_LINUX"); err != nil {
 		t.Fatal(err)
 	}
-	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "RUNS_ON_LINUX"); err != nil {
+	if err := e.client.DeleteVariable(ctx, 10, "alice", "demo", "CRSP_RUNS_ON_LINUX"); err != nil {
 		t.Fatalf("deleting a missing variable is not an error: %v", err)
 	}
 }
@@ -627,17 +627,17 @@ func TestDeviceFlowDenied(t *testing.T) {
 
 func TestMissingPermissions(t *testing.T) { // R5.24
 	full := map[string]string{"administration": "write", "actions": "read", "actions_variables": "write",
-		"contents": "read", "metadata": "read", "organization_self_hosted_runners": "write", "secrets": "write"}
+		"contents": "read", "metadata": "read", "organization_self_hosted_runners": "write"}
 	if m := MissingPermissions(full); len(m) != 0 {
 		t.Fatalf("%v", m)
 	}
 	weak := map[string]string{"administration": "read", "actions": "write", "contents": "read", "metadata": "read"}
 	got := MissingPermissions(weak)
-	want := []string{"actions_variables", "administration", "organization_self_hosted_runners", "secrets"}
+	want := []string{"actions_variables", "administration", "organization_self_hosted_runners"}
 	if fmt.Sprint(got) != fmt.Sprint(want) {
 		t.Fatalf("got %v want %v (a stronger grant counts, a weaker one is missing)", got, want)
 	}
-	if len(RequiredPermissions) != 7 {
+	if len(RequiredPermissions) != 6 {
 		t.Fatal("the set is exactly the R5.23 table")
 	}
 }
@@ -710,29 +710,26 @@ func TestOpenJobsUsesETag(t *testing.T) {
 	}
 }
 
-func TestSetSecretSealsTheValueToTheRepositoryKey(t *testing.T) { // CRSP134
+// github-integration R5.110: the jobs list of each run is conditional too, so a
+// poll round that finds nothing new costs no rate limit.
+func TestOpenJobsReadsEachRunsJobsWithETag(t *testing.T) {
 	e := newEnv(t)
 	ctx := context.Background()
 	e.fake.AddInstall(10, "alice", "User")
-	e.fake.AddRepo(100, 10, "alice", "demo", true)
-	if err := e.client.SetSecret(ctx, 10, "alice", "demo", "CRSP_ACCESS", "crsp_acc_value"); err != nil {
-		t.Fatal(err)
+	e.fake.AddRepo(100, 10, "alice", "demo", false)
+	e.fake.AddJob(fake.Job{ID: 1, RunID: 11, Repo: "alice/demo", Name: "build", Status: "queued", Labels: []string{"self-hosted", "linux"}})
+	for i := 0; i < 2; i++ {
+		if jobs, err := e.client.ListOpenJobs(ctx, 10, "alice", "demo"); err != nil || len(jobs) != 1 {
+			t.Fatalf("round %d: %+v %v", i, jobs, err)
+		}
 	}
-	// The fake opens the sealed box with the repository's private key: the plain
-	// value only comes out if it was sealed to that key.
-	if v, ok := e.fake.Secret("alice/demo", "CRSP_ACCESS"); !ok || v != "crsp_acc_value" {
-		t.Fatalf("secret = %q %v", v, ok)
+	conditional := 0
+	for _, r := range e.fake.Requests() {
+		if strings.HasSuffix(r.Path, "/jobs") && r.Header.Get("If-None-Match") != "" {
+			conditional++
+		}
 	}
-	if err := e.client.SetSecret(ctx, 10, "alice", "demo", "CRSP_ACCESS", "second"); err != nil {
-		t.Fatalf("replacing a secret: %v", err)
-	}
-	if v, _ := e.fake.Secret("alice/demo", "CRSP_ACCESS"); v != "second" {
-		t.Fatalf("replace: %q", v)
-	}
-	// A failure never carries the value.
-	e.fake.FailMatching("/repos/alice/demo/actions/secrets", 500, 10)
-	err := e.client.SetSecret(ctx, 10, "alice", "demo", "CRSP_ACCESS", "never-in-an-error")
-	if err == nil || strings.Contains(err.Error(), "never-in-an-error") {
-		t.Fatalf("err = %v", err)
+	if conditional == 0 {
+		t.Fatal("the second round must send If-None-Match on the jobs list")
 	}
 }

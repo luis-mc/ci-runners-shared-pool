@@ -91,7 +91,7 @@ export function Guardrails() {
                   rowLabel={(r) => r.repository}
                   action={{
                     label: 'Open',
-                    to: (r) => `/repositories/${r.repository}`,
+                    to: (r) => `/setup/pool/${r.repository}`,
                     name: (r) => r.repository,
                   }}
                 />

@@ -15,9 +15,9 @@ func slotMachine(id, name string, slots, peak, wait int) doctor.Machine {
 // OPS55 R5.73, R5.75: runners above the slots, and a hold not below the job timeout, each warn with a fix.
 func TestRunnerSlotsWarns(t *testing.T) {
 	env := doctor.Env{Fleet: &fleet{machines: []doctor.Machine{
-		slotMachine("m1", "fine", 2, 2, 10),
-		slotMachine("m2", "toomany", 2, 4, 10),
-		slotMachine("m3", "longhold", 2, 2, 30),
+		slotMachine("m1", "fine", 2, 2, 2),
+		slotMachine("m2", "toomany", 2, 4, 2),
+		slotMachine("m3", "longhold", 2, 2, 10),
 		slotMachine("m4", "unknown", 0, 9, 99),
 	}}}
 	sev := map[string]doctor.Severity{}

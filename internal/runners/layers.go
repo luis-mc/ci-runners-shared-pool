@@ -23,7 +23,7 @@ const PlaywrightPin = "1.65.1"
 // are the dev-standards names, so a project setting maps one to one.
 type Layer struct {
 	Name    string
-	Release string // the parity release that adds it
+	Release string // the release that adds it
 	// Packages are the distribution packages the layer installs.
 	Packages []string
 	// Optional packages are installed when the base image has them; a missing
@@ -172,7 +172,7 @@ func SelectLayers(p PoolLayers) ([]SelectedLayer, error) {
 
 // NeverLower picks the Playwright version of a rebuild: the wanted one, unless
 // the pool's current one is higher, which then stays (held is true). A rebuild
-// never lowers it (runners R5.44; parity plan row 24). An empty current takes
+// never lowers it (runners R5.44). An empty current takes
 // the wanted version. A version that is not dotted numbers is refused and
 // nothing changes.
 func NeverLower(current, wanted string) (version string, held bool, err error) {

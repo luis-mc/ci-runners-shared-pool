@@ -18,20 +18,20 @@ const screens = [
   // The state of an agent that needs recovery (web-console R5.33): the page and the list.
   {
     name: 'machine detail needing recovery',
-    url: '/pool/machines/m1',
+    url: '/setup/machines/m1',
     signedOut: false,
     recovery: true,
   },
   {
     name: 'jobs empty',
-    url: '/jobs',
+    url: '/pool',
     signedOut: false,
     recovery: false,
     emptyJobs: true,
   },
   {
     name: 'repositories with public rows while the setting is off',
-    url: '/repositories',
+    url: '/setup/pool',
     signedOut: false,
     recovery: false,
     publicRows: true,
@@ -39,14 +39,14 @@ const screens = [
   // The GitHub grant part (github-integration R5.86, web-console R5.93): one step list and one primary action.
   {
     name: 'repositories with a missing App permission (the GitHub grant)',
-    url: '/repositories',
+    url: '/setup/pool',
     signedOut: false,
     recovery: false,
     grant: true,
   },
   {
     name: 'machines needing recovery',
-    url: '/pool/machines',
+    url: '/setup/machines',
     signedOut: false,
     recovery: true,
   },
@@ -157,8 +157,8 @@ for (const theme of ['dark', 'light'] as const) {
 // in the order they are read, each one visible, and no control sets a positive tabindex (UX-17).
 const focusScreens = [
   { name: 'sign-in', url: '/sign-in', signedOut: true },
-  { name: 'first-run wizard', url: '/setup', signedOut: false },
-  { name: 'repositories', url: '/repositories', signedOut: false },
+  { name: 'first-run wizard', url: '/setup?wizard=1', signedOut: false },
+  { name: 'repositories', url: '/setup/pool', signedOut: false },
   { name: 'users', url: '/settings/access', signedOut: false },
 ];
 

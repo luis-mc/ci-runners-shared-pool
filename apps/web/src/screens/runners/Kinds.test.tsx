@@ -10,7 +10,7 @@ import {
   signedIn,
   type MockApi,
 } from '../../testing/mock';
-import { chooseKind, kindReasons } from './kinds';
+import { PERSISTENT_ELSEWHERE, chooseKind, kindReasons } from './kinds';
 
 afterEach(cleanup);
 
@@ -54,7 +54,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
       [machine()],
       [repository({ visibility: 'private', pool_on: true })],
     );
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     expect((await radio(/^Persistent/)).checked).toBe(true);
     expect((await radio(/^Ephemeral/)).checked).toBe(false);
     expect(
@@ -72,7 +72,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
       [machine()],
       [repository({ visibility: 'public', pool_on: true })],
     );
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     expect((await radio(/^Ephemeral/)).checked).toBe(true);
     expect(
       screen.getByText('Ephemeral is chosen because a public repository uses the pool.'),
@@ -90,7 +90,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
 
   it('keeps downloaded dependencies by default and sends the choice', async () => {
     const api = addApi([machine()], []);
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     const keep = await screen.findByRole<HTMLInputElement>('checkbox', {
       name: /Keep downloaded dependencies/,
     });
@@ -109,7 +109,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
       [machine()],
       [repository({ visibility: 'public', pool_on: true })],
     );
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     fireEvent.click(await radio(/^Persistent/));
     expect((await radio(/^Persistent/)).checked).toBe(true);
     expect(screen.queryByText(/is chosen because/)).toBeNull();
@@ -117,7 +117,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
 
   it('greys Ephemeral without the container backend, with the reason and a link', async () => {
     const api = addApi([noDocker], [repository({ visibility: 'public', pool_on: true })]);
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     const eph = await radio(/^Ephemeral/);
     expect(eph.disabled).toBe(true);
     expect(
@@ -134,7 +134,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
       screen
         .getByRole('button', { name: 'Allow it on the machine' })
         .getAttribute('href'),
-    ).toBe('/pool/machines/m1');
+    ).toBe('/setup/machines/m1');
   });
 
   it('greys Ephemeral for Windows and for macOS', () => {
@@ -154,7 +154,7 @@ describe('Add runners: kind (D93, D94(b))', () => {
 
   it('shows the Windows reason on the page', async () => {
     const api = addApi([machine({ os: 'windows' })], []);
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     fireEvent.click(await radio(/^Windows/));
     expect(
       await screen.findByText(
@@ -164,15 +164,19 @@ describe('Add runners: kind (D93, D94(b))', () => {
     expect((await radio(/^Ephemeral/)).disabled).toBe(true);
   });
 
-  it('offers both kinds for Linux on a Windows machine with the container backend', () => {
+  it('offers Persistent only where it runs on the machine itself (runners R5.134)', () => {
     const win = machine({ os: 'windows', container_os: 'linux' });
     expect(kindReasons(win, 'linux')).toEqual({
-      persistent: undefined,
+      persistent: PERSISTENT_ELSEWHERE('windows', 'linux'),
       ephemeral: undefined,
     });
+    expect(chooseKind(win, 'linux', [], undefined).kind).toBe('ephemeral');
     const off = machine({ os: 'windows', container_os: 'linux', backends: [] });
-    expect(kindReasons(off, 'linux').persistent).toMatch(/need the container backend/);
+    expect(kindReasons(off, 'linux').persistent).toBe(
+      PERSISTENT_ELSEWHERE('windows', 'linux'),
+    );
     expect(chooseKind(off, 'linux', [], undefined).none).toBe(true);
+    expect(kindReasons(machine({ os: 'linux' }), 'linux').persistent).toBeUndefined();
   });
 });
 
@@ -194,7 +198,7 @@ describe('Runner page (runners R5.89, R5.90)', () => {
         runner({ id: 'r2', name: 'eph-1', kind: 'ephemeral', keeps_state: false }),
       ],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
     // The Isolation cell is one line; the kind and what it keeps are in its hover text (UX-72).
     expect(
@@ -203,9 +207,43 @@ describe('Runner page (runners R5.89, R5.90)', () => {
     expect(table.querySelector('[title*="Ephemeral"]')).toBeTruthy();
   });
 
+  it('shows gated: offline by design, the weekly wake-up and why jobs wait (runners R5.140)', async () => {
+    const api = page().on('GET', '/api/v1/listener-gate', {
+      enforce: false,
+      wake_every_days: 7,
+      runners: [
+        {
+          runner_name: 'crsp-linux-1',
+          machine_id: 'm1',
+          os: 'linux',
+          text: 'gated: offline by design',
+          listener_on: false,
+          next_wake: '2026-11-29T10:00:00Z',
+          queue_text: 'waiting for room on M1: needs 6 CPU, 5 free',
+        },
+      ],
+    });
+    renderApp(api, '/setup/runners/r1');
+    expect(await screen.findByText('gated: offline by design')).toBeTruthy();
+    expect(screen.getByText('Weekly wake-up')).toBeTruthy();
+    expect(screen.getByText('waiting for room on M1: needs 6 CPU, 5 free')).toBeTruthy();
+    expect(screen.getByText(/The gate is in observe mode/)).toBeTruthy();
+  });
+
+  it('shows no Listener section for a runner the gate does not hold', async () => {
+    const api = page().on('GET', '/api/v1/listener-gate', {
+      enforce: true,
+      wake_every_days: 7,
+      runners: [],
+    });
+    renderApp(api, '/setup/runners/r1');
+    await screen.findByText('Dependency cache size');
+    expect(screen.queryByText('Weekly wake-up')).toBeNull();
+  });
+
   it('saves the keep-dependencies setting with Save', async () => {
     const api = page({ keep_dependencies: true });
-    renderApp(api, '/pool/runners/r1');
+    renderApp(api, '/setup/runners/r1');
     const box = await screen.findByRole<HTMLInputElement>('checkbox', {
       name: /Keep downloaded dependencies/,
     });
@@ -225,7 +263,7 @@ describe('Runner page (runners R5.89, R5.90)', () => {
 
   it('clears the cache now, and says it waits for a running job', async () => {
     const api = page({ state: 'busy' });
-    renderApp(api, '/pool/runners/r1');
+    renderApp(api, '/setup/runners/r1');
     expect(
       await screen.findByText('A job is running. Clearing waits for it to finish.'),
     ).toBeTruthy();
@@ -237,7 +275,7 @@ describe('Runner page (runners R5.89, R5.90)', () => {
 
   it('shows why a runner is not clean', async () => {
     const api = page({ unclean_reason: 'a process of the last job is still running' });
-    renderApp(api, '/pool/runners/r1');
+    renderApp(api, '/setup/runners/r1');
     expect(
       await screen.findByText(
         'Not clean: a process of the last job is still running. It takes no new job until it is clean.',
@@ -247,7 +285,7 @@ describe('Runner page (runners R5.89, R5.90)', () => {
 
   it('has no dependency setting for an ephemeral runner', async () => {
     const api = page({ kind: 'ephemeral', keeps_state: false });
-    renderApp(api, '/pool/runners/r1');
+    renderApp(api, '/setup/runners/r1');
     await screen.findByRole('heading', { level: 1, name: 'crsp-linux-1' });
     expect(screen.queryByRole('checkbox', { name: /Keep downloaded/ })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Clear now' })).toBeNull();
@@ -272,7 +310,7 @@ describe('Repositories: runner kind (github-integration R5.60)', () => {
       .on('PATCH', '/api/v1/repositories/:id/policy', r);
 
   it('shows the kind with (default) and the capacity line in the list', async () => {
-    renderApp(apiFor({ ...pub, visibility: 'private' }), '/repositories');
+    renderApp(apiFor({ ...pub, visibility: 'private' }), '/setup/pool');
     expect(await screen.findByText('Ephemeral only (default)')).toBeTruthy();
     expect(
       screen.getByText('No ephemeral runner capacity: jobs would wait.'),
@@ -288,12 +326,12 @@ describe('Repositories: runner kind (github-integration R5.60)', () => {
         runner_kinds_set: true,
       },
     });
-    renderApp(apiFor(r), '/repositories');
+    renderApp(apiFor(r), '/setup/pool');
     expect(await screen.findByText('Ephemeral only')).toBeTruthy();
   });
 
   it('links to Add runners from the repository page when there is no capacity', async () => {
-    renderApp(apiFor(), '/repositories/octo/app');
+    renderApp(apiFor(), '/setup/pool/octo/app');
     const note = await screen.findByText(
       'No ephemeral runner capacity: jobs would wait.',
     );
@@ -301,12 +339,12 @@ describe('Repositories: runner kind (github-integration R5.60)', () => {
       within(note.closest('[role], div') as HTMLElement)
         .getByRole('button', { name: 'Add runners' })
         .getAttribute('href'),
-    ).toBe('/pool/runners/add');
+    ).toBe('/setup/runners/add');
   });
 
   it('asks before a public repository takes Any runner, then saves it', async () => {
     const api = apiFor();
-    renderApp(api, '/repositories/octo/app');
+    renderApp(api, '/setup/pool/octo/app');
     fireEvent.click(await screen.findByRole('radio', { name: /^Any runner/ }));
     expect(
       screen.getAllByText(/Anyone who can open a pull request may reach it/).length,
@@ -335,7 +373,7 @@ describe('Repositories: runner kind (github-integration R5.60)', () => {
       },
     });
     const api = apiFor(chosen);
-    renderApp(api, '/repositories/octo/app');
+    renderApp(api, '/setup/pool/octo/app');
     fireEvent.click(
       await screen.findByRole('radio', { name: /^Use the default \(Any runner\)/ }),
     );

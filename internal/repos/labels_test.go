@@ -34,7 +34,7 @@ func TestLeftoverLabelOnlyWhenNoWorkflowNamesIt(t *testing.T) { // R5.27
 	}
 	files := map[string][]byte{
 		".github/workflows/a.yml": []byte("jobs:\n  a:\n    runs-on: [self-hosted, legacy-proj]\n"),
-		".github/workflows/b.yml": []byte("jobs:\n  b:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n"),
+		".github/workflows/b.yml": []byte("jobs:\n  b:\n    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}\n"),
 	}
 	if got := WorkflowsNaming("legacy-proj", files); len(got) != 1 || got[0] != ".github/workflows/a.yml" {
 		t.Fatalf("a workflow still names it, so the label stays: %v", got)

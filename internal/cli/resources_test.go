@@ -30,7 +30,7 @@ func jobJSON(id int, repo, name, state string) map[string]any {
 func repoJSON(id int, full string, on bool) map[string]any {
 	owner, name, _ := strings.Cut(full, "/")
 	return map[string]any{"id": id, "full_name": full, "owner": owner, "name": name, "installation_id": 1, "visibility": "private", "pool_on": on, "user_is_github_admin": true, "user_admin_known": true,
-		"variables": []any{map[string]any{"name": "RUNS_ON_LINUX", "status": "ok"}},
+		"variables": []any{map[string]any{"name": "CRSP_RUNS_ON_LINUX", "status": "ok"}},
 		"policy":    map[string]any{"priority": 0, "max_parallel_jobs": 2, "allow_fork_pull_requests": false, "labels": []string{"self-hosted", "linux"}, "runner_groups": []string{}}}
 }
 
@@ -159,7 +159,7 @@ func TestViewerChangeExits3(t *testing.T) {
 
 func planJSON(state string, needsYes bool) map[string]any {
 	return map[string]any{"id": "p1", "area": "repositories", "state": state, "created_at": "2026-11-14T10:00:00Z", "created_by": "luis-mc",
-		"steps": []any{map[string]any{"id": "s1", "action": "pool_off", "text": "Delete variable RUNS_ON_LINUX", "needs_yes": needsYes, "state": "planned"}}}
+		"steps": []any{map[string]any{"id": "s1", "action": "pool_off", "text": "Delete variable CRSP_RUNS_ON_LINUX", "needs_yes": needsYes, "state": "planned"}}}
 }
 
 func TestRepoCommands(t *testing.T) {

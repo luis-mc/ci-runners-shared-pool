@@ -56,6 +56,8 @@ func waitReason(r string) *gen.WaitReason {
 		out = gen.WaitReasonPaused
 	case "on_battery":
 		out = gen.WaitReasonOnBattery
+	case "over_memory":
+		out = gen.WaitReasonOverMemory
 	default:
 		out = gen.WaitReasonUnknown
 	}

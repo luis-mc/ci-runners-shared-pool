@@ -10,8 +10,8 @@ test('Jobs: the queue says why a run waits and when it should start, Done lists 
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/live?state=queued');
-  await expect(page.getByRole('heading', { level: 1, name: 'Jobs' })).toBeVisible();
+  await page.goto('/pool/jobs?state=queued');
+  await expect(page.getByRole('heading', { level: 1, name: 'Pool' })).toBeVisible();
   const queue = page.getByRole('table', { name: 'Queue runs' });
   // CRSP210: the row shows the short reason; Why opens the whole sentence under the row.
   await expect(queue.getByText('waits for a slot', { exact: true })).toBeVisible();
@@ -20,7 +20,10 @@ test('Jobs: the queue says why a run waits and when it should start, Done lists 
     queue.getByText('waits for a free slot on any Linux machine'),
   ).toBeVisible();
   await expect(queue.getByText('in about 4 to 7 min')).toBeVisible();
-  await page.getByRole('tab', { name: 'Done' }).click();
+  await page
+    .getByRole('group', { name: 'State' })
+    .getByRole('button', { name: 'Done' })
+    .click();
   const done = page.getByRole('table', { name: 'Done runs' });
   await expect(done.getByRole('button', { name: 'Open run' })).toHaveCount(3);
   await expect(
@@ -45,7 +48,7 @@ test('Jobs: the Done range asks for a from date, and Export holds the same filte
       body: 'id,repository\n1,octo/app\n',
     });
   });
-  await page.goto('/jobs/done?view=jobs');
+  await page.goto('/pool/jobs?state=done&view=jobs');
   await expect(page.getByRole('table', { name: 'Done jobs' })).toBeVisible();
   await page.getByRole('button', { name: 'Last 7 days' }).click();
   await expect
@@ -73,7 +76,7 @@ test('Jobs: a job row opens the Job page with a link to the run on GitHub', asyn
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/done?view=jobs');
+  await page.goto('/pool/jobs?state=done&view=jobs');
   await page.getByRole('button', { name: 'Open job: test-2' }).click();
   await expect(page.getByRole('heading', { level: 1, name: 'test-2' })).toBeVisible();
   await expect(
@@ -85,7 +88,7 @@ test('Jobs: Open run goes straight to the Run page', async ({ page }) => {
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/done');
+  await page.goto('/pool/jobs');
   await page.getByRole('button', { name: 'Open run' }).first().click();
   await expect(page.getByText('Open run page')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('ci.yml on');
@@ -98,7 +101,7 @@ test('Jobs: an empty pool says so', async ({ page }) => {
     .on('GET', '/api/v1/jobs/groups', { items: [] })
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/repository');
+  await page.goto('/pool/jobs?group=repository');
   await expect(
     page.getByText('No jobs yet. Jobs show here when a workflow runs on the pool.'),
   ).toBeVisible();
@@ -175,7 +178,7 @@ test('Jobs: the list starts with focus in the search box and the search narrows 
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/live');
+  await page.goto('/pool/jobs');
   const box = page.getByRole('textbox', { name: /Search/ });
   await expect(box).toBeFocused();
   const rows = page.locator('table.ds-table tbody tr[data-list-row]');
@@ -196,7 +199,7 @@ test('Jobs: Down, Up, j and k move from the search box through the controls to t
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/live');
+  await page.goto('/pool/jobs');
   await expect(page.getByRole('textbox', { name: /Search/ })).toBeFocused();
   const rows = page.locator('table.ds-table tbody tr[data-list-row]');
   await expect(rows.first()).toBeVisible();
@@ -230,7 +233,7 @@ test('Jobs: Show details opens the panel of the chosen row, Hide details closes 
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/live');
+  await page.goto('/pool/jobs');
   const toggle = page.getByRole('button', { name: 'Show details' });
   await expect(toggle).toHaveAttribute('title', 'Show details');
   await toggle.click();
@@ -241,30 +244,28 @@ test('Jobs: Show details opens the panel of the chosen row, Hide details closes 
   await expect(side).toHaveCount(0);
 });
 
-test('Jobs: the old addresses land on the new tabs and keep their filter', async ({
-  page,
-}) => {
+test('Pool and Analytics: the tabs are in one order', async ({ page }) => {
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/jobs/running');
-  await expect(page).toHaveURL(/\/jobs\/live\?state=running/);
-  await page.goto('/jobs/repository');
-  await expect(page).toHaveURL(/\/jobs\/done\?group=repository/);
-  await page.goto('/jobs/trends');
-  await expect(page).toHaveURL(/\/jobs\/charts/);
-  await page.goto('/jobs');
+  await page.goto('/pool');
   await expect(page.getByRole('tab', { name: 'Overview' })).toHaveAttribute(
     'aria-selected',
     'true',
   );
-  const tabs = await page.getByRole('tab').allTextContents();
-  expect(tabs.slice(0, 6)).toEqual([
+  expect(await page.getByRole('tab').allTextContents()).toEqual([
     'Overview',
     'Live',
-    'Done',
-    'Run elsewhere',
-    'Run insights',
+    'Queue Analysis',
+    'Jobs',
+    'Machines',
+  ]);
+  await page.goto('/analytics');
+  await expect(page.getByRole('tab', { name: 'Suggestions' })).toBeVisible();
+  expect(await page.getByRole('tab').allTextContents()).toEqual([
+    'Suggestions',
+    'Insights',
     'Charts',
+    'Run elsewhere',
   ]);
 });

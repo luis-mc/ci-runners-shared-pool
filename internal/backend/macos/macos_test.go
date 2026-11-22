@@ -79,7 +79,7 @@ func TestDaemonPlistUserAndFolder(t *testing.T) {
 		"<key>UserName</key>\n  <string>crsp-box-1</string>",
 		"<key>GroupName</key>\n  <string>crsp-runners</string>",
 		"<key>WorkingDirectory</key>\n  <string>/usr/local/var/crsp/runners/box-1</string>",
-		"<key>KeepAlive</key>\n  <true/>",
+		"<key>KeepAlive</key>\n  <dict>\n    <key>SuccessfulExit</key>\n    <false/>\n  </dict>",
 		"<string>" + label + "</string>",
 	} {
 		if !strings.Contains(plist, want) {

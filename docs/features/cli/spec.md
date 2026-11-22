@@ -7,7 +7,7 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: [cmd/crsp/**, internal/cli/**, internal/parity/**]
+code: [cmd/crsp/**, internal/cli/**]
 design_system: [content action-vocabulary, content message-wording, content dates-times-numbers]
 last_verified: 2026-11-20
 artifact:
@@ -126,7 +126,6 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 | `runner list\|create\|update\|clear-cache\|remove` | Runners on machines, with kind, dependency setting and cache clear (OPS28) | M1 | `runners` |
 | `job list\|watch` | Queue and history; live view | M1 | `scheduling` |
 | `doctor` | Run every check and print fixes | M2 | `doctor` |
-| `parity check\|soak\|report` | The parity gate against the old pool | M7 | this spec; [parity plan](../../architecture/parity-plan.md) |
 | `config export\|import --dry-run\|apply` | Configuration as a file | M8 | `config-as-code` |
 | `backup\|restore` | Back up and restore the controller | M1 | `backup` |
 | `app rotate-key --file PATH\|-` | Replace the GitHub App private key (owner only; the controller checks it with GitHub first) | M8 | `github-integration` (R5.7) |
@@ -220,7 +219,7 @@ With `--json`, a refusal prints the contract's `ErrorEnvelope` to stderr and use
 
 **R5.27** — A command run with no subcommand, or `help`, MUST print usage. Usage to stdout exits 0 when asked for; usage after an error goes to stderr and exits 2. (Built today.)
 
-**R5.28** — `parity check` MUST read the runners and a doctor run from the controller and write the parity report: one check per class (linux-container, windows, vm) that a runner of the class is online, one that no runner name is listed twice, and one that the doctor has no `warn` and no `fail`. `parity soak` MUST judge a soak either from an observation file (`--observations`) or as a dry run with fakes (`--dry-run`), and MUST refuse both or neither. A class passes the soak only when at least N jobs of it were submitted, no job is lost, no listener is duplicate and the p95 queue wait is at most the bound; the report passes only when every check and every class passes, and an empty report never passes. A dry run and a check-only run MUST never set `counts_for_gate`. `parity report FILE` MUST judge the file again from its parts, so an edited verdict cannot pass. A report that did not pass exits 8. The report is the JSON file `parity-report.json`, uploaded by `.github/workflows/parity.yml` as the artifact `parity-report`. Source: `internal/cli/cmd_parity.go`, `internal/parity/`; plan: parity plan sections 6 and 8.
+**R5.28** (removed, CRSP227) — `parity check|soak|report` is removed. The parity test against the old pool is gone (owner decision, 2026-11-22): the owner moves repositories by the move runbook and validates on real use. The ID stays so old notes keep their meaning.
 
 **R5.29** — `machine maintain NAME [--yes] [--command-timeout 30m] -- COMMAND [ARG...]` MUST do host maintenance without cancelling a job (handover lesson 30, HND24), in this order:
 
@@ -233,7 +232,7 @@ With `--json`, a refusal prints the contract's `ErrorEnvelope` to stderr and use
 
 A command that Ctrl-C cut off may still run on the machine until its own timeout; the message says so.
 
-**R5.60** (built, CRSP134) — With no login context, the CLI MUST sign in from the environment, for every command that talks to the controller: `CRSP_URL` (the controller address), `CRSP_ACCESS` (an access credential, github-integration R5.82) and `CRSP_CA_FINGERPRINT` (the SHA-256 of the controller's CA certificate, 64 hex characters, colons allowed). The names end in none of `_KEY`, `_TOKEN`, `_SECRET`, `_PASS`. A login context always wins: the environment is the way in only when no context exists. The fingerprint MUST be pinned for an `https` address, by the same rule as the agents (the chain holds the CA with that fingerprint, or the server certificate is that certificate); there is no flag or variable that turns the check off, and a missing or wrong fingerprint sends no request. `http` is allowed for `127.0.0.1` and `[::1]` only, as in R6.3. A partial set names the missing variables and says where to make them (the console, Settings, Access for CI). With none set the answer is the old "Not signed in", now naming the three variables. The access value is never printed, written to the config file or put in an error, and the redactor masks `crsp_acc_` values. The environment sign-in has no stored token: `logout` has nothing to forget. Source: `internal/cli/session.go`.
+**R5.60** (removed, CRSP227) — The environment sign-in with `CRSP_URL`, `CRSP_ACCESS` and `CRSP_CA_FINGERPRINT` is removed. It existed only to let the parity check run in a pool container with an access credential (github-integration R5.82, also removed). With no login context the answer is "Not signed in. Run crsp login URL."
 
 **R5.61** (built, CRSP136) — `machine settings NAME [--docker-compact on|off|auto] [--docker-compact-threshold GIB] [--docker-compact-idle MINUTES]` MUST show the Docker disk compact policy of a machine (machines R5.66) and, with a flag, change it with one `PATCH` of the machine's settings and show the result; the same rights as the Machine page (admin). A value out of range MUST exit 2 and send nothing. With `--json` it prints the settings. The compact itself is `machine maintain NAME -- docker-compact` (R5.29) when done by hand.
 
@@ -327,7 +326,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R5.25 | built: internal/cli/completion_test.go TestScriptsAndOfflineCompletion |
 | R5.26 | built: cmd/crsp/main_test.go TestRunVersion, TestRunVersionJSON; internal/cli/core_test.go TestVersionJSON |
 | R5.27 | built: cmd/crsp/main_test.go TestRunUsageErrors; internal/cli/core_test.go TestUsageErrors |
-| R5.28 | built: internal/parity/parity_test.go TestEachCriterionFailsItsClass, TestReportEvaluate, TestPercentile95; internal/cli/cmd_parity_test.go TestParityCheckPassesAndWritesReport, TestParitySoakDryRun, TestParityReportIsRejudged |
+| R5.28 | removed (CRSP227) |
 | R5.29 | built: internal/cli/cmd_maintain_test.go TestMaintainDrainsRunsAndReleases, TestMaintainJSON, TestMaintainReleasesWhenTheCommandFails, TestMaintainReleasesWhenTheControllerRefusesTheCommand, TestMaintainReleasesWhenCancelledWhileDraining, TestMaintainReleasesWhenCancelledWhileRunning, TestMaintainRefusals; internal/agent/host_command_test.go TestHostCommandRunsOnADrainedMachine, TestHostCommandFailureKeepsExitCodeAndOutput, TestHostCommandTimeoutStopsTheCommand, TestHostCommandNeverMeetsAJob, TestHostCommandRefusesEmptyAndUnknown; internal/api/machines_command_test.go TestRunMachineCommandRefusals, TestRunMachineCommandNeedsADrainedMachine; internal/agentlink/agentlink_test.go TestHostCommandOnlyToAnAgentThatCan |
 | R6.1 | built: internal/cli/login_test.go TestNoSecretInOutputOrConfig (runs commands with a canary token) |
 | R6.2 | built: internal/cli/contexts/contexts_test.go TestNoTokenInFile; internal/cli/core_test.go TestFallbackFileMode |
@@ -337,7 +336,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R6.6 | built: internal/cli/resources_test.go TestViewerChangeExits3 |
 | R6.7 | built: internal/cli/output/output_test.go TestFits80Columns |
 | R6.8 | built: internal/cli/output/output_test.go TestJSONGolden |
-| R5.60 | built: internal/cli/envlogin_test.go TestEnvSignInWorksWithoutAContext, TestEnvSignInWorksForOtherCommands, TestEnvSignInPinsTheFingerprint, TestEnvSignInNeedsTheFingerprintForHTTPS, TestEnvSignInPartialSetNamesWhatIsMissing, TestNoContextNoEnvKeepsNotSignedIn, TestLoginContextWinsOverEnv |
+| R5.60 | removed (CRSP227) |
 | R5.61 | built: internal/cli/cmd_machine_settings_test.go TestMachineSettingsShowsThePolicy, TestMachineSettingsSetsThePolicy, TestMachineSettingsRefusesBadValues |
 | R5.62 | planned in the OPS28 code branches (names reconciled when they land): `internal/cli` tests for `runner add --ephemeral`, the dependency flags, `runner update`, `runner clear-cache` and `repo policy --runner-kind` |
 | R5.63 | built: internal/cli/cmd_machine_leftovers_test.go TestMachineLeftoversLists, TestMachineLeftoversListEmpty, TestMachineLeftoversRemove, TestMachineLeftoversRemoveNeedsConfirmation, TestMachineLeftoversRemoveRefusedAndUnknown |
@@ -397,12 +396,6 @@ Source: internal/cli/cmd_machine.go
 Source: internal/cli/cmd_runner.go
 Source: internal/cli/cmd_job.go
 Source: internal/cli/cmd_ops.go
-Source: internal/cli/cmd_parity.go
-Source: internal/parity/soak.go
-Source: internal/parity/judge.go
-Source: internal/parity/checks.go
-Source: internal/parity/report.go
-Source: internal/parity/fake.go
 Source: internal/cli/contexts/contexts.go
 Source: internal/cli/output/output.go
 Source: internal/api/client/client.gen.go
@@ -412,4 +405,4 @@ Source: packages/contract/oapi-codegen-client.yaml
 
 Tests: internal/cli/*_test.go, internal/cli/contexts/contexts_test.go, internal/cli/output/output_test.go.
 
-Controller wiring note (CRSP127): `cmd/crsp` treats a Windows machine whose engine runs Linux containers, with the container backend allowed, as serving Linux for container runner hosts and for `RUNS_ON_LINUX` (runners R5.47). No command or flag changed.
+Controller wiring note (CRSP127): `cmd/crsp` treats a Windows machine whose engine runs Linux containers, with the container backend allowed, as serving Linux for container runner hosts and for `CRSP_RUNS_ON_LINUX` (runners R5.47). No command or flag changed.

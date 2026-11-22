@@ -21,14 +21,14 @@ const STATES: {
 }[] = [
   {
     name: 'runners with rows',
-    path: '/pool/runners',
+    path: '/setup/runners',
     h1: 'Runners',
     pane: 'Runners',
     primaries: 1,
   },
   {
     name: 'runners empty',
-    path: '/pool/runners',
+    path: '/setup/runners',
     h1: 'Runners',
     pane: 'Runners',
     empty: ['/api/v1/runners', { items: [] }],
@@ -36,14 +36,14 @@ const STATES: {
   },
   {
     name: 'runners failed',
-    path: '/pool/runners',
+    path: '/setup/runners',
     h1: 'Runners',
     failed: '/api/v1/runners',
     primaries: 1,
   },
   {
     name: 'images empty',
-    path: '/pool/images',
+    path: '/setup/images',
     h1: 'Images and caches',
     pane: 'Images',
     empty: ['/api/v1/images', { items: [] }],
@@ -51,7 +51,7 @@ const STATES: {
   },
   {
     name: 'caches empty',
-    path: '/pool/images?tab=caches',
+    path: '/setup/images?tab=caches',
     h1: 'Images and caches',
     pane: 'Caches',
     empty: ['/api/v1/caches', { items: [] }],
@@ -59,14 +59,14 @@ const STATES: {
   },
   {
     name: 'image detail',
-    path: '/pool/images/img_m1_linux',
+    path: '/setup/images/img_m1_linux',
     h1: 'build-1',
     pane: 'Layers',
     primaries: 1,
   },
   {
     name: 'images failed',
-    path: '/pool/images',
+    path: '/setup/images',
     h1: 'Images and caches',
     failed: '/api/v1/images',
     primaries: 1,
@@ -126,7 +126,7 @@ test('runners: Select all N and Clear sit in the toolbar inside the pane (UX-12)
 }) => {
   const mock = jobsAndDoctor(signedIn());
   await mock.install(page);
-  await page.goto('/pool/runners');
+  await page.goto('/setup/runners');
   const pane = page.getByRole('region', { name: 'Runners' });
   await expect(pane.getByRole('button', { name: /^Select all \d+$/ })).toBeVisible();
   await expect(

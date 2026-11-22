@@ -43,7 +43,7 @@ test('/ goes to the search bar, and nothing fires while typing in it', async ({
   page,
 }) => {
   await signedIn().install(page);
-  await page.goto('/pool/machines');
+  await page.goto('/setup/machines');
   await expect(page.getByRole('table', { name: 'Machines' })).toBeVisible();
   await page.keyboard.press('/');
   await expect(page.getByRole('textbox', { name: 'Search machines' })).toBeFocused();
@@ -56,7 +56,7 @@ test('Down and j move through the page to a row, Up and k come back, Enter opens
   page,
 }) => {
   await signedIn().install(page);
-  await page.goto('/pool/machines');
+  await page.goto('/setup/machines');
   await expect(page.getByRole('table', { name: 'Machines' })).toBeVisible();
   await page.keyboard.press('/');
   const search = page.getByRole('textbox', { name: 'Search machines' });

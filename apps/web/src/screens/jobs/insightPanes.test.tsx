@@ -14,7 +14,7 @@ describe('insight panes', () => {
       steps_source: 'rest',
       checked_at: new Date().toISOString(),
     });
-    renderApp(jobsApi({ detail }), '/jobs/1');
+    renderApp(jobsApi({ detail }), '/pool/jobs/1');
     expect(await screen.findByText(/crsp runner runner-1 on build-1/)).toBeTruthy();
     expect(screen.getByText(/Steps read from GitHub\./)).toBeTruthy();
     expect(screen.getByText(/Last checked with GitHub/)).toBeTruthy();
@@ -39,7 +39,7 @@ describe('insight panes', () => {
   });
 
   it('Run page shows the savings', async () => {
-    renderApp(jobsApi({ run: runItem() }), '/jobs/run/100');
+    renderApp(jobsApi({ run: runItem() }), '/pool/runs/100');
     expect(await screen.findByRole('region', { name: 'Savings' })).toBeTruthy();
     expect(screen.getByText(/The run would end 4 min sooner/)).toBeTruthy();
   });

@@ -4,7 +4,7 @@ import type { paths } from '@crsp/contract';
 import { useEffect, useMemo, useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad, type Loaded } from '../../api/hooks';
-import { useVersion } from '../../live/LiveProvider';
+import { useLiveState, useVersion } from '../../live/LiveProvider';
 import { allRepositories } from '../repositories/plans';
 
 export type JobsQuery = NonNullable<paths['/api/v1/jobs']['get']['parameters']['query']>;
@@ -16,13 +16,18 @@ export type GroupBy = NonNullable<
 /** Milliseconds between refreshes of a list that holds running jobs. */
 export const POLL_MS = 5000;
 
-/** A counter that goes up every `ms`, so a screen with running jobs asks again. */
+/**
+ * A counter that goes up every `ms` while the event stream is not live, so a screen asks again every 5 seconds
+ * when the stream has dropped (R5.150). While the stream is live it stays still: the events reload the lists.
+ */
 export function useTick(ms = POLL_MS): number {
   const [n, setN] = useState(0);
+  const status = useLiveState().status;
   useEffect(() => {
+    if (status === 'live') return;
     const t = setInterval(() => setN((x) => x + 1), ms);
     return () => clearInterval(t);
-  }, [ms]);
+  }, [ms, status]);
   return n;
 }
 

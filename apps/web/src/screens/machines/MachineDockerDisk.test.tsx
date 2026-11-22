@@ -46,7 +46,7 @@ const lastPatch = (api: ReturnType<typeof detail>) =>
 
 describe('Docker disk section', () => {
   it('shows the numbers, the state and the policy', async () => {
-    renderApp(detail(), '/pool/machines/m1');
+    renderApp(detail(), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getByRole('heading', { name: 'Docker disk' })).toBeTruthy();
     expect(screen.getByText('Waiting: jobs run or wait here')).toBeTruthy();
@@ -65,7 +65,7 @@ describe('Docker disk section', () => {
 
   it('saves the mode at once, without Save', async () => {
     const api = detail();
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getByRole('radio', { name: /^Off/ }));
     await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
@@ -74,7 +74,7 @@ describe('Docker disk section', () => {
 
   it('says when the agent cannot make the disk smaller and offers Turn off', async () => {
     const api = detail(windows({}, { can_compact: false, reason: 'no_admin' }));
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getByText(/does not run as administrator/)).toBeTruthy();
     expect(
@@ -86,7 +86,7 @@ describe('Docker disk section', () => {
   });
 
   it('shows nothing for a machine without a Docker Desktop disk file', async () => {
-    renderApp(detail(machine()), '/pool/machines/m1');
+    renderApp(detail(machine()), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.queryByRole('heading', { name: 'Docker disk' })).toBeNull();
   });

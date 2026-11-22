@@ -261,90 +261,6 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/api/v1/access-credentials": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * List access credentials for CI
-         * @description github-integration R5.82. Without their values.
-         */
-        get: operations["listAccessCredentials"];
-        put?: never;
-        /**
-         * Make an access credential for CI
-         * @description github-integration R5.82. The value is in the answer once; only its hash is kept and the audit row never holds it. A credential has one scope; `parity` allows only what `crsp parity check` calls.
-         */
-        post: operations["createAccessCredential"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/access-credentials/{credentialId}": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        post?: never;
-        /**
-         * Revoke an access credential
-         * @description github-integration R5.82. The next request with its value is refused.
-         */
-        delete: operations["revokeAccessCredential"];
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/parity-address": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        /**
-         * The address the parity setup will write, and whether it answers
-         * @description github-integration R5.84 (CRSP141). The address a runner uses to reach the controller: https, the public host and the console port, the same address machines join at. The controller calls it from the server side with its own CA and says whether it answers. A controller with no such address answers `needs_address` with the setting to fix.
-         */
-        get: operations["getParityAddress"];
-        put?: never;
-        post?: never;
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
-    "/api/v1/repositories/{repositoryId}/parity-setup": {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        get?: never;
-        put?: never;
-        /**
-         * Set up parity for this repository
-         * @description github-integration R5.84. Makes a `parity` access credential and writes it as the repository Actions secret CRSP_ACCESS, and the controller address and CA fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, through the GitHub App. The address is the one machines use to join (https, the controller CA), never the address of the browser, never loopback or http (CRSP141); when the controller has none the answer is `needs_address` and nothing is made. When the App lacks the `secrets` or `actions_variables` write permission nothing is made: the answer is `needs_permission` with the GitHub pages that grant it.
-         */
-        post: operations["setupRepositoryParity"];
-        delete?: never;
-        options?: never;
-        head?: never;
-        patch?: never;
-        trace?: never;
-    };
     "/api/v1/auth/logout": {
         parameters: {
             query?: never;
@@ -850,6 +766,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runs-on-pr": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Preview the runs-on pull request of one repository or of every opted-in repository
+         * @description github-integration R5.113. Reads the workflow files and shows the files and the diff of the change to the per-job runs-on form. Writes nothing to GitHub. Without repository_id it covers every repository whose pool is on.
+         */
+        get: operations["previewRunsOnPullRequests"];
+        put?: never;
+        /**
+         * Open the runs-on pull request of one repository or of every opted-in repository
+         * @description github-integration R5.113. Opens one pull request per repository; an open crsp pull request is returned, never a second one. Writes one audit row per pull request. Never merges. Only this call opens a pull request: nothing opens one on a schedule.
+         */
+        post: operations["openRunsOnPullRequests"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/queue": {
         parameters: {
             query?: never;
@@ -1112,6 +1052,130 @@ export interface paths {
          */
         get: operations["getMachineLoad"];
         put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/assign/leases": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Jobs that wait for a runner, start or run, with their reasons
+         * @description runners R5.110 to R5.116. One lease per GitHub job id. A waiting lease says why it waits, for example "waiting for room on M1: needs 6 CPU, 5 free".
+         */
+        get: operations["listAssignLeases"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The health of one machine
+         * @description machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+         */
+        get: operations["getMachineHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/job-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job stats of one machine and of its runners
+         * @description machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+         */
+        get: operations["getMachineJobStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runners/{runnerId}/job-stats": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Job stats of one runner
+         * @description machines R5.78, R5.79.
+         */
+        get: operations["getRunnerJobStats"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/timeline": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Jobs on machine runner slots over time, past, running and forecast
+         * @description LOOK58 (web-console R5.160 to R5.166). One row per machine runner slot. Finished and running jobs sit in the slot they held; a queued job is placed on the slot the scheduler's queue simulation gives it (observability R5.40, scheduling R5.72) up to the end of the last queued job's forecast and at most 24 hours ahead. A job with no slot yet (waiting, no runner fits) is a bar in the row `waiting` of its machine. Pages by time: `before` (RFC 3339) returns the jobs that ended before it, at most `hours` hours back (default 6, at most 24, never older than 24 h from now); the first call has no `before` and also returns running and forecast bars. `more_before` is false once 24 hours are loaded.
+         */
+        get: operations["getTimeline"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/health-thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The limits of the machine health checks
+         * @description doctor R5.66.
+         */
+        get: operations["getHealthThresholds"];
+        /**
+         * Change the limits of the machine health checks
+         * @description doctor R5.66. A value outside its range is refused with the range.
+         */
+        put: operations["putHealthThresholds"];
         post?: never;
         delete?: never;
         options?: never;
@@ -1403,7 +1467,7 @@ export interface paths {
         get: operations["getPublicRepositories"];
         /**
          * Turn public repositories on or off
-         * @description github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
+         * @description github-integration R5.54 and R5.55. Switching off turns the pool off for every public repository that has it on (its settings stay), sets its CRSP_RUNS_ON variables to the hosted labels, drains and removes its runners, and audits each. `stopped` is how many repositories that was. Switching on stops nothing and turns nothing on by itself.
          */
         put: operations["setPublicRepositories"];
         post?: never;
@@ -1649,6 +1713,218 @@ export interface paths {
         post?: never;
         /** Remove the console size override of a job pattern */
         delete: operations["deleteJobSizeOverride"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runner-classes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The size classes of runners and the reservation numbers
+         * @description scheduling R5.89 to R5.93. Four classes (small, medium, large, xl) with CPUs and GiB of memory. A runner's class is the ceiling of the jobs it takes and the hard memory cap of each job. Hints never block; a size that no pool holds is listed in `unheld`.
+         */
+        get: operations["getRunnerClasses"];
+        /**
+         * Save the size classes or the reservation numbers
+         * @description scheduling R5.91, R5.92. The save is refused with a 400 whose message is in the owner's words when a number is not a whole number above 0, when sizes do not grow from small to xl, or when a runner's class no longer fits its machine's pool. Lowering a size that runners use answers 409 needs_confirmation until `confirm_lowering` is true.
+         */
+        put: operations["putRunnerClasses"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/listener-gate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The listener gate of persistent runners on the machine itself
+         * @description runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+         */
+        get: operations["getListenerGate"];
+        /**
+         * Switch the listener gate between observe and enforce
+         * @description runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+         */
+        put: operations["putListenerGate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/timer-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The job, run, hold, timeout, queued and start-up timers
+         * @description scheduling R5.99, R5.104. All are whole minutes. Defaults are 30 (job), 45 (run), 2 (hold), 60 (timeout-minutes), 720 (queued) and 2 (start-up). `enforce` is false by default: timers only report until the owner switches it on. The grace of 30 s and the 10 minute extension are fixed.
+         */
+        get: operations["getTimerSettings"];
+        /**
+         * Save timer settings
+         * @description scheduling R5.104. Only the fields given change. The save is refused with a 400 whose `details` name each field and the message in the owner's words when a value is not a whole number of minutes above 0, the hold is above 2 minutes, or the job timer is not below the run timer.
+         */
+        put: operations["putTimerSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/timer-settings/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Check timer settings without saving them
+         * @description scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
+         */
+        post: operations["checkTimerSettings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/timer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The job timer of a job
+         * @description scheduling R5.100, R5.105. While the timer has run out and the grace runs, `deadline` is when crsp acts and `text` counts down.
+         */
+        get: operations["getJobTimer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/timer/stop-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop now, during the grace of the job timer
+         * @description scheduling R5.101. Stops that job's runner at once; only that job ends. 409 when the timer has not run out, or the run timer ran out too and the run is cancelled instead. The use is an audit row.
+         */
+        post: operations["stopJobNow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/timer/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend 10 min, during the grace of the job timer
+         * @description scheduling R5.101. Once per job. 409 when the timer has not run out or was extended already. The use is an audit row.
+         */
+        post: operations["extendJobTimer"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runId}/timer": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The run timer of a run attempt
+         * @description scheduling R5.100, R5.105.
+         */
+        get: operations["getRunTimer"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runId}/timer/cancel-now": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Cancel now, during the grace of the run timer
+         * @description scheduling R5.101. Cancels the whole run through GitHub (POST /repos/{owner}/{repo}/actions/runs/{id}/cancel); there is no per-job cancel. 409 when the timer has not run out. The use is an audit row.
+         */
+        post: operations["cancelRunNow"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runs/{runId}/timer/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend 10 min, during the grace of the run timer
+         * @description scheduling R5.101. Once per run. 409 when the timer has not run out or was extended already. The use is an audit row.
+         */
+        post: operations["extendRunTimer"];
+        delete?: never;
         options?: never;
         head?: never;
         patch?: never;
@@ -3426,6 +3702,168 @@ export interface components {
             class: components["schemas"]["JobSizeClass"];
             copy_line: string;
         };
+        RunnerClassSize: {
+            /** @enum {string} */
+            class: "small" | "medium" | "large" | "xl";
+            cpus: number;
+            memory_gib: number;
+        };
+        RunnerClasses: {
+            /** @description The preset the table equals, or custom. */
+            preset: string;
+            presets: ("standard" | "compact" | "memory-heavy" | "custom")[];
+            /** @description small, medium, large, xl. */
+            classes: components["schemas"]["RunnerClassSize"][];
+            /** @description Notes that never block a save. */
+            hints: string[];
+            /** @description Classes no machine's pool can hold. A note, not an error. */
+            unheld: string[];
+            /** @description Default 3. */
+            reserve_after_passes: number;
+            /** @description Default 10. */
+            reserve_after_minutes: number;
+        };
+        RunnerClassesInput: {
+            /**
+             * @description Sets the table to that preset. Ignored when `classes` is given.
+             * @enum {string}
+             */
+            preset?: "standard" | "compact" | "memory-heavy" | "custom";
+            classes?: components["schemas"]["RunnerClassSize"][];
+            reserve_after_passes?: number;
+            reserve_after_minutes?: number;
+            /** @description Needed when a size that runners use gets smaller. */
+            confirm_lowering?: boolean;
+        };
+        ListenerGateInput: {
+            /** @description True switches the gate on; false is observe mode. */
+            enforce: boolean;
+        };
+        ListenerGateRunner: {
+            runner_name: string;
+            machine_id: string;
+            os: string;
+            /** @description `gated: offline by design`, or that the listener is on for an admitted job. */
+            text: string;
+            listener_on: boolean;
+            /** @description The jobs that hold the listener. */
+            job_ids?: number[];
+            /**
+             * Format: date-time
+             * @description Absent when the runner was never woken.
+             */
+            last_wake?: string;
+            /**
+             * Format: date-time
+             * @description When the weekly wake-up is due.
+             */
+            next_wake: string;
+            /** @description Why jobs wait for this runner, in the owner's words. Absent when none wait. */
+            queue_text?: string;
+        };
+        ListenerGate: {
+            enforce: boolean;
+            /** @description Fixed at 7. */
+            wake_every_days: number;
+            runners: components["schemas"]["ListenerGateRunner"][];
+        };
+        TimerSettings: {
+            /** @description The job timer, from the first real step. Default 30. */
+            job_minutes: number;
+            /** @description The run timer, from the first job's real start. Default 45. */
+            run_minutes: number;
+            /** @description The hold of the job-started hook, at most 2. Default 2. */
+            hold_minutes: number;
+            /** @description timeout-minutes crsp asks workflows to carry, GitHub's safety net. Default 60. */
+            timeout_minutes: number;
+            /** @description Alert for a job that waits this long in GitHub's queue. Default 720 (12 h). */
+            queued_minutes: number;
+            /** @description A runner that has not started its job in this time is removed and the job admitted again. Default 2. */
+            startup_minutes: number;
+            /** @description Off (the default, also after an upgrade) is observe mode: the countdowns and the grace run, a job or run over its timer is reported in the audit log (timer.job.would_stop, timer.run.would_cancel) and a job note, and no stop or cancel is sent. On stops the job and cancels the run. Stop now, Cancel now and Extend act in both modes. */
+            enforce: boolean;
+            /** @description Fixed at 30. */
+            grace_seconds: number;
+            /** @description Fixed at 10. */
+            extend_minutes: number;
+        };
+        /** @description Only the fields given change. */
+        TimerSettingsInput: {
+            job_minutes?: number;
+            run_minutes?: number;
+            hold_minutes?: number;
+            timeout_minutes?: number;
+            queued_minutes?: number;
+            startup_minutes?: number;
+            enforce?: boolean;
+        };
+        TimerSettingsProblem: {
+            /** @enum {string} */
+            field: "job_minutes" | "run_minutes" | "hold_minutes" | "timeout_minutes" | "queued_minutes" | "startup_minutes";
+            /** @description In the owner's words. */
+            message: string;
+        };
+        TimerSettingsCheck: {
+            ok: boolean;
+            problems: components["schemas"]["TimerSettingsProblem"][];
+            /** @description The settings as they would be after the change. */
+            settings: components["schemas"]["TimerSettings"];
+        };
+        JobTimer: {
+            /** Format: int64 */
+            job_id: number;
+            repository?: string;
+            /** Format: int64 */
+            run_id?: number;
+            run_attempt?: number;
+            /** @enum {string} */
+            state: "running" | "grace" | "stopped" | "ended";
+            /**
+             * Format: date-time
+             * @description The job's first real step.
+             */
+            started_at?: string;
+            limit_seconds?: number;
+            elapsed_seconds?: number;
+            /**
+             * Format: date-time
+             * @description During the grace, when crsp acts. The countdown is deadline minus now.
+             */
+            deadline?: string;
+            /** @description The state in words, for example "Job timer ran out at 30:00; stopping in 30 s". */
+            text: string;
+            /** @description What crsp did, for example "stopped by crsp: job timer 30:00". */
+            note?: string;
+            can_stop_now: boolean;
+            can_extend: boolean;
+            extended: boolean;
+            /** @description The run timer ran out too; the run is cancelled and this job is not stopped on its own. */
+            covered_by_run: boolean;
+        };
+        RunTimer: {
+            /** Format: int64 */
+            run_id: number;
+            repository?: string;
+            run_attempt?: number;
+            /** @enum {string} */
+            state: "running" | "grace" | "stopped" | "ended";
+            /**
+             * Format: date-time
+             * @description The first job's real start.
+             */
+            started_at?: string;
+            limit_seconds?: number;
+            elapsed_seconds?: number;
+            /** Format: date-time */
+            deadline?: string;
+            /** @description For example "Run timer ran out at 45:00; cancelling in 30 s". */
+            text: string;
+            /** @description For example "cancelled by crsp: run timer 45:00". */
+            note?: string;
+            can_cancel_now: boolean;
+            can_extend: boolean;
+            extended: boolean;
+        };
         EnvSetList: {
             items: components["schemas"]["EnvSet"][];
         };
@@ -3532,7 +3970,7 @@ export interface components {
          * @description observability R5.5.
          * @enum {string}
          */
-        WaitReason: "free_slot" | "load_over_budget" | "no_runner_with_labels" | "repository_parallel_limit" | "machine_drained" | "load_not_measured" | "paused" | "on_battery" | "unknown";
+        WaitReason: "free_slot" | "load_over_budget" | "no_runner_with_labels" | "repository_parallel_limit" | "machine_drained" | "load_not_measured" | "paused" | "on_battery" | "over_memory" | "unknown";
         /** @enum {string} */
         Severity: "ok" | "info" | "skip" | "warn" | "fail";
         /** @enum {string} */
@@ -3628,35 +4066,6 @@ export interface components {
              */
             name: string;
         };
-        AccessCredential: {
-            id: string;
-            name: string;
-            scope: components["schemas"]["AccessScope"];
-            created_by: string;
-            /** Format: date-time */
-            created_at: string;
-            /** Format: date-time */
-            last_used_at?: string;
-            /** Format: date-time */
-            revoked_at?: string;
-        };
-        /**
-         * @description `parity` is read only: the runner list and a doctor run.
-         * @enum {string}
-         */
-        AccessScope: "parity";
-        AccessCredentialList: {
-            items: components["schemas"]["AccessCredential"][];
-        };
-        AccessCredentialCreate: {
-            name: string;
-            scope: components["schemas"]["AccessScope"];
-        };
-        AccessCredentialCreated: {
-            /** @description The credential. Shown once. */
-            value: string;
-            info: components["schemas"]["AccessCredential"];
-        };
         /** @description github-integration R5.86. */
         GithubGrant: {
             /** @description Every needed permission is accepted by the installation. */
@@ -3681,8 +4090,6 @@ export interface components {
             /** @description The GitHub page of the step. Absent when the step has none. */
             url?: string;
         };
-        /** @description No fields. The address is the controller's own, never one the browser sends (CRSP141). */
-        ParitySetupRequest: Record<string, never>;
         ListenAddressCandidate: {
             /** @enum {string} */
             id: "pc" | "docker" | "other";
@@ -3722,31 +4129,6 @@ export interface components {
         ListenAddressChosen: {
             address: string;
             restarting: boolean;
-        };
-        ParityAddress: {
-            /** @enum {string} */
-            status: "ok" | "unreachable" | "needs_address";
-            /** @description The address that will be written as CRSP_URL. Empty with needs_address. */
-            url?: string;
-            /** @description Why the address does not answer, or why the controller has none. */
-            problem?: string;
-            /** @description The setting to fix when the controller has no address a runner can reach. */
-            setting?: string;
-        };
-        ParitySetup: {
-            /** @enum {string} */
-            status: "done" | "needs_permission" | "needs_address";
-            missing_permissions?: string[];
-            grant?: components["schemas"]["GithubGrant"];
-            /** @description The name of the repository Actions value that holds the access, CRSP_ACCESS. */
-            access_name?: string;
-            variable_names?: string[];
-            /** @description The id of the access credential that was made. */
-            access_id?: string;
-            /** @description With needs_address, why the controller has no address a runner can reach. */
-            address_problem?: string;
-            /** @description With needs_address, the setting to fix. */
-            address_setting?: string;
         };
         CliToken: {
             id: string;
@@ -4017,7 +4399,7 @@ export interface components {
          *       "user_admin_known": true,
          *       "variables": [
          *         {
-         *           "name": "RUNS_ON_LINUX",
+         *           "name": "CRSP_RUNS_ON_LINUX",
          *           "status": "ok",
          *           "value": "[\"self-hosted\",\"linux\",\"x64\"]"
          *         }
@@ -4177,7 +4559,7 @@ export interface components {
         };
         RepositoryVariable: {
             /** @enum {string} */
-            name: "RUNS_ON_LINUX" | "RUNS_ON_WINDOWS" | "RUNS_ON_MACOS" | "RUNS_ON_LIGHT";
+            name: "CRSP_RUNS_ON_LINUX" | "CRSP_RUNS_ON_WINDOWS" | "CRSP_RUNS_ON_MACOS" | "RUNS_ON_LIGHT";
             status: components["schemas"]["VariableStatus"];
             /** @description The JSON list of labels as written. */
             value?: string;
@@ -4199,8 +4581,6 @@ export interface components {
             runner_kinds?: "ephemeral_only" | "any_runner";
             /** @description True when the owner chose runner_kinds; false while it is the default of the repository's visibility. */
             runner_kinds_set?: boolean;
-            /** @description Also write CI_RUNS_ON and CI_RUNS_ON_WINDOWS with the same labels as RUNS_ON_LINUX and RUNS_ON_WINDOWS, for workflows that still follow the old dev-standards templates (github-integration R5.39). Off by default; for the move from the old pool. */
-            legacy_vars?: boolean;
             /** @description May lower the machine budget for this repository's jobs, never raise it (scheduling R5.4). */
             budget_memory_pct?: number;
             budget_cpu_pct?: number;
@@ -4233,8 +4613,6 @@ export interface components {
              * @enum {string}
              */
             runner_kinds?: "ephemeral_only" | "any_runner" | "default";
-            /** @description Turn the old variable names CI_RUNS_ON and CI_RUNS_ON_WINDOWS on or off (github-integration R5.39). */
-            legacy_vars?: boolean;
             /** @description Needed to turn fork jobs on (github-integration R5.26). */
             confirm_fork_risk?: boolean;
             /** @description Turn the hosted fallback on or off (github-integration R5.42). A public repository is refused. */
@@ -4312,6 +4690,45 @@ export interface components {
             items: components["schemas"]["RunsOnFinding"][];
             /** Format: date-time */
             checked_at?: string;
+        };
+        RunsOnPullRequestFile: {
+            path: string;
+            changes: number;
+            diff: string;
+        };
+        RunsOnPullRequestPreview: {
+            /** Format: int64 */
+            repository_id: number;
+            full_name: string;
+            /** @enum {string} */
+            state: "change" | "nothing_to_change" | "not_owned" | "error";
+            files: components["schemas"]["RunsOnPullRequestFile"][];
+            /** @description The whole change as a unified diff. */
+            diff: string;
+            skipped: string[];
+            message?: string;
+        };
+        RunsOnPullRequestPreviewList: {
+            items: components["schemas"]["RunsOnPullRequestPreview"][];
+        };
+        /** @description Name one repository, or set all to cover every repository whose pool is on. */
+        OpenRunsOnPullRequestsRequest: {
+            /** Format: int64 */
+            repository_id?: number;
+            all?: boolean;
+        };
+        RunsOnPullRequestResult: {
+            /** Format: int64 */
+            repository_id: number;
+            full_name: string;
+            /** @enum {string} */
+            state: "opened" | "existing" | "nothing_to_change" | "not_owned" | "error";
+            number?: number;
+            url?: string;
+            message?: string;
+        };
+        RunsOnPullRequestResultList: {
+            items: components["schemas"]["RunsOnPullRequestResult"][];
         };
         /**
          * @example {
@@ -4561,6 +4978,7 @@ export interface components {
             /** @description Automatic pauses while the machine runs on battery. On by default; Always ignores it (machines R5.61, R5.63). */
             pause_on_battery?: boolean;
             cpu_cap_pct?: components["schemas"]["CpuCapPct"];
+            disk_floor_gib?: components["schemas"]["DiskFloorGib"];
             /**
              * Format: date-time
              * @description A pause from the tray with a timer ends at this time. Absent when none runs (machines R5.61).
@@ -4611,6 +5029,8 @@ export interface components {
          * @enum {integer}
          */
         CpuCapPct: 25 | 50 | 75 | 100;
+        /** @description The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config. */
+        DiskFloorGib: number;
         /**
          * @description Why a machine takes no new job (machines R5.62). Other features read these exact names.
          * @enum {string}
@@ -4638,6 +5058,10 @@ export interface components {
             cpu_cap_state?: components["schemas"]["CpuCapState"];
             /** @description Why the cap is not applied, in words fit to show. */
             cpu_cap_detail?: string;
+            /** @description The free-disk floor in force on the agent, in GiB (runners R5.83). 0 while it is off or the agent has not reported it. */
+            disk_floor_gib?: number;
+            /** @description The floor is off because config.toml or the agent flag says so. The console shows it read-only; a console value is refused. */
+            disk_floor_off?: boolean;
         };
         /**
          * @example {
@@ -4780,6 +5204,7 @@ export interface components {
             mode?: components["schemas"]["MachineMode"];
             pause_on_battery?: boolean;
             cpu_cap_pct?: components["schemas"]["CpuCapPct"];
+            disk_floor_gib?: components["schemas"]["DiskFloorGib"];
             docker_compact?: components["schemas"]["DockerCompactMode"];
             /** @description How many GiB of Docker's disk file must be reclaimable (file size minus what Docker uses) before the compact runs. 0 takes 30 (caches R5.51 to R5.54). */
             docker_compact_threshold_gib?: number;
@@ -5446,6 +5871,68 @@ export interface components {
             steps: components["schemas"]["StepForecast"][];
             history: components["schemas"]["HistoryPoint"][];
         };
+        /**
+         * @description How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
+         * @enum {string}
+         */
+        TimelineBarState: "running" | "waiting_runner" | "waiting_room" | "reserved" | "forecast" | "no_runner_fits" | "timer_ran_out" | "done" | "failed";
+        TimelineRow: {
+            /** @description `<machine_id>:<slot>`, or `<machine_id>:waiting` for jobs with no slot yet. */
+            key: string;
+            machine_id: string;
+            machine_name: string;
+            /** @description 1-based. Absent on the waiting row. */
+            slot?: number;
+            /** @description For example `M1 slot 1`. */
+            label: string;
+        };
+        TimelineBar: {
+            id: string;
+            /**
+             * Format: int64
+             * @description Absent when the bar is a forecast of a job that has no record yet.
+             */
+            job_id?: number;
+            row_id: string;
+            state: components["schemas"]["TimelineBarState"];
+            label: string;
+            repository?: string;
+            /** Format: date-time */
+            start: string;
+            /**
+             * Format: date-time
+             * @description Absent while the job runs; the chart ends the bar at now.
+             */
+            end?: string;
+            /** Format: date-time */
+            end_lo?: string;
+            /** Format: date-time */
+            end_hi?: string;
+            /**
+             * Format: date-time
+             * @description When the job began to wait (the light part before the bar).
+             */
+            wait_from?: string;
+            /** @description The words of the bar for a screen reader and the tooltip. */
+            detail?: string;
+        };
+        Timeline: {
+            /** Format: date-time */
+            now: string;
+            /**
+             * Format: date-time
+             * @description The earliest time loaded.
+             */
+            from: string;
+            /**
+             * Format: date-time
+             * @description The end of the last forecast; `now` when nothing is queued. At most now + 24 h.
+             */
+            to: string;
+            rows: components["schemas"]["TimelineRow"][];
+            bars: components["schemas"]["TimelineBar"][];
+            more_before: boolean;
+        };
         Slot: {
             /** @enum {string} */
             kind: "ci" | "light" | "heavy";
@@ -5478,6 +5965,41 @@ export interface components {
             /** @description 1 is first in line. */
             place: number;
             wait_reason?: components["schemas"]["WaitReason"];
+        };
+        /** @enum {string} */
+        AssignLeaseState: "waiting" | "starting" | "running" | "done" | "gone";
+        /**
+         * @description Why a waiting job has no runner: pool (CPU or memory not free), load (over budget or not measured), reserved (another job holds the machine's room), never (no runner of the machine is big enough), no_machine (no machine has its labels or OS), start_failed (the start failed, retried later), starting.
+         * @enum {string}
+         */
+        AssignReasonCode: "pool" | "load" | "reserved" | "never" | "no_machine" | "start_failed" | "starting";
+        AssignLease: {
+            /** Format: int64 */
+            job_id: number;
+            /** Format: int64 */
+            run_id?: number;
+            repository: string;
+            job?: string;
+            labels?: string[];
+            /** @description The job-name routing label; empty when the job has none. */
+            job_label?: string;
+            state: components["schemas"]["AssignLeaseState"];
+            machine_id?: string;
+            runner_name?: string;
+            cpus?: number;
+            memory_gib?: number;
+            class?: string;
+            /** Format: date-time */
+            queued_at: string;
+            /** @description The console reason of a waiting job. */
+            reason?: string;
+            reason_code?: components["schemas"]["AssignReasonCode"];
+            passes?: number;
+            /** Format: date-time */
+            reserved_since?: string;
+        };
+        AssignLeaseList: {
+            leases: components["schemas"]["AssignLease"][];
         };
         SlotStatus: {
             machine_id: string;
@@ -5656,7 +6178,7 @@ export interface components {
          *       "title": "No online runner carries [self-hosted, linux, arm64]",
          *       "detail": ".github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]",
          *       "fix": {
-         *         "text": "Add a runner with these labels, or use fromJSON(vars.RUNS_ON_LINUX).",
+         *         "text": "Add a runner with these labels, or use fromJSON(vars.CRSP_RUNS_ON_LINUX).",
          *         "link": "/runners"
          *       },
          *       "needs_admin": false,
@@ -7046,6 +7568,272 @@ export interface components {
             /** @description True from 5 good runs on. */
             measured: boolean;
         };
+        HealthThresholds: {
+            /** @description A disk that fills in fewer days is a finding (default 3). */
+            disk_days_under: number;
+            /** @description A disk with less free space is a finding (default 10). */
+            disk_free_pct_under: number;
+            /** @description No heartbeat for this long is a finding (default 120). */
+            no_heartbeat_seconds: number;
+            /** @description A clock this far from the controller is a finding (default 30). */
+            clock_skew_seconds: number;
+            /** @description An OOM kill this recent is a finding (default 60). */
+            oom_window_minutes: number;
+        };
+        /** @description A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC. */
+        MachineHealth: {
+            machine_id: string;
+            /** @description False until the first report arrives; every other field is absent then. */
+            reported: boolean;
+            /** Format: date-time */
+            received_at?: string;
+            /** @description The last report is older than 3 minutes. */
+            stale: boolean;
+            boot?: components["schemas"]["HealthBoot"];
+            volumes: components["schemas"]["HealthVolume"][];
+            swap?: components["schemas"]["HealthSwap"];
+            oom?: components["schemas"]["HealthOom"];
+            connectivity?: components["schemas"]["HealthConnectivity"];
+            versions?: components["schemas"]["HealthVersions"];
+            updates?: components["schemas"]["HealthUpdates"];
+            power?: components["schemas"]["HealthPower"];
+            docker_use?: components["schemas"]["HealthDockerUse"];
+            thermal?: components["schemas"]["HealthThermal"];
+            load?: components["schemas"]["HealthLoad"];
+        };
+        HealthBoot: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            uptime_seconds?: number;
+            /** Format: date-time */
+            last_boot_at?: string;
+            /** @description Booted in the last 24 hours without a restart crsp asked for. */
+            unexpected_restart?: boolean;
+        };
+        HealthVolume: {
+            /** @enum {string} */
+            role: "system" | "data_dir" | "docker" | "runner_work";
+            path: string;
+            unknown_reason?: string;
+            /** Format: int64 */
+            total_bytes?: number;
+            /** Format: int64 */
+            free_bytes?: number;
+            free_pct?: number;
+            /** @description From the trend of the last 24 hours; absent when free space is not falling or there are too few samples. */
+            days_until_full?: number;
+            /** @description Why days_until_full is absent. */
+            days_note?: string;
+        };
+        HealthSwap: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            total_bytes?: number;
+            /** Format: int64 */
+            used_bytes?: number;
+        };
+        HealthOomScope: {
+            /** @enum {string} */
+            scope: "pool" | "job";
+            name: string;
+            /** Format: int64 */
+            kills: number;
+        };
+        HealthOom: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            total_kills?: number;
+            /** Format: date-time */
+            last_kill_at?: string;
+            /** @description A kill inside the Doctor window (default 1 hour). */
+            recent?: boolean;
+            scopes?: components["schemas"]["HealthOomScope"][];
+        };
+        HealthGithub: {
+            reachable?: boolean;
+            /** Format: int64 */
+            latency_ms?: number;
+            /** Format: date-time */
+            checked_at?: string;
+            error?: string;
+        };
+        HealthDns: {
+            ok?: boolean;
+            error?: string;
+        };
+        HealthConnectivity: {
+            /**
+             * Format: int64
+             * @description Agent to controller round trip, from the heartbeats.
+             */
+            rtt_ms?: number;
+            /** Format: date-time */
+            last_heartbeat_at?: string;
+            reconnects_24h?: number;
+            /** @description Agent clock minus controller clock; positive means the agent is ahead. */
+            clock_skew_seconds?: number;
+            github?: components["schemas"]["HealthGithub"];
+            dns?: components["schemas"]["HealthDns"];
+        };
+        HealthVersions: {
+            agent?: string;
+            controller?: string;
+            agent_out_of_date?: boolean;
+            /** @description The oldest runner app on the machine. */
+            runner_app?: string;
+            latest_runner?: string;
+            runner_out_of_date?: boolean;
+            docker_kind?: string;
+            docker?: string;
+            wsl?: string;
+        };
+        HealthUpdates: {
+            unknown_reason?: string;
+            restart_pending?: boolean;
+            restart_reasons?: string[];
+            pending_update_count?: number;
+            /** @description Windows Update active hours, local hour 0 to 23. */
+            active_hours_start?: number;
+            active_hours_end?: number;
+            auto_update_state?: string;
+            /** @description A restart is pending and the OS may do it now. */
+            restart_may_happen_now?: boolean;
+            /** @description It may happen now and the machine runs or takes jobs. */
+            restart_may_hit_jobs?: boolean;
+        };
+        HealthPower: {
+            on_battery?: boolean;
+            source_unknown_reason?: string;
+            /** @description A setting can suspend or hibernate the machine. */
+            sleep_enabled?: boolean;
+            sleep_modes?: string[];
+            sleep_unknown_reason?: string;
+            /** Format: date-time */
+            last_wake_at?: string;
+        };
+        HealthDockerUse: {
+            unknown_reason?: string;
+            /** Format: int64 */
+            images_bytes?: number;
+            /** Format: int64 */
+            build_cache_bytes?: number;
+            /** Format: int64 */
+            volumes_bytes?: number;
+            /** Format: int64 */
+            containers_bytes?: number;
+            /** Format: date-time */
+            read_at?: string;
+        };
+        HealthThermal: {
+            unknown_reason?: string;
+            max_temp_celsius?: number;
+            throttled?: boolean;
+            throttle_detail?: string;
+        };
+        HealthLoad: {
+            load_unknown_reason?: string;
+            load1?: number;
+            load5?: number;
+            load15?: number;
+            steal_unknown_reason?: string;
+            steal_pct?: number;
+        };
+        JobStatsCounts: {
+            /** Format: int64 */
+            succeeded: number;
+            /** Format: int64 */
+            failed: number;
+            /** Format: int64 */
+            cancelled: number;
+            /**
+             * Format: int64
+             * @description Ended by the crsp job timer, or by GitHub as timed out.
+             */
+            timed_out: number;
+            /** Format: int64 */
+            over_memory: number;
+            /**
+             * Format: int64
+             * @description Stopped by crsp (a drain, a Stop, a removal).
+             */
+            stopped: number;
+            /**
+             * Format: int64
+             * @description No known result (a job crsp lost).
+             */
+            other: number;
+            /** Format: int64 */
+            total: number;
+        };
+        /** @description The counts as fractions of the total, 0 to 1. Absent when no job completed in the window. */
+        JobStatsRates: {
+            succeeded?: number;
+            failed?: number;
+            cancelled?: number;
+            timed_out?: number;
+            over_memory?: number;
+            stopped?: number;
+        };
+        JobStatsFailure: {
+            /** Format: int64 */
+            job_id: number;
+            repository: string;
+            job: string;
+            /** Format: int64 */
+            run_id: number;
+            /** @enum {string} */
+            class: "failed" | "timed_out" | "over_memory" | "stopped";
+            /** Format: date-time */
+            at: string;
+            job_url?: string;
+            run_url?: string;
+        };
+        JobStatsFailingJob: {
+            repository: string;
+            job: string;
+            /** Format: int64 */
+            failures: number;
+            /** Format: date-time */
+            last_at: string;
+        };
+        JobStatsSet: {
+            counts: components["schemas"]["JobStatsCounts"];
+            rates?: components["schemas"]["JobStatsRates"];
+            /** @description Absent when no job in the window has times. */
+            avg_run_seconds?: number;
+            avg_queue_wait_seconds?: number;
+            /** @description Time jobs ran inside the window, summed. */
+            busy_seconds?: number;
+            /** @description Busy seconds over the window times the slots (a runner has one), 0 to 100. */
+            busy_pct?: number;
+            last_failure?: components["schemas"]["JobStatsFailure"];
+            top_failing: components["schemas"]["JobStatsFailingJob"][];
+        };
+        RunnerJobStatsEntry: {
+            runner_id: string;
+            runner_name: string;
+            stats: components["schemas"]["JobStatsSet"];
+        };
+        MachineJobStats: {
+            /** @enum {string} */
+            window: "24h" | "7d";
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            machine: components["schemas"]["JobStatsSet"];
+            runners: components["schemas"]["RunnerJobStatsEntry"][];
+        };
+        RunnerJobStats: {
+            /** @enum {string} */
+            window: "24h" | "7d";
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            runner_id: string;
+            stats: components["schemas"]["JobStatsSet"];
+        };
     };
     responses: {
         /** @description Any error, in the error envelope. */
@@ -7108,12 +7896,17 @@ export interface components {
         /** @description The numeric GitHub repository id. */
         RepositoryId: number;
         PlanId: string;
+        /** @description The window of the stats, 24h (default) or 7d. */
+        StatsWindow: "24h" | "7d";
         MachineId: string;
         ChangeId: string;
         JoinCodeId: string;
         SetName: string;
         RunnerId: string;
         JobId: number;
+        TimerRunId: number;
+        /** @description The attempt; the newest when absent. */
+        TimerAttempt: number;
         FindingId: number;
         RunId: string;
         BackupId: string;
@@ -7395,122 +8188,6 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    listAccessCredentials: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The credentials. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessCredentialList"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    createAccessCredential: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody: {
-            content: {
-                "application/json": components["schemas"]["AccessCredentialCreate"];
-            };
-        };
-        responses: {
-            /** @description The credential and its value. Shown once. */
-            201: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["AccessCredentialCreated"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    revokeAccessCredential: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                credentialId: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Revoked. */
-            204: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content?: never;
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    getParityAddress: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path?: never;
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description The address and the result of calling it. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParityAddress"];
-                };
-            };
-            default: components["responses"]["Error"];
-        };
-    };
-    setupRepositoryParity: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                /** @description The numeric GitHub repository id. */
-                repositoryId: components["parameters"]["RepositoryId"];
-            };
-            cookie?: never;
-        };
-        requestBody?: {
-            content: {
-                "application/json": components["schemas"]["ParitySetupRequest"];
-            };
-        };
-        responses: {
-            /** @description Done, or the permission the App lacks. */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["ParitySetup"];
-                };
             };
             default: components["responses"]["Error"];
         };
@@ -8258,6 +8935,54 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    previewRunsOnPullRequests: {
+        parameters: {
+            query?: {
+                repository_id?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One preview per repository. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsOnPullRequestPreviewList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    openRunsOnPullRequests: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["OpenRunsOnPullRequestsRequest"];
+            };
+        };
+        responses: {
+            /** @description One result per repository. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunsOnPullRequestResultList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     getQueueSettings: {
         parameters: {
             query?: never;
@@ -8663,6 +9388,177 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LoadHistory"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAssignLeases: {
+        parameters: {
+            query?: {
+                /** @description Only leases in this state. */
+                state?: components["schemas"]["AssignLeaseState"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The leases, oldest queued first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AssignLeaseList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The health. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineHealth"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineJobStats: {
+        parameters: {
+            query?: {
+                /** @description The window of the stats, 24h (default) or 7d. */
+                window?: components["parameters"]["StatsWindow"];
+            };
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stats. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineJobStats"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunnerJobStats: {
+        parameters: {
+            query?: {
+                /** @description The window of the stats, 24h (default) or 7d. */
+                window?: components["parameters"]["StatsWindow"];
+            };
+            header?: never;
+            path: {
+                runnerId: components["parameters"]["RunnerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The stats. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerJobStats"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTimeline: {
+        parameters: {
+            query?: {
+                /** @description Only the slots and jobs of this machine. */
+                machine_id?: string;
+                before?: string;
+                hours?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timeline. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Timeline"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getHealthThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The limits in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthThresholds"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putHealthThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HealthThresholds"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthThresholds"];
                 };
             };
             default: components["responses"]["Error"];
@@ -9505,6 +10401,316 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunnerClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerClasses"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putRunnerClasses: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RunnerClassesInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunnerClasses"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getListenerGate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting and the gated runners. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListenerGate"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putListenerGate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListenerGateInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListenerGate"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getTimerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimerSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putTimerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimerSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimerSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    checkTimerSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TimerSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description The check. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TimerSettingsCheck"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJobTimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    stopJobNow: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the stop. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    extendJobTimer: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the extension. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRunTimer: {
+        parameters: {
+            query?: {
+                /** @description The attempt; the newest when absent. */
+                attempt?: components["parameters"]["TimerAttempt"];
+            };
+            header?: never;
+            path: {
+                runId: components["parameters"]["TimerRunId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    cancelRunNow: {
+        parameters: {
+            query?: {
+                /** @description The attempt; the newest when absent. */
+                attempt?: components["parameters"]["TimerAttempt"];
+            };
+            header?: never;
+            path: {
+                runId: components["parameters"]["TimerRunId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the cancel. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTimer"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    extendRunTimer: {
+        parameters: {
+            query?: {
+                /** @description The attempt; the newest when absent. */
+                attempt?: components["parameters"]["TimerAttempt"];
+            };
+            header?: never;
+            path: {
+                runId: components["parameters"]["TimerRunId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The timer after the extension. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RunTimer"];
+                };
             };
             default: components["responses"]["Error"];
         };

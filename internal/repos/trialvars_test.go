@@ -29,7 +29,7 @@ func TestTrialCanaryThroughOwnerCode(t *testing.T) {
 	tv := e.svc.Trial(nil)
 	m := trial.New(trial.Config{Vars: tv, Dispatcher: tv, KV: &trial.MemKV{}, Now: e.clock})
 	before := trialVarsOf(t, e, "alice/secret")
-	if before["RUNS_ON_LINUX"] == "" {
+	if before["CRSP_RUNS_ON_LINUX"] == "" {
 		t.Fatalf("pool on writes the variable: %v", before)
 	}
 	st, err := m.Set(ctx, "alice/secret", trial.Canary, trial.Options{Jobs: []string{"build"}})
@@ -37,7 +37,7 @@ func TestTrialCanaryThroughOwnerCode(t *testing.T) {
 		t.Fatal(err)
 	}
 	got := trialVarsOf(t, e, "alice/secret")
-	if got["RUNS_ON_CANARY_BUILD"] != before["RUNS_ON_LINUX"] || got["RUNS_ON_LINUX"] != before["RUNS_ON_LINUX"] || len(st.Written) != 1 {
+	if got["CRSP_RUNS_ON_CANARY_BUILD"] != before["CRSP_RUNS_ON_LINUX"] || got["CRSP_RUNS_ON_LINUX"] != before["CRSP_RUNS_ON_LINUX"] || len(st.Written) != 1 {
 		t.Fatalf("after canary: %v", got)
 	}
 	if !e.audit.has("variable.written") {
@@ -46,7 +46,7 @@ func TestTrialCanaryThroughOwnerCode(t *testing.T) {
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
 	}
-	if _, ok := trialVarsOf(t, e, "alice/secret")["RUNS_ON_CANARY_BUILD"]; !ok {
+	if _, ok := trialVarsOf(t, e, "alice/secret")["CRSP_RUNS_ON_CANARY_BUILD"]; !ok {
 		t.Fatal("the reconcile removed the canary variable")
 	}
 	if _, err := m.Set(ctx, "alice/secret", trial.Off, trial.Options{}); err != nil {
@@ -68,7 +68,7 @@ func TestTrialRefusesPublicAndForeignNames(t *testing.T) {
 			t.Errorf("%s: %v", mode, err)
 		}
 	}
-	if err := tv.Write(ctx, "alice/secret", "RUNS_ON_LINUX", "x"); err == nil {
+	if err := tv.Write(ctx, "alice/secret", "CRSP_RUNS_ON_LINUX", "x"); err == nil {
 		t.Fatal("the trial may not write a controller variable")
 	}
 	if err := tv.Remove(ctx, "alice/secret", "CI_RUNS_ON"); err == nil {

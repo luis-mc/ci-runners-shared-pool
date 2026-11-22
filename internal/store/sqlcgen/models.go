@@ -8,16 +8,59 @@ import (
 	"database/sql"
 )
 
-type AccessCredential struct {
-	ID             string
-	Hash           string
-	Name           string
-	Scope          string
-	CreatedByID    int64
-	CreatedByLogin string
-	CreatedAt      string
-	LastUsedAt     sql.NullString
-	RevokedAt      sql.NullString
+type AssignLabelset struct {
+	LabelKey   string
+	Repository string
+	Os         string
+	Labels     string
+	Cpus       int64
+	MemGib     int64
+	LastBusy   string
+}
+
+type AssignLease struct {
+	JobID         int64
+	RunID         int64
+	RunAttempt    int64
+	Repository    string
+	JobName       string
+	Labels        string
+	JobLabel      string
+	Os            string
+	State         string
+	MachineID     string
+	RunnerName    string
+	RunnerRecord  string
+	GithubRunner  int64
+	Cpus          int64
+	MemGib        int64
+	Class         string
+	QueuedAt      string
+	StartedAt     string
+	Passes        int64
+	ReservedSince string
+	Reason        string
+	ReasonCode    string
+	Fails         int64
+	NextTry       string
+	Arch          string
+	Alerted       int64
+	UpdatedAt     string
+}
+
+type AssignWarm struct {
+	ID           string
+	MachineID    string
+	LabelKey     string
+	Repository   string
+	Os           string
+	Labels       string
+	RunnerName   string
+	RunnerRecord string
+	GithubRunner int64
+	Cpus         int64
+	MemGib       int64
+	StartedAt    string
 }
 
 type AuditLog struct {
@@ -375,6 +418,28 @@ type Job struct {
 	CheckedAt    string
 }
 
+type JobClock struct {
+	JobID        int64
+	RepositoryID int64
+	Repository   string
+	RunID        int64
+	RunAttempt   int64
+	StartedAt    string
+	LimitSec     int64
+	Extended     int64
+	State        string
+	Deadline     string
+	Note         string
+	MachineID    string
+	RunnerRef    string
+	QueuedMs     int64
+	StartupMs    int64
+	HoldMs       int64
+	RunMs        int64
+	JobTimerMs   int64
+	RunTimerMs   int64
+}
+
 type JobDaily struct {
 	Day        string
 	Repository string
@@ -385,6 +450,13 @@ type JobDaily struct {
 	WaitP90Ms  int64
 	RunP50Ms   int64
 	RunP90Ms   int64
+}
+
+type JobEndReason struct {
+	JobID      int64
+	Reason     string
+	Detail     string
+	RecordedAt string
 }
 
 type JobFactsPending struct {
@@ -555,6 +627,20 @@ type LinkCode struct {
 	UsedAt       sql.NullString
 }
 
+type ListenerLease struct {
+	JobID     int64
+	RunnerID  string
+	State     string
+	Body      string
+	UpdatedAt string
+}
+
+type ListenerWake struct {
+	RunnerID    string
+	LastWake    string
+	WakingSince string
+}
+
 type Machine struct {
 	ID           string
 	Name         string
@@ -581,6 +667,23 @@ type MachineChange struct {
 	StartedAt  string
 	DeadlineAt string
 	FinishedAt sql.NullString
+}
+
+type MachineDiskSample struct {
+	MachineID  string
+	Role       string
+	Path       string
+	SampledAt  string
+	FreeBytes  int64
+	TotalBytes int64
+}
+
+type MachineHealth struct {
+	MachineID  string
+	ReceivedAt string
+	Report     string
+	OomTotal   int64
+	LastOomAt  string
 }
 
 type MachineKey struct {
@@ -925,6 +1028,41 @@ type RestoreDrill struct {
 	Detail     string
 }
 
+type RoutingJob struct {
+	Repository string
+	Job        string
+	VarName    string
+	Label      string
+	Class      string
+	Os         string
+	Value      string
+}
+
+type RoutingLabel struct {
+	Repository string
+	Label      string
+	State      string
+	Since      string
+	Jobs       string
+}
+
+type RoutingPr struct {
+	Repository string
+	Number     int64
+	Url        string
+	OpenedAt   string
+}
+
+type RoutingRunnerLabel struct {
+	Repository string
+	RunnerID   string
+	GithubID   int64
+	Label      string
+	ScopeOwner string
+	ScopeRepo  string
+	ScopeOrg   string
+}
+
 type Run struct {
 	RepositoryID int64
 	RunID        int64
@@ -944,6 +1082,20 @@ type Run struct {
 	CompletedAt  string
 	Conclusion   string
 	UpdatedAt    string
+}
+
+type RunClock struct {
+	RepositoryID int64
+	RunID        int64
+	RunAttempt   int64
+	Repository   string
+	StartedAt    string
+	LimitSec     int64
+	Extended     int64
+	State        string
+	Deadline     string
+	Note         string
+	RunTimerMs   int64
 }
 
 type RunFollowUp struct {
@@ -1019,6 +1171,22 @@ type RunsOnFinding struct {
 	Kind         string
 	Text         string
 	FoundAt      string
+}
+
+type SchedPass struct {
+	TicketID  string
+	MachineID string
+	Passes    int64
+}
+
+type SchedReservation struct {
+	MachineID string
+	TicketID  string
+	Cpus      int64
+	MemGib    int64
+	Class     string
+	Since     string
+	Expected  string
 }
 
 type SchemaMetum struct {

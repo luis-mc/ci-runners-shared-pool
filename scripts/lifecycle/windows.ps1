@@ -142,10 +142,12 @@ function Invoke-LifecycleTool($arguments) {
   if (-not $tool) { return [pscustomobject]@{ Code = 1; Text = 'crsp-lifecycle-test is not on the PATH' } }
   $err = Join-Path ([System.IO.Path]::GetTempPath()) ('lct-' + [guid]::NewGuid().ToString('N') + '.txt')
   try {
-    $p = Start-Process -FilePath $tool.Source -ArgumentList $arguments -Wait -PassThru -NoNewWindow -RedirectStandardError $err
+    $out = Join-Path ([System.IO.Path]::GetTempPath()) ('lct-' + [guid]::NewGuid().ToString('N') + '-out.txt')
+    $p = Start-Process -FilePath $tool.Source -ArgumentList $arguments -Wait -PassThru -NoNewWindow -RedirectStandardError $err -RedirectStandardOutput $out
     $text = if (Test-Path $err) { (Get-Content -Raw $err) } else { '' }
-    return [pscustomobject]@{ Code = $p.ExitCode; Text = ("$text").Trim() }
-  } finally { Remove-Item $err -Force -ErrorAction SilentlyContinue }
+    $stdout = if (Test-Path $out) { (Get-Content -Raw $out) } else { '' }
+    return [pscustomobject]@{ Code = $p.ExitCode; Text = ("$text").Trim(); Out = ("$stdout").Trim() }
+  } finally { Remove-Item $err, $out -Force -ErrorAction SilentlyContinue }
 }
 function Stop-Crsp {
   # Stop the service and wait until it has stopped, so the files are quiet. False when it did not stop.
@@ -191,6 +193,8 @@ function Compare-Snapshots($before, $after) {
   elseif ($before.Db -and $after.Db) {
     $r = Invoke-LifecycleTool @('--db-compare', "`"$($before.Db)`"", "`"$($after.Db)`"")
     if ($r.Code -ne 0) { $problems += $r.Text }
+    # Each change a migration declared on purpose (internal/store/declared_changes.go) that the comparison accepted.
+    foreach ($l in @("$($r.Out)" -split "\r?\n" | Where-Object { $_ -like 'LC-11 note:*' })) { $script:Notes += $l.Trim() }
   }
   if ($problems.Count -eq 0) { return $null }
   return ($problems -join '; ')
@@ -254,7 +258,9 @@ function Lc11 {
   if ($after.Error) { Out-Lc 'LC-11' $false $after.Error; return }
   if ($rc -ne 0) { Out-Lc 'LC-11' $false "upgrade exit $rc"; return }
   if (-not $before.Files -and -not $before.Db) { Out-Lc 'LC-11' $false 'no config or data to compare after the previous version was installed'; return }
+  $script:Notes = @()
   $diff = Compare-Snapshots $before $after
+  foreach ($n in $script:Notes) { Write-Output $n }  # its own line in lifecycle-steps.txt
   if ($diff) { Out-Lc 'LC-11' $false "upgrade from N-1 lost or changed config or data: $diff" }
   else { Out-Lc 'LC-11' $true 'upgrade from N-1 keeps config and data (checksums)' }
 }

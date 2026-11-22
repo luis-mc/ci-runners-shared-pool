@@ -177,7 +177,7 @@ func (s *Service) osDown(os string, now time.Time) (down bool, for_ time.Duratio
 }
 
 // EvaluateFallback is the controller's fallback pass. It reads which OSes have
-// a machine up, and for each repository that opted in it rewrites RUNS_ON_<OS>
+// a machine up, and for each repository that opted in it rewrites CRSP_RUNS_ON_<OS>
 // to the hosted label once no machine of the OS has been up for the grace
 // time, and back as soon as one is up (R5.43). It counts the fallback minutes
 // and stops falling back at the cap (R5.45). A repository that did not opt in

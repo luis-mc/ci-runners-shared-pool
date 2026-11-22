@@ -21,7 +21,7 @@ import {
   type WizardPhase,
 } from '@crsp/ui';
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad } from '../../api/hooks';
 import { safeAppUrl } from '../../auth/CallbackGuide';
@@ -112,6 +112,7 @@ export function ConnectGithubWizard({
         setPhase('done');
         const next = new URLSearchParams(params);
         next.delete('app');
+        next.set('wizard', '1');
         setParams(next, { replace: true });
       } else setPhase('done-after-reload');
       return;
@@ -124,6 +125,7 @@ export function ConnectGithubWizard({
       next.delete('error');
       next.delete('app_url');
       next.delete('app');
+      next.set('wizard', '1');
       setParams(next, { replace: true });
     } else if (flow === 'started') {
       setStep(3);
@@ -198,7 +200,7 @@ export function ConnectGithubWizard({
   };
 
   const startAgain = () => {
-    setParams(new URLSearchParams(), { replace: true });
+    setParams(new URLSearchParams({ wizard: '1' }), { replace: true });
     setProblem(undefined);
     setStep(1);
     setPhase('first-run');
@@ -335,7 +337,7 @@ export function ConnectGithubWizard({
         label: 'Sign in with GitHub',
         onPress: () => {
           onDone();
-          window.location.assign(signInUrl('/setup'));
+          window.location.assign(signInUrl('/setup?wizard=1'));
         },
       }}
     >
@@ -344,7 +346,7 @@ export function ConnectGithubWizard({
   );
 }
 
-export function SetupPage() {
+function SetupPage() {
   const client = useClient();
   const session = useSession();
   const navigate = useNavigate();
@@ -359,6 +361,7 @@ export function SetupPage() {
         const s = await unwrap(client.POST('/api/v1/setup/redeem', { body: { code } }));
         const next = new URLSearchParams(params);
         next.delete('code');
+        next.set('wizard', '1');
         setParams(next, { replace: true });
         return withPoolOn(client, s);
       } catch (e) {
@@ -463,7 +466,9 @@ function Checklist({
           ) : !signedIn ? (
             <Stack>
               <Text>Sign in with GitHub to go on.</Text>
-              <Button onPress={() => window.location.assign(signInUrl('/setup'))}>
+              <Button
+                onPress={() => window.location.assign(signInUrl('/setup?wizard=1'))}
+              >
                 Sign in with GitHub
               </Button>
             </Stack>
@@ -502,4 +507,18 @@ export function FirstMachineDone({ onDone }: { onDone: () => void }) {
       )}
     </Stack>
   );
+}
+
+/** The first-run parameters of /setup: the setup link's code, GitHub's way back (step, app, error) and the wizard link. */
+const FIRST_RUN_PARAMS = ['code', 'step', 'app', 'app_url', 'error', 'wizard'] as const;
+
+/**
+ * /setup is two things (LOOK56): with a first-run parameter it is the first-run page, which works without a
+ * session; without one it is the Setup section, which opens on its Summary. The setup link and GitHub's way back
+ * come from the controller, so the first-run page stays at this address.
+ */
+export function SetupEntry() {
+  const [params] = useSearchParams();
+  if (FIRST_RUN_PARAMS.some((k) => params.has(k))) return <SetupPage />;
+  return <Navigate to="/setup/summary" replace />;
 }

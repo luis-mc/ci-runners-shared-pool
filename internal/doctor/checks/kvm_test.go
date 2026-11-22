@@ -135,7 +135,7 @@ func TestWslconfigNested(t *testing.T) {
 	}
 }
 
-// TestKvmModuleLoadedInTheWSLVM: machines R5.53, parity row 41. The doctor says
+// TestKvmModuleLoadedInTheWSLVM: machines R5.53. The doctor says
 // how to fix it and never loads the module.
 func TestKvmModuleLoadedInTheWSLVM(t *testing.T) {
 	fs := kvmRun(t, kvmFake{states: []doctor.KVMState{

@@ -24,6 +24,9 @@ const OS_WORD: Record<OS, string> = {
   macos: 'macOS',
 };
 
+export const PERSISTENT_ELSEWHERE = (machineOs: OS, os: OS): string =>
+  `Persistent runners run on the machine itself, and this ${OS_WORD[machineOs]} machine cannot run a persistent ${OS_WORD[os]} runner there. ${OS_WORD[os]} runners on this machine are ephemeral.`;
+
 function container(m: Machine): Machine['backends'][number] | undefined {
   return m.backends.find((b) => b.name === 'docker');
 }
@@ -55,10 +58,9 @@ export function kindReasons(
   } else if (!ready) {
     ephemeral = `Ephemeral needs the container backend, ${containerWhy(m)}.`;
   }
-  const persistent =
-    crosses && !ready
-      ? `Persistent Linux runners on this ${OS_WORD[m.os]} machine need the container backend, ${containerWhy(m)}.`
-      : undefined;
+  // OPS78 (runners R5.134): a persistent runner is offered only where it runs on the machine itself. A
+  // container, a WSL2 distro or a VM is not offered; those places use ephemeral runners.
+  const persistent = crosses ? PERSISTENT_ELSEWHERE(m.os, os) : undefined;
   return { persistent, ephemeral };
 }
 

@@ -61,12 +61,27 @@ func (g *Gate) SetDiskFloor(f *runnercache.Floor) {
 	g.mu.Unlock()
 }
 
+// DiskFloor is the floor in force in GiB, and whether it is off (runners R5.83).
+func (g *Gate) DiskFloor() (gib int, off bool) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.floor == nil || g.floor.Bytes <= 0 {
+		return 0, true
+	}
+	return int(g.floor.Bytes >> 30), false
+}
+
 // SetSettings applies settings (R5.24, R5.25): running jobs keep going even
 // when the new budget is already exceeded.
 func (g *Gate) SetSettings(s machines.Settings, state string) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 	g.settings, g.have = s, true
+	// The console's disk floor wins over the value of the start (runners R5.83).
+	// A gate with no floor is off by config: the console cannot turn it on.
+	if s.DiskFloorGiB > 0 && g.floor != nil {
+		g.floor.Bytes = runnercache.FloorBytes(s.DiskFloorGiB)
+	}
 	// The controller owns the machine state; the agent follows it.
 	switch state {
 	case machines.StateActive, machines.StateDraining, machines.StateDrained:

@@ -160,6 +160,15 @@ Get-Process -Name 'Runner.Listener' -ErrorAction SilentlyContinue |
     ForEach-Object { $_.Id }
 `
 
+	// scriptWorkers prints the process id of every Runner.Worker that runs from
+	// CRSP_FOLDER: a job is running, so the listener must not be stopped.
+	scriptWorkers = scriptHeader + `
+$want = (Join-Path (Join-Path $env:CRSP_FOLDER 'bin') 'Runner.Worker') + '.exe'
+Get-Process -Name 'Runner.Worker' -ErrorAction SilentlyContinue |
+    Where-Object { $_.Path -and ($_.Path -ieq $want) } |
+    ForEach-Object { $_.Id }
+`
+
 	// scriptEndListeners ends each process in CRSP_PIDS (comma separated) with
 	// its whole process tree (runners R5.59).
 	scriptEndListeners = scriptHeader + `

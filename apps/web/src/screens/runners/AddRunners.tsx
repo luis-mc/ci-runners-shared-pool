@@ -64,21 +64,21 @@ function crossesTo(m: Schemas['Machine'], os: OS): boolean {
   return m.os !== os && machineSupports(m, os);
 }
 
-const RUNS_ON: Record<OS, string> = {
-  linux: 'RUNS_ON_LINUX',
-  windows: 'RUNS_ON_WINDOWS',
-  macos: 'RUNS_ON_MACOS',
+const CRSP_RUNS_ON: Record<OS, string> = {
+  linux: 'CRSP_RUNS_ON_LINUX',
+  windows: 'CRSP_RUNS_ON_WINDOWS',
+  macos: 'CRSP_RUNS_ON_MACOS',
 };
 
 /**
- * The labels a repository's workflows ask for on this system: the RUNS_ON_* variable the pool wrote (it holds
+ * The labels a repository's workflows ask for on this system: the CRSP_RUNS_ON_* variable the pool wrote (it holds
  * the pool label too, such as crsp-home), else the labels of its policy, else the plain self-hosted label.
  */
 export function defaultLabels(
   repo: Pick<Repository, 'variables' | 'policy'> | undefined,
   os: OS,
 ): string {
-  const v = repo?.variables.find((x) => x.name === RUNS_ON[os] && x.value);
+  const v = repo?.variables.find((x) => x.name === CRSP_RUNS_ON[os] && x.value);
   if (v?.value) {
     try {
       const list: unknown = JSON.parse(v.value);
@@ -335,7 +335,7 @@ export function AddRunnersWizard() {
         {machines.length === 0 ? (
           <Message
             tone="needs-you"
-            action={<LinkButton to="/pool/machines/add">Add a machine</LinkButton>}
+            action={<LinkButton to="/setup/machines/add">Add a machine</LinkButton>}
           >
             Add a machine first. Runners live on a machine.
           </Message>
@@ -371,7 +371,7 @@ export function AddRunnersWizard() {
           <Message
             tone="needs-you"
             action={
-              <LinkButton to={`/pool/machines/${picked.id}`}>
+              <LinkButton to={`/setup/machines/${picked.id}`}>
                 Allow it on the machine
               </LinkButton>
             }
@@ -396,7 +396,7 @@ export function AddRunnersWizard() {
           <Message
             tone="note"
             action={
-              <LinkButton to={`/pool/machines/${picked.id}`}>
+              <LinkButton to={`/setup/machines/${picked.id}`}>
                 Allow it on the machine
               </LinkButton>
             }
@@ -574,7 +574,7 @@ export function AddRunnersWizard() {
       failedAt={failedAt}
       donePrimary={{
         label: 'Open Runners',
-        onPress: () => void navigate('/pool/runners'),
+        onPress: () => void navigate('/setup/runners'),
       }}
     >
       <Section
@@ -598,7 +598,7 @@ export function AddRunnersPage() {
   return (
     <Page>
       <Breadcrumbs
-        trail={[{ to: '/pool/runners', label: 'Runners' }, { label: 'Add runners' }]}
+        trail={[{ to: '/setup/runners', label: 'Runners' }, { label: 'Add runners' }]}
       />
       <PageHeader title="Add runners" />
       <AddRunnersWizard />
