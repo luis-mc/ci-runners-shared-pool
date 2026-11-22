@@ -18,18 +18,18 @@ import { LiveProvider } from './live/LiveProvider';
 import type { EventSourceFactory } from './live/store';
 import { AppShell } from './shell/Shell';
 import { FaultBoundary } from './screens/common';
-import { jobsRoutes } from './screens/jobs/routes';
-import { MOVED, MovedTo } from './screens/pool/redirects';
-import { PoolLayout } from './screens/pool/PoolLayout';
-import { PoolSizePage } from './screens/pool/PoolSizePage';
-import { PoolSummary } from './screens/pool/PoolSummary';
-import { NotFound } from './screens/Later';
 import { later } from './screens/lazy';
+import { jobsRoutes } from './screens/jobs/routes';
+import { SetupLayout } from './screens/setup/SetupLayout';
+import { SizePage } from './screens/setup/SizePage';
+import { SetupSummary } from './screens/setup/SetupSummary';
+import { NotFound } from './screens/Later';
 import { ImagesAndCaches } from './screens/images/ImagesAndCaches';
 import { MachineDetail, MachinesList } from './screens/machines/Machines';
 import { Overview } from './screens/overview/Overview';
 import { RepositoriesList, RepositoryDetail } from './screens/repositories/Repositories';
 import { RunnersList } from './screens/runners/Runners';
+import { RunnerPage } from './screens/runners/RunnerPage';
 import {
   AccessTab,
   AuditTab,
@@ -41,11 +41,6 @@ import {
   SettingsLayout,
   ThemeApplier,
 } from './screens/settings/Settings';
-
-// Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
-const HelpScreen = lazy(() =>
-  import('./screens/help/Help').then((m) => ({ default: m.HelpScreen })),
-);
 
 // Screens that are not the first page load on their own, so the first JavaScript stays within its budget (R6.12).
 const DoctorScreen = later(
@@ -90,8 +85,8 @@ const RunnerPage = later(
   () => import('./screens/runners/RunnerPage').then((m) => m.RunnerPage),
   { heading: 'Runner' },
 );
-const SetupPage = lazy(() =>
-  import('./screens/setup/Setup').then((m) => ({ default: m.SetupPage })),
+const SetupEntry = lazy(() =>
+  import('./screens/setup/Setup').then((m) => ({ default: m.SetupEntry })),
 );
 const UpdateCompactPage = later(
   () => import('./screens/settings/Updates').then((m) => m.UpdateCompactPage),
@@ -103,6 +98,11 @@ const UpdateReviewPage = later(
     heading: (params) =>
       params.get('kind') === 'restart' ? 'Restart the service' : 'Update',
   },
+);
+
+// Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
+const HelpScreen = lazy(() =>
+  import('./screens/help/Help').then((m) => ({ default: m.HelpScreen })),
 );
 
 /** No valid session: every path but /sign-in and /setup goes to /sign-in and keeps the path (R5.8). */
@@ -148,7 +148,9 @@ function Gate({ factory }: { factory: EventSourceFactory | undefined }) {
       <AppShell>
         <FaultBoundary key={location.pathname}>
           <Suspense fallback={<Loading what="Loading the page" />}>
-            <Outlet />
+            <Suspense fallback={<Loading what="Loading the page" />}>
+              <Outlet />
+            </Suspense>
           </Suspense>
         </FaultBoundary>
       </AppShell>
@@ -224,7 +226,7 @@ export function App({
                 path="/setup"
                 element={
                   <Suspense fallback={<Loading what="Loading the page" />}>
-                    <SetupPage />
+                    <SetupEntry />
                   </Suspense>
                 }
               />
@@ -233,41 +235,38 @@ export function App({
               </Route>
               <Route element={<Gate factory={eventSource} />}>
                 <Route index element={<Overview />} />
-                <Route path="repositories" element={<RepositoriesList />} />
-                <Route path="repositories/turn-on" element={<TurnOnPoolPage />} />
-                <Route path="repositories/:owner/:name" element={<RepositoryDetail />} />
-                <Route path="pool" element={<PoolLayout />}>
-                  <Route index element={<PoolSummary />} />
+                <Route path="setup" element={<SetupLayout />}>
+                  <Route path="summary" element={<SetupSummary />} />
                   <Route path="machines" element={<MachinesList />} />
                   <Route path="runners" element={<RunnersList />} />
                   <Route path="images" element={<ImagesAndCaches />} />
-                  <Route path="size" element={<PoolSizePage />} />
+                  <Route path="size" element={<SizePage />} />
+                  <Route path="pool" element={<RepositoriesList />} />
                 </Route>
-                <Route path="pool/machines/add" element={<AddMachinePage />} />
-                <Route path="pool/machines/:id" element={<MachineDetail />} />
-                <Route path="pool/runners/add" element={<AddRunnersPage />} />
-                <Route path="pool/runners/:id" element={<RunnerPage />} />
-                <Route path="pool/images/:imageId" element={<ImageDetail />} />
+                <Route path="setup/pool/turn-on" element={<TurnOnPoolPage />} />
+                <Route path="setup/pool/:owner/:name" element={<RepositoryDetail />} />
+                <Route path="setup/machines/add" element={<AddMachinePage />} />
+                <Route path="setup/machines/:id" element={<MachineDetail />} />
+                <Route path="setup/runners/add" element={<AddRunnersPage />} />
+                <Route path="setup/runners/:id" element={<RunnerPage />} />
+                <Route path="setup/images/:imageId" element={<ImageDetail />} />
                 <Route
-                  path="pool/images/registry/budgets"
+                  path="setup/images/registry/budgets"
                   element={<RegistryBudgetsPage />}
                 />
                 <Route
-                  path="pool/images/registry/mirror"
+                  path="setup/images/registry/mirror"
                   element={<RegistryMirrorPage />}
                 />
-                <Route path="pool/images/registry/:id" element={<RegistryImagePage />} />
+                <Route path="setup/images/registry/:id" element={<RegistryImagePage />} />
                 <Route
-                  path="pool/images/registry/:id/replace"
+                  path="setup/images/registry/:id/replace"
                   element={<RegistryReplacePage />}
                 />
                 {jobsRoutes}
-                {MOVED.map(([from, to]) => (
-                  <Route key={from} path={from} element={<MovedTo to={to} />} />
-                ))}
                 <Route path="doctor" element={<DoctorScreen />} />
                 <Route
-                  path="help"
+                  path="help/*"
                   element={
                     <Suspense
                       fallback={

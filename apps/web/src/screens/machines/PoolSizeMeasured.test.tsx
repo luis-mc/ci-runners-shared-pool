@@ -108,7 +108,7 @@ describe('Machine detail, the measured Pool size block', () => {
       .on('PATCH', '/api/v1/machines/:id', m);
 
   it('shows the measured basis and the room', async () => {
-    renderApp(api(measured, machine({ os: 'windows' })), '/pool/machines/m1');
+    renderApp(api(measured, machine({ os: 'windows' })), '/setup/machines/m1');
     expect(
       await screen.findByText('Windows and your apps use up to 10.2 GiB (p95, 7 days)'),
     ).toBeTruthy();
@@ -127,7 +127,7 @@ describe('Machine detail, the measured Pool size block', () => {
         { ...base, basis: 'measuring', host_span_hours: 5 },
         machine({ os: 'windows' }),
       ),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     expect(await screen.findByText('measuring, 5 h of 24')).toBeTruthy();
     expect(screen.getByText('19.2 GiB')).toBeTruthy();
@@ -145,7 +145,7 @@ describe('Machine detail, the measured Pool size block', () => {
       leaves_gib: 8,
       room_gib: 25,
     };
-    renderApp(api(warn), '/pool/machines/m1');
+    renderApp(api(warn), '/setup/machines/m1');
     await waitFor(() =>
       expect(
         screen.getByRole<HTMLInputElement>('radio', { name: /Custom/ }).disabled,
@@ -182,7 +182,7 @@ describe('Machine detail, the measured Pool size block', () => {
         settings: { ...machine().settings, pool_memory_gib: 12, pool_cpus: 4 },
       }),
     );
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     expect(await screen.findByText('WSL memory cap now')).toBeTruthy();
     expect(screen.getByText('28 GiB')).toBeTruthy();
     expect(screen.getByText('Recommended WSL memory cap')).toBeTruthy();
@@ -195,7 +195,7 @@ describe('Machine detail, the measured Pool size block', () => {
   });
 
   it('shows no WSL block off WSL2', async () => {
-    renderApp(api(measured), '/pool/machines/m1');
+    renderApp(api(measured), '/setup/machines/m1');
     await screen.findByText(/use up to 10.2 GiB/);
     expect(screen.queryByText('WSL memory cap now')).toBeNull();
   });

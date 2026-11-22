@@ -41,7 +41,7 @@ function withOrgs(api: MockApi, items: unknown[]): MockApi {
 
 describe('Pool per organization', () => {
   it('has a switch for an organization and none for a personal account', async () => {
-    renderApp(withOrgs(signedIn(), [personal, acme]), '/repositories');
+    renderApp(withOrgs(signedIn(), [personal, acme]), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'Pool per organization' });
     expect(within(table).getByText('acme')).toBeTruthy();
     expect(within(table).queryByText('octo')).toBeNull();
@@ -61,7 +61,7 @@ describe('Pool per organization', () => {
         repositories: ['acme/api'],
       },
     );
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     const sw = await screen.findByRole('switch', {
       name: 'Organization runners for acme',
     });
@@ -89,7 +89,7 @@ describe('Pool per organization', () => {
         'you are not an owner of the acme organization in GitHub',
       ),
     );
-    renderApp(api, '/repositories');
+    renderApp(api, '/setup/pool');
     fireEvent.click(
       await screen.findByRole('switch', { name: 'Organization runners for acme' }),
     );
@@ -97,7 +97,7 @@ describe('Pool per organization', () => {
   });
 
   it('disables the switch for a viewer and says why (UX-38)', async () => {
-    renderApp(withOrgs(signedIn(viewer), [acme]), '/repositories');
+    renderApp(withOrgs(signedIn(viewer), [acme]), '/setup/pool');
     const sw = await screen.findByRole<HTMLButtonElement>('switch', {
       name: 'Organization runners for acme',
     });

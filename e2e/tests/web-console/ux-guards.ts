@@ -454,7 +454,7 @@ const MEASURES = {
       const lr = list.getBoundingClientRect();
       let next = null;
       for (const e of document.querySelectorAll('main h1, main h2, main .ds-pane, main .ds-page-header, main .ds-breadcrumbs, main table, main form, main p, main .ds-state')) {
-        if (!visible(e) || list.contains(e) || e.contains(list) || (e.matches('h2') && e.closest('.ds-pane'))) continue; // a pane's title sits on the pane's border: the pane itself is measured
+        if (!visible(e) || list.contains(e) || e.contains(list) || e.closest('.ds-action-bar') || (e.matches('h2') && e.closest('.ds-pane'))) continue; // a pane's title sits on the pane's border: the pane itself is measured; the sticky action bar floats over the page, it is not the block under the tabs
         const r = e.getBoundingClientRect();
         if (r.top < lr.bottom - 1 || r.top > lr.bottom + 400) continue;
         if (!next || r.top < next.getBoundingClientRect().top) next = e;

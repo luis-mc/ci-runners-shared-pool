@@ -25,7 +25,9 @@ import { useLoad } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
 import { waitWords } from '../jobs/words';
 import { Load } from '../common';
-import { OverviewInsights } from '../insights/OverviewLine';
+import { BestNextChange } from '../insights/OverviewLine';
+import { PoolCountTiles } from '../pool/PoolSection';
+import { poolCounts, startsAbout } from '../pool/poolWords';
 import { HowCrspWorks } from './HowCrspWorks';
 import { HelpTerm } from '../help/HelpTerm';
 
@@ -57,7 +59,7 @@ export function MachineCard({ m }: { m: Machine }) {
   const cpu = m.load?.cpu_pct;
   const budget = m.settings;
   return (
-    <Card title={m.name} to={`/pool/machines/${m.id}`}>
+    <Card title={m.name} to={`/setup/machines/${m.id}`}>
       <Status kind={s.kind} word={s.word} />
       <LevelBar
         label="Memory"
@@ -103,6 +105,7 @@ const jobColumns: Column<Job>[] = [
 /** Why each queued job waits (scheduling R5.48): the server's words, else the job's own reason (UX-34). */
 export interface WaitingRow {
   id: number;
+  eta: Job['queue_eta'];
   repository: string;
   job: string;
   words: string;
@@ -114,6 +117,7 @@ export function waitingRows(
   const words = new Map((o.waiting ?? []).map((w) => [w.job_id, w.words]));
   return (o.queued ?? []).map((j) => ({
     id: j.id,
+    eta: j.queue_eta,
     repository: j.repository,
     job: j.job_name,
     words: words.get(j.id) ?? sentence(waitWords(j)),
@@ -124,10 +128,11 @@ function sentence(w: string): string {
   return `${w.charAt(0).toUpperCase()}${w.slice(1)}.`;
 }
 
-const waitingColumns: Column<WaitingRow>[] = [
+const waitingColumns = (readAt: number): Column<WaitingRow>[] => [
   { id: 'repo', header: 'Repository', cell: (r) => r.repository },
   { id: 'job', header: 'Job', cell: (r) => r.job },
   { id: 'why', header: 'Why it waits', cell: (r) => r.words },
+  { id: 'start', header: 'Start', cell: (r) => startsAbout(r.eta, readAt) },
 ];
 
 /** The App-gone banner (github-integration R5.6): GitHub work is stopped, jobs that run keep running, and the
@@ -143,7 +148,7 @@ export function AppGoneBanner() {
   return (
     <Message
       tone="problem"
-      action={<TextLink to="/setup">Run the setup wizard again</TextLink>}
+      action={<TextLink to="/setup?wizard=1">Run the setup wizard again</TextLink>}
     >
       The GitHub App is gone. {health.reason ?? ''} crsp has stopped its GitHub work. Jobs
       that are running keep running.
@@ -187,7 +192,7 @@ export function Overview() {
       <PageHeader title="Overview" lead="The pool at a glance." />
       <AppGoneBanner />
       <HowCrspWorks />
-      <OverviewInsights />
+      <BestNextChange />
       {!o && firstPaint !== 'failed' ? (
         <Section title="The pool">
           <Loading what="Loading the overview" />
@@ -202,13 +207,14 @@ export function Overview() {
       ) : null}
       {o ? (
         <>
+          <PoolCountTiles counts={poolCounts(o)} />
           <Section title="Machines">
             <Load result={machines.result} what="machines" reload={machines.reload}>
               {(data) =>
                 data.items.length === 0 ? (
                   <Empty
                     title="No machine is in the pool yet. Add a machine so jobs have somewhere to run."
-                    action={<TextLink to="/pool/machines/add">Add a machine</TextLink>}
+                    action={<TextLink to="/setup/machines/add">Add a machine</TextLink>}
                   />
                 ) : (
                   <CardGrid>
@@ -242,13 +248,20 @@ export function Overview() {
               />
             )}
           </Section>
-          <Section title="Why jobs wait">
+          <Section
+            title="Why jobs wait"
+            actions={
+              <TextLink to="/pool/queue">
+                See the whole plan in Pool &gt; Queue Analysis
+              </TextLink>
+            }
+          >
             {(o.queued ?? []).length === 0 ? (
               <Empty title="No jobs are waiting." />
             ) : (
               <Table
                 caption="Waiting jobs"
-                columns={waitingColumns}
+                columns={waitingColumns(live.lastEventAt ?? Date.now())}
                 rows={waitingRows(o)}
                 rowKey={(r) => String(r.id)}
               />

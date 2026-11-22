@@ -20,13 +20,13 @@ describe('StatTile', () => {
           change="worse"
           changeText="up 2 vs the previous 7 days"
           trend={[1, 2, 3]}
-          to="/jobs/live?state=queued"
+          to="/pool/jobs?state=queued"
           linkName="Open the jobs that wait now"
         />
       </StatGrid>,
     );
     const link = screen.getByRole('link');
-    expect(link.getAttribute('href')).toBe('/jobs/live?state=queued');
+    expect(link.getAttribute('href')).toBe('/pool/jobs?state=queued');
     // The visible words are the name, in the order a person reads them, plus the hidden tone word and target.
     expect(link.textContent).toBe(
       'Waiting now 3 jobs ◷ up 2 vs the previous 7 days, worse. Open the jobs that wait now',
@@ -52,7 +52,7 @@ describe('FindingList', () => {
             title: 'Add a runner',
             minutes: 'about 40 min a week',
             fix: 'Add one.',
-            to: '/jobs/insights/finding/1',
+            to: '/analytics/finding/1',
             linkLabel: 'Open: Add a runner',
           },
         ]}
@@ -81,7 +81,7 @@ describe('BarList', () => {
             value: 212,
             text: '212 min',
             linkName: 'Open the jobs of repo-a',
-            to: '/jobs/done?repository=repo-a',
+            to: '/pool/jobs?repository=repo-a',
           },
         ]}
       />,

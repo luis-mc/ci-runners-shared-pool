@@ -55,7 +55,7 @@ describe('Runners list', () => {
         }),
       ],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
     expect(within(table).getByText('persistent, state kept between jobs')).toBeTruthy();
     expect(within(table).getByText('container')).toBeTruthy();
@@ -74,7 +74,7 @@ describe('Runners list', () => {
         }),
       ],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
     // LOOK19: one line (the part before the colon) and a Full error button; the whole text opens under the row.
     expect(within(table).getByText('register service')).toBeTruthy();
@@ -102,7 +102,7 @@ describe('Runners list', () => {
         }),
       ],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
     expect(within(table).queryByRole('columnheader', { name: 'System' })).toBeNull();
     expect(within(table).queryByRole('columnheader', { name: 'Backend' })).toBeNull();
@@ -121,7 +121,7 @@ describe('Runners list', () => {
         items: n === 1 ? [runner()] : [runner(), runner({ id: 'r2', name: 'crsp-new' })],
       };
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByText('crsp-linux-1');
     act(() =>
       FakeEventSource.latest().emit({
@@ -146,7 +146,7 @@ describe('Runners list', () => {
         }),
       ],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(screen.getByRole('button', { name: 'container' }));
     expect(screen.queryByText('crsp-linux-1')).toBeNull();
@@ -154,7 +154,7 @@ describe('Runners list', () => {
   });
 
   it('says what to do when there is no runner', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/runners', { items: [] }), '/pool/runners');
+    renderApp(signedIn().on('GET', '/api/v1/runners', { items: [] }), '/setup/runners');
     expect(
       await screen.findByText('No runners yet. Use Add runners at the top to start.'),
     ).toBeTruthy();
@@ -169,7 +169,7 @@ describe('Runners list', () => {
       signedIn().on('GET', '/api/v1/runners', {
         items: [runner(), runner({ id: 'r2', name: 'crsp-2' })],
       }),
-      '/pool/runners',
+      '/setup/runners',
     );
     const all = await screen.findByRole('button', { name: 'Select all 2' });
     expect(screen.getByRole('region', { name: 'Runners' })).toBeTruthy();
@@ -185,7 +185,7 @@ describe('Runners list', () => {
         items: [runner({ state: 'busy', current_job: job })],
       })
       .on('DELETE', '/api/v1/runners/:id', runner());
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select crsp-linux-1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete 1 runner' }));
@@ -208,7 +208,7 @@ describe('Runners list', () => {
         list = [{ ...list[0]!, state: 'draining', reason: 'remove asked' }];
         return runner({ state: 'draining' });
       });
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(
       screen.getByRole('checkbox', { name: 'Select crsp-home-automation-windows' }),
@@ -238,7 +238,7 @@ describe('Runners list', () => {
       .on('DELETE', '/api/v1/runners/:id', () =>
         apiError(404, 'not_found', 'no such runner or plan'),
       );
-    renderApp(api, '/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select crsp-linux-1' }));
     fireEvent.click(screen.getByRole('button', { name: 'Delete 1 runner' }));
@@ -275,7 +275,7 @@ describe('Runners list', () => {
         created_by: 'octo',
         steps: [],
       });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(screen.getByRole('button', { name: 'Replace' }));
     const dialog = await screen.findByRole('dialog', { name: 'Replace crsp-linux-1?' });
@@ -293,7 +293,7 @@ describe('Runners list', () => {
         ],
       })
       .on('DELETE', '/api/v1/runners/:id/registration', runner({ id: 'r9' }));
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     fireEvent.click(screen.getByRole('button', { name: 'Delete registration' }));
     const dialog = await screen.findByRole('dialog', { name: 'Delete crsp-gone-1?' });
@@ -307,7 +307,7 @@ describe('Runners list', () => {
   it('keeps a viewer from adding or deleting, and says why', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/runners', { items: [runner()] }),
-      '/pool/runners',
+      '/setup/runners',
     );
     const add = await screen.findByRole<HTMLButtonElement>('button', {
       name: 'Add runners',
@@ -323,7 +323,7 @@ describe('Add runners', () => {
         items: [machine(), machine({ id: 'm2', name: 'win-1', os: 'windows' })],
       })
       .on('GET', '/api/v1/github/repositories', { items: [], stale: { stale: false } });
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     const win = await screen.findByRole('radio', { name: /win-1/ });
     expect((win as HTMLInputElement).disabled).toBe(true);
@@ -339,7 +339,7 @@ describe('Add runners', () => {
         ],
       })
       .on('GET', '/api/v1/github/repositories', { items: [], stale: { stale: false } });
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     const ok = await screen.findByRole('radio', { name: /win-1/ });
     expect((ok as HTMLInputElement).disabled).toBe(false);
@@ -399,7 +399,7 @@ describe('Idle and busy at a glance (RES7)', () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
       items: [runner({ state: 'busy', current_job: job }), runner({ id: 'r2' })],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     expect(screen.getByText('Idle')).toBeTruthy();
     expect(screen.getByText('Busy')).toBeTruthy();
@@ -411,10 +411,10 @@ describe('Runners list truth (UX-1, UX-6, UX-19)', () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
       items: [runner({ machine_id: 'm9', machine_name: 'GameRoomPC' })],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: 'Runners on GameRoomPC' });
     const link = screen.getByText('Open GameRoomPC').closest('a');
-    expect(link?.getAttribute('href')).toBe('/pool/machines/m9');
+    expect(link?.getAttribute('href')).toBe('/setup/machines/m9');
     expect(within(table).queryByText('m9')).toBeNull();
   });
 
@@ -433,7 +433,7 @@ describe('Runners list truth (UX-1, UX-6, UX-19)', () => {
         }),
       ],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
     expect(within(table).getByText('not registered')).toBeTruthy();
     expect(
@@ -453,7 +453,7 @@ describe('Runners list truth (UX-1, UX-6, UX-19)', () => {
         ],
       })
       .on('DELETE', '/api/v1/runners/:id', runner({ state: 'draining' }));
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
     expect(within(table).getByText('the service did not start')).toBeTruthy();
     expect(within(table).getAllByRole('button', { name: 'Remove' })).toHaveLength(1);
@@ -506,14 +506,14 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
     const api = signedIn()
       .on('GET', '/api/v1/machines', { items: [win(false)] })
       .on('GET', '/api/v1/github/repositories', repos);
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     expect(
       (await screen.findAllByText(/The container backend is not allowed on this machine/))
         .length,
     ).toBeGreaterThan(0);
     const link = screen.getByRole('button', { name: 'Allow it on the machine' });
-    expect(link.getAttribute('href')).toBe('/pool/machines/m2');
+    expect(link.getAttribute('href')).toBe('/setup/machines/m2');
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Next' }).disabled).toBe(
       true,
     );
@@ -527,7 +527,7 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
       .on('POST', '/api/v1/runner-plans', () =>
         apiError(422, 'refused', 'machine GameRoomPC: not possible'),
       );
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
     expect(await screen.findByText('machine GameRoomPC: not possible.')).toBeTruthy();
@@ -540,7 +540,7 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
       .on('GET', '/api/v1/machines', { items: [win(true)] })
       .on('GET', '/api/v1/github/repositories', repos)
       .on('POST', '/api/v1/runner-plans', planOf([]));
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
     expect(
@@ -557,7 +557,7 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
       .on('POST', '/api/v1/runner-plans', planOf([step('planned')]))
       .on('POST', '/api/v1/runner-plans/:id/apply', { ...failed, state: 'failed' })
       .on('GET', '/api/v1/runner-plans/:id', { ...failed, state: 'failed' });
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Add 1 runner' }));

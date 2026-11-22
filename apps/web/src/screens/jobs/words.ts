@@ -261,7 +261,7 @@ export const RUNNER_KIND_WORDS = {
 
 /** "owner/name" to the address of the repository page. */
 export function repoPath(full: string): string {
-  return `/repositories/${full}`;
+  return `/setup/pool/${full}`;
 }
 
 /** The median of a list of numbers; 0 for none. */

@@ -14,7 +14,7 @@ const (
 	// Window is how many samples the decision median covers (R5.16, DL176).
 	Window = 5
 	// SampleEvery is how often the agent samples (R5.16).
-	SampleEvery = 5 * time.Second
+	SampleEvery = 2 * time.Second
 	// RawMaxAge: a previous raw counter older than this is not used for a CPU delta.
 	RawMaxAge = 10 * time.Minute
 	// MinGiBPerCPU: a slot's CPU gets at least this much memory (DL79).

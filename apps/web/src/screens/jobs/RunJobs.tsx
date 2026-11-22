@@ -119,7 +119,7 @@ export function RunJobsTable({
         onOpen={(r) => onOpen(r.job)}
         action={{
           label: 'Open job',
-          to: (r) => `/jobs/${r.job.id}`,
+          to: (r) => `/pool/jobs/${r.job.id}`,
           name: (r) => r.job.job_name,
         }}
         oneLine

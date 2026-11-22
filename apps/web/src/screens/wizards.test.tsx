@@ -131,7 +131,7 @@ const machineDriver: WizardDriver = {
   id: 'add-machine',
   async open(state) {
     const api = machineApi();
-    let path = '/pool/machines/add';
+    let path = '/setup/machines/add';
     if (state === 'loading') api.on('GET', '/api/v1/machines', never);
     if (state === 'planning') api.on('GET', '/api/v1/install-command', never);
     if (['paused', 'stopped', 'failed', 'done-after-reload'].includes(state)) {
@@ -228,7 +228,7 @@ const poolDriver: WizardDriver = {
       .on('POST', '/api/v1/repository-plans', plan('planned'))
       .on('POST', '/api/v1/repository-plans/:id/apply', plan('applying'))
       .on('GET', '/api/v1/repository-plans/:id', plan('done'));
-    let path = '/repositories/turn-on';
+    let path = '/setup/pool/turn-on';
     if (state === 'loading') api.on('GET', '/api/v1/github/repositories', never);
     if (state === 'planning') api.on('POST', '/api/v1/repository-plans', never);
     if (state === 'running')
@@ -284,7 +284,7 @@ const runnersDriver: WizardDriver = {
       .on('POST', '/api/v1/runner-plans', rplan('planned'))
       .on('POST', '/api/v1/runner-plans/:id/apply', rplan('applying'))
       .on('GET', '/api/v1/runner-plans/:id', rplan('done'));
-    let path = '/pool/runners/add';
+    let path = '/setup/runners/add';
     if (state === 'loading') api.on('GET', '/api/v1/machines', never);
     if (state === 'planning') api.on('POST', '/api/v1/runner-plans', never);
     if (state === 'running') api.on('GET', '/api/v1/runner-plans/:id', rplan('applying'));
@@ -556,7 +556,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
 
   it('Stop withdraws the join code and the wizard still ends at Done (R5.17)', async () => {
     const api = machineApi();
-    renderApp(api, '/pool/machines/add');
+    renderApp(api, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     await press('Next');
     await press('Join a machine');
@@ -607,7 +607,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
           stopped = true;
           return mk('applying');
         });
-      renderApp(api, repo ? '/repositories/turn-on' : '/pool/runners/add');
+      renderApp(api, repo ? '/setup/pool/turn-on' : '/setup/runners/add');
       if (repo) await tickOnce('Select octo/app');
       else await screen.findByRole('textbox', { name: /Labels/ });
       await press('Next');
@@ -632,7 +632,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
         ...rplan('planned'),
         created_by: String((c.body as { count: number }).count),
       }));
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('textbox', { name: /Labels/ });
     await press('Next');
     await screen.findByText(/1 persistent runner on build-1/);

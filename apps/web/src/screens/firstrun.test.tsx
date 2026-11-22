@@ -80,7 +80,7 @@ describe('Add runners (findings 10, 11, 12)', () => {
       .on('GET', '/api/v1/github/repositories', page(repos));
 
   it('asks System, Machine, Number and Labels, and no repository (D31)', async () => {
-    renderApp(api([org], [repository({ pool_on: true })]), '/pool/runners/add');
+    renderApp(api([org], [repository({ pool_on: true })]), '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
     await screen.findByRole('textbox', { name: /Labels/ });
     expect(screen.getByText('System')).toBeTruthy();
@@ -107,7 +107,7 @@ describe('Add runners (findings 10, 11, 12)', () => {
       '/api/v1/runner-plans',
       plan,
     );
-    renderApp(a, '/pool/runners/add');
+    renderApp(a, '/setup/runners/add');
     await screen.findByRole('textbox', { name: /Labels/ });
     fireEvent.click(screen.getByRole('button', { name: 'Next' }));
     await waitFor(() => expect(a.count('POST', '/api/v1/runner-plans')).toBe(1));
@@ -126,7 +126,7 @@ describe('Add runners (findings 10, 11, 12)', () => {
         { name: 'RUNS_ON_LINUX', status: 'ok', value: '["self-hosted","crsp-home"]' },
       ],
     });
-    renderApp(api([], [repo]), '/pool/runners/add');
+    renderApp(api([], [repo]), '/setup/runners/add');
     await waitFor(() =>
       expect(
         screen.getByRole<HTMLInputElement>('textbox', { name: /Labels/ }).value,
@@ -135,7 +135,7 @@ describe('Add runners (findings 10, 11, 12)', () => {
   });
 
   it('keeps labels the user wrote', async () => {
-    renderApp(api([], [repository({ pool_on: true })]), '/pool/runners/add');
+    renderApp(api([], [repository({ pool_on: true })]), '/setup/runners/add');
     const labels = await screen.findByRole<HTMLInputElement>('textbox', {
       name: /Labels/,
     });
@@ -147,7 +147,7 @@ describe('Add runners (findings 10, 11, 12)', () => {
 describe('Turn on the pool (findings 11, 14)', () => {
   it('ticks the only repository', async () => {
     const api = signedIn().on('GET', '/api/v1/github/repositories', page([repository()]));
-    renderApp(api, '/repositories/turn-on');
+    renderApp(api, '/setup/pool/turn-on');
     const box = await screen.findByRole<HTMLInputElement>('checkbox', {
       name: 'Select octo/app',
     });
@@ -156,7 +156,7 @@ describe('Turn on the pool (findings 11, 14)', () => {
 
   it('gives an action when no repository is free: install the App', async () => {
     const api = signedIn().on('GET', '/api/v1/github/repositories', page([]));
-    renderApp(api, '/repositories/turn-on');
+    renderApp(api, '/setup/pool/turn-on');
     expect(await screen.findByRole('button', { name: 'Add a repository' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open Repositories' })).toBeTruthy();
   });
@@ -165,7 +165,7 @@ describe('Turn on the pool (findings 11, 14)', () => {
 describe('Repositories after GitHub installed the App (finding 14)', () => {
   it('tells it from setup_action, reads the list and cleans the address', async () => {
     const api = signedIn().on('GET', '/api/v1/github/repositories', page([repository()]));
-    renderApp(api, '/repositories?installation_id=1&setup_action=install');
+    renderApp(api, '/setup/pool?installation_id=1&setup_action=install');
     expect(await screen.findByText(/GitHub saved the App installation/)).toBeTruthy();
     expect(await screen.findByRole('table', { name: 'octo repositories' })).toBeTruthy();
   });
@@ -176,7 +176,7 @@ describe('Runners explain themselves (findings 5, 6)', () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
       items: [runner({ name: 'crsp-light-1', labels: ['self-hosted', 'crsp-light'] })],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
     expect(screen.queryByText(/light runners/)).toBeNull();
   });
@@ -185,7 +185,7 @@ describe('Runners explain themselves (findings 5, 6)', () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
       items: [runner({ state: 'failed', failed_reason: 'The folder is left behind.' })],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     expect(await screen.findByText(/1 runner failed\./)).toBeTruthy();
     expect(screen.getByText('The folder is left behind.')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Remove' })).toBeTruthy();
@@ -208,13 +208,13 @@ describe('the machine page (findings 7, 8, 9)', () => {
   });
 
   it('writes a backend reason once', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/pool/machines/m1');
+    renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getAllByText(/no \/dev\/kvm/)).toHaveLength(1);
   });
 
   it('says an installed backend is not turned on and ticks it on request', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/pool/machines/m1');
+    renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/setup/machines/m1');
     const tick = await screen.findByRole('button', { name: 'Tick docker' });
     fireEvent.click(tick);
     const box = screen.getByRole<HTMLInputElement>('checkbox', { name: /docker/ });
@@ -222,7 +222,7 @@ describe('the machine page (findings 7, 8, 9)', () => {
   });
 
   it('keeps Remove in its own section with what it does', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/pool/machines/m1');
+    renderApp(signedIn().on('GET', '/api/v1/machines/m1', m), '/setup/machines/m1');
     const section = await screen.findByRole('region', { name: 'Remove crsp' });
     expect(within(section).getByText('Choose what happens to your data.')).toBeTruthy();
     expect(within(section).getByRole('button', { name: 'Remove crsp' })).toBeTruthy();

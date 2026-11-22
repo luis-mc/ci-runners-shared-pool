@@ -35,6 +35,23 @@ body {
   }
 }
 
+/* Links (UX-85): no anchor ever shows the browser's blue or purple. The base rule has no specificity (`:where`), so a
+   class below always wins; a link with no class is still a themed link in every state. */
+:where(a),
+:where(a:visited) {
+  color: var(--ds-color-primary);
+}
+:where(a:hover) {
+  color: var(--ds-color-text);
+}
+:where(a:focus-visible) {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+:where(a[aria-current]) {
+  color: var(--ds-color-primary);
+}
+
 /* frame */
 .ds-frame {
   display: grid;
@@ -95,8 +112,16 @@ body {
   .ds-header__product {
     grid-area: product;
   }
+  /* The status wraps inside its own column under the title; it never runs under Commands (LOOK56). */
   .ds-header__state {
     grid-area: state;
+    display: flex;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  .ds-header__status,
+  .ds-header__live {
+    min-inline-size: 0;
   }
   .ds-header__commands {
     grid-area: commands;
@@ -126,12 +151,28 @@ body {
   text-decoration: none;
   border-block-end: var(--ds-border-thick) solid transparent;
 }
+.ds-topmenu__link:visited {
+  color: var(--ds-color-text);
+}
+.ds-topmenu__link:hover {
+  color: var(--ds-color-primary);
+}
+.ds-topmenu__link:focus-visible {
+  color: var(--ds-color-text);
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
 /* The open screen is marked as a selected tab is: bold primary text and a 3 px underline. Never a box (UX-69). */
 .ds-topmenu__link[aria-current='page'] {
   font-weight: var(--ds-weight-bold);
   color: var(--ds-color-primary);
   border-block-end-color: var(--ds-color-primary);
   background: none;
+}
+.ds-topmenu__link[aria-current='page']:visited,
+.ds-topmenu__link[aria-current='page']:hover,
+.ds-topmenu__link[aria-current='page']:focus-visible {
+  color: var(--ds-color-primary);
 }
 .ds-main {
   display: block;
@@ -406,6 +447,20 @@ body {
   min-inline-size: var(--ds-target-min);
   color: var(--ds-color-primary);
   text-underline-offset: var(--ds-space-1);
+}
+.ds-link:visited {
+  color: var(--ds-color-primary);
+}
+.ds-link:hover {
+  color: var(--ds-color-text);
+}
+.ds-link:focus-visible {
+  color: var(--ds-color-primary);
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-link[aria-current] {
+  color: var(--ds-color-primary);
 }
 .ds-page-header {
   display: flex;
@@ -2690,7 +2745,7 @@ button.ds-jobgraph__node:hover {
 /* components 64 and 66 (LOOK44): job path and term help. */
 .ds-jobpath {
   display: grid;
-  grid-template-columns: 3fr 4fr;
+  grid-template-columns: minmax(min-content, 3fr) minmax(min-content, 4fr);
   gap: var(--ds-space-4);
   margin: 0;
   padding: 0;
@@ -2716,7 +2771,7 @@ button.ds-jobgraph__node:hover {
 .ds-jobpath__parts {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-columns: minmax(min-content, 1fr);
   gap: var(--ds-space-4);
   margin: 0;
   padding: 0;
@@ -2750,7 +2805,7 @@ button.ds-jobgraph__node:hover {
   background: var(--ds-color-surface);
   border: var(--ds-border-medium) solid var(--ds-color-border);
   border-radius: var(--ds-radius-2);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 button.ds-jobpath__box {
   cursor: pointer;
@@ -2775,12 +2830,9 @@ button.ds-jobpath__box {
 .ds-jobpath__line {
   color: var(--ds-color-text-muted);
 }
-/* A live example is a name that may be long (crsp-linux-1): it stays on one line, what does not fit is cut with … and its full text is the hover text (LOOK48). */
+/* A live example is a name that may be long (crsp-linux-1): it stays on one line and its column grows to fit it, never cut (LOOK48, LOOK56). */
 .ds-jobpath__line[data-example] {
-  min-inline-size: 0;
-  overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 @media (max-width: 600px) {
   .ds-jobpath {
@@ -2821,9 +2873,20 @@ button.ds-jobpath__box {
   color: var(--ds-color-text-muted);
   text-decoration: none;
 }
-.ds-boxbadge:hover {
+.ds-boxbadge:visited {
+  color: var(--ds-color-text-muted);
+}
+.ds-boxbadge:hover,
+.ds-boxbadge:focus-visible {
   color: var(--ds-color-text);
   text-decoration: underline;
+}
+.ds-boxbadge:focus-visible {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-boxbadge[aria-current] {
+  color: var(--ds-color-primary);
 }
 .ds-boxbadge__n {
   display: inline-grid;
@@ -3155,4 +3218,86 @@ a.ds-stat:focus-visible {
 }
 .ds-findings__meta {
   color: var(--ds-color-text-muted);
+}
+
+/* Component 75: numbered steps. */
+.ds-steps {
+  display: grid;
+  gap: var(--ds-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-steps__item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--ds-space-3);
+}
+.ds-steps__number {
+  color: var(--ds-color-primary);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-steps__text {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Component 76: side menu. Every link state uses tokens (UX-85). */
+.ds-sidemenu-layout {
+  display: grid;
+  gap: var(--ds-space-5);
+  min-inline-size: 0;
+}
+.ds-sidemenu-layout__body {
+  display: grid;
+  gap: var(--ds-space-6);
+  min-inline-size: 0;
+  align-content: start;
+}
+.ds-sidemenu__list {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-sidemenu__link {
+  display: flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  min-block-size: var(--ds-target-min);
+  padding-inline: var(--ds-space-2);
+  color: var(--ds-color-text);
+  text-decoration: none;
+  border-inline-start: var(--ds-border-thick) solid transparent;
+}
+.ds-sidemenu__link:visited {
+  color: var(--ds-color-text);
+}
+.ds-sidemenu__link:hover {
+  color: var(--ds-color-primary);
+}
+.ds-sidemenu__link:focus-visible {
+  color: var(--ds-color-text);
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-sidemenu__link[aria-current='page'] {
+  font-weight: var(--ds-weight-bold);
+  color: var(--ds-color-primary);
+  border-inline-start-color: var(--ds-color-primary);
+}
+.ds-sidemenu__link[aria-current='page']:visited,
+.ds-sidemenu__link[aria-current='page']:hover,
+.ds-sidemenu__link[aria-current='page']:focus-visible {
+  color: var(--ds-color-primary);
+}
+.ds-sidemenu__number {
+  color: var(--ds-color-text-muted);
+}
+@media (min-width: 900px) {
+  .ds-sidemenu-layout {
+    grid-template-columns: 16rem minmax(0, 1fr);
+    align-items: start;
+  }
 }

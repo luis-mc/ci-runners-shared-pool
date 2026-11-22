@@ -57,7 +57,7 @@ export function RunnerPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/runners', label: 'Runners' },
+          { to: '/setup/runners', label: 'Runners' },
           { label: result.state === 'ready' ? result.data.name : 'Runner' },
         ]}
       />
@@ -114,7 +114,7 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
             {
               name: 'Machine',
               value: (
-                <TextLink to={`/pool/machines/${r.machine_id}`}>
+                <TextLink to={`/setup/machines/${r.machine_id}`}>
                   {r.machine_name}
                 </TextLink>
               ),

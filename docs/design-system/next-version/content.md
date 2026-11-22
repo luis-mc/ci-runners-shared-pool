@@ -68,6 +68,7 @@ Add a row for each action the project needs. A new action gets a word that is no
 A retired word is not drawn as a label, button or message. The guard scans the source for each one. Do not list an approved word here.
 
 <!-- retired-words:start -->
+
 | Retired | Use instead |
 |---|---|
 | Submit | Save |
@@ -83,6 +84,7 @@ A retired word is not drawn as a label, button or message. The guard scans the s
 | Erase | Delete |
 | Runner kind | Runner type |
 | Kind (for persistent or ephemeral) | Runner type; Type alone where the page or step is already about runners (LOOK50) |
+
 <!-- retired-words:end -->
 
 ## Wizard step names
@@ -597,7 +599,6 @@ The state word of a runner on the Runners screen (web-console R5.23, runners R5.
 | offline, with "GitHub still holds the old session of this runner after the wait window; look for a second listener or another machine that uses this runner name" | The wait is over and GitHub still refuses the session (runners R5.95). |
 | Remove | The action on the row of a failed runner (busy word: Removing). Asks first in the question card, which names the runner (UX-9, UX-62). |
 
-
 ## Linux on a Windows machine words
 
 The words of Add runners and the machine list for a Windows machine whose container engine runs Linux containers (runners R5.47, machines R5.18).
@@ -612,7 +613,6 @@ The words of Add runners and the machine list for a Windows machine whose contai
 | {reason}. | A refusal of the plan, shown on Add runners step 1 with a full stop, so the user changes a choice. Try again after a failure goes back to step 1 with the reason in the same place. |
 | This machine runs windows, not linux. | The reason a machine is greyed for a system it cannot run (also for a Windows machine without Linux containers). |
 | WSL is installed but not ready; run wsl --install | Backend reason, shown only when WSL2 does not work and Docker does not run on it. It is written once. |
-
 
 ## List toolbar words
 
@@ -878,7 +878,7 @@ The fixed words of the waterfall, job graph and charts (components 50 to 55, RES
 ## Ordered list words
 
 | Word | Where |
-| --- | --- |
+|---|---|
 | Move {item} up | Name of the icon button ↑ on a row. |
 | Move {item} down | Name of the icon button ↓ on a row. |
 | {item} moved to place {n} of {total}. | Live line after a move. |
@@ -978,6 +978,7 @@ The words of the seven-item menu, Shared Pool and the Jobs sub-sections (owner d
 | See all | Button that pages in the earlier finished jobs. |
 | Done, failed and the averages count the last 200 finished jobs. | Quiet line under a grouped Jobs table. |
 | not placed yet | Group name of a job that has no machine or runner yet. |
+
 ## Runner service words
 
 The words of a runner service that did not start (runners R5.89, web-console R5.98, tray R5.44, doctor R5.45). The agent has already given the service account the right to log on as a service again and tried twice.
@@ -992,6 +993,7 @@ The words of a runner service that did not start (runners R5.89, web-console R5.
 | Doctor finding, the service is stopped | The service {service} of {runner} is not running |
 | Doctor finding, fine | {account} can log on as a service and {runner} runs |
 | Doctor fix | Press Start. The agent gives the account the right to log on as a service again and starts the service on {machine}. |
+
 ## Webhook settings words
 
 The words of Settings > Access > Webhooks and the link on the repository page (github-integration R5.51, web-console R5.99, OPS25).
@@ -1014,7 +1016,6 @@ The words of Settings > Access > Webhooks and the link on the repository page (g
 | Write the address without a user name, a query or a #fragment. | Mistake. |
 | The App does not listen for workflow jobs yet. On GitHub, open the App's permissions page and under Subscribe to events tick Workflow job, then save. Jobs are learned by webhooks once you have done that. | Guided step; its button is Open the App on GitHub. |
 | Turn on webhooks | Link at the end of the repository note "no webhook"; goes to Settings > Access > Webhooks. |
-
 
 ## Runner kind words
 
@@ -1121,7 +1122,7 @@ The words of the new Jobs section (web-console 4.6, proposed). A wait names what
 The short forms a one-line table shows; the whole line is the hover text and sits under the row's button (*Why*, *Details*). A workflow is its file name (`ci.yml`), the run number is the *Run* column (`#44723830522`, `, attempt 2`).
 
 | Wait reason | Short form |
-| --- | --- |
+|---|---|
 | free slot | waits for a slot |
 | load over budget | machine load too high |
 | no runner with labels | no runner with its labels |
@@ -1459,3 +1460,65 @@ Timers start in observe mode: they report and stop nothing until the owner switc
 | Doctor detail | The countdowns run and the audit log shows what crsp would have stopped or cancelled. Nothing is stopped until you switch enforcement on. |
 | Doctor fix | When the reports look right, switch on Enforce timers in Settings. |
 | Doctor finding, enforcing (ok) | Timers stop jobs and cancel runs that run over |
+## Console layout words (LOOK56, owner decision 22 Nov 2026, from the LOOK54 proposal)
+
+The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings, Help. Setup changes things; Pool shows what runs and why; Doctor says what is wrong now; Analytics says what could be better. `{n}` is a number, `{time}` a clock time, `{x}` a value.
+
+| Where | Words |
+|---|---|
+| Setup tabs | Summary, Machines, Runners, Images and caches, Size and backends, Pool setup (the old Repositories screen) |
+| Pool, page title and line | Pool. What runs, what waits and why. Nothing to configure here. |
+| Pool tabs | Overview, Live, Queue Analysis, Jobs, Machines |
+| Pool, four counts | Running, Starting, Queued, No runner fits |
+| Pool > Overview, panes | Queue plan (In the order crsp will start them.), Running jobs, Routing labels in use |
+| Queue plan columns | #, Job, Why it waits, Start, Machine and runner |
+| Start, a waiting job | Starts about {time} |
+| Start, a job that waits for nothing it can get | Does not start by itself |
+| Start, no estimate | Start not known |
+| A job at risk | Needs you (a word, a glyph and a colour, UX-58) |
+| Needs you, no runner has its labels | {job} will not start by itself. Add a runner with its labels, or change the labels of the job. |
+| Needs you, its machine does not take jobs | {job} waits on a machine that is not taking jobs. Let the machine take jobs again, or add a runner on another machine. |
+| Queue Analysis, filter | All {n}, Waiting for room, No runner fits |
+| Queue Analysis, panes | Queue, in start order; Where running jobs are going |
+| Queue Analysis, an entry | {place}. {job} {repository} #{run}; the wait words; Plan: {machine} · {runner}.; Label {labels}. |
+| Pool > Live, panes | Jobs over time (Each row is a job. The light part is waiting. A bracket is the forecast of the end.), Machines |
+| Pool > Live, empty | No job runs or waits. Jobs show here as they come. |
+| Pool > Machines, note | This page shows what runs where. To change a machine, its pool size or its load budget, go to Setup > Machines. |
+| Pool > Machines, link | Change {machine} in Setup > Machines |
+| Pool > Machines, runner table | Runner, Type, Doing now; Runners on {machine} |
+| Pool > Jobs | One list of every job: filter All, Queue, Running, Done; Range; Group by; Export CSV. A row's button says Details; for a waiting job its panel says why it waits and when it starts. |
+| Live updates paused | The shell banner says: Live updates paused. The data on screen is the last that arrived. The lists ask again every 5 seconds, and the console reconnects by itself. |
+| Analytics tabs | Suggestions, Insights, Charts, Run elsewhere |
+| Analytics lines | Suggestions: Changes that would make the pool faster. Ranked by the time they save. Insights: Where the time goes, from past runs. Charts: Numbers over time. Run elsewhere: Jobs that another runner ran, not your pool. |
+| Suggestions segments | Do next, Tests, Guardrails |
+| Insights panes | Four numbers; Where the time goes; Busiest repositories; Failed jobs; Waits; Timeline |
+| A suggestion about a project | The title names the repository: {title} ({repository}) unless the title has it already |
+| Path forward | Pane title: Path forward. Line: Do these in order for {repository}. List name: Steps |
+| Doctor | Needs you is the first pane. Doctor shows no suggestions. |
+
+### Suggestion steps words
+
+The numbered steps of a suggestion, by its kind. `{repository}` is the repository the suggestion is about; `{subject}` the workflow file, job or test it names. Every step sentence is in the page's words and nowhere else (`apps/web/src/screens/insights/steps.ts`).
+
+| Kind | Steps |
+|---|---|
+| wait.hold | 1. Open Pool > Jobs and filter by {repository} and the job {subject}. 2. Open Why waiting on a row of that job and read what holds it. 3. Change what the reason names: the runner, the image, or the load budget in Setup > Size and backends. 4. Run the job again and check that its wait is shorter. |
+| housekeeping.lane | 1. Open Setup > Runners and add a runner for the light jobs of {repository} ({subject}). 2. Give it the label that these jobs ask for. 3. Watch Pool > Queue Analysis: the light jobs should no longer wait behind heavy ones. |
+| pool.size | 1. Open Setup > Size and backends. 2. Raise the job slots of the machine this suggestion names, or add a machine in Setup > Machines. 3. Save, then watch Pool > Queue Analysis for a shorter queue. |
+| pool.idle_next_to_queue | 1. Open Setup > Runners and find the runners that sit idle while jobs wait. 2. Give them the label of the waiting jobs, or add the label to the jobs in the workflow. 3. Watch Pool > Live: the waiting jobs should move to the idle runners. |
+| repo.slots | 1. Open Setup > Pool setup and open {repository}. 2. Raise the number of jobs that repository may run at once. 3. Save, then watch Pool > Queue Analysis for fewer jobs that wait on the repository limit. |
+| run.critical_path | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Split the longest job, or let the jobs that do not depend on it start first (needs:). 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.superseded | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Add a concurrency group with cancel-in-progress: true, so an older run stops when a newer push arrives. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.duplicate_event | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Make the workflow start on one event only (push or pull_request), not both for the same commit. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.retested_tree | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Skip the run when the tree did not change, for example with a paths filter. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.fail_fast | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Set fail-fast: true on the matrix, so the other jobs stop after the first failure. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.timeout | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Add timeout-minutes to the job, a little above its slow end. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.retry | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Remove the retry that hides a failing step, or keep it on the one step that needs it. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.matrix_axis | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Remove the matrix value that adds no coverage, or run it on the main branch only. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.step_order | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Move the quick checks before the slow steps, so a failure shows early. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.cache | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Add the cache step from the snippet on this page to the job. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| test.slow | 1. Open the test {subject} in {repository}. 2. Find what makes it slow: a wait, a download, or a large setup. 3. Make it faster, or move it to a job that runs after the quick ones. 4. Merge the change, then read this suggestion again after the next runs. |
+| test.flaky | 1. Open the test {subject} in {repository}. 2. Run it ten times on your machine to see when it fails. 3. Fix the cause (a shared file, a clock, an order), or mark it as known flaky until you do. 4. Merge the change, then read this suggestion again after the next runs. |
+| test.duplicate | 1. Open the tests named {subject} in {repository}. 2. Keep the one that checks more, and delete the other. 3. Merge the change, then read this suggestion again after the next runs. |
+| test.no_assertions | 1. Open the test {subject} in {repository}. 2. Add a check of what it should do, or delete it if it checks nothing. 3. Merge the change, then read this suggestion again after the next runs. |
+| (any other kind) | 1. Read the fix on this page and the evidence under it for {repository}. 2. Make the change it names, in the place it names. 3. Read this suggestion again after the next runs: it goes away when the change works. |

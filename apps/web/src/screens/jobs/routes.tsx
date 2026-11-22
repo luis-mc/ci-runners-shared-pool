@@ -1,62 +1,72 @@
-// The routes of the Jobs section, and the redirects of the old Jobs addresses (web-console R5.117). Jobs has six tabs
-// (UX-74): Overview, Live, Done, Run elsewhere, Run insights, Charts. The old Queue, Running and By tabs go to the
-// list or the Group by choice that replaced them, with their filter kept.
-import { Navigate, Route, useLocation } from 'react-router-dom';
-import { ChartsTab } from './Charts';
-import { type GroupBy } from './Groups';
-import { DoneTab, ElsewhereTab, JobsLayout, LiveTab } from './JobsHome';
-import { JobsIndex } from './Overview';
+// The routes of Pool > Jobs, the run and job pages, and the Analytics tabs (web-console R5.117, LOOK56). Old addresses
+// (/jobs/..., /repositories, /shared-pool/...) are gone: there are no redirects.
+import { ClockProvider } from '@crsp/ui';
+import { Outlet, Route } from 'react-router-dom';
+import { later } from '../lazy';
+import { ElsewhereTab, JobsTab } from './JobsHome';
 import { JobPage } from './JobPage';
 import { RunPage } from './RunPage';
-import { ActionWizard } from '../insights/ActionWizard';
+import { AnalyticsLayout } from '../analytics/AnalyticsLayout';
+import { PoolSection } from '../pool/PoolSection';
 import { DoNext } from '../insights/DoNext';
-import { FindingPage } from '../insights/Finding';
-import { Guardrails } from '../insights/Guardrails';
 import { InsightsLayout } from '../insights/InsightsLayout';
-import { Tests } from '../insights/Tests';
-import { Timeline } from '../insights/Timeline';
-import { Waits } from '../insights/Waits';
 
-/** An old address goes to its new one; the filter of its query stays, and `set` adds what the old tab meant. */
-function Moved({ to, set }: { to: string; set: Record<string, string> }) {
-  const { search } = useLocation();
-  const q = new URLSearchParams(search);
-  for (const [k, v] of Object.entries(set)) q.set(k, v);
-  const s = q.toString();
-  return <Navigate to={`${to}${s ? `?${s}` : ''}`} replace />;
+const PoolOverview = later(() =>
+  import('../pool/PoolOverview').then((m) => m.PoolOverview),
+);
+const PoolLive = later(() => import('../pool/PoolLive').then((m) => m.PoolLive));
+const PoolMachines = later(() =>
+  import('../pool/PoolMachines').then((m) => m.PoolMachines),
+);
+const QueuePlan = later(() => import('../pool/QueuePlan').then((m) => m.QueuePlan));
+const Insights = later(() => import('../analytics/Insights').then((m) => m.Insights));
+const ChartsTab = later(() => import('./Charts').then((m) => m.ChartsTab));
+const Tests = later(() => import('../insights/Tests').then((m) => m.Tests));
+const Guardrails = later(() =>
+  import('../insights/Guardrails').then((m) => m.Guardrails),
+);
+const FindingPage = later(
+  () => import('../insights/Finding').then((m) => m.FindingPage),
+  true,
+);
+const ActionWizard = later(
+  () => import('../insights/ActionWizard').then((m) => m.ActionWizard),
+  true,
+);
+
+/** The run and job pages count their timers every second (R5.150). */
+function EverySecond() {
+  return (
+    <ClockProvider tickMs={1000}>
+      <Outlet />
+    </ClockProvider>
+  );
 }
-
-const group = (by: GroupBy) => <Moved to="/jobs/done" set={{ group: by }} />;
 
 export const jobsRoutes = (
   <>
-    <Route element={<JobsLayout />}>
-      <Route path="jobs" element={<JobsIndex />} />
-      <Route path="jobs/live" element={<LiveTab />} />
-      <Route
-        path="jobs/running"
-        element={<Moved to="/jobs/live" set={{ state: 'running' }} />}
-      />
-      <Route path="jobs/done" element={<DoneTab />} />
-      <Route path="jobs/elsewhere" element={<ElsewhereTab />} />
-      <Route path="jobs/repository" element={group('repository')} />
-      <Route path="jobs/machine" element={group('machine')} />
-      <Route path="jobs/runner" element={group('runner')} />
-      <Route path="jobs/runner-type" element={group('runner-type')} />
-      <Route path="jobs/job-type" element={group('job-type')} />
-      <Route path="jobs/insights" element={<InsightsLayout />}>
+    <Route path="pool" element={<PoolSection />}>
+      <Route index element={<PoolOverview />} />
+      <Route path="live" element={<PoolLive />} />
+      <Route path="queue" element={<QueuePlan />} />
+      <Route path="jobs" element={<JobsTab />} />
+      <Route path="machines" element={<PoolMachines />} />
+    </Route>
+    <Route element={<EverySecond />}>
+      <Route path="pool/runs/:runId" element={<RunPage />} />
+      <Route path="pool/jobs/:id" element={<JobPage />} />
+    </Route>
+    <Route path="analytics" element={<AnalyticsLayout />}>
+      <Route element={<InsightsLayout />}>
         <Route index element={<DoNext />} />
-        <Route path="waits" element={<Waits />} />
-        <Route path="timeline" element={<Timeline />} />
         <Route path="tests" element={<Tests />} />
         <Route path="guardrails" element={<Guardrails />} />
       </Route>
-      <Route path="jobs/charts" element={<ChartsTab />} />
-      <Route path="jobs/trends" element={<Navigate to="/jobs/charts" replace />} />
+      <Route path="insights" element={<Insights />} />
+      <Route path="charts" element={<ChartsTab />} />
+      <Route path="elsewhere" element={<ElsewhereTab />} />
     </Route>
-    <Route path="jobs/insights/finding/:id" element={<FindingPage />} />
-    <Route path="jobs/insights/finding/:id/change" element={<ActionWizard />} />
-    <Route path="jobs/run/:runId" element={<RunPage />} />
-    <Route path="jobs/:id" element={<JobPage />} />
+    <Route path="analytics/finding/:id" element={<FindingPage />} />
+    <Route path="analytics/finding/:id/change" element={<ActionWizard />} />
   </>
 );

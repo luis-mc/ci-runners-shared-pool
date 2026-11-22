@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderApp, repository, runner, signedIn } from '../../testing/mock';
 import { groupByMachine, runnerTotals } from '../runners/Runners';
 import { showStrip, STRIP_STORE_NAME } from '../overview/HowCrspWorks';
-import { poolTotals } from './PoolSummary';
+import { poolTotals } from './SetupSummary';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -28,48 +28,32 @@ const empty = () =>
     .on('GET', '/api/v1/runners', { items: [] })
     .on('GET', '/api/v1/github/repositories', repos([]));
 
-describe('the seven areas and the old addresses (D24)', () => {
-  it('moves the old addresses to Shared Pool and keeps the query', async () => {
-    const api = ready().on('GET', '/api/v1/runner-plans/:id', {
-      id: 'rp1',
-      area: 'runners',
-      state: 'done',
-      steps: [],
-      created_at: '2026-11-18T00:00:00Z',
-    });
-    renderApp(api, '/runners/add?plan=rp1');
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Add runners' }),
-    ).toBeTruthy();
-    const nav = screen.getByRole('navigation', { name: 'Areas' });
-    expect(
-      within(nav).getByRole('link', { name: 'Shared Pool' }).getAttribute('aria-current'),
-    ).toBe('page');
-    // The heading shows while the screen loads; its breadcrumb link comes with the screen.
-    expect(
-      (await screen.findByRole('link', { name: 'Runners' })).getAttribute('href'),
-    ).toBe('/pool/runners');
-  });
-
+describe('the seven areas and the Setup tabs (LOOK56)', () => {
   it.each([
-    ['/machines', 'Machines'],
-    ['/runners', 'Runners'],
-    ['/images', 'Images and caches'],
-    ['/caches', 'Images and caches'],
-  ])('%s opens its Shared Pool page', async (from, title) => {
+    ['/setup/machines', 'Machines'],
+    ['/setup/runners', 'Runners'],
+    ['/setup/images', 'Images and caches'],
+    ['/setup/size', 'Size and backends'],
+  ])('%s opens its Setup page', async (from, title) => {
     renderApp(ready(), from);
     expect(await screen.findByRole('heading', { level: 1, name: title })).toBeTruthy();
     expect(screen.getByRole('tab', { name: title, selected: true })).toBeTruthy();
+    const nav = screen.getByRole('navigation', { name: 'Areas' });
+    expect(
+      within(nav).getByRole('link', { name: 'Setup' }).getAttribute('aria-current'),
+    ).toBe('page');
   });
 
-  it('moves a machine address with its id', async () => {
-    renderApp(ready(), '/machines/m1');
-    expect(await screen.findByRole('link', { name: 'Machines' })).toBeTruthy();
+  it('opens Setup > Summary from /setup', async () => {
+    renderApp(ready(), '/setup');
+    expect(
+      await screen.findByRole('tab', { name: 'Summary', selected: true }),
+    ).toBeTruthy();
   });
 
-  it('shows the Shared Pool tabs and goes to a tab with the keyboard', async () => {
-    renderApp(ready(), '/pool');
-    const tabs = await screen.findByRole('tablist', { name: 'Shared Pool sections' });
+  it('shows the Setup tabs and goes to a tab with the keyboard', async () => {
+    renderApp(ready(), '/setup/summary');
+    const tabs = await screen.findByRole('tablist', { name: 'Setup sections' });
     expect(
       within(tabs)
         .getAllByRole('tab')
@@ -80,6 +64,7 @@ describe('the seven areas and the old addresses (D24)', () => {
       'Runners',
       'Images and caches',
       'Size and backends',
+      'Pool setup',
     ]);
     const first = within(tabs).getByRole('tab', { name: 'Summary' });
     first.focus();
@@ -90,15 +75,14 @@ describe('the seven areas and the old addresses (D24)', () => {
     // Choosing a tab redraws the row; focus is back on the chosen tab a frame later (keepFocus), so wait for it.
     await waitFor(() =>
       expect(document.activeElement).toBe(
-        within(screen.getByRole('tablist', { name: 'Shared Pool sections' })).getByRole(
-          'tab',
-          { name: 'Machines' },
-        ),
+        within(screen.getByRole('tablist', { name: 'Setup sections' })).getByRole('tab', {
+          name: 'Machines',
+        }),
       ),
     );
     fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'End' });
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Size and backends' }),
+      await screen.findByRole('tab', { name: 'Pool setup', selected: true }),
     ).toBeTruthy();
   });
 
@@ -116,38 +100,23 @@ describe('the seven areas and the old addresses (D24)', () => {
     await user.keyboard('k');
     expect(document.activeElement).toBe(links[1]);
   });
-
-  it('the old Wait and duration tab opens Charts, and the Jobs tabs stay a row', async () => {
-    renderApp(
-      ready().on('GET', '/api/v1/jobs/stats', {
-        days: [],
-        hours: [],
-        forecast_points: [],
-      }),
-      '/jobs/trends',
-    );
-    expect(await screen.findByRole('tablist', { name: 'Jobs sections' })).toBeTruthy();
-    expect(
-      await screen.findByRole('tab', { name: 'Charts', selected: true }),
-    ).toBeTruthy();
-  });
 });
 
 describe('Shared Pool summary and first-run guide (D33)', () => {
   it('shows the three steps on a pool with nothing in it, the later ones disabled with a reason', async () => {
-    renderApp(empty(), '/pool');
+    renderApp(empty(), '/setup/summary');
     expect(await screen.findByText('1 Add a machine')).toBeTruthy();
     expect(screen.getByText('2 Set runners')).toBeTruthy();
     expect(screen.getByText('3 Choose repositories')).toBeTruthy();
     expect(screen.getByText('Add a machine').closest('a')?.getAttribute('href')).toBe(
-      '/pool/machines/add',
+      '/setup/machines/add',
     );
     const later = screen.getByRole<HTMLButtonElement>('button', { name: 'Add runners' });
     expect(later.disabled).toBe(true);
   });
 
   it('shows the figures and no guide once the pool is set up', async () => {
-    renderApp(ready(), '/pool');
+    renderApp(ready(), '/setup/summary');
     expect((await screen.findAllByText('1 of 1 online')).length).toBeGreaterThan(0);
     expect(screen.queryByText('1 Add a machine')).toBeNull();
     expect(screen.getByRole('table', { name: 'Runners per system' })).toBeTruthy();
@@ -208,7 +177,7 @@ describe('Runners grouped by machine (D32)', () => {
     const api = ready().on('GET', '/api/v1/runners', {
       items: [items[0]!, busy, items[2]!],
     });
-    renderApp(api, '/pool/runners');
+    renderApp(api, '/setup/runners');
     expect(await screen.findByText('2 machines, 3 runners, 1 busy')).toBeTruthy();
     const t1 = await screen.findByRole('table', { name: 'Runners on build-1' });
     expect(screen.getByRole('table', { name: 'Runners on win-1' })).toBeTruthy();

@@ -60,7 +60,7 @@ export const CARDS: readonly HelpCard[] = [
     box: 'queue',
     title: 'Why is my job waiting?',
     answer:
-      'A job waits for a reason: no free slot, over the load budget, or a limit. The Jobs page says which, in words.',
+      'A job waits for a reason: no free slot, over the load budget, or a limit. Pool > Jobs and Queue Analysis say which, in words.',
   },
   {
     id: 'q-queue',
@@ -153,9 +153,117 @@ export function boxOf(id: string): { id: string; n: number; name: string } {
   return { id, n: i + 1, name: PATH_PARTS[i]?.title ?? '' };
 }
 
+/** The topics of the Help side menu (LOOK56, options F and G): the live guide next to today's Help. */
+export const TOPICS = [
+  { to: '/help', label: 'Start here' },
+  { to: '/help/where', label: 'Where things are' },
+  { to: '/help/queue', label: 'Reading Queue Analysis' },
+] as const;
+
+/** Where things are: each part of the console and what it is for. */
+export const WHERE_AREAS: readonly { name: string; line: string; to: string }[] = [
+  { name: 'Overview', line: 'The pool at a glance.', to: '/' },
+  {
+    name: 'Setup',
+    line: 'Machines, runners, sizes, Pool setup. Change things here.',
+    to: '/setup/summary',
+  },
+  {
+    name: 'Pool',
+    line: 'Overview, Live, Queue Analysis, Jobs, Machines. Watch and act.',
+    to: '/pool',
+  },
+  { name: 'Doctor', line: 'Needs you and checks. Something is wrong.', to: '/doctor' },
+  {
+    name: 'Analytics',
+    line: 'Suggestions, Insights, Charts, Run elsewhere. Could be better.',
+    to: '/analytics',
+  },
+  { name: 'Settings', line: 'Access, repositories, console.', to: '/settings' },
+  { name: 'Help', line: 'This guide.', to: '/help' },
+];
+
+export const WHERE_TABS: readonly {
+  section: string;
+  tab: string;
+  line: string;
+  to: string;
+}[] = [
+  {
+    section: 'Setup',
+    tab: 'Summary',
+    line: 'See the setup at a glance.',
+    to: '/setup/summary',
+  },
+  {
+    section: 'Setup',
+    tab: 'Machines',
+    line: 'Change a machine and its pool size.',
+    to: '/setup/machines',
+  },
+  {
+    section: 'Setup',
+    tab: 'Runners',
+    line: 'Add and remove runners.',
+    to: '/setup/runners',
+  },
+  {
+    section: 'Setup',
+    tab: 'Images and caches',
+    line: 'Clean images and caches.',
+    to: '/setup/images',
+  },
+  {
+    section: 'Setup',
+    tab: 'Size and backends',
+    line: 'Set size classes and backends.',
+    to: '/setup/size',
+  },
+  {
+    section: 'Setup',
+    tab: 'Pool setup',
+    line: 'Turn the pool on for a repository.',
+    to: '/setup/pool',
+  },
+  {
+    section: 'Pool',
+    tab: 'Overview',
+    line: 'Read the queue plan and the running jobs.',
+    to: '/pool',
+  },
+  {
+    section: 'Pool',
+    tab: 'Live',
+    line: 'See running and queued jobs on a timeline.',
+    to: '/pool/live',
+  },
+  {
+    section: 'Pool',
+    tab: 'Queue Analysis',
+    line: 'See why each job waits and when it starts.',
+    to: '/pool/queue',
+  },
+  {
+    section: 'Pool',
+    tab: 'Jobs',
+    line: 'Find any job, and ask why it waits.',
+    to: '/pool/jobs',
+  },
+  {
+    section: 'Pool',
+    tab: 'Machines',
+    line: 'See what runs where.',
+    to: '/pool/machines',
+  },
+];
+
 /** The words around the picture and the cards (content.md, Help words). */
 export const HELP_WORDS = {
   lead: 'One picture, then the questions people ask. Each card names its box.',
   pictureNote: '1 to 3 happen on GitHub. 4 to 7 happen in your pool.',
   questions: 'Questions, in the order a job meets them',
+  whereLead:
+    'Setup is where you change things. Pool is where you watch and act. Doctor is for what is wrong now. Analytics is for what could be better.',
+  queueLead:
+    'Queue Analysis ranks every waiting job in the order crsp will start it. Read it from the top.',
 } as const;

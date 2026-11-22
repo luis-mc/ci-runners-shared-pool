@@ -47,7 +47,7 @@ test('Add a machine: Review, Joining with a one-time code, then Done with the ma
       joined ? join('joined', { machine_id: 'm1' }) : join('waiting'),
     );
   await mock.install(page);
-  await page.goto('/pool/machines/add');
+  await page.goto('/setup/machines/add');
   await expect(
     page.getByRole('heading', { level: 1, name: 'Add a machine' }),
   ).toBeVisible();
@@ -92,7 +92,7 @@ test('Add a machine: Stop withdraws the code and the wizard still ends at Done',
     .on('GET', '/api/v1/join-codes/:id', join('waiting'))
     .on('DELETE', '/api/v1/join-codes/:id', undefined);
   await mock.install(page);
-  await page.goto('/pool/machines/add');
+  await page.goto('/setup/machines/add');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Join a machine' }).click();
   await page.getByRole('button', { name: 'Stop' }).click();
@@ -132,7 +132,7 @@ test('Turn on the pool: choose, Review, Turning on, Done with what was really do
     .on('POST', '/api/v1/repository-plans/:id/apply', plan('applying', 'running'))
     .on('GET', '/api/v1/repository-plans/:id', plan('done', 'done'));
   await mock.install(page);
-  await page.goto('/repositories/turn-on');
+  await page.goto('/setup/pool/turn-on');
   await expect(
     page.getByRole('heading', { level: 1, name: 'Turn on the pool' }),
   ).toBeVisible();
@@ -165,7 +165,7 @@ test('Stop new jobs asks first, names the running jobs, and stops new jobs on ye
     waiting_for: [],
   });
   await mock.install(page);
-  await page.goto('/pool/machines/m1');
+  await page.goto('/setup/machines/m1');
   await page.getByRole('button', { name: 'Stop new jobs', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Stop new jobs on build-1?' });
   await expect(dialog).toContainText('octo/app e2e');
@@ -187,7 +187,7 @@ test('Agent recovery: the state is shown, Recover is locked while it runs, then 
       return undefined;
     });
   await mock.install(page);
-  await page.goto('/pool/machines');
+  await page.goto('/setup/machines');
   await expect(page.getByRole('row', { name: /build-1/ })).toContainText(
     'needs recovery',
   );
@@ -206,7 +206,7 @@ test('Agent recovery: the state is shown, Recover is locked while it runs, then 
 test('Escape closes the question and nothing changes (UX-46)', async ({ page }) => {
   const mock = signedIn();
   await mock.install(page);
-  await page.goto('/pool/machines/m1');
+  await page.goto('/setup/machines/m1');
   await page.getByRole('button', { name: 'Remove crsp' }).click();
   await expect(page.getByRole('dialog', { name: 'Remove crsp' })).toBeVisible();
   await page.keyboard.press('Escape');
@@ -237,7 +237,7 @@ test('Delete runners names each runner and its job, then deletes with the yes', 
     })
     .on('DELETE', '/api/v1/runners/:id', runner());
   await mock.install(page);
-  await page.goto('/pool/runners');
+  await page.goto('/setup/runners');
   await page.getByRole('checkbox', { name: 'Select crsp-linux-1' }).check();
   await page.getByRole('button', { name: 'Delete 1 runner' }).click();
   const dialog = page.getByRole('dialog', { name: 'Delete these runners?' });
@@ -249,7 +249,7 @@ test('Delete runners names each runner and its job, then deletes with the yes', 
 
 test('Runners show their isolation in words', async ({ page }) => {
   await signedIn().install(page);
-  await page.goto('/pool/runners');
+  await page.goto('/setup/runners');
   await expect(page.getByText('persistent, state kept between jobs')).toBeVisible();
 });
 
@@ -274,7 +274,7 @@ test('The repository policy asks first before public forks are allowed', async (
     .on('GET', '/api/v1/repositories/:id', repository())
     .on('PATCH', '/api/v1/repositories/:id/policy', repository().policy);
   await mock.install(page);
-  await page.goto('/repositories/octo/app');
+  await page.goto('/setup/pool/octo/app');
   await page.getByRole('checkbox', { name: 'Run jobs from public forks' }).check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Allow jobs from public forks?' });
@@ -293,7 +293,7 @@ test('When the session ends the dialog shows over the page and the page stays', 
     failure(401, 'session_expired', 'The session ended.'),
   );
   await mock.install(page);
-  await page.goto('/pool/machines');
+  await page.goto('/setup/machines');
   const dialog = page.getByRole('dialog', { name: 'Session ended' });
   await expect(dialog).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Machines' })).toBeVisible();
@@ -309,7 +309,7 @@ test('Images and caches opens from the menu and says that there are no images ye
   const mock = signedIn();
   await mock.install(page);
   await page.goto('/');
-  await page.getByRole('link', { name: 'Shared Pool' }).click();
+  await page.getByRole('link', { name: 'Setup', exact: true }).click();
   await page.getByRole('tab', { name: 'Images and caches', exact: true }).click();
   await expect(
     page.getByRole('heading', { level: 1, name: 'Images and caches' }),
@@ -339,7 +339,7 @@ test('Wipe a cache asks first, names the cache, its size and the job, and wipes 
       return cache({ state: 'wiping', waiting_for: ['octo/app e2e'] });
     });
   await mock.install(page);
-  await page.goto('/pool/images?tab=caches');
+  await page.goto('/setup/images?tab=caches');
   await page.getByRole('button', { name: 'Wipe', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Wipe Tool cache of crsp-linux-1?' });
   await expect(dialog).toContainText('Tool cache of crsp-linux-1, 3.2 GB');

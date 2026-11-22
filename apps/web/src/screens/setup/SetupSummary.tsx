@@ -1,4 +1,4 @@
-// Shared Pool > Summary (D24, LOOK31): what the pool is now (machines, runners per system, capacity, health) and,
+// Setup > Summary (D24, LOOK31): what the pool is now (machines, runners per system, capacity, health) and,
 // until it is set up, the first-run guide: 1 Add a machine, 2 Set runners, 3 Choose repositories.
 import {
   ActionBar,
@@ -91,7 +91,7 @@ export function FirstRunGuide({ f }: { f: PoolFigures }) {
                 <Stack>
                   <Text>A computer that runs your jobs: Linux, Windows or macOS.</Text>
                   {admin ? (
-                    <LinkButton to="/pool/machines/add">Add a machine</LinkButton>
+                    <LinkButton to="/setup/machines/add">Add a machine</LinkButton>
                   ) : (
                     <Button disabled reason={why}>
                       Add a machine
@@ -116,7 +116,7 @@ export function FirstRunGuide({ f }: { f: PoolFigures }) {
                       Add runners
                     </Button>
                   ) : admin ? (
-                    <LinkButton to="/pool/runners/add">Add runners</LinkButton>
+                    <LinkButton to="/setup/runners/add">Add runners</LinkButton>
                   ) : (
                     <Button disabled reason={why}>
                       Add runners
@@ -141,7 +141,7 @@ export function FirstRunGuide({ f }: { f: PoolFigures }) {
                       Choose repositories
                     </Button>
                   ) : (
-                    <LinkButton to="/repositories">Choose repositories</LinkButton>
+                    <LinkButton to="/setup/pool">Choose repositories</LinkButton>
                   )}
                 </Stack>
               ),
@@ -159,7 +159,7 @@ interface SystemRow {
   busy: number;
 }
 
-export function PoolSummary() {
+export function SetupSummary() {
   const client = useClient();
   const machines = useMachines();
   const rv = useVersion('runners');
@@ -170,7 +170,7 @@ export function PoolSummary() {
   return (
     <Page>
       <PageHeader
-        title="Shared Pool"
+        title="Setup"
         lead="One pool across your machines. Set it up here, then choose the repositories that use it."
       />
       <Load result={machines.result} what="the pool" reload={machines.reload}>
@@ -254,7 +254,7 @@ export function PoolSummary() {
       session.can('admin') ? (
         <ActionBar
           primary={
-            <LinkButton to="/pool/runners/add" kind="primary">
+            <LinkButton to="/setup/runners/add" kind="primary">
               Add runners
             </LinkButton>
           }

@@ -62,7 +62,7 @@ export function RegistryReplacePage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/images?tab=registry', label: '‹ Registry' },
+          { to: '/setup/images?tab=registry', label: '‹ Registry' },
           { label: 'Replace an image' },
         ]}
       />
@@ -304,9 +304,9 @@ function ReplaceBody({
         }
         donePrimary={{
           label: 'Open the registry',
-          onPress: () => void navigate('/pool/images?tab=registry'),
+          onPress: () => void navigate('/setup/images?tab=registry'),
         }}
-        onStartAgain={() => void navigate(`/pool/images/registry/${imageId}`)}
+        onStartAgain={() => void navigate(`/setup/images/registry/${imageId}`)}
         onTryAgain={() => void start.run()}
       >
         {current === 0 && compare ? (
