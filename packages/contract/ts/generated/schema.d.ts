@@ -1698,6 +1698,30 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/listener-gate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The listener gate of persistent runners on the machine itself
+         * @description runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+         */
+        get: operations["getListenerGate"];
+        /**
+         * Switch the listener gate between observe and enforce
+         * @description runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+         */
+        put: operations["putListenerGate"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/timer-settings": {
         parameters: {
             query?: never;
@@ -3552,6 +3576,38 @@ export interface components {
             reserve_after_minutes?: number;
             /** @description Needed when a size that runners use gets smaller. */
             confirm_lowering?: boolean;
+        };
+        ListenerGateInput: {
+            /** @description True switches the gate on; false is observe mode. */
+            enforce: boolean;
+        };
+        ListenerGateRunner: {
+            runner_name: string;
+            machine_id: string;
+            os: string;
+            /** @description `gated: offline by design`, or that the listener is on for an admitted job. */
+            text: string;
+            listener_on: boolean;
+            /** @description The jobs that hold the listener. */
+            job_ids?: number[];
+            /**
+             * Format: date-time
+             * @description Absent when the runner was never woken.
+             */
+            last_wake?: string;
+            /**
+             * Format: date-time
+             * @description When the weekly wake-up is due.
+             */
+            next_wake: string;
+            /** @description Why jobs wait for this runner, in the owner's words. Absent when none wait. */
+            queue_text?: string;
+        };
+        ListenerGate: {
+            enforce: boolean;
+            /** @description Fixed at 7. */
+            wake_every_days: number;
+            runners: components["schemas"]["ListenerGateRunner"][];
         };
         TimerSettings: {
             /** @description The job timer, from the first real step. Default 30. */
@@ -9767,6 +9823,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunnerClasses"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getListenerGate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting and the gated runners. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListenerGate"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putListenerGate: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ListenerGateInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ListenerGate"];
                 };
             };
             default: components["responses"]["Error"];

@@ -632,6 +632,20 @@ type LinkCode struct {
 	UsedAt       sql.NullString
 }
 
+type ListenerLease struct {
+	JobID     int64
+	RunnerID  string
+	State     string
+	Body      string
+	UpdatedAt string
+}
+
+type ListenerWake struct {
+	RunnerID    string
+	LastWake    string
+	WakingSince string
+}
+
 type Machine struct {
 	ID           string
 	Name         string

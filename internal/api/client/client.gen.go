@@ -5766,6 +5766,43 @@ type ListenAddressChosen struct {
 	Restarting bool   `json:"restarting"`
 }
 
+// ListenerGate defines model for ListenerGate.
+type ListenerGate struct {
+	Enforce bool                 `json:"enforce"`
+	Runners []ListenerGateRunner `json:"runners"`
+
+	// WakeEveryDays Fixed at 7.
+	WakeEveryDays int `json:"wake_every_days"`
+}
+
+// ListenerGateInput defines model for ListenerGateInput.
+type ListenerGateInput struct {
+	// Enforce True switches the gate on; false is observe mode.
+	Enforce bool `json:"enforce"`
+}
+
+// ListenerGateRunner defines model for ListenerGateRunner.
+type ListenerGateRunner struct {
+	// JobIds The jobs that hold the listener.
+	JobIds *[]int64 `json:"job_ids,omitempty"`
+
+	// LastWake Absent when the runner was never woken.
+	LastWake   *time.Time `json:"last_wake,omitempty"`
+	ListenerOn bool       `json:"listener_on"`
+	MachineId  string     `json:"machine_id"`
+
+	// NextWake When the weekly wake-up is due.
+	NextWake time.Time `json:"next_wake"`
+	Os       string    `json:"os"`
+
+	// QueueText Why jobs wait for this runner, in the owner's words. Absent when none wait.
+	QueueText  *string `json:"queue_text,omitempty"`
+	RunnerName string  `json:"runner_name"`
+
+	// Text `gated: offline by design`, or that the listener is on for an admitted job.
+	Text string `json:"text"`
+}
+
 // Load defines model for Load.
 type Load struct {
 	CpuKnown    bool      `json:"cpu_known"`
@@ -9010,6 +9047,9 @@ type JoinMachineOverSshJSONRequestBody = SshJoinRequest
 // CreateJoinFileJSONRequestBody defines body for CreateJoinFile for application/json ContentType.
 type CreateJoinFileJSONRequestBody = CreateJoinFileRequest
 
+// PutListenerGateJSONRequestBody defines body for PutListenerGate for application/json ContentType.
+type PutListenerGateJSONRequestBody = ListenerGateInput
+
 // UpdateMachineJSONRequestBody defines body for UpdateMachine for application/json ContentType.
 type UpdateMachineJSONRequestBody = MachineSettingsUpdate
 
@@ -9876,6 +9916,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/join-files (the `CreateJoinFile` operationId).
 	CreateJoinFile(ctx context.Context, body CreateJoinFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetListenerGate The listener gate of persistent runners on the machine itself
+	//
+	// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+	//
+	// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+	GetListenerGate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutListenerGateWithBody Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutListenerGate Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGate(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListMachines Every machine with state, backends, load and slots
 	//
@@ -12702,6 +12767,61 @@ func (c *Client) CreateJoinFileWithBody(ctx context.Context, contentType string,
 // Corresponds with POST /api/v1/join-files (the `CreateJoinFile` operationId).
 func (c *Client) CreateJoinFile(ctx context.Context, body CreateJoinFileJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewCreateJoinFileRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetListenerGate The listener gate of persistent runners on the machine itself
+//
+// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+//
+// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+func (c *Client) GetListenerGate(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetListenerGateRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutListenerGateWithBody Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *Client) PutListenerGateWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutListenerGateRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutListenerGate Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *Client) PutListenerGate(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutListenerGateRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -19684,6 +19804,73 @@ func NewCreateJoinFileRequestWithBody(server string, contentType string, body io
 	return req, nil
 }
 
+// NewGetListenerGateRequest constructs an http.Request for the GetListenerGate method
+func NewGetListenerGateRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/listener-gate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutListenerGateRequest calls the generic PutListenerGate builder with application/json body
+func NewPutListenerGateRequest(server string, body PutListenerGateJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutListenerGateRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutListenerGateRequestWithBody constructs an http.Request for the PutListenerGate method, with any body, and a specified content type
+func NewPutListenerGateRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/listener-gate")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListMachinesRequest constructs an http.Request for the ListMachines method
 func NewListMachinesRequest(server string) (*http.Request, error) {
 	var err error
@@ -25631,6 +25818,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/v1/join-files (the `CreateJoinFile` operationId).
 	CreateJoinFileWithResponse(ctx context.Context, body CreateJoinFileJSONRequestBody, reqEditors ...RequestEditorFn) (*CreateJoinFileResponse, error)
 
+	// GetListenerGateWithResponse The listener gate of persistent runners on the machine itself
+	//
+	// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+	GetListenerGateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListenerGateResponse, error)
+
+	// PutListenerGateWithBodyWithResponse Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error)
+
+	// PutListenerGateWithResponse Switch the listener gate between observe and enforce
+	//
+	// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+	PutListenerGateWithResponse(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error)
+
 	// ListMachinesWithResponse Every machine with state, backends, load and slots
 	//
 	// machines R5.50.
@@ -30773,6 +30987,102 @@ func (r CreateJoinFileResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r CreateJoinFileResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetListenerGateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ListenerGate
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetListenerGateResponse) GetJSON200() *ListenerGate {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetListenerGateResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetListenerGateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetListenerGateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetListenerGateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetListenerGateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutListenerGateResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ListenerGate
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutListenerGateResponse) GetJSON200() *ListenerGate {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutListenerGateResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutListenerGateResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutListenerGateResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutListenerGateResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutListenerGateResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -37807,6 +38117,51 @@ func (c *ClientWithResponses) CreateJoinFileWithResponse(ctx context.Context, bo
 	return ParseCreateJoinFileResponse(rsp)
 }
 
+// GetListenerGateWithResponse The listener gate of persistent runners on the machine itself
+//
+// runners R5.134 to R5.140. `enforce` is false by default (observe mode): crsp writes would_start and would_stop rows in the audit log and leaves every listener as it is. Each runner shows `gated: offline by design` while no job needs it, the day of its weekly wake-up, and why jobs wait.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/listener-gate (the `GetListenerGate` operationId).
+func (c *ClientWithResponses) GetListenerGateWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetListenerGateResponse, error) {
+	rsp, err := c.GetListenerGate(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetListenerGateResponse(rsp)
+}
+
+// PutListenerGateWithBodyWithResponse Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *ClientWithResponses) PutListenerGateWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error) {
+	rsp, err := c.PutListenerGateWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutListenerGateResponse(rsp)
+}
+
+// PutListenerGateWithResponse Switch the listener gate between observe and enforce
+//
+// runners R5.138. Switching on parks the listeners nobody needs at the next round; a runner that has a job is never touched.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
+func (c *ClientWithResponses) PutListenerGateWithResponse(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error) {
+	rsp, err := c.PutListenerGate(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutListenerGateResponse(rsp)
+}
+
 // ListMachinesWithResponse Every machine with state, backends, load and slots
 //
 // machines R5.50.
@@ -42802,6 +43157,72 @@ func ParseCreateJoinFileResponse(rsp *http.Response) (*CreateJoinFileResponse, e
 			headers.XJoinCodeId = value
 		}
 		response.Headers201 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseGetListenerGateResponse parses an HTTP response from a GetListenerGateWithResponse call
+func ParseGetListenerGateResponse(rsp *http.Response) (*GetListenerGateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetListenerGateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ListenerGate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutListenerGateResponse parses an HTTP response from a PutListenerGateWithResponse call
+func ParsePutListenerGateResponse(rsp *http.Response) (*PutListenerGateResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutListenerGateResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ListenerGate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil

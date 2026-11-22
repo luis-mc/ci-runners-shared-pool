@@ -5765,6 +5765,43 @@ type ListenAddressChosen struct {
 	Restarting bool   `json:"restarting"`
 }
 
+// ListenerGate defines model for ListenerGate.
+type ListenerGate struct {
+	Enforce bool                 `json:"enforce"`
+	Runners []ListenerGateRunner `json:"runners"`
+
+	// WakeEveryDays Fixed at 7.
+	WakeEveryDays int `json:"wake_every_days"`
+}
+
+// ListenerGateInput defines model for ListenerGateInput.
+type ListenerGateInput struct {
+	// Enforce True switches the gate on; false is observe mode.
+	Enforce bool `json:"enforce"`
+}
+
+// ListenerGateRunner defines model for ListenerGateRunner.
+type ListenerGateRunner struct {
+	// JobIds The jobs that hold the listener.
+	JobIds *[]int64 `json:"job_ids,omitempty"`
+
+	// LastWake Absent when the runner was never woken.
+	LastWake   *time.Time `json:"last_wake,omitempty"`
+	ListenerOn bool       `json:"listener_on"`
+	MachineId  string     `json:"machine_id"`
+
+	// NextWake When the weekly wake-up is due.
+	NextWake time.Time `json:"next_wake"`
+	Os       string    `json:"os"`
+
+	// QueueText Why jobs wait for this runner, in the owner's words. Absent when none wait.
+	QueueText  *string `json:"queue_text,omitempty"`
+	RunnerName string  `json:"runner_name"`
+
+	// Text `gated: offline by design`, or that the listener is on for an admitted job.
+	Text string `json:"text"`
+}
+
 // Load defines model for Load.
 type Load struct {
 	CpuKnown    bool      `json:"cpu_known"`
@@ -9009,6 +9046,9 @@ type JoinMachineOverSshJSONRequestBody = SshJoinRequest
 // CreateJoinFileJSONRequestBody defines body for CreateJoinFile for application/json ContentType.
 type CreateJoinFileJSONRequestBody = CreateJoinFileRequest
 
+// PutListenerGateJSONRequestBody defines body for PutListenerGate for application/json ContentType.
+type PutListenerGateJSONRequestBody = ListenerGateInput
+
 // UpdateMachineJSONRequestBody defines body for UpdateMachine for application/json ContentType.
 type UpdateMachineJSONRequestBody = MachineSettingsUpdate
 
@@ -9365,6 +9405,12 @@ type ServerInterface interface {
 	// CreateJoinFile Download an installer file with a one-time join code built in
 	// (POST /api/v1/join-files)
 	CreateJoinFile(w http.ResponseWriter, r *http.Request)
+	// GetListenerGate The listener gate of persistent runners on the machine itself
+	// (GET /api/v1/listener-gate)
+	GetListenerGate(w http.ResponseWriter, r *http.Request)
+	// PutListenerGate Switch the listener gate between observe and enforce
+	// (PUT /api/v1/listener-gate)
+	PutListenerGate(w http.ResponseWriter, r *http.Request)
 	// ListMachines Every machine with state, backends, load and slots
 	// (GET /api/v1/machines)
 	ListMachines(w http.ResponseWriter, r *http.Request)
@@ -12643,6 +12689,34 @@ func (siw *ServerInterfaceWrapper) CreateJoinFile(w http.ResponseWriter, r *http
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.CreateJoinFile(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetListenerGate operation middleware
+func (siw *ServerInterfaceWrapper) GetListenerGate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetListenerGate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutListenerGate operation middleware
+func (siw *ServerInterfaceWrapper) PutListenerGate(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutListenerGate(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -16052,6 +16126,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.GetRunnerClasses)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.PutRunnerClasses)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/listener-gate", wrapper.GetListenerGate)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/listener-gate", wrapper.PutListenerGate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.GetTimerSettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.PutTimerSettings)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/timer-settings/check", wrapper.CheckTimerSettings)
@@ -19362,6 +19438,83 @@ type CreateJoinFiledefaultJSONResponse struct {
 }
 
 func (response CreateJoinFiledefaultJSONResponse) VisitCreateJoinFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetListenerGateRequestObject struct {
+}
+
+type GetListenerGateResponseObject interface {
+	VisitGetListenerGateResponse(w http.ResponseWriter) error
+}
+
+type GetListenerGate200JSONResponse ListenerGate
+
+func (response GetListenerGate200JSONResponse) VisitGetListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetListenerGatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetListenerGatedefaultJSONResponse) VisitGetListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutListenerGateRequestObject struct {
+	Body *PutListenerGateJSONRequestBody
+}
+
+type PutListenerGateResponseObject interface {
+	VisitPutListenerGateResponse(w http.ResponseWriter) error
+}
+
+type PutListenerGate200JSONResponse ListenerGate
+
+func (response PutListenerGate200JSONResponse) VisitPutListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutListenerGatedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutListenerGatedefaultJSONResponse) VisitPutListenerGateResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -24232,6 +24385,12 @@ type StrictServerInterface interface {
 	// CreateJoinFile Download an installer file with a one-time join code built in
 	// (POST /api/v1/join-files)
 	CreateJoinFile(ctx context.Context, request CreateJoinFileRequestObject) (CreateJoinFileResponseObject, error)
+	// GetListenerGate The listener gate of persistent runners on the machine itself
+	// (GET /api/v1/listener-gate)
+	GetListenerGate(ctx context.Context, request GetListenerGateRequestObject) (GetListenerGateResponseObject, error)
+	// PutListenerGate Switch the listener gate between observe and enforce
+	// (PUT /api/v1/listener-gate)
+	PutListenerGate(ctx context.Context, request PutListenerGateRequestObject) (PutListenerGateResponseObject, error)
 	// ListMachines Every machine with state, backends, load and slots
 	// (GET /api/v1/machines)
 	ListMachines(ctx context.Context, request ListMachinesRequestObject) (ListMachinesResponseObject, error)
@@ -26693,6 +26852,61 @@ func (sh *strictHandler) CreateJoinFile(w http.ResponseWriter, r *http.Request) 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(CreateJoinFileResponseObject); ok {
 		if err := validResponse.VisitCreateJoinFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetListenerGate operation middleware
+func (sh *strictHandler) GetListenerGate(w http.ResponseWriter, r *http.Request) {
+	var request GetListenerGateRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetListenerGate(ctx, request.(GetListenerGateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetListenerGate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetListenerGateResponseObject); ok {
+		if err := validResponse.VisitGetListenerGateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutListenerGate operation middleware
+func (sh *strictHandler) PutListenerGate(w http.ResponseWriter, r *http.Request) {
+	var request PutListenerGateRequestObject
+
+	var body PutListenerGateJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutListenerGate(ctx, request.(PutListenerGateRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutListenerGate")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutListenerGateResponseObject); ok {
+		if err := validResponse.VisitPutListenerGateResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

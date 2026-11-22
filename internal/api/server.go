@@ -88,6 +88,8 @@ type Options struct {
 	RunnerClasses RunnerClassService
 	// Timers serves the timer settings and the grace actions (handlers_timers.go, scheduling R5.99 to R5.106). Nil answers 501.
 	Timers TimerService
+	// ListenerGate serves the listener gate setting and its runners (handlers_listenergate.go, runners R5.134). Nil answers 501.
+	ListenerGate ListenerGateService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService
