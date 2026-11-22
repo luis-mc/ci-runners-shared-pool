@@ -94,7 +94,7 @@ The Machines screen and the Add machine wizard follow design system v1 ([ux-rule
 | Machine detail | Facts, backends with their reason when not usable, settings, running jobs, the install command again | UX-25, UX-22, UX-61 |
 | Machine detail, When it works | The mode (Automatic, Always, Paused), the Pause on battery switch, the CPU cap (25, 50, 75, 100%), the power source, and the reason when the machine takes no new job. Each control saves at once. A pause from the tray shows with its end and a Resume | UX-13, UX-22, UX-38, UX-58 |
 | Machine detail, Budget and slots | The four fields (Memory budget, CPU budget, Job slots, Time to finish running jobs) top-align in one row with their boxes on one line; the help of a field sits under its box, so a long name or help never moves the other boxes | UX-23, UX-78 |
-| Machine detail, Disk | The field Free disk to keep (GB), what the machine does under it (new jobs wait with `disk_low`, running jobs finish) and the free space now; the Save bar saves it. A floor that config turned off is shown as Off, read-only | UX-22, UX-23, CORE-1, CORE-5 |
+| Machine detail, Disk | The field Free disk to keep (GB), what the machine does under it (new jobs wait with `disk_low`, running jobs finish) and the free space now; the Save bar saves it. A floor that config turned off is shown as Off, read-only | UX-22, UX-23, CORE-1, CORE-5; `apps/web/src/screens/machines/MachineDiskFloor.test.tsx` |
 | Machines, list column Takes jobs | The word Taking jobs, Paused, On battery or Busy | UX-58 |
 | Add machine | Wizard: pick the OS, copy the command, wait for the machine to join, Done | UX-5, UX-29, UX-30, UX-54 |
 | Waiting for join | Names what it waits for and when the code expires | UX-29, UX-6 |
