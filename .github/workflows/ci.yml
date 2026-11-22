@@ -151,7 +151,9 @@ jobs:
           cache: pnpm
 
       - name: CI scripts unit tests
-        run: python3 -m unittest discover -s scripts/ci -p 'test_*.py'
+        run: |
+          python3 -m pip install --quiet -r scripts/ci/requirements-test.txt
+          python3 -m pytest scripts/ci
 
       # 1 install from the committed lockfiles, frozen.
       - name: Install (frozen)
@@ -299,7 +301,7 @@ jobs:
           [ "$LINT" = "success" ] && [ "$TYPES" = "success" ] && [ "$TESTS" = "success" ]
 
   test-os:
-    name: go test (${{ matrix.os }})
+    name: Go tests (${{ matrix.os }})
     needs: decide
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ matrix.os }}
