@@ -9600,14 +9600,14 @@ type ClientInterface interface {
 
 	// GetHealthThresholds The limits of the machine health checks
 	//
-	// doctor R5.80.
+	// doctor R5.66.
 	//
 	// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
 	GetHealthThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// PutHealthThresholdsWithBody Change the limits of the machine health checks
 	//
-	// doctor R5.80. A value outside its range is refused with the range.
+	// doctor R5.66. A value outside its range is refused with the range.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -9616,7 +9616,7 @@ type ClientInterface interface {
 
 	// PutHealthThresholds Change the limits of the machine health checks
 	//
-	// doctor R5.80. A value outside its range is refused with the range.
+	// doctor R5.66. A value outside its range is refused with the range.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -10003,14 +10003,14 @@ type ClientInterface interface {
 
 	// GetMachineHealth The health of one machine
 	//
-	// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+	// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
 	//
 	// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
 	GetMachineHealth(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMachineJobStats Job stats of one machine and of its runners
 	//
-	// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+	// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
 	//
 	// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
 	GetMachineJobStats(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -10705,7 +10705,7 @@ type ClientInterface interface {
 
 	// GetRunnerJobStats Job stats of one runner
 	//
-	// machines R5.78.
+	// machines R5.78, R5.79.
 	//
 	// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
 	GetRunnerJobStats(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -11954,7 +11954,7 @@ func (c *Client) ListRepositories(ctx context.Context, params *ListRepositoriesP
 
 // GetHealthThresholds The limits of the machine health checks
 //
-// doctor R5.80.
+// doctor R5.66.
 //
 // Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
 func (c *Client) GetHealthThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -11971,7 +11971,7 @@ func (c *Client) GetHealthThresholds(ctx context.Context, reqEditors ...RequestE
 
 // PutHealthThresholdsWithBody Change the limits of the machine health checks
 //
-// doctor R5.80. A value outside its range is refused with the range.
+// doctor R5.66. A value outside its range is refused with the range.
 //
 // Takes any type of body and a specified content type.
 //
@@ -11990,7 +11990,7 @@ func (c *Client) PutHealthThresholdsWithBody(ctx context.Context, contentType st
 
 // PutHealthThresholds Change the limits of the machine health checks
 //
-// doctor R5.80. A value outside its range is refused with the range.
+// doctor R5.66. A value outside its range is refused with the range.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -12887,7 +12887,7 @@ func (c *Client) DrainMachine(ctx context.Context, machineId MachineId, body Dra
 
 // GetMachineHealth The health of one machine
 //
-// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
 //
 // Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
 func (c *Client) GetMachineHealth(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -12904,7 +12904,7 @@ func (c *Client) GetMachineHealth(ctx context.Context, machineId MachineId, reqE
 
 // GetMachineJobStats Job stats of one machine and of its runners
 //
-// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
 //
 // Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
 func (c *Client) GetMachineJobStats(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -14489,7 +14489,7 @@ func (c *Client) GetRunnerEnv(ctx context.Context, runnerId RunnerId, reqEditors
 
 // GetRunnerJobStats Job stats of one runner
 //
-// machines R5.78.
+// machines R5.78, R5.79.
 //
 // Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
 func (c *Client) GetRunnerJobStats(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -24770,7 +24770,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetHealthThresholdsWithResponse The limits of the machine health checks
 	//
-	// doctor R5.80.
+	// doctor R5.66.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -24779,7 +24779,7 @@ type ClientWithResponsesInterface interface {
 
 	// PutHealthThresholdsWithBodyWithResponse Change the limits of the machine health checks
 	//
-	// doctor R5.80. A value outside its range is refused with the range.
+	// doctor R5.66. A value outside its range is refused with the range.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -24788,7 +24788,7 @@ type ClientWithResponsesInterface interface {
 
 	// PutHealthThresholdsWithResponse Change the limits of the machine health checks
 	//
-	// doctor R5.80. A value outside its range is refused with the range.
+	// doctor R5.66. A value outside its range is refused with the range.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -25239,7 +25239,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMachineHealthWithResponse The health of one machine
 	//
-	// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+	// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -25248,7 +25248,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetMachineJobStatsWithResponse Job stats of one machine and of its runners
 	//
-	// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+	// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -26037,7 +26037,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetRunnerJobStatsWithResponse Job stats of one runner
 	//
-	// machines R5.78.
+	// machines R5.78, R5.79.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -36283,7 +36283,7 @@ func (c *ClientWithResponses) ListRepositoriesWithResponse(ctx context.Context, 
 
 // GetHealthThresholdsWithResponse The limits of the machine health checks
 //
-// doctor R5.80.
+// doctor R5.66.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -36298,7 +36298,7 @@ func (c *ClientWithResponses) GetHealthThresholdsWithResponse(ctx context.Contex
 
 // PutHealthThresholdsWithBodyWithResponse Change the limits of the machine health checks
 //
-// doctor R5.80. A value outside its range is refused with the range.
+// doctor R5.66. A value outside its range is refused with the range.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -36313,7 +36313,7 @@ func (c *ClientWithResponses) PutHealthThresholdsWithBodyWithResponse(ctx contex
 
 // PutHealthThresholdsWithResponse Change the limits of the machine health checks
 //
-// doctor R5.80. A value outside its range is refused with the range.
+// doctor R5.66. A value outside its range is refused with the range.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -37070,7 +37070,7 @@ func (c *ClientWithResponses) DrainMachineWithResponse(ctx context.Context, mach
 
 // GetMachineHealthWithResponse The health of one machine
 //
-// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+// machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -37085,7 +37085,7 @@ func (c *ClientWithResponses) GetMachineHealthWithResponse(ctx context.Context, 
 
 // GetMachineJobStatsWithResponse Job stats of one machine and of its runners
 //
-// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+// machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -38408,7 +38408,7 @@ func (c *ClientWithResponses) GetRunnerEnvWithResponse(ctx context.Context, runn
 
 // GetRunnerJobStatsWithResponse Job stats of one runner
 //
-// machines R5.78.
+// machines R5.78, R5.79.
 //
 // Returns a wrapper object for the known response body format(s).
 //

@@ -1,5 +1,5 @@
 -- +goose Up
--- OPS83: machine health (machines R5.70 to R5.77) and the job stats per machine and per runner.
+-- OPS83: machine health (machines R5.72 to R5.77) and the job stats per machine and per runner.
 -- machine_health: the last HealthReport of each machine, as protojson, with the OOM state the controller derived.
 -- machine_disk_samples: 24 hours of free space per volume, pruned; the days until full come from the trend.
 -- job_end_reasons: why crsp ended a job (its timer, memory, a stop); a job without a row ended by itself or by GitHub.

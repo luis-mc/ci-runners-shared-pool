@@ -11,7 +11,7 @@ import (
 )
 
 // MachineHealthRow is the last health report of a machine and the OOM state
-// the controller derived from it (machines R5.70).
+// the controller derived from it (machines R5.72).
 type MachineHealthRow struct {
 	MachineID  string
 	ReceivedAt time.Time

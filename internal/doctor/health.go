@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-// The machine health the checks of machines R5.70 to R5.77 read (OPS83). The
+// The machine health the checks of machines R5.72 to R5.77 read (OPS83). The
 // controller fills it from the agents' HealthReports; a check never reads an
 // agent itself.
 
@@ -52,7 +52,7 @@ type MachineHealth struct {
 	ThrottleDetail           string
 }
 
-// HealthThresholds are the editable limits of the health checks (doctor R5.80).
+// HealthThresholds are the editable limits of the health checks (doctor R5.66).
 type HealthThresholds struct {
 	DiskDaysUnder      int
 	DiskFreePctUnder   int

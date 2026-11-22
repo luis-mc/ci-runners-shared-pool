@@ -19,7 +19,7 @@ func (b healthBase) Run(argv []string) (health.Result, bool) {
 	return health.Result{Code: r.Code, Out: r.Out}, ok
 }
 
-// newHealth builds the Monitor of this agent (machines R5.70): the volumes that
+// newHealth builds the Monitor of this agent (machines R5.72): the volumes that
 // matter, the configured GitHub address and the engine of this machine.
 func (c Config) newHealth() *health.Monitor {
 	sys := c.sys()

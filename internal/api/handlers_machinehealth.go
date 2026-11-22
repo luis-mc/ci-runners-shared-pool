@@ -10,8 +10,8 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
 )
 
-// HealthService is what the machine health routes need (machines R5.70 to R5.78,
-// doctor R5.80). *machinehealth.Service implements it.
+// HealthService is what the machine health routes need (machines R5.72 to R5.79,
+// doctor R5.66). *machinehealth.Service implements it.
 type HealthService interface {
 	View(ctx context.Context, machineID string) (machinehealth.View, error)
 	MachineJobStats(ctx context.Context, machineID, window string) (machinehealth.MachineStats, error)

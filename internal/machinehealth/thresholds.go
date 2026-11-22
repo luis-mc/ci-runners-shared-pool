@@ -11,7 +11,7 @@ import (
 const KeyThresholds = "health_thresholds"
 
 // Thresholds are the limits the Doctor's machine health checks use. They are
-// editable settings (doctor R5.80); the defaults are the owner's decision.
+// editable settings (doctor R5.66); the defaults are the owner's decision.
 type Thresholds struct {
 	// DiskDaysUnder: a volume that fills in fewer days than this is a finding.
 	DiskDaysUnder int `json:"disk_days_under"`

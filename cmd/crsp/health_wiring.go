@@ -11,7 +11,7 @@ import (
 )
 
 // newHealthService makes the machine health service over the store and the
-// machines service (machines R5.70 to R5.78, OPS83).
+// machines service (machines R5.72 to R5.79, OPS83).
 func newHealthService(db *store.Store, svc *machines.Service, version string) *machinehealth.Service {
 	return &machinehealth.Service{
 		Store: db, ControllerVersion: version, LatestRunner: latestRunnerVersion,
@@ -47,7 +47,7 @@ func latestRunnerVersion() string {
 
 var _ doctor.HealthFleet = doctorFleet{}
 
-// MachineHealths gives the Doctor the health of every machine that reported (doctor R5.80).
+// MachineHealths gives the Doctor the health of every machine that reported (doctor R5.66).
 func (f doctorFleet) MachineHealths(ctx context.Context) ([]doctor.MachineHealth, error) {
 	if f.health == nil {
 		return nil, nil

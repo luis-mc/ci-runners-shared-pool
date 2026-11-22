@@ -1262,7 +1262,7 @@ type SessionRequest_JobResourceSamples struct {
 }
 
 type SessionRequest_HealthReport struct {
-	// OPS83: machine health, sent every minute and with Hello (machines R5.70).
+	// OPS83: machine health, sent every minute and with Hello (machines R5.72).
 	HealthReport *HealthReport `protobuf:"bytes,32,opt,name=health_report,json=healthReport,proto3,oneof"`
 }
 
@@ -8455,7 +8455,7 @@ func (x *JobResourceSample) GetKnown() bool {
 }
 
 // HealthReport is what the agent reads of the machine's own health (machines
-// R5.70 to R5.77). The cheap sections are read every minute; slow ones (OS
+// R5.72 to R5.77). The cheap sections are read every minute; slow ones (OS
 // updates, Docker disk use, GitHub reachability) are read off the hot path at
 // their own pace and repeated from the last read. A value an OS cannot give is
 // sent with known=false and an unknown_reason, never as 0.

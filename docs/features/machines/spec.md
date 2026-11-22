@@ -13,6 +13,7 @@ code:
   - internal/load/**
   - internal/power/**
   - internal/cpucap/**
+  - internal/machinehealth/**
   - internal/dockercompact/**
 design_system: [UX-4, UX-5, UX-6, UX-9, UX-13, UX-16, UX-17, UX-18, UX-19, UX-22, UX-26, UX-29, UX-30, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62]
 last_verified: 2026-11-21
@@ -313,6 +314,35 @@ The controller serves the packages of the release it was built from at `GET /api
 - **WSL.** When the pool runs in WSL2 (`.wslconfig` is present or the WSL VM is up), the block shows the cap `.wslconfig` declares (`wsl_cap_gib`, or "not set" when WSL takes its half), the cap that matches the pool, and the lines `[wsl2]` and `memory=<pool>GB` to copy. There is no apply path in the product (the agent only reads `.wslconfig`, R5.54), so it is a recommendation with Copy: crsp never edits the file, and the block says WSL must restart (`wsl --shutdown`) for a change to apply. A declared cap above total RAM less the p95 is flagged (`wsl_cap_above_pc`) and the Doctor says so (doctor R5.64).
 - **Screen.** Only shared parts (Facts, Message, Text, Stack, CodeBlock): CORE-1 to CORE-7 checked, UX-4, UX-10, UX-17, UX-71; the words are in the design system `next-version` content (Pool size words, C12). Layout is proven at 360, 393 and 1300 px.
 
+**R5.72** (M1, built OPS83; owner decision 22 Nov, back end only) — **The agent reports the machine's own health.** A new message `HealthReport` (agent protocol field 32 of `SessionRequest`, additive) goes to the controller with Hello and then every minute. It is built by `internal/agent/health`: one `Monitor`, collectors per OS (`linux.go`, `windows.go`, `darwin.go`) that read through one `Env` interface, so tests feed fixed answers. Each cheap collector has a time budget (5 s) and gives up with an unknown reason when it takes longer. The slow ones (OS updates, Docker disk use, power, GitHub reachability) run off the hot path at their own pace and the report repeats their last answer. **A value an OS cannot give is reported as unknown with the reason (`known=false`, `unknown_reason`), never as 0**; the API leaves the field out and names the reason.
+
+**R5.73** (M1, built OPS83) — **The cheap items, read every minute, on Linux, Windows and macOS.**
+
+| Item | Linux | Windows | macOS |
+|---|---|---|---|
+| Uptime, last boot | `/proc/uptime` | `GetTickCount64` | `sysctl kern.boottime` |
+| Unexpected restart | a boot in the last 24 h that crsp did not ask for (state file `health-state.json` in the data dir; `health.MarkExpectedRestart` is the hook a restart command calls; no crsp command restarts a machine yet, so every boot counts as unexpected) | same | same |
+| Disk free | system volume, crsp data dir, Docker or WSL data, runner work dirs | same | same |
+| Swap | `/proc/meminfo` | page file (`Win32_PageFileUsage`) | `sysctl vm.swapusage` |
+| OOM kills | cgroup v2 `memory.events` `oom_kill` of `/sys/fs/cgroup/crsp*` (pool) and `crsp*/*` (job) | System event 2004 (Resource-Exhaustion-Detector), last 24 h | unknown: no count crsp can read |
+| Agent to controller round trip, last heartbeat, reconnects in 24 h, clock skew | from the heartbeats: the round trip is the time from sending a heartbeat to its answer, the skew is the agent clock at the middle of the trip minus the controller time in the answer (`health.Beats`) | same | same |
+| GitHub reachable and latency, DNS | a HEAD to the configured GitHub address (`internal/addresses`) every 5 minutes, and a lookup of its host | same | same |
+| Versions | agent, oldest runner app, Docker engine, WSL (Windows) | same | same |
+| CPU temperature and throttling | thermal zones, `core_throttle_count` | unknown (needs admin) | unknown (needs admin, unreliable) |
+| Load average, CPU steal | `/proc/loadavg`, `/proc/stat` | unknown | load average; steal unknown |
+
+**R5.74** (M1, built OPS83) — **The slower items.** Restart pending and OS updates: Windows reads `RebootRequired`, `RebootPending`, `PendingFileRenameOperations`, the pending update count and the Windows Update active hours; Linux reads `/var/run/reboot-required` (Debian, Ubuntu) or `needs-restarting -r` (RHEL) and the unattended-upgrades state; macOS runs `softwareupdate --list` at most hourly, in the background, with a timeout. Sleep and power: on AC or battery, the sleep and hibernate settings that can suspend the machine (`powercfg /q` idle times on Windows, `pmset -g` on macOS, unmasked systemd sleep targets plus a logind idle action or a lid on Linux), and the last wake where the OS keeps it. Docker disk use (`docker system df`: images, build cache, volumes) every 10 minutes.
+
+**R5.75** (M1, built OPS83) — **Disk samples and the days until full.** The controller keeps the last HealthReport of each machine (table `machine_health`, protojson) and 24 hours of free-space samples per volume (`machine_disk_samples`), pruned at most hourly. The days until full are a least-squares line through the samples, from 30 minutes of samples on; free space that is not falling gives no figure and a note.
+
+**R5.76** (M1, built OPS83) — **Say whether a restart may happen while jobs run.** `restart_may_happen_now` is true when a restart is pending and the OS may do it now (automatic restart on and, on Windows, the time is outside the active hours). `restart_may_hit_jobs` is true when that holds and the machine runs jobs or takes new ones.
+
+**R5.77** (M1, built OPS83) — **Out of date is flagged.** The agent is out of date when older than the controller; the runner app when older than the latest pinned runner. A version that is not numbers (a development build) is never out of date. An OOM kill is recent when it is inside the OOM window (default 1 hour); the controller sees a kill as a rise of the OOM count between two reports.
+
+**R5.78** (M1, built OPS83) — **Job stats per machine and per runner, over 24 hours and 7 days.** For the jobs that completed in the window: counts and rates of succeeded, failed, cancelled, timed out (the crsp job timer, or GitHub's timed out), over memory and stopped by crsp; the average run time and queue wait; the busy percent (job time inside the window over the window times the slots, 1 for a runner); the last failure with its job and run link; the top failing jobs. A job crsp ended itself has a row in `job_end_reasons` (`timeout`, `over_memory`, `stopped`; migration 00040; the timer, the memory guard and the stop paths call `Store.RecordJobEndReason`) and counts by that reason, the rest by GitHub's result. An average with no job behind it is absent, not 0. The queries are four indexed reads (`jobs_machine_done`, `jobs_runner_done`).
+
+**R5.79** (M1, built OPS83) — **The API.** `GET /api/v1/machines/{id}/health` (`getMachineHealth`), `GET /api/v1/machines/{id}/job-stats?window=24h|7d` (`getMachineJobStats`, the machine and each runner that ran on it), `GET /api/v1/runners/{id}/job-stats?window=24h|7d` (`getRunnerJobStats`), and the Doctor limits `GET` and `PUT /api/v1/health-thresholds` (doctor R5.66). The console screens are built by LOOK56 on these routes.
+
 ## 6. Non-functional requirements
 
 **R6.1** (M1) — The agent link uses TLS 1.3 only. A connection without a valid pinned certificate and a valid machine key is refused.
@@ -501,6 +531,14 @@ Every test below is planned and NOT YET IMPLEMENTED. Paths are where the tests w
 | R5.69 | cmd/crsp/machines_wiring.go auditedRepo (console audit); internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine (machine.rejoin entry) | built (OPS59) |
 | R5.70 | internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine, TestAgentRejoinMatchesHostOSArch; internal/machines/join_test.go TestJoinMakesNamesUnique | built (OPS59) |
 | R5.71 | `internal/load/hostuse_test.go` TestHostUseNeedsADayOfSamples, TestHostUseP95IsTheNearestRank, TestHostUseForgetsAfterAWeek, TestHostUseKeepsThePeakOfAStep, TestHostUseSaveRestore, TestParsePSOwnCountsOnlyCrsp, TestHostOwnBytesPerOS (linux, darwin, windows, floor), TestSamplerReportsHostUse, TestRefreshReadsPoolContainersAndOwnUse; `internal/poolsize/poolsize_test.go` TestMeasuredRoomTable, TestRecommendedBasisTable, TestLeavesLessThanHostIsAWarningNotABlock, TestWSLCapIsShown; `internal/api/machines_pool_size_test.go` TestPoolSizeCheckSaysMeasuredOrMeasuring; `apps/web/src/screens/machines/PoolSizeMeasured.test.tsx`; `e2e/tests/web-console/ux-pool-size.spec.ts` (DOM layout at 360, 393 and 1300 px) | built (OPS61) |
+| R5.72 | `internal/agent/health/other_test.go` TestMonitorCollect, TestMonitorBudgetAndSlowOffPath; `internal/agent/health/linux_test.go` TestLinuxUnknownIsNotZero | built (OPS83) |
+| R5.73 | `internal/agent/health/linux_test.go` TestLinuxBootSwapLoad, TestLinuxOOMTargets, TestLinuxThermalThrottle, TestLinuxCPUTimes; `internal/agent/health/other_test.go` TestWindowsBootSwapOOM, TestDarwin, TestBootTracking, TestBeats, TestMonitorGitHubDownAndOOMDelta | built (OPS83) |
+| R5.74 | `internal/agent/health/linux_test.go` TestLinuxUpdatesDebian, TestLinuxUpdatesRHEL, TestLinuxPower; `internal/agent/health/other_test.go` TestParseWindowsUpdates, TestHourInRange, TestWindowsPower, TestWindowsWSLVersion, TestDarwinUpdatesAndPower, TestParseDockerDF | built (OPS83) |
+| R5.75 | `internal/machinehealth/service_test.go` TestIngestAndDaysUntilFull, TestTrendNeedsData; `internal/store/jobstats_test.go` TestMachineHealthRowsAndDiskSamples | built (OPS83) |
+| R5.76 | `internal/machinehealth/service_test.go` TestRestartMayHitJobs | built (OPS83) |
+| R5.77 | `internal/machinehealth/service_test.go` TestOutOfDate, TestOOMStateAndVersions | built (OPS83) |
+| R5.78 | `internal/store/jobstats_test.go` TestJobStatsCountsAveragesAndFailures, TestJobStatsAveragesRunnerAndEmpty, TestJobStatsBusyClipsToWindow, TestJobStatsUseTheIndexes; `internal/machinehealth/service_test.go` TestJobStatsWindowsAndRates | built (OPS83) |
+| R5.79 | `internal/api/handlers_machinehealth_test.go` TestMachineHealthRoute, TestJobStatsRoutes, TestHealthThresholdsRoutes, TestHealthRoutesOffAnswer501 | built (OPS83) |
 
 ## 10. Decisions
 

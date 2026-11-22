@@ -1,6 +1,6 @@
 // Package health reads the machine's own health for the agent: uptime, disk,
 // swap, OOM kills, connectivity, versions, restart and update state, power,
-// Docker disk use, temperature and load (machines R5.70 to R5.77, OPS83).
+// Docker disk use, temperature and load (machines R5.72 to R5.77, OPS83).
 //
 // A value an OS cannot give is reported as unknown with the reason, never as 0.
 // Every collector reads through Env, so tests feed fixed answers. The cheap

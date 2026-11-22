@@ -1128,7 +1128,7 @@ export interface paths {
         };
         /**
          * The health of one machine
-         * @description machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+         * @description machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
          */
         get: operations["getMachineHealth"];
         put?: never;
@@ -1148,7 +1148,7 @@ export interface paths {
         };
         /**
          * Job stats of one machine and of its runners
-         * @description machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+         * @description machines R5.78, R5.79. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
          */
         get: operations["getMachineJobStats"];
         put?: never;
@@ -1168,7 +1168,7 @@ export interface paths {
         };
         /**
          * Job stats of one runner
-         * @description machines R5.78.
+         * @description machines R5.78, R5.79.
          */
         get: operations["getRunnerJobStats"];
         put?: never;
@@ -1188,12 +1188,12 @@ export interface paths {
         };
         /**
          * The limits of the machine health checks
-         * @description doctor R5.80.
+         * @description doctor R5.66.
          */
         get: operations["getHealthThresholds"];
         /**
          * Change the limits of the machine health checks
-         * @description doctor R5.80. A value outside its range is refused with the range.
+         * @description doctor R5.66. A value outside its range is refused with the range.
          */
         put: operations["putHealthThresholds"];
         post?: never;

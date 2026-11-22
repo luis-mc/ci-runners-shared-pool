@@ -1,5 +1,5 @@
 // Package machinehealth is the controller side of the machine health report
-// (machines R5.70 to R5.77, OPS83): it keeps the last HealthReport of each
+// (machines R5.72 to R5.77, OPS83): it keeps the last HealthReport of each
 // machine and 24 hours of disk samples, works out the days until a disk is
 // full, flags what is out of date, and serves the job stats per machine and
 // per runner from the store.

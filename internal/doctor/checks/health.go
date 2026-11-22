@@ -9,8 +9,8 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/doctor"
 )
 
-// HealthChecks are the machine health checks of machines R5.70 to R5.77 and
-// doctor R5.80 (OPS83). The controller registers them with the live doctor
+// HealthChecks are the machine health checks of machines R5.72 to R5.77 and
+// doctor R5.66 (OPS83). The controller registers them with the live doctor
 // (wire.DoctorDeps.Extra), like the KVM checks. Each reads the last
 // HealthReport of an agent through doctor.HealthFleet; the limits are the
 // editable settings of doctor.HealthThresholds.
