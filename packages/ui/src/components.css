@@ -35,6 +35,23 @@ body {
   }
 }
 
+/* Links (UX-80): no anchor ever shows the browser's blue or purple. The base rule has no specificity (`:where`), so a
+   class below always wins; a link with no class is still a themed link in every state. */
+:where(a),
+:where(a:visited) {
+  color: var(--ds-color-primary);
+}
+:where(a:hover) {
+  color: var(--ds-color-text);
+}
+:where(a:focus-visible) {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+:where(a[aria-current]) {
+  color: var(--ds-color-primary);
+}
+
 /* frame */
 .ds-frame {
   display: grid;
@@ -95,8 +112,16 @@ body {
   .ds-header__product {
     grid-area: product;
   }
+  /* The status wraps inside its own column under the title; it never runs under Commands (LOOK56). */
   .ds-header__state {
     grid-area: state;
+    display: flex;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+  .ds-header__status,
+  .ds-header__live {
+    min-inline-size: 0;
   }
   .ds-header__commands {
     grid-area: commands;
@@ -126,12 +151,28 @@ body {
   text-decoration: none;
   border-block-end: var(--ds-border-thick) solid transparent;
 }
+.ds-topmenu__link:visited {
+  color: var(--ds-color-text);
+}
+.ds-topmenu__link:hover {
+  color: var(--ds-color-primary);
+}
+.ds-topmenu__link:focus-visible {
+  color: var(--ds-color-text);
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
 /* The open screen is marked as a selected tab is: bold primary text and a 3 px underline. Never a box (UX-69). */
 .ds-topmenu__link[aria-current='page'] {
   font-weight: var(--ds-weight-bold);
   color: var(--ds-color-primary);
   border-block-end-color: var(--ds-color-primary);
   background: none;
+}
+.ds-topmenu__link[aria-current='page']:visited,
+.ds-topmenu__link[aria-current='page']:hover,
+.ds-topmenu__link[aria-current='page']:focus-visible {
+  color: var(--ds-color-primary);
 }
 .ds-main {
   display: block;
@@ -406,6 +447,20 @@ body {
   min-inline-size: var(--ds-target-min);
   color: var(--ds-color-primary);
   text-underline-offset: var(--ds-space-1);
+}
+.ds-link:visited {
+  color: var(--ds-color-primary);
+}
+.ds-link:hover {
+  color: var(--ds-color-text);
+}
+.ds-link:focus-visible {
+  color: var(--ds-color-primary);
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-link[aria-current] {
+  color: var(--ds-color-primary);
 }
 .ds-page-header {
   display: flex;
@@ -2821,9 +2876,20 @@ button.ds-jobpath__box {
   color: var(--ds-color-text-muted);
   text-decoration: none;
 }
-.ds-boxbadge:hover {
+.ds-boxbadge:visited {
+  color: var(--ds-color-text-muted);
+}
+.ds-boxbadge:hover,
+.ds-boxbadge:focus-visible {
   color: var(--ds-color-text);
   text-decoration: underline;
+}
+.ds-boxbadge:focus-visible {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-boxbadge[aria-current] {
+  color: var(--ds-color-primary);
 }
 .ds-boxbadge__n {
   display: inline-grid;

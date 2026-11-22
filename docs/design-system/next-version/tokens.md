@@ -306,6 +306,7 @@ A screen works from 360 px up (UX-16). Write layouts mobile first.
 | `--ds-bp-sm` | `600px` | phone to tablet |
 | `--ds-bp-md` | `900px` | tablet to desktop |
 | `--ds-bp-lg` | `1200px` | wide screens |
+| `--ds-bp-wide` | `1400px` | wide layouts start here (UX-79) |
 | `--ds-bp-xl` | `1600px` | very wide screens |
 
 CSS cannot read a custom property inside a media query. Write these values in the query itself.
@@ -334,7 +335,7 @@ These tokens take a different value at each width. The gutter is the space at th
 | Token | Value | Use |
 |---|---|---|
 | `--ds-frame-narrow` | `40rem` | the sign-in and other auth pages only (`Page frame="narrow"`, UX-69); no other page uses it |
-| `--ds-frame-wide` | `76rem` | the one page frame: header, menu, page and key-hint bar share its left and right edge (UX-69) |
+| `--ds-frame-wide` | `96rem` | (1536 px; was `76rem`) the one page frame: header, menu, page and key-hint bar share its left and right edge (UX-69) |
 
 ### Control heights
 
