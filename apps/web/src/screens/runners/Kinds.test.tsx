@@ -172,7 +172,9 @@ describe('Add runners: kind (D93, D94(b))', () => {
     });
     expect(chooseKind(win, 'linux', [], undefined).kind).toBe('ephemeral');
     const off = machine({ os: 'windows', container_os: 'linux', backends: [] });
-    expect(kindReasons(off, 'linux').persistent).toBe(PERSISTENT_ELSEWHERE('windows', 'linux'));
+    expect(kindReasons(off, 'linux').persistent).toBe(
+      PERSISTENT_ELSEWHERE('windows', 'linux'),
+    );
     expect(chooseKind(off, 'linux', [], undefined).none).toBe(true);
     expect(kindReasons(machine({ os: 'linux' }), 'linux').persistent).toBeUndefined();
   });

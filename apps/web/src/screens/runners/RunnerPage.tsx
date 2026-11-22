@@ -93,7 +93,10 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
 
   // The listener gate of a persistent runner on the machine itself; a runner it does not gate shows nothing.
   const { result: gateResult } = useLoad(
-    () => (persistent ? unwrap(client.GET('/api/v1/listener-gate')) : Promise.resolve(undefined)),
+    () =>
+      persistent
+        ? unwrap(client.GET('/api/v1/listener-gate'))
+        : Promise.resolve(undefined),
     [persistent, r.id],
   );
   const gate = gateResult.state === 'ready' ? gateResult.data : undefined;
