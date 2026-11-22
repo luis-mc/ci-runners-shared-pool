@@ -662,6 +662,48 @@ func (e HealthStatus) Valid() bool {
 	}
 }
 
+// Defines values for HealthOomScopeScope.
+const (
+	HealthOomScopeScopeJob  HealthOomScopeScope = "job"
+	HealthOomScopeScopePool HealthOomScopeScope = "pool"
+)
+
+// Valid indicates whether the value is a known member of the HealthOomScopeScope enum.
+func (e HealthOomScopeScope) Valid() bool {
+	switch e {
+	case HealthOomScopeScopeJob:
+		return true
+	case HealthOomScopeScopePool:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for HealthVolumeRole.
+const (
+	HealthVolumeRoleDataDir    HealthVolumeRole = "data_dir"
+	HealthVolumeRoleDocker     HealthVolumeRole = "docker"
+	HealthVolumeRoleRunnerWork HealthVolumeRole = "runner_work"
+	HealthVolumeRoleSystem     HealthVolumeRole = "system"
+)
+
+// Valid indicates whether the value is a known member of the HealthVolumeRole enum.
+func (e HealthVolumeRole) Valid() bool {
+	switch e {
+	case HealthVolumeRoleDataDir:
+		return true
+	case HealthVolumeRoleDocker:
+		return true
+	case HealthVolumeRoleRunnerWork:
+		return true
+	case HealthVolumeRoleSystem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ImageState.
 const (
 	ImageStateFailed     ImageState = "failed"
@@ -1241,6 +1283,30 @@ func (e JobSizeSource) Valid() bool {
 	}
 }
 
+// Defines values for JobStatsFailureClass.
+const (
+	JobStatsFailureClassFailed     JobStatsFailureClass = "failed"
+	JobStatsFailureClassOverMemory JobStatsFailureClass = "over_memory"
+	JobStatsFailureClassStopped    JobStatsFailureClass = "stopped"
+	JobStatsFailureClassTimedOut   JobStatsFailureClass = "timed_out"
+)
+
+// Valid indicates whether the value is a known member of the JobStatsFailureClass enum.
+func (e JobStatsFailureClass) Valid() bool {
+	switch e {
+	case JobStatsFailureClassFailed:
+		return true
+	case JobStatsFailureClassOverMemory:
+		return true
+	case JobStatsFailureClassStopped:
+		return true
+	case JobStatsFailureClassTimedOut:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for JoinCodeProgress.
 const (
 	JoinCodeProgressConnected JoinCodeProgress = "connected"
@@ -1403,6 +1469,24 @@ func (e MachineChangeDecisionDecision) Valid() bool {
 	case MachineChangeDecisionDecisionStopJobs:
 		return true
 	case MachineChangeDecisionDecisionWaitLonger:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for MachineJobStatsWindow.
+const (
+	MachineJobStatsWindowN24h MachineJobStatsWindow = "24h"
+	MachineJobStatsWindowN7d  MachineJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the MachineJobStatsWindow enum.
+func (e MachineJobStatsWindow) Valid() bool {
+	switch e {
+	case MachineJobStatsWindowN24h:
+		return true
+	case MachineJobStatsWindowN7d:
 		return true
 	default:
 		return false
@@ -2786,6 +2870,24 @@ func (e RunWasteKind) Valid() bool {
 	}
 }
 
+// Defines values for RunnerJobStatsWindow.
+const (
+	RunnerJobStatsWindowN24h RunnerJobStatsWindow = "24h"
+	RunnerJobStatsWindowN7d  RunnerJobStatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the RunnerJobStatsWindow enum.
+func (e RunnerJobStatsWindow) Valid() bool {
+	switch e {
+	case RunnerJobStatsWindowN24h:
+		return true
+	case RunnerJobStatsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunnerKind.
 const (
 	RunnerKindEphemeral  RunnerKind = "ephemeral"
@@ -3620,6 +3722,24 @@ func (e WorkflowCheckStatus) Valid() bool {
 	}
 }
 
+// Defines values for StatsWindow.
+const (
+	StatsWindowN24h StatsWindow = "24h"
+	StatsWindowN7d  StatsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the StatsWindow enum.
+func (e StatsWindow) Valid() bool {
+	switch e {
+	case StatsWindowN24h:
+		return true
+	case StatsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ExportAuditEventsParamsFormat.
 const (
 	ExportAuditEventsParamsFormatCsv  ExportAuditEventsParamsFormat = "csv"
@@ -3911,6 +4031,24 @@ func (e GetJobStatsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetMachineJobStatsParamsWindow.
+const (
+	GetMachineJobStatsParamsWindowN24h GetMachineJobStatsParamsWindow = "24h"
+	GetMachineJobStatsParamsWindowN7d  GetMachineJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetMachineJobStatsParamsWindow enum.
+func (e GetMachineJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetMachineJobStatsParamsWindowN24h:
+		return true
+	case GetMachineJobStatsParamsWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DeleteRegistryLoginParamsKind.
 const (
 	DeleteRegistryLoginParamsKindContainer  DeleteRegistryLoginParamsKind = "container"
@@ -3926,6 +4064,24 @@ func (e DeleteRegistryLoginParamsKind) Valid() bool {
 	case DeleteRegistryLoginParamsKindPersistent:
 		return true
 	case DeleteRegistryLoginParamsKindVm:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetRunnerJobStatsParamsWindow.
+const (
+	GetRunnerJobStatsParamsWindowN24h GetRunnerJobStatsParamsWindow = "24h"
+	GetRunnerJobStatsParamsWindowN7d  GetRunnerJobStatsParamsWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the GetRunnerJobStatsParamsWindow enum.
+func (e GetRunnerJobStatsParamsWindow) Valid() bool {
+	switch e {
+	case GetRunnerJobStatsParamsWindowN24h:
+		return true
+	case GetRunnerJobStatsParamsWindowN7d:
 		return true
 	default:
 		return false
@@ -4648,6 +4804,181 @@ type Health struct {
 // HealthStatus defines model for Health.Status.
 type HealthStatus string
 
+// HealthBoot defines model for HealthBoot.
+type HealthBoot struct {
+	LastBootAt *time.Time `json:"last_boot_at,omitempty"`
+
+	// UnexpectedRestart Booted in the last 24 hours without a restart crsp asked for.
+	UnexpectedRestart *bool   `json:"unexpected_restart,omitempty"`
+	UnknownReason     *string `json:"unknown_reason,omitempty"`
+	UptimeSeconds     *int64  `json:"uptime_seconds,omitempty"`
+}
+
+// HealthConnectivity defines model for HealthConnectivity.
+type HealthConnectivity struct {
+	// ClockSkewSeconds Agent clock minus controller clock; positive means the agent is ahead.
+	ClockSkewSeconds *float32      `json:"clock_skew_seconds,omitempty"`
+	Dns              *HealthDns    `json:"dns,omitempty"`
+	Github           *HealthGithub `json:"github,omitempty"`
+	LastHeartbeatAt  *time.Time    `json:"last_heartbeat_at,omitempty"`
+	Reconnects24h    *int          `json:"reconnects_24h,omitempty"`
+
+	// RttMs Agent to controller round trip, from the heartbeats.
+	RttMs *int64 `json:"rtt_ms,omitempty"`
+}
+
+// HealthDns defines model for HealthDns.
+type HealthDns struct {
+	Error *string `json:"error,omitempty"`
+	Ok    *bool   `json:"ok,omitempty"`
+}
+
+// HealthDockerUse defines model for HealthDockerUse.
+type HealthDockerUse struct {
+	BuildCacheBytes *int64     `json:"build_cache_bytes,omitempty"`
+	ContainersBytes *int64     `json:"containers_bytes,omitempty"`
+	ImagesBytes     *int64     `json:"images_bytes,omitempty"`
+	ReadAt          *time.Time `json:"read_at,omitempty"`
+	UnknownReason   *string    `json:"unknown_reason,omitempty"`
+	VolumesBytes    *int64     `json:"volumes_bytes,omitempty"`
+}
+
+// HealthGithub defines model for HealthGithub.
+type HealthGithub struct {
+	CheckedAt *time.Time `json:"checked_at,omitempty"`
+	Error     *string    `json:"error,omitempty"`
+	LatencyMs *int64     `json:"latency_ms,omitempty"`
+	Reachable *bool      `json:"reachable,omitempty"`
+}
+
+// HealthLoad defines model for HealthLoad.
+type HealthLoad struct {
+	Load1              *float32 `json:"load1,omitempty"`
+	Load15             *float32 `json:"load15,omitempty"`
+	Load5              *float32 `json:"load5,omitempty"`
+	LoadUnknownReason  *string  `json:"load_unknown_reason,omitempty"`
+	StealPct           *float32 `json:"steal_pct,omitempty"`
+	StealUnknownReason *string  `json:"steal_unknown_reason,omitempty"`
+}
+
+// HealthOom defines model for HealthOom.
+type HealthOom struct {
+	LastKillAt *time.Time `json:"last_kill_at,omitempty"`
+
+	// Recent A kill inside the Doctor window (default 1 hour).
+	Recent        *bool             `json:"recent,omitempty"`
+	Scopes        *[]HealthOomScope `json:"scopes,omitempty"`
+	TotalKills    *int64            `json:"total_kills,omitempty"`
+	UnknownReason *string           `json:"unknown_reason,omitempty"`
+}
+
+// HealthOomScope defines model for HealthOomScope.
+type HealthOomScope struct {
+	Kills int64               `json:"kills"`
+	Name  string              `json:"name"`
+	Scope HealthOomScopeScope `json:"scope"`
+}
+
+// HealthOomScopeScope defines model for HealthOomScope.Scope.
+type HealthOomScopeScope string
+
+// HealthPower defines model for HealthPower.
+type HealthPower struct {
+	LastWakeAt *time.Time `json:"last_wake_at,omitempty"`
+	OnBattery  *bool      `json:"on_battery,omitempty"`
+
+	// SleepEnabled A setting can suspend or hibernate the machine.
+	SleepEnabled        *bool     `json:"sleep_enabled,omitempty"`
+	SleepModes          *[]string `json:"sleep_modes,omitempty"`
+	SleepUnknownReason  *string   `json:"sleep_unknown_reason,omitempty"`
+	SourceUnknownReason *string   `json:"source_unknown_reason,omitempty"`
+}
+
+// HealthSwap defines model for HealthSwap.
+type HealthSwap struct {
+	TotalBytes    *int64  `json:"total_bytes,omitempty"`
+	UnknownReason *string `json:"unknown_reason,omitempty"`
+	UsedBytes     *int64  `json:"used_bytes,omitempty"`
+}
+
+// HealthThermal defines model for HealthThermal.
+type HealthThermal struct {
+	MaxTempCelsius *float32 `json:"max_temp_celsius,omitempty"`
+	ThrottleDetail *string  `json:"throttle_detail,omitempty"`
+	Throttled      *bool    `json:"throttled,omitempty"`
+	UnknownReason  *string  `json:"unknown_reason,omitempty"`
+}
+
+// HealthThresholds defines model for HealthThresholds.
+type HealthThresholds struct {
+	// ClockSkewSeconds A clock this far from the controller is a finding (default 30).
+	ClockSkewSeconds int `json:"clock_skew_seconds"`
+
+	// DiskDaysUnder A disk that fills in fewer days is a finding (default 3).
+	DiskDaysUnder int `json:"disk_days_under"`
+
+	// DiskFreePctUnder A disk with less free space is a finding (default 10).
+	DiskFreePctUnder int `json:"disk_free_pct_under"`
+
+	// NoHeartbeatSeconds No heartbeat for this long is a finding (default 120).
+	NoHeartbeatSeconds int `json:"no_heartbeat_seconds"`
+
+	// OomWindowMinutes An OOM kill this recent is a finding (default 60).
+	OomWindowMinutes int `json:"oom_window_minutes"`
+}
+
+// HealthUpdates defines model for HealthUpdates.
+type HealthUpdates struct {
+	ActiveHoursEnd *int `json:"active_hours_end,omitempty"`
+
+	// ActiveHoursStart Windows Update active hours, local hour 0 to 23.
+	ActiveHoursStart   *int    `json:"active_hours_start,omitempty"`
+	AutoUpdateState    *string `json:"auto_update_state,omitempty"`
+	PendingUpdateCount *int    `json:"pending_update_count,omitempty"`
+
+	// RestartMayHappenNow A restart is pending and the OS may do it now.
+	RestartMayHappenNow *bool `json:"restart_may_happen_now,omitempty"`
+
+	// RestartMayHitJobs It may happen now and the machine runs or takes jobs.
+	RestartMayHitJobs *bool     `json:"restart_may_hit_jobs,omitempty"`
+	RestartPending    *bool     `json:"restart_pending,omitempty"`
+	RestartReasons    *[]string `json:"restart_reasons,omitempty"`
+	UnknownReason     *string   `json:"unknown_reason,omitempty"`
+}
+
+// HealthVersions defines model for HealthVersions.
+type HealthVersions struct {
+	Agent          *string `json:"agent,omitempty"`
+	AgentOutOfDate *bool   `json:"agent_out_of_date,omitempty"`
+	Controller     *string `json:"controller,omitempty"`
+	Docker         *string `json:"docker,omitempty"`
+	DockerKind     *string `json:"docker_kind,omitempty"`
+	LatestRunner   *string `json:"latest_runner,omitempty"`
+
+	// RunnerApp The oldest runner app on the machine.
+	RunnerApp       *string `json:"runner_app,omitempty"`
+	RunnerOutOfDate *bool   `json:"runner_out_of_date,omitempty"`
+	Wsl             *string `json:"wsl,omitempty"`
+}
+
+// HealthVolume defines model for HealthVolume.
+type HealthVolume struct {
+	// DaysNote Why days_until_full is absent.
+	DaysNote *string `json:"days_note,omitempty"`
+
+	// DaysUntilFull From the trend of the last 24 hours; absent when free space is not falling or there are too few samples.
+	DaysUntilFull *float32         `json:"days_until_full,omitempty"`
+	FreeBytes     *int64           `json:"free_bytes,omitempty"`
+	FreePct       *float32         `json:"free_pct,omitempty"`
+	Path          string           `json:"path"`
+	Role          HealthVolumeRole `json:"role"`
+	TotalBytes    *int64           `json:"total_bytes,omitempty"`
+	UnknownReason *string          `json:"unknown_reason,omitempty"`
+}
+
+// HealthVolumeRole defines model for HealthVolume.Role.
+type HealthVolumeRole string
+
 // HistoryPoint One earlier run of a job key.
 type HistoryPoint struct {
 	At      time.Time  `json:"at"`
@@ -5361,6 +5692,77 @@ type JobStats struct {
 	Hours          []HourStat      `json:"hours"`
 }
 
+// JobStatsCounts defines model for JobStatsCounts.
+type JobStatsCounts struct {
+	Cancelled int64 `json:"cancelled"`
+	Failed    int64 `json:"failed"`
+
+	// Other No known result (a job crsp lost).
+	Other      int64 `json:"other"`
+	OverMemory int64 `json:"over_memory"`
+
+	// Stopped Stopped by crsp (a drain, a Stop, a removal).
+	Stopped   int64 `json:"stopped"`
+	Succeeded int64 `json:"succeeded"`
+
+	// TimedOut Ended by the crsp job timer, or by GitHub as timed out.
+	TimedOut int64 `json:"timed_out"`
+	Total    int64 `json:"total"`
+}
+
+// JobStatsFailingJob defines model for JobStatsFailingJob.
+type JobStatsFailingJob struct {
+	Failures   int64     `json:"failures"`
+	Job        string    `json:"job"`
+	LastAt     time.Time `json:"last_at"`
+	Repository string    `json:"repository"`
+}
+
+// JobStatsFailure defines model for JobStatsFailure.
+type JobStatsFailure struct {
+	At         time.Time            `json:"at"`
+	Class      JobStatsFailureClass `json:"class"`
+	Job        string               `json:"job"`
+	JobId      int64                `json:"job_id"`
+	JobUrl     *string              `json:"job_url,omitempty"`
+	Repository string               `json:"repository"`
+	RunId      int64                `json:"run_id"`
+	RunUrl     *string              `json:"run_url,omitempty"`
+}
+
+// JobStatsFailureClass defines model for JobStatsFailure.Class.
+type JobStatsFailureClass string
+
+// JobStatsRates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+type JobStatsRates struct {
+	Cancelled  *float32 `json:"cancelled,omitempty"`
+	Failed     *float32 `json:"failed,omitempty"`
+	OverMemory *float32 `json:"over_memory,omitempty"`
+	Stopped    *float32 `json:"stopped,omitempty"`
+	Succeeded  *float32 `json:"succeeded,omitempty"`
+	TimedOut   *float32 `json:"timed_out,omitempty"`
+}
+
+// JobStatsSet defines model for JobStatsSet.
+type JobStatsSet struct {
+	AvgQueueWaitSeconds *float32 `json:"avg_queue_wait_seconds,omitempty"`
+
+	// AvgRunSeconds Absent when no job in the window has times.
+	AvgRunSeconds *float32 `json:"avg_run_seconds,omitempty"`
+
+	// BusyPct Busy seconds over the window times the slots (a runner has one), 0 to 100.
+	BusyPct *float32 `json:"busy_pct,omitempty"`
+
+	// BusySeconds Time jobs ran inside the window, summed.
+	BusySeconds *float32         `json:"busy_seconds,omitempty"`
+	Counts      JobStatsCounts   `json:"counts"`
+	LastFailure *JobStatsFailure `json:"last_failure,omitempty"`
+
+	// Rates The counts as fractions of the total, 0 to 1. Absent when no job completed in the window.
+	Rates      *JobStatsRates       `json:"rates,omitempty"`
+	TopFailing []JobStatsFailingJob `json:"top_failing"`
+}
+
 // JobSummary One job type of one repository on one day (OPS34 D2).
 type JobSummary struct {
 	Day        string `json:"day"`
@@ -5618,6 +6020,41 @@ type MachineFacts struct {
 	OsVersion     *string `json:"os_version,omitempty"`
 	Threads       *int    `json:"threads,omitempty"`
 }
+
+// MachineHealth A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC.
+type MachineHealth struct {
+	Boot         *HealthBoot         `json:"boot,omitempty"`
+	Connectivity *HealthConnectivity `json:"connectivity,omitempty"`
+	DockerUse    *HealthDockerUse    `json:"docker_use,omitempty"`
+	Load         *HealthLoad         `json:"load,omitempty"`
+	MachineId    string              `json:"machine_id"`
+	Oom          *HealthOom          `json:"oom,omitempty"`
+	Power        *HealthPower        `json:"power,omitempty"`
+	ReceivedAt   *time.Time          `json:"received_at,omitempty"`
+
+	// Reported False until the first report arrives; every other field is absent then.
+	Reported bool `json:"reported"`
+
+	// Stale The last report is older than 3 minutes.
+	Stale    bool            `json:"stale"`
+	Swap     *HealthSwap     `json:"swap,omitempty"`
+	Thermal  *HealthThermal  `json:"thermal,omitempty"`
+	Updates  *HealthUpdates  `json:"updates,omitempty"`
+	Versions *HealthVersions `json:"versions,omitempty"`
+	Volumes  []HealthVolume  `json:"volumes"`
+}
+
+// MachineJobStats defines model for MachineJobStats.
+type MachineJobStats struct {
+	From    time.Time             `json:"from"`
+	Machine JobStatsSet           `json:"machine"`
+	Runners []RunnerJobStatsEntry `json:"runners"`
+	To      time.Time             `json:"to"`
+	Window  MachineJobStatsWindow `json:"window"`
+}
+
+// MachineJobStatsWindow defines model for MachineJobStats.Window.
+type MachineJobStatsWindow string
 
 // MachineList defines model for MachineList.
 type MachineList struct {
@@ -7223,6 +7660,25 @@ type RunnerEnv struct {
 	Vars     []ResolvedEnvVar `json:"vars"`
 }
 
+// RunnerJobStats defines model for RunnerJobStats.
+type RunnerJobStats struct {
+	From     time.Time            `json:"from"`
+	RunnerId string               `json:"runner_id"`
+	Stats    JobStatsSet          `json:"stats"`
+	To       time.Time            `json:"to"`
+	Window   RunnerJobStatsWindow `json:"window"`
+}
+
+// RunnerJobStatsWindow defines model for RunnerJobStats.Window.
+type RunnerJobStatsWindow string
+
+// RunnerJobStatsEntry defines model for RunnerJobStatsEntry.
+type RunnerJobStatsEntry struct {
+	RunnerId   string      `json:"runner_id"`
+	RunnerName string      `json:"runner_name"`
+	Stats      JobStatsSet `json:"stats"`
+}
+
 // RunnerKind defines model for RunnerKind.
 type RunnerKind string
 
@@ -8042,6 +8498,9 @@ type RunnerId = string
 // SetName defines model for SetName.
 type SetName = string
 
+// StatsWindow defines model for StatsWindow.
+type StatsWindow string
+
 // To defines model for To.
 type To = time.Time
 
@@ -8363,6 +8822,15 @@ type StartDockerCompactParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetMachineJobStatsParams defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetMachineJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetMachineJobStatsParamsWindow defines parameters for GetMachineJobStats.
+type GetMachineJobStatsParamsWindow string
+
 // GetMachineLoadParams defines parameters for GetMachineLoad.
 type GetMachineLoadParams struct {
 	From *From `form:"from,omitempty" json:"from,omitempty"`
@@ -8430,6 +8898,15 @@ type DeleteRunnerParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
+
+// GetRunnerJobStatsParams defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParams struct {
+	// Window The window of the stats, 24h (default) or 7d.
+	Window *GetRunnerJobStatsParamsWindow `form:"window,omitempty" json:"window,omitempty"`
+}
+
+// GetRunnerJobStatsParamsWindow defines parameters for GetRunnerJobStats.
+type GetRunnerJobStatsParamsWindow string
 
 // DeleteRunnerRegistrationParams defines parameters for DeleteRunnerRegistration.
 type DeleteRunnerRegistrationParams struct {
@@ -8543,6 +9020,9 @@ type PutEnvSetJSONRequestBody = EnvSetInput
 
 // SetOrgPoolJSONRequestBody defines body for SetOrgPool for application/json ContentType.
 type SetOrgPoolJSONRequestBody = OrgPoolSet
+
+// PutHealthThresholdsJSONRequestBody defines body for PutHealthThresholds for application/json ContentType.
+type PutHealthThresholdsJSONRequestBody = HealthThresholds
 
 // UpdateImageLayersJSONRequestBody defines body for UpdateImageLayers for application/json ContentType.
 type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
@@ -9118,6 +9598,31 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/github/repositories (the `ListRepositories` operationId).
 	ListRepositories(ctx context.Context, params *ListRepositoriesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// GetHealthThresholds The limits of the machine health checks
+	//
+	// doctor R5.80.
+	//
+	// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+	GetHealthThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutHealthThresholdsWithBody Change the limits of the machine health checks
+	//
+	// doctor R5.80. A value outside its range is refused with the range.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholdsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutHealthThresholds Change the limits of the machine health checks
+	//
+	// doctor R5.80. A value outside its range is refused with the range.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholds(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListImages Images per machine and OS, with layers and sizes
 	//
 	// web-console R5.25, runners R5.32 and R5.33.
@@ -9495,6 +10000,20 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/drain (the `DrainMachine` operationId).
 	DrainMachine(ctx context.Context, machineId MachineId, body DrainMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineHealth The health of one machine
+	//
+	// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+	GetMachineHealth(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineJobStats Job stats of one machine and of its runners
+	//
+	// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+	GetMachineJobStats(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetMachineLoad Load history at 15-second steps, up to 24 hours
 	//
@@ -10183,6 +10702,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/runners/{runnerId}/env (the `GetRunnerEnv` operationId).
 	GetRunnerEnv(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRunnerJobStats Job stats of one runner
+	//
+	// machines R5.78.
+	//
+	// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+	GetRunnerJobStats(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// DeleteRunnerRegistration Delete the registration of an offline runner whose agent cannot remove it
 	//
@@ -11426,6 +11952,61 @@ func (c *Client) ListRepositories(ctx context.Context, params *ListRepositoriesP
 	return c.Client.Do(req)
 }
 
+// GetHealthThresholds The limits of the machine health checks
+//
+// doctor R5.80.
+//
+// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+func (c *Client) GetHealthThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetHealthThresholdsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutHealthThresholdsWithBody Change the limits of the machine health checks
+//
+// doctor R5.80. A value outside its range is refused with the range.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *Client) PutHealthThresholdsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutHealthThresholdsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutHealthThresholds Change the limits of the machine health checks
+//
+// doctor R5.80. A value outside its range is refused with the range.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *Client) PutHealthThresholds(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutHealthThresholdsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListImages Images per machine and OS, with layers and sizes
 //
 // web-console R5.25, runners R5.32 and R5.33.
@@ -12294,6 +12875,40 @@ func (c *Client) DrainMachineWithBody(ctx context.Context, machineId MachineId, 
 // Corresponds with POST /api/v1/machines/{machineId}/drain (the `DrainMachine` operationId).
 func (c *Client) DrainMachine(ctx context.Context, machineId MachineId, body DrainMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewDrainMachineRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineHealth The health of one machine
+//
+// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+func (c *Client) GetMachineHealth(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineHealthRequest(c.Server, machineId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineJobStats Job stats of one machine and of its runners
+//
+// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+func (c *Client) GetMachineJobStats(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineJobStatsRequest(c.Server, machineId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -13862,6 +14477,23 @@ func (c *Client) ClearRunnerCache(ctx context.Context, runnerId RunnerId, reqEdi
 // Corresponds with GET /api/v1/runners/{runnerId}/env (the `GetRunnerEnv` operationId).
 func (c *Client) GetRunnerEnv(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRunnerEnvRequest(c.Server, runnerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRunnerJobStats Job stats of one runner
+//
+// machines R5.78.
+//
+// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+func (c *Client) GetRunnerJobStats(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRunnerJobStatsRequest(c.Server, runnerId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -16813,6 +17445,73 @@ func NewListRepositoriesRequest(server string, params *ListRepositoriesParams) (
 	return req, nil
 }
 
+// NewGetHealthThresholdsRequest constructs an http.Request for the GetHealthThresholds method
+func NewGetHealthThresholdsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/health-thresholds")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutHealthThresholdsRequest calls the generic PutHealthThresholds builder with application/json body
+func NewPutHealthThresholdsRequest(server string, body PutHealthThresholdsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutHealthThresholdsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutHealthThresholdsRequestWithBody constructs an http.Request for the PutHealthThresholds method, with any body, and a specified content type
+func NewPutHealthThresholdsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/health-thresholds")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewListImagesRequest constructs an http.Request for the ListImages method
 func NewListImagesRequest(server string, params *ListImagesParams) (*http.Request, error) {
 	var err error
@@ -19099,6 +19798,101 @@ func NewDrainMachineRequestWithBody(server string, machineId MachineId, contentT
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMachineHealthRequest constructs an http.Request for the GetMachineHealth method
+func NewGetMachineHealthRequest(server string, machineId MachineId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/health", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetMachineJobStatsRequest constructs an http.Request for the GetMachineJobStats method
+func NewGetMachineJobStatsRequest(server string, machineId MachineId, params *GetMachineJobStatsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/job-stats", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -21845,6 +22639,67 @@ func NewGetRunnerEnvRequest(server string, runnerId RunnerId) (*http.Request, er
 	return req, nil
 }
 
+// NewGetRunnerJobStatsRequest constructs an http.Request for the GetRunnerJobStats method
+func NewGetRunnerJobStatsRequest(server string, runnerId RunnerId, params *GetRunnerJobStatsParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runnerId", runnerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runners/%s/job-stats", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Window != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "window", *params.Window, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewDeleteRunnerRegistrationRequest constructs an http.Request for the DeleteRunnerRegistration method
 func NewDeleteRunnerRegistrationRequest(server string, runnerId RunnerId, params *DeleteRunnerRegistrationParams) (*http.Request, error) {
 	var err error
@@ -23913,6 +24768,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/github/repositories (the `ListRepositories` operationId).
 	ListRepositoriesWithResponse(ctx context.Context, params *ListRepositoriesParams, reqEditors ...RequestEditorFn) (*ListRepositoriesResponse, error)
 
+	// GetHealthThresholdsWithResponse The limits of the machine health checks
+	//
+	// doctor R5.80.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+	GetHealthThresholdsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthThresholdsResponse, error)
+
+	// PutHealthThresholdsWithBodyWithResponse Change the limits of the machine health checks
+	//
+	// doctor R5.80. A value outside its range is refused with the range.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholdsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error)
+
+	// PutHealthThresholdsWithResponse Change the limits of the machine health checks
+	//
+	// doctor R5.80. A value outside its range is refused with the range.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+	PutHealthThresholdsWithResponse(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error)
+
 	// ListImagesWithResponse Images per machine and OS, with layers and sizes
 	//
 	// web-console R5.25, runners R5.32 and R5.33.
@@ -24354,6 +25236,24 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/drain (the `DrainMachine` operationId).
 	DrainMachineWithResponse(ctx context.Context, machineId MachineId, body DrainMachineJSONRequestBody, reqEditors ...RequestEditorFn) (*DrainMachineResponse, error)
+
+	// GetMachineHealthWithResponse The health of one machine
+	//
+	// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+	GetMachineHealthWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineHealthResponse, error)
+
+	// GetMachineJobStatsWithResponse Job stats of one machine and of its runners
+	//
+	// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+	GetMachineJobStatsWithResponse(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*GetMachineJobStatsResponse, error)
 
 	// GetMachineLoadWithResponse Load history at 15-second steps, up to 24 hours
 	//
@@ -25134,6 +26034,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/runners/{runnerId}/env (the `GetRunnerEnv` operationId).
 	GetRunnerEnvWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*GetRunnerEnvResponse, error)
+
+	// GetRunnerJobStatsWithResponse Job stats of one runner
+	//
+	// machines R5.78.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+	GetRunnerJobStatsWithResponse(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*GetRunnerJobStatsResponse, error)
 
 	// DeleteRunnerRegistrationWithResponse Delete the registration of an offline runner whose agent cannot remove it
 	//
@@ -27572,6 +28481,102 @@ func (r ListRepositoriesResponse) ContentType() string {
 	return ""
 }
 
+type GetHealthThresholdsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *HealthThresholds
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetHealthThresholdsResponse) GetJSON200() *HealthThresholds {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetHealthThresholdsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetHealthThresholdsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetHealthThresholdsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetHealthThresholdsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetHealthThresholdsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutHealthThresholdsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *HealthThresholds
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutHealthThresholdsResponse) GetJSON200() *HealthThresholds {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutHealthThresholdsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutHealthThresholdsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutHealthThresholdsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutHealthThresholdsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutHealthThresholdsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListImagesResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -29532,6 +30537,102 @@ func (r DrainMachineResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r DrainMachineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineHealthResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MachineHealth
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineHealthResponse) GetJSON200() *MachineHealth {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineHealthResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineHealthResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineHealthResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineHealthResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineHealthResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineJobStatsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MachineJobStats
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineJobStatsResponse) GetJSON200() *MachineJobStats {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineJobStatsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineJobStatsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineJobStatsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineJobStatsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineJobStatsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -32712,6 +33813,54 @@ func (r GetRunnerEnvResponse) ContentType() string {
 	return ""
 }
 
+type GetRunnerJobStatsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *RunnerJobStats
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRunnerJobStatsResponse) GetJSON200() *RunnerJobStats {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRunnerJobStatsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRunnerJobStatsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRunnerJobStatsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRunnerJobStatsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRunnerJobStatsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type DeleteRunnerRegistrationResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -35132,6 +36281,51 @@ func (c *ClientWithResponses) ListRepositoriesWithResponse(ctx context.Context, 
 	return ParseListRepositoriesResponse(rsp)
 }
 
+// GetHealthThresholdsWithResponse The limits of the machine health checks
+//
+// doctor R5.80.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/health-thresholds (the `GetHealthThresholds` operationId).
+func (c *ClientWithResponses) GetHealthThresholdsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetHealthThresholdsResponse, error) {
+	rsp, err := c.GetHealthThresholds(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetHealthThresholdsResponse(rsp)
+}
+
+// PutHealthThresholdsWithBodyWithResponse Change the limits of the machine health checks
+//
+// doctor R5.80. A value outside its range is refused with the range.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *ClientWithResponses) PutHealthThresholdsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error) {
+	rsp, err := c.PutHealthThresholdsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutHealthThresholdsResponse(rsp)
+}
+
+// PutHealthThresholdsWithResponse Change the limits of the machine health checks
+//
+// doctor R5.80. A value outside its range is refused with the range.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/health-thresholds (the `PutHealthThresholds` operationId).
+func (c *ClientWithResponses) PutHealthThresholdsWithResponse(ctx context.Context, body PutHealthThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutHealthThresholdsResponse, error) {
+	rsp, err := c.PutHealthThresholds(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutHealthThresholdsResponse(rsp)
+}
+
 // ListImagesWithResponse Images per machine and OS, with layers and sizes
 //
 // web-console R5.25, runners R5.32 and R5.33.
@@ -35872,6 +37066,36 @@ func (c *ClientWithResponses) DrainMachineWithResponse(ctx context.Context, mach
 		return nil, err
 	}
 	return ParseDrainMachineResponse(rsp)
+}
+
+// GetMachineHealthWithResponse The health of one machine
+//
+// machines R5.70 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/health (the `GetMachineHealth` operationId).
+func (c *ClientWithResponses) GetMachineHealthWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineHealthResponse, error) {
+	rsp, err := c.GetMachineHealth(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineHealthResponse(rsp)
+}
+
+// GetMachineJobStatsWithResponse Job stats of one machine and of its runners
+//
+// machines R5.78. Jobs that completed in the window, counted by how they ended, with the times and the busy percent.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/job-stats (the `GetMachineJobStats` operationId).
+func (c *ClientWithResponses) GetMachineJobStatsWithResponse(ctx context.Context, machineId MachineId, params *GetMachineJobStatsParams, reqEditors ...RequestEditorFn) (*GetMachineJobStatsResponse, error) {
+	rsp, err := c.GetMachineJobStats(ctx, machineId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineJobStatsResponse(rsp)
 }
 
 // GetMachineLoadWithResponse Load history at 15-second steps, up to 24 hours
@@ -37180,6 +38404,21 @@ func (c *ClientWithResponses) GetRunnerEnvWithResponse(ctx context.Context, runn
 		return nil, err
 	}
 	return ParseGetRunnerEnvResponse(rsp)
+}
+
+// GetRunnerJobStatsWithResponse Job stats of one runner
+//
+// machines R5.78.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/runners/{runnerId}/job-stats (the `GetRunnerJobStats` operationId).
+func (c *ClientWithResponses) GetRunnerJobStatsWithResponse(ctx context.Context, runnerId RunnerId, params *GetRunnerJobStatsParams, reqEditors ...RequestEditorFn) (*GetRunnerJobStatsResponse, error) {
+	rsp, err := c.GetRunnerJobStats(ctx, runnerId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRunnerJobStatsResponse(rsp)
 }
 
 // DeleteRunnerRegistrationWithResponse Delete the registration of an offline runner whose agent cannot remove it
@@ -39321,6 +40560,72 @@ func ParseListRepositoriesResponse(rsp *http.Response) (*ListRepositoriesRespons
 	return response, nil
 }
 
+// ParseGetHealthThresholdsResponse parses an HTTP response from a GetHealthThresholdsWithResponse call
+func ParseGetHealthThresholdsResponse(rsp *http.Response) (*GetHealthThresholdsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetHealthThresholdsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest HealthThresholds
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutHealthThresholdsResponse parses an HTTP response from a PutHealthThresholdsWithResponse call
+func ParsePutHealthThresholdsResponse(rsp *http.Response) (*PutHealthThresholdsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutHealthThresholdsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest HealthThresholds
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListImagesResponse parses an HTTP response from a ListImagesWithResponse call
 func ParseListImagesResponse(rsp *http.Response) (*ListImagesResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -40675,6 +41980,72 @@ func ParseDrainMachineResponse(rsp *http.Response) (*DrainMachineResponse, error
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineHealthResponse parses an HTTP response from a GetMachineHealthWithResponse call
+func ParseGetMachineHealthResponse(rsp *http.Response) (*GetMachineHealthResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineHealthResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MachineHealth
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineJobStatsResponse parses an HTTP response from a GetMachineJobStatsWithResponse call
+func ParseGetMachineJobStatsResponse(rsp *http.Response) (*GetMachineJobStatsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineJobStatsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MachineJobStats
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -42855,6 +44226,39 @@ func ParseGetRunnerEnvResponse(rsp *http.Response) (*GetRunnerEnvResponse, error
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RunnerEnv
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRunnerJobStatsResponse parses an HTTP response from a GetRunnerJobStatsWithResponse call
+func ParseGetRunnerJobStatsResponse(rsp *http.Response) (*GetRunnerJobStatsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRunnerJobStatsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest RunnerJobStats
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
