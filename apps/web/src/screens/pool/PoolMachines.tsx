@@ -1,5 +1,16 @@
 // Pool > Machines (LOOK56): what runs where. It only shows, and links to Setup > Machines, where machines change.
-import { Empty, Message, Section, Stack, Table, TextLink, type Column } from '@crsp/ui';
+import {
+  CardGrid,
+  ClampText,
+  Empty,
+  LinkButton,
+  Message,
+  Section,
+  Stack,
+  Table,
+  TextLink,
+  type Column,
+} from '@crsp/ui';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
@@ -9,8 +20,16 @@ import { MachineCard, withLiveLoad } from '../overview/Overview';
 
 type Runner = Schemas['Runner'];
 
-const columns: Column<Runner>[] = [
-  { id: 'runner', header: 'Runner', cell: (r) => r.name },
+const columnsOf = (names: ReadonlyMap<string, string>): Column<Runner>[] => [
+  { id: 'runner', header: 'Runner', cell: (r) => <ClampText text={r.name} /> },
+  {
+    id: 'machine',
+    header: 'Machine',
+    cell: (r) => {
+      const name = r.machine_id ? names.get(r.machine_id) : undefined;
+      return name ? <ClampText text={name} /> : 'none';
+    },
+  },
   { id: 'type', header: 'Type', cell: (r) => r.kind },
   { id: 'now', header: 'Doing now', cell: (r) => r.current_job?.job_name ?? 'idle' },
 ];
@@ -26,40 +45,40 @@ export function PoolMachines() {
         This page shows what runs where. To change a machine, its pool size or its load
         budget, go to <TextLink to="/setup/machines">Setup &gt; Machines</TextLink>.
       </Message>
+      <LinkButton to="/setup/machines" kind="primary">
+        Open Setup &gt; Machines
+      </LinkButton>
       <Load result={machines.result} what="machines" reload={machines.reload}>
         {(d) =>
           d.items.length === 0 ? (
             <Empty title="No machine is in the pool yet." />
           ) : (
-            <Stack gap="section">
-              {d.items.map((m) => (
-                <Section key={m.id} title={m.name}>
-                  <MachineCard m={withLiveLoad(m, live.overview)} />
-                  <Load
-                    result={runners.result}
-                    what="the runners"
-                    reload={runners.reload}
-                  >
-                    {(r) => {
-                      const mine = r.items.filter((x) => x.machine_id === m.id);
-                      return mine.length === 0 ? (
-                        <Empty title={`No runner on ${m.name}.`} />
-                      ) : (
-                        <Table
-                          caption={`Runners on ${m.name}`}
-                          columns={columns}
-                          rows={mine}
-                          rowKey={(x) => x.id}
-                        />
-                      );
-                    }}
-                  </Load>
-                  <TextLink to={`/setup/machines/${m.id}`}>
-                    Change {m.name} in Setup &gt; Machines
-                  </TextLink>
-                </Section>
-              ))}
-            </Stack>
+            <>
+              <Section title="Machines" count={d.items.length}>
+                <CardGrid>
+                  {d.items.map((m) => (
+                    <MachineCard key={m.id} m={withLiveLoad(m, live.overview)} />
+                  ))}
+                </CardGrid>
+              </Section>
+              <Section title="Runners">
+                <Load result={runners.result} what="the runners" reload={runners.reload}>
+                  {(r) => {
+                    const names = new Map(d.items.map((m) => [m.id, m.name]));
+                    return r.items.length === 0 ? (
+                      <Empty title="No runner is in the pool yet." />
+                    ) : (
+                      <Table
+                        caption="Runners by machine"
+                        columns={columnsOf(names)}
+                        rows={r.items}
+                        rowKey={(x) => x.id}
+                      />
+                    );
+                  }}
+                </Load>
+              </Section>
+            </>
           )
         }
       </Load>

@@ -39,7 +39,7 @@ export function Insights() {
   const pool = usePoolBusy();
   const groups = useGroups('repository');
   return (
-    <Stack>
+    <Stack gap="section">
       <Load result={stats.result} what="the overview" reload={stats.reload}>
         {(s) => {
           const { last, prev } = periods(s.days);

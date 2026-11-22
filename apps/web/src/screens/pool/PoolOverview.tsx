@@ -82,7 +82,13 @@ function QueuePlanTable({ queued, readAt }: { queued: readonly Job[]; readAt: nu
   );
 }
 
-export function RunningTable({ running }: { running: readonly Job[] }) {
+export function RunningTable({
+  running,
+  title = 'Running jobs',
+}: {
+  running: readonly Job[];
+  title?: string;
+}) {
   const now = useNow();
   const columns: Column<Job>[] = [
     {
@@ -109,7 +115,7 @@ export function RunningTable({ running }: { running: readonly Job[] }) {
     },
   ];
   return (
-    <Section title="Running jobs" count={running.length}>
+    <Section title={title} count={running.length}>
       {running.length === 0 ? (
         <Empty title="No jobs running. Jobs show here when a workflow runs on the pool." />
       ) : (

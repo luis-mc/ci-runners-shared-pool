@@ -79,21 +79,22 @@ export function Timeline() {
   const { result, reload } = useTimeline(Number(hours));
   return (
     <Stack gap="section">
-      <Segmented
-        label="Range of the timeline"
-        options={HOURS}
-        value={hours}
-        allLabel={null}
-        onChange={(v) => setHours(v === '1' || v === '6' ? v : '24')}
-      />
+      <Section title="Timeline">
+        <Segmented
+          label="Range of the timeline"
+          options={HOURS}
+          value={hours}
+          allLabel={null}
+          onChange={(v) => setHours(v === '1' || v === '6' ? v : '24')}
+        />
+        {result.state === 'ready' && result.data.lanes.length === 0 ? (
+          <Empty title="No runner took a job in this range." />
+        ) : null}
+      </Section>
       <Load result={result} what="the timeline" reload={reload}>
         {(t) =>
-          t.lanes.length === 0 ? (
-            <Section title="Timeline">
-              <Empty title="No runner took a job in this range." />
-            </Section>
-          ) : (
-            <Stack>
+          t.lanes.length === 0 ? null : (
+            <Stack gap="section">
               {t.lanes.map((lane) => {
                 const rows = lane.segments.filter(
                   (s) => !repository || s.kind === 'idle' || s.repository === repository,

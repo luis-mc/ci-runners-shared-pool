@@ -2745,7 +2745,7 @@ button.ds-jobgraph__node:hover {
 /* components 64 and 66 (LOOK44): job path and term help. */
 .ds-jobpath {
   display: grid;
-  grid-template-columns: 3fr 4fr;
+  grid-template-columns: minmax(min-content, 3fr) minmax(min-content, 4fr);
   gap: var(--ds-space-4);
   margin: 0;
   padding: 0;
@@ -2771,7 +2771,7 @@ button.ds-jobgraph__node:hover {
 .ds-jobpath__parts {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-columns: minmax(min-content, 1fr);
   gap: var(--ds-space-4);
   margin: 0;
   padding: 0;
@@ -2805,7 +2805,7 @@ button.ds-jobgraph__node:hover {
   background: var(--ds-color-surface);
   border: var(--ds-border-medium) solid var(--ds-color-border);
   border-radius: var(--ds-radius-2);
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 button.ds-jobpath__box {
   cursor: pointer;
@@ -2830,12 +2830,9 @@ button.ds-jobpath__box {
 .ds-jobpath__line {
   color: var(--ds-color-text-muted);
 }
-/* A live example is a name that may be long (crsp-linux-1): it stays on one line, what does not fit is cut with … and its full text is the hover text (LOOK48). */
+/* A live example is a name that may be long (crsp-linux-1): it stays on one line and its column grows to fit it, never cut (LOOK48, LOOK56). */
 .ds-jobpath__line[data-example] {
-  min-inline-size: 0;
-  overflow: hidden;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 @media (max-width: 600px) {
   .ds-jobpath {

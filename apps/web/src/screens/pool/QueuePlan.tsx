@@ -54,9 +54,7 @@ export function QueuePlan() {
                 </Stack>
               )}
             </Section>
-            <Section title="Where running jobs are going">
-              <RunningTable running={o.running} />
-            </Section>
+            <RunningTable title="Where running jobs are going" running={o.running} />
           </Stack>
         );
       }}

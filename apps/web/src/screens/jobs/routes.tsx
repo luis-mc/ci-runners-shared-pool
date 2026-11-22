@@ -25,9 +25,13 @@ const Tests = later(() => import('../insights/Tests').then((m) => m.Tests));
 const Guardrails = later(() =>
   import('../insights/Guardrails').then((m) => m.Guardrails),
 );
-const FindingPage = later(() => import('../insights/Finding').then((m) => m.FindingPage));
-const ActionWizard = later(() =>
-  import('../insights/ActionWizard').then((m) => m.ActionWizard),
+const FindingPage = later(
+  () => import('../insights/Finding').then((m) => m.FindingPage),
+  true,
+);
+const ActionWizard = later(
+  () => import('../insights/ActionWizard').then((m) => m.ActionWizard),
+  true,
 );
 
 /** The run and job pages count their timers every second (R5.150). */
