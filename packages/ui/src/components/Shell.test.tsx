@@ -18,7 +18,7 @@ describe('TopMenu', () => {
         />
       </MemoryRouter>,
     );
-    const open = screen.getByRole('link', { name: 'Jobs' });
+    const open = screen.getByRole('link', { name: 'Pool' });
     const other = screen.getByRole('link', { name: 'Overview' });
     expect(open.getAttribute('aria-current')).toBe('page');
     expect(other.getAttribute('aria-current')).toBeNull();
