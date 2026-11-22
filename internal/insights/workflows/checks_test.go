@@ -35,9 +35,9 @@ func TestEachCheck(t *testing.T) {
 		line  int    // 0: not checked
 		text  string // the detail names this
 	}{
-		{"timeout missing", on + "jobs:\n  a:\n    runs-on: x\n    steps:\n      - run: echo\n", CheckTimeout, "a", Fail, 3, "timeout-minutes: 30"},
-		{"timeout 45", on + "jobs:\n  a:\n    timeout-minutes: 45\n    steps: []\n", CheckTimeout, "a", Fail, 4, "over the limit of 30"},
-		{"timeout 30", on + "jobs:\n  a:\n    timeout-minutes: 30\n    steps: []\n", CheckTimeout, "a", OK, 0, ""},
+		{"timeout missing", on + "jobs:\n  a:\n    runs-on: x\n    steps:\n      - run: echo\n", CheckTimeout, "a", Fail, 3, "timeout-minutes: 60"},
+		{"timeout 90", on + "jobs:\n  a:\n    timeout-minutes: 90\n    steps: []\n", CheckTimeout, "a", Fail, 4, "over the limit of 60"},
+		{"timeout 60", on + "jobs:\n  a:\n    timeout-minutes: 60\n    steps: []\n", CheckTimeout, "a", OK, 0, ""},
 		{"timeout expression", on + "jobs:\n  a:\n    timeout-minutes: ${{ inputs.t }}\n    steps: []\n", CheckTimeout, "a", OK, 0, ""},
 		{"retry action", on + "jobs:\n  a:\n    steps:\n      - uses: nick-fields/retry@v3\n", CheckRetry, "a", Fail, 5, "retry action"},
 		{"retry flag", on + "jobs:\n  a:\n    steps:\n      - run: npx playwright test --retries=2\n", CheckRetry, "a", Fail, 5, "--retries=2"},
@@ -155,7 +155,7 @@ func TestAnalyserFindings(t *testing.T) {
 		{Check: CheckCache, Job: JoinJob(".github/workflows/ci.yml", "a"), Status: Skip},
 	}}
 	t0 := time.Date(2026, 11, 1, 0, 0, 0, 0, time.UTC)
-	jobs := oneJobs{jobs: []insights.JobFact{{Workflow: ".github/workflows/ci.yml", NodeID: "a", StartedAt: t0, CompletedAt: t0.Add(45 * time.Minute)}}}
+	jobs := oneJobs{jobs: []insights.JobFact{{Workflow: ".github/workflows/ci.yml", NodeID: "a", StartedAt: t0, CompletedAt: t0.Add(75 * time.Minute)}}}
 	a := Analyser{Repos: oneRepo{}, Store: st, Jobs: jobs}
 	got, err := a.Analyse(context.Background(), insights.Window{})
 	if err != nil || len(got) != 1 {
