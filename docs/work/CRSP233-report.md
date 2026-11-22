@@ -20,3 +20,8 @@ Branch CRSP233-doctor-windows-crashes, from origin/main.
 
 ## Docs
 Change notes: features/doctor and features/operations (CRSP233); spec lines in doctor R5.32 and operations R5.41.
+
+## CI (run 45071402574, head b8d63db)
+Red: only job `tests` (and so `verify`): Go race test `internal/machines TestControllerJoinsItsOwnAgentWithoutACode` failed in cleanup, "TempDir RemoveAll cleanup: directory not empty". This package and test are untouched by CRSP233; it looks like a flaky temp-folder race. Everything else is green (lint, types, Go tests on macOS and Windows, e2e 1-4, builds). Not retried, skipped or merged; the owner decides (a red pull request waits for the owner).
+
+CODE DONE b8d63dbcc71675761c30941b5f399a224f54acf9
