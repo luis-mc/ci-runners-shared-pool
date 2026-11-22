@@ -9,7 +9,7 @@ Branch OPS78-listener-gate: origin/OPS77-integration, then OPS80-before-assignme
 4. [done] `assign.Gate` hook (launch, Completed, Vanished, unused sweep), doctor `listener.gate` (info), API `GET/PUT /api/v1/listener-gate`, `cmd/crsp/listenergate_wiring.go`.
 5. [done] Console: Listener section of the runner page, Persistent only on the machine itself, content.md + CHANGES C14.
 6. [done] Specs (runners R5.134 to R5.141, scheduling R5.108, doctor R5.66), change notes, docs_check (only W1).
-7. [todo] CI run, draft PR.
+7. [done] CI: first run red on e2e shard 3 (3 Add runners specs assumed persistent Linux on a Windows machine) and prettier; fixed, local e2e gate pass, `ci.yml` dispatch run 45000844163 on 696fdd1 green. Draft PR opened.
 
 ## Decisions and deviations (owner please read)
 - **launchd**: not "without KeepAlive" but `KeepAlive {SuccessfulExit: false}` (restart on failure only, like systemd `Restart=on-failure`). A clean stop stays stopped; a crash is still restarted. Removing the key is a one-line change.
