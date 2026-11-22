@@ -12,12 +12,17 @@ const ALLOWED = new Set([
   'apps/web/src/screens/doctor/serverLinks.ts',
   'apps/web/src/screens/doctor/serverLinks.test.ts',
   'apps/web/src/oldPaths.test.ts',
+  'apps/web/src/screens/jobs/redirects.test.tsx',
 ]);
 
 // A string that starts with an old address: /shared-pool, /repositories, /jobs, the old top-level lists, and the old
 // children of /pool (Pool itself is the new execution section).
 const OLD =
   /['"`](\/shared-pool|\/repositories|\/jobs|\/machines|\/runners|\/images|\/caches|\/pool\/(runners|images|size|machines\/))(?=[/?#'"`])/;
+
+// The same addresses written in a regular expression (`\/jobs\/`) or in a query value (`%2Fjobs`).
+const OLD_ESCAPED =
+  /\\\/(shared-pool|repositories|jobs|machines|runners|images|caches)\\\/|(?<!setup)(?<!pool)(?<!analytics)%2F(shared-pool|repositories|jobs|machines|runners|images|caches|pool%2F(runners|images|size|machines%2F))/;
 
 function files(dir: string): string[] {
   const out: string[] = [];
@@ -40,7 +45,7 @@ describe('old addresses', () => {
       readFileSync(file, 'utf8')
         .split('\n')
         .forEach((line, i) => {
-          if (OLD.test(line) && !line.includes('/api/'))
+          if ((OLD.test(line) || OLD_ESCAPED.test(line)) && !line.includes('/api/'))
             hits.push(`${rel}:${i + 1}: ${line.trim()}`);
         });
     }

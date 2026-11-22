@@ -46,26 +46,35 @@ import {
 import { UpdateCompactPage, UpdateReviewPage } from './screens/settings/Updates';
 import { SetupEntry } from './screens/setup/Setup';
 
-const RegistryBudgetsPage = later(() =>
-  import('./screens/registry/RegistryBudgetsPage').then((m) => m.RegistryBudgetsPage),
+const RegistryBudgetsPage = later(
+  () =>
+    import('./screens/registry/RegistryBudgetsPage').then((m) => m.RegistryBudgetsPage),
+  true,
 );
-const RegistryImagePage = later(() =>
-  import('./screens/registry/RegistryImagePage').then((m) => m.RegistryImagePage),
+const RegistryImagePage = later(
+  () => import('./screens/registry/RegistryImagePage').then((m) => m.RegistryImagePage),
+  true,
 );
-const RegistryMirrorPage = later(() =>
-  import('./screens/registry/RegistryMirrorPage').then((m) => m.RegistryMirrorPage),
+const RegistryMirrorPage = later(
+  () => import('./screens/registry/RegistryMirrorPage').then((m) => m.RegistryMirrorPage),
+  true,
 );
-const RegistryReplacePage = later(() =>
-  import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
+const RegistryReplacePage = later(
+  () =>
+    import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
+  true,
 );
-const AddMachinePage = later(() =>
-  import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
+const AddMachinePage = later(
+  () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
+  true,
 );
-const TurnOnPoolPage = later(() =>
-  import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
+const TurnOnPoolPage = later(
+  () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
+  true,
 );
-const AddRunnersPage = later(() =>
-  import('./screens/runners/AddRunners').then((m) => m.AddRunnersPage),
+const AddRunnersPage = later(
+  () => import('./screens/runners/AddRunners').then((m) => m.AddRunnersPage),
+  true,
 );
 
 // Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
