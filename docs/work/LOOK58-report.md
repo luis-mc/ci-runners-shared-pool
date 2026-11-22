@@ -19,3 +19,6 @@ Branch LOOK58-timeline-machines (from origin/LOOK56-console-layout 7c46b87, plus
 - Local e2e gate --e2e-only on 6944e5f: whole suite passed (3191 specs). Publishing the gate ref fails with HTTP 403 (as in LOOK56); local record used.
 - Not done: `reserved` and ticket/job-timer `timer_ran_out` bars are never emitted (no scheduler reservation, no timer data; LOOK58a). Health badge limits are Doctor defaults, not /health-thresholds (LOOK58c).
 - Next: ci.yml dispatch, watch, draft PR.
+- Full CI green on a15dfb0 (run 45003462973). Draft PR #390 (base LOOK56-console-layout).
+
+CODE DONE a15dfb0
