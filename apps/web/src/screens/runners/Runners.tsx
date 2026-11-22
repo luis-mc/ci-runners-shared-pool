@@ -211,7 +211,7 @@ export function RunnersList() {
       header: 'Name',
       cell: (r) => <TextLink to={`/setup/runners/${r.id}`}>{r.name}</TextLink>,
       title: (r) => r.name,
-      grow: 2,
+      grow: 1,
       sort: (r) => r.name,
     },
     {
@@ -236,7 +236,7 @@ export function RunnersList() {
         const s = runnerStatus(r);
         return <Status kind={s.kind} word={s.word} />;
       },
-      grow: 2,
+      grow: 1,
       long: (r) => {
         const full = r.unclean_reason
           ? uncleanText(r.unclean_reason)
