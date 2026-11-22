@@ -21,7 +21,7 @@ Partly built (CRSP23, wired into the controller by CRSP41 in `cmd/crsp/areas_wir
 
 ## 1. In one paragraph
 
-The doctor checks that the whole pool is healthy and says how to fix each problem. It looks at every machine, every isolation backend, every runner, the GitHub App, the repository variables `RUNS_ON_*`, the `runs-on` labels of every workflow, and the runner hooks. Each problem is a finding with a severity and one clear fix. The user runs it from the Doctor screen of the web console, from the CLI (`crsp doctor`), or lets the controller run it on a schedule. New findings feed the notifications. The doctor only reads. It never changes anything.
+The doctor checks that the whole pool is healthy and says how to fix each problem. It looks at every machine, every isolation backend, every runner, the GitHub App, the repository variables `CRSP_RUNS_ON_*`, the `runs-on` labels of every workflow, and the runner hooks. Each problem is a finding with a severity and one clear fix. The user runs it from the Doctor screen of the web console, from the CLI (`crsp doctor`), or lets the controller run it on a schedule. New findings feed the notifications. The doctor only reads. It never changes anything.
 
 ## 2. Why
 
@@ -137,11 +137,11 @@ States:
 
 ### 5.5 Repository variables and workflows
 
-**R5.17** — For each pool repository and each OS that has runners for it, `RUNS_ON_<OS>` is set, is a JSON list of strings, and equals the labels the product would write. Unset where a workflow uses it is `fail`; different is `warn`. A variable set for an OS with no online runner is `fail` (its jobs would queue forever). Built (CRSP23).
+**R5.17** — For each pool repository and each OS that has runners for it, `CRSP_RUNS_ON_<OS>` is set, is a JSON list of strings, and equals the labels the product would write. Unset where a workflow uses it is `fail`; different is `warn`. A variable set for an OS with no online runner is `fail` (its jobs would queue forever). Built (CRSP23).
 
-**R5.18** — For each pool repository, the doctor reads every workflow file on the default branch and every job's `runs-on`: a string, a flow list, a block list, or `${{ fromJSON(vars.NAME) }}` with an optional `|| '<default>'`, resolved through the repository variable. A label set with `self-hosted` must be carried in full by at least one online runner; otherwise `fail`, with file and line. GitHub-hosted label sets are skipped. An expression it cannot resolve (a matrix value) is `info`, "not checked". Built (CRSP23).
+**R5.18** — For each pool repository, the doctor reads every workflow file on the default branch and every job's `runs-on`: a string, a flow list, a block list, or `${{ fromJSON(vars.NAME) }}` with an optional `|| '<default>'`, resolved through the repository variable, or the per-job chain `${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"') }}`, where the first variable that is set wins. A job that reads `RUNS_ON_<OS>`, the name older versions wrote, counts for that OS (CRSP229). A label set with `self-hosted` must be carried in full by at least one online runner; otherwise `fail`, with file and line; the fix says to add a runner or to use the per-job form `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"')`. GitHub-hosted label sets are skipped. An expression it cannot resolve (a matrix value) is `info`, "not checked". Built (CRSP23).
 
-**R5.19** — A self-hosted job with literal labels instead of `fromJSON(vars.RUNS_ON_*)` is `warn`. A runner label that is not generic (not `self-hosted`, an OS, an architecture, `docker`, `kvm`, `gpu` or a pool name) is `warn` (learning 7). Built (CRSP23).
+**R5.19** — A self-hosted job with literal labels instead of `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"')` is `warn`; the fix names that form (CRSP229). A runner label that is not generic (not `self-hosted`, an OS, an architecture, `docker`, `kvm`, `gpu` or a pool name) is `warn` (learning 7). Built (CRSP23).
 
 ### 5.6 Where it runs
 
@@ -372,16 +372,16 @@ Repositories and workflows:
 
 | Check | Finds | Severity | Fix | Admin | M |
 |---|---|---|---|---|---|
-| `repo.vars` | `RUNS_ON_<OS>` unset where used (fail), not a JSON list (fail), different from the product's value (warn) | fail, warn | Set it from the Repositories screen; the `gh variable set` command | no | 1 |
-| `repo.vars.runner` | A `RUNS_ON_<OS>` whose labels no online runner carries | fail | Add or start a runner with those labels | no | 1 |
+| `repo.vars` | `CRSP_RUNS_ON_<OS>` unset where used (fail), not a JSON list (fail), different from the product's value (warn) | fail, warn | Set it from the Repositories screen; the `gh variable set` command | no | 1 |
+| `repo.vars.runner` | A `CRSP_RUNS_ON_<OS>` whose labels no online runner carries | fail | Add or start a runner with those labels | no | 1 |
 | `runner.light_leftover` | An old light runner could not be removed by the reconcile of an upgrade; says why (runners R5.57, decision D110). Nothing is shown while no removal failed | warn | Fix the cause named; if it is still there after 5 tries, remove the runner by hand | no | 1 |
 | `demand.quiet` | A pool repository has jobs queued on GitHub whose `runs-on` resolves to crsp, but the demand source has seen no demand for it for 10 minutes (config `demand_quiet_minutes`). The controller restarts the demand loop once when it first finds this; the finding says whether it did. Built, CRSP77; github-integration R5.37 | warn | First detection: run the doctor again in a minute. Still quiet after the restart: restart the controller service, check that GitHub is reachable and the App can read Actions, read the log for "poll queued jobs" | no | 1 |
 | `repo.waiting` | A pool repository's jobs wait because no crsp machine is up and its hosted fallback is off | info | Start or resume a machine, or turn the fallback on | no | 1 |
 | `repo.fallback` | A repository with the hosted fallback on runs on GitHub-hosted runners now (GitHub may bill the minutes) | warn (ok while on crsp machines) | Start or resume a machine | no | 1 |
 | `repo.forks` | A public repository lets fork pull requests reach the pool | warn | Turn fork jobs off unless meant | no | 2 |
-| `workflow.labels` | A self-hosted `runs-on` label set no online runner carries, with file and line | fail | Add a runner with the labels, or change the workflow to `fromJSON(vars.RUNS_ON_<OS>)` | no | 1 |
-| `workflow.generic` | A self-hosted job with literal labels | warn | Use `${{ fromJSON(vars.RUNS_ON_<OS>) }}` | no | 1 |
-| `workflow.perjob` | A routed `runs-on` that still reads only `RUNS_ON_<OS>` instead of the per-job form `fromJSON(vars.CRSP_<JOB> || vars.RUNS_ON_<OS> || '"ubuntu-latest"')` (github-integration R5.107, R5.108) | info (ok when every routed job has it) | On the owner's repositories crsp opens one pull request; elsewhere copy or download the patch in the finding | no | 1 |
+| `workflow.labels` | A self-hosted `runs-on` label set no online runner carries, with file and line | fail | Add a runner with the labels, or change the workflow to `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"')` | no | 1 |
+| `workflow.generic` | A self-hosted job with literal labels | warn | Use `${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"') }}` | no | 1 |
+| `workflow.perjob` | A routed `runs-on` that still reads only `CRSP_RUNS_ON_<OS>`, or the old `RUNS_ON_<OS>` (the patch writes the new name, CRSP229), instead of the per-job form `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"')` (github-integration R5.107, R5.108) | info (ok when every routed job has it) | On the owner's repositories crsp opens one pull request; elsewhere copy or download the patch in the finding | no | 1 |
 | `workflow.unresolved` | A `runs-on` expression the doctor cannot resolve | info | None needed; it says it was not checked | no | 1 |
 | `workflow.timeout` | A job has no `timeout-minutes` or one over 60 (a safety net only: crsp's job and run timers end a job first, scheduling R5.99) | warn | Add `timeout-minutes: 60` or less to each job | no | 1 |
 | `workflow.retry` | A step retries tests | warn | Remove the retry; fix or quarantine the flaky test | no | 1 |
@@ -474,7 +474,7 @@ Not ported, with the reason:
       "severity": "fail",
       "title": "No online runner carries [self-hosted, linux, arm64]",
       "detail": ".github/workflows/ci.yml:12 needs [self-hosted, linux, arm64]",
-      "fix": {"text": "Add a runner with these labels, or use fromJSON(vars.RUNS_ON_LINUX).", "command": null, "link": "/runners"},
+      "fix": {"text": "Add a runner with these labels, or use fromJSON(vars.CRSP_RUNS_ON_LINUX).", "command": null, "link": "/runners"},
       "needs_admin": false,
       "milestone": 1,
       "checked_at": "2026-11-14T10:00:12Z"
@@ -587,7 +587,7 @@ Rows that name a file without "planned" are built (CRSP23). Planned rows are NOT
 | D1 | Does the doctor repair? | No. It reads only; each finding gives words, a command and a link to where the fix lives (UX-52) | 2026-11-14 |
 | D2 | Severity levels | `ok`, `info`, `skip`, `warn`, `fail`; `needs_admin` is a flag on `skip` | 2026-11-14 |
 | D3 | CLI exit codes | 0 healthy, 1 worst `warn`, 2 worst `fail`, 3 could not run | 2026-11-14 |
-| D4 | Variable names | `CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`, `CRSP_RUNS_ON_MACOS`, from the product brief (decision 0002 still says `CRSP_RUNS_ON_LINUX`) | 2026-11-14 |
+| D4 | Variable names | `CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`, `CRSP_RUNS_ON_MACOS`, the size variables `CRSP_RUNS_ON_<OS>_<SIZE>` and per job `CRSP_<JOB>` (CRSP229, github-integration GI-1). A workflow that still reads `RUNS_ON_<OS>`, the name older versions wrote, is routed as if it read the new name. `CI_RUNS_ON` and `CI_RUNS_ON_WINDOWS` are not crsp's names (github-integration R5.39 removed) | 2026-11-22 |
 | D5 | How runners are found | From the OS service list first, then the database; never only by reading runner folders (learning 6) | 2026-11-14 |
 | D6 | Which milestone starts the doctor | Milestone 1, with the checks of milestone 1 parts, since every milestone ends with the doctor covering its parts | 2026-11-14 |
 
@@ -603,7 +603,7 @@ The seams that change as it is built:
   0. R5.33 (CRSP47): the capability table is static per release, so a repository is `covered` by what the release offers, not by what the fleet has online. Alternative: also require a live runner for the OS. Which one?
   1. The brief lists the doctor under milestone 2 but says every milestone ends with the doctor covering its parts. Start it in milestone 1 (D6)?
   2. Answered in CRSP23: only `fail` exits 1; `warn` exits 0 (see R5.22).
-  3. Decision 0002 still shows `CRSP_RUNS_ON_LINUX` as an example; the product writes `RUNS_ON_*` (D4, D300).
+  3. Answered in CRSP229: the product writes `CRSP_RUNS_ON_*`, the name decision 0002 shows (D4).
   4. UX-58 has no glyph for a warning. Add one in the next design-system version (for example `! warn` in Needs you amber)?
   5. Schedule defaults: full run every 30 minutes and quick run every 60 s (R5.25). Right?
   6. May viewers start a run, or only read findings (R6.4)?

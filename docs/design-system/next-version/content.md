@@ -1601,3 +1601,22 @@ Pool > Machines and the machine page (`/pool/machines/{id}`). `{os}` is the mach
 | Versions and Docker, facts | Agent, Controller, Runner app ({v} (out of date)), Docker, WSL, Docker disk; table What, Size (Images, Build cache, Volumes, Containers) |
 | Heat and load, facts | Temperature, Slowed by heat, Load 1 min, Load 5 min, Load 15 min, CPU taken by the host |
 | Job stats, runner table | Runner, Jobs, Succeeded, Failed or cut short, Average run time, Busy |
+
+## Variable name words (CRSP229, github-integration R5.28, R5.39, R5.102, R5.107, doctor R5.18, R5.19)
+
+The repository variables crsp writes, as the console, the CLI and the Doctor name them. A name is shown as it is, in code style, never translated or shortened. `{OS}` is `LINUX`, `WINDOWS` or `MACOS`; `{SIZE}` is a size name such as `LARGE`; `{JOB}` is the job key in upper case with `_` for every other character; `{repo}` is `owner/name`.
+
+| Where | Words |
+|---|---|
+| Pool variable of an OS | CRSP_RUNS_ON_{OS} (CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS, CRSP_RUNS_ON_MACOS) |
+| Size variable | CRSP_RUNS_ON_{OS}_{SIZE} (for example CRSP_RUNS_ON_LINUX_LARGE) |
+| Per-job variable | CRSP_{JOB} (for example CRSP_E2E) |
+| Per-job variable of a job whose name starts with runs on | CRSP_JOB_{JOB}_{hash} (for example CRSP_JOB_RUNS_ON_LINUX_1A2B) |
+| The runs-on a workflow should have | runs-on: ${{ fromJSON(vars.CRSP_{JOB} \|\| vars.CRSP_RUNS_ON_{OS} \|\| '"ubuntu-latest"') }} |
+| Plan step, write | Write variable CRSP_RUNS_ON_{OS} of {repo} = {labels} |
+| Plan step, delete an old name when the pool is turned off | Delete variable RUNS_ON_{OS} of {repo}. Workflows that read it will fail to start: {files}. |
+| Audit, old name removed | RUNS_ON_{OS} (old name; CRSP_RUNS_ON_{OS} replaces it) |
+| Audit, old light name removed | RUNS_ON_LIGHT (old name; no variable replaces it) |
+| Runs-on finding, a workflow reads an old name | job {job} reads RUNS_ON_{OS}, an old name crsp no longer writes; read CRSP_RUNS_ON_{OS} instead |
+| Doctor fix, literal labels | Use `runs-on: ${{ fromJSON(vars.CRSP_<JOB> \|\| vars.CRSP_RUNS_ON_<OS> \|\| '"ubuntu-latest"') }}` so the product keeps the labels correct. |
+| Retired | the setting Old variable names (legacy_vars), and the names CI_RUNS_ON and CI_RUNS_ON_WINDOWS as crsp's |

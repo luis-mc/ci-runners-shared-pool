@@ -23,7 +23,7 @@ Rules that hold the whole time:
 ## Move
 
 1. Pick the OS (Linux or Windows) and the repository: the one with the fewest jobs first.
-2. Turn the pool on for the repository in the console (or `crsp repo enable OWNER/NAME`). crsp installs its runners and writes `RUNS_ON_<OS>`. With the setting `legacy_vars` on it also writes `CI_RUNS_ON` or `CI_RUNS_ON_WINDOWS`, so the old templates follow. Without it, set both variables by hand.
+2. Turn the pool on for the repository in the console (or `crsp repo enable OWNER/NAME`). crsp installs its runners and writes `CRSP_RUNS_ON_<OS>`. crsp does not write the old template names `CI_RUNS_ON` or `CI_RUNS_ON_WINDOWS`: change the workflows to `runs-on: ${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_<OS> || '"ubuntu-latest"') }}` (on your own repositories crsp opens the pull request that does it; doctor `workflow.perjob`), or set the old variable by hand to the value of `CRSP_RUNS_ON_<OS>`.
 3. Do not run the old pool's setup for this repository again. It would write the old labels back.
 4. Leave the repository's old runner registered and idle.
 5. Run the repository's CI on a pull request. Then run it on the default branch. Watch with `crsp job watch --repo OWNER/NAME`. Compare the job times with the ones you noted. A job that waits longer than before: look at it with `crsp job list --repo OWNER/NAME --state queued`, and in the console, where the wait reason is shown.
@@ -37,7 +37,7 @@ If a run is red because of crsp, go back (next part) and tell the agent that wor
 Use this when a run fails because of crsp, a job waits too long, or the doctor shows `fail` for the repository.
 
 1. Set the variable of that OS back to the value you wrote down. For Linux this is `CI_RUNS_ON`, for Windows `CI_RUNS_ON_WINDOWS`. Set it in the repository's variables on GitHub.
-2. Turn the pool off for the repository (`crsp repo disable OWNER/NAME`), so crsp stops writing `RUNS_ON_<OS>` and `legacy_vars`. crsp names what it removes and asks first; running jobs finish (crsp never cuts a job).
+2. Turn the pool off for the repository (`crsp repo disable OWNER/NAME`), so crsp stops writing `CRSP_RUNS_ON_<OS>`. crsp names what it removes and asks first; running jobs finish (crsp never cuts a job).
 3. Check that the old runner is online and idle on the repository's runner list on GitHub. If it is offline, start it with the old pool's own tools.
 4. Raise `ci_slots` of the old pool by what the repository had.
 5. Run the repository's CI on a pull request. It must run on the old runner.
