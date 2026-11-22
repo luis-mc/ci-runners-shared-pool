@@ -4,6 +4,8 @@
 //	crsp-lifecycle-test --self-test           poll the installed console until it answers (LC-8)
 //	crsp-lifecycle-test --lifecycle-state     print the state of a fresh, unpaired updater as JSON
 //	crsp-lifecycle-test --lifecycle-simulate  run the pair step on the updater: no manual step (LC-29)
+//	crsp-lifecycle-test --db-snapshot DB OUT  write the user tables of a database file, read-only, as JSON (LC-10, LC-11)
+//	crsp-lifecycle-test --db-compare BEFORE AFTER  fail when a snapshot lost or changed a row of the earlier one
 //	crsp-lifecycle-test [--addr 127.0.0.1:7391]  serve the updater test interface over HTTP for
 //	                                          scripts/delivery/lifecycle_conformance.py --url
 //
@@ -51,9 +53,19 @@ func main() {
 	state := flag.Bool("lifecycle-state", false, "print the state of a fresh, unpaired updater")
 	sim := flag.Bool("lifecycle-simulate", false, "pair the updater and check it left unpaired (LC-29)")
 	addr := flag.String("addr", "127.0.0.1:7391", "listen address (loopback only)")
+	snap := flag.Bool("db-snapshot", false, "write the user tables of a database (args: DB OUT)")
+	cmp := flag.Bool("db-compare", false, "compare two snapshots (args: BEFORE AFTER)")
 	flag.Parse()
 	var err error
 	switch {
+	case *snap || *cmp:
+		if flag.NArg() != 2 {
+			err = errors.New("two file arguments are needed")
+		} else if *snap {
+			err = dbSnapshot(flag.Arg(0), flag.Arg(1))
+		} else {
+			err = dbCompare(flag.Arg(0), flag.Arg(1))
+		}
 	case *selfT:
 		err = selfTest(consoleHealthURL(), selfTestLimit, selfTestPoll)
 	case *state:

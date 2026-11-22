@@ -47,17 +47,37 @@ function Remove-Msi([switch]$Purge) {
   return (Start-Process msiexec.exe -ArgumentList $a -Wait -PassThru).ExitCode
 }
 function Get-FileSha256($file) {
-  # The service holds its database open, so open with FileShare.ReadWrite: a live file is read, never skipped.
+  # A file that is read while the service runs is never skipped: open with FileShare.ReadWrite.
   $stream = [System.IO.File]::Open($file, 'Open', 'Read', 'ReadWrite')
   try {
     $sha = [System.Security.Cryptography.SHA256]::Create()
     try { return ([System.BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '') } finally { $sha.Dispose() }
   } finally { $stream.Dispose() }
 }
+# What the checksums leave out, each by name. The contract names three places the user keeps: paths.windows.config
+# (the config file), paths.windows.data (the data folder, kept on remove: keep_on_remove) and, apart from both,
+# paths.windows.logs. So:
+#  - the logs folder is not config and not data: the service writes it each time it starts;
+#  - controller.db is the data, compared by what it holds (its user tables), not by the bytes of a file the service
+#    rewrites; controller.db-wal and controller.db-shm are SQLite's journal of that same database, which a checkpoint
+#    folds into controller.db, so they carry no data of their own.
+# Everything else under config and data is compared byte for byte.
+$script:DbName = 'controller.db'
+$script:VolatileNames = @($script:DbName, "$($script:DbName)-wal", "$($script:DbName)-shm")
+function Test-VolatilePath($full) {
+  $name = Split-Path -Leaf $full
+  if ($script:VolatileNames -contains $name) { return $true }
+  if ($script:Logs) {
+    $logs = $script:Logs.TrimEnd('\') + '\'
+    if ($full.StartsWith($logs, [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+  }
+  return $false
+}
 function Get-Checksums($paths) {
-  # A file that truly cannot be read is listed as "UNREADABLE path: reason" and recorded in $script:ChecksumError,
+  # A file that truly cannot be read is listed as "UNREADABLE path" and recorded in $script:ChecksumError,
   # so the step prints a FAIL line with the reason; it never crashes the script and never drops the file.
-  $files = $paths | Where-Object { $_ -and (Test-Path $_) } | ForEach-Object { Get-ChildItem $_ -Recurse -File } | Sort-Object FullName
+  $files = $paths | Where-Object { $_ -and (Test-Path $_) } | ForEach-Object { Get-ChildItem $_ -Recurse -File } |
+    Where-Object { -not (Test-VolatilePath $_.FullName) } | Sort-Object FullName
   foreach ($f in $files) {
     try { '{0} {1}' -f (Get-FileSha256 $f.FullName), $f.FullName }
     catch {
@@ -65,6 +85,65 @@ function Get-Checksums($paths) {
       'UNREADABLE {0}' -f $f.FullName
     }
   }
+}
+function Invoke-LifecycleTool($arguments) {
+  # Start-Process, so a message on stderr is text to read and never an error that stops this script (Windows PowerShell 5.1).
+  $tool = Get-Command crsp-lifecycle-test -ErrorAction SilentlyContinue
+  if (-not $tool) { return [pscustomobject]@{ Code = 1; Text = 'crsp-lifecycle-test is not on the PATH' } }
+  $err = Join-Path ([System.IO.Path]::GetTempPath()) ('lct-' + [guid]::NewGuid().ToString('N') + '.txt')
+  try {
+    $p = Start-Process -FilePath $tool.Source -ArgumentList $arguments -Wait -PassThru -NoNewWindow -RedirectStandardError $err
+    $text = if (Test-Path $err) { (Get-Content -Raw $err) } else { '' }
+    return [pscustomobject]@{ Code = $p.ExitCode; Text = ("$text").Trim() }
+  } finally { Remove-Item $err -Force -ErrorAction SilentlyContinue }
+}
+function Stop-Crsp {
+  # Stop the service and wait until it has stopped, so the files are quiet. False when it did not stop.
+  $s = Get-Service -Name $script:Service -ErrorAction SilentlyContinue
+  if (-not $s) { return $true }
+  [void](Wait-Until { (Get-Service -Name $script:Service).Status -notin 'StartPending', 'StopPending' } 60)
+  try { Stop-Service -Name $script:Service -Force -ErrorAction Stop } catch { }
+  return (Wait-Until { (Get-Service -Name $script:Service).Status -eq 'Stopped' } 90)
+}
+function Start-Crsp {
+  $s = Get-Service -Name $script:Service -ErrorAction SilentlyContinue
+  if (-not $s) { return $false }
+  try { Start-Service -Name $script:Service -ErrorAction Stop } catch { }
+  return (Wait-Until { Test-Up } 60)
+}
+function Get-Snapshot($label) {
+  # Stops the service first (files quiet), then records the config and data: the checksums of every file that is not
+  # volatile, and the user tables of the database.
+  $script:ChecksumError = $null
+  if (-not (Stop-Crsp)) { return [pscustomobject]@{ Error = "the $($script:Service) service did not stop before the $label snapshot" } }
+  $db = Join-Path $script:Data $script:DbName
+  $json = $null
+  if (Test-Path $db) {
+    $json = Join-Path ([System.IO.Path]::GetTempPath()) ("lc-db-$label-" + [guid]::NewGuid().ToString('N') + '.json')
+    $r = Invoke-LifecycleTool @('--db-snapshot', "`"$db`"", "`"$json`"")
+    if ($r.Code -ne 0) { return [pscustomobject]@{ Error = "cannot read the database for the $label snapshot: $($r.Text)" } }
+  }
+  if ($script:ChecksumError) { return [pscustomobject]@{ Error = $script:ChecksumError } }
+  return [pscustomobject]@{ Error = $null; Files = @(Get-Checksums (Get-DataPaths)); Db = $json }
+}
+function Compare-Snapshots($before, $after) {
+  # Returns $null when config and data are the same, else the text that says where they differ.
+  $problems = @()
+  $b = @('#') + @($before.Files); $a = @('#') + @($after.Files)  # a sentinel: Compare-Object refuses an empty list
+  $d = @(Compare-Object -ReferenceObject $b -DifferenceObject $a)
+  if ($d.Count -gt 0) {
+    $paths = @($d | ForEach-Object { ($_.InputObject -replace '^\S+ ', '') } | Select-Object -Unique)
+    $first = @($paths | Select-Object -First 5) -join ', '
+    $more = if ($paths.Count -gt 5) { " and $($paths.Count - 5) more" } else { '' }
+    $problems += "files changed: $first$more"
+  }
+  if ($before.Db -and -not $after.Db) { $problems += 'the database is gone' }
+  elseif ($before.Db -and $after.Db) {
+    $r = Invoke-LifecycleTool @('--db-compare', "`"$($before.Db)`"", "`"$($after.Db)`"")
+    if ($r.Code -ne 0) { $problems += $r.Text }
+  }
+  if ($problems.Count -eq 0) { return $null }
+  return ($problems -join '; ')
 }
 function Get-Version {
   $k = Get-ItemProperty 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Uninstall\*', 'HKLM:\Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*' -ErrorAction SilentlyContinue |
@@ -99,22 +178,35 @@ function Lc8 {
   Out-Lc 'LC-8' ($LASTEXITCODE -eq 0) 'self-test on a fresh install'
 }
 function Lc10 {
-  $script:ChecksumError = $null
-  $before = (Get-Checksums (Get-DataPaths)) + (Get-Version)
+  $v1 = Get-Version
+  $before = Get-Snapshot 'before'
+  if ($before.Error) { Out-Lc 'LC-10' $false $before.Error; return }
+  [void](Start-Crsp)
   [void](Install-Msi $Pkg)
-  $after = (Get-Checksums (Get-DataPaths)) + (Get-Version)
-  if ($script:ChecksumError) { Out-Lc 'LC-10' $false $script:ChecksumError; return }
-  Out-Lc 'LC-10' (($before -join "`n") -eq ($after -join "`n")) 'reinstall of the same version changes nothing'
+  $after = Get-Snapshot 'after'
+  $v2 = Get-Version
+  [void](Start-Crsp)
+  if ($after.Error) { Out-Lc 'LC-10' $false $after.Error; return }
+  $diff = Compare-Snapshots $before $after
+  if (-not $diff -and $v1 -ne $v2) { $diff = "version changed from $v1 to $v2" }
+  if ($diff) { Out-Lc 'LC-10' $false "reinstall of the same version changed config or data: $diff" }
+  else { Out-Lc 'LC-10' $true 'reinstall of the same version changes nothing' }
 }
 function Lc11 {
   if (-not $PrevPkg) { Out-Lc 'LC-11' $false 'missing input PrevPkg'; return }
   [void](Remove-Msi -Purge); [void](Install-Msi $PrevPkg)
-  $script:ChecksumError = $null
-  $before = Get-Checksums (Get-DataPaths)
+  $before = Get-Snapshot 'before'
+  if ($before.Error) { Out-Lc 'LC-11' $false $before.Error; return }
+  [void](Start-Crsp)
   $rc = Install-Msi $Pkg
-  $after = Get-Checksums (Get-DataPaths)
-  if ($script:ChecksumError) { Out-Lc 'LC-11' $false $script:ChecksumError; return }
-  Out-Lc 'LC-11' (($rc -eq 0) -and $before -and (($before -join "`n") -eq ($after -join "`n"))) 'upgrade from N-1 keeps config and data (checksums)'
+  $after = Get-Snapshot 'after'
+  [void](Start-Crsp)
+  if ($after.Error) { Out-Lc 'LC-11' $false $after.Error; return }
+  if ($rc -ne 0) { Out-Lc 'LC-11' $false "upgrade exit $rc"; return }
+  if (-not $before.Files -and -not $before.Db) { Out-Lc 'LC-11' $false 'no config or data to compare after the previous version was installed'; return }
+  $diff = Compare-Snapshots $before $after
+  if ($diff) { Out-Lc 'LC-11' $false "upgrade from N-1 lost or changed config or data: $diff" }
+  else { Out-Lc 'LC-11' $true 'upgrade from N-1 keeps config and data (checksums)' }
 }
 function Lc12 {
   if (-not $BrokenPkg) { Out-Lc 'LC-12' $false 'missing input BrokenPkg'; return }

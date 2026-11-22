@@ -24,6 +24,7 @@ import { PoolLayout } from './screens/pool/PoolLayout';
 import { PoolSizePage } from './screens/pool/PoolSizePage';
 import { PoolSummary } from './screens/pool/PoolSummary';
 import { NotFound } from './screens/Later';
+import { later } from './screens/lazy';
 import { ImagesAndCaches } from './screens/images/ImagesAndCaches';
 import { MachineDetail, MachinesList } from './screens/machines/Machines';
 import { Overview } from './screens/overview/Overview';
@@ -47,54 +48,61 @@ const HelpScreen = lazy(() =>
 );
 
 // Screens that are not the first page load on their own, so the first JavaScript stays within its budget (R6.12).
-const DoctorScreen = lazy(() =>
-  import('./screens/doctor/Doctor').then((m) => ({ default: m.DoctorScreen })),
+const DoctorScreen = later(
+  () => import('./screens/doctor/Doctor').then((m) => m.DoctorScreen),
+  { heading: 'Doctor' },
 );
-const RegistryBudgetsPage = lazy(() =>
-  import('./screens/registry/RegistryBudgetsPage').then((m) => ({
-    default: m.RegistryBudgetsPage,
-  })),
+const RegistryBudgetsPage = later(
+  () =>
+    import('./screens/registry/RegistryBudgetsPage').then((m) => m.RegistryBudgetsPage),
+  { heading: 'Registry budgets' },
 );
-const RegistryImagePage = lazy(() =>
-  import('./screens/registry/RegistryImagePage').then((m) => ({
-    default: m.RegistryImagePage,
-  })),
+const RegistryImagePage = later(
+  () => import('./screens/registry/RegistryImagePage').then((m) => m.RegistryImagePage),
+  { heading: 'Image' },
 );
-const RegistryMirrorPage = lazy(() =>
-  import('./screens/registry/RegistryMirrorPage').then((m) => ({
-    default: m.RegistryMirrorPage,
-  })),
+const RegistryMirrorPage = later(
+  () => import('./screens/registry/RegistryMirrorPage').then((m) => m.RegistryMirrorPage),
+  { heading: 'Mirror of upstream images' },
 );
-const RegistryReplacePage = lazy(() =>
-  import('./screens/registry/RegistryReplacePage').then((m) => ({
-    default: m.RegistryReplacePage,
-  })),
+const RegistryReplacePage = later(
+  () =>
+    import('./screens/registry/RegistryReplacePage').then((m) => m.RegistryReplacePage),
+  { heading: 'Replace an image' },
 );
-const ImageDetail = lazy(() =>
-  import('./screens/images/ImageDetail').then((m) => ({ default: m.ImageDetail })),
+const ImageDetail = later(
+  () => import('./screens/images/ImageDetail').then((m) => m.ImageDetail),
+  { heading: 'Image' },
 );
-const AddMachinePage = lazy(() =>
-  import('./screens/machines/AddMachine').then((m) => ({ default: m.AddMachinePage })),
+const AddMachinePage = later(
+  () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
+  { heading: 'Add a machine' },
 );
-const TurnOnPoolPage = lazy(() =>
-  import('./screens/repositories/TurnOnPool').then((m) => ({
-    default: m.TurnOnPoolPage,
-  })),
+const TurnOnPoolPage = later(
+  () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
+  { heading: 'Turn on the pool' },
 );
-const AddRunnersPage = lazy(() =>
-  import('./screens/runners/AddRunners').then((m) => ({ default: m.AddRunnersPage })),
+const AddRunnersPage = later(
+  () => import('./screens/runners/AddRunners').then((m) => m.AddRunnersPage),
+  { heading: 'Add runners' },
 );
-const RunnerPage = lazy(() =>
-  import('./screens/runners/RunnerPage').then((m) => ({ default: m.RunnerPage })),
+const RunnerPage = later(
+  () => import('./screens/runners/RunnerPage').then((m) => m.RunnerPage),
+  { heading: 'Runner' },
 );
 const SetupPage = lazy(() =>
   import('./screens/setup/Setup').then((m) => ({ default: m.SetupPage })),
 );
-const UpdateCompactPage = lazy(() =>
-  import('./screens/settings/Updates').then((m) => ({ default: m.UpdateCompactPage })),
+const UpdateCompactPage = later(
+  () => import('./screens/settings/Updates').then((m) => m.UpdateCompactPage),
+  { heading: 'Update', compact: true },
 );
-const UpdateReviewPage = lazy(() =>
-  import('./screens/settings/Updates').then((m) => ({ default: m.UpdateReviewPage })),
+const UpdateReviewPage = later(
+  () => import('./screens/settings/Updates').then((m) => m.UpdateReviewPage),
+  {
+    heading: (params) =>
+      params.get('kind') === 'restart' ? 'Restart the service' : 'Update',
+  },
 );
 
 /** No valid session: every path but /sign-in and /setup goes to /sign-in and keeps the path (R5.8). */
