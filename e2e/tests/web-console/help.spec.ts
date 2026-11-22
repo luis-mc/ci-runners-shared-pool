@@ -128,7 +128,7 @@ test('the ? beside Slots opens a short answer that links to its Help card', asyn
   page,
 }) => {
   await signedIn().on('GET', '/api/v1/machines/:id', real).install(page);
-  await page.goto('/pool/machines/m1');
+  await page.goto('/setup/machines/m1');
   await page.getByRole('button', { name: 'What does Slots mean?' }).click();
   const panel = page.getByRole('group', { name: 'Slots' });
   await expect(panel).toBeVisible();

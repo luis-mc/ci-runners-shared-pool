@@ -105,7 +105,7 @@ test('Turn on the pool: Stop ends the plan stopped and Done says what is left', 
       return plan('applying');
     });
   await mock.install(page);
-  await page.goto('/repositories/turn-on');
+  await page.goto('/setup/pool/turn-on');
   await page.getByRole('checkbox', { name: 'Select octo/app' }).check();
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Turn on 1 repository' }).click();
@@ -164,7 +164,7 @@ test('Add runners: Stop ends the plan stopped and Done says what is left', async
       return plan('applying');
     });
   await mock.install(page);
-  await page.goto('/pool/runners/add');
+  await page.goto('/setup/runners/add');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Add 1 runner' }).click();
   await page.getByRole('button', { name: 'Stop' }).click();
@@ -214,7 +214,7 @@ test('Add runners: Linux on a Windows machine is planned and added to the pool',
     .on('POST', '/api/v1/runner-plans/:id/apply', poolPlan('applying', 'running'))
     .on('GET', '/api/v1/runner-plans/:id', poolPlan('done', 'done'));
   await mock.install(page);
-  await page.goto('/pool/runners/add');
+  await page.goto('/setup/runners/add');
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByText('Add ephemeral runner crsp-pool-1')).toBeVisible();
   await page.getByRole('button', { name: 'Add 1 runner' }).click();
@@ -237,7 +237,7 @@ test('Add runners: a failed runner ends at Done with its reason and a next step'
     .on('POST', '/api/v1/runner-plans/:id/apply', poolPlan('applying', 'running'))
     .on('GET', '/api/v1/runner-plans/:id', failedPlan);
   await mock.install(page);
-  await page.goto('/pool/runners/add');
+  await page.goto('/setup/runners/add');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Add 1 runner' }).click();
   await expect(
@@ -256,7 +256,7 @@ test('Add runners: the container backend not allowed is said on step 1', async (
     .on('GET', '/api/v1/machines', { items: [winMachine(false)] })
     .on('GET', '/api/v1/github/repositories', emptyRepos);
   await mock.install(page);
-  await page.goto('/pool/runners/add');
+  await page.goto('/setup/runners/add');
   await expect(
     page
       .getByRole('region', { name: 'Runners to add' })
@@ -298,7 +298,7 @@ test('Add runners: a public repository preselects Ephemeral, with its reason, an
 }) => {
   const mock = addApi('public');
   await mock.install(page);
-  await page.goto('/pool/runners/add');
+  await page.goto('/setup/runners/add');
   await expect(page.getByRole('radio', { name: /^Ephemeral/ })).toBeChecked();
   await expect(
     page.getByText('Ephemeral is chosen because a public repository uses the pool.'),
@@ -318,7 +318,7 @@ test('Add runners: a pool of private repositories preselects Persistent and keep
 }) => {
   const mock = addApi('private');
   await mock.install(page);
-  await page.goto('/pool/runners/add');
+  await page.goto('/setup/runners/add');
   await expect(page.getByRole('radio', { name: /^Persistent/ })).toBeChecked();
   await expect(
     page.getByText('Persistent is chosen because no public repository uses the pool.'),

@@ -69,7 +69,7 @@ for (const mode of MODES) {
       await mock.install(page);
       await page.emulateMedia({ colorScheme: mode });
       await page.setViewportSize(w);
-      await page.goto('/pool/machines/m1');
+      await page.goto('/setup/machines/m1');
       await settle(page, mode);
       await headingShown(page);
       const section = page.getByRole('region', { name: 'Pool size' });
