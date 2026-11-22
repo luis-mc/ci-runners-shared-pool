@@ -7,6 +7,6 @@ Branch OPS83-machine-health. Back end only.
 - [x] 2. internal/agent/health collectors (per OS, fakes) and agent wiring.
 - [x] 3. Migration 00040, store queries, job stats.
 - [x] 4. internal/machinehealth controller service and thresholds.
-- [ ] 5. OpenAPI and handlers.
-- [ ] 6. Doctor checks.
+- [x] 5. OpenAPI and handlers.
+- [x] 6. Doctor checks.
 - [ ] 7. Docs, gates, PR, CI.

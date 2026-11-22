@@ -82,6 +82,8 @@ type Options struct {
 	EnvSets *envsets.Service
 	// JobSizes serves the job size routes (handlers_jobsizes.go, scheduling R5.89 to R5.97). Nil answers 501.
 	JobSizes JobSizeService
+	// Health serves machine health, job stats and the health thresholds (handlers_machinehealth.go, OPS83). Nil answers 501.
+	Health HealthService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService

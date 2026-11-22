@@ -116,3 +116,6 @@ func (s *Service) RunnerJobStats(ctx context.Context, runnerID, window string) (
 	}
 	return RunnerStats{RunnerID: runnerID, Stats: makeStats(js, d, 1)}, from, to, nil
 }
+
+// JobFailure is the last failure of a stats set, with the links to its job and run.
+type JobFailure = store.JobFailureRef
