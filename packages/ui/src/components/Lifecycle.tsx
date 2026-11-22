@@ -223,7 +223,7 @@ export function UpdatesCard(p: UpdatesCardProps) {
         }
       >
         <Stack>
-          <Status kind={STATE_KIND[p.state]} word={lw(`state.${p.state}`)} />
+          <Status kind={STATE_KIND[p.state] ?? 'off'} word={lw(`state.${p.state}`)} />
           {updateStateLine(p) === lw(`state.${p.state}`) ? null : (
             <Text>{updateStateLine(p)}</Text>
           )}
@@ -316,7 +316,7 @@ export function UpdateHistory({ events }: { events: readonly AuditEvent[] }) {
       id: 'result',
       header: lw('history.result'),
       cell: (e) => (
-        <Status kind={RESULT_KIND[e.result]} word={lw(`result.${e.result}`)} />
+        <Status kind={RESULT_KIND[e.result] ?? 'off'} word={lw(`result.${e.result}`)} />
       ),
     },
   ];
@@ -474,7 +474,9 @@ export function FleetRows({
     {
       id: 'state',
       header: lw('updates.state'),
-      cell: (r) => <Status kind={FLEET_KIND[r.state]} word={lw(`fleet.${r.state}`)} />,
+      cell: (r) => (
+        <Status kind={FLEET_KIND[r.state] ?? 'off'} word={lw(`fleet.${r.state}`)} />
+      ),
     },
   ];
   if (action) columns.push({ id: 'action', header: '', cell: (r) => action(r) });
