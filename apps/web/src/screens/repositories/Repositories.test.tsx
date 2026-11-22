@@ -155,7 +155,9 @@ describe('Repositories list', () => {
       name: 'Turn off these repositories?',
     });
     expect(within(dialog).getByText('octo/site: pool off')).toBeTruthy();
-    expect(within(dialog).getByText('octo/site: variable CRSP_RUNS_ON_LINUX')).toBeTruthy();
+    expect(
+      within(dialog).getByText('octo/site: variable CRSP_RUNS_ON_LINUX'),
+    ).toBeTruthy();
     expect(api.count('POST', '/api/v1/repository-plans')).toBe(0);
     fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off' }));
     await waitFor(() =>

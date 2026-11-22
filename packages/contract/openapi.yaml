@@ -7103,7 +7103,8 @@ components:
       properties:
         name:
           type: string
-          enum: [CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS, CRSP_RUNS_ON_MACOS, RUNS_ON_LIGHT]
+          enum:
+            [CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS, CRSP_RUNS_ON_MACOS, RUNS_ON_LIGHT]
         status:
           $ref: '#/components/schemas/VariableStatus'
         value:
