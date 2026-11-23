@@ -77,7 +77,13 @@ func (f *fonts) metrics() Metrics {
 			return 0
 		}
 		var sz struct{ CX, CY int32 }
-		_, _, _ = pGetTextExtentPoint32.Call(f.dc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)), ptr(&sz))
+		ok, _, _ := pGetTextExtentPoint32.Call(f.dc, uintptr(unsafe.Pointer(&u[0])), uintptr(len(u)), ptr(&sz))
+		if ok == 0 || sz.CX <= 0 {
+			// GDI refused this one call (handle pressure on a busy or headless session). A
+			// width of 0 would pass a clipped line as fitting; the average width keeps the
+			// layout honest and the same on every run.
+			return len(u) * f.avgW
+		}
 		return int(sz.CX)
 	}}
 }
