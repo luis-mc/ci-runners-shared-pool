@@ -979,6 +979,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines/{machineId}/restart": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart the service of one agent machine after its running jobs end
+         * @description machines R5.81, operations R5.15 (CRSP235). The machine takes no new jobs, waits for its running jobs, and its agent restarts its service. No running job is cut. The controller's own machine restarts through `restartService`; this operation answers 409 for it. Without `confirmed` it changes nothing and answers 409 `needs_confirmation` with the jobs it waits for. The change is audited as `machine.service_restart` with the actor.
+         */
+        post: operations["restartMachineService"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/machines/{machineId}/pool-size-check": {
         parameters: {
             query?: never;
@@ -4958,6 +4978,7 @@ export interface components {
             heavy_jobs?: string[];
             slot_max_age_minutes?: number;
             gate_poll_seconds?: number;
+            /** @description How long the job-started hook may hold a job for a slot, in minutes. Never more than the hold cap of 2 (scheduling R5.75), and the default is 2. Saved from the machine page (machines R5.82). */
             gate_max_wait_minutes?: number;
             /** @enum {string} */
             gate_on_timeout?: "fail" | "run";
@@ -5187,6 +5208,8 @@ export interface components {
             heavy_slots?: number;
             light_jobs?: string[];
             heavy_jobs?: string[];
+            /** @description How long the job-started hook may hold a job for a slot, 1 or 2 minutes. The hold is never longer than 2 (scheduling R5.75). */
+            gate_max_wait_minutes?: number;
             /** @enum {string} */
             gate_on_timeout?: "fail" | "run";
             allowed_backends?: components["schemas"]["BackendName"][];
@@ -9293,6 +9316,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Machine"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    restartMachineService: {
+        parameters: {
+            query?: {
+                /** @description The yes to the Review step that named the running jobs (tray R5.16). */
+                confirmed?: components["parameters"]["Confirmed"];
+            };
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Draining, then restarting. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineChange"];
                 };
             };
             default: components["responses"]["Error"];

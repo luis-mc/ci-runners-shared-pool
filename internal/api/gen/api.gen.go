@@ -6598,16 +6598,18 @@ type MachineSettings struct {
 	DockerCompactIdleMinutes *int `json:"docker_compact_idle_minutes,omitempty"`
 
 	// DockerCompactThresholdGib How many GiB of Docker's disk file must be reclaimable (file size minus what Docker uses) before the compact runs. 0 takes 30 (caches R5.51 to R5.54).
-	DockerCompactThresholdGib *int                          `json:"docker_compact_threshold_gib,omitempty"`
-	DrainTimeoutMinutes       int                           `json:"drain_timeout_minutes"`
-	GateMaxWaitMinutes        *int                          `json:"gate_max_wait_minutes,omitempty"`
-	GateOnTimeout             *MachineSettingsGateOnTimeout `json:"gate_on_timeout,omitempty"`
-	GatePollSeconds           *int                          `json:"gate_poll_seconds,omitempty"`
-	HeavyJobs                 *[]string                     `json:"heavy_jobs,omitempty"`
-	HeavySlots                int                           `json:"heavy_slots"`
-	JobSlots                  int                           `json:"job_slots"`
-	LightJobs                 *[]string                     `json:"light_jobs,omitempty"`
-	LightSlots                int                           `json:"light_slots"`
+	DockerCompactThresholdGib *int `json:"docker_compact_threshold_gib,omitempty"`
+	DrainTimeoutMinutes       int  `json:"drain_timeout_minutes"`
+
+	// GateMaxWaitMinutes How long the job-started hook may hold a job for a slot, in minutes. Never more than the hold cap of 2 (scheduling R5.75), and the default is 2. Saved from the machine page (machines R5.82).
+	GateMaxWaitMinutes *int                          `json:"gate_max_wait_minutes,omitempty"`
+	GateOnTimeout      *MachineSettingsGateOnTimeout `json:"gate_on_timeout,omitempty"`
+	GatePollSeconds    *int                          `json:"gate_poll_seconds,omitempty"`
+	HeavyJobs          *[]string                     `json:"heavy_jobs,omitempty"`
+	HeavySlots         int                           `json:"heavy_slots"`
+	JobSlots           int                           `json:"job_slots"`
+	LightJobs          *[]string                     `json:"light_jobs,omitempty"`
+	LightSlots         int                           `json:"light_slots"`
 
 	// Mode Automatic (default) takes jobs and pauses on battery and on a pause from the tray; Always ignores the battery; Paused takes no new job and finishes the running ones (machines R5.61).
 	Mode *MachineMode `json:"mode,omitempty"`
@@ -6661,14 +6663,17 @@ type MachineSettingsUpdate struct {
 	DockerCompactIdleMinutes *int `json:"docker_compact_idle_minutes,omitempty"`
 
 	// DockerCompactThresholdGib How many GiB of Docker's disk file must be reclaimable (file size minus what Docker uses) before the compact runs. 0 takes 30 (caches R5.51 to R5.54).
-	DockerCompactThresholdGib *int                                `json:"docker_compact_threshold_gib,omitempty"`
-	DrainTimeoutMinutes       *int                                `json:"drain_timeout_minutes,omitempty"`
-	GateOnTimeout             *MachineSettingsUpdateGateOnTimeout `json:"gate_on_timeout,omitempty"`
-	HeavyJobs                 *[]string                           `json:"heavy_jobs,omitempty"`
-	HeavySlots                *int                                `json:"heavy_slots,omitempty"`
-	JobSlots                  *int                                `json:"job_slots,omitempty"`
-	LightJobs                 *[]string                           `json:"light_jobs,omitempty"`
-	LightSlots                *int                                `json:"light_slots,omitempty"`
+	DockerCompactThresholdGib *int `json:"docker_compact_threshold_gib,omitempty"`
+	DrainTimeoutMinutes       *int `json:"drain_timeout_minutes,omitempty"`
+
+	// GateMaxWaitMinutes How long the job-started hook may hold a job for a slot, 1 or 2 minutes. The hold is never longer than 2 (scheduling R5.75).
+	GateMaxWaitMinutes *int                                `json:"gate_max_wait_minutes,omitempty"`
+	GateOnTimeout      *MachineSettingsUpdateGateOnTimeout `json:"gate_on_timeout,omitempty"`
+	HeavyJobs          *[]string                           `json:"heavy_jobs,omitempty"`
+	HeavySlots         *int                                `json:"heavy_slots,omitempty"`
+	JobSlots           *int                                `json:"job_slots,omitempty"`
+	LightJobs          *[]string                           `json:"light_jobs,omitempty"`
+	LightSlots         *int                                `json:"light_slots,omitempty"`
 
 	// Mode Automatic (default) takes jobs and pauses on battery and on a pause from the tray; Always ignores the battery; Paused takes no new job and finishes the running ones (machines R5.61).
 	Mode *MachineMode `json:"mode,omitempty"`
@@ -9575,6 +9580,12 @@ type GetMachineLoadParams struct {
 	To   *To   `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// RestartMachineServiceParams defines parameters for RestartMachineService.
+type RestartMachineServiceParams struct {
+	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
+	Confirmed *Confirmed `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
 // ResumeMachineParams defines parameters for ResumeMachine.
 type ResumeMachineParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -10221,6 +10232,9 @@ type ServerInterface interface {
 	// RedetectMachine Check again; the agent detects facts and backends now
 	// (POST /api/v1/machines/{machineId}/redetect)
 	RedetectMachine(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// RestartMachineService Restart the service of one agent machine after its running jobs end
+	// (POST /api/v1/machines/{machineId}/restart)
+	RestartMachineService(w http.ResponseWriter, r *http.Request, machineId MachineId, params RestartMachineServiceParams)
 	// ResumeMachine Return a drained machine to active
 	// (POST /api/v1/machines/{machineId}/resume)
 	ResumeMachine(w http.ResponseWriter, r *http.Request, machineId MachineId, params ResumeMachineParams)
@@ -13968,6 +13982,48 @@ func (siw *ServerInterfaceWrapper) RedetectMachine(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// RestartMachineService operation middleware
+func (siw *ServerInterfaceWrapper) RestartMachineService(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RestartMachineServiceParams
+
+	// ------------- Optional query parameter "confirmed" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "confirmed", r.URL.Query(), &params.Confirmed, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "confirmed"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "confirmed", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RestartMachineService(w, r, machineId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ResumeMachine operation middleware
 func (siw *ServerInterfaceWrapper) ResumeMachine(w http.ResponseWriter, r *http.Request) {
 
@@ -17110,6 +17166,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/docker-compact", wrapper.StartDockerCompact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/runner-leftovers/remove", wrapper.RemoveRunnerLeftovers)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/resume", wrapper.ResumeMachine)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/restart", wrapper.RestartMachineService)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/pool-size-check", wrapper.CheckMachinePoolSize)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/redetect", wrapper.RedetectMachine)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/recovery", wrapper.RecoverMachine)
@@ -21119,6 +21176,46 @@ type RedetectMachinedefaultJSONResponse struct {
 }
 
 func (response RedetectMachinedefaultJSONResponse) VisitRedetectMachineResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RestartMachineServiceRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+	Params    RestartMachineServiceParams
+}
+
+type RestartMachineServiceResponseObject interface {
+	VisitRestartMachineServiceResponse(w http.ResponseWriter) error
+}
+
+type RestartMachineService202JSONResponse MachineChange
+
+func (response RestartMachineService202JSONResponse) VisitRestartMachineServiceResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RestartMachineServicedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response RestartMachineServicedefaultJSONResponse) VisitRestartMachineServiceResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25821,6 +25918,9 @@ type StrictServerInterface interface {
 	// RedetectMachine Check again; the agent detects facts and backends now
 	// (POST /api/v1/machines/{machineId}/redetect)
 	RedetectMachine(ctx context.Context, request RedetectMachineRequestObject) (RedetectMachineResponseObject, error)
+	// RestartMachineService Restart the service of one agent machine after its running jobs end
+	// (POST /api/v1/machines/{machineId}/restart)
+	RestartMachineService(ctx context.Context, request RestartMachineServiceRequestObject) (RestartMachineServiceResponseObject, error)
 	// ResumeMachine Return a drained machine to active
 	// (POST /api/v1/machines/{machineId}/resume)
 	ResumeMachine(ctx context.Context, request ResumeMachineRequestObject) (ResumeMachineResponseObject, error)
@@ -28728,6 +28828,33 @@ func (sh *strictHandler) RedetectMachine(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RedetectMachineResponseObject); ok {
 		if err := validResponse.VisitRedetectMachineResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RestartMachineService operation middleware
+func (sh *strictHandler) RestartMachineService(w http.ResponseWriter, r *http.Request, machineId MachineId, params RestartMachineServiceParams) {
+	var request RestartMachineServiceRequestObject
+
+	request.MachineId = machineId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RestartMachineService(ctx, request.(RestartMachineServiceRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RestartMachineService")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RestartMachineServiceResponseObject); ok {
+		if err := validResponse.VisitRestartMachineServiceResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

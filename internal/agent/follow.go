@@ -17,6 +17,8 @@ import (
 type Updater interface {
 	Follow(ctx context.Context, version string) (update.Status, error)
 	Status(ctx context.Context) update.Status
+	// Restart restarts the service once no job runs (machines R5.81).
+	Restart(ctx context.Context) (update.Status, error)
 }
 
 // Report states of UpdateReport (agent.proto).
@@ -41,6 +43,46 @@ func (l *link) handleUpdate(ctx context.Context, m *agentv1.UpdateAgent) {
 		defer func() { l.followMu.Lock(); l.following = false; l.followMu.Unlock() }()
 		l.follow(ctx, m)
 	}()
+}
+
+// handleRestart restarts the agent's service for the console (machines R5.81).
+// The controller sent it when the drain found the machine idle; the manager
+// holds new jobs, checks once more and restarts. It runs in the background like
+// a follow update, and reports with the same UpdateReport states.
+func (l *link) handleRestart(ctx context.Context, m *agentv1.RestartAgent) {
+	l.followMu.Lock()
+	if l.following {
+		l.followMu.Unlock()
+		return
+	}
+	l.following = true
+	l.followMu.Unlock()
+	go func() {
+		defer func() { l.followMu.Lock(); l.following = false; l.followMu.Unlock() }()
+		l.restart(ctx, m)
+	}()
+}
+
+func (l *link) restart(ctx context.Context, m *agentv1.RestartAgent) {
+	cfg := l.cfg
+	report := func(state, text string) {
+		_ = l.send(&agentv1.SessionRequest{Message: &agentv1.SessionRequest_UpdateReport{UpdateReport: &agentv1.UpdateReport{
+			CommandId: m.GetCommandId(), State: state, Error: text}}})
+	}
+	if cfg.Updater == nil {
+		report(followUnsupported, "this agent has no updater")
+		return
+	}
+	_, err := cfg.Updater.Restart(ctx)
+	switch {
+	case errors.Is(err, update.ErrUnprivileged):
+		report(followUnsupported, "this agent runs as an account that cannot restart its service; run the install command again on this machine")
+	case errors.Is(err, update.ErrBusy), errors.Is(err, update.ErrInProgress):
+		// An update or restart runs already and ends in a restart: the controller sees the agent connect again.
+	case err != nil:
+		report(followFailed, err.Error())
+	}
+	// A restart that began ends this process; nothing more to report.
 }
 
 func (l *link) follow(ctx context.Context, m *agentv1.UpdateAgent) {

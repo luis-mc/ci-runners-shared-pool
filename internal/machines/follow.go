@@ -74,6 +74,9 @@ func (s *Service) handleUpdateReport(ctx context.Context, id string, r *agentv1.
 	if prev.State == u.State && prev.Version == u.Version {
 		return
 	}
+	if u.State == "failed" || u.State == "unsupported" {
+		s.failRestart(ctx, id, u.Error)
+	}
 	switch u.State {
 	case "installing", "failed", "postponed", "unsupported":
 		_ = s.o.Repo.Audit(ctx, "agent", "machine.agent_update."+u.State, id, u.Version+" "+u.Error)

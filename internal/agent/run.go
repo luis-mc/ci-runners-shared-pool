@@ -664,6 +664,8 @@ func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 		l.wipes.start(ctx, m.WipeCache)
 	case *agentv1.SessionResponse_UpdateAgent:
 		l.handleUpdate(ctx, m.UpdateAgent)
+	case *agentv1.SessionResponse_RestartAgent:
+		l.handleRestart(ctx, m.RestartAgent)
 	case *agentv1.SessionResponse_EnsureImageAnswer:
 		cfg.Registry.onAnswer(m.EnsureImageAnswer)
 	case *agentv1.SessionResponse_RegistryGrant:

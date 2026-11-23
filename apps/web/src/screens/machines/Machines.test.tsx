@@ -159,6 +159,60 @@ describe('Machine detail', () => {
     await waitFor(() => expect(api.count('POST', '/api/v1/machines/m1/drain')).toBe(1));
   });
 
+  // CRSP235, scheduling R5.75: Gate maximum wait is on the page, 1 or 2 minutes, saved by the page's Save bar.
+  it('has the Gate maximum wait field and saves a change with the one Save', async () => {
+    const api = base().on('PATCH', '/api/v1/machines/:id', machine());
+    renderApp(api, '/setup/machines/m1');
+    fireEvent.click(await screen.findByRole('button', { name: /Gate maximum wait/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: '1' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
+    const body = api.calls.find((c) => c.method === 'PATCH')?.body as {
+      gate_max_wait_minutes?: number;
+    };
+    expect(body.gate_max_wait_minutes).toBe(1);
+  });
+
+  it('says a saved wait above the cap is cut, and does not send it again unchanged', async () => {
+    const m = machine({
+      running_jobs: running,
+      settings: { ...machine().settings, gate_max_wait_minutes: 30 },
+    });
+    const api = signedIn()
+      .on('GET', '/api/v1/machines/:id', m)
+      .on('PATCH', '/api/v1/machines/:id', m);
+    renderApp(api, '/setup/machines/m1');
+    expect(await screen.findByText(/Saved as 30 minutes/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('checkbox', { name: /docker/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
+    expect(api.calls.find((c) => c.method === 'PATCH')?.body).not.toHaveProperty(
+      'gate_max_wait_minutes',
+    );
+  });
+
+  it('opens the Restart the service wizard of an agent machine, and the controller one from Settings', async () => {
+    renderApp(base(), '/setup/machines/m1');
+    expect(await screen.findByText(/Stop and start the service/)).toBeTruthy();
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Restart the service' })
+        .disabled,
+    ).toBe(false);
+  });
+
+  it('locks Restart the service while the machine is offline and says why', async () => {
+    const api = signedIn().on('GET', '/api/v1/machines/:id', machine({ online: false }));
+    renderApp(api, '/setup/machines/m1');
+    const b = await screen.findByRole<HTMLButtonElement>('button', {
+      name: 'Restart the service',
+    });
+    expect(b.disabled).toBe(true);
+    expect(screen.getByText('The machine is offline.')).toBeTruthy();
+  });
+
   it('does nothing when the question is cancelled', async () => {
     const api = base();
     renderApp(api, '/setup/machines/m1');

@@ -500,6 +500,96 @@ const updateDriverFor = (compact: boolean): WizardDriver => ({
 const updateDriver = updateDriverFor(false);
 const updatePageDriver = updateDriverFor(true);
 
+// ---------------------------------------------------------------------------------------------------- Restart the service (machine)
+const restartChange = (state: string) => ({
+  id: 'ch1',
+  machine_id: 'm1',
+  kind: 'service_restart',
+  state,
+  started_at: '2026-11-14T10:00:00Z',
+  waiting_for: [],
+});
+const jobOn = {
+  id: 9,
+  repository: 'octo/app',
+  run_id: 1,
+  run_attempt: 1,
+  github_job_id: 1,
+  job_name: 'e2e',
+  labels: [],
+  state: 'running' as const,
+};
+
+const restartDriver: WizardDriver = {
+  id: 'restart-machine',
+  async open(state) {
+    let started = false;
+    let reads = 0;
+    const api = signedIn()
+      .on('GET', '/api/v1/machines/:id', () => {
+        reads += 1;
+        if (state === 'planning' && reads > 1) return hang();
+        if (started && state === 'running')
+          return machine({ pending_change: restartChange('waiting') as never });
+        if (started) return machine();
+        return state === 'first-run' || state === 'planning'
+          ? machine({ online: false })
+          : machine({ running_jobs: [jobOn] });
+      })
+      .on('POST', '/api/v1/machines/:id/restart', () => {
+        started = true;
+        return restartChange('waiting');
+      });
+    let path = '/setup/machines/m1/restart';
+    if (state === 'loading') api.on('GET', '/api/v1/machines/:id', hang);
+    if (state === 'stopped')
+      api.on('GET', '/api/v1/machines/:id', machine({ is_controller: true }));
+    if (state === 'paused') {
+      path += '?started=1';
+      api.on(
+        'GET',
+        '/api/v1/machines/:id',
+        machine({ pending_change: restartChange('running') as never }),
+      );
+    }
+    if (state === 'failed') {
+      path += '?started=1';
+      api.on(
+        'GET',
+        '/api/v1/machines/:id',
+        machine({ pending_change: restartChange('needs_you') as never }),
+      );
+    }
+    if (state === 'done-after-reload') {
+      path += '?started=1';
+      api.on('GET', '/api/v1/machines/:id', machine());
+    }
+    renderApp(api, path);
+    await step('Restart the service');
+    const snap = () => read(state, 'Restart the service', false);
+    if (state === 'loading') return snap();
+    if (['paused', 'stopped', 'failed', 'done-after-reload'].includes(state)) {
+      await screen.findAllByRole('button', {
+        name: /Start again|Try again|Open the machine/,
+      });
+      return snap();
+    }
+    if (state === 'first-run' || state === 'planning') {
+      await press('Try again');
+      return snap();
+    }
+    await screen.findByText(/Nothing has changed yet/);
+    if (state === 'ready-to-review') return snap();
+    await press('Restart the service');
+    if (state === 'running') {
+      await screen.findByText(/Restarting the service|Waiting for/, { selector: 'p' });
+      return snap();
+    }
+    await screen.findByRole('button', { name: 'Open the machine' });
+    return snap();
+  },
+};
+
 describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
   const drivers = [
     connectDriver,
@@ -508,6 +598,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
     runnersDriver,
     updateDriver,
     updatePageDriver,
+    restartDriver,
   ];
   for (const d of drivers) {
     it(`${d.id} passes the ten states and keeps its known list empty`, async () => {

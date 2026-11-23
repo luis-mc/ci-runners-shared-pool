@@ -23,6 +23,9 @@ func TestRunnerSlotsWarns(t *testing.T) {
 	sev := map[string]doctor.Severity{}
 	for _, f := range forCheck(run(t, env, "runner.slots"), "runner.slots") {
 		sev[f.Subject.Name] = f.Severity
+		if f.Subject.Name == "longhold" && f.Fix.Link != "/machines/m3"+GateMaxWaitAnchor {
+			t.Errorf("the hold fix must open the Gate maximum wait field: %q", f.Fix.Link)
+		}
 		if f.Severity == doctor.Warn && (f.Fix.Text == "" || f.Fix.Link == "") {
 			t.Errorf("warn without a fix: %+v", f)
 		}

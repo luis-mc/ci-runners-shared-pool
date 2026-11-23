@@ -193,6 +193,9 @@ func apply(set Settings, u SettingsUpdate) Settings {
 	if u.GateOnTimeout != nil {
 		set.GateOnTimeout = *u.GateOnTimeout
 	}
+	if u.GateMaxWaitMinutes != nil {
+		set.GateMaxWaitMinutes = *u.GateMaxWaitMinutes
+	}
 	if u.AllowedBackends != nil {
 		set.AllowedBackends = *u.AllowedBackends
 	}
@@ -245,6 +248,10 @@ func (s *Service) UpdateSettings(ctx context.Context, actor, id string, u Settin
 	}
 	if err := validate(next, m.Facts, m.Backends); err != nil {
 		return View{}, nil, err
+	}
+	// Only a value sent now is checked: a stored longer value (older versions allowed 30) must not block other saves.
+	if u.GateMaxWaitMinutes != nil && (*u.GateMaxWaitMinutes < 1 || *u.GateMaxWaitMinutes > MaxGateWaitMinutes) {
+		return View{}, nil, fmt.Errorf("%w: the gate maximum wait is 1 to %d minutes", ErrInvalid, MaxGateWaitMinutes)
 	}
 	if u.PoolMemoryGiB != nil || u.PoolCPUs != nil || u.BudgetMemoryPct != nil || u.BudgetCPUPct != nil {
 		if err := s.checkPoolSize(id, m, cur, next, u.ConfirmShrink); err != nil {
@@ -309,6 +316,7 @@ func settingsDiff(a, b Settings) string {
 	add("heavy slots", a.HeavySlots, b.HeavySlots)
 	add("cache cap", a.CacheCapBytes, b.CacheCapBytes)
 	add("drain timeout", a.DrainTimeoutMinutes, b.DrainTimeoutMinutes)
+	add("gate maximum wait", a.GateMaxWaitMinutes, b.GateMaxWaitMinutes)
 	add("backends", a.AllowedBackends, b.AllowedBackends)
 	add("symlink right", a.WindowsSymlinkRight, b.WindowsSymlinkRight)
 	add("pool memory GiB", a.PoolMemoryGiB, b.PoolMemoryGiB)
