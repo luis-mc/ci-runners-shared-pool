@@ -1,0 +1,1330 @@
+{
+ "captured_at": "2026-11-23T23:21 (PC clock)",
+ "viewport": "Live: Chrome window 1920x1080 physical at 150% scale = 1278x1248 CSS px. Prototype: headless Chrome at 1278x1248 CSS px, so both sides are the same width. LOOK54 was approved at 1920 px; at 1278 px the 96rem frame (1536 px) is not reached, so frame width was not compared. Live main max-width is 1536px (96rem), matching D69.",
+ "notes": [
+  "Prototype shots are .png; live shots are .jpg (some at 0.4-0.6 scale).",
+  "Live console is v0.1.23 (origin/main). Local checkout main is behind origin/main; refs starting with origin/ were read with git show.",
+  "docs/features/web-console/spec.md in the local checkout is stale (seven areas with 'Shared Pool'); origin/main has R5.156 for LOOK58.",
+  "Decision lines: docs/project/content/look/decisions.json D62 1449, D63 1470, D64 1491, D68 1575, D69 1596, D73 1684, D74 1705.",
+  "Data-only: prototype has 3 machines and sample jobs; live has 1 machine and no running jobs."
+ ],
+ "pairs": [
+  {
+   "id": "overview",
+   "proto_page": "overview.html",
+   "live_route": "/",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/overview-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/overview-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Four stat tiles: Running, Starting, Queued, No runner fits",
+    "Best next change card, Machines card"
+   ],
+   "differences": [
+    {
+     "area": "section order",
+     "approved": "Tiles first, then timer alert, then Best next change as one line with a 'sure' tag and the link on the right",
+     "live": "Best next change is a large pane above the tiles, with the link centred below",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; LOOK56 report marks Overview done",
+     "evidence_ref": "origin/LOOK56-console-layout:docs/work/LOOK56-report.md:10"
+    },
+    {
+     "area": "machine cards",
+     "approved": "Title 'GameRoomPC 6 CPU / 9 GiB'; CPU and Memory bars in cores and GiB; job labels; link 'Open in Pool > Machines'",
+     "live": "Online mark; Memory and CPU as percent of budget; Slots bar with a '?'; no pool size, no labels, no link",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "missing panes",
+     "approved": "'Next to start', 'Routing labels' and 'Jobs over the next 30 minutes' timeline",
+     "live": "Not on live; live has 'Queue and running jobs' and 'Why jobs wait' instead",
+     "kind": "design-gap",
+     "evidence": "LOOK58 step 4 says the slot timeline is reused in Pool Overview; Overview is not named and live Overview has none",
+     "evidence_ref": "origin/LOOK58-timeline-machines:docs/work/LOOK58-report.md:12"
+    },
+    {
+     "area": "subtitle",
+     "approved": "'The pool at a glance. Open a card for the detail.'",
+     "live": "'The pool at a glance.'",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "tile sublines and alert banner",
+     "approved": "'1 timer ran out', 'mac-sign, 0:50 of 2:00', red timer banner",
+     "live": "No sublines, no banner at zero jobs",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    },
+    {
+     "area": "header",
+     "approved": "3 of 3 machines online, user octo",
+     "live": "1 of 1 machine online, user luis-mc",
+     "kind": "data-only",
+     "evidence": "Header count and user name differ because live has 1 machine and prototype has sample data.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "index",
+   "proto_page": "index.html",
+   "live_route": "/",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/index-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/index-proto.png",
+   "same": [
+    "Prototype index is a link list; it pairs with the live home (/)"
+   ],
+   "differences": [
+    {
+     "area": "index page",
+     "approved": "A page that lists 11 pages as links",
+     "live": "Live has no index; the menu is the way in",
+     "kind": "design-gap",
+     "evidence": "A prototype helper page, not a console screen",
+     "evidence_ref": ""
+    }
+   ],
+   "note": "index.html links 11 pages (all exist in the folder). It does not link the other pages (see index_check.unlinked_files). No linked page is missing."
+  },
+  {
+   "id": "pool-overview",
+   "proto_page": "pool-overview.html",
+   "live_route": "/pool",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-overview-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-overview-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Pool tabs: Overview, Live, Queue Analysis, Jobs, Machines",
+    "Four stat tiles",
+    "Queue plan and Running jobs panes"
+   ],
+   "differences": [
+    {
+     "area": "timeline on Overview tab",
+     "approved": "Overview tab starts with Queue plan; no chart",
+     "live": "Overview tab adds a 'Jobs over time' slot timeline (24 h, one row per slot, 17 rows for 1 machine) before Queue plan",
+     "kind": "later-decision",
+     "evidence": "Owner decisions 22 Nov: one slot timeline in every Jobs over time chart, reused in Pool Overview",
+     "evidence_ref": "origin/main:docs/features/web-console/spec.md:491"
+    },
+    {
+     "area": "queue plan",
+     "approved": "4 queued jobs with Execution plan and start times",
+     "live": "'Nothing is waiting. Every job has a slot.'",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    },
+    {
+     "area": "tile sublines",
+     "approved": "sublines under each tile",
+     "live": "none",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "pool-live",
+   "proto_page": "pool-live.html",
+   "live_route": "/pool/live",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-live-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-live-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Pool tabs",
+    "Four stat tiles",
+    "'Jobs over time' pane"
+   ],
+   "differences": [
+    {
+     "area": "timeline rows",
+     "approved": "'Each row is a job. Colour is the machine. Dashed means waiting.' 9 job rows",
+     "live": "'Each row is a slot of a machine.' 17 slot rows plus a waiting row; 24 h of past, forecast to the right",
+     "kind": "later-decision",
+     "evidence": "Owner decisions 22 Nov 01:10/01:20; the old per-job waterfall path was removed",
+     "evidence_ref": "docs/project/registry.json:5259"
+    },
+    {
+     "area": "extra pane",
+     "approved": "No Machines pane",
+     "live": "'Machines' pane below the timeline",
+     "kind": "later-decision",
+     "evidence": "Shared timeline and machine health work of LOOK58",
+     "evidence_ref": "origin/LOOK58-timeline-machines:docs/work/LOOK58-report.md:12"
+    },
+    {
+     "area": "alert banner and states",
+     "approved": "timer-ran-out banner, reserved and no-runner bars",
+     "live": "none; 'reserved' and 'timer ran out' bars are never sent yet",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "pool-queue",
+   "proto_page": "pool-queue.html",
+   "live_route": "/pool/queue",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-queue-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-queue-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Pool tabs",
+    "Filter chips",
+    "'Queue, in start order' pane"
+   ],
+   "differences": [
+    {
+     "area": "filter chips",
+     "approved": "All, Waiting for room, Reserved, No runner fits",
+     "live": "All, Waiting for room, No runner fits (no Reserved chip)",
+     "kind": "design-gap",
+     "evidence": "Reserved is never emitted (no scheduler reservation); no task records dropping the chip",
+     "evidence_ref": "origin/LOOK58-timeline-machines:docs/work/LOOK58-report.md:20"
+    },
+    {
+     "area": "extra panes",
+     "approved": "One pane: queue with a card per job",
+     "live": "Adds 'Where the queue lands on the slots' (slot timeline) and 'Where running jobs are going'",
+     "kind": "later-decision",
+     "evidence": "Slot timeline reused in Queue Analysis",
+     "evidence_ref": "origin/main:docs/features/web-console/spec.md:491"
+    },
+    {
+     "area": "job cards",
+     "approved": "4 jobs with CPU and memory needed and plan lines",
+     "live": "Empty: 'Nothing is waiting'",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "pool-queue-norunner",
+   "proto_page": "pool-queue-norunner.html",
+   "live_route": "/pool/queue",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-queue-norunner-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-queue-norunner-proto.png",
+   "same": [
+    "Same screen as pool-queue; state variant"
+   ],
+   "differences": [
+    {
+     "area": "state",
+     "approved": "Queue with a 'No runner fits' job (vm, octo/desktop #412) and Needs you",
+     "live": "Live queue is empty; the state cannot be shown",
+     "kind": "data-only",
+     "evidence": "Live has no job of this state; see pool-queue for design gaps",
+     "evidence_ref": ""
+    }
+   ],
+   "note": "State variant. Live screenshot is the empty queue."
+  },
+  {
+   "id": "pool-jobs-filters",
+   "proto_page": "pool-jobs-filters.html",
+   "live_route": "/pool/jobs",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-jobs-filters-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-jobs-filters-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Pool tabs",
+    "Range Last 7/30/90 days",
+    "Group by None/Repository/Machine/Runner/Runner type/Job type",
+    "All/Queue/Running/Done",
+    "Jobs/Runs toggle",
+    "Export CSV"
+   ],
+   "differences": [
+    {
+     "area": "default view",
+     "approved": "Jobs table: Job, Status, Machine, Start, Why",
+     "live": "Runs table (56 runs): Repository, Workflow, Run, Branch, Jobs done, When, Waits for or runs, Result, Open run",
+     "kind": "design-gap",
+     "evidence": "Jobs list layout was a CRSP211 pick (LOOK41); no recorded reason for Runs as the default",
+     "evidence_ref": "docs/project/registry.json (task LOOK41)"
+    },
+    {
+     "area": "filters panel",
+     "approved": "'Filters open': Repository, Machine, Runner type, Branch groups visible",
+     "live": "Search box and a small panel toggle; panel closed by default",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "why column",
+     "approved": "'Why' link on every job row",
+     "live": "No Why column in the Runs view",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "pool-jobs-reserved",
+   "proto_page": "pool-jobs-reserved.html",
+   "live_route": "/pool/jobs",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-jobs-reserved-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-jobs-reserved-proto.png",
+   "same": [
+    "Same screen as pool-jobs-filters; state variant"
+   ],
+   "differences": [
+    {
+     "area": "state",
+     "approved": "A reserved job row in the Jobs list",
+     "live": "No reserved job exists live; 'reserved' is not sent yet",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ],
+   "note": "State variant. Live screenshot is the normal Runs list. Reserved is not emitted: origin/LOOK58-timeline-machines:docs/work/LOOK58-report.md:20"
+  },
+  {
+   "id": "pool-jobs-inspector",
+   "proto_page": "pool-jobs-inspector.html",
+   "live_route": "/pool/jobs/<id>",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-jobs-inspector-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-jobs-inspector-proto.png",
+   "same": [
+    "Pool tabs and breadcrumb",
+    "Job detail shows why a job waits"
+   ],
+   "differences": [
+    {
+     "area": "where it opens",
+     "approved": "Inspector opens inside the Jobs page, list stays visible",
+     "live": "A row opens a separate page (/pool/runs/<id>, then /pool/jobs/<id>) with breadcrumb Jobs / repo / Run",
+     "kind": "design-gap",
+     "evidence": "Spec calls the job page the 'why-waiting inspector'; no record of an in-page panel",
+     "evidence_ref": "origin/main:docs/features/web-console/spec.md:491"
+    },
+    {
+     "area": "slot timeline",
+     "approved": "small job chart",
+     "live": "Job page shows Queue pane plus the full slot timeline",
+     "kind": "later-decision",
+     "evidence": "Slot timeline reused in the why-waiting inspector",
+     "evidence_ref": "origin/main:docs/features/web-console/spec.md:491"
+    }
+   ],
+   "note": "Live shot is a queued job's page (opened by clicking a run, then its job)."
+  },
+  {
+   "id": "pool-machines",
+   "proto_page": "pool-machines.html",
+   "live_route": "/pool/machines",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-machines-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/pool-machines-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Pool tabs",
+    "Note: 'To change a machine ... go to Setup > Machines'",
+    "One card per machine with CPU and Memory bars"
+   ],
+   "differences": [
+    {
+     "area": "machine card",
+     "approved": "Card with running count, pool size, budget, 'Runners on' table, CPU and memory charts",
+     "live": "Health card: uptime, disk free, days until full, swap, connectivity, restart pending, power, clock skew, versions, 24 h/7 d result counts",
+     "kind": "later-decision",
+     "evidence": "Machine health screens are LOOK58c (owner decisions 22 Nov)",
+     "evidence_ref": "docs/project/registry.json:5259"
+    },
+    {
+     "area": "runners table",
+     "approved": "'Runners on GameRoomPC' table (Runner, Type, Size, Doing now)",
+     "live": "Not seen in the text read; not checked below the fold",
+     "kind": "design-gap",
+     "evidence": "unverified",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "setup-summary",
+   "proto_page": "setup-summary.html",
+   "live_route": "/setup/summary",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-summary-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-summary-proto.png",
+   "same": [
+    "Setup tabs: Summary, Machines, Runners, Images and caches, Size and backends, Pool setup"
+   ],
+   "differences": [
+    {
+     "area": "layout",
+     "approved": "Cards Machines, Runners, Repositories with Open links, plus 'Setup steps' checklist",
+     "live": "'The pool' pane (machines, runners, repositories, health, capacity bar) and 'Runners per system' table; Add runners bar",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "numbers",
+     "approved": "3 machines, 6 runners, 2 repositories",
+     "live": "1 machine, 1 runner, 3 repositories",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "setup-machines",
+   "proto_page": "setup-machines.html",
+   "live_route": "/setup/machines",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-machines-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-machines-proto.png",
+   "same": [
+    "Setup tabs",
+    "Machines table with an Add a machine action"
+   ],
+   "differences": [
+    {
+     "area": "pool size panes",
+     "approved": "One 'pool size' pane per machine (CPU and memory in the pool, Change the pool size)",
+     "live": "None here; pool size is in Setup > Size and backends",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; LOOK22 made pool size its own section",
+     "evidence_ref": "docs/project/registry.json (task LOOK22)"
+    },
+    {
+     "area": "table columns",
+     "approved": "Machine, System, Pool, Load budget, State",
+     "live": "Name, System, State, Takes jobs, Backends, Load, Slots, Last seen; search and filter chips",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "rows",
+     "approved": "3 machines",
+     "live": "1 machine",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "setup-runners",
+   "proto_page": "setup-runners.html",
+   "live_route": "/setup/runners",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-runners-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-runners-proto.png",
+   "same": [
+    "Setup tabs",
+    "Add runners action"
+   ],
+   "differences": [
+    {
+     "area": "grouping",
+     "approved": "Plain table: Runner, Machine, Type, Size",
+     "live": "Stats line, search with type chips, runners grouped by machine, Fail error and Remove buttons",
+     "kind": "later-decision",
+     "evidence": "Runners grouped by machine is owner decision D31-D34 (LOOK31)",
+     "evidence_ref": "docs/project/registry.json (task LOOK31)"
+    },
+    {
+     "area": "rows",
+     "approved": "6 runners",
+     "live": "1 runner, failed, with a Needs you banner",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "setup-images",
+   "proto_page": "setup-images.html",
+   "live_route": "/setup/images",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-images-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-images-proto.png",
+   "same": [
+    "Setup tabs",
+    "Title 'Images and caches'"
+   ],
+   "differences": [
+    {
+     "area": "sub-tabs",
+     "approved": "One Images table",
+     "live": "Sub-tabs Images, Caches, Registry",
+     "kind": "later-decision",
+     "evidence": "Image registry shipped in RELEASE-45",
+     "evidence_ref": "commit 4e437499"
+    },
+    {
+     "area": "rows",
+     "approved": "3 images and caches",
+     "live": "'No images yet'",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "setup-size",
+   "proto_page": "setup-size.html",
+   "live_route": "/setup/size",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-size-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-size-proto.png",
+   "same": [
+    "Setup tabs"
+   ],
+   "differences": [
+    {
+     "area": "content",
+     "approved": "Size classes table (small to xl) and Backends table (docker, microVM)",
+     "live": "'Demand' pane with a chart and a Machines table (job slots, backend)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "setup-pool",
+   "proto_page": "setup-pool.html",
+   "live_route": "/setup/pool",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-pool-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/setup-pool-proto.png",
+   "same": [
+    "Setup tabs",
+    "Repositories table with a Pool column and an action to use the pool"
+   ],
+   "differences": [
+    {
+     "area": "columns",
+     "approved": "Repository, Pool, Runner type, Fallback label, Jobs now; GitHub App and Owners panes",
+     "live": "Repository, Pool, Jobs go to, Runner type, Last delivery; filter chips, owner group, 'Use pool' bar",
+     "kind": "design-gap",
+     "evidence": "LOOK29 asked for fewer columns; no record about Fallback label",
+     "evidence_ref": "docs/project/registry.json (task LOOK29)"
+    },
+    {
+     "area": "rows",
+     "approved": "3 repositories",
+     "live": "8 private repositories, 3 on",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "doctor",
+   "proto_page": "doctor.html",
+   "live_route": "/doctor",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/doctor-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/doctor-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Needs you pane first (D65)",
+    "Run checks action"
+   ],
+   "differences": [
+    {
+     "area": "row shape",
+     "approved": "Needs you rows with an Open button each, then a 'Checks 6' list by area with check marks",
+     "live": "Table 'What is wrong / Area', no Open button; 'Last run' line; checks list not in first screen",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; checks list not verified below the fold",
+     "evidence_ref": ""
+    },
+    {
+     "area": "count",
+     "approved": "6 problems",
+     "live": "15 problems (real data, after Run checks)",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "analytics-suggestions",
+   "proto_page": "analytics-suggestions.html",
+   "live_route": "/analytics",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-suggestions-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-suggestions-proto.png",
+   "same": [
+    "Analytics tabs: Suggestions, Insights, Charts, Run elsewhere (D73, D74)",
+    "Suggestions ranked by time saved"
+   ],
+   "differences": [
+    {
+     "area": "table",
+     "approved": "# Change, Sure?, Saves a week, Who decides; fix text inline",
+     "live": "What to do, Project, Area, Saves, Since, Open; sub-tabs Do next / Tests / Guardrails; project chips; Weekly digest",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "rows",
+     "approved": "4 suggestions",
+     "live": "4 suggestions with project names octo/app and octo/api (looks like sample data on live)",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "analytics-insights",
+   "proto_page": "analytics-insights.html",
+   "live_route": "/analytics/insights",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-insights-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-insights-proto.png",
+   "same": [
+    "Analytics tabs",
+    "Tiles: Waiting now, Wait slowest 10%, Jobs that passed, Pool busy",
+    "Where the time goes, Busiest repositories, Failed jobs panes"
+   ],
+   "differences": [
+    {
+     "area": "extra",
+     "approved": "Waits table and Runner timeline",
+     "live": "Day range buttons and 'Wait, hold and run per day' chart; Waits and Runner timeline not seen in first screen",
+     "kind": "design-gap",
+     "evidence": "unverified below the fold",
+     "evidence_ref": ""
+    },
+    {
+     "area": "values",
+     "approved": "wait 8 min, 93% passed",
+     "live": "'no data yet'",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "analytics-charts",
+   "proto_page": "analytics-charts.html",
+   "live_route": "/analytics/charts",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-charts-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-charts-proto.png",
+   "same": [
+    "Analytics tabs",
+    "Charts are the page"
+   ],
+   "differences": [
+    {
+     "area": "chart set",
+     "approved": "Per-machine CPU today, Jobs a day, Free CPU with and without a reservation",
+     "live": "Run time and wait per day, Jobs per day, Forecast against actual; 7/14/30 day buttons; Export CSV",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; LOOK51 (job-sizing charts) is Dropped",
+     "evidence_ref": "docs/project/registry.json (task LOOK51)"
+    },
+    {
+     "area": "data",
+     "approved": "filled charts",
+     "live": "flat lines, no data",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "analytics-elsewhere",
+   "proto_page": "analytics-elsewhere.html",
+   "live_route": "/analytics/elsewhere",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-elsewhere-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/analytics-elsewhere-proto.png",
+   "same": [
+    "Analytics tabs",
+    "Run elsewhere list"
+   ],
+   "differences": [
+    {
+     "area": "tools",
+     "approved": "Plain table: Job, Repository, Runner, Took, Result",
+     "live": "Search, All/Queue/Running/Done, Runs/Jobs toggle, Show 25 more",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "rows",
+     "approved": "3 jobs",
+     "live": "'No job runs on another runner'",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "help-start",
+   "proto_page": "help-start.html",
+   "live_route": "/help",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/help-start-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/help-start-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "Diagram 'How a job gets run' with 7 boxes (GitHub 1-3, pool 4-7)",
+    "Question cards"
+   ],
+   "differences": [
+    {
+     "area": "side menu",
+     "approved": "13 sections: Start here to Reading Queue Analysis",
+     "live": "3 sections: Start here, Where things are, Reading Queue Analysis",
+     "kind": "design-gap",
+     "evidence": "TOPICS lists only 3; no open task builds the other 10; D68 says merge live guide with useful G parts",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    },
+    {
+     "area": "cards",
+     "approved": "9 questions with an 'Open ...' link each",
+     "live": "4-column cards with box badge and picture; links not seen",
+     "kind": "design-gap",
+     "evidence": "no recorded reason",
+     "evidence_ref": ""
+    },
+    {
+     "area": "overflow",
+     "approved": "Diagram fits the frame",
+     "live": "At 1278 px viewport the last box is cut and the page scrolls sideways; not checked at 1920",
+     "kind": "design-gap",
+     "evidence": "observed in the live shot only",
+     "evidence_ref": ""
+    }
+   ]
+  },
+  {
+   "id": "help-where",
+   "proto_page": "help-where.html",
+   "live_route": "/help/where",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/help-where-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/help-where-proto.png",
+   "same": [
+    "Top menu: Overview, Setup, Pool, Doctor, Analytics, Settings, Help",
+    "Commands button and user menu at top right",
+    "Page title and subtitle",
+    "'Where things are' text and table"
+   ],
+   "differences": [
+    {
+     "area": "side menu",
+     "approved": "13 sections",
+     "live": "3 sections",
+     "kind": "design-gap",
+     "evidence": "TOPICS lists only 3",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "help-admission",
+   "proto_page": "help-admission.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/help-admission-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Help > Admission and passing page",
+     "live": "No such page; /help/admission shows Start here",
+     "kind": "design-gap",
+     "evidence": "no open task; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-before-assignment",
+   "proto_page": "outside-help-before-assignment.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-before-assignment-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Before assignment is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-gating",
+   "proto_page": "outside-help-gating.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-gating-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Gating is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-job-size",
+   "proto_page": "outside-help-job-size.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-job-size-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Job size is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-pool-and-load-budget",
+   "proto_page": "outside-help-pool-and-load-budget.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-pool-and-load-budget-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Pool and load budget is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-reservation",
+   "proto_page": "outside-help-reservation.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-reservation-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Reservation is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-routing-labels",
+   "proto_page": "outside-help-routing-labels.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-routing-labels-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Routing labels is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-runner-types",
+   "proto_page": "outside-help-runner-types.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-runner-types-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Runner types is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-size-classes",
+   "proto_page": "outside-help-size-classes.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-size-classes-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Size classes is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-timers",
+   "proto_page": "outside-help-timers.html",
+   "live_route": null,
+   "live_shot": null,
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-timers-proto.png",
+   "same": [],
+   "differences": [
+    {
+     "area": "page missing in live",
+     "approved": "Placeholder: 'Help > Timers is today's screen and is not part of this proposal'",
+     "live": "No such Help page on live (3 sections only)",
+     "kind": "design-gap",
+     "evidence": "no recorded reason; TOPICS lists 3 sections",
+     "evidence_ref": "origin/main:apps/web/src/screens/help/helpContent.ts:157-161"
+    }
+   ]
+  },
+  {
+   "id": "outside-help-reading-queue-analysis",
+   "proto_page": "outside-help-reading-queue-analysis.html",
+   "live_route": "/help/queue",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-reading-queue-analysis-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-help-reading-queue-analysis-proto.png",
+   "same": [
+    "Help section exists with this name"
+   ],
+   "differences": [],
+   "note": "Prototype page is a placeholder ('today's screen'); nothing to compare. Live shows one line of text and an 'In your pool right now' pane."
+  },
+  {
+   "id": "outside-settings-repositories",
+   "proto_page": "outside-settings-repositories.html",
+   "live_route": "/settings/repositories",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-repositories-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-repositories-proto.png",
+   "same": [
+    "Settings tab exists with this name"
+   ],
+   "differences": [],
+   "note": "Prototype page is a placeholder ('today's screen, does not change'); nothing to compare."
+  },
+  {
+   "id": "outside-settings-console",
+   "proto_page": "outside-settings-console.html",
+   "live_route": "/settings/console",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-console-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-console-proto.png",
+   "same": [
+    "Settings tab exists with this name"
+   ],
+   "differences": [],
+   "note": "Prototype page is a placeholder ('today's screen, does not change'); nothing to compare."
+  },
+  {
+   "id": "outside-settings-updates",
+   "proto_page": "outside-settings-updates.html",
+   "live_route": "/settings/updates",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-updates-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-updates-proto.png",
+   "same": [
+    "Settings tab exists with this name"
+   ],
+   "differences": [],
+   "note": "Prototype page is a placeholder ('today's screen, does not change'); nothing to compare."
+  },
+  {
+   "id": "outside-settings-data",
+   "proto_page": "outside-settings-data.html",
+   "live_route": "/settings/data",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-data-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-data-proto.png",
+   "same": [
+    "Settings tab exists with this name"
+   ],
+   "differences": [],
+   "note": "Prototype page is a placeholder ('today's screen, does not change'); nothing to compare."
+  },
+  {
+   "id": "outside-settings-audit-log",
+   "proto_page": "outside-settings-audit-log.html",
+   "live_route": "/settings/audit",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-audit-log-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-settings-audit-log-proto.png",
+   "same": [
+    "Settings tab exists with this name"
+   ],
+   "differences": [],
+   "note": "Prototype page is a placeholder ('today's screen, does not change'); nothing to compare."
+  },
+  {
+   "id": "outside-pool-jobs-why-it-waited-0-min",
+   "proto_page": "outside-pool-jobs-why-it-waited-0-min.html",
+   "live_route": "/pool/jobs/<id>",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-pool-jobs-why-it-waited-0-min-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-pool-jobs-why-it-waited-0-min-proto.png",
+   "same": [
+    "A queued job has a why-it-waited view"
+   ],
+   "differences": [
+    {
+     "area": "wait length",
+     "approved": "Placeholder for a job that waited 0 min",
+     "live": "Live shows one queued job: 'number 1 in the queue', waiting for a runner",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ],
+   "note": "Prototype page is a placeholder. Live shot is a queued job's page."
+  },
+  {
+   "id": "outside-pool-jobs-why-it-waited-1-min",
+   "proto_page": "outside-pool-jobs-why-it-waited-1-min.html",
+   "live_route": "/pool/jobs/<id>",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-pool-jobs-why-it-waited-1-min-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-pool-jobs-why-it-waited-1-min-proto.png",
+   "same": [
+    "A queued job has a why-it-waited view"
+   ],
+   "differences": [
+    {
+     "area": "wait length",
+     "approved": "Placeholder for a job that waited 1 min",
+     "live": "Live shows one queued job: 'number 1 in the queue', waiting for a runner",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ],
+   "note": "Prototype page is a placeholder. Live shot is a queued job's page."
+  },
+  {
+   "id": "outside-pool-jobs-why-it-waited-4-min",
+   "proto_page": "outside-pool-jobs-why-it-waited-4-min.html",
+   "live_route": "/pool/jobs/<id>",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-pool-jobs-why-it-waited-4-min-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/outside-pool-jobs-why-it-waited-4-min-proto.png",
+   "same": [
+    "A queued job has a why-it-waited view"
+   ],
+   "differences": [
+    {
+     "area": "wait length",
+     "approved": "Placeholder for a job that waited 4 min",
+     "live": "Live shows one queued job: 'number 1 in the queue', waiting for a runner",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ],
+   "note": "Prototype page is a placeholder. Live shot is a queued job's page."
+  },
+  {
+   "id": "settings",
+   "proto_page": "settings.html",
+   "live_route": "/settings/access",
+   "live_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/settings-live.jpg",
+   "proto_shot": "C:/Users/Luis/AppData/Local/Temp/claude/794ea5571bcdd477/05bb7457-5711-43c5-b874-bc8cda4d87cc/scratchpad/compare/settings-proto.png",
+   "same": [
+    "Settings tabs: Access, Repositories, Console, Updates, Data, Audit log",
+    "Users and roles, Add a user, GitHub App key panes"
+   ],
+   "differences": [
+    {
+     "area": "Access for CI / parity",
+     "approved": "'Access for CI' pane and 'Set up parity'",
+     "live": "Not present",
+     "kind": "later-decision",
+     "evidence": "Parity removed in RELEASE-55",
+     "evidence_ref": "commit 44f1cff2"
+    },
+    {
+     "area": "Webhooks",
+     "approved": "'Webhooks' pane in Access",
+     "live": "Not seen in first screen; not checked below the fold",
+     "kind": "design-gap",
+     "evidence": "unverified",
+     "evidence_ref": ""
+    },
+    {
+     "area": "users",
+     "approved": "0 users",
+     "live": "1 user, luis-mc, owner",
+     "kind": "data-only",
+     "evidence": "Prototype has sample data; live pool is empty or small.",
+     "evidence_ref": ""
+    }
+   ]
+  }
+ ],
+ "not_compared": [],
+ "all_pages": [
+  {
+   "page": "analytics-charts.html",
+   "pair": "analytics-charts"
+  },
+  {
+   "page": "analytics-elsewhere.html",
+   "pair": "analytics-elsewhere"
+  },
+  {
+   "page": "analytics-insights.html",
+   "pair": "analytics-insights"
+  },
+  {
+   "page": "analytics-suggestions.html",
+   "pair": "analytics-suggestions"
+  },
+  {
+   "page": "doctor.html",
+   "pair": "doctor"
+  },
+  {
+   "page": "help-admission.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "help-start.html",
+   "pair": "help-start"
+  },
+  {
+   "page": "help-where.html",
+   "pair": "help-where"
+  },
+  {
+   "page": "index.html",
+   "pair": "index"
+  },
+  {
+   "page": "outside-help-before-assignment.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-gating.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-job-size.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-pool-and-load-budget.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-reading-queue-analysis.html",
+   "pair": "outside-help-reading-queue-analysis"
+  },
+  {
+   "page": "outside-help-reservation.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-routing-labels.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-runner-types.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-size-classes.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-help-timers.html",
+   "pair": "MISSING IN LIVE"
+  },
+  {
+   "page": "outside-pool-jobs-why-it-waited-0-min.html",
+   "pair": "outside-pool-jobs-why-it-waited-0-min"
+  },
+  {
+   "page": "outside-pool-jobs-why-it-waited-1-min.html",
+   "pair": "outside-pool-jobs-why-it-waited-1-min"
+  },
+  {
+   "page": "outside-pool-jobs-why-it-waited-4-min.html",
+   "pair": "outside-pool-jobs-why-it-waited-4-min"
+  },
+  {
+   "page": "outside-settings-audit-log.html",
+   "pair": "outside-settings-audit-log"
+  },
+  {
+   "page": "outside-settings-console.html",
+   "pair": "outside-settings-console"
+  },
+  {
+   "page": "outside-settings-data.html",
+   "pair": "outside-settings-data"
+  },
+  {
+   "page": "outside-settings-repositories.html",
+   "pair": "outside-settings-repositories"
+  },
+  {
+   "page": "outside-settings-updates.html",
+   "pair": "outside-settings-updates"
+  },
+  {
+   "page": "overview.html",
+   "pair": "overview"
+  },
+  {
+   "page": "pool-jobs-filters.html",
+   "pair": "pool-jobs-filters"
+  },
+  {
+   "page": "pool-jobs-inspector.html",
+   "pair": "pool-jobs-inspector"
+  },
+  {
+   "page": "pool-jobs-reserved.html",
+   "pair": "pool-jobs-reserved"
+  },
+  {
+   "page": "pool-live.html",
+   "pair": "pool-live"
+  },
+  {
+   "page": "pool-machines.html",
+   "pair": "pool-machines"
+  },
+  {
+   "page": "pool-overview.html",
+   "pair": "pool-overview"
+  },
+  {
+   "page": "pool-queue-norunner.html",
+   "pair": "pool-queue-norunner"
+  },
+  {
+   "page": "pool-queue.html",
+   "pair": "pool-queue"
+  },
+  {
+   "page": "settings.html",
+   "pair": "settings"
+  },
+  {
+   "page": "setup-images.html",
+   "pair": "setup-images"
+  },
+  {
+   "page": "setup-machines.html",
+   "pair": "setup-machines"
+  },
+  {
+   "page": "setup-pool.html",
+   "pair": "setup-pool"
+  },
+  {
+   "page": "setup-runners.html",
+   "pair": "setup-runners"
+  },
+  {
+   "page": "setup-size.html",
+   "pair": "setup-size"
+  },
+  {
+   "page": "setup-summary.html",
+   "pair": "setup-summary"
+  }
+ ],
+ "index_check": {
+  "linked": [
+   "analytics-suggestions.html",
+   "doctor.html",
+   "help-start.html",
+   "overview.html",
+   "pool-jobs-inspector.html",
+   "pool-live.html",
+   "pool-machines.html",
+   "pool-overview.html",
+   "pool-queue.html",
+   "settings.html",
+   "setup-summary.html"
+  ],
+  "broken_links": [],
+  "unlinked_files": [
+   "analytics-charts.html",
+   "analytics-elsewhere.html",
+   "analytics-insights.html",
+   "help-admission.html",
+   "help-where.html",
+   "outside-help-before-assignment.html",
+   "outside-help-gating.html",
+   "outside-help-job-size.html",
+   "outside-help-pool-and-load-budget.html",
+   "outside-help-reading-queue-analysis.html",
+   "outside-help-reservation.html",
+   "outside-help-routing-labels.html",
+   "outside-help-runner-types.html",
+   "outside-help-size-classes.html",
+   "outside-help-timers.html",
+   "outside-pool-jobs-why-it-waited-0-min.html",
+   "outside-pool-jobs-why-it-waited-1-min.html",
+   "outside-pool-jobs-why-it-waited-4-min.html",
+   "outside-settings-audit-log.html",
+   "outside-settings-console.html",
+   "outside-settings-data.html",
+   "outside-settings-repositories.html",
+   "outside-settings-updates.html",
+   "pool-jobs-filters.html",
+   "pool-jobs-reserved.html",
+   "pool-queue-norunner.html",
+   "setup-images.html",
+   "setup-machines.html",
+   "setup-pool.html",
+   "setup-runners.html",
+   "setup-size.html"
+  ]
+ }
+}

@@ -1,0 +1,116 @@
+
+/* LOOK51 proposal-only styles. Tokens only. */
+.pv-note{color:var(--ds-color-text-muted);margin:0}
+.pv-grid{display:grid;gap:var(--ds-space-4);grid-template-columns:repeat(auto-fit,minmax(min(100%,17rem),1fr))}
+.pv-grid.two{grid-template-columns:repeat(auto-fit,minmax(min(100%,26rem),1fr))}
+.pv-cols{display:grid;gap:var(--ds-space-4);grid-template-columns:minmax(0,1fr)}
+@media (min-width:900px){.pv-cols.l3{grid-template-columns:15rem minmax(0,1fr)}.pv-cols.r3{grid-template-columns:minmax(0,1fr) 27rem}}
+.pv-stack{display:grid;gap:var(--ds-space-3)}
+.pv-row{display:flex;flex-wrap:wrap;gap:var(--ds-space-3);align-items:center;justify-content:space-between}
+.pv-tags{display:flex;flex-wrap:wrap;gap:var(--ds-space-2)}
+.pv-kpi{display:grid;gap:var(--ds-space-1)}.pv-kpi b{font-size:1.8rem;line-height:1}
+.pv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:var(--ds-space-3)}
+.pv-kpis>div{border:var(--ds-border-thin) solid var(--ds-color-border);padding:var(--ds-space-3);display:grid;gap:var(--ds-space-1)}
+.pv-kpis>div[data-t=wait]{border-color:var(--ds-color-needs-you)}.pv-kpis>div[data-t=bad]{border-color:var(--ds-color-problem)}
+.pv-btnrow{display:flex;flex-wrap:wrap;gap:var(--ds-space-3)}
+.pv-btnrow .ds-button{min-block-size:44px}
+.pv-mono{font-family:var(--ds-font-mono,monospace)}
+/* --- Gantt: would become shared part TimelineChart (UX-41) --- */
+.pv-g{display:grid;gap:0}
+.pv-g-axis,.pv-g-row{display:grid;grid-template-columns:11.5rem minmax(0,1fr);gap:var(--ds-space-3);align-items:center}
+.pv-g-row{padding-block:var(--ds-space-1);border-block-start:var(--ds-border-thin) solid var(--ds-color-divider)}
+.pv-g-name{display:grid;gap:2px;min-inline-size:0}.pv-g-name b{overflow-wrap:anywhere}
+.pv-g-track{position:relative;block-size:1.7rem;background:linear-gradient(to right,var(--ds-color-divider) 1px,transparent 1px) 0 0/calc(100%/6) 100%}
+.pv-g-ticks{position:relative;block-size:1.4rem}.pv-g-ticks span{position:absolute;transform:translateX(-50%);font-size:.8rem;color:var(--ds-color-text-muted)}
+.pv-g-ticks span:first-child{transform:none}
+.pv-b{position:absolute;inset-block:3px;box-sizing:border-box;border:2px solid transparent;display:flex;align-items:center;padding-inline:3px;font-size:.75rem;overflow:hidden;white-space:nowrap}
+.pv-b.run{color:var(--ds-color-on-primary);font-weight:700}
+.pv-b.m1{background:var(--ds-color-primary);border-color:var(--ds-color-primary)}
+.pv-b.m2{background:var(--ds-color-note);border-color:var(--ds-color-note);color:var(--ds-color-on-note)}
+.pv-b.m3{background:var(--ds-color-text);border-color:var(--ds-color-text);color:var(--ds-color-page)}
+.pv-b.m2.run{background-image:repeating-linear-gradient(135deg,transparent 0 5px,rgba(255,255,255,.25) 5px 8px)}
+.pv-b.m3.run{background-image:radial-gradient(rgba(255,255,255,.35) 1.5px,transparent 1.6px);background-size:6px 6px}
+.pv-b.fc{background:transparent!important;background-image:none!important;border-style:dashed;color:var(--ds-color-text)}
+.pv-b.fc.m1{border-color:var(--ds-color-primary)}.pv-b.fc.m2{border-color:var(--ds-color-note)}.pv-b.fc.m3{border-color:var(--ds-color-text)}
+.pv-b.wr{border-style:dashed;border-color:var(--ds-color-text-inactive);background:transparent}
+.pv-b.wm{border-style:dashed;border-color:var(--ds-color-needs-you);background:var(--ds-color-needs-you-tint)}
+.pv-b.nr{border-style:dashed;border-color:var(--ds-color-problem);background:var(--ds-color-problem-tint);color:var(--ds-color-on-problem-tint)}
+.pv-b.gr{background:var(--ds-color-problem);border-color:var(--ds-color-problem)}
+.pv-now{position:absolute;inset-block:-3px;inline-size:0;border-inline-start:2px solid var(--ds-color-text);z-index:2}
+.pv-tick{position:absolute;inset-block:-3px;inline-size:0;border-inline-start:3px solid var(--ds-color-needs-you);z-index:1}
+.pv-legend{display:flex;flex-wrap:wrap;gap:var(--ds-space-3) var(--ds-space-4);margin-block-start:var(--ds-space-3);color:var(--ds-color-text-muted);font-size:.9rem}
+.pv-legend span{display:inline-flex;align-items:center;gap:var(--ds-space-2)}
+.pv-sw.pv-b{position:static;inset:auto;display:inline-block;inline-size:1.6rem;block-size:.9rem;padding:0}
+.pv-b.nr{overflow:visible;color:var(--ds-color-problem)}
+.pv-g-ticks span:last-child{transform:translateX(-100%)}
+.pv-sw{display:inline-block;inline-size:1.6rem;block-size:.9rem;box-sizing:border-box;border:2px solid transparent}
+@media (max-width:700px){.pv-g-axis,.pv-g-row{grid-template-columns:minmax(0,1fr);gap:2px}.pv-g-axis>div:first-child{display:none}.pv-g-ticks span:nth-child(even){display:none}.pv-g-name{grid-auto-flow:column;justify-content:space-between;align-items:baseline}}
+.pv-g.compact .pv-g-axis,.pv-g.compact .pv-g-row{grid-template-columns:minmax(0,1fr)}.pv-g.compact .pv-g-axis>div:first-child,.pv-g.compact .pv-g-name{display:none}.pv-g.compact .pv-g-ticks span:nth-child(even){display:none}
+/* --- charts: would become shared part StepChart / LineChart (UX-41) --- */
+.pv-svg{display:block;inline-size:100%;max-inline-size:34rem;block-size:auto}
+.pv-svg text{fill:var(--ds-color-text-muted);font-family:var(--ds-font-body);font-size:11px}
+.pv-svg .lbl{fill:var(--ds-color-text);font-weight:700}
+.pv-svg .ax{stroke:var(--ds-color-divider);stroke-width:1}
+.pv-svg .pool{stroke:var(--ds-color-text);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+.pv-svg .need{stroke:var(--ds-color-needs-you);stroke-width:2;stroke-dasharray:6 4;fill:none}
+.pv-svg .s1{stroke:var(--ds-color-primary);stroke-width:2.5;fill:var(--ds-color-selection)}
+.pv-svg .s2{stroke:var(--ds-color-note);stroke-width:2.5;fill:var(--ds-color-note-tint)}
+.pv-svg .fcast{fill:var(--ds-color-divider);opacity:.45}
+.pv-svg .nowl{stroke:var(--ds-color-text);stroke-width:1.5}
+.pv-svg .bad{stroke:var(--ds-color-problem);stroke-width:2.5;fill:none}
+.pv-svg .good{stroke:var(--ds-color-primary);stroke-width:2.5;fill:none}
+.pv-svg .dot{fill:var(--ds-color-primary)}.pv-svg .dotb{fill:var(--ds-color-problem)}
+/* --- misc --- */
+.pv-timer{display:grid;gap:var(--ds-space-1)}
+.pv-grace{border:2px solid var(--ds-color-problem);padding:var(--ds-space-3);display:grid;gap:var(--ds-space-3)}
+.pv-sheet{border:2px solid var(--ds-color-primary);box-shadow:var(--ds-shadow-3);background:var(--ds-color-surface);padding:var(--ds-space-4);display:grid;gap:var(--ds-space-4)}
+.pv-sheet-h{display:flex;justify-content:space-between;gap:var(--ds-space-3);align-items:start}
+@media (max-width:700px){.pv-sheet.side{position:relative}}
+.pv-nav{display:grid;gap:var(--ds-space-1);list-style:none;margin:0;padding:0}
+.pv-nav a{display:block;padding:var(--ds-space-2) var(--ds-space-3);min-block-size:44px;box-sizing:border-box;display:flex;align-items:center;gap:var(--ds-space-2);text-decoration:none;border-inline-start:3px solid transparent}
+.pv-nav a[aria-current]{border-inline-color:var(--ds-color-primary);background:var(--ds-color-selection);font-weight:700}
+.pv-flow{display:flex;flex-wrap:wrap;gap:var(--ds-space-2);align-items:stretch;list-style:none;margin:0;padding:0}
+.pv-flow li{border:var(--ds-border-thin) solid var(--ds-color-border);padding:var(--ds-space-2) var(--ds-space-3);display:grid;gap:2px;flex:1 1 9rem}
+.pv-flow li[data-on]{border-color:var(--ds-color-primary);background:var(--ds-color-selection)}
+.pv-flow li[data-bad]{border-color:var(--ds-color-problem)}
+.pv-num{display:inline-grid;place-items:center;inline-size:1.6rem;block-size:1.6rem;border-radius:var(--ds-radius-round);background:var(--ds-color-primary);color:var(--ds-color-on-primary);font-weight:700;font-size:.9rem;flex:none}
+.pv-ask{margin-block-start:var(--ds-space-2)}
+.pv-code{font-family:var(--ds-font-mono,monospace);overflow-wrap:anywhere}
+.pv-rank{display:grid;gap:var(--ds-space-2)}
+.pv-rank>div{display:grid;grid-template-columns:2rem minmax(0,1fr);gap:var(--ds-space-3);align-items:start;border-block-start:var(--ds-border-thin) solid var(--ds-color-divider);padding-block:var(--ds-space-3)}
+
+[data-look54-page] .ds-text{max-inline-size:70ch}
+.pv-grid{grid-template-columns:repeat(auto-fit,minmax(min(100%,19rem),1fr))}
+@media (min-width:1400px){.pv-grid.cards{grid-template-columns:repeat(4,minmax(0,1fr))}.pv-grid.cards3{grid-template-columns:repeat(3,minmax(0,1fr))}}
+/* Pool > Jobs: filters | list | inspector. Under 1400 the filters sit above the list; under 900 everything stacks. */
+.pv-jobs{display:grid;gap:var(--ds-space-4);grid-template-columns:minmax(0,1fr);align-items:start}
+.pv-jobs>*{min-inline-size:0}
+@media (min-width:900px){.pv-jobs.insp{grid-template-columns:minmax(0,1fr) 26rem}.pv-jobs.insp .pv-jobs-filters{grid-column:1/-1}}
+@media (min-width:1400px){.pv-jobs{grid-template-columns:19rem minmax(0,1fr)}.pv-jobs.insp{grid-template-columns:19rem minmax(0,1fr) 27rem}.pv-jobs.insp .pv-jobs-filters{grid-column:auto}}
+.pv-filters.pv-fbody-closed{display:none}
+@media (min-width:1400px){.pv-filters.pv-fbody-closed{display:grid}.pv-fopen{display:none}}
+.pv-filters{display:grid;gap:var(--ds-space-3)}
+.pv-filters-grid{display:grid;gap:var(--ds-space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,13rem),1fr))}
+@media (min-width:1400px){.pv-filters-grid{grid-template-columns:minmax(0,1fr)}}
+/* Doctor > Needs you: 2 columns from 1400, the Open link on the right of its row. */
+.pv-nylist{display:grid;gap:0 var(--ds-space-5);grid-template-columns:minmax(0,1fr)}
+@media (min-width:1400px){.pv-nylist{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pv-ny{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:var(--ds-space-3);align-items:center;border-block-start:var(--ds-border-thin) solid var(--ds-color-divider);padding-block:var(--ds-space-3)}
+.pv-ny .ds-link{min-block-size:44px;display:inline-flex;align-items:center}
+.pv-ny-t{display:grid;gap:var(--ds-space-1);min-inline-size:0}
+.pv-split{display:grid;gap:var(--ds-space-4);grid-template-columns:minmax(0,1fr)}
+@media (min-width:1400px){.pv-split{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.pv-before{outline:var(--ds-border-thin) dashed var(--ds-color-border)}
+.pv-map{display:grid;gap:var(--ds-space-3);grid-template-columns:repeat(auto-fit,minmax(min(100%,12rem),1fr))}
+.pv-map>div{border:var(--ds-border-thin) solid var(--ds-color-border);padding:var(--ds-space-3);display:grid;gap:var(--ds-space-2);align-content:start}
+.pv-map ul{margin:0;padding-inline-start:1.1rem}
+.pv-bars{display:grid;gap:var(--ds-space-2)}
+
+/* LOOK54 prototype: dark console frame, the menu written for this proposal, links as sub-tabs. Tokens only. */
+:root{--ds-frame-wide:96rem !important}
+[hidden]{display:none !important}
+.ds-topmenu__toggle{display:none}
+@media (max-width:600px){.ds-topmenu__toggle{display:block}.ds-topmenu{display:none}.ds-topmenu.open{display:block}}
+a.ds-tab{display:inline-flex;align-items:center;box-sizing:border-box;text-decoration:none}
+.ds-tab[aria-current='page']{font-weight:var(--ds-weight-bold);color:var(--ds-color-primary);border-block-end-width:var(--ds-border-thick);border-block-end-color:var(--ds-color-primary)}
+tr[aria-selected='true']{background:var(--ds-color-selection)}
