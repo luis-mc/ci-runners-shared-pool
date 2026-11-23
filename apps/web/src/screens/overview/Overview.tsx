@@ -28,6 +28,13 @@ import { Load } from '../common';
 import { BestNextChange } from '../insights/OverviewLine';
 import { PoolCountTiles } from '../pool/PoolSection';
 import { poolCounts, startsAbout } from '../pool/poolWords';
+import { SlotTimeline } from '../pool/SlotTimeline';
+import {
+  NextToStart,
+  OverviewMachineCard,
+  RoutingLabelsPane,
+  TimerAlert,
+} from './OverviewPanes';
 import { HowCrspWorks } from './HowCrspWorks';
 import { HelpTerm } from '../help/HelpTerm';
 
@@ -198,10 +205,12 @@ export function Overview() {
   const machines = useMachines();
   return (
     <Page>
-      <PageHeader title="Overview" lead="The pool at a glance." />
+      <PageHeader
+        title="Overview"
+        lead="The pool at a glance. Open a card for the detail."
+      />
       <AppGoneBanner />
       <HowCrspWorks />
-      <BestNextChange />
       {!o && firstPaint !== 'failed' ? (
         <Section title="The pool">
           <Loading what="Loading the overview" />
@@ -217,64 +226,41 @@ export function Overview() {
       {o ? (
         <>
           <PoolCountTiles counts={poolCounts(o)} />
-          <Section title="Machines">
-            <Load result={machines.result} what="machines" reload={machines.reload}>
-              {(data) =>
-                data.items.length === 0 ? (
-                  <Empty
-                    title="No machine is in the pool yet. Add a machine so jobs have somewhere to run."
-                    action={<TextLink to="/setup/machines/add">Add a machine</TextLink>}
-                  />
-                ) : (
-                  <CardGrid>
-                    {data.items.map((m) => (
-                      <MachineCard key={m.id} m={withLiveLoad(m, store)} />
-                    ))}
-                  </CardGrid>
-                )
-              }
-            </Load>
-          </Section>
-          <Section title="Queue and running jobs">
-            <Facts
-              items={[
-                {
-                  name: 'Queued jobs',
-                  value: formatNumber(o.queued_count),
-                  help: <HelpTerm term="queue" />,
-                },
-                { name: 'Running jobs', value: formatNumber(o.running.length) },
-              ]}
-            />
-            {o.running.length === 0 ? (
-              <Empty title="No jobs running. Jobs show here when a workflow runs on the pool." />
-            ) : (
-              <Table
-                caption="Running jobs"
-                columns={jobColumns}
-                rows={o.running}
-                rowKey={(j) => String(j.id)}
-              />
-            )}
-          </Section>
-          <Section
-            title="Why jobs wait"
-            actions={
-              <TextLink to="/pool/queue">
-                See the whole plan in Pool &gt; Queue Analysis
-              </TextLink>
+          <TimerAlert running={o.running} />
+          <BestNextChange />
+          <Load result={machines.result} what="machines" reload={machines.reload}>
+            {(data) =>
+              data.items.length === 0 ? (
+                <Empty
+                  title="No machine is in the pool yet. Add a machine so jobs have somewhere to run."
+                  action={<TextLink to="/setup/machines/add">Add a machine</TextLink>}
+                />
+              ) : (
+                <CardGrid>
+                  {data.items.map((m) => (
+                    <OverviewMachineCard
+                      key={m.id}
+                      m={withLiveLoad(m, store)}
+                      running={o.running}
+                    />
+                  ))}
+                </CardGrid>
+              )
             }
+          </Load>
+          <CardGrid>
+            <NextToStart
+              queued={o.queued ?? []}
+              count={o.queued_count}
+              readAt={live.lastEventAt ?? Date.now()}
+            />
+            <RoutingLabelsPane jobs={[...o.running, ...(o.queued ?? [])]} />
+          </CardGrid>
+          <Section
+            title="Jobs over time"
+            hint="Each row is a slot of a machine. Scroll left for the past, right for the forecast."
           >
-            {(o.queued ?? []).length === 0 ? (
-              <Empty title="No jobs are waiting." />
-            ) : (
-              <Table
-                caption="Waiting jobs"
-                columns={waitingColumns(live.lastEventAt ?? Date.now())}
-                rows={waitingRows(o)}
-                rowKey={(r) => String(r.id)}
-              />
-            )}
+            <SlotTimeline compact />
           </Section>
           {o.minutes_saved_today && o.minutes_saved_today.length > 0 ? (
             <Section title="Minutes saved today">
