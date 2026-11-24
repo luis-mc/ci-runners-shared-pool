@@ -441,6 +441,8 @@ Owner decision 21 Nov 2026 (job sizing wave 1, T9): a persistent Windows or macO
 
 **R5.141** (OPS78) — **Open checks for the owner.** The listener tests of the research (session create and delete, the second-job race, stop during a job, a label change on a connected listener, Windows service control 50 times, update at start) need a real runner and are not run by crsp's tests; the owner runs them by hand on a real runner. Every rule above is tested on fakes (the labels client, the service manager of each OS, the injected clock).
 
+**R5.150** (OPS89; R5.25, R5.72, R5.93, R5.127; source: the owner's Windows PC GameRoomPC on v0.1.24, 24 Nov 01:20 UTC, job 138144007503 of luis-mc/lan-link) — **An ephemeral Linux runner starts on a Windows host, and a failed start leaves nothing behind.** (a) The container backend never runs `chown` on a Windows host: NTFS has no uid and the folder is owned as the engine (Docker Desktop, WSL2) decides; on a Linux host it still gives the lane folders to the pool uid (R5.72). (b) Each try for a job has its own runner name, `crsp-job-<job id>-<try>`, and a start that fails after GitHub made the JIT registration deletes that registration, so the next try never meets `409 Already exists`. (c) A job gets at most 5 tries; a later `queued` event does not start the loop again for it. (d) The tries of a job share one key and leave one failed row, which the next try replaces and the end of the job removes (`Service.ClearFailedStarts`). (e) An idle ephemeral pool runner says `a container starts for each job of the pool`; `no repository uses the pool yet` shows only for a persistent pool runner with no registration.
+
 ## 6. Non-functional requirements
 
 All **NOT YET IMPLEMENTED**.

@@ -61,3 +61,17 @@ func TestOwnLaneChownsToUID(t *testing.T) {
 		t.Fatalf("unexpected chown: %v %v", err, cmd2.Texts())
 	}
 }
+
+// OPS89: a Windows host has no chown and NTFS has no uid; the lane is left to
+// the engine and no command runs on the host.
+func TestOwnLaneNeverRunsChownOnAWindowsHost(t *testing.T) {
+	cmd := &sysfake.Commands{}
+	b := New(sys.Deps{Cmd: cmd}, newFake(), Config{IDs: fixedID(64010), HostOS: "windows"})
+	lane := runnercache.LaneFor(`C:\cache`, "repo1", 1)
+	if err := b.ownLane(context.Background(), 64010, lane); err != nil {
+		t.Fatal(err)
+	}
+	if got := cmd.Texts(); len(got) != 0 {
+		t.Fatalf("host commands on Windows: %v", got)
+	}
+}

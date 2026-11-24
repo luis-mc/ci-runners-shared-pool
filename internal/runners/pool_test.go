@@ -355,3 +355,16 @@ func TestFailedPoolRegistrationStaysVisibleAndIsNotRetried(t *testing.T) {
 		t.Fatalf("the list shows %+v %v", views, err)
 	}
 }
+
+// OPS89: an ephemeral pool runner holds no registration by design, so its view
+// never says that no repository uses the pool.
+func TestEphemeralPoolRunnerViewDoesNotBlameTheRepositories(t *testing.T) {
+	v := poolView(Record{Kind: "ephemeral", Scope: Scope{Kind: ScopePool}}, nil, nil, "m")
+	if v.State != Idle || v.Reason != "a container starts for each job of the pool" {
+		t.Fatalf("view = %+v", v)
+	}
+	p := poolView(Record{Kind: "persistent", Scope: Scope{Kind: ScopePool}}, nil, nil, "m")
+	if p.Reason != "no repository uses the pool yet" {
+		t.Fatalf("persistent view = %+v", p)
+	}
+}

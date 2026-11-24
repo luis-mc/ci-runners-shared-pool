@@ -2,8 +2,10 @@ package runners
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backend"
@@ -28,6 +30,30 @@ type JobRunner struct {
 	// repository-level call. A job that came from a scale set needs a runner
 	// of that scale set (github-integration R5.40).
 	JIT func(ctx context.Context) (github.JITConfig, error)
+	// JobKey, when set, ties every try for one job together (OPS89): a try
+	// first removes the failed record an earlier try of the key left, so a job
+	// shows one failed row, not one for each try. A name starts with it.
+	JobKey string
+}
+
+// ClearFailedStarts removes the failed records of the tries for one job. The
+// loop calls it when the job ends (OPS89).
+func (s *Service) ClearFailedStarts(ctx context.Context, jobKey string) error {
+	if jobKey == "" {
+		return nil
+	}
+	list, err := s.Store.ListRunners(ctx, Filter{State: string(Failed)})
+	if err != nil {
+		return err
+	}
+	for _, r := range list {
+		if r.Kind == "ephemeral" && strings.HasPrefix(r.Name, jobKey) {
+			if err := s.Store.DeleteRunner(ctx, r.ID); err != nil && !errors.Is(err, ErrNotFound) {
+				return err
+			}
+		}
+	}
+	return nil
 }
 
 // StartJobRunner makes one ephemeral runner for one job (runners R5.25,
@@ -64,6 +90,9 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	if err != nil {
 		return Record{}, fmt.Errorf("resolve scope: %w", err)
 	}
+	if err := s.ClearFailedStarts(ctx, j.JobKey); err != nil {
+		return Record{}, err
+	}
 	id := s.newID("r_")
 	rec := Record{ID: id, Name: j.Name, MachineID: j.MachineID, OS: j.OS, Arch: j.Arch, Kind: "ephemeral",
 		Backend: j.Backend, Isolation: string(iso), Labels: j.Labels,
@@ -86,6 +115,16 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	if err != nil {
 		return fail(fmt.Errorf("JIT config: %w", err))
 	}
+	// A start that fails after GitHub made the registration leaves it behind:
+	// the next try would meet 409 "already exists" (OPS89). Delete it, best effort.
+	failStart := func(err error) (Record, error) {
+		if j.JIT == nil && jit.RunnerID != 0 {
+			if derr := s.GitHub.DeleteRunner(ctx, t.InstallationID, t.Scope, jit.RunnerID); derr != nil {
+				s.audit(ctx, actor, "runner.jit_delete_failed", j.MachineID, id, derr.Error())
+			}
+		}
+		return fail(err)
+	}
 	spec := backend.RunnerSpec{ID: id, Name: j.Name, OS: j.OS, Arch: j.Arch, Labels: j.Labels, GitHubURL: t.URL, Group: t.Group,
 		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, CacheQuota: s.CacheQuota, ExtraPackages: j.ExtraPackages}
 	if m, err := s.Machines.GetMachine(ctx, j.MachineID); err == nil {
@@ -105,7 +144,7 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	if s.PoolSettings != nil {
 		ps, err := s.PoolSettings(ctx, j.Scope)
 		if err != nil {
-			return fail(fmt.Errorf("pool settings: %w", err))
+			return failStart(fmt.Errorf("pool settings: %w", err))
 		}
 		spec.Pool.Layers, spec.Pool.Database = ps.Layers, ps.Database
 	}
@@ -113,7 +152,7 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	if err != nil {
 		// The agent's error text is its own; the config is not in it by the
 		// backend's rule (R6.2), and it is not added here.
-		return fail(err)
+		return failStart(err)
 	}
 	if err := s.Store.SetRunnerService(ctx, id, h.Ref, ""); err != nil {
 		return Record{}, err

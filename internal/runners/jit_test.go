@@ -143,3 +143,42 @@ func TestRoutingLabelPassesValidation(t *testing.T) {
 		t.Fatal("the 101st label is refused")
 	}
 }
+
+// OPS89: a start the agent refuses deletes the GitHub registration of the JIT
+// runner, so the next try does not meet 409.
+func TestFailedStartDeletesTheRegistration(t *testing.T) {
+	r := newRig(machine("linux", "x64", true))
+	r.ag.addErr = errors.New("own lane: chown not found")
+	if _, err := r.svc.StartJobRunner(context.Background(), jobRunner(), "u"); err == nil {
+		t.Fatal("the start must fail")
+	}
+	if len(r.gh.deleted) != 1 || r.gh.deleted[0] != 4242 {
+		t.Fatalf("registration not deleted: %v", r.gh.deleted)
+	}
+}
+
+// OPS89: the tries of one job leave one failed row, and the end of the job clears it.
+func TestOneFailedRowForEachJob(t *testing.T) {
+	ctx := context.Background()
+	r := newRig(machine("linux", "x64", true))
+	r.ag.addErr = errors.New("engine down")
+	for i := 1; i <= 3; i++ {
+		j := jobRunner()
+		j.Name, j.JobKey = fmt.Sprintf("crsp-job-9-%d", i), "crsp-job-9-"
+		_, _ = r.svc.StartJobRunner(ctx, j, "u")
+	}
+	other := jobRunner()
+	other.Name, other.JobKey = "crsp-job-10-1", "crsp-job-10-"
+	_, _ = r.svc.StartJobRunner(ctx, other, "u")
+	rows, _ := r.store.ListRunners(ctx, Filter{State: string(Failed)})
+	if len(rows) != 2 {
+		t.Fatalf("failed rows = %d, want 1 for each of 2 jobs: %+v", len(rows), rows)
+	}
+	if err := r.svc.ClearFailedStarts(ctx, "crsp-job-9-"); err != nil {
+		t.Fatal(err)
+	}
+	rows, _ = r.store.ListRunners(ctx, Filter{State: string(Failed)})
+	if len(rows) != 1 || rows[0].Name != "crsp-job-10-1" {
+		t.Fatalf("after the job ended: %+v", rows)
+	}
+}

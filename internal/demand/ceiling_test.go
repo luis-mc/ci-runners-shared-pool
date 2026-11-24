@@ -50,9 +50,9 @@ func TestCeilingFreedByAFinishedJob(t *testing.T) {
 		t.Fatalf("started %d waiting %d", len(fr.started), l.Waiting())
 	}
 	fr.running["m1"]--
-	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "completed", RunnerName: "crsp-job-1"})
+	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "completed", RunnerName: "crsp-job-1-1"})
 	l.Dispatch(ctx)
-	if len(fr.started) != 2 || fr.started[1].Name != "crsp-job-2" {
+	if len(fr.started) != 2 || fr.started[1].Name != "crsp-job-2-1" {
 		t.Fatalf("started %+v", fr.started)
 	}
 }
