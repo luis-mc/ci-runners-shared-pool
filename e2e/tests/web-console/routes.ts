@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
 export interface ConsoleRoute {
-  /** The route pattern, for example `/repositories/:owner/:name`. */
+  /** The route pattern, for example `/setup/pool/:owner/:name`. */
   pattern: string;
   /** A URL that opens it: the parameters are filled with the ids of the mocked data. */
   url: string;
@@ -17,6 +17,7 @@ const SAMPLE: Record<string, string> = {
   name: 'app',
   id: '1',
   imageId: 'img_m1_linux',
+  machineId: 'm1',
 };
 export const NOT_FOUND_URL = '/no/such/page';
 
@@ -62,9 +63,11 @@ export function parseRoutes(source: string): ConsoleRoute[] {
       .replace(/\/\*$/, '')
       .split('/')
       .filter(Boolean);
+    // /setup is the first-run page only with a first-run parameter (web-console 4.3a); without one it opens Setup.
     const url =
       '/' +
-      full.map((p) => (p.startsWith(':') ? (SAMPLE[p.slice(1)] ?? 'x') : p)).join('/');
+      full.map((p) => (p.startsWith(':') ? (SAMPLE[p.slice(1)] ?? 'x') : p)).join('/') +
+      (full.join('/') === 'setup' ? '?wizard=1' : '');
     out.push({
       pattern: '/' + full.join('/'),
       url,

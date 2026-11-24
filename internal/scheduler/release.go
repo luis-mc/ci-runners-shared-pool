@@ -20,6 +20,9 @@ import (
 // returns no error: the job has finished and nothing fails.
 func (e *Engine) Release(ctx context.Context, machineID string, job JobRef, claims []string) ([]Freed, error) {
 	freed, err := e.freeJob(ctx, machineID, toJob(job), claims, slots.OutcomeRan)
+	if err == nil && len(claims) == 0 {
+		e.lifeEnded(machineID, job)
+	}
 	if err == nil && len(freed) == 0 && machineID != "" && len(claims) == 0 {
 		a := Alert{Kind: AlertJobStartedMissing, MachineID: machineID, Job: job, At: e.now(),
 			Message: "A job ended on this machine that never took a slot, so its job-started hook did not reach crsp or the gate let it go without one. " +
@@ -35,7 +38,11 @@ func (e *Engine) Release(ctx context.Context, machineID string, job JobRef, clai
 // CompletedOnGitHub frees leftovers of a job GitHub reports completed, on
 // every machine (R5.36).
 func (e *Engine) CompletedOnGitHub(ctx context.Context, job JobRef) ([]Freed, error) {
-	return e.freeJob(ctx, "", toJob(job), nil, slots.OutcomeCompletedGH)
+	freed, err := e.freeJob(ctx, "", toJob(job), nil, slots.OutcomeCompletedGH)
+	if err == nil {
+		e.lifeEnded("", job)
+	}
+	return freed, err
 }
 
 func (e *Engine) freeJob(ctx context.Context, machineID string, job slots.Job, claims []string, outcome string) ([]Freed, error) {

@@ -232,6 +232,24 @@ func (a *Agent) StopService(ctx context.Context, machineID, service string) erro
 	return a.stop(ctx, machineID, service, false)
 }
 
+// listenerWait is how long a listener command may take: a clean stop waits for
+// the listener to exit by itself.
+const listenerWait = 3 * time.Minute
+
+// ControlListener starts, stops or reads the listener of a gated persistent
+// runner (runners R5.134). action is start, stop or status. It returns the
+// listener state the agent saw after the step: offline, online or busy.
+func (a *Agent) ControlListener(ctx context.Context, machineID, action, service string, jobAssigned, maintenance bool) (string, error) {
+	r, err := a.L.callWait(ctx, machineID, listenerWait, func(id string) *agentv1.SessionResponse {
+		return &agentv1.SessionResponse{Message: &agentv1.SessionResponse_ListenerControl{ListenerControl: &agentv1.ListenerControl{
+			CommandId: id, ServiceName: service, Action: action, JobAssigned: jobAssigned, Maintenance: maintenance}}}
+	})
+	if err != nil {
+		return "", err
+	}
+	return r.GetListener(), nil
+}
+
 // CleanUp deletes the service entry, the account and the folder of a runner.
 func (a *Agent) CleanUp(ctx context.Context, machineID, service string) error {
 	return a.stop(ctx, machineID, service, true)

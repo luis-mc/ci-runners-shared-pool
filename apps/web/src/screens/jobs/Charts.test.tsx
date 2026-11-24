@@ -52,7 +52,7 @@ const stats = {
 describe('Charts', () => {
   it('asks for 14 days first and switches to 7 and 30', async () => {
     const api = jobsApi({ stats });
-    renderApp(api, '/jobs/charts');
+    renderApp(api, '/analytics/charts');
     await screen.findByRole('region', { name: 'Busiest hours' });
     expect(
       api.calls.find((c) => c.path === '/api/v1/jobs/stats')?.query.get('days'),
@@ -78,7 +78,7 @@ describe('Charts', () => {
   });
 
   it('says how many jobs ran inside their forecast, and gives every chart a table view', async () => {
-    renderApp(jobsApi({ stats }), '/jobs/charts');
+    renderApp(jobsApi({ stats }), '/analytics/charts');
     expect(
       await screen.findByText(/50% of 2 finished jobs ran inside their forecast range/),
     ).toBeTruthy();
@@ -88,13 +88,13 @@ describe('Charts', () => {
   });
 
   it('says there is nothing to draw with no finished jobs', async () => {
-    renderApp(jobsApi(), '/jobs/charts');
+    renderApp(jobsApi(), '/analytics/charts');
     expect(await screen.findByText(/No finished jobs in this range/)).toBeTruthy();
   });
 
   it('exports the daily summaries of the range from the controller', async () => {
     const api = jobsApi({ stats });
-    renderApp(api, '/jobs/charts');
+    renderApp(api, '/analytics/charts');
     await screen.findByRole('region', { name: 'Busiest hours' });
     URL.createObjectURL = () => 'blob:x';
     URL.revokeObjectURL = () => undefined;
@@ -112,7 +112,7 @@ describe('Charts', () => {
   it('says it could not load the charts', async () => {
     renderApp(
       jobsApi().on('GET', '/api/v1/jobs/stats', apiError(500, 'internal', 'busy')),
-      '/jobs/charts',
+      '/analytics/charts',
     );
     expect(await screen.findByText(/Could not load the charts/)).toBeTruthy();
   });

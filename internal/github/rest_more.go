@@ -16,7 +16,6 @@ var RequiredPermissions = map[string]string{
 	"actions_variables":                "write",
 	"contents":                         "read",
 	"metadata":                         "read",
-	"secrets":                          "write",
 	"organization_self_hosted_runners": "write",
 }
 

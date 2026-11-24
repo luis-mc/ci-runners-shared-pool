@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
 	"strconv"
 	"strings"
 	"time"
@@ -325,6 +326,8 @@ type doctorFleet struct {
 	runners  runners.Store
 	repos    repos.Store
 	rsvc     *repos.Service
+	// health is the machine health service (OPS83); nil makes the health checks skip.
+	health *machinehealth.Service
 }
 
 func (f doctorFleet) Machines(ctx context.Context) ([]doctor.Machine, error) {
@@ -333,7 +336,12 @@ func (f doctorFleet) Machines(ctx context.Context) ([]doctor.Machine, error) {
 		return nil, err
 	}
 	out := make([]doctor.Machine, 0, len(views))
-	allRunners, _ := f.runners.ListRunners(ctx, runners.Filter{})
+	// A fleet built with only the machines service (the KVM and engine report
+	// sources) has no runner store: it lists the machines without runner facts.
+	var allRunners []runners.Record
+	if f.runners != nil {
+		allRunners, _ = f.runners.ListRunners(ctx, runners.Filter{})
+	}
 	signs, _ := f.machines.ResetSigns(ctx)
 	known := map[string]bool{}
 	for _, v := range views {
@@ -350,7 +358,7 @@ func (f doctorFleet) Machines(ctx context.Context) ([]doctor.Machine, error) {
 			ID: v.Machine.ID, Name: v.Machine.Name, OS: v.Machine.OS, Online: v.Machine.Online,
 			LastSeen: v.Machine.LastSeen, State: v.Settings.State,
 			BudgetMemoryPct: v.Settings.BudgetMemoryPct, BudgetCPUPct: v.Settings.BudgetCPUPct,
-			LightSlots: v.Settings.LightSlots, PauseReason: v.Machine.PauseReason,
+			LightSlots: v.Settings.LightSlots, PauseReason: v.Machine.PauseReason, DiskFloorGiB: v.Policy.DiskFloorGiB,
 			JobSlots: v.Settings.JobSlots, GateMaxWaitMin: v.Settings.GateMaxWaitMinutes,
 		}
 		if v.LoadWarning != nil {

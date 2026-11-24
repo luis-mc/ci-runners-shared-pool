@@ -7,20 +7,20 @@ import { openRoute } from './ux-guards';
 import { rowActionWords } from './ux-measure-source';
 
 const SCREENS = [
-  { name: 'Live', url: '/jobs/live' },
-  { name: 'Live, jobs', url: '/jobs/live?view=jobs' },
-  { name: 'Queue', url: '/jobs/live?state=queued' },
-  { name: 'Queue, jobs', url: '/jobs/live?state=queued&view=jobs' },
-  { name: 'Running', url: '/jobs/live?state=running' },
-  { name: 'Running, jobs', url: '/jobs/live?state=running&view=jobs' },
-  { name: 'Done', url: '/jobs/done' },
-  { name: 'Done, jobs', url: '/jobs/done?view=jobs' },
-  { name: 'Run elsewhere', url: '/jobs/elsewhere' },
-  { name: 'Group by repository', url: '/jobs/done?group=repository' },
-  { name: 'Group by machine', url: '/jobs/done?group=machine' },
-  { name: 'Group by runner', url: '/jobs/done?group=runner' },
-  { name: 'Group by runner type', url: '/jobs/done?group=runner-type' },
-  { name: 'Group by job type', url: '/jobs/done?group=job-type' },
+  { name: 'All', url: '/pool/jobs' },
+  { name: 'All, jobs', url: '/pool/jobs?view=jobs' },
+  { name: 'Queue', url: '/pool/jobs?state=queued' },
+  { name: 'Queue, jobs', url: '/pool/jobs?state=queued&view=jobs' },
+  { name: 'Running', url: '/pool/jobs?state=running' },
+  { name: 'Running, jobs', url: '/pool/jobs?state=running&view=jobs' },
+  { name: 'Done', url: '/pool/jobs?state=done' },
+  { name: 'Done, jobs', url: '/pool/jobs?state=done&view=jobs' },
+  { name: 'Run elsewhere', url: '/analytics/elsewhere' },
+  { name: 'Group by repository', url: '/pool/jobs?group=repository' },
+  { name: 'Group by machine', url: '/pool/jobs?group=machine' },
+  { name: 'Group by runner', url: '/pool/jobs?group=runner' },
+  { name: 'Group by runner type', url: '/pool/jobs?group=runner-type' },
+  { name: 'Group by job type', url: '/pool/jobs?group=job-type' },
 ];
 
 /** Runs in the page: the breaches of UX-72 in every visible table, as `{ table, what }`. */
@@ -117,12 +117,12 @@ for (const s of SCREENS) {
 test('Open run lands on the Run page and the page does not scroll sideways at 1300 px', async ({
   page,
 }) => {
-  await openRoute(page, { url: '/jobs/done', signedOut: false }, { width: 1300 });
+  await openRoute(page, { url: '/pool/jobs', signedOut: false }, { width: 1300 });
   await page
     .getByRole('button', { name: /^Open run/ })
     .first()
     .click();
-  await expect(page).toHaveURL(/\/jobs\/run\/\d+\?attempt=\d+/);
+  await expect(page).toHaveURL(/\/pool\/runs\/\d+\?attempt=\d+/);
   await expect(page.getByRole('region', { name: 'Job graph' })).toBeVisible();
   const wide = await page.evaluate(
     () => document.documentElement.scrollWidth > document.documentElement.clientWidth,

@@ -142,7 +142,8 @@ func xmlEscape(s string) string {
 }
 
 // Plist renders the launchd daemon (runners R5.23): its own user and group,
-// the runner folder as working directory, restarted when it exits.
+// the runner folder as working directory, restarted only when it fails: a clean
+// exit stays stopped, which the listener gate needs (runners R5.23, R5.134).
 func Plist(label, user, folder string) string {
 	return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -163,7 +164,10 @@ func Plist(label, user, folder string) string {
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
-  <true/>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
   <key>ProcessType</key>
   <string>Interactive</string>
   <key>StandardOutPath</key>

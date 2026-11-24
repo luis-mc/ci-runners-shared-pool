@@ -62,7 +62,7 @@ func SizeNames(floors map[string]SizeFloor) []string {
 	return names
 }
 
-// SizeClassForLabel maps a size label (the end of RUNS_ON_LINUX_LARGE) to its
+// SizeClassForLabel maps a size label (the end of CRSP_RUNS_ON_LINUX_LARGE) to its
 // size class. An unknown label is refused and the message lists the known ones.
 func SizeClassForLabel(label string) (runners.SizeClass, error) {
 	l := strings.ToLower(strings.TrimSpace(label))
@@ -93,16 +93,16 @@ func CheckSizeFloors(floors map[string]SizeFloor) error {
 
 var (
 	sizeNameRE = regexp.MustCompile(`^[a-z][a-z0-9]*$`)
-	sizeVarRE  = regexp.MustCompile(`^RUNS_ON_(LINUX|WINDOWS|MACOS)_([A-Z][A-Z0-9]*)$`)
+	sizeVarRE  = regexp.MustCompile(`^CRSP_RUNS_ON_(LINUX|WINDOWS|MACOS)_([A-Z][A-Z0-9]*)$`)
 )
 
-// SizeVariableName is the variable of one OS and size, such as RUNS_ON_LINUX_LARGE.
+// SizeVariableName is the variable of one OS and size, such as CRSP_RUNS_ON_LINUX_LARGE.
 func SizeVariableName(os, size string) string {
-	return "RUNS_ON_" + strings.ToUpper(os) + "_" + strings.ToUpper(size)
+	return "CRSP_RUNS_ON_" + strings.ToUpper(os) + "_" + strings.ToUpper(size)
 }
 
 // ParseSizeVariable splits a size variable into its OS and size name, both
-// lowercase. ok is false for any other name, including the plain RUNS_ON_<OS>.
+// lowercase. ok is false for any other name, including the plain CRSP_RUNS_ON_<OS>.
 func ParseSizeVariable(name string) (os, size string, ok bool) {
 	m := sizeVarRE.FindStringSubmatch(name)
 	if m == nil {
@@ -165,7 +165,7 @@ func (s *Service) sizeVariables(ctx context.Context, pol Policy, base map[string
 }
 
 // UnservedSizes lists the size variables no machine can serve, for the doctor
-// ("RUNS_ON_LINUX_XL: no machine has 16 CPUs and 32 GiB in its pool size").
+// ("CRSP_RUNS_ON_LINUX_XL: no machine has 16 CPUs and 32 GiB in its pool size").
 func (s *Service) UnservedSizes(ctx context.Context) ([]string, error) {
 	if s.cfg.Sizes == nil {
 		return nil, nil

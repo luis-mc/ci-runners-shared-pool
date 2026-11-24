@@ -124,7 +124,7 @@ func Download(ctx context.Context, d sys.Deps, url, dest, sha string) error {
 	}
 	// A wrong hash may come from a cut or corrupted transfer: the file is
 	// deleted and fetched once more. A second wrong hash is refused (runners
-	// R5.37, parity row 31). A pin that is not a real hash is never retried.
+	// R5.37). A pin that is not a real hash is never retried.
 	var err error
 	for attempt := 0; attempt < 2; attempt++ {
 		if err = d.Fetch.Fetch(ctx, url, dest); err != nil {

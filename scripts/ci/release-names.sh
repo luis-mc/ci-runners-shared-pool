@@ -49,7 +49,7 @@ stable_to_asset() {
 # CRSP224, TRANSITION: the name the updater of 0.1.21 and older looks for,
 # crsp-<goos>-<goarch>_<version>.<ext> (internal/update/source.go of v0.1.21, VersionedName). os:
 # win->windows, linux->linux, macos->darwin; arch: x64->amd64, arm64->arm64. Kept until no
-# supported install is on 0.1.21 or older (operations R5.127).
+# supported install is on 0.1.21 or older (operations R5.128).
 # legacy_asset_name VERSION OS ARCH EXT; OS and ARCH may be Go names or release names.
 legacy_asset_name() {
   local version="${1#v}" os arch

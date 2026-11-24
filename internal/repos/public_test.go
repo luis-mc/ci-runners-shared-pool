@@ -45,7 +45,7 @@ func TestPublicizedKeepsServingAndShowsProblem(t *testing.T) {
 	e, fleet := publicEnv(t)
 	ctx := context.Background()
 	e.setPublic(false)
-	before := e.variable("RUNS_ON_LINUX")
+	before := e.variable("CRSP_RUNS_ON_LINUX")
 	e.fake.Lock(func() { e.fake.Repos[101].Private = false })
 	if err := e.svc.Publicized(ctx, "Alice/Secret"); err != nil {
 		t.Fatal(err)
@@ -54,8 +54,8 @@ func TestPublicizedKeepsServingAndShowsProblem(t *testing.T) {
 	if !r.PoolOn || r.Visibility != "public" {
 		t.Errorf("pool on %v, visibility %q", r.PoolOn, r.Visibility)
 	}
-	if v := e.variable("RUNS_ON_LINUX"); v != before {
-		t.Errorf("RUNS_ON_LINUX changed to %s", v)
+	if v := e.variable("CRSP_RUNS_ON_LINUX"); v != before {
+		t.Errorf("CRSP_RUNS_ON_LINUX changed to %s", v)
 	}
 	if len(fleet.removed) != 0 {
 		t.Errorf("nothing may be removed: fleet %v", fleet.removed)
@@ -100,7 +100,7 @@ func TestReconcileKeepsPublicRepositoryServed(t *testing.T) {
 	if !r.PoolOn || r.Visibility != "public" || len(fleet.removed) != 0 {
 		t.Fatalf("pool on %v, visibility %q, fleet %v", r.PoolOn, r.Visibility, fleet.removed)
 	}
-	if v := e.variable("RUNS_ON_LINUX"); !strings.Contains(v, "crsp-home") {
+	if v := e.variable("CRSP_RUNS_ON_LINUX"); !strings.Contains(v, "crsp-home") {
 		t.Errorf("the variable was rewritten: %s", v)
 	}
 	if v, _ := e.svc.Get(ctx, adminP, 101); v.Problem == nil {
@@ -209,11 +209,11 @@ func TestStopPublicOnPoolKeepsPolicyAndCounts(t *testing.T) {
 	if pol, _ := e.store.GetPolicy(ctx, 100); pol.Priority != 3 {
 		t.Errorf("the policy was not kept: %+v", pol)
 	}
-	if v := e.variable("RUNS_ON_LINUX"); !strings.Contains(v, "crsp-home") { // private repository 101 untouched
+	if v := e.variable("CRSP_RUNS_ON_LINUX"); !strings.Contains(v, "crsp-home") { // private repository 101 untouched
 		t.Errorf("private variable: %s", v)
 	}
 	e.fake.Lock(func() {
-		if v := e.fake.Variables["alice/web"]["RUNS_ON_LINUX"]; v != `["ubuntu-latest"]` {
+		if v := e.fake.Variables["alice/web"]["CRSP_RUNS_ON_LINUX"]; v != `["ubuntu-latest"]` {
 			t.Errorf("public variable %s, want the hosted label", v)
 		}
 	})

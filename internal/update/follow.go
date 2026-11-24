@@ -80,6 +80,21 @@ func (m *Manager) Follow(ctx context.Context, version string) (Status, error) {
 	return m.begin(ctx, KindUpdate, FollowActor)
 }
 
+// RestartActor is the actor name of a restart the controller asked for: the
+// owner pressed Restart the service on this machine's page in the console.
+const RestartActor = "console-restart"
+
+// Restart restarts this machine's service after the running jobs end (machines
+// R5.81, CRSP235). It is the agent's answer to the console's Restart the
+// service: the same drain as an update, never a cut job, the per-OS restart of
+// the install helper.
+func (m *Manager) Restart(ctx context.Context) (Status, error) {
+	if !m.o.Privileged() {
+		return m.Status(ctx), ErrUnprivileged
+	}
+	return m.Apply(ctx, KindRestart, true, RestartActor)
+}
+
 func autoActor(a string) bool { return a == "auto-update" || a == FollowActor }
 
 // ServiceActiveCommand is the command whose exit code says the service runs.

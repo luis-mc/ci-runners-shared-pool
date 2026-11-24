@@ -122,7 +122,7 @@ func (s *Service) planOff(ctx context.Context, r Repository) ([]Step, error) {
 	for _, v := range have {
 		if pools[v.Name] {
 			present = append(present, v.Name)
-		} else if isAlias(v.Name) || isSizeVar(v.Name) {
+		} else if isLegacyVariable(v.Name) || isSizeVar(v.Name) {
 			if yes, err := s.mayDelete(ctx, r, v.Name); err != nil {
 				return nil, err
 			} else if yes {
@@ -289,6 +289,13 @@ func (s *Service) ApplyPlan(ctx context.Context, p auth.Principal, id string, ap
 			_ = s.CheckRunsOn(ctx, id)
 		}
 	}
+	if s.cfg.OnPoolOn != nil { // the pool is on and its variables are written (R5.106)
+		for _, c := range changesOf(plan) {
+			if r2, err := s.cfg.Store.GetRepository(ctx, c.RepositoryID); c.Pool && err == nil && r2.PoolOn {
+				s.cfg.OnPoolOn(ctx, r2)
+			}
+		}
+	}
 	return plan, nil
 }
 
@@ -337,9 +344,6 @@ func (s *Service) runStep(ctx context.Context, p auth.Principal, r Repository, s
 		if err := s.SyncOrgGroup(ctx, r.InstallationID); err != nil { // R5.21: the group follows the pool switch
 			return err
 		}
-		if err := s.migrateLegacy(ctx, p, r); err != nil { // CRSP25: old CRSP_RUNS_ON_* names
-			return err
-		}
 		r.PoolOn = true
 		s.syncRegistrations(ctx, p, r) // the pool runners get a registration for this repository
 	case ActPoolOff:
@@ -359,6 +363,10 @@ func (s *Service) runStep(ctx context.Context, p auth.Principal, r Repository, s
 			return err
 		}
 		s.cfg.Audit.Audit(ctx, p, "variable.written", "repository", r.FullName, st.Target+" = "+st.Value)
+		// CRSP229: the name an older version wrote for it goes once it is written.
+		if _, err := s.migrateLegacy(ctx, p, r, func(n string) bool { return n == st.Target }); err != nil {
+			return err
+		}
 	case ActDeleteVariable:
 		if err := s.cfg.GitHub.DeleteVariable(ctx, r.InstallationID, r.Owner, r.Name, st.Target); err != nil {
 			return err

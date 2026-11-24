@@ -33,7 +33,7 @@ function renderRouted(a: MockApi) {
         element: <App client={client} eventSource={(url) => new FakeEventSource(url)} />,
       },
     ],
-    { initialEntries: ['/repositories/octo/app'] },
+    { initialEntries: ['/setup/pool/octo/app'] },
   );
   render(<RouterProvider router={router} />);
   return router;
@@ -87,7 +87,7 @@ describe('Repository form edit bar', () => {
     expect(labels.value).toBe(was);
     expect(marks()).toBe(0);
     expect(button('Save').disabled).toBe(true);
-    expect(router.state.location.pathname).toBe('/repositories/octo/app');
+    expect(router.state.location.pathname).toBe('/setup/pool/octo/app');
   });
 
   it('asks before a link leaves with changes: Keep editing stays, Discard leaves', async () => {
@@ -98,18 +98,18 @@ describe('Repository form edit bar', () => {
     expect(await screen.findByText('Discard changes?')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     await waitFor(() => expect(screen.queryByText('Discard changes?')).toBeNull());
-    expect(router.state.location.pathname).toBe('/repositories/octo/app');
+    expect(router.state.location.pathname).toBe('/setup/pool/octo/app');
     expect(labels.value).toBe('other');
     fireEvent.click(crumb());
     fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/repositories'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/setup/pool'));
   });
 
   it('does not ask when nothing changed', async () => {
     const router = renderRouted(api());
     await screen.findByLabelText('Labels');
     fireEvent.click(crumb());
-    await waitFor(() => expect(router.state.location.pathname).toBe('/repositories'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/setup/pool'));
     expect(screen.queryByText('Discard changes?')).toBeNull();
   });
 });

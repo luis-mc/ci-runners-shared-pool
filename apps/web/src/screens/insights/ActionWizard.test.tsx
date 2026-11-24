@@ -9,7 +9,7 @@ afterEach(cleanup);
 
 describe('Action wizard', () => {
   it('reviews, changes and says what was done', async () => {
-    renderApp(jobsApi(), '/jobs/insights/finding/1/change');
+    renderApp(jobsApi(), '/analytics/finding/1/change');
     await screen.findByText(/Raise the job slots of linux-box/);
     expect(screen.getByText(/Nothing has changed yet/)).toBeTruthy();
     const steps = screen

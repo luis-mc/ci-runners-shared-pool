@@ -1,4 +1,4 @@
-// Package repos is the pool switch, repository policy, the RUNS_ON_*
+// Package repos is the pool switch, repository policy, the CRSP_RUNS_ON_*
 // variables and the workflow runs-on check (github-integration R5.17 to
 // R5.30). It reads and writes data through the Store interface declared here
 // and reaches GitHub through the small GitHub interface, so it is tested with
@@ -48,10 +48,6 @@ type Policy struct {
 	RunnerGroups    []string
 	BudgetMemoryPct int // 0 means not set
 	BudgetCPUPct    int // 0 means not set
-	// LegacyVars also writes CI_RUNS_ON and CI_RUNS_ON_WINDOWS, the old
-	// dev-standards names, while a repository moves off the old pool (R5.39).
-	// Off by default.
-	LegacyVars bool
 	// ExtraPackages are the extra distribution packages of the pool image,
 	// sorted, without repeats (runners R5.51). Empty adds no layer.
 	ExtraPackages []string
@@ -132,7 +128,7 @@ const (
 	LightValue = "crsp-light"
 )
 
-// ManagedVariable is a RUNS_ON_* variable as the controller last wrote it.
+// ManagedVariable is a CRSP_RUNS_ON_* variable as the controller last wrote it.
 type ManagedVariable struct {
 	RepositoryID int64
 	Name         string

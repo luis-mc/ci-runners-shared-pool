@@ -14,6 +14,7 @@ import {
   PageHeader,
   Section,
   Stack,
+  Steps,
   Table,
   Text,
   formatShortDateTime,
@@ -25,6 +26,7 @@ import { useCommand } from '../../api/hooks';
 import type { Schemas } from '../../api/api';
 import { Load } from '../common';
 import { dismissFinding, useFinding } from './api';
+import { stepsFor } from './steps';
 import { AREA_WORDS, minutesWords, projectOf, type Finding } from './words';
 
 interface Evidence {
@@ -44,7 +46,7 @@ const evidenceColumns: Column<Evidence>[] = [
 ];
 
 export const changePath = (f: Pick<Finding, 'id'>): string =>
-  `/jobs/insights/finding/${f.id}/change`;
+  `/analytics/finding/${f.id}/change`;
 
 function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
   const [until, setUntil] = useState<string | undefined>(f.dismissed_until);
@@ -56,8 +58,8 @@ function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
     <>
       <Breadcrumbs
         trail={[
-          { label: 'Jobs', to: '/jobs' },
-          { label: 'Run insights', to: '/jobs/insights' },
+          { label: 'Analytics', to: '/analytics' },
+          { label: 'Suggestions', to: '/analytics' },
           { label: f.title },
         ]}
       />
@@ -75,6 +77,12 @@ function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
         <Section title="The fix">
           <Text>{f.fix}</Text>
           {f.snippet ? <CodeBlock text={f.snippet} label="Workflow snippet" /> : null}
+        </Section>
+        <Section
+          title="Path forward"
+          hint={`Do these in order${f.repository ? ` for ${f.repository}` : ''}.`}
+        >
+          <Steps label="Steps" steps={stepsFor(f)} />
         </Section>
         <Section title="Evidence">
           <Table
@@ -117,7 +125,7 @@ function FindingView({ f }: { f: Schemas['InsightFinding'] }) {
               Review the change
             </LinkButton>
           ) : (
-            <LinkButton to="/jobs/insights">Back to Do next</LinkButton>
+            <LinkButton to="/analytics">Back to Suggestions</LinkButton>
           )
         }
       />

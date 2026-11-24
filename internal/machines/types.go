@@ -38,6 +38,10 @@ const (
 	ChangeNeedsYou = "needs_you"
 )
 
+// MaxGateWaitMinutes is the longest hold the console may save: the 2 minute cap
+// of scheduling R5.75 (slots.MaxHoldMin; a test keeps them equal).
+const MaxGateWaitMinutes = 2
+
 // Errors the API maps to the error envelope.
 var (
 	ErrNotFound        = errors.New("machine not found")
@@ -169,6 +173,9 @@ type Settings struct {
 	PauseUntil         time.Time
 	PausedUntilResumed bool
 	CPUCapPct          int
+	// DiskFloorGiB is the free disk the console set for this machine (runners
+	// R5.83, OPS86); 0 means none set, so the agent keeps its own first value.
+	DiskFloorGiB int
 	// The Docker disk compact policy (caches R5.51 to R5.54, machines R5.66). An empty
 	// mode is automatic; 0 and "" take the defaults of EffectiveCompact.
 	CompactMode         string
@@ -197,6 +204,9 @@ const (
 	PauseUntilResumedValue = "until_resumed"
 	PauseNone              = "none"
 )
+
+// MaxDiskFloorGiB is the top of the disk floor the console accepts (runners R5.83).
+const MaxDiskFloorGiB = 2000
 
 // CPUCaps are the CPU cap values in percent (R5.64).
 var CPUCaps = []int{25, 50, 75, 100}
@@ -233,7 +243,7 @@ func DefaultSettings() Settings {
 		Version: 1, State: StateActive,
 		BudgetMemoryPct: 85, BudgetCPUPct: 60, JobSlots: 2, LightSlots: 1, HeavySlots: 1,
 		LightJobs: []string{}, HeavyJobs: []string{},
-		SlotMaxAgeMinutes: 120, GatePollSeconds: 15, GateMaxWaitMinutes: 10, GateOnTimeout: "fail",
+		SlotMaxAgeMinutes: 120, GatePollSeconds: 15, GateMaxWaitMinutes: 2, GateOnTimeout: "fail",
 		AllowedBackends: []string{"persistent"}, CacheCapBytes: 20 << 30, DrainTimeoutMinutes: 60,
 		Mode: ModeAutomatic, PauseOnBattery: true, CPUCapPct: 100,
 	}
@@ -241,15 +251,17 @@ func DefaultSettings() Settings {
 
 // SettingsUpdate is a partial change; nil fields stay as they are.
 type SettingsUpdate struct {
-	Name                *string
-	BudgetMemoryPct     *int
-	BudgetCPUPct        *int
-	JobSlots            *int
-	LightSlots          *int
-	HeavySlots          *int
-	LightJobs           *[]string
-	HeavyJobs           *[]string
-	GateOnTimeout       *string
+	Name            *string
+	BudgetMemoryPct *int
+	BudgetCPUPct    *int
+	JobSlots        *int
+	LightSlots      *int
+	HeavySlots      *int
+	LightJobs       *[]string
+	HeavyJobs       *[]string
+	GateOnTimeout   *string
+	// GateMaxWaitMinutes is 1 to MaxGateWaitMinutes (scheduling R5.75).
+	GateMaxWaitMinutes  *int
 	AllowedBackends     *[]string
 	CacheCapBytes       *int64
 	DrainTimeoutMinutes *int
@@ -261,6 +273,8 @@ type SettingsUpdate struct {
 	PauseOnBattery *bool
 	// CPUCapPct is 25, 50, 75 or 100 (R5.64).
 	CPUCapPct *int
+	// DiskFloorGiB is 1 to MaxDiskFloorGiB (runners R5.83).
+	DiskFloorGiB *int
 	// The Docker disk compact policy (caches R5.51 to R5.54): on, off or empty for
 	// automatic; the threshold in GiB; idle minutes.
 	CompactMode         *string

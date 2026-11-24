@@ -33,7 +33,7 @@ function app(enabled = false): MockApi {
 
 describe('Repositories grouped by owner', () => {
   it('has no Owner column; each owner is a heading with its counts and one table', async () => {
-    renderApp(app(), '/repositories');
+    renderApp(app(), '/setup/pool');
     const acme = await screen.findByRole('table', { name: 'acme repositories' });
     expect(screen.getByRole('table', { name: 'octo repositories' })).toBeTruthy();
     expect(within(acme).queryByRole('columnheader', { name: 'Owner' })).toBeNull();
@@ -42,7 +42,7 @@ describe('Repositories grouped by owner', () => {
   });
 
   it('selects the whole group with its tick box', async () => {
-    renderApp(app(), '/repositories');
+    renderApp(app(), '/setup/pool');
     await screen.findByRole('table', { name: 'acme repositories' });
     fireEvent.click(screen.getByRole('checkbox', { name: /^acme/ }));
     expect(screen.getByText('2 selected')).toBeTruthy();
@@ -57,7 +57,7 @@ describe('Repositories grouped by owner', () => {
   });
 
   it('searches across groups and hides a group with no match', async () => {
-    renderApp(app(), '/repositories');
+    renderApp(app(), '/setup/pool');
     await screen.findByRole('table', { name: 'acme repositories' });
     fireEvent.change(screen.getByRole('textbox', { name: 'Search repositories' }), {
       target: { value: 'app' },
@@ -74,7 +74,7 @@ describe('Repositories grouped by owner', () => {
 
 describe('Repositories: inactive types are not listed', () => {
   it('lists private only, says how many are not listed, and counts private ones', async () => {
-    renderApp(app(), '/repositories');
+    renderApp(app(), '/setup/pool');
     await screen.findByRole('table', { name: 'octo repositories' });
     expect(screen.queryByRole('link', { name: 'site' })).toBeNull();
     expect(screen.queryByRole('table', { name: 'pub repositories' })).toBeNull();
@@ -89,7 +89,7 @@ describe('Repositories: inactive types are not listed', () => {
   });
 
   it('List them too shows them in grey in their groups and the line offers to hide them', async () => {
-    renderApp(app(), '/repositories');
+    renderApp(app(), '/setup/pool');
     fireEvent.click(await screen.findByRole('link', { name: 'List them too' }));
     const octo = await screen.findByRole('table', { name: 'octo repositories' });
     const row = within(octo)
@@ -104,13 +104,13 @@ describe('Repositories: inactive types are not listed', () => {
   });
 
   it('the note has List them too and no Change active types link', async () => {
-    renderApp(app(), '/repositories');
+    renderApp(app(), '/setup/pool');
     expect(await screen.findByRole('link', { name: 'List them too' })).toBeTruthy();
     expect(screen.queryByRole('link', { name: 'Change active types' })).toBeNull();
   });
 
   it('shows no note and lists everything when public repositories are on', async () => {
-    renderApp(app(true), '/repositories');
+    renderApp(app(true), '/setup/pool');
     await screen.findByRole('table', { name: 'pub repositories' });
     expect(screen.queryByText(/are not listed/)).toBeNull();
     expect(screen.getByText('5 private & public repositories')).toBeTruthy();

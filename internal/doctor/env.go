@@ -33,6 +33,12 @@ type Env struct {
 	Ephemeral EphemeralSource
 	// Postgres is nil when no Postgres server is read; runner.postgres_logins then skips.
 	Postgres PostgresSource
+	// Timers says whether crsp's job and run timers enforce; nil makes
+	// timers.mode skip.
+	Timers TimerSource
+	// ListenerGate says whether the listener gate enforces; nil makes
+	// listener.gate skip.
+	ListenerGate GateSource
 	// PoolName is the pool's name label; RunnerPrefix starts the name of every
 	// runner the product makes (default "crsp-").
 	PoolName string
@@ -155,6 +161,9 @@ type Machine struct {
 	// PauseReason is why the machine takes no new jobs ("disk_low", "paused",
 	// "on_battery", ...); empty while it accepts.
 	PauseReason string
+	// DiskFloorGiB is the free-disk floor in force on the machine, in GiB
+	// (runners R5.83); 0 when unknown or off.
+	DiskFloorGiB int
 	// Admin is true when the doctor on this machine runs with administrator
 	// rights, for checks that need them (R5.13). Reported by the agent.
 	Admin bool
@@ -266,6 +275,9 @@ type Runner struct {
 	// Tools is what the agent saw of the common tools on the runner's PATH as
 	// its service sees it; nil when it did not look (doctor R5.63).
 	Tools *ToolsProbe
+	// ToolPlan is the tool plan of the runner's repository set against the machine's tool store (Windows and
+	// macOS, runners R5.119); nil when the agent did not look or the OS has no store.
+	ToolPlan *ToolPlanProbe
 	// SymlinkWanted is true when the machine or label setting asks for the
 	// symbolic link right for this runner (runners R5.14). Symlink is what the
 	// agent read; nil when it did not look (R5.42).
@@ -323,6 +335,22 @@ func SymlinkProbeFrom(known, canLink, developerMode bool, errText string) *Symli
 type ToolsProbe struct {
 	Err   string
 	Tools []ToolProbe
+}
+
+// ToolPlanProbe is the tool plan against the tool store. Err is set when the agent could not make the plan
+// (the scan failed, a tools: entry is wrong); the check then skips the runner.
+type ToolPlanProbe struct {
+	Err   string
+	Items []ToolPlanItem
+}
+
+// ToolPlanItem is one tool and version of the plan and whether the store has it.
+type ToolPlanItem struct {
+	Tool, Version string
+	Present       bool
+	// Hint says what the owner does when the tool is missing and only the owner can add it: which Xcode to
+	// install (the store never downloads Xcode).
+	Hint string
 }
 
 // ToolProbe is one tool: found or not, and the first line of its version output.
@@ -497,6 +525,18 @@ type UncleanLister interface {
 // wait. The controller's watchdog keeps it; a check only reads it.
 type DemandSource interface {
 	QuietDemand(ctx context.Context) ([]QuietDemand, error)
+}
+
+// TimerSource tells whether the timers stop jobs and cancel runs (enforce on)
+// or only report (observe mode, scheduling R5.99). A check only reads it.
+type TimerSource interface {
+	TimersEnforced(ctx context.Context) (bool, error)
+}
+
+// GateSource tells whether the listener gate of persistent runners acts (enforce
+// on) or only reports (observe mode, runners R5.134). A check only reads it.
+type GateSource interface {
+	GateEnforced(ctx context.Context) (bool, error)
 }
 
 // VMTool is one program the VM backend runs.

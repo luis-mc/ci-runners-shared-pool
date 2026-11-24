@@ -25,7 +25,7 @@ describe('Overview (R5.20)', () => {
       within(card).getByRole('meter', { name: 'Slots' }).getAttribute('aria-valuetext'),
     ).toBe('1 of 4');
     expect(within(card).getByRole('link', { name: 'build-1' }).getAttribute('href')).toBe(
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
   });
 
@@ -216,7 +216,7 @@ describe('App health banner (github-integration R5.6)', () => {
       within(alert)
         .getByRole('link', { name: 'Run the setup wizard again' })
         .getAttribute('href'),
-    ).toBe('/setup');
+    ).toBe('/setup?wizard=1');
   });
 
   it('draws nothing while the App answers', async () => {

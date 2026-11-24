@@ -7,7 +7,7 @@ import { renderApp, signedIn } from '../../testing/mock';
 afterEach(cleanup);
 
 const status = (extra: Record<string, unknown> = {}) => ({
-  state: 'idle',
+  state: 'up_to_date',
   current: '1.4.0',
   available: null,
   required: false,
@@ -175,5 +175,14 @@ describe('the app-wide update banner', () => {
     renderApp(api(), '/settings/updates');
     await screen.findByRole('region', { name: 'Updates' });
     expect(document.querySelector('[data-lifecycle="update-banner"]')).toBeNull();
+  });
+
+  // CRSP235: the controller's own restart is reached from the console, not only from the tray.
+  it('offers Restart the service, which opens its Review step', async () => {
+    renderApp(api(), '/settings/updates');
+    fireEvent.click(await screen.findByRole('button', { name: 'Restart the service' }));
+    expect(
+      await screen.findByRole('heading', { name: 'Restart the service' }),
+    ).toBeTruthy();
   });
 });

@@ -27,7 +27,7 @@ describe('Machines list', () => {
         machine({ id: 'm2', name: 'win-1', os: 'windows', online: false }),
       ],
     });
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     const table = await screen.findByRole('table', { name: 'Machines' });
     expect(within(table).getByText('online')).toBeTruthy();
     expect(within(table).getByText('offline')).toBeTruthy();
@@ -40,7 +40,7 @@ describe('Machines list', () => {
     const api = signedIn().on('GET', '/api/v1/machines', {
       items: [machine({ id: 'm2', name: 'win-1', os: 'windows', container_os: 'linux' })],
     });
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     const table = await screen.findByRole('table', { name: 'Machines' });
     expect(within(table).getByText('Windows, runs Linux containers')).toBeTruthy();
   });
@@ -49,7 +49,7 @@ describe('Machines list', () => {
     const api = signedIn().on('GET', '/api/v1/machines', {
       items: [machine(), machine({ id: 'm2', name: 'win-1', state: 'drained' })],
     });
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     await screen.findByRole('table', { name: 'Machines' });
     fireEvent.change(screen.getByRole('textbox', { name: 'Search machines' }), {
       target: { value: 'win' },
@@ -67,7 +67,7 @@ describe('Machines list', () => {
   });
 
   it('says what to do when there is none, and offers Add a machine to an admin', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines', { items: [] }), '/pool/machines');
+    renderApp(signedIn().on('GET', '/api/v1/machines', { items: [] }), '/setup/machines');
     expect(
       await screen.findByText('No machines yet. Use Add a machine above to start.'),
     ).toBeTruthy();
@@ -78,7 +78,7 @@ describe('Machines list', () => {
   it('shows Add a machine disabled with its reason to a viewer (UX-38)', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/machines', { items: [machine()] }),
-      '/pool/machines',
+      '/setup/machines',
     );
     const button = await screen.findByRole<HTMLButtonElement>('button', {
       name: 'Add a machine',
@@ -89,7 +89,7 @@ describe('Machines list', () => {
 
   it('puts the search, filters and table inside one pane titled Machines', async () => {
     const api = signedIn().on('GET', '/api/v1/machines', { items: [machine()] });
-    renderApp(api, '/pool/machines');
+    renderApp(api, '/setup/machines');
     const pane = await screen.findByRole('region', { name: 'Machines' });
     expect(within(pane).getByRole('textbox', { name: 'Search machines' })).toBeTruthy();
     expect(within(pane).getByRole('table', { name: 'Machines' })).toBeTruthy();
@@ -100,7 +100,7 @@ describe('Machines list', () => {
       signedIn().on('GET', '/api/v1/machines', () =>
         apiError(503, 'unavailable', 'The database is busy.'),
       ),
-      '/pool/machines',
+      '/setup/machines',
     );
     expect(await screen.findByText(/Could not load machines\./)).toBeTruthy();
     expect(screen.getByText(/The database is busy\. Try again\./)).toBeTruthy();
@@ -113,7 +113,7 @@ describe('Machine detail', () => {
     signedIn().on('GET', '/api/v1/machines/:id', machine({ running_jobs: running }));
 
   it('shows facts, backends and the budget', async () => {
-    renderApp(base(), '/pool/machines/m1');
+    renderApp(base(), '/setup/machines/m1');
     expect(
       await screen.findByRole('heading', { level: 1, name: 'build-1' }),
     ).toBeTruthy();
@@ -134,7 +134,7 @@ describe('Machine detail', () => {
         ],
       }),
     );
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { level: 1, name: 'build-1' });
     expect(await screen.findAllByText(why)).toHaveLength(1);
   });
@@ -148,7 +148,7 @@ describe('Machine detail', () => {
       started_at: 'x',
       waiting_for: [],
     });
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     fireEvent.click(await screen.findByRole('button', { name: 'Stop new jobs' }));
     const dialog = await screen.findByRole('dialog', {
       name: 'Stop new jobs on build-1?',
@@ -159,9 +159,63 @@ describe('Machine detail', () => {
     await waitFor(() => expect(api.count('POST', '/api/v1/machines/m1/drain')).toBe(1));
   });
 
+  // CRSP235, scheduling R5.75: Gate maximum wait is on the page, 1 or 2 minutes, saved by the page's Save bar.
+  it('has the Gate maximum wait field and saves a change with the one Save', async () => {
+    const api = base().on('PATCH', '/api/v1/machines/:id', machine());
+    renderApp(api, '/setup/machines/m1');
+    fireEvent.click(await screen.findByRole('button', { name: /Gate maximum wait/ }));
+    const dialog = await screen.findByRole('dialog');
+    fireEvent.click(within(dialog).getByRole('button', { name: '1' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Done' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
+    const body = api.calls.find((c) => c.method === 'PATCH')?.body as {
+      gate_max_wait_minutes?: number;
+    };
+    expect(body.gate_max_wait_minutes).toBe(1);
+  });
+
+  it('says a saved wait above the cap is cut, and does not send it again unchanged', async () => {
+    const m = machine({
+      running_jobs: running,
+      settings: { ...machine().settings, gate_max_wait_minutes: 30 },
+    });
+    const api = signedIn()
+      .on('GET', '/api/v1/machines/:id', m)
+      .on('PATCH', '/api/v1/machines/:id', m);
+    renderApp(api, '/setup/machines/m1');
+    expect(await screen.findByText(/Saved as 30 minutes/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('checkbox', { name: /docker/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    await waitFor(() => expect(api.count('PATCH', '/api/v1/machines/m1')).toBe(1));
+    expect(api.calls.find((c) => c.method === 'PATCH')?.body).not.toHaveProperty(
+      'gate_max_wait_minutes',
+    );
+  });
+
+  it('opens the Restart the service wizard of an agent machine, and the controller one from Settings', async () => {
+    renderApp(base(), '/setup/machines/m1');
+    expect(await screen.findByText(/Stop and start the service/)).toBeTruthy();
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Restart the service' })
+        .disabled,
+    ).toBe(false);
+  });
+
+  it('locks Restart the service while the machine is offline and says why', async () => {
+    const api = signedIn().on('GET', '/api/v1/machines/:id', machine({ online: false }));
+    renderApp(api, '/setup/machines/m1');
+    const b = await screen.findByRole<HTMLButtonElement>('button', {
+      name: 'Restart the service',
+    });
+    expect(b.disabled).toBe(true);
+    expect(screen.getByText('The machine is offline.')).toBeTruthy();
+  });
+
   it('does nothing when the question is cancelled', async () => {
     const api = base();
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     fireEvent.click(await screen.findByRole('button', { name: 'Stop new jobs' }));
     const dialog = await screen.findByRole('dialog');
     fireEvent.click(within(dialog).getByRole('button', { name: 'Cancel' }));
@@ -173,7 +227,7 @@ describe('Machine detail', () => {
     const api = base()
       .on('POST', '/api/v1/remove', {})
       .on('GET', '/api/v1/machines', { items: [] });
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     fireEvent.click(await screen.findByRole('button', { name: 'Remove crsp' }));
     const dialog = await screen.findByRole('dialog', { name: 'Remove crsp' });
     const confirm = within(dialog).getByRole('button', { name: 'Remove crsp' });
@@ -191,7 +245,7 @@ describe('Machine detail', () => {
     const api = signedIn()
       .on('GET', '/api/v1/machines/:id', machine({ state: 'drained' }))
       .on('POST', '/api/v1/machines/:id/resume', machine());
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     fireEvent.click(await screen.findByRole('button', { name: 'Resume' }));
     await waitFor(() => expect(api.count('POST', '/api/v1/machines/m1/resume')).toBe(1));
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -208,7 +262,7 @@ describe('Machine detail', () => {
       }
       return machine();
     });
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { name: 'build-1' });
     fireEvent.click(screen.getAllByRole('checkbox')[0]!);
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
@@ -227,7 +281,7 @@ describe('Machine detail', () => {
   it('shows the viewer the form with Save disabled and why', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/machines/:id', machine()),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByRole('heading', { name: 'build-1' });
     expect(screen.getByRole<HTMLButtonElement>('button', { name: 'Save' }).disabled).toBe(
@@ -244,7 +298,7 @@ describe('Machine detail, one page', () => {
     signedIn().on('GET', '/api/v1/machines/:id', machine({ running_jobs: running }));
   it('has one primary (Save; Stop new jobs is secondary), one foot with Cancel and Save, and Remove in its pane', async () => {
     const api = base();
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     await screen.findByRole('heading', { level: 1, name: 'build-1' });
     const primaries = Array.from(document.querySelectorAll('button[data-primary]')).map(
       (b) => b.textContent,
@@ -264,7 +318,7 @@ describe('Machine detail, one page', () => {
     const api = signedIn().on('GET', '/api/v1/machines/:id', () =>
       apiError(500, 'internal', 'The controller could not answer.'),
     );
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     expect(
       await screen.findByRole('heading', { level: 1, name: 'Machine' }),
     ).toBeTruthy();
@@ -302,7 +356,7 @@ describe('Machine detail, a drain that waits', () => {
         },
       }),
     );
-    renderApp(api, '/pool/machines/m1');
+    renderApp(api, '/setup/machines/m1');
     expect(await screen.findByText('octo/app build on runner-1')).toBeTruthy();
     expect(screen.getByText('45 min')).toBeTruthy();
     expect(screen.getByText('10 min')).toBeTruthy();
@@ -359,7 +413,7 @@ describe('Machine detail, the pool size', () => {
   };
 
   it('is a section, not a wizard: facts, three choices with their words, no step row', async () => {
-    renderApp(api(fits), '/pool/machines/m1');
+    renderApp(api(fits), '/setup/machines/m1');
     expect(await screen.findByText('Room for the pool')).toBeTruthy();
     expect(screen.getAllByText('CPU budget').length).toBeGreaterThan(0);
     expect(screen.getByText('not set')).toBeTruthy();
@@ -387,7 +441,7 @@ describe('Machine detail, the pool size', () => {
 
   it('a recommended choice fills the size, runs the live check and saves with the page Save', async () => {
     const a = api(fits);
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     await choose(/half of the free room/);
     expect(
       await screen.findByText(/This size fits the budget of the machine/),
@@ -405,7 +459,7 @@ describe('Machine detail, the pool size', () => {
 
   it('the three quarters choice sends its own size', async () => {
     const a = api(fits);
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     await choose(/three quarters/);
     await screen.findByText(/This size fits the budget of the machine/);
     await waitFor(() => expect(saveButton().disabled).toBe(false));
@@ -419,7 +473,7 @@ describe('Machine detail, the pool size', () => {
 
   it('Custom shows the memory and CPU fields, marks them and checks 250 ms after the last edit', async () => {
     const a = api(fits);
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     await choose(/Custom/);
     const before = a.count('POST', '/api/v1/machines/m1/pool-size-check');
     await typeNumber(/Pool memory/, ['1', '2', '.', '5']);
@@ -441,7 +495,7 @@ describe('Machine detail, the pool size', () => {
   });
 
   it('a size that leaves little for the PC is a warning, still savable', async () => {
-    renderApp(api({ ...fits, room_gib: 18 }), '/pool/machines/m1');
+    renderApp(api({ ...fits, room_gib: 18 }), '/setup/machines/m1');
     await choose(/Custom/);
     await typeNumber(/Pool memory/, ['1', '6']);
     expect(await screen.findByText(/fits, but leaves 2 GiB for this PC/)).toBeTruthy();
@@ -460,7 +514,7 @@ describe('Machine detail, the pool size', () => {
           }
         : fits,
     );
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     await choose(/Custom/);
     await typeNumber(/Pool memory/, ['3', '0']);
     expect(
@@ -492,7 +546,7 @@ describe('Machine detail, the pool size', () => {
       { ...fits, needs_shrink_confirm: true, current_memory_gib: 16, current_cpus: 4 },
       m,
     );
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     await choose(/Custom/);
     await typeNumber(/Pool memory/, ['8']);
     expect(await screen.findByText(/This lowers the pool size/)).toBeTruthy();
@@ -521,7 +575,7 @@ describe('Machine detail, the pool size', () => {
         ++n <= 2 ? fits : { ...fits, current_memory_gib: 12, current_cpus: 3 },
       )
       .on('PATCH', '/api/v1/machines/:id', machine());
-    renderApp(a, '/pool/machines/m1');
+    renderApp(a, '/setup/machines/m1');
     await choose(/half of the free room/);
     await screen.findByText(/This size fits the budget of the machine/);
     await waitFor(() => expect(saveButton().disabled).toBe(false));
@@ -533,7 +587,7 @@ describe('Machine detail, the pool size', () => {
   });
 
   it('Cancel puts the choice back to what is saved', async () => {
-    renderApp(api(fits), '/pool/machines/m1');
+    renderApp(api(fits), '/setup/machines/m1');
     await choose(/half of the free room/);
     fireEvent.click(await screen.findByRole('button', { name: 'Cancel' }));
     await waitFor(() => expect(screen.queryByText('Unsaved changes (1)')).toBeNull());
@@ -552,7 +606,7 @@ describe('Machine detail, the pool size', () => {
   it('preselects half of the free room when it is the size now (OPS47)', async () => {
     renderApp(
       api({ ...fits, current_memory_gib: 9, current_cpus: 2 }, sized(9, 2)),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await waitFor(() => expect(radio(/half of the free room/).checked).toBe(true));
     expect(radio(/three quarters/).checked).toBe(false);
@@ -564,7 +618,7 @@ describe('Machine detail, the pool size', () => {
   it('preselects three quarters when it is the size now (OPS47)', async () => {
     renderApp(
       api({ ...fits, current_memory_gib: 14, current_cpus: 3 }, sized(14, 3)),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await waitFor(() => expect(radio(/three quarters/).checked).toBe(true));
     expect(radio(/half of the free room/).checked).toBe(false);
@@ -573,7 +627,7 @@ describe('Machine detail, the pool size', () => {
   it('preselects Custom with the current values when no recommended size matches (OPS47)', async () => {
     renderApp(
       api({ ...fits, current_memory_gib: 12, current_cpus: 3 }, sized(12, 3)),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await waitFor(() => expect(radio(/Custom/).checked).toBe(true));
     expect(radio(/half of the free room/).checked).toBe(false);
@@ -598,7 +652,7 @@ describe('Machine detail, the pool size', () => {
       signedIn(viewer)
         .on('GET', '/api/v1/machines/:id', machine())
         .on('POST', '/api/v1/machines/:id/pool-size-check', fits),
-      '/pool/machines/m1',
+      '/setup/machines/m1',
     );
     await screen.findByText('Room for the pool');
     expect(saveButton().disabled).toBe(true);

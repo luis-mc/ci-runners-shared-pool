@@ -230,14 +230,14 @@ Requirement IDs are this spec's own. "Idea n" is the owner's list of 20 Nov 2026
 
 | Check ID | Fails when | Guardrail |
 |---|---|---|
-| `workflow.timeout` | a job has no `timeout-minutes` or one over 30 | G2 |
+| `workflow.timeout` | a job has no `timeout-minutes` or one over 60 (OPS81: a safety net; crsp's own timers end a job first) | G2 |
 | `workflow.retry` | a step retries tests (a retry action, `--retries`, `--reruns`, `rerun-failed`, `retry:` over 0) | G3 |
 | `workflow.matrix_axis` | a matrix gained an axis or values since the last default-branch commit checked; the detail gives the job count before and after | none |
 | `workflow.step_order` | an end-to-end job does not need the lint or type check job of the same workflow, or a lint or type step comes after a test step in one job | none |
 | `workflow.cache` | a job sets up a package manager without its cache (`setup-node` without `cache`, `setup-go` with `cache: false`, cargo or pip without `actions/cache`) | none |
 | `workflow.slow_tests_on_pr` | a mutation or many-run property test runs on `pull_request` or a non-default push | G6 |
 
-**R5.30** — **Where they show.** The Repository page (4.4), the Doctor in an area Workflows with check IDs as above (doctor feature), and as findings: one finding per repository and check ID that fails, with the jobs and lines in the evidence. Minutes: `workflow.cache` counts the set-up step time over the median of the same step with a cache in other repositories; the others count 0 unless a run proved the cost (a timed-out job ran past 30 min: its minutes over 30).
+**R5.30** — **Where they show.** The Repository page (4.4), the Doctor in an area Workflows with check IDs as above (doctor feature), and as findings: one finding per repository and check ID that fails, with the jobs and lines in the evidence. Minutes: `workflow.cache` counts the set-up step time over the median of the same step with a cache in other repositories; the others count 0 unless a run proved the cost (a timed-out job ran past 60 min: its minutes over 60).
 
 ### Guardrail status (idea 6)
 

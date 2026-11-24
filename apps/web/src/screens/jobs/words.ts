@@ -16,6 +16,7 @@ const REASON_WORDS: Record<Schemas['WaitReason'], string> = {
   load_not_measured: 'waits because the machine load is not measured yet',
   paused: 'waits because its machine is paused',
   on_battery: 'waits because its machine runs on battery',
+  over_memory: 'was stopped for going over its memory limit',
   unknown: 'waits, the reason is not known yet',
 };
 
@@ -34,6 +35,7 @@ const REASON_SHORT: Record<Schemas['WaitReason'], string> = {
   load_not_measured: 'load not measured yet',
   paused: 'machine paused',
   on_battery: 'machine on battery',
+  over_memory: 'over memory',
   unknown: 'reason not known yet',
 };
 
@@ -259,7 +261,7 @@ export const RUNNER_KIND_WORDS = {
 
 /** "owner/name" to the address of the repository page. */
 export function repoPath(full: string): string {
-  return `/repositories/${full}`;
+  return `/setup/pool/${full}`;
 }
 
 /** The median of a list of numbers; 0 for none. */

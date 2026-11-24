@@ -209,9 +209,9 @@ export function RunnersList() {
     {
       id: 'name',
       header: 'Name',
-      cell: (r) => <TextLink to={`/pool/runners/${r.id}`}>{r.name}</TextLink>,
+      cell: (r) => <TextLink to={`/setup/runners/${r.id}`}>{r.name}</TextLink>,
       title: (r) => r.name,
-      grow: 2,
+      grow: 1,
       sort: (r) => r.name,
     },
     {
@@ -236,7 +236,7 @@ export function RunnersList() {
         const s = runnerStatus(r);
         return <Status kind={s.kind} word={s.word} />;
       },
-      grow: 2,
+      grow: 1,
       long: (r) => {
         const full = r.unclean_reason
           ? uncleanText(r.unclean_reason)
@@ -352,7 +352,7 @@ export function RunnersList() {
               {data.items.some((r) => r.state === 'failed') ? (
                 <Message
                   tone="needs-you"
-                  action={<LinkButton to="/pool/runners/add">Add runners</LinkButton>}
+                  action={<LinkButton to="/setup/runners/add">Add runners</LinkButton>}
                 >
                   {failedWords(data.items.filter((r) => r.state === 'failed').length)}
                 </Message>
@@ -457,7 +457,7 @@ export function RunnersList() {
                       title={`Machine ${g.name}`}
                       count={g.rows.length}
                       actions={
-                        <LinkButton to={`/pool/machines/${g.id}`}>
+                        <LinkButton to={`/setup/machines/${g.id}`}>
                           {`Open ${g.name}`}
                         </LinkButton>
                       }
@@ -547,7 +547,7 @@ export function RunnersList() {
             kind="primary"
             disabled={!admin}
             reason={admin ? undefined : why}
-            onPress={() => void navigate('/pool/runners/add')}
+            onPress={() => void navigate('/setup/runners/add')}
           >
             Add runners
           </Button>

@@ -11,13 +11,13 @@ const WIDTHS = [360, 393, 1300];
 const SCREENS = [
   {
     name: 'list',
-    path: '/repositories',
+    path: '/setup/pool',
     panes: ['Repositories'],
     primaries: ['Use pool'],
   },
   {
     name: 'detail',
-    path: '/repositories/octo/app',
+    path: '/setup/pool/octo/app',
     panes: [
       'State',
       'Policy',
@@ -30,7 +30,7 @@ const SCREENS = [
   },
   {
     name: 'turn on the pool',
-    path: '/repositories/turn-on',
+    path: '/setup/pool/turn-on',
     panes: ['Repositories to turn on'],
     primaries: ['Next'],
   },
@@ -78,7 +78,7 @@ for (const width of WIDTHS) {
       ),
     ).install(page);
     await page.setViewportSize({ width, height: 900 });
-    await page.goto('/repositories/octo/app');
+    await page.goto('/setup/pool/octo/app');
     await expect(page.getByRole('heading', { level: 1, name: 'octo/app' })).toBeVisible();
     await expect(page.getByText('Could not load the repository.')).toBeVisible();
   });

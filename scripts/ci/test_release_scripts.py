@@ -260,7 +260,7 @@ class Manifest(unittest.TestCase):
         subprocess.run(["openssl", "genpkey", "-algorithm", "ed25519", "-out", key], check=True)
         subprocess.run(["openssl", "pkey", "-in", key, "-pubout", "-out", pub], check=True)
         sig = os.path.join(self.dist, "manifest.json.sig")
-        env = dict(os.environ, CRSP_UPDATE_SIGNING_KEY=open(key).read(), CRSP_UPDATE_PUBLIC_KEY_FILE=pub)
+        env = dict(os.environ, CRSP_UPDATE_SIGNING_KEY=open(key).read(), CRSP_UPDATE_PUBLIC_KEY_FILE=pub)  # secret-scan:ignore (env var name; value is a throwaway test key file)
         r = subprocess.run(["bash", SIGN, out, sig], capture_output=True, text=True, env=env)
         self.assertEqual(r.returncode, 0, r.stderr)
         raw_sig = bytes.fromhex(open(sig).read())

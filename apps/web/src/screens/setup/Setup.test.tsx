@@ -21,7 +21,7 @@ const state = (over: object = {}) => ({
 describe('Setup page', () => {
   it('without a setup link says how to get one and offers nothing else (R5.14)', async () => {
     const api = signedIn().on('GET', '/api/v1/setup', state());
-    renderApp(api, '/setup');
+    renderApp(api, '/setup?wizard=1');
     expect(
       await screen.findByText(
         /choose Open in the tray menu of the controller.s machine\./,
@@ -97,7 +97,7 @@ describe('Setup page', () => {
       '/api/v1/setup',
       state({ setup_link_redeemed: true }),
     );
-    renderApp(api, '/setup');
+    renderApp(api, '/setup?wizard=1');
     expect(await screen.findByText(/App names are unique across GitHub/)).toBeTruthy();
   });
 
@@ -117,7 +117,7 @@ describe('Setup page', () => {
         }),
       )
       .on('GET', '/api/v1/machines', { items: [] });
-    renderApp(api, '/setup');
+    renderApp(api, '/setup?wizard=1');
     expect(await screen.findByRole('group', { name: 'Add a machine' })).toBeTruthy();
     expect(screen.getByText('Connect GitHub is done.')).toBeTruthy();
     expect(screen.getByText('This waits for Add the first machine.')).toBeTruthy();
@@ -186,7 +186,7 @@ describe('Setup page when every step is done (UX-6)', () => {
     const api = signedIn()
       .on('GET', '/api/v1/setup', allDoneState())
       .on('GET', '/api/v1/machines', { items: [machine()] });
-    renderApp(api, '/setup');
+    renderApp(api, '/setup?wizard=1');
     const go = await screen.findByRole('button', { name: 'Open the overview' });
     expect(go.getAttribute('data-kind')).toBe('primary');
     expect(go.hasAttribute('data-primary')).toBe(true);
@@ -217,7 +217,7 @@ describe('Setup page when every step is done (UX-6)', () => {
         items: [{ id: 1, full_name: 'octo/home-automation', pool_on: true }],
         stale: { stale: false },
       });
-    renderApp(api, '/setup');
+    renderApp(api, '/setup?wizard=1');
     expect(await screen.findByRole('button', { name: 'Open the overview' })).toBeTruthy();
     expect(screen.queryByRole('group', { name: 'Turn on the pool' })).toBeNull();
   });
@@ -237,13 +237,13 @@ describe('Setup page when every step is done (UX-6)', () => {
       )
       .on('GET', '/api/v1/machines', { items: [machine()] })
       .on('GET', '/api/v1/github/repositories', { items: [], stale: { stale: false } });
-    renderApp(api, '/setup');
+    renderApp(api, '/setup?wizard=1');
     await screen.findByText('Turn on the first repository');
     expect(screen.queryByRole('button', { name: 'Open the overview' })).toBeNull();
   });
 
   it('never sends the owner to a terminal', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/setup', state()), '/setup');
+    renderApp(signedIn().on('GET', '/api/v1/setup', state()), '/setup?wizard=1');
     await screen.findByText(/no GitHub App yet/);
     expect(document.body.textContent).not.toMatch(/crsp open|terminal|command line/i);
   });
@@ -267,7 +267,7 @@ describe('First run banner (R5.15)', () => {
     expect(await screen.findByText(/First run is not finished\./)).toBeTruthy();
     expect(
       screen.getByRole('button', { name: 'Open the setup page' }).getAttribute('href'),
-    ).toBe('/setup');
+    ).toBe('/setup?wizard=1');
   });
 
   it('is gone when every wizard is done', async () => {
@@ -304,7 +304,7 @@ describe('First run banner (R5.15)', () => {
             }),
           ],
         });
-      renderApp(api, '/setup');
+      renderApp(api, '/setup?wizard=1');
       expect(await screen.findByText('This PC, OFFICE-PC, is in the pool.')).toBeTruthy();
       expect(screen.queryByRole('group', { name: 'Add a machine' })).toBeNull();
       fireEvent.click(screen.getByRole('button', { name: 'Add another machine' }));
@@ -315,7 +315,7 @@ describe('First run banner (R5.15)', () => {
       const api = signedIn()
         .on('GET', '/api/v1/setup', done())
         .on('GET', '/api/v1/machines', { items: [machine()] });
-      renderApp(api, '/setup');
+      renderApp(api, '/setup?wizard=1');
       expect(await screen.findByText('Add the first machine is done.')).toBeTruthy();
       expect(screen.getByRole('button', { name: 'Add another machine' })).toBeTruthy();
     });

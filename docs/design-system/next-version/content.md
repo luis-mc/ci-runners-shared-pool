@@ -68,6 +68,7 @@ Add a row for each action the project needs. A new action gets a word that is no
 A retired word is not drawn as a label, button or message. The guard scans the source for each one. Do not list an approved word here.
 
 <!-- retired-words:start -->
+
 | Retired | Use instead |
 |---|---|
 | Submit | Save |
@@ -83,6 +84,7 @@ A retired word is not drawn as a label, button or message. The guard scans the s
 | Erase | Delete |
 | Runner kind | Runner type |
 | Kind (for persistent or ephemeral) | Runner type; Type alone where the page or step is already about runners (LOOK50) |
+
 <!-- retired-words:end -->
 
 ## Wizard step names
@@ -552,6 +554,25 @@ The words of the section on the repositories screen (github-integration R5.21).
 | Failure | Could not change the pool. {reason} |
 | Refusal | you are not an owner of the {organization} organization in GitHub. |
 
+## Runs-on pull request words
+
+The words of the pane *Switch to crsp runners* on the Repositories list and on a repository's page (github-integration R5.113, web-console R5.123).
+
+| Where | Word |
+|---|---|
+| Pane title | Switch to crsp runners |
+| Lead, one repository | crsp opens one pull request on this repository. It changes each routed runs-on line to its own runner label. You review and merge it; crsp never merges. |
+| Lead, all | crsp opens one pull request on each repository with the pool on. It changes each routed runs-on line to its own runner label. You review and merge it; crsp never merges. |
+| Action | Switch to crsp runners (one repository), Switch all to crsp runners (all); busy: Reading the workflows |
+| Open | Open the pull request (one), Open the pull requests (several); busy: Opening |
+| Preview line | {n} file changes in {repository}. / {n} files change in {repository}. / Nothing to change in {repository}. / {repository} is not yours, so crsp opens no pull request there. / Could not read {repository}. {reason} |
+| Code block label | Change in {repository} |
+| Skipped | Not changed (runs-on is not on one line): {jobs} |
+| No repository | No repository has the pool on. |
+| Done | Pull request opened on {repository}. / A pull request is already open on {repository}. / Nothing to change in {repository}. / {repository} is not yours, so crsp opens no pull request there. |
+| Link | Open on GitHub |
+| Failure | Could not read the change. {reason} / Could not open the pull request. {reason} |
+
 ## First machine words
 
 The words of the setup step "Add the first machine" when a machine is already in the pool (machines R5.1, web-console 4.1).
@@ -597,7 +618,6 @@ The state word of a runner on the Runners screen (web-console R5.23, runners R5.
 | offline, with "GitHub still holds the old session of this runner after the wait window; look for a second listener or another machine that uses this runner name" | The wait is over and GitHub still refuses the session (runners R5.95). |
 | Remove | The action on the row of a failed runner (busy word: Removing). Asks first in the question card, which names the runner (UX-9, UX-62). |
 
-
 ## Linux on a Windows machine words
 
 The words of Add runners and the machine list for a Windows machine whose container engine runs Linux containers (runners R5.47, machines R5.18).
@@ -612,7 +632,6 @@ The words of Add runners and the machine list for a Windows machine whose contai
 | {reason}. | A refusal of the plan, shown on Add runners step 1 with a full stop, so the user changes a choice. Try again after a failure goes back to step 1 with the reason in the same place. |
 | This machine runs windows, not linux. | The reason a machine is greyed for a system it cannot run (also for a Windows machine without Linux containers). |
 | WSL is installed but not ready; run wsl --install | Backend reason, shown only when WSL2 does not work and Docker does not run on it. It is written once. |
-
 
 ## List toolbar words
 
@@ -682,38 +701,6 @@ The words of the first-run fixes (web-console 4.1 and 4.3, CRSP124). The console
 | Remove this machine | The section of the Remove button, with: "Removing takes the machine and its runners out of the pool. Jobs that run there finish first. The agent stays installed on the machine." |
 | Open Machines | The one primary on Done of Add a machine when it is not part of the first-run checklist. |
 | Runners are added to one repository. An organization appears here when the App is installed on one. | Note in Add runners when the App is on no organization. |
-
-## Access for CI words
-
-The words of the Settings section Access for CI and of the action that sets up parity for a repository (web-console R5.90 and R5.91, github-integration R5.82 to R5.84, CRSP134).
-
-| Word | Where and meaning |
-|---|---|
-| Access for CI | The Settings section, and the title of its table. |
-| Only an admin can make, see or revoke access for CI. Ask an admin to do it. | Needs-you message for a person who is not an admin. |
-| An access for CI is a value a CI job uses to read the pool. It can read the runners and run the doctor, which is all that the parity check needs. It cannot change a machine, a runner, a setting or a user. | Note above the table. |
-| No access yet. Set up parity for a repository below, or make one here. | Empty table. |
-| Name, Can do, Made by, Made, Last used, State, Actions | The columns. |
-| Read only: the checks of parity | The Can do cell. |
-| never, live, revoked, Revoked | Last used and State values, and the Actions cell of a revoked access. |
-| Revoke | The danger button of a row and of its question card. Busy: Revoking. |
-| Revoke {name}? / Access {name} stops working at once. A CI job that uses it is refused. | Title and line of the question card. |
-| Make an access | The section of the form. |
-| Write a name for the access, such as "parity CI". | Error when the name is empty. |
-| What it can do / Parity | The field and its one choice; description: Read the runners and run the doctor, nothing else. |
-| Make | The primary button of the form. Busy: Making. |
-| Could not make the access. {reason} | Problem message when making fails. |
-| Access {name} is made / I have it | Title and close button of the card that shows the value once. |
-| This is the only time the value is shown. crsp keeps no copy of it. Copy it now, or revoke this access and make another. | Needs-you message on that card. |
-| Access value | Label of the code block that holds the value. |
-| Set up parity | The section of the action. |
-| No repository yet. Install the App on a repository first (Repositories). | Empty state of the section. |
-| crsp writes the access as the secret CRSP_ACCESS, and its address and certificate fingerprint as the variables CRSP_URL and CRSP_CA_FINGERPRINT, to the repository through the GitHub App. You copy nothing. The parity workflow reads them. | Note of the section. |
-| Repository | The field that chooses the repository. |
-| Set up parity | The primary button (one line at phone width). Busy: Setting up. Reason when none is chosen: Choose a repository first. |
-| Could not set up parity. Nothing was left behind. {reason} | Problem message when the setup fails. |
-| Parity is set up for {repository}. The workflow can run now. | Done message. |
-| The GitHub grant | See GitHub grant words: a missing App permission is shown by the shared part, not by words of this screen. |
 
 ## Docker disk words
 
@@ -801,7 +788,7 @@ The words of the repositories page when the list is the last copy because the re
 
 ## Network words
 
-The words of Settings > Console > Network and of the dialog that chooses the controller address (operations R5.90, OPS14). Also opened from the Needs-you box of Access for CI.
+The words of Settings > Console > Network and of the dialog that chooses the controller address (operations R5.90, OPS14).
 
 | Word | Where and meaning |
 |---|---|
@@ -875,10 +862,26 @@ The fixed words of the waterfall, job graph and charts (components 50 to 55, RES
 | lowest, highest, last, values | Chart and sparkline text alternatives ("5 values, last 4 s"). |
 | no data yet | A sparkline, heatmap or forecast chart with nothing to draw. |
 
+## Timeline words
+
+The fixed words of the slot timeline (component 77, LOOK58). Every other word comes in through props.
+
+| Word | Where |
+|---|---|
+| running, waiting for a runner, waiting for room, reserved, forecast, no runner fits, timer ran out, done, failed | The nine states: each with its glyph in the legend, on the bars and in the table. |
+| States | Name of the legend list. |
+| now {time} | The label of the now line on the axis. |
+| Back to now | Button shown when the chart is scrolled away from now; pins it again. |
+| Loading older jobs | Note while older jobs load. |
+| Showing the last 24 hours | Note when no older jobs exist. |
+| Left and Right arrows scroll. Home goes to now. End goes to the end of the forecast. | The key hint under the chart (read with the chart). |
+| Slot, Job, State, Start, End or forecast | Table heads under *Show as table*. |
+| now, about {time}, about {time} to {time} | The End or forecast cell of a running job and of a forecast. |
+
 ## Ordered list words
 
 | Word | Where |
-| --- | --- |
+|---|---|
 | Move {item} up | Name of the icon button ↑ on a row. |
 | Move {item} down | Name of the icon button ↓ on a row. |
 | {item} moved to place {n} of {total}. | Live line after a move. |
@@ -978,6 +981,7 @@ The words of the seven-item menu, Shared Pool and the Jobs sub-sections (owner d
 | See all | Button that pages in the earlier finished jobs. |
 | Done, failed and the averages count the last 200 finished jobs. | Quiet line under a grouped Jobs table. |
 | not placed yet | Group name of a job that has no machine or runner yet. |
+
 ## Runner service words
 
 The words of a runner service that did not start (runners R5.89, web-console R5.98, tray R5.44, doctor R5.45). The agent has already given the service account the right to log on as a service again and tried twice.
@@ -992,6 +996,7 @@ The words of a runner service that did not start (runners R5.89, web-console R5.
 | Doctor finding, the service is stopped | The service {service} of {runner} is not running |
 | Doctor finding, fine | {account} can log on as a service and {runner} runs |
 | Doctor fix | Press Start. The agent gives the account the right to log on as a service again and starts the service on {machine}. |
+
 ## Webhook settings words
 
 The words of Settings > Access > Webhooks and the link on the repository page (github-integration R5.51, web-console R5.99, OPS25).
@@ -1014,7 +1019,6 @@ The words of Settings > Access > Webhooks and the link on the repository page (g
 | Write the address without a user name, a query or a #fragment. | Mistake. |
 | The App does not listen for workflow jobs yet. On GitHub, open the App's permissions page and under Subscribe to events tick Workflow job, then save. Jobs are learned by webhooks once you have done that. | Guided step; its button is Open the App on GitHub. |
 | Turn on webhooks | Link at the end of the repository note "no webhook"; goes to Settings > Access > Webhooks. |
-
 
 ## Runner kind words
 
@@ -1121,7 +1125,7 @@ The words of the new Jobs section (web-console 4.6, proposed). A wait names what
 The short forms a one-line table shows; the whole line is the hover text and sits under the row's button (*Why*, *Details*). A workflow is its file name (`ci.yml`), the run number is the *Run* column (`#44723830522`, `, attempt 2`).
 
 | Wait reason | Short form |
-| --- | --- |
+|---|---|
 | free slot | waits for a slot |
 | load over budget | machine load too high |
 | no runner with labels | no runner with its labels |
@@ -1145,7 +1149,6 @@ One word set for the button at the end of a table row. The guard reads this tabl
 | Edit | Row action of a user (Settings, Access): opens the change of its role. A press, not a link. Admin only. |
 | Replace | Button of an unmanaged runner (Runners): replaces it with one the pool manages, after a question. A press. Admin only (busy word: Replacing). |
 | Delete registration | Button of an offline managed runner (Runners): deletes its registration on GitHub, after a question. A press. Admin only (busy word: Deleting). |
-| Revoke | Row action of a live access for CI (Settings, Access): stops it working, after a question. A press. Admin only. |
 | Copy line | Row action of a job size (Repository page, Job sizes): copies the line for `.crsp.yml` and says what it copied. It changes nothing. A press. |
 | Copy | The button of a code block in a cell (Doctor, a finding's command): copies the text and says Copied. It changes nothing. A press. |
 | On, Off | The word of a switch in a cell (Repositories, the pool for a repository): it shows the state; pressing it changes the state. Admin only. |
@@ -1353,6 +1356,56 @@ The measured block of the Job page, in the CPU and memory pane. `{n}` is a numbe
 | Job page, job key, not measured | Not measured yet: {runs} of 5 good runs. |
 | Job page, job key, no good run | No good run yet. |
 
+## Restart the service and Gate maximum wait words (CRSP235; machines R5.81, R5.82)
+
+The Service section of the machine page, the Restart the service wizard of an agent machine and the field Gate maximum wait. Built from the shared Section, Button, Cluster, Wizard, Facts, BulletList, Message, Text and NumberField parts. The action word is Restart the service, as in the action vocabulary; the same button is on Settings, Updates for the controller's own service.
+
+| Where | Words |
+|---|---|
+| Machine page, section title | Service |
+| Machine page and Settings, Updates, line | Stop and start the service after the running jobs end. No running job is stopped. |
+| Button | Restart the service |
+| Button, locked for an offline machine | The machine is offline. |
+| Wizard name and page title | Restart the service |
+| Wizard steps | Review, Restarting, Done |
+| Review text | Restart the service of {machine}. This machine takes no new jobs, waits for the running jobs to end (up to {n} minutes), then restarts its service. No running job is stopped. |
+| Review, jobs | These jobs run now and are waited for: |
+| Review, no job | No job runs on this machine now. |
+| Restarting, State | Waiting for {n} running jobs to end; Waiting for running jobs to end; Restarting the service |
+| Restarting, facts | State; Jobs still running; the jobs as rows with the value running |
+| Restarting, progress | {State}: {n} jobs left |
+| Restarting, console not answering | The console is not answering. This page waits for it. |
+| Paused (page reloaded while it runs) | Paused. The page closed while the service restarted. It goes on without this page. Start again to follow it. |
+| Offline, first run | {machine} is offline. Its service can restart only while it is connected. Try again when it is back. |
+| Offline, busy word | Looking |
+| Looking | Looking at {machine}. |
+| The controller's machine, stopped | Stopped. Nothing changed: {machine} is the controller. Its service restarts from Settings, Updates. |
+| Failed | The restart did not finish. {reason} The service keeps running. Try again. |
+| Failed, reasons | The service could not restart. Resume the machine, then try again. The service did not come back within 5 minutes. |
+| Done | The service of {machine} restarted. |
+| Done, facts | Version; Jobs stopped: 0 |
+| Done, next action | Open the machine |
+| Field label | Gate maximum wait |
+| Field unit | min |
+| Field help | How long a job may wait for a free slot before it starts. Never more than 2 minutes. |
+| Field mistake, on Save | Gate maximum wait must be from 1 to 2 minutes. |
+| Field note, a saved value above 2 | Saved as {n} minutes. The hook cuts the wait to 2. Set 2 or less and press Save. |
+| Doctor fix | On the machine page set Gate maximum wait to 2 minutes or less. (The Open button goes to the field.) |
+
+## Disk floor words (OPS86, runners R5.83)
+
+The free disk a machine keeps before it starts a job or a VM, on the machine page under Disk (the Save bar saves it). `{x}` is a number of GB (1 decimal at most).
+
+| Where | Words |
+|---|---|
+| Machine page, section title | Disk |
+| Field | Free disk to keep (unit " GB", 1 to 2000) |
+| Field help | Under this much free space new jobs wait (disk_low). Running jobs finish. |
+| Line under the field | {x} GB free now. |
+| Fact when config.toml turned the floor off | Free disk to keep: Off |
+| Note when config.toml turned the floor off | The floor is off in config.toml on this machine. It cannot be changed here. |
+| Mistake when the value is out of range | Free disk to keep must be from 1 GB to 2000 GB. |
+
 ## Help words
 
 The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 20 Nov, D57). English only. *Slot* is a shown word. *Runner type* is the word for persistent or ephemeral; Linux or Windows is the system, never the type.
@@ -1424,6 +1477,31 @@ The Job sizes and Cost table panes on a repository's page. A size is *Light*, *N
 | Cost table, basis values | Assumption, Measured |
 | Cost table, empty | The cost table is empty. |
 
+## Listener gate words (OPS78, runners R5.134 to R5.140)
+
+Persistent runners that run on the machine itself are gated: crsp turns the listener on when it admits a job for the runner and off after the job. The gate starts in observe mode: it writes what it would do and leaves every listener as it is.
+
+| Where | Words |
+|---|---|
+| Section title, runner page | Listener |
+| Fact name | Listener |
+| Fact value, no job | gated: offline by design |
+| Fact value, a job holds it | listener on for the admitted job |
+| Fact name | Weekly wake-up |
+| Fact value | {date and time} |
+| Weekly wake-up help | Every gated runner is switched on for about a minute each week, with no job, so GitHub never removes it for staying offline. |
+| Fact name | Jobs waiting |
+| Fact value, none | No job waits for this runner. |
+| Observe mode note | The gate is in observe mode. crsp writes would_start and would_stop rows to the audit log and leaves the listener as it is. |
+| Setting name | Gate persistent runners |
+| Setting help | Off: observe mode. On: crsp starts the listener of a persistent runner when it admits a job for it and stops it after the job. A runner with a job is never stopped. |
+| Audit actions | listener.would_start, listener.would_stop, listener.start, listener.stop, listener.wake, listener.failed |
+| Doctor finding, observe mode (info) | The listener gate is in observe mode: persistent runners keep their listener on |
+| Doctor detail | The audit log shows when crsp would have started and stopped each listener. No listener is touched until you switch enforcement on. |
+| Doctor fix | When the reports look right, switch on Gate persistent runners in Settings. |
+| Doctor finding, enforcing (ok) | Persistent runners on the machine itself are gated: offline by design until a job needs them |
+| Add runners, Persistent not offered | Persistent runners run on the machine itself, and this {machine system} machine cannot run a persistent {system} runner there. {System} runners on this machine are ephemeral. |
+
 ## Lifecycle words
 
 The words of install, update and remove (UX-79 to UX-83, components 70 to 74). They come from `lifecycle.json`, `words.states`; a screen, the native window and the tray read that table and write no string of their own (LC-21). Banned: OK, Yes, No, Install now, Later, daemon, binary, payload, error codes, HTTP statuses, doubled punctuation. A date and time is shown by the shared `DateTime` part (UX-78).
@@ -1443,3 +1521,138 @@ The words of install, update and remove (UX-79 to UX-83, components 70 to 74). T
 | Version {version} is skipped. We look again when a newer version is out. | Title after the third failure. |
 | Pair this machine first. Crsp looks for updates after that. | Title on an unpaired machine; no check runs. |
 | Remove {product}, Keep my data, Delete my data too ({size} GB in {path}), Cancel | The Remove question. The Remove button says `Remove {product}`, stays disabled until one choice is made, and its reason is `Choose what happens to your data first.`. |
+## Timer mode words (OPS81, scheduling R5.107, doctor R5.65)
+
+Timers start in observe mode: they report and stop nothing until the owner switches enforcement on in Settings. `{mm:ss}` is the limit of the timer, `{n}` the seconds left of the grace.
+
+| Where | Words |
+|---|---|
+| Setting name | Enforce timers |
+| Setting help | Off: timers only report. A job or run over its limit is written to the audit log and noted, and nothing is stopped or cancelled. On: crsp stops the job and cancels the run. Stop now, Cancel now and Extend 10 min work in both modes. |
+| Job note, observe mode | would stop at {mm:ss} (timers in observe mode) |
+| Run note, observe mode | would cancel at {mm:ss} (timers in observe mode) |
+| Grace line, observe mode | Job timer ran out at {mm:ss}; would stop in {n} s / Run timer ran out at {mm:ss}; would cancel in {n} s |
+| Audit actions | timer.job.would_stop, timer.run.would_cancel |
+| Doctor finding, observe mode (info) | Timers are in observe mode: jobs over the limit are reported, not stopped |
+| Doctor detail | The countdowns run and the audit log shows what crsp would have stopped or cancelled. Nothing is stopped until you switch enforcement on. |
+| Doctor fix | When the reports look right, switch on Enforce timers in Settings. |
+| Doctor finding, enforcing (ok) | Timers stop jobs and cancel runs that run over |
+## Console layout words (LOOK56, owner decision 22 Nov 2026, from the LOOK54 proposal)
+
+The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings, Help. Setup changes things; Pool shows what runs and why; Doctor says what is wrong now; Analytics says what could be better. `{n}` is a number, `{time}` a clock time, `{x}` a value.
+
+| Where | Words |
+|---|---|
+| Setup tabs | Summary, Machines, Runners, Images and caches, Size and backends, Pool setup (the old Repositories screen) |
+| Pool, page title and line | Pool. What runs, what waits and why. Nothing to configure here. |
+| Pool tabs | Overview, Live, Queue Analysis, Jobs, Machines |
+| Pool, four counts | Running, Starting, Queued, No runner fits |
+| Pool > Overview, panes | Queue plan (In the order crsp will start them.), Running jobs, Routing labels in use |
+| Queue plan columns | #, Job, Why it waits, Start, Machine and runner |
+| Start, a waiting job | Starts about {time} |
+| Start, a job that waits for nothing it can get | Does not start by itself |
+| Start, no estimate | Start not known |
+| A job at risk | Needs you (a word, a glyph and a colour, UX-58) |
+| Needs you, no runner has its labels | {job} will not start by itself. Add a runner with its labels, or change the labels of the job. |
+| Needs you, its machine does not take jobs | {job} waits on a machine that is not taking jobs. Let the machine take jobs again, or add a runner on another machine. |
+| Queue Analysis, filter | All {n}, Waiting for room, No runner fits |
+| Queue Analysis, panes | Queue, in start order; Where running jobs are going |
+| Queue Analysis, an entry | {place}. {job} {repository} #{run}; the wait words; Plan: {machine} · {runner}.; Label {labels}. |
+| Pool > Live, panes | Jobs over time (Each row is a slot of a machine. Scroll left for the past 24 hours, right for the forecast.), Machines |
+| Pool > Live, empty | No job runs or waits. Jobs show here as they come. |
+| Pool > Machines, note | This page shows what runs where. To change a machine, its pool size or its load budget, go to Setup > Machines. |
+| Pool > Machines, link | Change {machine} in Setup > Machines |
+| Pool > Machines, runner table | Runner, Type, Doing now; Runners on {machine} |
+| Pool > Jobs | One list of every job: filter All, Queue, Running, Done; Range; Group by; Export CSV. A row's button says Details; for a waiting job its panel says why it waits and when it starts. |
+| Live updates paused | The shell banner says: Live updates paused. The data on screen is the last that arrived. The lists ask again every 5 seconds, and the console reconnects by itself. |
+| Analytics tabs | Suggestions, Insights, Charts, Run elsewhere |
+| Analytics lines | Suggestions: Changes that would make the pool faster. Ranked by the time they save. Insights: Where the time goes, from past runs. Charts: Numbers over time. Run elsewhere: Jobs that another runner ran, not your pool. |
+| Suggestions segments | Do next, Tests, Guardrails |
+| Insights panes | Four numbers; Where the time goes; Busiest repositories; Failed jobs; Waits; Timeline |
+| A suggestion about a project | The title names the repository: {title} ({repository}) unless the title has it already |
+| Path forward | Pane title: Path forward. Line: Do these in order for {repository}. List name: Steps |
+| Doctor | Needs you is the first pane. Doctor shows no suggestions. |
+
+### Suggestion steps words
+
+The numbered steps of a suggestion, by its kind. `{repository}` is the repository the suggestion is about; `{subject}` the workflow file, job or test it names. Every step sentence is in the page's words and nowhere else (`apps/web/src/screens/insights/steps.ts`).
+
+| Kind | Steps |
+|---|---|
+| wait.hold | 1. Open Pool > Jobs and filter by {repository} and the job {subject}. 2. Open Why waiting on a row of that job and read what holds it. 3. Change what the reason names: the runner, the image, or the load budget in Setup > Size and backends. 4. Run the job again and check that its wait is shorter. |
+| housekeeping.lane | 1. Open Setup > Runners and add a runner for the light jobs of {repository} ({subject}). 2. Give it the label that these jobs ask for. 3. Watch Pool > Queue Analysis: the light jobs should no longer wait behind heavy ones. |
+| pool.size | 1. Open Setup > Size and backends. 2. Raise the job slots of the machine this suggestion names, or add a machine in Setup > Machines. 3. Save, then watch Pool > Queue Analysis for a shorter queue. |
+| pool.idle_next_to_queue | 1. Open Setup > Runners and find the runners that sit idle while jobs wait. 2. Give them the label of the waiting jobs, or add the label to the jobs in the workflow. 3. Watch Pool > Live: the waiting jobs should move to the idle runners. |
+| repo.slots | 1. Open Setup > Pool setup and open {repository}. 2. Raise the number of jobs that repository may run at once. 3. Save, then watch Pool > Queue Analysis for fewer jobs that wait on the repository limit. |
+| run.critical_path | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Split the longest job, or let the jobs that do not depend on it start first (needs:). 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.superseded | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Add a concurrency group with cancel-in-progress: true, so an older run stops when a newer push arrives. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.duplicate_event | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Make the workflow start on one event only (push or pull_request), not both for the same commit. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.retested_tree | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Skip the run when the tree did not change, for example with a paths filter. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| run.fail_fast | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Set fail-fast: true on the matrix, so the other jobs stop after the first failure. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.timeout | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Add timeout-minutes to the job, a little above its slow end. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.retry | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Remove the retry that hides a failing step, or keep it on the one step that needs it. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.matrix_axis | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Remove the matrix value that adds no coverage, or run it on the main branch only. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.step_order | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Move the quick checks before the slow steps, so a failure shows early. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| workflow.cache | 1. Open the workflow file of {repository} on GitHub ({subject}). 2. Add the cache step from the snippet on this page to the job. 3. Commit the change on a branch and open a pull request. 4. When it is merged, read this suggestion again after the next runs: it goes away when the change works. |
+| test.slow | 1. Open the test {subject} in {repository}. 2. Find what makes it slow: a wait, a download, or a large setup. 3. Make it faster, or move it to a job that runs after the quick ones. 4. Merge the change, then read this suggestion again after the next runs. |
+| test.flaky | 1. Open the test {subject} in {repository}. 2. Run it ten times on your machine to see when it fails. 3. Fix the cause (a shared file, a clock, an order), or mark it as known flaky until you do. 4. Merge the change, then read this suggestion again after the next runs. |
+| test.duplicate | 1. Open the tests named {subject} in {repository}. 2. Keep the one that checks more, and delete the other. 3. Merge the change, then read this suggestion again after the next runs. |
+| test.no_assertions | 1. Open the test {subject} in {repository}. 2. Add a check of what it should do, or delete it if it checks nothing. 3. Merge the change, then read this suggestion again after the next runs. |
+| (any other kind) | 1. Read the fix on this page and the evidence under it for {repository}. 2. Make the change it names, in the place it names. 3. Read this suggestion again after the next runs: it goes away when the change works. |
+
+## Machine health words (LOOK58c, machines R5.72 to R5.79, web-console R5.154, R5.155)
+
+Pool > Machines and the machine page (`/pool/machines/{id}`). `{os}` is the machine's own system name (*Linux*, *Windows*, *macOS*), `{x}` the reason the API gives, `{n}` a number, `{name}` a machine name. A value the API leaves out reads *unknown on {os}*; on the machine page the reason follows after a colon. It is never blank and never 0.
+
+| Where | Words |
+|---|---|
+| Unknown value | unknown on {os}; on the page: unknown on {os}: {x} |
+| Health badges (a status, UX-58) | healthy, health not reported yet, report is old, disk almost full, disk fills soon, ran out of memory, cannot reach GitHub, DNS fails, restarted unexpectedly, restart may stop jobs, restart pending, clock is off, agent out of date, runner app out of date, slowed by heat, on battery, can go to sleep |
+| Key numbers, names | Uptime, Disk free, Days until full, Swap, Connectivity, Restart pending, Power, Sleep, Clock skew, Versions, Docker disk, Temperature, Load (1, 5, 15 min) |
+| Key numbers, values | {n} days {n} h; {n}% on the {disk}; about {n} days ({disk}); none set up; {n} GB of {n} GB used; reaches GitHub in {n} ms; cannot reach GitHub; {n} ms to the controller; yes; yes, and it may stop running jobs; no; on battery; on mains power; can go to sleep; never goes to sleep; in sync with the controller; {time} ahead of the controller; {time} behind the controller; {n} GB in use; {n} °C; {n} °C, slowed by heat |
+| Days until full, no figure | The API's note (for example: free space is not falling); not enough samples yet |
+| Disk names | system disk, crsp data disk, Docker disk, runner work disk |
+| Job stats, switch | Name: Job stats window. Choices: 24 h, 7 days |
+| Job stats, lines | Succeeded, Failed, Cancelled, Timed out, Over memory, Stopped by crsp, Average run time, Average queue wait, Busy |
+| Job stats, no average | no jobs yet |
+| Job stats, last failure | Last failure: {job} in {repository}, {failed, timed out, ran over memory, stopped by crsp} {time ago}; none in the last 24 hours; none in the last 7 days |
+| Job stats, top failing | {repository} {job}: {n} failure, {n} failures (a link to Pool > Jobs); No job failed in {window}. |
+| Job stats, window words | the last 24 hours, the last 7 days |
+| Runner line | {n} jobs, {n} failed or cut short, average run {time}, busy {n}%; no jobs in this window; No runner is on this machine. |
+| Load, could not load | Could not load the health of {name}. Could not load the job stats of {name}. |
+| Machine page, notes | This machine has not reported its health yet. Every value reads unknown until it does. The last report is from {time ago}. These values may be out of date. |
+| Machine page, line | Health, job stats and runners of this machine. To change it, go to Setup > Machines. |
+| Machine page, panes | Key numbers; Disks; Memory and swap; Network and clock; Restarts, sleep and power; Versions and Docker; Heat and load; Job stats; Jobs over time |
+| Job stats, pane note | Jobs that finished in {window}. |
+| Jobs over time, note | Each row is a slot of this machine. Scroll left for the past, right for the forecast. |
+| Pool > Overview and Pool > Live, Jobs over time, note | Each row is a slot of a machine. Scroll left for the past, right for the forecast. |
+| Queue Analysis, section | Where the queue lands on the slots (Waiting jobs are placed on the slots the scheduler gives them. A forecast is not a promise.) |
+| Job page, waiting, chart label | Where this job waits |
+| Slot timeline, labels | Jobs of the pool; Jobs of this machine; Loading the jobs over time; Could not load the jobs over time. |
+| Slot timeline, empty | No job ran, runs or waits in the last 24 hours. |
+| Disks, table | Disk, Path, Free, Size, Days until full |
+| Memory and swap, facts | Swap, Memory kills ({n}, {n}, one recently), Last memory kill (none); table Scope, Name, Kills (Pool, Job) |
+| Network and clock, facts | Round trip to the controller, Last heartbeat, Reconnects in 24 h, GitHub (reachable, not reachable), DNS (works, fails), Clock skew |
+| Restarts, sleep, power, facts | Uptime, Last boot, Restarted without being asked, Restart pending, Why it is pending (not pending), May restart now, May stop running jobs, Updates waiting, Update active hours ({hh}:00 to {hh}:00), Automatic updates, Power, Sleep, Last wake |
+| Versions and Docker, facts | Agent, Controller, Runner app ({v} (out of date)), Docker, WSL, Docker disk; table What, Size (Images, Build cache, Volumes, Containers) |
+| Heat and load, facts | Temperature, Slowed by heat, Load 1 min, Load 5 min, Load 15 min, CPU taken by the host |
+| Job stats, runner table | Runner, Jobs, Succeeded, Failed or cut short, Average run time, Busy |
+
+## Variable name words (CRSP229, github-integration R5.28, R5.39, R5.102, R5.107, doctor R5.18, R5.19)
+
+The repository variables crsp writes, as the console, the CLI and the Doctor name them. A name is shown as it is, in code style, never translated or shortened. `{OS}` is `LINUX`, `WINDOWS` or `MACOS`; `{SIZE}` is a size name such as `LARGE`; `{JOB}` is the job key in upper case with `_` for every other character; `{repo}` is `owner/name`.
+
+| Where | Words |
+|---|---|
+| Pool variable of an OS | CRSP_RUNS_ON_{OS} (CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS, CRSP_RUNS_ON_MACOS) |
+| Size variable | CRSP_RUNS_ON_{OS}_{SIZE} (for example CRSP_RUNS_ON_LINUX_LARGE) |
+| Per-job variable | CRSP_{JOB} (for example CRSP_E2E) |
+| Per-job variable of a job whose name starts with runs on | CRSP_JOB_{JOB}_{hash} (for example CRSP_JOB_RUNS_ON_LINUX_1A2B) |
+| The runs-on a workflow should have | runs-on: ${{ fromJSON(vars.CRSP_{JOB} \|\| vars.CRSP_RUNS_ON_{OS} \|\| '"ubuntu-latest"') }} |
+| Plan step, write | Write variable CRSP_RUNS_ON_{OS} of {repo} = {labels} |
+| Plan step, delete an old name when the pool is turned off | Delete variable RUNS_ON_{OS} of {repo}. Workflows that read it will fail to start: {files}. |
+| Audit, old name removed | RUNS_ON_{OS} (old name; CRSP_RUNS_ON_{OS} replaces it) |
+| Audit, old light name removed | RUNS_ON_LIGHT (old name; no variable replaces it) |
+| Runs-on finding, a workflow reads an old name | job {job} reads RUNS_ON_{OS}, an old name crsp no longer writes; read CRSP_RUNS_ON_{OS} instead |
+| Doctor fix, literal labels | Use `runs-on: ${{ fromJSON(vars.CRSP_<JOB> \|\| vars.CRSP_RUNS_ON_<OS> \|\| '"ubuntu-latest"') }}` so the product keeps the labels correct. |
+| Retired | the setting Old variable names (legacy_vars), and the names CI_RUNS_ON and CI_RUNS_ON_WINDOWS as crsp's |

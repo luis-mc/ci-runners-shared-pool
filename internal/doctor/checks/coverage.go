@@ -14,7 +14,7 @@ import (
 )
 
 // capability is one thing a job can need from the pool (doctor R5.33). Release
-// is the release of the parity plan that adds it; Built says this build offers it.
+// is the release that adds it; Built says this build offers it.
 type capability struct {
 	Name    string
 	Release string
@@ -25,7 +25,7 @@ type capability struct {
 
 // capabilities is the table of the first version (v0.2.0): Windows jobs are
 // offered; every other need is listed with the release that adds it. Each
-// parity release flips Built for what it adds.
+// release flips Built for what it adds.
 var capabilities = []capability{
 	{Name: "database", Release: "v0.4.0", Words: []string{"pool-db-env", "crsp db-env", "database_url"}},
 	{Name: "browsers", Release: "v0.4.0", Words: []string{"playwright"}},
@@ -89,6 +89,11 @@ func CapabilitiesFromWorkflow(file string, content []byte, vars map[string]strin
 			n.OS = osOfLabels(labels)
 		case rj.Kind == runson.Variable:
 			n.OS = osOfVariable(rj.Var)
+			for _, v := range rj.Vars { // fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || ...)
+				if n.OS == "" {
+					n.OS = osOfVariable(v)
+				}
+			}
 		}
 		if n.OS == "" {
 			n.Unknown = true
@@ -169,18 +174,14 @@ func osOfLabels(labels []string) string {
 	return ""
 }
 
-// osOfVariable knows RUNS_ON_<OS> and the old names of github-integration R5.39.
+// osOfVariable knows CRSP_RUNS_ON_<OS> and RUNS_ON_<OS>, the name older
+// versions wrote (CRSP229). CI_RUNS_ON and CI_RUNS_ON_WINDOWS are not crsp's:
+// the legacy_vars setting that wrote them is gone (github-integration R5.39).
 func osOfVariable(name string) string {
 	if os := runson.OSOfVariable(name); os != "" {
 		return os
 	}
-	switch name {
-	case "CI_RUNS_ON":
-		return "linux"
-	case "CI_RUNS_ON_WINDOWS":
-		return "windows"
-	}
-	return ""
+	return runson.OSOfVariable("CRSP_" + name)
 }
 
 func coverageSubject(r doctor.Repository, os string) doctor.Subject {
@@ -261,7 +262,7 @@ func coverageRows(r doctor.Repository, jobs []JobNeeds) []doctor.Finding {
 		}
 		f.Severity, f.Title = doctor.Info, "missing: "+strings.Join(names, ", ")
 		f.Detail = "These jobs need what the pool does not offer yet: " + strings.Join(parts, "; ") + "."
-		f.Fix = doctor.Fix{Text: "Keep the " + osTitle(os) + " jobs of this repository on the old pool until these releases (see the parity plan)."}
+		f.Fix = doctor.Fix{Text: "Keep the " + osTitle(os) + " jobs of this repository on the old pool until these releases (see the move runbook)."}
 		out = append(out, f)
 	}
 	if len(unknown) > 0 {
@@ -269,7 +270,7 @@ func coverageRows(r doctor.Repository, jobs []JobNeeds) []doctor.Finding {
 		out = append(out, doctor.Finding{Check: "repo.coverage", Subject: repoSubject(r), Severity: doctor.Info,
 			Title:  "not checked",
 			Detail: "The doctor cannot tell what these jobs need: " + strings.Join(unknown, ", ") + ".",
-			Fix:    doctor.Fix{Text: "Write runs-on with a variable (fromJSON(vars.RUNS_ON_<OS>)) or labels so the job can be read."}})
+			Fix:    doctor.Fix{Text: "Write runs-on with a variable (fromJSON(vars.CRSP_RUNS_ON_<OS>)) or labels so the job can be read."}})
 	}
 	return out
 }

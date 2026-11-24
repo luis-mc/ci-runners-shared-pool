@@ -67,6 +67,8 @@ type Options struct {
 	// Jobs and Slots serve the jobs and slot routes (handlers_jobs.go).
 	Jobs  slots.Jobs
 	Slots scheduler.SlotQueue
+	// Assign serves the leases of the assign controller (handlers_assign.go).
+	Assign AssignLeases
 	// JobsData serves the Jobs section: runs, jobs, steps, forecasts, groups, stats and summaries (handlers_jobs.go,
 	// handlers_runs.go, handlers_jobstats.go). With it listJobs, getJob and exportJobs read from it, not from Jobs. Nil
 	// answers 501 on the new routes.
@@ -87,6 +89,14 @@ type Options struct {
 	EnvSets *envsets.Service
 	// JobSizes serves the job size routes (handlers_jobsizes.go, scheduling R5.89 to R5.97). Nil answers 501.
 	JobSizes JobSizeService
+	// RunnerClasses serves the runner size class settings (handlers_runnerclasses.go, scheduling R5.89 to R5.93). Nil answers 501.
+	RunnerClasses RunnerClassService
+	// Timers serves the timer settings and the grace actions (handlers_timers.go, scheduling R5.99 to R5.106). Nil answers 501.
+	Timers TimerService
+	// Health serves machine health, job stats and the health thresholds (handlers_machinehealth.go, OPS83). Nil answers 501.
+	Health HealthService
+	// ListenerGate serves the listener gate setting and its runners (handlers_listenergate.go, runners R5.134). Nil answers 501.
+	ListenerGate ListenerGateService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.
 	RegistryReplace RegistryReplaceService
@@ -109,17 +119,8 @@ type Options struct {
 	// JobRunners says who ran a job (runner origin, group, labels, steps source, checked at). Nil leaves
 	// those fields of a job absent (ci-run-insights R5.39 to R5.41).
 	JobRunners JobRunnerReader
-	// PublicHost is the name or address runners and machines reach this
-	// controller at (CRSP_PUBLIC_HOST), and ListenAddr the console address. The
-	// parity setup writes https://PublicHost:port; with none a runner can reach
-	// it refuses (CRSP141).
-	PublicHost string
-	ListenAddr string
 	// Listen serves the listen address routes (handlers_listen.go). Nil answers 501.
 	Listen ListenService
-	// ParityProbe calls the address the parity setup will write from the
-	// server side. Nil uses a call over https that trusts only the controller CA.
-	ParityProbe func(ctx context.Context, addr string) error
 	// Authn says who a request acts as. Nil uses the GitHub area's sessions and
 	// CLI tokens; with neither, every operation that needs a role answers 401.
 	// A test passes a fixed principal.

@@ -17,7 +17,6 @@ type MemStore struct {
 	users    map[int64]User
 	sessions map[string]sessionRow
 	tokens   map[string]CLIToken
-	access   map[string]AccessCredential
 	links    map[string]linkRow
 	bindings map[[2]string]TrayBinding
 	audit    []AuditEvent
@@ -43,7 +42,7 @@ type linkRow struct {
 // NewMemStore returns an empty store.
 func NewMemStore() *MemStore {
 	return &MemStore{setup: map[string]setupRow{}, users: map[int64]User{}, sessions: map[string]sessionRow{},
-		tokens: map[string]CLIToken{}, access: map[string]AccessCredential{}, links: map[string]linkRow{}, bindings: map[[2]string]TrayBinding{}, themes: map[int64]string{}}
+		tokens: map[string]CLIToken{}, links: map[string]linkRow{}, bindings: map[[2]string]TrayBinding{}, themes: map[int64]string{}}
 }
 
 var _ Store = (*MemStore)(nil)
@@ -431,68 +430,5 @@ func (m *MemStore) SetTheme(_ context.Context, id int64, theme string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.themes[id] = theme
-	return nil
-}
-
-func (m *MemStore) InsertAccessCredential(_ context.Context, c AccessCredential) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	m.access[c.ID] = c
-	return nil
-}
-
-func (m *MemStore) GetAccessCredential(_ context.Context, hash string) (AccessCredential, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	for _, c := range m.access {
-		if c.Hash == hash && c.RevokedAt.IsZero() {
-			return c, nil
-		}
-	}
-	return AccessCredential{}, ErrNotFound
-}
-
-func (m *MemStore) TouchAccessCredential(_ context.Context, id string, at time.Time) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if c, ok := m.access[id]; ok {
-		c.LastUsedAt = at
-		m.access[id] = c
-	}
-	return nil
-}
-
-func (m *MemStore) ListAccessCredentials(_ context.Context) ([]AccessCredential, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	out := make([]AccessCredential, 0, len(m.access))
-	for _, c := range m.access {
-		out = append(out, c)
-	}
-	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.After(out[j].CreatedAt) })
-	return out, nil
-}
-
-func (m *MemStore) GetAccessCredentialByID(_ context.Context, id string) (AccessCredential, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	c, ok := m.access[id]
-	if !ok {
-		return AccessCredential{}, ErrNotFound
-	}
-	return c, nil
-}
-
-func (m *MemStore) RevokeAccessCredential(_ context.Context, id string, at time.Time) error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	c, ok := m.access[id]
-	if !ok {
-		return ErrNotFound
-	}
-	if c.RevokedAt.IsZero() {
-		c.RevokedAt = at
-		m.access[id] = c
-	}
 	return nil
 }

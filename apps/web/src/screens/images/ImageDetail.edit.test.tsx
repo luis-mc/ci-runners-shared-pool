@@ -55,7 +55,7 @@ function renderRouted() {
         element: <App client={client} eventSource={(url) => new FakeEventSource(url)} />,
       },
     ],
-    { initialEntries: ['/pool/images/i1'] },
+    { initialEntries: ['/setup/images/i1'] },
   );
   render(<RouterProvider router={router} />);
   return router;
@@ -93,9 +93,9 @@ describe('Image layers edit bar', () => {
     expect(await screen.findByText('Discard changes?')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Keep editing' }));
     await waitFor(() => expect(screen.queryByText('Discard changes?')).toBeNull());
-    expect(router.state.location.pathname).toBe('/pool/images/i1');
+    expect(router.state.location.pathname).toBe('/setup/images/i1');
     fireEvent.click(screen.getByRole('link', { name: '‹ Images' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Discard' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/pool/images'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/setup/images'));
   });
 });

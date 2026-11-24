@@ -131,7 +131,7 @@ const machineDriver: WizardDriver = {
   id: 'add-machine',
   async open(state) {
     const api = machineApi();
-    let path = '/pool/machines/add';
+    let path = '/setup/machines/add';
     if (state === 'loading') api.on('GET', '/api/v1/machines', never);
     if (state === 'planning') api.on('GET', '/api/v1/install-command', never);
     if (['paused', 'stopped', 'failed', 'done-after-reload'].includes(state)) {
@@ -210,7 +210,7 @@ const plan = (state: string, steps: object[] = []) => ({
         {
           id: 's2',
           action: 'write_variable',
-          text: 'Write RUNS_ON_LINUX',
+          text: 'Write CRSP_RUNS_ON_LINUX',
           needs_yes: false,
           state: state === 'done' ? 'done' : 'planned',
         },
@@ -228,7 +228,7 @@ const poolDriver: WizardDriver = {
       .on('POST', '/api/v1/repository-plans', plan('planned'))
       .on('POST', '/api/v1/repository-plans/:id/apply', plan('applying'))
       .on('GET', '/api/v1/repository-plans/:id', plan('done'));
-    let path = '/repositories/turn-on';
+    let path = '/setup/pool/turn-on';
     if (state === 'loading') api.on('GET', '/api/v1/github/repositories', never);
     if (state === 'planning') api.on('POST', '/api/v1/repository-plans', never);
     if (state === 'running')
@@ -284,7 +284,7 @@ const runnersDriver: WizardDriver = {
       .on('POST', '/api/v1/runner-plans', rplan('planned'))
       .on('POST', '/api/v1/runner-plans/:id/apply', rplan('applying'))
       .on('GET', '/api/v1/runner-plans/:id', rplan('done'));
-    let path = '/pool/runners/add';
+    let path = '/setup/runners/add';
     if (state === 'loading') api.on('GET', '/api/v1/machines', never);
     if (state === 'planning') api.on('POST', '/api/v1/runner-plans', never);
     if (state === 'running') api.on('GET', '/api/v1/runner-plans/:id', rplan('applying'));
@@ -500,6 +500,96 @@ const updateDriverFor = (compact: boolean): WizardDriver => ({
 const updateDriver = updateDriverFor(false);
 const updatePageDriver = updateDriverFor(true);
 
+// ---------------------------------------------------------------------------------------------------- Restart the service (machine)
+const restartChange = (state: string) => ({
+  id: 'ch1',
+  machine_id: 'm1',
+  kind: 'service_restart',
+  state,
+  started_at: '2026-11-14T10:00:00Z',
+  waiting_for: [],
+});
+const jobOn = {
+  id: 9,
+  repository: 'octo/app',
+  run_id: 1,
+  run_attempt: 1,
+  github_job_id: 1,
+  job_name: 'e2e',
+  labels: [],
+  state: 'running' as const,
+};
+
+const restartDriver: WizardDriver = {
+  id: 'restart-machine',
+  async open(state) {
+    let started = false;
+    let reads = 0;
+    const api = signedIn()
+      .on('GET', '/api/v1/machines/:id', () => {
+        reads += 1;
+        if (state === 'planning' && reads > 1) return hang();
+        if (started && state === 'running')
+          return machine({ pending_change: restartChange('waiting') as never });
+        if (started) return machine();
+        return state === 'first-run' || state === 'planning'
+          ? machine({ online: false })
+          : machine({ running_jobs: [jobOn] });
+      })
+      .on('POST', '/api/v1/machines/:id/restart', () => {
+        started = true;
+        return restartChange('waiting');
+      });
+    let path = '/setup/machines/m1/restart';
+    if (state === 'loading') api.on('GET', '/api/v1/machines/:id', hang);
+    if (state === 'stopped')
+      api.on('GET', '/api/v1/machines/:id', machine({ is_controller: true }));
+    if (state === 'paused') {
+      path += '?started=1';
+      api.on(
+        'GET',
+        '/api/v1/machines/:id',
+        machine({ pending_change: restartChange('running') as never }),
+      );
+    }
+    if (state === 'failed') {
+      path += '?started=1';
+      api.on(
+        'GET',
+        '/api/v1/machines/:id',
+        machine({ pending_change: restartChange('needs_you') as never }),
+      );
+    }
+    if (state === 'done-after-reload') {
+      path += '?started=1';
+      api.on('GET', '/api/v1/machines/:id', machine());
+    }
+    renderApp(api, path);
+    await step('Restart the service');
+    const snap = () => read(state, 'Restart the service', false);
+    if (state === 'loading') return snap();
+    if (['paused', 'stopped', 'failed', 'done-after-reload'].includes(state)) {
+      await screen.findAllByRole('button', {
+        name: /Start again|Try again|Open the machine/,
+      });
+      return snap();
+    }
+    if (state === 'first-run' || state === 'planning') {
+      await press('Try again');
+      return snap();
+    }
+    await screen.findByText(/Nothing has changed yet/);
+    if (state === 'ready-to-review') return snap();
+    await press('Restart the service');
+    if (state === 'running') {
+      await screen.findByText(/Restarting the service|Waiting for/, { selector: 'p' });
+      return snap();
+    }
+    await screen.findByRole('button', { name: 'Open the machine' });
+    return snap();
+  },
+};
+
 describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
   const drivers = [
     connectDriver,
@@ -508,6 +598,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
     runnersDriver,
     updateDriver,
     updatePageDriver,
+    restartDriver,
   ];
   for (const d of drivers) {
     it(`${d.id} passes the ten states and keeps its known list empty`, async () => {
@@ -556,7 +647,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
 
   it('Stop withdraws the join code and the wizard still ends at Done (R5.17)', async () => {
     const api = machineApi();
-    renderApp(api, '/pool/machines/add');
+    renderApp(api, '/setup/machines/add');
     await screen.findByRole('radio', { name: 'Linux' });
     await press('Next');
     await press('Join a machine');
@@ -607,7 +698,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
           stopped = true;
           return mk('applying');
         });
-      renderApp(api, repo ? '/repositories/turn-on' : '/pool/runners/add');
+      renderApp(api, repo ? '/setup/pool/turn-on' : '/setup/runners/add');
       if (repo) await tickOnce('Select octo/app');
       else await screen.findByRole('textbox', { name: /Labels/ });
       await press('Next');
@@ -632,7 +723,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
         ...rplan('planned'),
         created_by: String((c.body as { count: number }).count),
       }));
-    renderApp(api, '/pool/runners/add');
+    renderApp(api, '/setup/runners/add');
     await screen.findByRole('textbox', { name: /Labels/ });
     await press('Next');
     await screen.findByText(/1 persistent runner on build-1/);

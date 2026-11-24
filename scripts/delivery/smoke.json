@@ -1,5 +1,5 @@
 {
-  "_note": "STACKSPEC 13.7. start runs the PACKAGED crsp binary in controller mode (cmd/crsp/main.go runController). The console is plain HTTP on 127.0.0.1 and ::1 and HTTPS on every other address (web-console R5.1, D38); the smoke run listens on loopback, so it probes http. smoke_packaged.py still probes a loopback https URL without verifying the controller's own CA. Ports 18460/18461 and a temp data dir keep it off the default 8460/8461. Expect lines are slog JSON messages: 'controller listening' (cmd/crsp/main.go), 'agent link listening' (cmd/crsp/machines_wiring.go), and the controller's own worker, the local agent: 'joined the controller' and 'session open' (internal/agent/run.go); 'first run: open this one-time setup link' (cmd/crsp/areas_wiring.go). The second health URL is getSetupState: it answers 200 only when the GitHub area is wired into the controller (CRSP41); an unwired controller answers 501.",
+  "_note": "STACKSPEC 13.7. Fill start (the PACKAGED program) and list a readiness line for the program and every worker it starts in expect. An empty start means the product ships no packaged program.",
   "smoke": {
     "build": "CGO_ENABLED=0 go build -mod=readonly -trimpath -o dist/crsp ./cmd/crsp",
     "start": "CRSP_DATA_DIR=\"$(mktemp -d)\" CRSP_LISTEN_ADDR=127.0.0.1:18460 CRSP_AGENT_ADDR=127.0.0.1:18461 ./dist/crsp controller",

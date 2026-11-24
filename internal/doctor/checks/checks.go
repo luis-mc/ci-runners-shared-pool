@@ -53,10 +53,13 @@ func Register(reg *doctor.Registry) {
 		doctor.NewCheck("runner.registrations", doctor.GroupRunner, M1, false, runnerRegistrations),
 		doctor.NewCheck("runner.slots", doctor.GroupRunner, M1, false, runnerSlots),
 		doctor.NewCheck("machine.reset", doctor.GroupMachine, M1, false, machineReset),
+		doctor.NewCheck("runner.tools.plan", doctor.GroupRunner, M1, false, runnerToolsPlan),
 		doctor.NewCheck("runner.tools.same", doctor.GroupRunner, M1, false, runnerToolsSame),
 		doctor.NewCheck("github.app.installation", doctor.GroupGitHub, M1, false, appInstallation),
 		doctor.NewCheck("github.app.permissions", doctor.GroupGitHub, M1, false, appPermissions),
 		doctor.NewCheck("github.webhook", doctor.GroupGitHub, M1, false, githubWebhook),
+		doctor.NewCheck("timers.mode", doctor.GroupMachine, M1, false, timersMode),
+		doctor.NewCheck("listener.gate", doctor.GroupMachine, M1, false, listenerGate),
 		doctor.NewCheck("demand.quiet", doctor.GroupRepository, M1, false, demandQuiet),
 		doctor.NewCheck("repo.vars", doctor.GroupRepository, M1, false, repoVars),
 		doctor.NewCheck("repo.vars.runner", doctor.GroupRepository, M1, false, repoVarsRunner),
@@ -69,6 +72,7 @@ func Register(reg *doctor.Registry) {
 		doctor.NewCheck("repo.coverage", doctor.GroupRepository, M1, false, repoCoverage),
 		doctor.NewCheck("workflow.labels", doctor.GroupWorkflow, M1, false, workflowLabels),
 		doctor.NewCheck("workflow.generic", doctor.GroupWorkflow, M1, false, workflowGeneric),
+		doctor.NewCheck("workflow.perjob", doctor.GroupWorkflow, M1, false, workflowPerJob),
 		doctor.NewCheck("workflow.unresolved", doctor.GroupWorkflow, M1, false, workflowUnresolved),
 	} {
 		reg.Register(c)

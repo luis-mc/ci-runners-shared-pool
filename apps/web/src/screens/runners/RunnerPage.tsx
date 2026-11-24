@@ -4,6 +4,7 @@ import {
   Breadcrumbs,
   Button,
   CheckRow,
+  DateTime,
   EditBar,
   Facts,
   Message,
@@ -15,13 +16,21 @@ import {
   TextLink,
   formatSize,
 } from '@crsp/ui';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { useVersion } from '../../live/LiveProvider';
 import { Load } from '../common';
+import {
+  GATE_OBSERVE_NOTE,
+  GATE_SECTION,
+  GATE_WAKE_HELP,
+  gateRowOf,
+  listenerText,
+  waitingText,
+} from './gateWords';
 import { KIND_NAMES } from './kinds';
 
 type Runner = Schemas['Runner'];
@@ -57,7 +66,7 @@ export function RunnerPage() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/runners', label: 'Runners' },
+          { to: '/setup/runners', label: 'Runners' },
           { label: result.state === 'ready' ? result.data.name : 'Runner' },
         ]}
       />
@@ -80,7 +89,23 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
   const persistent = r.kind === 'persistent';
   const saved = r.keep_dependencies !== false;
   const [keeps, setKeeps] = useState(saved);
-  useEffect(() => setKeeps(saved), [saved]);
+  // Follow the saved value when it changes. Not an effect: a mount effect ran after an early click and undid it.
+  const [seenSaved, setSeenSaved] = useState(saved);
+  if (seenSaved !== saved) {
+    setSeenSaved(saved);
+    setKeeps(saved);
+  }
+
+  // The listener gate of a persistent runner on the machine itself; a runner it does not gate shows nothing.
+  const { result: gateResult } = useLoad(
+    () =>
+      persistent
+        ? unwrap(client.GET('/api/v1/listener-gate'))
+        : Promise.resolve(undefined),
+    [persistent, r.id],
+  );
+  const gate = gateResult.state === 'ready' ? gateResult.data : undefined;
+  const gateRow = gateRowOf(gate, r.name);
 
   const save = useCommand(async () => {
     await unwrap(
@@ -114,7 +139,7 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
             {
               name: 'Machine',
               value: (
-                <TextLink to={`/pool/machines/${r.machine_id}`}>
+                <TextLink to={`/setup/machines/${r.machine_id}`}>
                   {r.machine_name}
                 </TextLink>
               ),
@@ -124,6 +149,21 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
           ]}
         />
       </Section>
+      {gate && gateRow ? (
+        <Section title={GATE_SECTION}>
+          <Stack>
+            {!gate.enforce ? <Message tone="note">{GATE_OBSERVE_NOTE}</Message> : null}
+            <Facts
+              items={[
+                { name: 'Listener', value: listenerText(gateRow) },
+                { name: 'Weekly wake-up', value: <DateTime value={gateRow.next_wake} /> },
+                { name: 'Jobs waiting', value: waitingText(gateRow) },
+              ]}
+            />
+            <Text tone="muted">{GATE_WAKE_HELP}</Text>
+          </Stack>
+        </Section>
+      ) : null}
       {persistent ? (
         <Section title="Dependencies">
           <Stack>

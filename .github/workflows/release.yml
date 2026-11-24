@@ -14,7 +14,7 @@ name: Release
 # TRANSITION (CRSP224): each installer and archive is also published as a byte-identical copy named
 # crsp-<goos>-<goarch>_<version>.<ext> (goos windows, linux, darwin; goarch amd64, arm64), the name
 # the updater of 0.1.21 and older looks for. They are in SHA256SUMS and attested like the others,
-# and stay until no supported install is on 0.1.21 or older (operations R5.127).
+# and stay until no supported install is on 0.1.21 or older (operations R5.128).
 # crsp-sbom-go.spdx.json and crsp-sbom-web.spdx.json (SPDX SBOMs, CRSP90),
 # manifest.json and manifest.json.sig (the update manifest and its Ed25519 signature, signed with
 # the secret CRSP_UPDATE_SIGNING_KEY; the release fails when the secret is missing),
@@ -338,7 +338,7 @@ jobs:
       # linux, darwin; arch amd64, arm64). OPS69 renamed the assets, and those updaters would find
       # nothing. The copies come after the manifest, so manifest.json and its signature are unchanged;
       # they join SHA256SUMS and the attestation below. The legacy names stay until no supported
-      # install is on 0.1.21 or older (operations R5.127, docs/guides/install.md).
+      # install is on 0.1.21 or older (operations R5.128, docs/guides/install.md).
       - name: Legacy asset names for 0.1.21 and older (transition)
         run: bash scripts/ci/release-legacy.sh dist "$VERSION"
 
@@ -391,7 +391,7 @@ jobs:
           flags=""
           case "$TAG" in *-*) flags="--prerelease" ;; esac
           # shellcheck disable=SC2086
-          gh release create "$TAG" dist/* --verify-tag --generate-notes $flags
+          gh release create "$TAG" dist/* --verify-tag --generate-notes --notes-file docs/guides/upgrade-notes.md $flags
 
       # CRSP130: when GitHub found no merged PR between the previous stable tag
       # and this one, the generated notes have no "What's Changed" list; write
@@ -405,6 +405,8 @@ jobs:
           gh release view "$TAG" --json body --jq .body > "$RUNNER_TEMP/notes.md"
           bash scripts/ci/release-notes-fallback.sh "$TAG" "$RUNNER_TEMP/notes.md" > "$RUNNER_TEMP/fallback.md"
           if [ -s "$RUNNER_TEMP/fallback.md" ]; then
+            { cat docs/guides/upgrade-notes.md; echo; cat "$RUNNER_TEMP/fallback.md"; } > "$RUNNER_TEMP/fallback-full.md"
+            mv "$RUNNER_TEMP/fallback-full.md" "$RUNNER_TEMP/fallback.md"
             gh release edit "$TAG" --notes-file "$RUNNER_TEMP/fallback.md"
             echo "notes written from commit subjects"
           fi

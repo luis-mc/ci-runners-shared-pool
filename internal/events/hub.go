@@ -14,7 +14,7 @@ const (
 	DefaultReplayEvents = 2000
 	DefaultReplayAge    = 10 * time.Minute
 	DefaultMaxBehind    = 500
-	DefaultLoadEvery    = 5 * time.Second
+	DefaultLoadEvery    = 2 * time.Second
 )
 
 // Options configure a MemHub. A zero field takes its default.

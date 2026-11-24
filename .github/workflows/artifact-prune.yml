@@ -1,17 +1,25 @@
 name: Artifact prune
 
-# Implements STACKSPEC 13.1 "Build artifacts": the platform keeps only the
-# newest build artifact of each name. Artifacts are billed for storage, so one
-# sweep a day deletes the older ones (DL379). It does not run after every
-# workflow: a run per workflow took the one self-hosted slot many times a day.
+# Implements STACKSPEC §13.1 "Build artifacts": the platform keeps only the
+# newest build artifact of each name. Installers, bundles and test reports that
+# a workflow uploads are billed for storage, so older ones are deleted by one
+# sweep a day (DL379). It does not run after every workflow: a run per workflow
+# took the one self-hosted slot many times a day, and one prune waited hours.
 # A project whose storage fills sooner starts it by hand (workflow_dispatch).
 #
-# The sweep reads the artifacts of the whole repository, so every workflow that
-# uploads one is covered. Workflows that upload artifacts here, as a note:
-# workflows: ["CI", "Release", "Package", "Package Windows", "Installer", "Installer packages", "Tray smoke", "Parity"]
+# Every workflow that uploads an artifact (actions/upload-artifact) is covered:
+# the sweep reads the artifacts of the whole repository. The line below is a
+# note of the ones the project knows, kept in `.delivery/config.json`:
+#   {"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}}
+# After a plugin update run scripts/delivery/artifact_prune.py --sync-workflow.
+# workflows: ["CI", "Release", "Package", "Package Windows", "Installer", "Installer packages", "Tray smoke"]
 #
-# Artifact names are stable per kind (crsp-linux-amd64, never one with a version
-# or run number), or the grouping would not work.
+# Installer artifacts (CIR10 W5): when a workflow publishes them, add to the run line
+# `--hold windows-installer --hold-workflow package-windows.yml`, so a failed publish keeps its installer.
+#
+# Artifact names must be stable per kind (`windows-installer`, never
+# `windows-installer-1.4.2-run-812`), or the pruning cannot group them. A build
+# that must outlive the next one is a release asset, not an artifact.
 on:
   schedule:
     - cron: '23 3 * * *'
@@ -43,3 +51,5 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
         run: bash scripts/ci/artifact-prune.sh
+      - name: Check the workflow list
+        run: python3 scripts/delivery/artifact_prune.py --check-workflow || echo "::warning::artifact-prune.yml lists other workflows than artifact_prune.workflows; run scripts/delivery/artifact_prune.py --sync-workflow"

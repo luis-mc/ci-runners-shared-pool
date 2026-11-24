@@ -73,8 +73,18 @@
     "internal/api/handlers_registry*.go": [
       "docs/features/registry/spec.md"
     ],
+    "internal/api/handlers_runnerclasses.go": [
+      "docs/features/scheduling/spec.md"
+    ],
+    "internal/api/handlers_timers.go": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/api/stubs_registry_*.go": [
       "docs/features/registry/spec.md"
+    ],
+    "internal/assign/**": [
+      "docs/features/github-integration/spec.md",
+      "docs/features/runners/spec.md"
     ],
     "internal/audit/**": [
       "docs/features/observability/spec.md"
@@ -137,6 +147,9 @@
     "internal/github/**": [
       "docs/features/github-integration/spec.md"
     ],
+    "internal/github/cancel.go": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/github/rest_insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
@@ -167,11 +180,17 @@
     "internal/logs/**": [
       "docs/features/observability/spec.md"
     ],
+    "internal/machinehealth/**": [
+      "docs/features/machines/spec.md"
+    ],
     "internal/machines/**": [
       "docs/features/machines/spec.md"
     ],
     "internal/mail/**": [
       "docs/features/notifications/spec.md"
+    ],
+    "internal/memcap/**": [
+      "docs/features/scheduling/spec.md"
     ],
     "internal/mirror/**": [
       "docs/features/caches/spec.md"
@@ -181,9 +200,6 @@
     ],
     "internal/overview/**": [
       "docs/features/observability/spec.md"
-    ],
-    "internal/parity/**": [
-      "docs/features/cli/spec.md"
     ],
     "internal/power/**": [
       "docs/features/machines/spec.md"
@@ -203,6 +219,9 @@
     "internal/repos/**": [
       "docs/features/github-integration/spec.md"
     ],
+    "internal/routing/**": [
+      "docs/features/github-integration/spec.md"
+    ],
     "internal/runnercache/**": [
       "docs/features/caches/spec.md",
       "docs/features/runners/spec.md"
@@ -210,7 +229,13 @@
     "internal/runners/**": [
       "docs/features/runners/spec.md"
     ],
+    "internal/runners/sizeclass*.go": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/scheduler/**": [
+      "docs/features/scheduling/spec.md"
+    ],
+    "internal/scheduler/admit/**": [
       "docs/features/scheduling/spec.md"
     ],
     "internal/secrets/**": [
@@ -249,11 +274,23 @@
     "internal/store/registry_core.go": [
       "docs/features/registry/spec.md"
     ],
+    "internal/store/schedadmit.go": [
+      "docs/features/scheduling/spec.md"
+    ],
     "internal/store/schedstore.go": [
+      "docs/features/scheduling/spec.md"
+    ],
+    "internal/store/timers.go": [
+      "docs/features/scheduling/spec.md"
+    ],
+    "internal/timers/**": [
       "docs/features/scheduling/spec.md"
     ],
     "internal/tools/**": [
       "docs/features/caches/spec.md"
+    ],
+    "internal/toolstore/**": [
+      "docs/features/runners/spec.md"
     ],
     "internal/tray/**": [
       "docs/features/tray/spec.md"

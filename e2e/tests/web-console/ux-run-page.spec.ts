@@ -11,7 +11,7 @@ for (const width of [393, 1300]) {
     }) => {
       const mock = await openRoute(
         page,
-        { url: '/jobs/run/100', signedOut: false },
+        { url: '/pool/runs/100', signedOut: false },
         { width, mode },
       );
       mock.on('GET', '/api/v1/runs/:id', RUN);

@@ -111,7 +111,7 @@ describe('Enable for public repositories (settings)', () => {
 
 describe('Repositories: active types, Visibility and greyed public rows', () => {
   it('shows the active types as a chip in the toolbar, not a link, and the chip opens the setting (UX-8)', async () => {
-    renderApp(list(setting(signedIn(), false)), '/repositories');
+    renderApp(list(setting(signedIn(), false)), '/setup/pool');
     const chip = await screen.findByRole('button', {
       name: 'Types: Private (default)',
     });
@@ -129,14 +129,14 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
   });
 
   it('shows Private & Public when the setting is on', async () => {
-    renderApp(list(setting(signedIn(), true)), '/repositories');
+    renderApp(list(setting(signedIn(), true)), '/setup/pool');
     expect(
       await screen.findByRole('button', { name: 'Types: Private & Public' }),
     ).toBeTruthy();
   });
 
   it('tags a public row with its visibility; public rows are greyed without a repeated note while it is off', async () => {
-    renderApp(list(setting(signedIn(), false)), '/repositories?public=1');
+    renderApp(list(setting(signedIn(), false)), '/setup/pool?public=1');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     expect(within(table).queryByRole('columnheader', { name: 'Visibility' })).toBeNull();
     await screen.findByRole('button', { name: 'Types: Private (default)' });
@@ -156,7 +156,7 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
   });
 
   it('does not grey public rows while the setting is on', async () => {
-    renderApp(list(setting(signedIn(), true)), '/repositories');
+    renderApp(list(setting(signedIn(), true)), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     await screen.findByRole('button', { name: 'Types: Private & Public' });
     for (const row of within(table).getAllByRole('row'))
@@ -164,7 +164,7 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
   });
 
   it('disables Turn on for a selection that holds a public repository while off, with the reason', async () => {
-    renderApp(list(setting(signedIn(), false)), '/repositories?public=1');
+    renderApp(list(setting(signedIn(), false)), '/setup/pool?public=1');
     await screen.findByRole('button', { name: 'Types: Private (default)' });
     fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/site' }));
     const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Use pool' });
@@ -186,7 +186,7 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
     };
     const bad = { ...pub, pool_on: true, problem };
     const api = setting(signedIn(), false).on('GET', '/api/v1/repositories/:id', bad);
-    renderApp(list(api, [priv, bad]), '/repositories/octo/site');
+    renderApp(list(api, [priv, bad]), '/setup/pool/octo/site');
     const alert = await screen.findByRole('alert');
     expect(within(alert).getByText(problem.text)).toBeTruthy();
     expect(
@@ -202,7 +202,7 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
 
 describe('Turn on the pool and Add runners while public repositories are off', () => {
   it('Turn on the pool does not list a public repository and says why, with a link', async () => {
-    renderApp(list(setting(signedIn(), false)), '/repositories/turn-on');
+    renderApp(list(setting(signedIn(), false)), '/setup/pool/turn-on');
     expect(await screen.findByText(/1 public repository is not listed/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Open the setting' })).toBeTruthy();
     expect(screen.getByRole('checkbox', { name: 'Select octo/app' })).toBeTruthy();
@@ -211,7 +211,7 @@ describe('Turn on the pool and Add runners while public repositories are off', (
 
   it('Add runners names no repository, so the server refuses a public one while off (D31)', async () => {
     const onPool = { ...pub, pool_on: true };
-    renderApp(list(setting(signedIn(), false), [onPool]), '/pool/runners/add');
+    renderApp(list(setting(signedIn(), false), [onPool]), '/setup/runners/add');
     await screen.findByRole('textbox', { name: /Labels/ });
     expect(screen.queryByRole('radio', { name: /octo\/site/ })).toBeNull();
   });

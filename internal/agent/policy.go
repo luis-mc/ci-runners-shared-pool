@@ -175,7 +175,9 @@ func (l *link) acceptingReport(ctx context.Context) *agentv1.AcceptingReport {
 	l.capMu.Lock()
 	applied := l.cap.pct // the percent the state is about, set after the apply
 	l.capMu.Unlock()
+	floorGiB, floorOff := l.cfg.Gate.DiskFloor()
 	r := &agentv1.AcceptingReport{
+		DiskFloorGib: int32(floorGiB), DiskFloorOff: floorOff, //nolint:gosec // at most 2000
 		Accepting: acc.Accepting, PauseReason: acc.Reason, OnBattery: acc.Power.OnBattery, BatteryKnown: acc.Power.Known,
 		CpuCapPct: int32(applied), CpuCapState: res.State, CpuCapDetail: res.Detail, //nolint:gosec // 25 to 100
 	}
@@ -222,5 +224,6 @@ func sameReport(a, b *agentv1.AcceptingReport) bool {
 	return a.GetAccepting() == b.GetAccepting() && a.GetPauseReason() == b.GetPauseReason() &&
 		a.GetOnBattery() == b.GetOnBattery() && a.GetBatteryKnown() == b.GetBatteryKnown() &&
 		a.GetCpuCapPct() == b.GetCpuCapPct() && a.GetCpuCapState() == b.GetCpuCapState() &&
-		a.GetCpuCapDetail() == b.GetCpuCapDetail() && a.GetPauseUntilUnixMs() == b.GetPauseUntilUnixMs()
+		a.GetCpuCapDetail() == b.GetCpuCapDetail() && a.GetPauseUntilUnixMs() == b.GetPauseUntilUnixMs() &&
+		a.GetDiskFloorGib() == b.GetDiskFloorGib() && a.GetDiskFloorOff() == b.GetDiskFloorOff()
 }

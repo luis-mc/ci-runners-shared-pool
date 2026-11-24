@@ -4,6 +4,7 @@ import {
   Button,
   Chips,
   CheckRow,
+  Cluster,
   Empty,
   ErrorSummary,
   Facts,
@@ -20,6 +21,7 @@ import {
   Status,
   Table,
   Breadcrumbs,
+  Text,
   TextLink,
   formatPast,
   formatPercent,
@@ -29,8 +31,8 @@ import {
   ActionBar,
   EditBar,
 } from '@crsp/ui';
-import { lazy, Suspense, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
@@ -46,6 +48,11 @@ import { RecoverySection } from './Recovery';
 const MachineRemove = lazy(() => import('./MachineRemove'));
 
 type Machine = Schemas['Machine'];
+
+/** The longest the job-started hook holds a job: the cap of scheduling R5.75. The saved value is 1 or 2. */
+const GATE_WAIT_MAX = 2;
+/** The address part the Doctor fix opens the page at (internal/doctor/checks GateMaxWaitAnchor). */
+const GATE_WAIT_ANCHOR = 'gate-max-wait';
 
 const STATES = [
   { value: 'active', label: 'Online' },
@@ -65,7 +72,7 @@ export function MachinesList() {
     {
       id: 'name',
       header: 'Name',
-      cell: (m) => <TextLink to={`/pool/machines/${m.id}`}>{m.name}</TextLink>,
+      cell: (m) => <TextLink to={`/setup/machines/${m.id}`}>{m.name}</TextLink>,
       sort: (m) => m.name,
     },
     { id: 'os', header: 'System', cell: (m) => systemText(m), sort: (m) => m.os },
@@ -176,7 +183,7 @@ export function MachinesList() {
             kind="primary"
             disabled={!session.can('admin')}
             reason={session.can('admin') ? undefined : session.whyNot('admin')}
-            onPress={() => void navigate('/pool/machines/add')}
+            onPress={() => void navigate('/setup/machines/add')}
           >
             Add a machine
           </Button>
@@ -203,7 +210,7 @@ export function MachineDetail() {
     <Page>
       <Breadcrumbs
         trail={[
-          { to: '/pool/machines', label: 'Machines' },
+          { to: '/setup/machines', label: 'Machines' },
           { label: result.state === 'ready' ? result.data.name : 'Machine' },
         ]}
       />
@@ -240,11 +247,24 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
       : { kind: t.kind, word: t.word };
   const jobs = (m.running_jobs ?? []).map((j) => `${j.repository} ${j.job_name}`);
 
+  // Doctor fixes open this page at a field (#gate-max-wait): scroll to it once the page is drawn.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash)
+      document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: 'center' });
+  }, [hash]);
+
   const [mem, setMem] = useState(m.settings.budget_memory_pct);
   const [cpu, setCpu] = useState(m.settings.budget_cpu_pct);
   const [slots, setSlots] = useState(m.settings.job_slots);
   const [drain, setDrain] = useState(m.settings.drain_timeout_minutes);
+  const gateSaved = m.settings.gate_max_wait_minutes ?? GATE_WAIT_MAX;
+  const [gate, setGate] = useState(gateSaved);
   const [allowed, setAllowed] = useState<string[]>(m.settings.allowed_backends);
+  // The floor in force: the console value, else what the agent started with (runners R5.83, OPS86).
+  const floorOff = m.policy?.disk_floor_off === true;
+  const floorSaved = m.settings.disk_floor_gib || m.policy?.disk_floor_gib || 10;
+  const [floor, setFloor] = useState(floorSaved);
   const [errors, setErrors] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
 
@@ -254,6 +274,8 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     (cpu !== m.settings.budget_cpu_pct ? 1 : 0) +
     (slots !== m.settings.job_slots ? 1 : 0) +
     (drain !== m.settings.drain_timeout_minutes ? 1 : 0) +
+    (gate !== gateSaved ? 1 : 0) +
+    (!floorOff && floor !== floorSaved ? 1 : 0) +
     (allowed.slice().sort().join() !== m.settings.allowed_backends.slice().sort().join()
       ? 1
       : 0);
@@ -264,9 +286,13 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
       budget_cpu_pct: cpu,
       job_slots: slots,
       drain_timeout_minutes: drain,
+      // Sent only when changed: a stored longer value must not block saving the other fields.
+      ...(gate !== gateSaved ? { gate_max_wait_minutes: gate } : {}),
       allowed_backends: allowed as Schemas['BackendName'][],
+      // Sent only when changed: saving other fields must not pin the value of the start.
+      ...(!floorOff && floor !== floorSaved ? { disk_floor_gib: floor } : {}),
     }),
-    [mem, cpu, slots, drain, allowed],
+    [mem, cpu, slots, drain, gate, gateSaved, allowed, floor, floorOff, floorSaved],
   );
 
   const saveAsk = useQuestion(
@@ -287,6 +313,10 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     if (mem < 1 || mem > 100) problems.push('Memory budget must be from 1% to 100%.');
     if (cpu < 1 || cpu > 100) problems.push('CPU budget must be from 1% to 100%.');
     if (slots < 1) problems.push('Job slots must be at least 1.');
+    if (gate !== gateSaved && (gate < 1 || gate > GATE_WAIT_MAX))
+      problems.push(`Gate maximum wait must be from 1 to ${GATE_WAIT_MAX} minutes.`);
+    if (!floorOff && (floor < 1 || floor > 2000))
+      problems.push('Free disk to keep must be from 1 GB to 2000 GB.');
     setErrors(problems);
     if (problems.length) return;
     if (!(await poolSize.save())) return;
@@ -413,6 +443,35 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
         />
       </Section>
       <RecoverySection m={m} onChanged={onChanged} />
+      <Section title="Service">
+        <Stack gap="tight">
+          <Text>
+            Stop and start the service after the running jobs end. No running job is
+            stopped.
+          </Text>
+          <Cluster>
+            <Button
+              onPress={() =>
+                void navigate(
+                  m.is_controller
+                    ? '/settings/updates/review?kind=restart'
+                    : `/setup/machines/${m.id}/restart`,
+                )
+              }
+              disabled={!admin || (!m.online && !m.is_controller)}
+              reason={
+                !admin
+                  ? why
+                  : !m.online && !m.is_controller
+                    ? 'The machine is offline.'
+                    : undefined
+              }
+            >
+              Restart the service
+            </Button>
+          </Cluster>
+        </Stack>
+      </Section>
       <MachinePolicySection m={m} onChanged={onChanged} />
       <MachineDockerDiskSection m={m} onChanged={onChanged} />
       <form
@@ -502,7 +561,58 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
                 changed={drain !== m.settings.drain_timeout_minutes}
                 onChange={setDrain}
               />
+              <div id={GATE_WAIT_ANCHOR}>
+                <NumberField
+                  label="Gate maximum wait"
+                  help="How long a job may wait for a free slot before it starts. Never more than 2 minutes."
+                  value={gate}
+                  unit=" min"
+                  min={1}
+                  max={GATE_WAIT_MAX}
+                  changed={gate !== gateSaved}
+                  error={
+                    gateSaved > GATE_WAIT_MAX && gate === gateSaved
+                      ? `Saved as ${gateSaved} minutes. The hook cuts the wait to ${GATE_WAIT_MAX}. Set ${GATE_WAIT_MAX} or less and press Save.`
+                      : undefined
+                  }
+                  onChange={setGate}
+                />
+              </div>
             </FieldGrid>
+          </Section>
+          <Section title="Disk">
+            <Stack>
+              {floorOff ? (
+                <Facts
+                  items={[
+                    {
+                      name: 'Free disk to keep',
+                      value: 'Off',
+                    },
+                  ]}
+                />
+              ) : (
+                <NumberField
+                  label="Free disk to keep"
+                  help="Under this much free space new jobs wait (disk_low). Running jobs finish."
+                  value={floor}
+                  unit=" GB"
+                  min={1}
+                  max={2000}
+                  changed={floor !== floorSaved}
+                  onChange={setFloor}
+                />
+              )}
+              {floorOff ? (
+                <Text>
+                  The floor is off in config.toml on this machine. It cannot be changed
+                  here.
+                </Text>
+              ) : null}
+              {f?.disk_free_bytes !== undefined ? (
+                <Text>{`${Math.round((f.disk_free_bytes / 2 ** 30) * 10) / 10} GB free now.`}</Text>
+              ) : null}
+            </Stack>
           </Section>
           {poolSize.section}
         </Stack>
@@ -511,7 +621,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
         <MachineRemove
           machineId={m.id}
           disabled={!admin}
-          onRemoved={() => void navigate('/pool/machines')}
+          onRemoved={() => void navigate('/setup/machines')}
         />
       </Suspense>
       {saved ? <Message tone="done">Settings saved.</Message> : null}
@@ -526,6 +636,8 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           setCpu(m.settings.budget_cpu_pct);
           setSlots(m.settings.job_slots);
           setDrain(m.settings.drain_timeout_minutes);
+          setGate(gateSaved);
+          setFloor(floorSaved);
           setAllowed(m.settings.allowed_backends);
           setErrors([]);
           poolSize.reset();

@@ -4,7 +4,7 @@
 # crsp-<goos>-<goarch>_<version>.<ext>. Those updaters read that name from the release assets and
 # from SHA256SUMS, then check the SHA-256 and the build provenance attestation for it. The new
 # updater (0.1.22+) prefers the Crsp-* names and the signed manifest. The copies stay until no
-# supported install is on 0.1.21 or older (operations R5.127).
+# supported install is on 0.1.21 or older (operations R5.128).
 # Usage: bash scripts/ci/release-legacy.sh DIR VERSION
 set -euo pipefail
 dir="${1:?usage: release-legacy.sh DIR VERSION}"

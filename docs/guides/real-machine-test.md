@@ -58,7 +58,7 @@ The setup page shows three wizards in order. A later one stays greyed until the 
 
 - [ ] **Connect GitHub.** Choose your personal account, keep the App name, go to **Review**. It says "Nothing has changed yet." Go on: **Creating the App** sends you to GitHub and back. **Done** shows the App's name, its permissions and **Sign in with GitHub**.
 - [ ] **Add the first machine.** Choose the OS of this PC. If this PC is the controller's own machine, the step says "This PC, {host name}, is in the pool." as done.
-- [ ] **Turn on the first repository.** Pick only the test private repository. **Review** lists the variables to write. **Done** shows the repository turned on and its `RUNS_ON_*` variables written.
+- [ ] **Turn on the first repository.** Pick only the test private repository. **Review** lists the variables to write. **Done** shows the repository turned on and its `CRSP_RUNS_ON_*` variables written.
 - [ ] Reload the page at the end of each wizard: it shows **Done** again and not a blank step. A step you have not reached cannot be pressed.
 - Report if: a button that starts work stays pressable while the work runs, a later step can be pressed early, **Stop** is missing while the wizard waits, or **Done** shows the plan and not what happened.
 
@@ -84,12 +84,12 @@ Do this on a second PC (the Windows PC when you test Linux, and the reverse) or 
 
 - [ ] **Repositories**: tick the test repository, then **Use pool**. The wizard **Turn on the pool** has **Review**, **Turning on** and **Done**. Done shows the repository's variables written.
 - [ ] Turning the pool on makes no light runner. Light jobs (smoke, prune, cleanup) run on the pool runners and take a light slot of the machine. After an upgrade from an older version no `crsp-light-*` row is left in **Runners**.
-- [ ] In GitHub the repository has the `RUNS_ON_*` variables.
+- [ ] In GitHub the repository has the `CRSP_RUNS_ON_*` variables.
 - Report if: the repository stays listed as off, a public repository is allowed while public repositories are off, or a variable is missing in GitHub.
 
 ## 8. A job runs on the pool
 
-- [ ] Push a workflow to the test repository with `runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}` (or `RUNS_ON_WINDOWS`), or start one by hand. Make it last about two minutes (a `sleep 120` step) so you can watch it.
+- [ ] Push a workflow to the test repository with `runs-on: ${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}` (`CRSP_RUNS_ON_WINDOWS` on Windows; `CRSP_<JOB>` is the per-job variable, upper case, and may be unset), or start one by hand. Make it last about two minutes (a `sleep 120` step) so you can watch it.
 - [ ] The job runs on this PC and ends green on GitHub.
 - Report if: the job waits more than a minute with a free runner (Doctor then says why, step 11), or fails with an error that names crsp.
 
@@ -123,8 +123,8 @@ Watch while the step 8 job runs. Open **Jobs**.
 
 ## 12. Restart the service
 
-- [ ] Choose **Restart the service** (the tray menu has it; the console asks first in its Review step). Press it. A question card names the running jobs it waits for; nothing happens until you confirm.
-- [ ] The console shows it waits, then the service comes back by itself, and the console reconnects with the same version and your machines and runners still there. A job that was running finishes first and is not cut.
+- [ ] Choose **Restart the service**. The console has it in two places: **Settings, Updates** for the controller's own service (the tray menu opens the same page), and **Setup, Machines, the machine, Service** for an agent machine. Both open the Review step, which names the running jobs it waits for; nothing happens until you press **Restart the service** there.
+- [ ] The console shows it waits (Waiting for running jobs to end), then Restarting the service, then Done once the service answers again (the controller) or the agent connects again (an agent machine). It comes back by itself with the same version and your machines and runners still there. A job that was running finishes first and is not cut. For an agent machine the machine page takes no new job until the restart is done.
 - [ ] After a restart the tray shows **Running** again.
 - Report if: the console does not come back within two minutes, or a running job is cut.
 
