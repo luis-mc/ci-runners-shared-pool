@@ -20,9 +20,13 @@ describe('Do next', () => {
     expect(at('wait a median')).toBeLessThan(at('no timeout'));
     expect(at('no timeout')).toBeLessThan(at('G1: 3 unit tests'));
     // LOOK65: the columns of the approved prototype, with the fix inline and one primary below the table.
-    expect(
-      screen.getAllByRole('columnheader').map((h) => h.textContent),
-    ).toEqual(['#', 'Change', 'Sure?', 'Saves a week', 'Who decides']);
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      '#',
+      'Change',
+      'Sure?',
+      'Saves a week',
+      'Who decides',
+    ]);
     expect(screen.getAllByText(/^Fix: /).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/^about \d+ min$/).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Review the first change' })).toBeTruthy();
