@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights"
@@ -47,7 +48,7 @@ func ComputeStats(ds []time.Duration) Stats {
 	for _, d := range c {
 		tot += d
 	}
-	return Stats{Known: len(c), Total: tot, P50: rank(c, 50), P95: rank(c, 95)}
+	return Stats{Known: len(c), Total: tot, P50: rank(c, 50), P90: rank(c, 90), P95: rank(c, 95)}
 }
 
 func rank(c []time.Duration, p int) time.Duration {
@@ -58,11 +59,27 @@ func rank(c []time.Duration, p int) time.Duration {
 	return c[i]
 }
 
+// LabelOf is the runner label a job asked for (LOOK66): the crsp-prefixed one, else every label joined, else
+// "no label".
+func LabelOf(j insights.JobFact) string {
+	for _, l := range j.Labels {
+		if strings.HasPrefix(strings.ToLower(l), "crsp-") {
+			return l
+		}
+	}
+	if len(j.Labels) == 0 {
+		return "no label"
+	}
+	return strings.Join(j.Labels, ", ")
+}
+
 // GroupKey is the group key of a job (R5.13): repository, job identity or UTC day of creation.
 func GroupKey(j insights.JobFact, g Group) string {
 	switch g {
 	case ByJobKey:
 		return j.JobIdent
+	case ByLabel:
+		return LabelOf(j)
 	case ByDay:
 		return j.CreatedAt.UTC().Format("2006-01-02")
 	default:

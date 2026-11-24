@@ -3430,8 +3430,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Wait, hold and run per repository, job key or day
-         * @description ci-run-insights R5.12 to R5.14 (CIX).
+         * Wait, hold and run per repository, job key, runner label or day
+         * @description ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
          */
         get: operations["getWaitSplit"];
         put?: never;
@@ -5433,6 +5433,11 @@ export interface components {
             managed: boolean;
             /** @description True for a persistent runner (runners R5.7, UX-61). */
             keeps_state: boolean;
+            /**
+             * @description The declared size class of the runner (runners R5.71). Absent when none is declared; the default class is medium.
+             * @enum {string}
+             */
+            size_class?: "small" | "medium" | "large" | "xl";
             /** @description Persistent runner only. True when its downloaded dependencies stay between jobs (runners R5.90). Absent for an ephemeral runner. */
             keep_dependencies?: boolean;
             /**
@@ -7348,7 +7353,7 @@ export interface components {
             finished_at?: string;
         };
         WaitSplitRow: {
-            /** @description The repository, the job key or the day (year-month-day, UTC). */
+            /** @description The repository, the job key, the runner label or the day (year-month-day, UTC). */
             key: string;
             jobs: number;
             wait: components["schemas"]["DurationStats"];
@@ -7364,6 +7369,8 @@ export interface components {
             /** Format: int64 */
             total_seconds: number;
             p50_seconds?: number;
+            /** @description The slowest 10%, nearest rank (LOOK66). */
+            p90_seconds?: number;
             p95_seconds?: number;
             /** @description Jobs with a known value; unknown is never counted as 0. */
             known?: number;
@@ -7371,7 +7378,7 @@ export interface components {
         WaitSplit: {
             days: number;
             /** @enum {string} */
-            group: "repository" | "job_key" | "day";
+            group: "repository" | "job_key" | "label" | "day";
             hold_cap_seconds: number;
             rows: components["schemas"]["WaitSplitRow"][];
         };
@@ -12727,7 +12734,7 @@ export interface operations {
         parameters: {
             query?: {
                 days?: 7 | 14 | 30;
-                group?: "repository" | "job_key" | "day";
+                group?: "repository" | "job_key" | "label" | "day";
                 repository_id?: number;
             };
             header?: never;

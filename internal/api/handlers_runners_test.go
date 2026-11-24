@@ -362,3 +362,14 @@ func TestRemoveRegistrationFixes(t *testing.T) {
 		t.Fatalf("%d %s", rec.Code, rec.Body)
 	}
 }
+
+// LOOK66: a runner with a declared size class carries it; one without leaves the field out.
+func TestRunnerSizeClassInResponse(t *testing.T) {
+	with := toGenRunner(runners.View{Record: runners.Record{ID: "r1", SizeClass: runners.SizeLarge}})
+	if with.SizeClass == nil || *with.SizeClass != "large" {
+		t.Fatalf("size class = %v", with.SizeClass)
+	}
+	if without := toGenRunner(runners.View{Record: runners.Record{ID: "r2"}}); without.SizeClass != nil {
+		t.Fatalf("size class = %v", *without.SizeClass)
+	}
+}

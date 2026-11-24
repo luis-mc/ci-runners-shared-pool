@@ -78,7 +78,7 @@ type fakeWaits struct{ cap time.Duration }
 
 func (w *fakeWaits) SplitBy(_ context.Context, _ int, _ waits.Group, _ int64, c time.Duration) ([]waits.Row, error) {
 	w.cap = c
-	return []waits.Row{{Key: "2026-11-19", Jobs: 4, Wait: waits.Stats{Known: 4, Total: time.Minute, P50: 10 * time.Second, P95: 20 * time.Second},
+	return []waits.Row{{Key: "2026-11-19", Jobs: 4, Wait: waits.Stats{Known: 4, Total: time.Minute, P50: 10 * time.Second, P90: 15 * time.Second, P95: 20 * time.Second},
 		HoldReasons: map[waits.HoldReason]int{waits.HoldImagePull: 1}}}, nil
 }
 
@@ -170,6 +170,13 @@ func TestWaitSplitHoldCapAndRanges(t *testing.T) {
 	do(mux, "GET", "/api/v1/insights/waits", "")
 	if w.cap != 5*time.Minute {
 		t.Errorf("cap %v", w.cap)
+	}
+	wait := row["wait"].(map[string]any)
+	if wait["p50_seconds"] != float64(10) || wait["p90_seconds"] != float64(15) {
+		t.Errorf("wait stats = %v", wait)
+	}
+	if rec := do(mux, "GET", "/api/v1/insights/waits?group=label", ""); rec.Code != 200 {
+		t.Errorf("group=label: %d", rec.Code)
 	}
 	for _, q := range []string{"days=3", "group=week"} {
 		if rec := do(mux, "GET", "/api/v1/insights/waits?"+q, ""); rec.Code != 400 {

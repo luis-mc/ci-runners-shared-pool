@@ -5118,8 +5118,8 @@ paths:
       x-cli: none
       x-cli-reason: 'Later: the insights commands come in their own task (cli open question 7).'
       tags: [insights]
-      summary: Wait, hold and run per repository, job key or day
-      description: ci-run-insights R5.12 to R5.14 (CIX).
+      summary: Wait, hold and run per repository, job key, runner label or day
+      description: ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
       x-auth: user
       x-rate-limit: 600/minute/user
       parameters:
@@ -5132,7 +5132,7 @@ paths:
           required: false
           schema:
             type: string
-            enum: [repository, job_key, day]
+            enum: [repository, job_key, label, day]
             default: day
         - name: repository_id
           in: query
@@ -8550,6 +8550,10 @@ components:
         keeps_state:
           type: boolean
           description: True for a persistent runner (runners R5.7, UX-61).
+        size_class:
+          type: string
+          enum: [small, medium, large, xl]
+          description: The declared size class of the runner (runners R5.71). Absent when none is declared; the default class is medium.
         keep_dependencies:
           type: boolean
           description: Persistent runner only. True when its downloaded dependencies stay between jobs (runners R5.90). Absent for an ephemeral runner.
@@ -11763,7 +11767,7 @@ components:
       properties:
         key:
           type: string
-          description: The repository, the job key or the day (year-month-day, UTC).
+          description: The repository, the job key, the runner label or the day (year-month-day, UTC).
         jobs: { type: integer }
         wait: { $ref: '#/components/schemas/DurationStats' }
         hold: { $ref: '#/components/schemas/DurationStats' }
@@ -11779,6 +11783,9 @@ components:
       properties:
         total_seconds: { type: integer, format: int64 }
         p50_seconds: { type: integer }
+        p90_seconds:
+          type: integer
+          description: The slowest 10%, nearest rank (LOOK66).
         p95_seconds: { type: integer }
         known:
           type: integer
@@ -11790,7 +11797,7 @@ components:
         days: { type: integer }
         group:
           type: string
-          enum: [repository, job_key, day]
+          enum: [repository, job_key, label, day]
         hold_cap_seconds: { type: integer }
         rows:
           type: array
