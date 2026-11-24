@@ -1,0 +1,673 @@
+{
+  "decisions": [
+    {
+      "id": "D1",
+      "question": "Where do the seven test guardrails live in dev-standards?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Extend luismc-delivery + STACKSPEC numbers",
+          "summary": "Rule file at session start, edit hook, test_guardrails.py guard in pre-push, branch gate and CI, shrink-only known list; limits in STACKSPEC 11.4 and the track templates.",
+          "recommended": true
+        },
+        {
+          "label": "STACKSPEC and templates only",
+          "summary": "New projects start right; nothing stops a later edit; audit is manual."
+        },
+        {
+          "label": "New luismc-testing plugin",
+          "summary": "Clean scope, but duplicates delivery's installer, hooks and known-list check."
+        }
+      ],
+      "chosen": "Extend luismc-delivery + STACKSPEC numbers",
+      "decided": "2026-11-20",
+      "task": "CIX4",
+      "owner_words": "Extend luismc-delivery (Recommended)"
+    },
+    {
+      "id": "D2",
+      "question": "Which crsp slice of CI run insights comes first?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Pool sizing + cross-project timeline + do-next list",
+          "summary": "Ideas 2, 3 and 1, plus 11, 12 and 14 from round 2: all from data crsp already stores; they target queueing, the biggest cost in all three studies."
+        },
+        {
+          "label": "Workflow file checks first",
+          "summary": "Idea 5: guardrail and step-order findings per repository from the workflow files crsp already fetches."
+        },
+        {
+          "label": "Test reports first",
+          "summary": "Idea 7: slow and flaky tests from JUnit/JSON artifacts and job logs, kept on the owner's machines (allowed by D4)."
+        },
+        {
+          "label": "All 16, 4 slices",
+          "summary": "One release per slice: queue (1-4, 11-16), workflow checks and guardrail status (5-6), test reports and logs (7-8), CPU/memory per job and the digest (9-10).",
+          "recommended": true
+        },
+        {
+          "label": "All 16 at once",
+          "summary": "One wave and one release for all 16 ideas: faster to finish, larger review, more risk of a red CI."
+        }
+      ],
+      "chosen": "All 16 at once",
+      "decided": "2026-11-20",
+      "task": "CIX4",
+      "owner_words": "Are you proposing to not do all the 16 features? / All 16 at once"
+    },
+    {
+      "id": "D3",
+      "question": "Which of crsp's own open CI fixes from the dev-standards study go into the next release?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "The small ones now",
+          "summary": "Parity schedule, empty quarantine step, shard balance, Go -timeout and vitest testTimeout per tier, Playwright JSON report: all size S, about half a day of agent time."
+        },
+        {
+          "label": "Small and medium",
+          "summary": "Also the llvm layer cache, the verify split, fail-fast ordering and the ux-routes rewrite: about 300 wall minutes a day saved, more review."
+        },
+        {
+          "label": "Wait for D1",
+          "summary": "Do them once the dev-standards guard exists, so the guard checks them."
+        },
+        {
+          "label": "All of them",
+          "summary": "Small and medium fixes from the study, plus the leftover first-audit guardrail fixes (D5), in the release after RELEASE-46.",
+          "recommended": true
+        }
+      ],
+      "chosen": "All of them",
+      "decided": "2026-11-20",
+      "task": "CIX4",
+      "owner_words": "All of them (Recommended)"
+    },
+    {
+      "id": "D4",
+      "question": "May crsp store CI job logs and test reports itself, given observability R5.38 says logs are never stored?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, locally",
+          "summary": "crsp keeps job logs, test reports and the datasets it builds from them on the owner's machines, to improve its features. Nothing goes to a third party (R6.7 stays). R5.38 gets reworded: secrets and environment values are still never stored, logs are redacted, with a retention limit."
+        },
+        {
+          "label": "No",
+          "summary": "Keep R5.38 as written: no logs, only names and timings."
+        }
+      ],
+      "chosen": "Yes, locally",
+      "decided": "2026-11-20",
+      "owner_words": "the observability spec (R5.38) forbids storing logs. => this was about sending logs to 3rd parties for now; CRSP can have its logs and dataset to improves its features",
+      "task": "CIX7"
+    },
+    {
+      "id": "D5",
+      "question": "When do the leftover guardrail fixes from the first crsp audit (91 sleeps, 17 tests over 20 cases, 3 jobs without a valid timeout-minutes) go in?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "With D3",
+          "summary": "Same release as the D3 fixes; ux-routes is rewritten once for both.",
+          "recommended": true
+        },
+        {
+          "label": "After the guard (D1)",
+          "summary": "Fix them as the guard's known list shrinks."
+        },
+        {
+          "label": "Not now",
+          "summary": "Leave them."
+        }
+      ],
+      "chosen": "With D3",
+      "decided": "2026-11-20",
+      "owner_words": "With D3 (Recommended)",
+      "task": "CIX4"
+    },
+    {
+      "id": "D6",
+      "question": "Fix the Job page faults seen on a comics-organizer job (does not say another runner runs it, 0 steps for poller-only jobs, stale 'queued' card)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, next release",
+          "summary": "Ride with the D3 release.",
+          "recommended": true
+        },
+        {
+          "label": "Yes, with slice 1",
+          "summary": "Fold into the first CI run insights build."
+        },
+        {
+          "label": "No",
+          "summary": "Leave as is."
+        }
+      ],
+      "chosen": "Yes, with slice 1",
+      "decided": "2026-11-20",
+      "owner_words": "Yes, with slice 1",
+      "task": "CIX4"
+    },
+    {
+      "id": "D7",
+      "question": "How should crsp treat jobs that another runner runs (e.g. the old pool, while a repository's RUNS_ON still points there)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Show apart, marked",
+          "summary": "Queue and Running list only jobs crsp can run; jobs run elsewhere get their own 'Run elsewhere' filter naming the runner and labels; they still feed CI run insights; their state is reconciled with GitHub.",
+          "recommended": true
+        },
+        {
+          "label": "Hide them",
+          "summary": "Recorded for insights only; no Jobs page shows them."
+        },
+        {
+          "label": "Keep as is",
+          "summary": "Show every job as now; only fix stale states and add who runs it."
+        }
+      ],
+      "chosen": "Show apart, marked",
+      "decided": "2026-11-20",
+      "owner_words": "I still do not understand why CRSP is reporting for jobs not running in CRSP / Show apart, marked (Recommended)",
+      "task": "CIX8"
+    },
+    {
+      "id": "D8",
+      "question": "Where does CI run insights live in the console?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A Jobs tab before Charts",
+          "summary": "'Run insights' is a view of Jobs, right before Charts."
+        },
+        {
+          "label": "Inside Charts",
+          "summary": "The do-next list on the Charts tab, as first proposed."
+        }
+      ],
+      "chosen": "A Jobs tab before Charts",
+      "decided": "2026-11-20",
+      "owner_words": "The \"Run Insights\" functionality section should be a tab before Charts",
+      "task": "CIX8"
+    },
+    {
+      "id": "D9",
+      "question": "Which concept should the Jobs section become (CRSP212 study)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A Ops cockpit",
+          "summary": "Overview first, 6 tabs: Overview, Live, Done, Run elsewhere, Run insights, Charts",
+          "recommended": true
+        },
+        {
+          "label": "B Inbox of actions",
+          "summary": "To-do list landing"
+        },
+        {
+          "label": "C Story per repository",
+          "summary": "One card per repository"
+        },
+        {
+          "label": "Wait for CRSP211",
+          "summary": "Decide after the 10 list layouts"
+        }
+      ],
+      "chosen": "A Ops cockpit",
+      "decided": "2026-11-20",
+      "owner_words": "A Ops cockpit (Recommended)",
+      "task": "CRSP212"
+    },
+    {
+      "id": "D10",
+      "question": "What is the first page of Jobs?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Overview first",
+          "summary": "Overview is the landing; Live second",
+          "recommended": true
+        },
+        {
+          "label": "Live first",
+          "summary": "Live stays the landing"
+        }
+      ],
+      "chosen": "Overview first",
+      "decided": "2026-11-20",
+      "owner_words": "Overview first (Recommended)",
+      "task": "CRSP212"
+    },
+    {
+      "id": "D11",
+      "question": "Default range and comparison on the Jobs Overview?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "7 days vs previous 7",
+          "summary": "Trend vs the 7 days before",
+          "recommended": true
+        },
+        {
+          "label": "Today vs same weekday",
+          "summary": "Today vs same weekday last week"
+        },
+        {
+          "label": "30 days vs previous 30",
+          "summary": "Slow-moving"
+        }
+      ],
+      "chosen": "7 days vs previous 7",
+      "decided": "2026-11-20",
+      "owner_words": "7 days vs previous 7 (Recommended)",
+      "task": "CRSP212"
+    },
+    {
+      "id": "D12",
+      "question": "Which 4 key numbers on the Overview?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Keep the 4",
+          "summary": "Waiting now, Wait slow end (p90), Jobs that passed, Pool busy",
+          "recommended": true
+        },
+        {
+          "label": "Swap Pool busy for minutes saved",
+          "summary": "Needs Run insights data"
+        },
+        {
+          "label": "Swap Jobs passed for minutes saved",
+          "summary": "Drop pass rate"
+        }
+      ],
+      "chosen": "Keep the 4",
+      "decided": "2026-11-20",
+      "owner_words": "Keep the 4 (Recommended)",
+      "task": "CRSP212"
+    },
+    {
+      "id": "D13",
+      "question": "Run elsewhere: own Jobs tab or a section in Live and Done?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Own tab",
+          "summary": "6th tab",
+          "recommended": true
+        },
+        {
+          "label": "Section in Live and Done",
+          "summary": "5 tabs"
+        }
+      ],
+      "chosen": "Own tab",
+      "decided": "2026-11-20",
+      "owner_words": "Own tab (Recommended)",
+      "task": "CRSP212"
+    },
+    {
+      "id": "D14",
+      "question": "Table text: may rows differ in height when a name wraps (UX-72)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, wrap; change UX-72",
+          "summary": "No ellipsis anywhere",
+          "recommended": true
+        },
+        {
+          "label": "Two-line cap, then full text on hover",
+          "summary": "Name cell max 2 lines"
+        },
+        {
+          "label": "Visible where possible, else ellipsis + full text",
+          "summary": "No text outside its cell; all visible where possible, else an ellipsis with a way to see the full text"
+        }
+      ],
+      "chosen": "Visible where possible, else ellipsis + full text",
+      "decided": "2026-11-20",
+      "owner_words": "I meant no text overflows outside its cell; also, preferably all text should be visible, and if not possible show the ellipsis, but with a way to visualize the full text too;",
+      "task": "CRSP210"
+    },
+    {
+      "id": "D15",
+      "question": "How is the full text of a cut cell shown?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Tooltip + tap to expand row",
+          "summary": "Hover/focus tooltip; tap expands the row on a phone",
+          "recommended": true
+        },
+        {
+          "label": "Tooltip only",
+          "summary": "Long-press on phones"
+        },
+        {
+          "label": "Expand row only",
+          "summary": "Row toggle"
+        }
+      ],
+      "chosen": "Tooltip + tap to expand row",
+      "decided": "2026-11-20",
+      "owner_words": "Tooltip + tap to expand row (Recommended)",
+      "task": "CRSP210"
+    },
+    {
+      "id": "D16",
+      "question": "May Run insights show estimated savings?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Show, marked by confidence",
+          "summary": "sure / likely / a guess, with How we know",
+          "recommended": true
+        },
+        {
+          "label": "Sure ones only",
+          "summary": "No guesses"
+        },
+        {
+          "label": "Show, guesses hidden by default",
+          "summary": "Filter reveals guesses"
+        }
+      ],
+      "chosen": "Show, marked by confidence",
+      "decided": "2026-11-20",
+      "owner_words": "Show, marked by confidence (Recommended)",
+      "task": "CIX22"
+    },
+    {
+      "id": "D17",
+      "question": "Does a dismissed finding come back by itself?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Back after 30 days if still true",
+          "summary": "-",
+          "recommended": true
+        },
+        {
+          "label": "Stay until I restore",
+          "summary": "-"
+        },
+        {
+          "label": "Back after 90 days",
+          "summary": "-"
+        },
+        {
+          "label": "Back after 7 days if still true",
+          "summary": "Owner's own answer"
+        }
+      ],
+      "chosen": "Back after 7 days if still true",
+      "decided": "2026-11-20",
+      "owner_words": "Back after 7 days if still true",
+      "task": "CIX23"
+    },
+    {
+      "id": "D18",
+      "question": "Weekly digest timing and where it shows; how often insights update?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Monday 08:00, file + tray link",
+          "summary": "Lisbon time",
+          "recommended": true
+        },
+        {
+          "label": "Monday 08:00, file only",
+          "summary": "-"
+        },
+        {
+          "label": "Friday 17:00, file + tray link",
+          "summary": "-"
+        },
+        {
+          "label": "Mon 08:00 file + tray; refresh after each run",
+          "summary": "Insights re-analysed after each run; crsp checks the analysis cost (CPU, RAM, disk) and suggests other periods"
+        }
+      ],
+      "chosen": "Mon 08:00 file + tray; refresh after each run",
+      "decided": "2026-11-20",
+      "owner_words": "option 1, but insights are also analizes, reviews, and updated after each run - review resources used, disk, cpu, ram, in case its using too much, and if it is recomend other periods for updates",
+      "task": "CIX23"
+    },
+    {
+      "id": "D19",
+      "question": "What is 'too much' for one insights analysis pass?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Over 5% CPU or 300 MB RAM or 1 GB disk",
+          "summary": "Average over the pass; disk = store total",
+          "recommended": true
+        },
+        {
+          "label": "Over 10% CPU or 500 MB RAM or 2 GB disk",
+          "summary": "-"
+        },
+        {
+          "label": "Over 2% CPU or 150 MB RAM or 500 MB disk",
+          "summary": "-"
+        }
+      ],
+      "chosen": "Over 5% CPU or 300 MB RAM or 1 GB disk",
+      "decided": "2026-11-20",
+      "owner_words": "Over 5% CPU or 300 MB RAM or 1 GB disk (Recommended)",
+      "task": "CIX23"
+    },
+    {
+      "id": "D20",
+      "question": "Runner timeline: all machines only, or also per machine?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Both",
+          "summary": "Jobs + machine page",
+          "recommended": true
+        },
+        {
+          "label": "All machines only",
+          "summary": "-"
+        }
+      ],
+      "chosen": "Both",
+      "decided": "2026-11-20",
+      "owner_words": "Both (Recommended)",
+      "task": "CRSP212"
+    },
+    {
+      "id": "D21",
+      "question": "Flaky window (same commit, different result)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "14 days",
+          "summary": "As CircleCI",
+          "recommended": true
+        },
+        {
+          "label": "7 days",
+          "summary": "-"
+        },
+        {
+          "label": "30 days",
+          "summary": "-"
+        }
+      ],
+      "chosen": "14 days",
+      "decided": "2026-11-20",
+      "owner_words": "14 days (Recommended)",
+      "task": "CIX23"
+    },
+    {
+      "id": "D22",
+      "question": "New shared parts: v3 draft and approval before building?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "v3 draft, I approve, then build",
+          "summary": "-",
+          "recommended": true
+        },
+        {
+          "label": "Build parts in v2 now",
+          "summary": "Breaks the rule"
+        }
+      ],
+      "chosen": "v3 draft, I approve, then build",
+      "decided": "2026-11-20",
+      "owner_words": "v3 draft, I approve, then build (Recommended)",
+      "task": "LOOK40"
+    },
+    {
+      "id": "D23",
+      "question": "When is the Jobs concept A redesign built?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Next release after RELEASE-48",
+          "summary": "After v3 approval",
+          "recommended": true
+        },
+        {
+          "label": "Fold into RELEASE-48",
+          "summary": "Delays it"
+        }
+      ],
+      "chosen": "Next release after RELEASE-48",
+      "decided": "2026-11-20",
+      "owner_words": "Next release after RELEASE-48 (Recommended)",
+      "task": "LOOK41"
+    },
+    {
+      "id": "D24",
+      "question": "Wait for the 10 list layouts (CRSP211) before building the list?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Wait, I'll pick from the 10",
+          "summary": "-",
+          "recommended": true
+        },
+        {
+          "label": "Use concept A's list, stop CRSP211",
+          "summary": "-"
+        }
+      ],
+      "chosen": "Wait, I'll pick from the 10",
+      "decided": "2026-11-20",
+      "owner_words": "Wait, I'll pick from the 10 (Recommended)",
+      "task": "CRSP211"
+    },
+    {
+      "id": "D25",
+      "question": "Turn on the dev-standards CI fallback (ci-shards.json)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Off for now",
+          "summary": "Installed but disabled",
+          "recommended": true
+        },
+        {
+          "label": "On, Linux only, after 30 min",
+          "summary": "-"
+        },
+        {
+          "label": "On, Linux + Windows, after 30 min",
+          "summary": "Paid minutes"
+        }
+      ],
+      "chosen": "Off for now",
+      "decided": "2026-11-20",
+      "owner_words": "What are CI shards? / Off for now (Recommended)",
+      "task": "CRSP213"
+    },
+    {
+      "id": "D26",
+      "question": "How many slots does comics-organizer get once it moves to the shared pool (its release CI takes 87 min on one slot per OS)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Follow the advice",
+          "summary": "Start at 2 Linux + 2 Windows; after a week set it from the slot advice",
+          "recommended": true
+        },
+        {
+          "label": "3 Linux + 2 Windows now",
+          "summary": "Jobs need ~8.5 GiB each"
+        },
+        {
+          "label": "Keep 1 each for now",
+          "summary": "Change nothing until a week of data"
+        },
+        {
+          "label": "Only after crsp runs and analyses it",
+          "summary": "Set slots once crsp manages the pool and has analysed real comics-organizer runs"
+        }
+      ],
+      "chosen": "Only after crsp runs and analyses it",
+      "decided": "2026-11-20",
+      "owner_words": "Shouldn't we do this only when CRSP takes over the pool management and actually runs a comics CI and analyzis it?",
+      "task": "CIX15"
+    },
+    {
+      "id": "D27",
+      "question": "Should a run link to the follow-up workflows it starts (e.g. Installers after CI)?",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, add it",
+          "summary": "Run details show Started next with each follow-up and its state; the run is finished only when they are.",
+          "recommended": true
+        },
+        {
+          "label": "Show the link only",
+          "summary": "List the follow-ups; keep the run's own state."
+        },
+        {
+          "label": "No",
+          "summary": "Leave runs as they are."
+        }
+      ],
+      "chosen": "Yes, add it",
+      "decided": "2026-11-21",
+      "task": "CIX24",
+      "owner_words": "Yes, add it (Recommended)"
+    }
+  ]
+}

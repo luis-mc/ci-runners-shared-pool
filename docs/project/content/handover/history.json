@@ -1,5 +1,13 @@
 [
   {
+    "date": "22 Nov 08:42",
+    "change": "dropped: owner 22 Nov: no parity gate; full switch after v0.1.23 (CRSP227)"
+  },
+  {
+    "date": "22 Nov 08:42",
+    "change": "dropped: owner 22 Nov: no parity gate; full switch after v0.1.23 (CRSP227)"
+  },
+  {
     "date": "15 Nov 11:33",
     "change": "Feature artifact created."
   }

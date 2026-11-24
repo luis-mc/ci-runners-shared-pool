@@ -1,0 +1,35 @@
+<!-- title: Proposed: what an image holds (for approval) -->
+<p>Images and caches &gt; Images, redesigned so you can see what a job gets and add what it needs. Open each view.</p>
+<details open><summary><b>Desktop 1300 px</b></summary>
+<div style="overflow-x:auto;border:1px solid #1c371c;background:#040a05;color:#b9f7b4;font-family:'JetBrains Mono',monospace;font-size:13px;padding:20px">
+<div style="font-size:20px;color:#4dff88;font-weight:700">Images and caches</div>
+<div style="color:#78b874;margin:4px 0 16px">One image per machine and OS. Every repository on that machine runs its jobs from it.</div>
+<div style="border:1px solid #4a8a47;padding:14px 16px">
+<div style="display:flex;justify-content:space-between;align-items:center"><b style="color:#4dff88">GameRoomPC, linux</b><span>✓ ready · 2.1 GB · built 17 Nov 14:40</span></div>
+<div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin-top:12px">
+<div><b>Base (always included)</b><div style="color:#78b874;margin-top:4px">Ubuntu 24.04 · git, curl, python3, jq, zip, unzip, xz, make, gcc, pkg-config, psql, gh 2.83, node 26, corepack, pnpm, yarn</div></div>
+<div><b>Extra packages, per repository</b><div style="color:#78b874;margin-top:4px">luis-mc/comics-organizer: imagemagick · <span style="text-decoration:underline;color:#4dff88">Change in Repositories</span></div></div>
+</div>
+<div style="margin-top:14px;border-top:1px solid #1c371c;padding-top:10px"><b>Optional layers</b> <span style="color:#78b874">tick, Save, then Rebuild. Running jobs finish first.</span></div>
+<table style="width:100%;border-collapse:collapse;margin-top:6px">
+<tr style="color:#78b874"><td style="padding:6px;width:30px"></td><td style="padding:6px">Layer</td><td style="padding:6px">Adds</td><td style="padding:6px">Pick it when</td><td style="padding:6px">Needed by</td><td style="padding:6px;text-align:right">Size</td></tr>
+<tr style="border-top:1px solid #1c371c"><td style="padding:6px">☑</td><td style="padding:6px">Browsers</td><td style="padding:6px">Playwright Chromium, Firefox, WebKit + libraries</td><td style="padding:6px">end-to-end browser tests</td><td style="padding:6px">2 repositories</td><td style="padding:6px;text-align:right">1.4 GB</td></tr>
+<tr style="border-top:1px solid #1c371c"><td style="padding:6px">☐</td><td style="padding:6px">LLVM</td><td style="padding:6px">clang-cl, lld-link, llvm-lib, llvm-rc (LLVM 20)</td><td style="padding:6px">Windows builds of Rust/C from Linux (cargo-xwin)</td><td style="padding:6px;color:#ffc94d">1 repository · jobs fail without it</td><td style="padding:6px;text-align:right">0.6 GB</td></tr>
+<tr style="border-top:1px solid #1c371c"><td style="padding:6px">☐</td><td style="padding:6px">Windows packaging</td><td style="padding:6px">dotnet 8, Wine, msitools, Xvfb</td><td style="padding:6px">MSI installers built on Linux</td><td style="padding:6px">none</td><td style="padding:6px;text-align:right">1.0 GB</td></tr>
+<tr style="border-top:1px solid #1c371c"><td style="padding:6px">☐</td><td style="padding:6px">Linux packaging</td><td style="padding:6px">deb, rpm, SELinux policy, gpg, shellcheck</td><td style="padding:6px">.deb/.rpm packages</td><td style="padding:6px">none</td><td style="padding:6px;text-align:right">0.3 GB</td></tr>
+<tr style="border-top:1px solid #1c371c"><td style="padding:6px">☐</td><td style="padding:6px">VMs (KVM)</td><td style="padding:6px">qemu, cloud-image tools, ssh</td><td style="padding:6px">tests that boot a VM (needs KVM on the machine)</td><td style="padding:6px">none</td><td style="padding:6px;text-align:right">0.2 GB</td></tr>
+</table>
+<div style="display:flex;justify-content:space-between;margin-top:12px"><span style="border:1px solid #4a8a47;padding:10px 16px">Save</span><span style="background:#4dff88;color:#021207;padding:10px 16px;font-weight:700">Rebuild</span></div>
+</div>
+<div style="color:#78b874;margin-top:12px">Before any runner exists: the card says "Not built yet. Choose layers now; it is built when the first runner starts." and the ticks work.<br>"Needed by" comes from the repositories' recent jobs (labels and failed-tool errors); amber when a job failed for lack of the layer.</div>
+</div></details>
+<details><summary><b>Phone 390 px</b></summary>
+<div style="max-width:390px;border:1px solid #1c371c;background:#040a05;color:#b9f7b4;font-family:'JetBrains Mono',monospace;font-size:13px;padding:16px">
+<b style="color:#4dff88">GameRoomPC, linux</b><div>✓ ready · 2.1 GB</div>
+<div style="margin-top:10px"><b>Base (always included)</b><div style="color:#78b874">git, curl, python3, jq, … node 26, pnpm <span style="text-decoration:underline;color:#4dff88">Show all</span></div></div>
+<div style="margin-top:10px"><b>Optional layers</b></div>
+<div style="border-top:1px solid #1c371c;padding:8px 0">☑ <b>Browsers</b> · 1.4 GB<div style="color:#78b874">Playwright browsers. For browser tests. Needed by 2.</div></div>
+<div style="border-top:1px solid #1c371c;padding:8px 0">☐ <b>LLVM</b> · 0.6 GB<div style="color:#78b874">clang-cl, lld-link. For Windows builds from Linux.</div><div style="color:#ffc94d">1 repository's jobs fail without it.</div></div>
+<div style="border-top:1px solid #1c371c;padding:8px 0">☐ <b>Windows packaging</b> · 1.0 GB<div style="color:#78b874">dotnet, Wine. For MSI installers.</div></div>
+<div style="display:grid;gap:8px;margin-top:10px"><span style="border:1px solid #4a8a47;padding:10px;text-align:center">Save</span><span style="background:#4dff88;color:#021207;padding:10px;text-align:center;font-weight:700">Rebuild</span></div>
+</div></details>

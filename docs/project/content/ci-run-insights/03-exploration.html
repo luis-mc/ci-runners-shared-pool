@@ -1,0 +1,43 @@
+<!-- title: Research, round 1 (20 Nov) -->
+<p>Three read-only studies, finished 20 Nov 10:52 Lisbon. Sources are linked. Where a claim could not be checked, it says so.</p>
+
+<h3>What similar products do</h3>
+<table>
+  <thead><tr><th>Product</th><th>What people act on</th><th>Why it does not fit crsp as is</th></tr></thead>
+  <tbody>
+    <tr><td><a href="https://docs.mergify.com/ci-insights/">Mergify CI Insights</a></td><td>A job is flaky when the same job on the same commit gives different results. Job duration, cost and flake rate. Monitoring of self-hosted runner capacity.</td><td>Closest match, but a SaaS app. The depth of its runner advice could not be checked.</td></tr>
+    <tr><td><a href="https://docs.codecov.com/docs/test-analytics">Codecov Test Analytics</a></td><td>A PR comment with the failed tests and stack traces, marked "flaky on main". Input is JUnit XML only.</td><td>No timing or pool advice.</td></tr>
+    <tr><td><a href="https://depot.dev/docs/github-actions/overview">Depot runners</a></td><td>CPU and memory per job, with runner-size recommendations.</td><td>Hosted runners only.</td></tr>
+    <tr><td><a href="https://currents.dev/">Currents</a></td><td>Shards split by timing from a live queue, per-test flake rate.</td><td>Playwright only.</td></tr>
+    <tr><td><a href="https://docs.datadoghq.com/tests/test_impact_analysis/">Datadog Test Impact Analysis</a></td><td>Skips tests a change cannot affect, using per-test coverage.</td><td>Needs per-language instrumentation and carries a risk of skipping a regression.</td></tr>
+    <tr><td><a href="https://engflow.com/product/buildDashboard">EngFlow</a></td><td>Critical path with speed-up suggestions.</td><td>Bazel only.</td></tr>
+    <tr><td><a href="https://github.blog/changelog/2025-03-14-actions-performance-metrics-are-generally-available-and-enterprise-level-metrics-are-in-public-preview">GitHub Actions metrics</a></td><td>Average run time, queue time and failure rate per workflow, job and runner label, up to a year back.</td><td>Describes; never recommends. No per-test data.</td></tr>
+  </tbody>
+</table>
+<p class="muted">Also looked at: Buildkite Test Engine, Gradle Develocity, CloudBees Smart Tests (Launchable), Trunk, BuildPulse, Allure TestOps, RunsOn, Blacksmith. Harness Test Intelligence: no source found.</p>
+
+<h3>What research and practice say</h3>
+<ul>
+  <li><strong>Feedback time.</strong> <a href="https://dora.dev/capabilities/continuous-integration/">DORA</a> puts the upper limit for CI feedback at about 10 minutes.</li>
+  <li><strong>Queues grow fast near full use.</strong> Wait time rises steeply between 80% and 95% utilisation (<a href="https://en.wikipedia.org/wiki/Kingman%27s_formula">Kingman's formula</a>). Applying it to runners is our own modelling.</li>
+  <li><strong>Test selection.</strong> Meta's predictive test selection halved test cost and still caught over 95% of failures (<a href="https://arxiv.org/abs/1810.05286">ICSE 2019</a>). It needs history and machine learning, which is too heavy for one owner.</li>
+  <li><strong>Flaky tests.</strong> Rerunning until green can hide a real bug. A history rule (same commit, different result) detects flakes without rerunning.</li>
+  <li><strong>What gets used.</strong> Google's static-analysis lessons (<a href="https://research.google/pubs/lessons-from-building-static-analysis-tools-at-google/">CACM 2018</a>): put findings in the developer's workflow (code review), keep false positives near zero, and offer the fix, not only the finding. No direct evidence was found that CI dashboards get ignored, so treat that as a hypothesis.</li>
+</ul>
+
+<h3>What crsp already has</h3>
+<ul>
+  <li><strong>Every job's timeline:</strong> queued, slot taken, started, completed, wait reason, machine, runner, labels, matrix and the forecast made at the time (<code>jobs</code>, 90 days).</li>
+  <li><strong>Steps</strong> from the <code>workflow_job</code> webhook (30 days), the <code>needs</code> graph per commit with the critical path, and daily rollups per repo and job type (400 days).</li>
+  <li><strong>The slot log and wait reasons:</strong> no runner with the labels, load over budget, repository limit, quiet hours and others.</li>
+  <li><strong>Places that already show it:</strong> Jobs charts, the run page (job graph, critical path), the job page (step waterfall), Pool size, Doctor findings, and registry recommendations that cannot be dismissed (registry R5.45).</li>
+</ul>
+<p><strong>Missing:</strong></p>
+<ul>
+  <li>No test-level data. crsp reads no JUnit, logs or artifacts today. The observability spec (R5.38) says "never stored: logs". The owner explained on 20 Nov (D4) that this rule was meant to stop logs going to third parties: crsp may keep logs and test data on the owner's machines to improve its features. R6.7 (nothing leaves the machines) stays.</li>
+  <li>No reading of workflow or test files beyond <code>needs</code>.</li>
+  <li>No CPU or memory per job.</li>
+  <li>Pool size advice ignores job history.</li>
+  <li>No store for recommendations about the pool or projects.</li>
+</ul>
+<p>dev-standards already writes a <code>ci-run-times</code> artifact and per-file test timings (<code>ci-timings.json</code>) in each project. crsp reads neither.</p>

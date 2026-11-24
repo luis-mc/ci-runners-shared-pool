@@ -1,0 +1,67 @@
+<!-- title: What round 2 means for crsp -->
+<p>The study is a test of the hypotheses in round 1, and it adds six ideas no single project's audit showed.</p>
+
+<h3>Hypotheses against the evidence</h3>
+<table>
+  <thead><tr><th>Hypothesis (round 1)</th><th>Round 2 evidence</th><th>Verdict</th></tr></thead>
+  <tbody>
+    <tr><td>Pool capacity advice matters most</td><td>Cause #1, "one job at a time per repository", is the largest at ~520 wall min a day. It is the old pool's <code>CI_MAX_PARALLEL=1</code>.</td><td>Holds, and stronger</td></tr>
+    <tr><td>Cross-project ordering saves more than one project's tuning</td><td>Housekeeping and after-merge work take slots from PR jobs in every pool repository: prune, train cleanup, mutation, master re-runs, nightly three times a day.</td><td>Holds</td></tr>
+    <tr><td>crsp can work mostly from data it already sees</td><td>15 of the 20 causes show up in job and step timings plus the workflow file. Per-test data is needed only for #4, #5, #10 and #17.</td><td>Holds</td></tr>
+    <tr><td>Guardrail checks must fail something to hold</td><td>G1 and G2 fail in 6 of 6 repositories, although the owner already holds these rules</td><td>Holds</td></tr>
+    <tr><td>A ranked "do next" list gets used</td><td>The study itself is that list: minutes a day, fix, coverage change, size</td><td>Untested on users; the format reads well</td></tr>
+  </tbody>
+</table>
+
+<h3>Requirements for crsp itself (it replaces the pool the study measured)</h3>
+<ul>
+  <li><strong>Parallel jobs per repository by measured headroom, not a fixed 1.</strong>
+    <ul>
+      <li>crsp already has <code>repository_parallel_limit</code> and the load budget (85% memory, 60% CPU).</li>
+      <li>The advice should say how many slots to allow, and why: "comics-organizer queued 620 min a day; a second Linux slot fits within the 85% budget".</li>
+      <li>Check this against the scheduling spec before the RUNS_ON switch.</li>
+    </ul>
+  </li>
+  <li><strong>Hold time is reported apart from run time.</strong>
+    <ul>
+      <li>On the old pool the job-start hold runs inside <code>Set up runner</code>, so GitHub counts it as run time. That makes slow tests look slow even when the time went into waiting.</li>
+      <li>crsp has <code>slot_at</code>, so its Jobs page and advice can always split wait, hold and run.</li>
+      <li>The study also asks that a hold be capped at about 2 min, and the job requeued with its reason, instead of a 30-min hold.</li>
+    </ul>
+  </li>
+  <li><strong>Housekeeping jobs never queue in front of real work.</strong> Prune, cleanup and a production smoke take a slot for under a minute but wait up to hours. Two options:
+    <ul>
+      <li>A small separate lane for jobs under a minute. The light runners were dropped in RELEASE-43; this would be a scheduling rule, not a runner type.</li>
+      <li>Advice to run them once a day on a schedule.</li>
+    </ul>
+  </li>
+  <li><strong>Superseded work is spotted.</strong> 3,109 job-min in 12 days in comics-organizer went to jobs of commits that were no longer the head. crsp sees head SHAs, so it can flag them, and, only if the owner turns it on, skip a queued job whose commit was replaced.</li>
+</ul>
+
+<h3>New feature ideas (numbers continue the options list)</h3>
+<table>
+  <thead><tr><th>#</th><th>Idea</th><th>Evidence (study cause)</th><th>Data</th><th>Where it shows</th></tr></thead>
+  <tbody>
+    <tr><td>11</td><td><strong>Wait, hold and run split</strong> per job, per repository and per day, with the hold cap and its reason</td><td>#19; the 55 job-h of queue</td><td>What crsp has</td><td>Job page, Jobs charts</td></tr>
+    <tr><td>12</td><td><strong>Slots per repository advice</strong> from queue minutes and measured memory headroom</td><td>#1, and #5, #10 and #14, which wait for it</td><td>What crsp has, plus per-job memory (idea 9)</td><td>Pool size, Repository page</td></tr>
+    <tr><td>13</td><td><strong>Housekeeping lane or schedule advice</strong> for jobs under a minute that queue for long</td><td>#16; prune waited 421 min</td><td>What crsp has (job type, duration)</td><td>Pool size, Do-next list</td></tr>
+    <tr><td>14</td><td><strong>Superseded and duplicate run finder:</strong> jobs of a commit that is no longer the head; two events on one head; master re-running a tree the PR already tested</td><td>#2, #9; 10 of 130 crsp runs were duplicates</td><td>What crsp has (runs, SHAs, events)</td><td>Do-next list, Repository page</td></tr>
+    <tr><td>15</td><td><strong>Fail-fast order advice:</strong> a run that failed in lint still ran e2e and the image to the end</td><td>#12; 64 of 130 crsp runs failed or were cancelled</td><td>What crsp has (job graph, results)</td><td>Run page</td></tr>
+    <tr><td>16</td><td><strong>Idle runner next to a queue:</strong> the Windows runner idle while the Linux slot has a queue, or the other way round</td><td>#3; round 1's 51-min idle Windows runner</td><td>What crsp has</td><td>Cross-project timeline (idea 3)</td></tr>
+  </tbody>
+</table>
+<p>All six come from data crsp already stores. They fit the first slice proposed in D2 and make it stronger: ideas 11, 12 and 14 beside 1, 2 and 3.</p>
+
+<h3>For dev-standards</h3>
+<ul>
+  <li><strong>Template fixes</strong> the guard would enforce:
+    <ul>
+      <li><code>timeout-minutes</code> on every job in every template workflow, including the dev-standards check (<code>dev-standards.yml</code>) and the train-cleanup and artifact-prune workflows;</li>
+      <li>per-tier test timeouts for vitest, Playwright, Go, cargo or nextest, and dotnet;</li>
+      <li>a JSON test report and a <code>ci-run-times</code> artifact in every CI template.</li>
+    </ul>
+  </li>
+  <li><strong>The artifact-prune trigger:</strong> once a day on a schedule, not after every workflow (study #16). It is a dev-standards template.</li>
+  <li><strong>Its own repository:</strong> mutation shards out of PR runs, and <code>docs_check.py</code> before a push (83 of its 218 failures came from that check).</li>
+  <li>These belong to dev-standards. The dev-standards study already lists them as its own tasks. crsp only reports them per repository (idea 6).</li>
+</ul>

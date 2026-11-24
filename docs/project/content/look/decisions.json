@@ -1,79 +1,1850 @@
 {
- "decisions": [
-  {
-   "id": "D1",
-   "question": "Console frame style",
-   "options": [
+  "decisions": [
     {
-     "label": "A Phosphor plain cards",
-     "summary": "Colours only, prompt headlines."
+      "id": "D1",
+      "question": "Console frame style",
+      "options": [
+        {
+          "label": "A Phosphor plain cards",
+          "summary": "Colours only, prompt headlines."
+        },
+        {
+          "label": "B TUI panes",
+          "summary": "Box-line panes with the title in the border, key-hint bar, reverse-video selected row."
+        },
+        {
+          "label": "C Charm plain cards",
+          "summary": "Colours only, rounded."
+        },
+        {
+          "label": "D Powerline status line",
+          "summary": "Segmented status line on top."
+        },
+        {
+          "label": "E Man page sections",
+          "summary": "NAME/SECTION capitals, underlined input."
+        },
+        {
+          "label": "F Command blocks",
+          "summary": "Each card a command block with a state-coloured left edge."
+        }
+      ],
+      "chosen": "B TUI panes",
+      "status": "decided",
+      "decided": "2026-11-15",
+      "asked": "2026-11-15",
+      "task": "LOOK1"
     },
     {
-     "label": "B TUI panes",
-     "summary": "Box-line panes with the title in the border, key-hint bar, reverse-video selected row."
+      "id": "D2",
+      "question": "Console colours",
+      "options": [
+        {
+          "label": "One palette for everyone",
+          "summary": "Pick one of the six palettes."
+        },
+        {
+          "label": "All six as user themes",
+          "summary": "Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized and Nord, each with dark and light; the user picks in Settings (token values only, UX-55)."
+        }
+      ],
+      "chosen": "All six as user themes",
+      "status": "decided",
+      "decided": "2026-11-15",
+      "asked": "2026-11-15",
+      "owner_words": "Option A to F color schemes as options for user to select",
+      "task": "LOOK1"
     },
     {
-     "label": "C Charm plain cards",
-     "summary": "Colours only, rounded."
+      "id": "D3",
+      "question": "Default colour scheme for a new install",
+      "options": [
+        {
+          "label": "Tokyo Night",
+          "summary": "Goes with the B panes it was drawn for; used until the owner picks."
+        },
+        {
+          "label": "Phosphor",
+          "summary": "The classic green terminal."
+        }
+      ],
+      "status": "decided",
+      "asked": "2026-11-15",
+      "task": "LOOK2",
+      "chosen": "Tokyo Night",
+      "decided": "2026-11-15",
+      "owner_words": "Tokyo Night (Recommended)"
     },
     {
-     "label": "D Powerline status line",
-     "summary": "Segmented status line on top."
+      "id": "D4",
+      "question": "Default colour mode of the console",
+      "options": [
+        {
+          "label": "Dark by default (Recommended)",
+          "summary": "Matches UX-60 and the look page; System and Light stay choices."
+        },
+        {
+          "label": "Keep System",
+          "summary": "Follows the OS; light on the owner's PC."
+        }
+      ],
+      "chosen": "Dark by default (Recommended)",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "Dark by default (Recommended)"
     },
     {
-     "label": "E Man page sections",
-     "summary": "NAME/SECTION capitals, underlined input."
+      "id": "D5",
+      "question": "When to start the look-parity fix",
+      "options": [
+        {
+          "label": "Start now (Recommended)",
+          "summary": "Cloud agent now, RELEASE-27."
+        },
+        {
+          "label": "After my audit review",
+          "summary": "Bundle with the audit fix groups."
+        }
+      ],
+      "chosen": "After my audit review",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "After my audit review"
     },
     {
-     "label": "F Command blocks",
-     "summary": "Each card a command block with a state-coloured left edge."
+      "id": "D6",
+      "question": "How Settings shows its many sections with no sideways scroll",
+      "options": [
+        {
+          "label": "Side list (Recommended)",
+          "summary": "Left pane list on desktop, list then section on phones."
+        },
+        {
+          "label": "Tabs wrap to rows",
+          "summary": "Tabs wrap onto as many rows as needed; all visible."
+        },
+        {
+          "label": "Tabs + More menu",
+          "summary": "Tabs that fit, the rest under More."
+        }
+      ],
+      "chosen": "Tabs wrap to rows",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "Tabs wrap to rows; do not use horizontal scroll bars in menus; reuse UX components; work well on mobile phones"
+    },
+    {
+      "id": "D7",
+      "question": "When to build the menu and phone fixes",
+      "options": [
+        {
+          "label": "Start now (Recommended)",
+          "summary": "Cloud agent now, RELEASE-27."
+        },
+        {
+          "label": "With the audit fixes",
+          "summary": "Bundle after the owner's audit review."
+        }
+      ],
+      "chosen": "With the audit fixes",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "With the audit fixes"
+    },
+    {
+      "id": "D8",
+      "question": "How to group the 12 Settings sections",
+      "options": [
+        {
+          "label": "5 groups (Recommended)",
+          "summary": "Access (Users and roles, GitHub App, Access for CI); Repositories (Repositories, Budgets); Console (Appearance, Notifications, Updates); Data (Retention, Backups, Config export); Audit log."
+        },
+        {
+          "label": "4 groups",
+          "summary": "Audit log goes into Data."
+        },
+        {
+          "label": "6 groups",
+          "summary": "Limits and Updates on their own."
+        }
+      ],
+      "chosen": "5 groups (Recommended)",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "group the settings sections more, some are really small, to reduce number of tabs; chose 5 groups"
+    },
+    {
+      "id": "D9",
+      "question": "Keyboard movement rule for the whole console",
+      "options": [
+        {
+          "label": "Up/Down and j/k move through every control and list item",
+          "summary": "Owner's rule: page order, list ends hand over to the previous/next control; palette focus starts in search; search filters the list; one shared search+list part."
+        },
+        {
+          "label": "Keep j/k on list rows only",
+          "summary": "Today's behaviour: j/k move list rows; arrows do nothing else."
+        }
+      ],
+      "chosen": "Up/Down and j/k move through every control and list item",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "keys up and down should move between all buttons, inputs and items in a list; J and K do the same; focus should start in the search box; build as reusable components"
+    },
+    {
+      "id": "D10",
+      "question": "Arrow keys in option groups and multi-line text",
+      "options": [
+        {
+          "label": "Keep normal there",
+          "summary": "Option groups and multi-line text keep their own arrows."
+        },
+        {
+          "label": "Always move on",
+          "summary": "Up/Down always go to the next control."
+        }
+      ],
+      "chosen": "Always move on",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "Up/Down always move to the next control including out of an option group; Left/Right and Space change the choice; multi-line text keeps Up/Down for the text cursor"
+    },
+    {
+      "id": "D11",
+      "question": "Default theme for a new install",
+      "options": [
+        {
+          "label": "Tokyo Night dark",
+          "summary": "Earlier choice D3."
+        },
+        {
+          "label": "Phosphor dark",
+          "summary": "The classic green terminal, dark mode."
+        }
+      ],
+      "chosen": "Phosphor dark",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "make theme Phosphor dark mode the default theme when installing the app",
+      "replaces": "D3"
+    },
+    {
+      "id": "D12",
+      "question": "Light theme versions",
+      "options": [
+        {
+          "label": "Keep as on the look page (Recommended)",
+          "summary": "Exact match."
+        },
+        {
+          "label": "Make light versions more distinct",
+          "summary": "New design-system version."
+        }
+      ],
+      "chosen": "Keep as on the look page (Recommended)",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "Keep as on the look page (Recommended)"
+    },
+    {
+      "id": "D13",
+      "question": "Tag v0.1.5 after the partial RELEASE-28, or wait for RELEASE-29",
+      "options": [
+        {
+          "label": "Wait for RELEASE-29 (Recommended)",
+          "summary": "Merge RELEASE-28 when green; tag v0.1.5 only after RELEASE-29."
+        },
+        {
+          "label": "Tag after RELEASE-28 as planned",
+          "summary": "Ship the partial fixes now; the rest in v0.1.6."
+        }
+      ],
+      "chosen": "Wait for RELEASE-29 (Recommended)",
+      "status": "decided",
+      "decided": "2026-11-16",
+      "asked": "2026-11-16",
+      "owner_words": "Wait for RELEASE-29 (Recommended)"
+    },
+    {
+      "id": "D14",
+      "question": "Console alignment from top bar to footer (mockup https://claude.ai/artifact/8yFs1FD6abz9mKvSqXffwN): what next?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Approve, apply to every screen",
+          "summary": "One agent applies it in the shared shell and parts, with guard tests at 360, 393 and 1300 px."
+        },
+        {
+          "label": "I'll comment on the canvas",
+          "summary": "The owner marks changes on the mockups; revise and show again before code."
+        },
+        {
+          "label": "Show more screens first",
+          "summary": "Draw Repositories and a machine page the same way before deciding."
+        }
+      ],
+      "chosen": "Approve, apply to every screen",
+      "decided": "2026-11-17",
+      "owner_words": "Approve, apply to every screen",
+      "task": "LOOK3"
+    },
+    {
+      "id": "D15",
+      "question": "Which new mockups to build now (canvas boards Repos, FilePicker, Themes, Fields, Keypad)?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Grouped repositories",
+          "summary": "Owner heading rows instead of an Owner column."
+        },
+        {
+          "label": "File field",
+          "summary": "One shared file field replacing the browser button."
+        },
+        {
+          "label": "Themes + fields row",
+          "summary": "Theme cards 3 per row; aligned field rows."
+        },
+        {
+          "label": "Keypad overlay",
+          "summary": "Overlay sized to the keys, one Cancel, Done primary."
+        }
+      ],
+      "chosen": "Grouped repositories",
+      "decided": "2026-11-17",
+      "owner_words": "Grouped repositories, Themes + fields row, Keypad overlay",
+      "task": "LOOK5"
+    },
+    {
+      "id": "D16",
+      "question": "Only private repositories are active; should Repositories still list public ones?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Hide inactive types",
+          "summary": "List only active types; one line says how many are hidden, with a Show link."
+        },
+        {
+          "label": "Show them greyed (today)",
+          "summary": "Keep listing them muted without the per-row note."
+        },
+        {
+          "label": "Group them at the bottom",
+          "summary": "A collapsed Not served group at the end."
+        }
+      ],
+      "chosen": "Hide inactive types",
+      "decided": "2026-11-17",
+      "owner_words": "Hide inactive types (Recommended)",
+      "task": "LOOK5"
+    },
+    {
+      "id": "D17",
+      "question": "Build the shared File field (canvas board FilePicker)?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Approve the file field",
+          "summary": "One shared part replaces the browser Choose File button everywhere."
+        },
+        {
+          "label": "Not now",
+          "summary": "Keep the browser button."
+        }
+      ],
+      "chosen": "Approve the file field",
+      "decided": "2026-11-17",
+      "owner_words": "approve the file field too",
+      "task": "LOOK8"
+    },
+    {
+      "id": "D18",
+      "question": "Update review page is narrower than Overview (narrow 40rem frame, centred). How should wizard pages sit?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Wide frame, left edge",
+          "summary": "Every page starts at the title's left edge and fills the wide frame; fixes the 9 px menu offset."
+        },
+        {
+          "label": "Left edge, readable width",
+          "summary": "Same left edge, but the wizard stays about 40rem wide."
+        },
+        {
+          "label": "Keep centred narrow",
+          "summary": "Only fix the menu offset."
+        }
+      ],
+      "chosen": "Wide frame, left edge",
+      "decided": "2026-11-17",
+      "owner_words": "wide frame but pages should use the full frame width by default; Auth workflows can use the narrow frame",
+      "task": "LOOK9"
+    },
+    {
+      "id": "D19",
+      "question": "Queue order lets the same key be picked in all 4 positions. Which single-list ordering UX?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A. List + up/down buttons",
+          "summary": "Numbered rows with Move up/Move down buttons; Alt+Up/Down on keyboard."
+        },
+        {
+          "label": "B. Drag handle + buttons",
+          "summary": "Drag to reorder, buttons for keyboard."
+        },
+        {
+          "label": "C. Position select per row",
+          "summary": "A 1-4 select per key; picking a taken slot swaps."
+        },
+        {
+          "label": "D. Pick in order, chips",
+          "summary": "Tap keys in order; they become numbered chips."
+        }
+      ],
+      "chosen": "A. List + up/down buttons",
+      "decided": "2026-11-17",
+      "owner_words": "use a single list with ordering UX; show me 4 proposal before implementing",
+      "task": "LOOK10"
+    },
+    {
+      "id": "D20",
+      "question": "The machine 'Drain' button is not clear. How should it read?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Rename + hint line",
+          "summary": "'Stop new jobs', secondary style, hint 'Running jobs finish first. Resume takes jobs again.'; states 'Finishing N jobs' / 'Not taking jobs'."
+        },
+        {
+          "label": "Keep 'Drain', add hint",
+          "summary": "Same word, secondary style, hint line."
+        },
+        {
+          "label": "Move into a menu",
+          "summary": "Machine actions menu with described items."
+        }
+      ],
+      "chosen": "Rename + hint line",
+      "decided": "2026-11-17",
+      "owner_words": "what does the Drain button do? is not clear to the user",
+      "task": "LOOK11"
+    },
+    {
+      "id": "D21",
+      "question": "Build the Images and caches redesign (mockup 'what an image holds')?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Approve, build it",
+          "summary": "Base tools, per-layer adds/when/needed-by/size, extra packages, layers before first build."
+        },
+        {
+          "label": "Not yet, I'll review",
+          "summary": "Stays Needs you."
+        }
+      ],
+      "chosen": "Approve, build it",
+      "decided": "2026-11-17",
+      "owner_words": "screen approved",
+      "task": "LOOK12"
+    },
+    {
+      "id": "D22",
+      "question": "Dimmed text is hard to tell from normal text. Which treatment?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A. Grey plus a tag",
+          "summary": "Neutral grey #8a948a (4.5:1) plus an 'inactive type' tag."
+        },
+        {
+          "label": "B. Own group at the end",
+          "summary": "Collapsed group per owner."
+        },
+        {
+          "label": "C. Lower opacity + italic",
+          "summary": "Fails contrast."
+        },
+        {
+          "label": "D. Striped background",
+          "summary": "Striped row and grey left bar."
+        }
+      ],
+      "chosen": "A. Grey plus a tag",
+      "decided": "2026-11-17",
+      "owner_words": "use option A",
+      "task": "LOOK13"
+    },
+    {
+      "id": "D23",
+      "question": "Images screen for several machines and repositories: too much at once. Simplified prototype (list of images with one status line each, open one to see layers) OK?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Simplified: list then detail",
+          "summary": "List of images, one status line; detail with a layer checklist, a missing-layer banner with Add, Save and rebuild, contents folded."
+        },
+        {
+          "label": "Earlier full table",
+          "summary": "All cards with tables and a repository matrix at once."
+        }
+      ],
+      "chosen": "Simplified: list then detail",
+      "decided": "2026-11-17",
+      "owner_words": "too much going on at the same time ... improve; then: approved",
+      "task": "LOOK12"
+    },
+    {
+      "id": "D24",
+      "question": "Top navigation of the console (one shared pool model)",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Six items with Shared Pool",
+          "summary": "Overview, Shared Pool, Repositories, Jobs, Doctor, Settings. Shared Pool holds Machines, Runners, Images and other pool setup; Repositories opts repos in; Jobs has sub-sections and charts."
+        },
+        {
+          "label": "Today's eight items",
+          "summary": "Overview, Repositories, Machines, Runners, Jobs, Images and caches, Doctor, Settings."
+        }
+      ],
+      "chosen": "Six items with Shared Pool",
+      "decided": "2026-11-17",
+      "owner_words": "The main options at the top should be: Overview, Shared Pool (machines, runners, images...), Repositories, Jobs (queued, running, done; sub-sections), Doctor, Settings",
+      "task": "LOOK23"
+    },
+    {
+      "id": "D25",
+      "question": "Main action: name on Repositories and where main actions sit",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Use pool, sticky bottom action bar",
+          "summary": "'Use pool' replaces 'Turn on the pool'; main action at the bottom like Save, always visible, same on every screen."
+        },
+        {
+          "label": "Keep top-right buttons",
+          "summary": "Today: 'Turn on the pool' top right; Save at the page bottom, scrolls away."
+        }
+      ],
+      "chosen": "Use pool, sticky bottom action bar",
+      "decided": "2026-11-17",
+      "task": "LOOK26",
+      "owner_words": "should be 'Use Pool'; the option should be at the bottom like the Save button, always visible; main action button presented consistently across the whole app"
+    },
+    {
+      "id": "D26",
+      "question": "Settings tabs with the one bottom action bar",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "One Save per tab",
+          "summary": "Each tab is one form; the bar shows Unsaved changes and one Save; other actions are normal buttons in their section."
+        },
+        {
+          "label": "Bar follows the section",
+          "summary": "The bar shows the main action of the section in focus."
+        },
+        {
+          "label": "Decide later",
+          "summary": "Leave Settings as it is."
+        }
+      ],
+      "chosen": "One Save per tab",
+      "decided": "2026-11-18",
+      "task": "LOOK27",
+      "owner_words": "One Save per tab"
+    },
+    {
+      "id": "D27",
+      "question": "Doctor fix buttons with one main action per screen",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Fix buttons stay in rows",
+          "summary": "Per-finding fix buttons are normal buttons; the bar holds Run checks again."
+        },
+        {
+          "label": "Fix all in the bar",
+          "summary": "Bar: Fix N findings; rows keep a small fix link."
+        },
+        {
+          "label": "Decide later",
+          "summary": "Leave Doctor as it is."
+        }
+      ],
+      "chosen": "Fix buttons stay in rows",
+      "decided": "2026-11-18",
+      "task": "LOOK27",
+      "owner_words": "Fix buttons stay in rows"
+    },
+    {
+      "id": "D28",
+      "question": "Repositories table without a horizontal scroll bar",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A Fewer columns",
+          "summary": "Repository, Pool, Jobs go to, Last delivery; summary line under the name."
+        },
+        {
+          "label": "B Two-line rows",
+          "summary": "Second muted line with the details; new shared list part."
+        },
+        {
+          "label": "C Cards below 1400 px",
+          "summary": "All columns on wide screens, cards below."
+        }
+      ],
+      "chosen": "A Fewer columns",
+      "decided": "2026-11-18",
+      "task": "LOOK29",
+      "owner_words": "A Fewer columns"
+    },
+    {
+      "id": "D29",
+      "question": "Word for the capacity added per machine",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Runners",
+          "summary": "GameRoomPC: 3 Linux runners, 1 Windows runner."
+        },
+        {
+          "label": "Slots",
+          "summary": "More exact, a new word."
+        }
+      ],
+      "chosen": "Runners",
+      "decided": "2026-11-18",
+      "task": "LOOK23",
+      "owner_words": "Runners (Recommended)"
+    },
+    {
+      "id": "D30",
+      "question": "Hidden per-repository long-lived runner registrations",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, hide them",
+          "summary": "One per pool repository, created and removed automatically; one runs at a time per slot."
+        },
+        {
+          "label": "Cap per machine",
+          "summary": "At most N; more repositories wait."
+        },
+        {
+          "label": "Decide later",
+          "summary": "Container part only."
+        }
+      ],
+      "chosen": "Yes, hide them",
+      "decided": "2026-11-18",
+      "task": "LOOK23",
+      "owner_words": "Yes, hide them (Recommended)"
+    },
+    {
+      "id": "D31",
+      "question": "Split of the one-pool build",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Menu now, runners in steps",
+          "summary": "Menu, Shared Pool, Add runners without repo now; hidden registrations next release."
+        },
+        {
+          "label": "All in one release",
+          "summary": "Everything now."
+        },
+        {
+          "label": "After option D",
+          "summary": "Decide in the morning."
+        }
+      ],
+      "chosen": "Menu now, runners in steps",
+      "decided": "2026-11-18",
+      "task": "LOOK31",
+      "owner_words": "Menu now, runners in steps"
+    },
+    {
+      "id": "D32",
+      "question": "Runners view inside Shared Pool",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "B Grouped by machine",
+          "summary": "Grouped by machine with pool totals."
+        },
+        {
+          "label": "A Simple list",
+          "summary": "Flat list."
+        },
+        {
+          "label": "C Set on each machine",
+          "summary": "Counters on machine pages."
+        }
+      ],
+      "chosen": "B Grouped by machine",
+      "decided": "2026-11-18",
+      "task": "LOOK31",
+      "owner_words": "B Grouped by machine"
+    },
+    {
+      "id": "D33",
+      "question": "How crsp works strip on Overview",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, on first run only",
+          "summary": "Until the pool is set up; dismissable."
+        },
+        {
+          "label": "Always",
+          "summary": "Always shown."
+        },
+        {
+          "label": "No",
+          "summary": "No strip."
+        }
+      ],
+      "chosen": "Yes, on first run only",
+      "decided": "2026-11-18",
+      "task": "LOOK31",
+      "owner_words": "Yes, on first run only"
+    },
+    {
+      "id": "D34",
+      "question": "Done jobs kept in the Jobs list",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Last 100",
+          "summary": "With See all paging."
+        },
+        {
+          "label": "Last 50",
+          "summary": "Shorter."
+        },
+        {
+          "label": "Last 24 hours",
+          "summary": "Time window."
+        }
+      ],
+      "chosen": "Last 100",
+      "decided": "2026-11-18",
+      "task": "LOOK31",
+      "owner_words": "Last 100"
+    },
+    {
+      "id": "D35",
+      "question": "Gap between Settings sections",
+      "task": "LOOK16",
+      "options": [
+        {
+          "label": "A: 32px",
+          "summary": "Next spacing step"
+        },
+        {
+          "label": "B: 40px",
+          "summary": "Needs a new token"
+        },
+        {
+          "label": "C: 32px + inner room",
+          "summary": "More room inside panes"
+        },
+        {
+          "label": "Keep 16px",
+          "summary": "No change"
+        }
+      ],
+      "chosen": "A: 32px",
+      "owner_words": "A: 32px",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D36",
+      "question": "Long error text in table cells",
+      "task": "LOOK19",
+      "options": [
+        {
+          "label": "B: one line + expand",
+          "summary": "Full error opens under the row"
+        },
+        {
+          "label": "A: Details dialog",
+          "summary": "Dialog with full text and Copy"
+        },
+        {
+          "label": "C: note per failed runner",
+          "summary": "Problem note above the table"
+        }
+      ],
+      "chosen": "B: one line + expand",
+      "owner_words": "B: one line + expand",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D37",
+      "question": "Tables that use the long-text pattern",
+      "task": "LOOK19",
+      "options": [
+        {
+          "label": "Yes, all three",
+          "summary": "Runners, Doctor, Jobs"
+        },
+        {
+          "label": "Runners only",
+          "summary": "Others later"
+        }
+      ],
+      "chosen": "Yes, all three",
+      "owner_words": "Yes, all three",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D38",
+      "question": "Unsaved changes on edit pages",
+      "task": "LOOK21",
+      "options": [
+        {
+          "label": "Count + leave guard",
+          "summary": "Unsaved changes (n), marked fields, Discard changes?"
+        },
+        {
+          "label": "B: save at once",
+          "summary": "Each field saves itself, Undo 7 s"
+        },
+        {
+          "label": "Leave guard only",
+          "summary": "Only Discard changes?"
+        },
+        {
+          "label": "Nothing more",
+          "summary": "Bar is enough"
+        }
+      ],
+      "chosen": "Count + leave guard",
+      "owner_words": "Count + leave guard",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D39",
+      "question": "Pool size layout on the machine page",
+      "task": "LOOK22",
+      "options": [
+        {
+          "label": "A: plain section",
+          "summary": "Facts, Recommended / Custom, live check"
+        },
+        {
+          "label": "C: summary + Edit",
+          "summary": "Edit in place"
+        },
+        {
+          "label": "B: sliders + room bar",
+          "summary": "New parts"
+        }
+      ],
+      "chosen": "A: plain section",
+      "owner_words": "A: plain section",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D40",
+      "question": "How Recommended pool size is computed",
+      "task": "LOOK22",
+      "options": [
+        {
+          "label": "Half the free room",
+          "summary": "5 GiB, 3 CPUs in the example"
+        },
+        {
+          "label": "Three quarters",
+          "summary": "7 GiB, 4 CPUs in the example"
+        },
+        {
+          "label": "Both, labelled",
+          "summary": "Two choices, each label says how it was computed"
+        }
+      ],
+      "chosen": "Both, labelled",
+      "owner_words": "Offer Options 1 and 2, with a label explaining how each was calculated (half of the free room, 3/4 of the free room)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D41",
+      "question": "Pool size Save",
+      "task": "LOOK22",
+      "options": [
+        {
+          "label": "Yes, one Save",
+          "summary": "Pool size joins the page form"
+        },
+        {
+          "label": "No, own Save",
+          "summary": "Section saves on its own"
+        }
+      ],
+      "chosen": "Yes, one Save",
+      "owner_words": "Yes, one Save",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D42",
+      "question": "Release for LOOK16, LOOK19, LOOK21, LOOK22",
+      "task": "CRSP182",
+      "options": [
+        {
+          "label": "RELEASE-39",
+          "summary": "Merge ~10:30"
+        },
+        {
+          "label": "RELEASE-40",
+          "summary": "RELEASE-39 keeps ~09:25"
+        }
+      ],
+      "chosen": "RELEASE-39",
+      "owner_words": "RELEASE-39",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D43",
+      "question": "Pool size 'leaves little for this PC' threshold",
+      "task": "LOOK22",
+      "options": [
+        {
+          "label": "Keep 3 GiB",
+          "summary": "No change"
+        },
+        {
+          "label": "2 GiB",
+          "summary": "Warn less"
+        },
+        {
+          "label": "4 GiB",
+          "summary": "Warn earlier"
+        }
+      ],
+      "chosen": "Keep 3 GiB",
+      "owner_words": "Keep 3 GiB",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D44",
+      "question": "LOOK33 block caret as built",
+      "task": "LOOK33",
+      "options": [
+        {
+          "label": "Ship as is",
+          "summary": "Block, 1 s blink, letter inverted"
+        },
+        {
+          "label": "Thin bar",
+          "summary": "2 px bar"
+        },
+        {
+          "label": "Block, no inversion",
+          "summary": "Hides the letter"
+        },
+        {
+          "label": "Slower blink",
+          "summary": "1.5 s"
+        }
+      ],
+      "chosen": "Ship as is",
+      "owner_words": "Ship as is (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D45",
+      "question": "RES21 design-system fixes: launch?",
+      "task": "RES21",
+      "options": [
+        {
+          "label": "Launch all, guards first",
+          "summary": "T8 guards red first, then T1-T7"
+        },
+        {
+          "label": "Fixes only, no new guards",
+          "summary": "faster, can regress"
+        },
+        {
+          "label": "High severity only",
+          "summary": "T1-T3"
+        },
+        {
+          "label": "Hold",
+          "summary": "look first"
+        }
+      ],
+      "chosen": "Launch all, guards first",
+      "owner_words": "Launch all, guards first (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D46",
+      "question": "RES21 G1: guards enforce v1 while the owner rules live in next-version",
+      "task": "RES21",
+      "options": [
+        {
+          "label": "Promote next-version as v2",
+          "summary": "guards then read v2"
+        },
+        {
+          "label": "Show me the gallery first",
+          "summary": "serve gallery, ask again"
+        },
+        {
+          "label": "Keep v1 for now",
+          "summary": "new guards read next-version"
+        }
+      ],
+      "chosen": "Promote next-version as v2",
+      "owner_words": "Promote next-version as v2 (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D47",
+      "question": "Which Jobs list layout (CRSP211, 10 options as real screens)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Option 7: four views",
+          "summary": "Now, History, Run insights, Charts with one toolbar",
+          "recommended": true
+        },
+        {
+          "label": "Keep concept A (6 tabs)",
+          "summary": "Overview, Live, Done, Elsewhere, Insights, Charts"
+        },
+        {
+          "label": "Option 10: split view",
+          "summary": "List left, details right"
+        },
+        {
+          "label": "Option 3: unified list + chips",
+          "summary": "One list with state chips and counts"
+        },
+        {
+          "label": "Option 11: new combination",
+          "summary": "Option 1 + unified list with All/Queue/Running/Done filters + option 9 search + panel toggle for option 10 details; Run elsewhere in its own tab"
+        }
+      ],
+      "chosen": "Option 11: new combination",
+      "decided": "2026-11-20",
+      "task": "CRSP211",
+      "owner_words": "Option 11 (Recommended)"
+    },
+    {
+      "id": "D48",
+      "question": "Which Help section proposal (LOOK42)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "A Picture first",
+          "summary": "One 7-box diagram of how a job gets run",
+          "recommended": true
+        },
+        {
+          "label": "D ? next to terms",
+          "summary": "Popover beside each term"
+        },
+        {
+          "label": "E Your pool right now",
+          "summary": "Live diagram of your pool"
+        },
+        {
+          "label": "B or C",
+          "summary": "Glossary cards or a 6-panel story"
+        },
+        {
+          "label": "5 new: A + (F+C) + D",
+          "summary": "Owner asked for 5 layouts of this combination, keeping A's How a job gets run section"
+        }
+      ],
+      "chosen": "5 new: A + (F+C) + D",
+      "decided": "2026-11-20",
+      "task": "LOOK42",
+      "owner_words": "A + (F+C) + D - give me 5 options (update the page) for this combination"
+    },
+    {
+      "id": "D49",
+      "question": "Approve the design system v3 draft (LOOK40)?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Approve after the layout pick",
+          "summary": "Change UX-74 to the Jobs pick first",
+          "recommended": true
+        },
+        {
+          "label": "Approve as is",
+          "summary": "Promote now as v3; later changes go into the next version"
+        },
+        {
+          "label": "Not yet",
+          "summary": "Stays a draft"
+        }
+      ],
+      "chosen": "Approve as is",
+      "decided": "2026-11-20",
+      "task": "LOOK40",
+      "owner_words": "Approve as is"
+    },
+    {
+      "id": "D50",
+      "question": "Where does Help live in the console?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Top bar button",
+          "summary": "Next to Commands"
+        },
+        {
+          "label": "7th menu item",
+          "summary": "In the main menu"
+        },
+        {
+          "label": "Under Settings",
+          "summary": "A Settings page"
+        }
+      ],
+      "chosen": "7th menu item",
+      "decided": "2026-11-20",
+      "task": "LOOK42",
+      "owner_words": "7th menu item"
+    },
+    {
+      "id": "D51",
+      "question": "Word for persistent vs ephemeral runners?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Runner type",
+          "summary": "Linux or Windows is the OS"
+        },
+        {
+          "label": "Isolation",
+          "summary": "Isolation: persistent or ephemeral"
+        },
+        {
+          "label": "Kind",
+          "summary": "Kind: persistent or ephemeral"
+        }
+      ],
+      "chosen": "Runner type",
+      "decided": "2026-11-20",
+      "task": "LOOK42",
+      "owner_words": "Runner type"
+    },
+    {
+      "id": "D52",
+      "question": "Quiet hours (machines R5.28, never built): keep or drop?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Keep, explain in Help",
+          "summary": "Times you use the PC; crsp uses less of it",
+          "recommended": true
+        },
+        {
+          "label": "Drop the concept",
+          "summary": "Mode and the load budget cover it"
+        },
+        {
+          "label": "Keep, build it soon",
+          "summary": "Explain and add a build task"
+        }
+      ],
+      "chosen": "Drop the concept",
+      "decided": "2026-11-20",
+      "task": "OPS51",
+      "owner_words": "What is this concept needed for? / Drop the concept"
+    },
+    {
+      "id": "D53",
+      "question": "Help details",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Show my real load budget",
+          "summary": "Machine value, not fixed 85%/60%"
+        },
+        {
+          "label": "Picture on first-run Overview",
+          "summary": "Replaces How crsp works"
+        },
+        {
+          "label": "Explain tray and Doctor here",
+          "summary": "Entries in Help"
+        },
+        {
+          "label": "English only",
+          "summary": "No other languages"
+        }
+      ],
+      "chosen": "Show my real load budget",
+      "decided": "2026-11-20",
+      "task": "LOOK42",
+      "owner_words": "Picture on first-run Overview, Explain tray and Doctor here, English only, Show my real load budget (all four)"
+    },
+    {
+      "id": "D54",
+      "question": "Where does the Updates pane live in Settings?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Its own section after Console",
+          "summary": "Owner request"
+        },
+        {
+          "label": "Inside Console, as today",
+          "summary": "No change"
+        }
+      ],
+      "chosen": "Its own section after Console",
+      "decided": "2026-11-20",
+      "task": "LOOK43",
+      "owner_words": "move update to its own section after Console under Settings"
+    },
+    {
+      "id": "D55",
+      "question": "Which of the five Help proposals G to K is built?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "H cards along the diagram",
+          "summary": "Each question card under the diagram part it explains, plus the ? popover. Effort M.",
+          "recommended": true
+        },
+        {
+          "label": "G diagram, then questions",
+          "summary": "Same cards in one grid under the diagram. Effort S."
+        },
+        {
+          "label": "I stepper walks the diagram",
+          "summary": "A stepper walks the diagram one part at a time. Costs most (state)."
+        },
+        {
+          "label": "J two columns",
+          "summary": "Diagram and answer side by side, sticky. Weak on a phone."
+        },
+        {
+          "label": "K question first",
+          "summary": "Question first, diagram last."
+        }
+      ],
+      "chosen": "I stepper walks the diagram",
+      "decided": "2026-11-20",
+      "owner_words": "I",
+      "task": "LOOK42"
+    },
+    {
+      "id": "D56",
+      "question": "Which words do Help and the app use for job capacity: slots or pool size?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Pool size makes slots",
+          "summary": "You set memory and CPUs; crsp turns that into slots, the jobs that run at once. Slot becomes a shown word."
+        },
+        {
+          "label": "Pool size only",
+          "summary": "Never say slot; talk about memory, CPUs and the load budget."
+        },
+        {
+          "label": "Slots only",
+          "summary": "Help and Pool size talk in slots; memory and CPU stay in the load budget."
+        }
+      ],
+      "chosen": "Pool size makes slots",
+      "decided": "2026-11-20",
+      "owner_words": "Pool size makes slots",
+      "task": "LOOK42"
+    },
+    {
+      "id": "D57",
+      "question": "May the new shared UI parts (stepper, popover, search+list) ship tonight before the owner approves design system v4?",
+      "asked": "2026-11-20",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, approve v4 tomorrow",
+          "summary": "Ship the parts from next-version tonight; v4 gallery shown in the morning.",
+          "recommended": true
+        },
+        {
+          "label": "No, hold those screens",
+          "summary": "Jobs redesign and Help wait for v4 approval."
+        }
+      ],
+      "chosen": "Yes, approve v4 tomorrow",
+      "decided": "2026-11-20",
+      "owner_words": "consider approved v4 now, and keep moving forward to send features live",
+      "task": "LOOK41"
+    },
+    {
+      "id": "D58",
+      "question": "Help page: replace the stepper (I, built as a wizard) with a layout where all info is reachable?",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "replaces": "D55",
+      "options": [
+        {
+          "label": "H cards along diagram",
+          "summary": "Cards under each diagram part, all visible; pressing a part scrolls to its cards.",
+          "recommended": true
+        },
+        {
+          "label": "I as tabs, nothing locked",
+          "summary": "One part at a time as 3 tabs, any order, no Back/Next."
+        },
+        {
+          "label": "G diagram, then all questions",
+          "summary": "Diagram on top, every question card in one grid below."
+        }
+      ],
+      "chosen": "G diagram, then all questions",
+      "decided": "2026-11-21",
+      "task": "LOOK47",
+      "owner_words": "I think I choose G, where did you record the I?"
+    },
+    {
+      "id": "D59",
+      "question": "Execution plan start times: clock or relative",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Clock times, about",
+          "summary": "about 14:16, UX-18",
+          "recommended": true
+        },
+        {
+          "label": "Relative",
+          "summary": "in about 4 min"
+        },
+        {
+          "label": "Both",
+          "summary": "about 14:16 (in 4 min)"
+        }
+      ],
+      "chosen": "Clock times, about",
+      "decided": "2026-11-21",
+      "owner_words": "Clock times, 'about' (Recommended)",
+      "task": "LOOK51"
+    },
+    {
+      "id": "D60",
+      "question": "Queued job at risk of its run timer shows Needs you",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, Needs you",
+          "summary": "attention state with fixes",
+          "recommended": true
+        },
+        {
+          "label": "No, only a note",
+          "summary": "plain line"
+        }
+      ],
+      "chosen": "Yes, Needs you",
+      "decided": "2026-11-21",
+      "owner_words": "Yes, Needs you (Recommended)",
+      "task": "LOOK51"
+    },
+    {
+      "id": "D61",
+      "question": "How to unblock the LOOK51 re-render push",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Wait for the DL387 fix",
+          "summary": "normal push after fix",
+          "recommended": true
+        },
+        {
+          "label": "Allow a new-branch push now",
+          "summary": "push as v2"
+        },
+        {
+          "label": "Use the old shots",
+          "summary": "drop re-render"
+        }
+      ],
+      "chosen": "Wait for the DL387 fix",
+      "decided": "2026-11-21",
+      "owner_words": "Wait for the DL387 fix (Recommended)",
+      "task": "LOOK51"
+    },
+    {
+      "id": "D62",
+      "question": "Pool tab order in the consolidated layout",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Overview first",
+          "summary": "Overview, Live, Queue Analysis, Jobs, Machines",
+          "recommended": true
+        },
+        {
+          "label": "Live first",
+          "summary": "Live, Overview, ..."
+        }
+      ],
+      "chosen": "Overview first",
+      "decided": "2026-11-21",
+      "owner_words": "Overview first (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D63",
+      "question": "Where Repositories goes in Setup",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Repositories is a tab of Setup",
+          "summary": "tab named Repositories",
+          "recommended": true
+        },
+        {
+          "label": "A 'Pool setup' tab holds Repositories",
+          "summary": "tab named Pool setup"
+        }
+      ],
+      "chosen": "A 'Pool setup' tab holds Repositories",
+      "decided": "2026-11-21",
+      "owner_words": "A 'Pool setup' tab holds Repositories",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D64",
+      "question": "Machines in both Setup and Pool",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Both: Setup = config, Pool = live",
+          "summary": "two views",
+          "recommended": true
+        },
+        {
+          "label": "Only Pool > Machines",
+          "summary": "config from Pool"
+        }
+      ],
+      "chosen": "Both: Setup = config, Pool = live",
+      "decided": "2026-11-21",
+      "owner_words": "Both: Setup = config, Pool = live (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D65",
+      "question": "Where Needs you sits on Doctor",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "First pane on Doctor",
+          "summary": "top of Doctor",
+          "recommended": true
+        },
+        {
+          "label": "Its own tab in Doctor",
+          "summary": "tabs Needs you, Checks"
+        }
+      ],
+      "chosen": "First pane on Doctor",
+      "decided": "2026-11-21",
+      "owner_words": "First pane on Doctor (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D66",
+      "question": "When to render the consolidated option",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Now, fresh branch",
+          "summary": "~23:45",
+          "recommended": true
+        },
+        {
+          "label": "After the script sync",
+          "summary": "~01:30"
+        }
+      ],
+      "chosen": "Now, fresh branch",
+      "decided": "2026-11-21",
+      "owner_words": "Now, fresh branch (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D67",
+      "question": "Re-render options A to F too",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, all seven",
+          "summary": "one page",
+          "recommended": true
+        },
+        {
+          "label": "Only the consolidated one",
+          "summary": "faster"
+        }
+      ],
+      "chosen": "Only the consolidated one",
+      "decided": "2026-11-21",
+      "owner_words": "Only the consolidated one",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D68",
+      "question": "Help in the consolidated option",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Merge: live guide + useful G parts",
+          "summary": "F plus today's Help",
+          "recommended": true
+        },
+        {
+          "label": "Replace with F",
+          "summary": "live guide only"
+        }
+      ],
+      "chosen": "Merge: live guide + useful G parts",
+      "decided": "2026-11-21",
+      "owner_words": "Merge: live guide + useful G parts (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D69",
+      "question": "Desktop frame width (--ds-frame-wide, now 76rem)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Up to 96rem (1536 px)",
+          "summary": "like Comiclex",
+          "recommended": true
+        },
+        {
+          "label": "Full width, gutters only",
+          "summary": "no cap"
+        },
+        {
+          "label": "Up to 120rem (1920 px)",
+          "summary": "very wide"
+        }
+      ],
+      "chosen": "Up to 96rem (1536 px)",
+      "decided": "2026-11-21",
+      "owner_words": "Up to 96rem (1536 px) (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D70",
+      "question": "Wide-screen layouts above ~1400 px",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, wide layouts",
+          "summary": "2-column Needs you, side panes",
+          "recommended": true
+        },
+        {
+          "label": "No, only the wider frame",
+          "summary": "same layout"
+        }
+      ],
+      "chosen": "Yes, wide layouts",
+      "decided": "2026-11-21",
+      "owner_words": "Yes, wide layouts (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D71",
+      "question": "How the wider frame is shown and shipped",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "In LOOK54 shots, then build",
+          "summary": "review first",
+          "recommended": true
+        },
+        {
+          "label": "Ship now on its own",
+          "summary": "release tonight"
+        }
+      ],
+      "chosen": "In LOOK54 shots, then build",
+      "decided": "2026-11-21",
+      "owner_words": "In LOOK54 shots, then build (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D72",
+      "question": "Analytics position in the top menu",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "After Pool",
+          "summary": "now then past",
+          "recommended": true
+        },
+        {
+          "label": "After Doctor",
+          "summary": "Overview, Setup, Pool, Doctor, Analytics"
+        }
+      ],
+      "chosen": "After Doctor",
+      "decided": "2026-11-21",
+      "owner_words": "After Doctor",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D73",
+      "question": "Analytics tabs",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Suggestions, Insights, Charts",
+          "summary": "ranked fixes, insights, charts",
+          "recommended": true
+        },
+        {
+          "label": "Insights, Charts only",
+          "summary": "moved tabs only"
+        }
+      ],
+      "chosen": "Suggestions, Insights, Charts",
+      "decided": "2026-11-21",
+      "owner_words": "Suggestions, Insights, Charts (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D74",
+      "question": "Where Run elsewhere goes",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Analytics tab",
+          "summary": "past runs",
+          "recommended": true
+        },
+        {
+          "label": "Filter in Pool > Jobs",
+          "summary": "ran on filter"
+        },
+        {
+          "label": "Pool tab",
+          "summary": "sixth tab"
+        }
+      ],
+      "chosen": "Analytics tab",
+      "decided": "2026-11-21",
+      "owner_words": "Analytics tab (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D75",
+      "question": "Strong suggestions on Doctor too",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "No, Analytics only",
+          "summary": "Doctor = wrong, Analytics = better",
+          "recommended": true
+        },
+        {
+          "label": "Yes, above a threshold",
+          "summary": "both"
+        }
+      ],
+      "chosen": "No, Analytics only",
+      "decided": "2026-11-21",
+      "owner_words": "No, Analytics only (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D76",
+      "question": "Theme of the LOOK54 screenshots",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "All dark",
+          "summary": "as the owner uses it",
+          "recommended": true
+        },
+        {
+          "label": "All light",
+          "summary": "every shot light"
+        },
+        {
+          "label": "Both, side by side",
+          "summary": "twice the shots"
+        }
+      ],
+      "chosen": "All dark",
+      "decided": "2026-11-21",
+      "owner_words": "All dark (Recommended)",
+      "task": "LOOK54"
+    },
+    {
+      "id": "D77",
+      "question": "Which LOOK54 gap-fix groups start now?",
+      "asked": "2026-11-23",
+      "status": "decided",
+      "options": [
+        {
+          "label": "P1 Overview",
+          "summary": "Order, machine cards, Next to start, Routing labels"
+        },
+        {
+          "label": "P3+P8 Help sections",
+          "summary": "10 missing Help sections and the Start here overflow"
+        },
+        {
+          "label": "P4+P5 Setup and Doctor",
+          "summary": "Setup screens and Doctor rows as approved"
+        },
+        {
+          "label": "P6+P7 Analytics and reserved",
+          "summary": "Analytics columns and charts; controller sends reserved and timer ran out"
+        }
+      ],
+      "chosen": "P1 Overview",
+      "decided": "2026-11-23",
+      "owner_words": "P3+P8 Help sections, P1 Overview, P4+P5 Setup and Doctor, P6+P7 Analytics and reserved (all four)",
+      "task": "LOOK60"
+    },
+    {
+      "id": "D78",
+      "question": "Which should Pool > Jobs be?",
+      "asked": "2026-11-23",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Approved Jobs list first",
+          "summary": "Jobs list default with inline inspector; Runs as a second view",
+          "recommended": true
+        },
+        {
+          "label": "Keep Runs first, add Jobs",
+          "summary": "Runs default; Jobs list as a second view"
+        },
+        {
+          "label": "Keep live as is",
+          "summary": "Record Runs table as a later decision"
+        }
+      ],
+      "chosen": "Approved Jobs list first",
+      "decided": "2026-11-23",
+      "owner_words": "Approved Jobs list first (Recommended)",
+      "task": "LOOK62"
+    },
+    {
+      "id": "D79",
+      "question": "When should the fix agents start?",
+      "asked": "2026-11-23",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Now, in parallel",
+          "summary": "Branch from main now; ride RELEASE-63",
+          "recommended": true
+        },
+        {
+          "label": "After RELEASE-62 merges",
+          "summary": "Start once RELEASE-62 is on main"
+        }
+      ],
+      "chosen": "Now, in parallel",
+      "decided": "2026-11-23",
+      "owner_words": "Now, in parallel (Recommended)",
+      "task": "LOOK60"
     }
-   ],
-   "chosen": "B TUI panes",
-   "status": "decided",
-   "decided": "2026-11-15",
-   "asked": "2026-11-15",
-   "task": "LOOK1"
-  },
-  {
-   "id": "D2",
-   "question": "Console colours",
-   "options": [
-    {
-     "label": "One palette for everyone",
-     "summary": "Pick one of the six palettes."
-    },
-    {
-     "label": "All six as user themes",
-     "summary": "Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized and Nord, each with dark and light; the user picks in Settings (token values only, UX-55)."
-    }
-   ],
-   "chosen": "All six as user themes",
-   "status": "decided",
-   "decided": "2026-11-15",
-   "asked": "2026-11-15",
-   "owner_words": "Option A to F color schemes as options for user to select",
-   "task": "LOOK1"
-  },
-  {
-   "id": "D3",
-   "question": "Default colour scheme for a new install",
-   "options": [
-    {
-     "label": "Tokyo Night",
-     "summary": "Goes with the B panes it was drawn for; used until the owner picks."
-    },
-    {
-     "label": "Phosphor",
-     "summary": "The classic green terminal."
-    }
-   ],
-   "status": "decided",
-   "asked": "2026-11-15",
-   "task": "LOOK2",
-   "chosen": "Tokyo Night",
-   "decided": "2026-11-15",
-   "owner_words": "Tokyo Night (Recommended)"
-  }
- ]
+  ]
 }

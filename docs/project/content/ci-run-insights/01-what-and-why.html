@@ -1,0 +1,28 @@
+<!-- title: What and why -->
+<p>Two audits on 20 Nov 2026 showed that CI was slow for reasons no single run page shows. Jobs waited for runners for up to 4 h 53 min. Jobs ran serially when they could run in parallel. Tests slept on fixed timers, generated hundreds of cases, or had no time limit at all. crsp already sees every job it runs, so it is in the right place to find these problems for every project, and to keep finding them.</p>
+<p>The owner's goals for this feature (20 Nov 2026):</p>
+<ol>
+  <li><strong>Guardrails that cannot be forgotten.</strong> Everything learned from the audits goes into the dev-standards plugins as enforcement: rules, hooks and guard scripts that run in Claude Code sessions, before a push and in CI. Memory notes are not enough.</li>
+  <li><strong>crsp audits all CI runs.</strong> It analyses each project's runs and the orchestration of all runs across projects. It recommends:
+    <ul>
+      <li>how to change the crsp setup to match the real demand (runners, labels, machine slots, images, caches, schedules);</li>
+      <li>how each project can improve its CI: run time, step order, wait time, repeated tests, tests that check nothing;</li>
+      <li>where each project stands against each dev-standards guardrail.</li>
+    </ul>
+  </li>
+  <li><strong>Useful, not shelfware.</strong> Research best practices and similar products, test each idea against the crsp product concept, and build only what people will act on. A dashboard nobody opens is a cost in code and in the console.</li>
+</ol>
+<p>This page grows as the exploration goes on over the next days. Each round adds findings, options and decisions.</p>
+<h3>The test guardrails being enforced</h3>
+<table>
+  <thead><tr><th>ID</th><th>Guardrail</th></tr></thead>
+  <tbody>
+    <tr><td>G1</td><td>Every test runner has a per-test timeout: unit 10 s, integration 60 s, e2e 2 min. Never raise it to pass.</td></tr>
+    <tr><td>G2</td><td>Every CI job sets <code>timeout-minutes</code> of 30 or less. Never raise it to pass.</td></tr>
+    <tr><td>G3</td><td>No retries of failing tests in CI. Fix the test, or quarantine it with an issue draft.</td></tr>
+    <tr><td>G4</td><td>No sleeps or open-ended wait loops. Use fake timers, or wait-for with a hard deadline.</td></tr>
+    <tr><td>G5</td><td>Parametrize at most 20 cases per test unless a spec requires more. No new matrix axes without owner approval.</td></tr>
+    <tr><td>G6</td><td>Mutation tests and property tests with many runs stay out of branch and PR CI.</td></tr>
+    <tr><td>G7</td><td>Report the measured time of each new test.</td></tr>
+  </tbody>
+</table>

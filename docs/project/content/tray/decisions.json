@@ -169,6 +169,351 @@
       "chosen": "Disc with CRSP letters, everywhere",
       "decided": "2026-11-15",
       "task": "OPS5"
+    },
+    {
+      "id": "D9",
+      "question": "When RELEASE-30 (tray update dialog fix) merges green, tag v0.1.6 without asking?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Tag v0.1.6 when green",
+          "summary": "Tag v0.1.6 on main right after RELEASE-30 merges green, then tell the owner."
+        },
+        {
+          "label": "Ask me first",
+          "summary": "Merge on green, then wait for the owner's yes before tagging."
+        },
+        {
+          "label": "No tag; wait for more",
+          "summary": "Merge only; the fix ships in a later version."
+        }
+      ],
+      "chosen": "Tag v0.1.6 when green",
+      "decided": "2026-11-17",
+      "owner_words": "Tag v0.1.6 when green (Recommended)",
+      "task": "TRAY2"
+    },
+    {
+      "id": "D10",
+      "question": "How to organise the tray menu (6 alternatives)?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "1. Grouped by intent",
+          "summary": "Open on top, Pause and Mode, rare items in More"
+        },
+        {
+          "label": "2. Flat, sections",
+          "summary": "No submenus except Mode"
+        },
+        {
+          "label": "3. State-driven",
+          "summary": "Menu changes with running/paused"
+        },
+        {
+          "label": "4. Minimal + console",
+          "summary": "Open, Pause, Quit; rest in Settings"
+        },
+        {
+          "label": "5. Status + update first",
+          "summary": "Update action and live status on top, Troubleshoot and About"
+        },
+        {
+          "label": "6. Mode as radio items",
+          "summary": "Run-mode radios in the menu"
+        }
+      ],
+      "chosen": "5. Status + update first",
+      "decided": "2026-11-17",
+      "owner_words": "Open Console, Open in Github and Look for updates in a single section; Pause and Mode in another section; troubleshoot all in the first menu in another section; keep the installed version line",
+      "task": "TRAY3"
+    },
+    {
+      "id": "D11",
+      "question": "Tag after RELEASE-40 (TRAY5)",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Tag v0.1.13 when green",
+          "summary": "Tag right after merge"
+        },
+        {
+          "label": "Ask before tagging",
+          "summary": "Merge only"
+        }
+      ],
+      "chosen": "Tag v0.1.13 when green",
+      "owner_words": "option 1, but show me options for how the Update Window will look and behave; also I want a consistent look between installers and updaters' windows",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D12",
+      "question": "Look of the update and installer windows",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Like comics-organizer",
+          "summary": "Native Windows: MSI banner and side bitmaps from Phosphor tokens, native update window with the same band; macOS and Linux keep B's web window"
+        },
+        {
+          "label": "B + setup program",
+          "summary": "One web look via a setup program"
+        },
+        {
+          "label": "B + branded MSI",
+          "summary": "B updater, stock MSI with crsp bitmaps"
+        },
+        {
+          "label": "A: compact dialog",
+          "summary": "Native close-only window per OS"
+        }
+      ],
+      "chosen": "Like comics-organizer",
+      "owner_words": "option 1, and tell dev-standards to add this as the default for install/updates in the design-system plugin",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D13",
+      "question": "How an automatic update ends",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "One toast",
+          "summary": "Desktop notification with the crsp icon; click opens Done"
+        },
+        {
+          "label": "Open the Done window",
+          "summary": "Window on Done every time"
+        },
+        {
+          "label": "Nothing",
+          "summary": "Silent"
+        }
+      ],
+      "chosen": "One toast",
+      "owner_words": "One toast (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D14",
+      "question": "How to build the native Windows update window",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Go, in crsp itself",
+          "summary": "Signed crsp copy from temp in update-window mode, Win32 drawn in Go"
+        },
+        {
+          "label": "PowerShell WinForms script",
+          "summary": "Like comics-organizer's script"
+        }
+      ],
+      "chosen": "Go, in crsp itself",
+      "owner_words": "Go, in crsp itself (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D15",
+      "question": "Cancel in the update window",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Cancel before Installing",
+          "summary": "Cancel while downloading and waiting for jobs; Hide from Installing on"
+        },
+        {
+          "label": "Cancel at every step",
+          "summary": "Cancel any time, undo the install"
+        },
+        {
+          "label": "No Cancel, Hide only",
+          "summary": "As today"
+        }
+      ],
+      "chosen": "Cancel before Installing",
+      "owner_words": "Cancel before Installing (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D16",
+      "question": "Colours of the native update window",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Phosphor all over",
+          "summary": "Green on black like the console"
+        },
+        {
+          "label": "Band only, Windows body",
+          "summary": "Phosphor band, Windows colours"
+        }
+      ],
+      "chosen": "Phosphor all over",
+      "owner_words": "Phosphor all over (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D17",
+      "question": "Band and MSI picture art",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Icon + name, faint scanlines",
+          "summary": "Phosphor green on black with CRT scanlines"
+        },
+        {
+          "label": "Icon + name, plain",
+          "summary": "Flat black"
+        }
+      ],
+      "chosen": "Icon + name, faint scanlines",
+      "owner_words": "Icon + name, faint scanlines (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D18",
+      "question": "crsp icon in the web page",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Yes",
+          "summary": "Icon for web windows and console tabs"
+        },
+        {
+          "label": "No",
+          "summary": "Browser default icon"
+        }
+      ],
+      "chosen": "Yes",
+      "owner_words": "Yes (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D19",
+      "question": "Own browser profile for the macOS/Linux web update window",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Yes, macOS and Linux",
+          "summary": "Opens at its own size"
+        },
+        {
+          "label": "Later, with the macOS and Linux versions",
+          "summary": "Decide when those versions are built"
+        },
+        {
+          "label": "No",
+          "summary": "Browser's remembered size"
+        }
+      ],
+      "chosen": "Later, with the macOS and Linux versions",
+      "owner_words": "add this decision to when we implement the linux and macos versions",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D20",
+      "question": "First-start window on macOS and Linux",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Yes, first start only",
+          "summary": "Welcome, choices, Done once"
+        },
+        {
+          "label": "No",
+          "summary": "Console opens"
+        }
+      ],
+      "chosen": "Yes, first start only",
+      "owner_words": "Yes, first start only (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D21",
+      "question": "PR #253, the TRAY5 options review",
+      "task": "TRAY5",
+      "options": [
+        {
+          "label": "Close it",
+          "summary": "Close without merging when RELEASE-40 merges"
+        },
+        {
+          "label": "Keep as reference",
+          "summary": "Leave open until the review"
+        }
+      ],
+      "chosen": "Close it",
+      "owner_words": "Close it (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D22",
+      "question": "When to start the macOS and Linux versions (TRAY7)",
+      "task": "TRAY7",
+      "options": [
+        {
+          "label": "After the v0.1.13 review",
+          "summary": "Plan with the review"
+        },
+        {
+          "label": "Now, in parallel",
+          "summary": "Cloud agents now"
+        },
+        {
+          "label": "Later, owner says when",
+          "summary": "No date"
+        }
+      ],
+      "chosen": "Later, owner says when",
+      "owner_words": "Later, I'll say when",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D23",
+      "question": "Hint while Remove is disabled in the native remove window",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Choose what happens to your data first.",
+          "summary": "short, next step",
+          "recommended": true
+        },
+        {
+          "label": "Pick Keep my data or Delete my data too to continue.",
+          "summary": "names both"
+        }
+      ],
+      "chosen": "Choose what happens to your data first.",
+      "decided": "2026-11-21",
+      "owner_words": "Choose what happens to your data first. (Recommended)",
+      "task": "TRAY12"
     }
   ]
 }

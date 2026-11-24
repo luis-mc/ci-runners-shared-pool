@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dimmed rows options</title>
+<style>
+body{margin:0;background:#040a05;color:#b9f7b4;font:13px/1.5 'JetBrains Mono',ui-monospace,monospace}
+.wrap{max-width:1100px;margin:0 auto;padding:16px}h1{color:#4dff88;font-size:18px}h2{color:#4dff88;font-size:15px;margin:24px 0 4px}
+.mu{color:#78b874}table{width:100%;border-collapse:collapse;background:#08130a;border:1px solid #4a8a47}
+td,th{padding:8px 10px;border-top:1px solid #1c371c;text-align:left;white-space:nowrap}th{color:#b9f7b4}
+a{color:#4dff88}
+.grey td,.grey a{color:#8a948a}.tag{border:1px solid #8a948a;padding:0 6px;margin-left:6px}
+.op{opacity:.55}.op a{font-style:italic}
+.hatch{background:repeating-linear-gradient(135deg,#08130a 0 6px,#0d1a0f 6px 12px);box-shadow:inset 4px 0 #8a948a}
+summary{cursor:pointer;padding:8px 10px;color:#78b874}
+</style></head><body><div class="wrap">
+<h1>Dimmed rows: 4 options</h1>
+<p class="mu">Today the public rows (shown after "List them too") use the muted green #78b874, which is too close to normal text. Each option below shows the same 4 rows. The same treatment would apply everywhere the console dims something.</p>
+
+<h2>A. Grey plus a tag (recommended)</h2><p class="mu">Neutral grey, still 4.5:1 contrast, plus the words "inactive type", so it does not rely on colour alone.</p>
+<table><tr><th>Repository</th><th>Visibility</th><th>Pool</th><th>Parallel jobs</th><th>Jobs go to</th></tr>
+<tr class="grey"><td><a href="#">aboutme</a></td><td>Public<span class="tag">inactive type</span></td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">comics-organizer</a></td><td>Private</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr class="grey"><td><a href="#">dev-standards</a></td><td>Public<span class="tag">inactive type</span></td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">home-automation</a></td><td>Private</td><td>✓ on</td><td>2</td><td>✓ crsp machines</td></tr></table>
+
+<h2>B. Their own group at the end</h2><p class="mu">Colours unchanged; inactive repositories sit in a collapsed group per owner.</p>
+<table><tr><th>Repository</th><th>Visibility</th><th>Pool</th><th>Parallel jobs</th><th>Jobs go to</th></tr>
+<tr><td><a href="#">comics-organizer</a></td><td>Private</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">home-automation</a></td><td>Private</td><td>✓ on</td><td>2</td><td>✓ crsp machines</td></tr>
+<tr><td colspan="5" style="padding:0"><details><summary>▸ Public, not served by the pool (2)</summary><table style="border:0"><tr><td><a href="#">aboutme</a></td><td>Public</td><td>○ off</td><td>2</td><td>○ pool off</td></tr><tr><td><a href="#">dev-standards</a></td><td>Public</td><td>○ off</td><td>2</td><td>○ pool off</td></tr></table></details></td></tr></table>
+
+<h2>C. Lower opacity and italic names</h2><p class="mu">Clearest difference, but contrast falls below 4.5:1 (fails the accessibility rule).</p>
+<table><tr><th>Repository</th><th>Visibility</th><th>Pool</th><th>Parallel jobs</th><th>Jobs go to</th></tr>
+<tr class="op"><td><a href="#">aboutme</a></td><td>Public</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">comics-organizer</a></td><td>Private</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr class="op"><td><a href="#">dev-standards</a></td><td>Public</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">home-automation</a></td><td>Private</td><td>✓ on</td><td>2</td><td>✓ crsp machines</td></tr></table>
+
+<h2>D. Striped background and a grey left bar</h2><p class="mu">Text stays readable green; the row itself looks set aside.</p>
+<table><tr><th>Repository</th><th>Visibility</th><th>Pool</th><th>Parallel jobs</th><th>Jobs go to</th></tr>
+<tr class="hatch"><td><a href="#">aboutme</a></td><td>Public</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">comics-organizer</a></td><td>Private</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr class="hatch"><td><a href="#">dev-standards</a></td><td>Public</td><td>○ off</td><td>2</td><td>○ pool off</td></tr>
+<tr><td><a href="#">home-automation</a></td><td>Private</td><td>✓ on</td><td>2</td><td>✓ crsp machines</td></tr></table>
+</div></body></html>

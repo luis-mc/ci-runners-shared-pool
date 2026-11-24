@@ -1,0 +1,956 @@
+{
+  "decisions": [
+    {
+      "id": "D1",
+      "question": "RES15: Done jobs kept and shown",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "90 days, show 25",
+          "summary": "Show more up to 100 a page"
+        },
+        {
+          "label": "Last 100 only",
+          "summary": "Current spec D34"
+        },
+        {
+          "label": "400 days, 25 at a time",
+          "summary": "No cap"
+        }
+      ],
+      "chosen": "90 days, show 25",
+      "owner_words": "90 days, show 25 (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D2",
+      "question": "RES15: Step timings kept",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "30 d steps, 90 d jobs",
+          "summary": "Daily summaries 400 d"
+        },
+        {
+          "label": "Steps as long as jobs",
+          "summary": "90 d"
+        },
+        {
+          "label": "No steps stored",
+          "summary": "Live from GitHub"
+        }
+      ],
+      "chosen": "30 d steps, 90 d jobs",
+      "owner_words": "30 d steps, 90 d jobs (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D3",
+      "question": "RES15: Read the workflow file for the job graph",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Yes, read it",
+          "summary": "Cached per commit; timing fallback"
+        },
+        {
+          "label": "No, timing only",
+          "summary": "Overlap only"
+        },
+        {
+          "label": "Per repository setting",
+          "summary": "Switch in Settings"
+        }
+      ],
+      "chosen": "Yes, read it",
+      "owner_words": "Yes, read it (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D4",
+      "question": "RES15: Forecast wording",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Range on page, number in tables",
+          "summary": "about 6 to 9 min / about 7 min"
+        },
+        {
+          "label": "Range everywhere",
+          "summary": "As built"
+        },
+        {
+          "label": "One number",
+          "summary": "about 7 min"
+        }
+      ],
+      "chosen": "Range on page, number in tables",
+      "owner_words": "Range on page, number in tables (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D5",
+      "question": "RES15: Runs vs jobs in Queue, Running, Done",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Rows per run, jobs inside",
+          "summary": "Run row opens its jobs, then steps; a Jobs switch keeps the flat list"
+        },
+        {
+          "label": "Rows per job, grouped under run",
+          "summary": "Run header lines"
+        },
+        {
+          "label": "Rows per job, as built",
+          "summary": "Flat list"
+        }
+      ],
+      "chosen": "Rows per run, jobs inside",
+      "owner_words": "Rows per run, jobs inside (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D6",
+      "question": "RES15: Where step times come from",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "GitHub now, both later",
+          "summary": "Hook marks later win"
+        },
+        {
+          "label": "GitHub only",
+          "summary": "Never a hook"
+        },
+        {
+          "label": "Hook marks now",
+          "summary": "Workflow change"
+        }
+      ],
+      "chosen": "GitHub now, both later",
+      "owner_words": "GitHub now, both later (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D7",
+      "question": "RES15: Branch and worktree display",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Branch, task, worktree if told",
+          "summary": "Else not reported"
+        },
+        {
+          "label": "Branch only",
+          "summary": "No task or worktree"
+        },
+        {
+          "label": "Require a worktree label",
+          "summary": "Every job reports it"
+        }
+      ],
+      "chosen": "Branch, task, worktree if told",
+      "owner_words": "Branch, task, worktree if told (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D8",
+      "question": "RES15: Forecast with under 5 runs",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Fallback, labelled",
+          "summary": "Workflow or repo typical time, labelled"
+        },
+        {
+          "label": "Always a number",
+          "summary": "Repo median"
+        },
+        {
+          "label": "Nothing until 20 runs",
+          "summary": "No forecast"
+        }
+      ],
+      "chosen": "Fallback, labelled",
+      "owner_words": "Fallback, labelled (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D9",
+      "question": "RES15: Queue start ETA",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Yes, start range",
+          "summary": "From slots and jobs ahead"
+        },
+        {
+          "label": "Reason only",
+          "summary": "No time"
+        }
+      ],
+      "chosen": "Yes, start range",
+      "owner_words": "Yes, start range (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D10",
+      "question": "RES15: Runner type grouping",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Kind; backend a column",
+          "summary": "Persistent vs ephemeral"
+        },
+        {
+          "label": "Type = backend",
+          "summary": "docker/wsl2/hyperv"
+        },
+        {
+          "label": "Both as filters",
+          "summary": "One table"
+        }
+      ],
+      "chosen": "Kind; backend a column",
+      "owner_words": "Kind; backend a column (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D11",
+      "question": "RES15: Job type meaning",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Job name, light/heavy badge",
+          "summary": "Matrix values removed"
+        },
+        {
+          "label": "Light vs heavy",
+          "summary": "Scheduler classes"
+        },
+        {
+          "label": "Label set",
+          "summary": "runs-on labels"
+        }
+      ],
+      "chosen": "Job name, light/heavy badge",
+      "owner_words": "Job name, light/heavy badge (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D12",
+      "question": "RES15: Charts range",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "14 days, switch 7/30",
+          "summary": "Default 14"
+        },
+        {
+          "label": "30 days fixed",
+          "summary": "Fixed"
+        }
+      ],
+      "chosen": "14 days, switch 7/30",
+      "owner_words": "14 days, switch 7/30 (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D13",
+      "question": "RES15: Export",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "List and daily summaries",
+          "summary": "CSV"
+        },
+        {
+          "label": "List only",
+          "summary": "CSV"
+        }
+      ],
+      "chosen": "List and daily summaries",
+      "owner_words": "List and daily summaries (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D14",
+      "question": "RES15: Replace current Jobs screens",
+      "task": "RES15",
+      "options": [
+        {
+          "label": "Replace at once",
+          "summary": "Old links redirect"
+        },
+        {
+          "label": "Both for one release",
+          "summary": "Side by side"
+        }
+      ],
+      "chosen": "Replace at once",
+      "owner_words": "Replace at once (recommended option picked, 18 Nov)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D15",
+      "question": "Image profile model",
+      "options": [
+        {
+          "label": "Profiles plus tool cache",
+          "summary": "Profile sets base, layers, services; versions from a shared tool cache"
+        },
+        {
+          "label": "One image per profile",
+          "summary": "Full image per profile"
+        },
+        {
+          "label": "One big image for all",
+          "summary": "Like GitHub's runner image"
+        }
+      ],
+      "chosen": "Profiles plus tool cache",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Profiles plus tool cache (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D16",
+      "question": "Who confirms scan findings",
+      "options": [
+        {
+          "label": "Auto for low-risk, you for new",
+          "summary": "Covered findings apply; new layers and every service need the owner"
+        },
+        {
+          "label": "Always you",
+          "summary": "Every finding waits"
+        },
+        {
+          "label": "Fully automatic",
+          "summary": "crsp applies all"
+        }
+      ],
+      "chosen": "Auto for low-risk, you for new",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Auto for low-risk, you for new (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D17",
+      "question": "How service containers start",
+      "options": [
+        {
+          "label": "Sidecars plus compose groups",
+          "summary": "crsp starts per-job sidecars; fixed groups like pool-main are a profile's compose group; never a socket"
+        },
+        {
+          "label": "Sidecars per job only",
+          "summary": "Per-job only"
+        },
+        {
+          "label": "Compose groups only",
+          "summary": "Fixed groups only"
+        }
+      ],
+      "chosen": "Sidecars plus compose groups",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Sidecars plus compose groups (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D18",
+      "question": "Ready-made images and the registry",
+      "options": [
+        {
+          "label": "Every image, standard and custom",
+          "summary": "Pull on a match, else build and push to crsp's own private registry; one build per profile per CPU type"
+        },
+        {
+          "label": "Custom profiles only",
+          "summary": "Standard from releases"
+        },
+        {
+          "label": "Standard profiles only",
+          "summary": "Custom builds per machine"
+        }
+      ],
+      "chosen": "Every image, standard and custom",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Pull a ready-made image when one matches, else build locally and push it to the registry; the registry is part of crsp and not public. Option 1 (every image), plus a Registry section under Images and caches: manage images, usage data and metrics, delete, recommendations (delete unused, max disk for standard and for custom), detect a newer version of a custom image and offer to replace the old o...",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D19",
+      "question": "Scan source and scope",
+      "options": [
+        {
+          "label": "Per run's commit, local copy",
+          "summary": "Stack files of each queued run's commit from a local shallow git copy; images keyed by file content"
+        },
+        {
+          "label": "Default branch only, local copy",
+          "summary": "Only main"
+        },
+        {
+          "label": "Per run's commit, API reads",
+          "summary": "Through the GitHub API"
+        }
+      ],
+      "chosen": "Per run's commit, local copy",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Per run's commit, local copy (Recommended); earlier: default branch only, and asked why the scan cannot run on local disk",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D20",
+      "question": "Build limits",
+      "options": [
+        {
+          "label": "One at a time, half the cores busy",
+          "summary": "One build per machine; half the cores while jobs run"
+        },
+        {
+          "label": "One at a time, no CPU cap",
+          "summary": "One at a time, no CPU cap"
+        },
+        {
+          "label": "Only when idle",
+          "summary": "Only when idle"
+        }
+      ],
+      "chosen": "One at a time, half the cores busy",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "One at a time, half the cores busy (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D21",
+      "question": "Cache limits",
+      "options": [
+        {
+          "label": "Editable per cache, plus machine budget",
+          "summary": "Editable per cache, plus machine budget"
+        },
+        {
+          "label": "Keep two fixed limits",
+          "summary": "20 and 40 GiB"
+        },
+        {
+          "label": "One machine budget only",
+          "summary": "One machine budget only"
+        }
+      ],
+      "chosen": "Editable per cache, plus machine budget",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Editable per cache, plus machine budget (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D22",
+      "question": "Image software list and vulnerability count",
+      "options": [
+        {
+          "label": "Yes, in crsp, every image",
+          "summary": "Syft list and Trivy count when the registry stores an image; never blocks"
+        },
+        {
+          "label": "Software list only",
+          "summary": "Software list only"
+        },
+        {
+          "label": "Not now",
+          "summary": "Not now"
+        }
+      ],
+      "chosen": "Yes, in crsp, every image",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Yes, in crsp, every image (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D23",
+      "question": "Add runners work step with the image",
+      "options": [
+        {
+          "label": "Rename and show image progress",
+          "summary": "'Adding runners' with build or pull progress"
+        },
+        {
+          "label": "Keep 'Registering', show progress",
+          "summary": "Keep 'Registering', show progress"
+        },
+        {
+          "label": "Separate 'Job image' step",
+          "summary": "Separate 'Job image' step"
+        }
+      ],
+      "chosen": "Rename and show image progress",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "option 1; if a valid image is already in the registry, can it be reused?",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D24",
+      "question": "Build logs kept",
+      "options": [
+        {
+          "label": "Last 5, 1 MB each",
+          "summary": "Last 5, 1 MB each"
+        },
+        {
+          "label": "Last 20",
+          "summary": "Last 20"
+        },
+        {
+          "label": "Only failed builds",
+          "summary": "Only failed builds"
+        }
+      ],
+      "chosen": "Last 5, 1 MB each",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Last 5, 1 MB each (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D25",
+      "question": "Repository hint file .crsp.yml",
+      "options": [
+        {
+          "label": "Later",
+          "summary": "See how often the scan is wrong first"
+        },
+        {
+          "label": "Yes, now",
+          "summary": "Yes, now"
+        },
+        {
+          "label": "Never",
+          "summary": "Never"
+        }
+      ],
+      "chosen": "Later",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Later (Recommended)",
+      "asked": "2026-11-19",
+      "task": "RES19"
+    },
+    {
+      "id": "D26",
+      "question": "Image registry: where it runs",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Embedded in controller",
+          "summary": "one binary, controller decides deletes"
+        },
+        {
+          "label": "Container on one machine",
+          "summary": "needs Docker there"
+        },
+        {
+          "label": "On every machine, peers pull",
+          "summary": "every machine stores every image"
+        }
+      ],
+      "chosen": "Embedded in controller",
+      "owner_words": "Embedded in controller (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D27",
+      "question": "Image registry engine",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Distribution v3",
+          "summary": "plain storage and events; weekly short read-only window"
+        },
+        {
+          "label": "Zot",
+          "summary": "built-in retention kept off"
+        }
+      ],
+      "chosen": "Distribution v3",
+      "owner_words": "Distribution v3 (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D28",
+      "question": "Image registry: who pushes",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Staging, controller promotes",
+          "summary": "a machine pushes only to its own staging area"
+        },
+        {
+          "label": "Push straight to final name",
+          "summary": "simpler, can poison others"
+        }
+      ],
+      "chosen": "Staging, controller promotes",
+      "owner_words": "Staging, controller promotes (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D29",
+      "question": "Standard images: import ready-made images from CI",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Build first now, CI import later",
+          "summary": "follow-up after the registry core"
+        },
+        {
+          "label": "Both in the first release",
+          "summary": "CI import with the core"
+        },
+        {
+          "label": "Never import from CI",
+          "summary": "first machine always builds; nothing to ghcr.io"
+        }
+      ],
+      "chosen": "Never import from CI",
+      "owner_words": "Never import from CI (after asking how the CI import would work)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D30",
+      "question": "Registry default budgets",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "40 GB std, 30 GB custom",
+          "summary": "editable, never above half the free disk"
+        },
+        {
+          "label": "Share of free disk at setup",
+          "summary": "computed at setup"
+        },
+        {
+          "label": "Ask at setup",
+          "summary": "wizard asks"
+        }
+      ],
+      "chosen": "40 GB std, 30 GB custom",
+      "owner_words": "40 GB std, 30 GB custom (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D31",
+      "question": "May crsp delete registry images on its own (replaced after rollback days, merged branch variants, unused layers)",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Yes, dates shown ahead",
+          "summary": "planned dates shown in advance"
+        },
+        {
+          "label": "Always ask",
+          "summary": "every delete waits"
+        }
+      ],
+      "chosen": "Yes, dates shown ahead",
+      "owner_words": "Yes, dates shown ahead (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D32",
+      "question": "Registry: unused after how many days",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "30 days",
+          "summary": "editable"
+        },
+        {
+          "label": "60 days",
+          "summary": "longer"
+        },
+        {
+          "label": "14 days",
+          "summary": "faster"
+        }
+      ],
+      "chosen": "30 days",
+      "owner_words": "30 days (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D33",
+      "question": "Registry: rollback days after a replace",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "7 days",
+          "summary": "editable per replace"
+        },
+        {
+          "label": "3 days",
+          "summary": "sooner"
+        },
+        {
+          "label": "14 days",
+          "summary": "longer"
+        }
+      ],
+      "chosen": "7 days",
+      "owner_words": "7 days (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D34",
+      "question": "Registry: one repository moves to a newer image, another still uses the old one",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Old image stays for it",
+          "summary": "pointer per repository"
+        },
+        {
+          "label": "Move both",
+          "summary": "all move together"
+        }
+      ],
+      "chosen": "Old image stays for it",
+      "owner_words": "Old image stays for it (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D35",
+      "question": "Registry: can the owner dismiss a recommendation",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "No, stays until resolved",
+          "summary": "fewer hidden states"
+        },
+        {
+          "label": "Snooze for 7 days",
+          "summary": "hide for a week"
+        }
+      ],
+      "chosen": "No, stays until resolved",
+      "owner_words": "No, stays until resolved (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D36",
+      "question": "Registry image signing",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Digest pinning now, cosign later",
+          "summary": "integrity covered"
+        },
+        {
+          "label": "Cosign from the start",
+          "summary": "sign and verify every image"
+        }
+      ],
+      "chosen": "Digest pinning now, cosign later",
+      "owner_words": "Digest pinning now, cosign later (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D37",
+      "question": "Pull-through mirror of upstream base images",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Later",
+          "summary": "follow-up task"
+        },
+        {
+          "label": "Now",
+          "summary": "with the registry core"
+        }
+      ],
+      "chosen": "Now",
+      "owner_words": "Now",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D38",
+      "question": "Controller offline, a machine needs an image it lacks",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Build locally, push later",
+          "summary": "a job never waits on the registry"
+        },
+        {
+          "label": "Job waits for the controller",
+          "summary": "no duplicate build, jobs stall"
+        }
+      ],
+      "chosen": "Job waits for the controller",
+      "owner_words": "Job waits for the controller",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D39",
+      "question": "Registry folder on a Windows controller",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Data folder, editable",
+          "summary": "C:\\ProgramData\\crsp\registry"
+        },
+        {
+          "label": "Ask folder and drive at setup",
+          "summary": "setup asks"
+        }
+      ],
+      "chosen": "Data folder, editable",
+      "owner_words": "Data folder, editable (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D40",
+      "question": "When registry work starts",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "After RES21 fixes land",
+          "summary": "next wave with RES19 IMG-1/3/5"
+        },
+        {
+          "label": "Now, in parallel",
+          "summary": "REG-1 and REG-4 now"
+        },
+        {
+          "label": "Later, I say when",
+          "summary": "parked"
+        }
+      ],
+      "chosen": "After RES21 fixes land",
+      "owner_words": "After RES21 fixes land (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D41",
+      "question": "REG-5 registry screens (RES20 review build)",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Approve as shown",
+          "summary": "build as they are"
+        },
+        {
+          "label": "Approve with changes",
+          "summary": "with listed changes"
+        },
+        {
+          "label": "Not yet",
+          "summary": "look longer"
+        }
+      ],
+      "chosen": "Approve as shown",
+      "owner_words": "Approve as shown",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D42",
+      "question": "Registry wave start (phases 1 to 3 in one go; replaces D40)",
+      "task": "RES20",
+      "options": [
+        {
+          "label": "Now, contract first",
+          "summary": "shared contract, then all agents in parallel"
+        },
+        {
+          "label": "After the design fixes land",
+          "summary": "keep D40"
+        }
+      ],
+      "chosen": "Now, contract first",
+      "owner_words": "Now, contract first (Recommended)",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    }
+  ]
+}

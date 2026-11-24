@@ -1,5 +1,229 @@
 [
   {
+    "date": "24 Nov 09:17",
+    "change": "09:13 0.1.26 installed; Windows add passed the account steps, failed at register (OPS93); row removed"
+  },
+  {
+    "date": "24 Nov 09:05",
+    "change": "09:05 PR #402 merged 108bee12; v0.1.26 tagged"
+  },
+  {
+    "date": "24 Nov 07:16",
+    "change": "07:15 Docker back; 2 persistent Linux runners added, idle; lan-link smoke green on gameroompc-pool-4"
+  },
+  {
+    "date": "24 Nov 07:10",
+    "change": "06:25 owner: restarts Docker himself; v0.1.26 tag approved when RELEASE-64 green"
+  },
+  {
+    "date": "24 Nov 06:21",
+    "change": "06:13 0.1.25 installed; 6 failed rows removed; Windows add failed (PowerShell stdin); Linux not offered: Docker engine does not answer"
+  },
+  {
+    "date": "24 Nov 03:46",
+    "change": "03:30 branch CI green 858762b0; joined"
+  },
+  {
+    "date": "24 Nov 02:29",
+    "change": "02:29 first agent blocked on e2e push; finish agent launched"
+  },
+  {
+    "date": "22 Nov 08:32",
+    "change": "dropped: folded into RELEASE-55"
+  },
+  {
+    "date": "22 Nov 08:24",
+    "change": "dropped: folded into RELEASE-56"
+  },
+  {
+    "date": "22 Nov 08:24",
+    "change": "dropped: folded into RELEASE-56"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 09:18",
+    "change": "page reworked visual + all stacks"
+  },
+  {
+    "date": "21 Nov 08:48",
+    "change": "Linux crsp fetched for image; wizard shows failure; failed runner stays visible"
+  },
+  {
+    "date": "21 Nov 08:12",
+    "change": "cause: runners kept in memory only; machines DB + rejoin + audit + doctor built"
+  },
+  {
+    "date": "21 Nov 07:40",
+    "change": "rerun: Go green; web pool.test heading flake, file not touched"
+  },
+  {
+    "date": "21 Nov 07:37",
+    "change": "full CI green"
+  },
+  {
+    "date": "21 Nov 07:30",
+    "change": "full CI failed in internal/cli TestMaintainReleasesWhenCancelledWhileRunning; rerun"
+  },
+  {
+    "date": "21 Nov 07:22",
+    "change": "owner: runners vanished too; brief extended"
+  },
+  {
+    "date": "21 Nov 07:22",
+    "change": "agent launched"
+  },
+  {
+    "date": "21 Nov 07:21",
+    "change": "owner: all four fixes; cause = automatic v0.1.18 update 20 Nov 17:21"
+  },
+  {
+    "date": "21 Nov 07:19",
+    "change": "machine m_p7fsaimerpsrmxzv joined 20 Nov 17:21 with defaults; DB audit from 15 Nov intact; machines live in machines.json, not the DB"
+  },
+  {
+    "date": "21 Nov 07:13",
+    "change": "code done 5554cb32, PR #350"
+  },
+  {
+    "date": "21 Nov 07:13",
+    "change": "PR-event CI skipped 10 of 11 jobs; full dispatched CI is the gate"
+  },
+  {
+    "date": "21 Nov 07:11",
+    "change": "code done e034f541, PR #348, CI green"
+  },
+  {
+    "date": "21 Nov 07:08",
+    "change": "proposals page docs/project/proposals/job-sizing-and-runners.html"
+  },
+  {
+    "date": "21 Nov 07:05",
+    "change": "owner: same-label tool check; agent launched"
+  },
+  {
+    "date": "21 Nov 07:05",
+    "change": "owner: Watch, hold, warn; agent launched"
+  },
+  {
+    "date": "21 Nov 07:04",
+    "change": "owner: measured sizes, no tag-based sizing; asked for proposals page"
+  },
+  {
+    "date": "21 Nov 04:20",
+    "change": "PR CI green"
+  },
+  {
+    "date": "21 Nov 04:18",
+    "change": "agent could not open PR or start CI; orchestrator opened #346 and started CI"
+  },
+  {
+    "date": "21 Nov 03:51",
+    "change": "rebased and pushed 6e5e0609, CI green"
+  },
+  {
+    "date": "21 Nov 03:00",
+    "change": "443c65d2, CI green"
+  },
+  {
+    "date": "21 Nov 02:58",
+    "change": "push blocked by secret scan on old insights test tokens; fixed, agent told to rebase"
+  },
+  {
+    "date": "21 Nov 02:34",
+    "change": "launched from dev-standards finding 02:40"
+  },
+  {
+    "date": "21 Nov 01:52",
+    "change": "launched from dev-standards findings 01:38 and 01:52"
+  },
+  {
+    "date": "21 Nov 01:52",
+    "change": "CODE DONE d0206cd8, PR #340 draft, CI green"
+  },
+  {
+    "date": "21 Nov 01:08",
+    "change": "relaunched with background gate allowed"
+  },
+  {
+    "date": "21 Nov 00:40",
+    "change": "pool finding 00:50 from dev-standards; agent launched"
+  },
+  {
+    "date": "21 Nov 00:28",
+    "change": "blocked: e2e gate >10 min foreground cap; told to run it in background"
+  },
+  {
+    "date": "20 Nov 23:56",
+    "change": "CODE DONE 8a28f09, CI green (dev-standards W1 docs/work only)"
+  },
+  {
+    "date": "20 Nov 23:38",
+    "change": "dev-standards compact ran 23:30: 313->112 GB, ~2 min down; procedure sent to agent (fstrim, wsl shutdown, diskpart, kvm check)"
+  },
+  {
+    "date": "20 Nov 23:32",
+    "change": "owner: build all 6 now, ride RELEASE-48"
+  },
+  {
+    "date": "20 Nov 23:13",
+    "change": "added to RELEASE-48 at owner's ask; agent starts 23:20"
+  },
+  {
+    "date": "18 Nov 14:45",
+    "change": "OPS28 item changed from \"Add runners: the user chooses persistent or ephemeral\" to \"Runner kind choice; public repositories default to ephemeral\""
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
     "date": "15 Nov 11:33",
     "change": "OPS12 item changed from \"Pool lesson 28: /dev/kvm via device_cgroup_rules and supervisor mknod (DL369)\" to \"Lesson 28 recorded in the handover notes (DL369)\""
   },

@@ -1,6 +1,6 @@
 {
   "title": "Full Progress: CI Runners Shared Pool",
   "hero": "Manager for shared self-hosted GitHub Actions runners on your own machines: controller, node agent, web console, CLI and tray in one binary, crsp.",
-  "lede": "v0.1.2 is installed on the owner's PC; v0.1.3 (RELEASE-22 to RELEASE-25: first-run rework, TUI panes, guided GitHub grant, parity access) is building. A tag and a build ship no code of their own, so they show under Other work, not as a release. Task IDs are tracker IDs.",
+  "lede": "v0.1.18 is tagged (RELEASE-46, 20 Nov). RELEASE-48 now also carries CI run insights (RELEASE-49, owner's call): 22 agents run in the cloud, merge ~19:45 Lisbon.",
   "extra_css": ""
 }

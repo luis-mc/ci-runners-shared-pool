@@ -1,5 +1,25 @@
 [
   {
+    "date": "21 Nov 13:18",
+    "change": "owner: fix in R51; add stuck-attempt recovery"
+  },
+  {
+    "date": "21 Nov 13:10",
+    "change": "owner: fix in RELEASE-51"
+  },
+  {
+    "date": "18 Nov 16:16",
+    "change": "TRAY5 item changed from \"Update and installer windows: one crsp look; options first, then build\" to \"Update and installer windows: native crsp window on Windows, branded MSI\""
+  },
+  {
+    "date": "18 Nov 14:17",
+    "change": "TRAY5 item changed from \"Update window looks like a random browser popup: icon, size, buttons cut off\" to \"Update and installer windows: one crsp look; options first, then build\""
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
     "date": "14 Nov 10:47",
     "change": "Feature artifact created."
   }

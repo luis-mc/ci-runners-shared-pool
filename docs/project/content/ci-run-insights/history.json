@@ -1,0 +1,34 @@
+[
+  {
+    "date": "22 Nov 08:48",
+    "change": "dropped: owner 22 Nov 09:00: drop the baseline comparison"
+  },
+  {
+    "date": "21 Nov 11:35",
+    "change": "owner: yes (D27)"
+  },
+  {
+    "date": "21 Nov 01:08",
+    "change": "branch CI green (dev-standards W1 only)"
+  },
+  {
+    "date": "20 Nov 23:13",
+    "change": "added to RELEASE-48 at owner's ask; agent starts 23:20"
+  },
+  {
+    "date": "20 Nov 18:06",
+    "change": "First run blocked at push by sandbox golangci-lint; relaunched 18:08"
+  },
+  {
+    "date": "20 Nov 18:06",
+    "change": "First run blocked at push by sandbox golangci-lint; relaunched 18:08"
+  },
+  {
+    "date": "20 Nov 15:57",
+    "change": "dropped: folded into RELEASE-48"
+  },
+  {
+    "date": "20 Nov 10:47",
+    "change": "Feature artifact created."
+  }
+]
