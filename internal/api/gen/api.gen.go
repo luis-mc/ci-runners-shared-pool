@@ -8706,14 +8706,20 @@ type TimelineBar struct {
 	End   *time.Time `json:"end,omitempty"`
 	EndHi *time.Time `json:"end_hi,omitempty"`
 	EndLo *time.Time `json:"end_lo,omitempty"`
-	Id    string     `json:"id"`
+
+	// ExpiresAt LOOK65. On a `timer_ran_out` bar of a running job, the end of its grace; then crsp stops the job.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	Id        string     `json:"id"`
 
 	// JobId Absent when the bar is a forecast of a job that has no record yet.
-	JobId      *int64    `json:"job_id,omitempty"`
-	Label      string    `json:"label"`
-	Repository *string   `json:"repository,omitempty"`
-	RowId      string    `json:"row_id"`
-	Start      time.Time `json:"start"`
+	JobId      *int64  `json:"job_id,omitempty"`
+	Label      string  `json:"label"`
+	Repository *string `json:"repository,omitempty"`
+
+	// ReservedSince LOOK65. On a `reserved` bar, when the job became its machine's reserved job.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
+	RowId         string     `json:"row_id"`
+	Start         time.Time  `json:"start"`
 
 	// State How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
 	State TimelineBarState `json:"state"`

@@ -17,6 +17,11 @@ func WaitWords(reason WaitReason, text string) string {
 			return "Over the load budget: " + text + "."
 		}
 		return "Over the memory or CPU budget."
+	case WaitReserved:
+		if text != "" {
+			return "Reserved: " + text + "."
+		}
+		return "Reserved. The machine keeps room free for this job."
 	case WaitFreeSlot, WaitLostRace:
 		if text != "" {
 			return "No free slot: " + text + "."

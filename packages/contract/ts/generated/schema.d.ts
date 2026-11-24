@@ -5928,6 +5928,16 @@ export interface components {
              * @description When the job began to wait (the light part before the bar).
              */
             wait_from?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. On a `timer_ran_out` bar of a running job, the end of its grace; then crsp stops the job.
+             */
+            expires_at?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. On a `reserved` bar, when the job became its machine's reserved job.
+             */
+            reserved_since?: string;
             /** @description The words of the bar for a screen reader and the tooltip. */
             detail?: string;
         };

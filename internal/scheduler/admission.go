@@ -202,6 +202,10 @@ func (e *Engine) admissionGate(tx slots.Tx, set slots.Settings, machineID string
 		reservedLine = "; " + areservation.Text(e.zoneOrUTC())
 	}
 	if mine.w.Blocked {
+		if reservedLine != "" {
+			d, err := wait(WaitReserved, mine.verdict.Text+reservedLine)
+			return admitted{}, &d, err
+		}
 		d, err := wait(WaitFreeSlot, mine.verdict.Text+reservedLine)
 		return admitted{}, &d, err
 	}
