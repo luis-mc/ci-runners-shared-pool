@@ -1,10 +1,13 @@
 // Pool > Jobs and Analytics > Run elsewhere (LOOK56): the one list of both, today's Live tab renamed with the filters of
 // the old Done tab (range, Group by, export): a search box, the state filter All, Queue, Running and Done, one table and a
 // details panel (owner decision 20 Nov 2026, option 11 of CRSP211). Wait reasons say what is happening (UX-29); a
-// status is a word, a glyph and a colour (UX-58). Runs are the first view, jobs the second.
+// status is a word, a glyph and a colour (UX-58). Jobs are the first view (owner decision 23 Nov 2026, LOOK62): the
+// filters sit in a pane beside the list, open at first, and a row opens its inspector beside the list. Runs are the
+// second view.
 import {
   ActionBar,
   Button,
+  Code,
   Cut,
   Empty,
   ExportButton,
@@ -15,19 +18,24 @@ import {
   Progress,
   SearchTable,
   Segmented,
+  SelectField,
   Stack,
   Status,
   Text,
   TextLink,
   fileNameOf,
   formatShortDateTime,
+  formatTime,
   formatDuration,
+  type Choice,
   type Column,
 } from '@crsp/ui';
 import { useState } from 'react';
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient } from '../../api/api';
-import type { Loaded } from '../../api/hooks';
+import { useMachines } from '../../api/machines';
+import { useLoad, type Loaded } from '../../api/hooks';
+import { allRepositories } from '../repositories/plans';
 import { Load } from '../common';
 import { HelpTerm } from '../help/HelpTerm';
 import {
@@ -63,10 +71,12 @@ import {
   eventWords,
   forecastOf,
   forecastOne,
+  isReserved,
   jobStatus,
   ranSeconds,
   secondsOrNone,
   startRange,
+  RESERVED_WORDS,
   startedNextWords,
   waitShort,
   waitWords,
@@ -170,6 +180,55 @@ function JobCell({ j }: { j: Job }) {
 function StatusCell({ j }: { j: Job }) {
   const s = jobStatus(j);
   return <Status kind={s.kind} word={s.word} />;
+}
+
+/** When a job starts or started, in a few words: "Starts about 14:16", "since 14:09", "finished 14:02". */
+export function startWords(j: Job, now: number): string {
+  if (j.state === 'queued')
+    return j.queue_eta
+      ? `Starts about ${formatTime(now + j.queue_eta.p50 * 1000)}`
+      : 'Start not known';
+  if (j.state === 'running')
+    return j.started_at ? `since ${formatTime(j.started_at)}` : 'not known';
+  return j.completed_at ? `finished ${formatTime(j.completed_at)}` : 'not known';
+}
+
+/** The columns of the Jobs list: Job, Status, Machine, Start and the Why button (the table adds it, LOOK62). */
+export function inspectorColumns(now: number): Column<Job>[] {
+  return [
+    {
+      id: 'job',
+      header: 'Job',
+      kind: 'grow',
+      grow: 2,
+      cell: (j) => (
+        <>
+          <Code>{j.job_name}</Code>
+          <Text tone="muted">{`${j.repository} #${j.run_id}`}</Text>
+        </>
+      ),
+      title: (j) => `${j.job_name}, ${j.repository} #${j.run_id}`,
+      sort: (j) => j.job_name,
+    },
+    {
+      id: 'status',
+      header: 'Status',
+      cell: (j) => <StatusCell j={j} />,
+      sort: (j) => jobStatus(j).word,
+    },
+    {
+      id: 'machine',
+      header: 'Machine',
+      cell: (j) => j.runner?.machine_name ?? '—',
+      sort: (j) => j.runner?.machine_name ?? '',
+    },
+    {
+      id: 'start',
+      header: 'Start',
+      cell: (j) => startWords(j, now),
+      sort: (j) => j.started_at ?? j.completed_at ?? j.queue_eta?.p50 ?? 0,
+    },
+  ];
 }
 
 type Kind = 'queue' | 'running' | 'done';
@@ -359,14 +418,11 @@ const elsewhereColumn: Column<Job> = {
 
 type View = 'runs' | 'jobs';
 
-/** Which list the reader sees: runs by default; a filter only jobs have (runner, machine, type) opens the jobs. */
+/** Which list the reader sees: the jobs by default (owner decision 23 Nov 2026); `?view=runs` shows the runs. */
 function useView(): { view: View; set: (v: View) => void } {
   const [params, setParams] = useSearchParams();
-  const jobOnly = ['machine', 'runner', 'runner_kind', 'backend', 'job_type'].some((k) =>
-    params.get(k),
-  );
   const raw = params.get('view');
-  const view: View = raw === 'jobs' || raw === 'runs' ? raw : jobOnly ? 'jobs' : 'runs';
+  const view: View = raw === 'runs' ? 'runs' : 'jobs';
   return {
     view,
     set: (v) => {
@@ -382,11 +438,11 @@ function ViewSwitch({ view, onChange }: { view: View; onChange: (v: View) => voi
     <Segmented<View>
       label="Show runs or jobs"
       options={[
-        { value: 'runs', label: 'Runs' },
         { value: 'jobs', label: 'Jobs' },
+        { value: 'runs', label: 'Runs' },
       ]}
       value={view}
-      onChange={(v) => onChange(v === '' ? 'runs' : v)}
+      onChange={(v) => onChange(v === '' ? 'jobs' : v)}
       allLabel={null}
     />
   );
@@ -592,10 +648,59 @@ function JobDetail({ j, now }: { j: Job; now: number }) {
               ]),
         ]}
       />
+      {j.state === 'queued' ? (
+        <Message tone="note" dismissible={false}>
+          {isReserved(j) && !j.wait_text ? RESERVED_WORDS : waitWords(j)}
+        </Message>
+      ) : null}
       <LinkButton to={`/pool/jobs/${j.id}`}>Open job</LinkButton>
     </>
   );
 }
+
+const ANY = '';
+
+/** The options of the Repository, Machine and Branch filters: what the pool knows, and the value in the address. */
+function useFilterChoices(
+  filter: Filter,
+  branches: readonly string[],
+): { repository: Choice[]; machine: Choice[]; branch: Choice[] } {
+  const client = useClient();
+  const repos = useLoad(() => allRepositories(client, { pool: 'on' }), []);
+  const machines = useMachines();
+  const withValue = (list: Choice[], value: string | undefined, label?: string) =>
+    value && !list.some((c) => c.value === value)
+      ? [...list, { value, label: label ?? value }]
+      : list;
+  const repoList: Choice[] =
+    repos.result.state === 'ready'
+      ? repos.result.data.items.map((r) => ({ value: r.full_name, label: r.full_name }))
+      : [];
+  const machineList: Choice[] =
+    machines.result.state === 'ready'
+      ? machines.result.data.items.map((m) => ({ value: m.id, label: m.name }))
+      : [];
+  const branchList: Choice[] = [...new Set(branches)]
+    .sort()
+    .map((b) => ({ value: b, label: b }));
+  return {
+    repository: [
+      { value: ANY, label: 'All repositories' },
+      ...withValue(repoList, filter.repository),
+    ],
+    machine: [
+      { value: ANY, label: 'All machines' },
+      ...withValue(machineList, filter.machine),
+    ],
+    branch: [{ value: ANY, label: 'Any branch' }, ...withValue(branchList, filter.branch)],
+  };
+}
+
+const RUNNER_TYPES: Choice[] = [
+  { value: ANY, label: 'Any' },
+  { value: 'persistent', label: 'Persistent' },
+  { value: 'ephemeral', label: 'Ephemeral' },
+];
 
 type Tab = 'jobs' | 'elsewhere';
 
@@ -804,10 +909,12 @@ function JobsListTab({ tab }: { tab: Tab }) {
     </>
   );
 
+  // Grouped, the list is gone and so is its filter pane: the same two choices stay in a bar of their own, so the
+  // reader can go back (LOOK62). Otherwise they are fields of the pane.
   // Done adds its own choices, in a bar of their own so the bar of the list stays one row: the range of the finished
   // work, and one Group by choice in place of the five By tabs (UX-74).
   const doneBar =
-    tab === 'jobs' ? (
+    tab === 'jobs' && group ? (
       <ListToolbar
         label="Range and grouping"
         filters={
@@ -834,6 +941,74 @@ function JobsListTab({ tab }: { tab: Tab }) {
       />
     ) : null;
 
+  const choices = useFilterChoices(
+    f.filter,
+    jobRows.flatMap((j) => (j.branch ? [j.branch] : [])),
+  );
+  const set1 = (key: string) => (v: string) =>
+    change((n) => (v ? n.set(key, v) : n.delete(key)));
+  const pane =
+    tab === 'jobs' && !group
+      ? {
+          summary: [
+            `State: ${TITLES[state]}`,
+            RANGES.find((r) => r.value === days)?.label ?? `Last ${days} days`,
+            `Group: none`,
+            ...FILTER_KEYS.flatMap((k) =>
+              f.filter[k] ? [`${FILTER_NAMES[k]}: ${f.filter[k]}`] : [],
+            ),
+          ],
+          children: (
+            <>
+              <SelectField
+                label="Range"
+                width="full"
+                value={days}
+                choices={RANGES}
+                onChange={(v) => {
+                  set1('days')(v === String(KEPT_DAYS) ? '' : v);
+                  setShown(DONE_STEP);
+                }}
+              />
+              <SelectField
+                label="Group by"
+                width="full"
+                value=""
+                choices={[{ value: '', label: 'No grouping' }, ...GROUPS]}
+                onChange={set1('group')}
+              />
+              <SelectField
+                label="Repository"
+                width="full"
+                value={f.filter.repository ?? ANY}
+                choices={choices.repository}
+                onChange={set1('repository')}
+              />
+              <SelectField
+                label="Machine"
+                width="full"
+                value={f.filter.machine ?? ANY}
+                choices={choices.machine}
+                onChange={set1('machine')}
+              />
+              <SelectField
+                label="Runner type"
+                width="full"
+                value={f.filter.runner_kind ?? ANY}
+                choices={RUNNER_TYPES}
+                onChange={set1('runner_kind')}
+              />
+              <SelectField
+                label="Branch"
+                width="full"
+                value={f.filter.branch ?? ANY}
+                choices={choices.branch}
+                onChange={set1('branch')}
+              />
+            </>
+          ),
+        }
+      : undefined;
   const caption = `${TITLES[state]} ${unit}`;
   const below = (
     <>
@@ -876,6 +1051,7 @@ function JobsListTab({ tab }: { tab: Tab }) {
     below,
     empty: q ? undefined : emptyWords,
     expandLabel: view === 'runs' ? 'Why' : 'Details',
+    filterPane: pane,
   };
   const state1 = state === 'all' ? undefined : KIND_OF[state];
 
@@ -957,17 +1133,30 @@ function JobsListTab({ tab }: { tab: Tab }) {
                 branch: (j) => j.branch ?? '',
                 job: (j) => `${j.workflow ?? ''} ${j.job_name}`,
               }}
-              columns={withElsewhere(jobColumns(state1 ?? 'all', live), elsewhere)}
+              columns={
+                elsewhere
+                  ? withElsewhere(jobColumns(state1 ?? 'all', live), elsewhere)
+                  : inspectorColumns(live)
+              }
               rowKey={(j) => String(j.id)}
               rowLabel={(j) => j.job_name}
-              onOpen={(j) => void navigate(`/pool/jobs/${j.id}`)}
-              action={{
-                label: 'Open job',
-                to: (j) => `/pool/jobs/${j.id}`,
-                name: (j) => j.job_name,
-              }}
+              {...(elsewhere
+                ? {
+                    onOpen: (j: Job) => void navigate(`/pool/jobs/${j.id}`),
+                    action: {
+                      label: 'Open job',
+                      to: (j: Job) => `/pool/jobs/${j.id}`,
+                      name: (j: Job) => j.job_name,
+                    },
+                  }
+                : {
+                    inspect: { label: 'Why', name: (j: Job) => `${j.job_name} ${j.repository}` },
+                  })}
               detail={{
-                title: (j) => `${j.repository} ${j.job_name}`,
+                title: (j) =>
+                  elsewhere
+                    ? `${j.repository} ${j.job_name}`
+                    : `${j.job_name}: ${jobStatus(j).word}`,
                 render: (j) => <JobDetail j={j} now={live} />,
               }}
             />

@@ -21,8 +21,26 @@ const REASON_WORDS: Record<Schemas['WaitReason'], string> = {
 };
 
 /** Why a queued job waits, in words (UX-29): the server's line when it has one, else the reason's. */
-export function waitWords(j: Pick<Job, 'wait_reason' | 'wait_text'>): string {
+/**
+ * A waiting job whose machine keeps room for it: the controller reports the wait reason `reserved` (the assign reason
+ * of the same name). It is not in the generated WaitReason list yet, so it is read as a plain string (LOOK62).
+ */
+export const isReserved = (j: {
+  state?: Job['state'] | undefined;
+  wait_reason?: Job['wait_reason'] | undefined;
+}): boolean => j.state === 'queued' && (j.wait_reason as string | undefined) === 'reserved';
+
+type Waiting = {
+  state?: Job['state'] | undefined;
+  wait_reason?: Job['wait_reason'] | undefined;
+  wait_text?: Job['wait_text'] | undefined;
+};
+
+export const RESERVED_WORDS = 'waits for the room another job holds on its machine';
+
+export function waitWords(j: Waiting): string {
   if (j.wait_text) return j.wait_text;
+  if (isReserved(j)) return RESERVED_WORDS;
   return j.wait_reason ? REASON_WORDS[j.wait_reason] : 'waits to be placed';
 }
 
@@ -43,7 +61,8 @@ const REASON_SHORT: Record<Schemas['WaitReason'], string> = {
  * The short form of a wait reason for a one-line row (UX-72): a few words, the full line is under the Why button.
  * A line the server sent without a reason has none (the table shortens it at its first clause).
  */
-export function waitShort(j: Pick<Job, 'wait_reason' | 'wait_text'>): string | undefined {
+export function waitShort(j: Waiting): string | undefined {
+  if (isReserved(j)) return 'room held for it';
   if (j.wait_reason) return REASON_SHORT[j.wait_reason];
   return j.wait_text ? undefined : 'waits to be placed';
 }
@@ -58,10 +77,13 @@ export function workflowFile(path: string): string {
 export function jobStatus(j: {
   state: Job['state'];
   result?: Job['result'] | undefined;
+  wait_reason?: Job['wait_reason'] | undefined;
 }): {
   kind: StatusKind;
   word: string;
 } {
+  if (isReserved({ state: j.state, wait_reason: j.wait_reason }))
+    return { kind: 'waiting', word: 'Reserved' };
   if (j.state === 'queued') return { kind: 'waiting', word: 'waiting' };
   if (j.state === 'running') return { kind: 'running', word: 'running' };
   switch (j.result) {

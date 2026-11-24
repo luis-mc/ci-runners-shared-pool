@@ -43,7 +43,7 @@ const rows = (t: HTMLElement) => within(t).getAllByRole('row').slice(1);
 
 describe('the unified list', () => {
   it('lists waiting, running and finished runs in one table, in that order', async () => {
-    renderApp(jobsApi(data), '/pool/jobs');
+    renderApp(jobsApi(data), '/pool/jobs?view=runs');
     const table = await screen.findByRole('table', { name: 'All runs' });
     const r = rows(table);
     expect(r).toHaveLength(3);
@@ -56,7 +56,7 @@ describe('the unified list', () => {
   });
 
   it('opens the Done tab on the Done filter, and the filter changes the list', async () => {
-    renderApp(jobsApi(data), '/pool/jobs?state=done');
+    renderApp(jobsApi(data), '/pool/jobs?state=done&view=runs');
     const done = await screen.findByRole('table', { name: 'Done runs' });
     expect(rows(done)).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Queue' }));
@@ -66,7 +66,7 @@ describe('the unified list', () => {
 
   it('starts with focus in the search box and narrows by words and field words', async () => {
     const user = userEvent.setup();
-    renderApp(jobsApi(data), '/pool/jobs');
+    renderApp(jobsApi(data), '/pool/jobs?view=runs');
     await screen.findByRole('table', { name: 'All runs' });
     // The table is drawn again when the list refreshes, so ask for it each time.
     const now = () => rows(screen.getByRole('table', { name: /runs$/ }));
@@ -84,7 +84,7 @@ describe('the unified list', () => {
   });
 
   it('shows the details of the chosen row in a panel', async () => {
-    renderApp(jobsApi(data), '/pool/jobs');
+    renderApp(jobsApi(data), '/pool/jobs?view=runs');
     await screen.findByRole('table', { name: 'All runs' });
     fireEvent.click(screen.getByRole('button', { name: 'Show details' }));
     const side = await screen.findByRole('complementary');
@@ -107,13 +107,11 @@ describe('the unified list', () => {
 
 describe('Group by on Done', () => {
   it('replaces the list with the groups when one is chosen, and None brings the list back', async () => {
-    renderApp(jobsApi(data), '/pool/jobs?state=done');
+    renderApp(jobsApi(data), '/pool/jobs?state=done&view=runs');
     await screen.findByRole('table', { name: 'Done runs' });
-    fireEvent.click(
-      within(screen.getByRole('group', { name: 'Group by' })).getByRole('button', {
-        name: 'Repository',
-      }),
-    );
+    fireEvent.change(screen.getByLabelText('Group by'), {
+      target: { value: 'repository' },
+    });
     await screen.findAllByText(/No jobs yet|Repositories/);
     expect(screen.queryByRole('table', { name: 'Done runs' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'None' }));

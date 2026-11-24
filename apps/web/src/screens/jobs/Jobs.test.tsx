@@ -29,7 +29,7 @@ const queued = (id: number, place: number, over: Parameters<typeof job>[0] = {})
 
 describe('Queue', () => {
   it('shows one row for a run with its place, start range and why it waits', async () => {
-    renderApp(jobsApi({ jobs: [queued(1, 1), queued(2, 2)] }), '/pool/jobs?state=queued');
+    renderApp(jobsApi({ jobs: [queued(1, 1), queued(2, 2)] }), '/pool/jobs?state=queued&view=runs');
     const table = await screen.findByRole('table', { name: 'Queue runs' });
     const rows = within(table).getAllByRole('row');
     expect(rows).toHaveLength(2); // the head and one row for the run, not one for each job
@@ -44,24 +44,24 @@ describe('Queue', () => {
   });
 
   it('says what a run row opens to with the one word of every list, Open run', async () => {
-    renderApp(jobsApi({ jobs: [queued(1, 1)] }), '/pool/jobs?state=queued');
+    renderApp(jobsApi({ jobs: [queued(1, 1)] }), '/pool/jobs?state=queued&view=runs');
     const table = await screen.findByRole('table', { name: 'Queue runs' });
     expect(within(table).getByRole('button', { name: /^Open run: / })).toBeTruthy();
   });
 
-  it('lists every waiting job in order in the Jobs view, each with Open job', async () => {
+  it('lists every waiting job in order in the Jobs view, each with Why', async () => {
     renderApp(
       jobsApi({ jobs: [queued(1, 1), queued(2, 2)] }),
       '/pool/jobs?state=queued&view=jobs',
     );
     const table = await screen.findByRole('table', { name: 'Queue jobs' });
-    expect(within(table).getAllByRole('button', { name: /^Open job: / })).toHaveLength(2);
-    expect(within(table).getAllByText('in about 4 to 7 min')).toHaveLength(2);
+    expect(within(table).getAllByRole('button', { name: 'Why' })).toHaveLength(2);
+    expect(within(table).getAllByText(/^Starts about \d\d:\d\d$/)).toHaveLength(2);
     expect(within(table).queryByText('Waited')).toBeNull(); // RES18: Waited is on the Job page
   });
 
   it('says so when nothing waits', async () => {
-    renderApp(jobsApi(), '/pool/jobs?state=queued');
+    renderApp(jobsApi(), '/pool/jobs?state=queued&view=runs');
     expect(
       await screen.findByText('Nothing is waiting. Every job has a slot.'),
     ).toBeTruthy();
@@ -73,13 +73,13 @@ describe('Queue', () => {
       '/api/v1/jobs',
       apiError(500, 'internal', 'The store is busy.'),
     );
-    renderApp(api, '/pool/jobs?state=queued');
+    renderApp(api, '/pool/jobs?state=queued&view=runs');
     expect(await screen.findByText(/Could not load the queue/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Try again' })).toBeTruthy();
   });
 
   it('shows the loading state first', async () => {
-    renderApp(jobsApi(), '/pool/jobs?state=queued');
+    renderApp(jobsApi(), '/pool/jobs?state=queued&view=runs');
     expect(await screen.findByText('Loading the queue')).toBeTruthy();
   });
 });
@@ -114,7 +114,7 @@ describe('Running', () => {
           }),
         ],
       }),
-      '/pool/jobs?state=running',
+      '/pool/jobs?state=running&view=runs',
     );
     const table = await screen.findByRole('table', { name: 'Running runs' });
     expect(within(table).getByText('2 of 4')).toBeTruthy();
@@ -125,14 +125,15 @@ describe('Running', () => {
     expect(within(table).getByText('running')).toBeTruthy();
   });
 
-  it('shows a running job against its forecast in the Jobs view', async () => {
+  it('shows a running job with the time it started in the Jobs view', async () => {
     renderApp(jobsApi({ jobs: [running] }), '/pool/jobs?state=running&view=jobs');
     const table = await screen.findByRole('table', { name: 'Running jobs' });
-    expect(within(table).getByRole('progressbar')).toBeTruthy();
+    expect(within(table).getByText('running')).toBeTruthy();
+    expect(within(table).getByText(/^since \d\d:\d\d$/)).toBeTruthy();
   });
 
   it('says so when no run is in progress', async () => {
-    renderApp(jobsApi(), '/pool/jobs?state=running');
+    renderApp(jobsApi(), '/pool/jobs?state=running&view=runs');
     expect(await screen.findByText('No run is in progress.')).toBeTruthy();
   });
 });
@@ -145,14 +146,14 @@ describe('Done', () => {
 
   it('asks for the list once, not on every render', async () => {
     const api = jobsApi({ runs: [runSummary()] });
-    renderApp(api, '/pool/jobs?state=done');
+    renderApp(api, '/pool/jobs?state=done&view=runs');
     await screen.findByRole('table', { name: 'Done runs' });
     await act(async () => {}); // let every effect and state update settle
     expect(api.count('GET', '/api/v1/runs')).toBe(1);
   });
 
   it('lists runs with jobs done of all, result and the retention words', async () => {
-    renderApp(jobsApi({ runs: [runSummary()] }), '/pool/jobs?state=done');
+    renderApp(jobsApi({ runs: [runSummary()] }), '/pool/jobs?state=done&view=runs');
     const table = await screen.findByRole('table', { name: 'Done runs' });
     expect(within(table).getByText('3 of 3')).toBeTruthy();
     expect(within(table).queryByText('Total time')).toBeNull(); // RES18: in the opened run
@@ -167,7 +168,7 @@ describe('Done', () => {
 
   it('shows 25 first and adds 25 a time, up to 100', async () => {
     const api = jobsApi({ runs: many(120) });
-    renderApp(api, '/pool/jobs?state=done');
+    renderApp(api, '/pool/jobs?state=done&view=runs');
     await screen.findByText(/Showing 25 of 120 finished runs/);
     fireEvent.click(screen.getByRole('button', { name: 'Show 25 more' }));
     await screen.findByText(/Showing 50 of 120 finished runs/);
@@ -181,9 +182,9 @@ describe('Done', () => {
 
   it('asks for the range chosen, as a from date', async () => {
     const api = jobsApi({ runs: [runSummary()] });
-    renderApp(api, '/pool/jobs?state=done');
+    renderApp(api, '/pool/jobs?state=done&view=runs');
     await screen.findByRole('table', { name: 'Done runs' });
-    fireEvent.click(screen.getByRole('button', { name: 'Last 7 days' }));
+    fireEvent.change(screen.getByLabelText('Range'), { target: { value: '7' } });
     await waitFor(() => {
       const last = api.calls.filter((c) => c.path === '/api/v1/runs').at(-1);
       const from = Date.parse(last?.query.get('from') ?? '');
@@ -192,7 +193,7 @@ describe('Done', () => {
   });
 
   it('goes from Open run straight to the Run page, with no row opened in place', async () => {
-    renderApp(jobsApi({ runs: [runSummary()] }), '/pool/jobs?state=done');
+    renderApp(jobsApi({ runs: [runSummary()] }), '/pool/jobs?state=done&view=runs');
     const table = await screen.findByRole('table', { name: 'Done runs' });
     fireEvent.click(within(table).getByRole('button', { name: /^Open run: / }));
     expect(await screen.findByRole('region', { name: 'Job graph' })).toBeTruthy();
@@ -201,7 +202,7 @@ describe('Done', () => {
   });
 
   it('opens the Run page with Enter on a run row', async () => {
-    renderApp(jobsApi({ runs: [runSummary()] }), '/pool/jobs?state=done');
+    renderApp(jobsApi({ runs: [runSummary()] }), '/pool/jobs?state=done&view=runs');
     const table = await screen.findByRole('table', { name: 'Done runs' });
     const row = within(table).getAllByRole('row')[1] as HTMLElement;
     fireEvent.keyDown(row, { key: 'Enter' });
@@ -210,7 +211,7 @@ describe('Done', () => {
 
   it('shows the jobs view with a filter from the address, by repository name', async () => {
     const api = jobsApi({ jobs: [job()], runs: [runSummary()] });
-    renderApp(api, '/pool/jobs?state=done&repository=octo%2Fapp');
+    renderApp(api, '/pool/jobs?state=done&repository=octo%2Fapp&view=runs');
     await screen.findByRole('table', { name: 'Done runs' });
     expect(
       screen.getByText('Showing only what belongs to repository octo/app.'),
@@ -234,7 +235,7 @@ describe('Done', () => {
   });
 
   it('says a repository that is not listed has no run', async () => {
-    renderApp(jobsApi(), '/pool/jobs?state=done&repository=nobody%2Fnothing');
+    renderApp(jobsApi(), '/pool/jobs?state=done&repository=nobody%2Fnothing&view=runs');
     expect(await screen.findByText(/is not on the list of repositories/)).toBeTruthy();
   });
 
@@ -253,7 +254,7 @@ describe('Done', () => {
   });
 
   it('says so when there are no finished runs yet', async () => {
-    renderApp(jobsApi(), '/pool/jobs?state=done');
+    renderApp(jobsApi(), '/pool/jobs?state=done&view=runs');
     expect(await screen.findByText(/No finished runs yet/)).toBeTruthy();
   });
 });
@@ -262,7 +263,7 @@ describe('the Runs | Jobs switch', () => {
   it('keeps the filter and puts the choice in the address', async () => {
     renderApp(
       jobsApi({ jobs: [job()], runs: [runSummary()] }),
-      '/pool/jobs?state=done&repository=octo%2Fapp',
+      '/pool/jobs?state=done&repository=octo%2Fapp&view=runs',
     );
     await screen.findByRole('table', { name: 'Done runs' });
     fireEvent.click(screen.getByRole('button', { name: 'Jobs' }));
