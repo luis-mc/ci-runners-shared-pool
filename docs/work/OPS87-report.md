@@ -21,4 +21,10 @@ Branch OPS87-persistent-linux-on-windows (rides RELEASE-63).
 - Not a wizard change; the wizard parts are untouched.
 
 ## Checks
-(see below)
+- CI run 45299603318 on 292db9e: green except e2e shard 3 (two Add runners specs assumed Ephemeral is the only Linux kind on Windows).
+- Fix: `exports-stop.spec.ts` picks the Ephemeral radio on step 1 in the two Windows-machine specs that expect the ephemeral plan text. No other spec goes through /setup/runners/add with a Windows machine (design-layout uses the default machine; the OPS28 kind specs already choose the kind).
+- Chromium: symlinks in /dev/shm/pw to /opt/pw-browsers (chromium 1255 -> 1243, ffmpeg 1013 -> 1011), PLAYWRIGHT_BROWSERS_PATH=/dev/shm/pw.
+- Local gate `branch_gate.py --e2e-only`: PASS, 3247 passed, 2 skipped (23.6m).
+- Branch CI: pending.
+
+BLOCKED branch CI not yet run
