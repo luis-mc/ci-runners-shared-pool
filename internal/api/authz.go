@@ -60,7 +60,7 @@ var otherAreaAuth = map[string]string{
 	"createJoinCode": authAdmin, "createJoinFile": authAdmin, "joinMachineOverSsh": authAdmin, "createRunners": authAdmin, "decideMachineChange": authAdmin, "deleteRunner": authAdmin, "deleteRunnerRegistration": authAdmin, "updateRunnerSettings": authAdmin, "clearRunnerCache": authAdmin,
 	"drainMachine": authAdmin, "freeStaleSlots": authAdmin, "getInstallCommand": authAdmin, "getJoinCode": authAdmin,
 	"listBackups": authAdmin, "planRunnerReplacement": authAdmin, "planRunners": authAdmin, "redetectMachine": authAdmin, "recoverMachine": authAdmin, "checkMachinePoolSize": authAdmin,
-	"removeMachine": authAdmin, "resumeMachine": authAdmin, "revokeJoinCode": authAdmin, "runBackup": authAdmin,
+	"removeMachine": authAdmin, "resumeMachine": authAdmin, "restartMachineService": authAdmin, "revokeJoinCode": authAdmin, "runBackup": authAdmin,
 	"runBackupDrill": authAdmin, "runDoctor": authAdmin, "updateMachine": authAdmin, "updatePoolSettings": authAdmin,
 	"updateQueueSettings": authAdmin, "putEnvSet": authAdmin, "putJobSizeOverride": authAdmin, "putRunnerClasses": authAdmin, "deleteJobSizeOverride": authAdmin, "deleteEnvSet": authAdmin, "getRegistrySettings": authAdmin,
 	"putRegistryLogin": authAdmin, "deleteRegistryLogin": authAdmin, "putRegistryCaBundle": authAdmin, "deleteRegistryCaBundle": authAdmin,

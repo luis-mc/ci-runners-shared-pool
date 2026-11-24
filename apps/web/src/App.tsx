@@ -79,6 +79,10 @@ const AddMachinePage = later(
   () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
   { heading: 'Add a machine' },
 );
+const MachineRestartPage = later(
+  () => import('./screens/machines/MachineRestart').then((m) => m.MachineRestartPage),
+  { heading: 'Restart the service' },
+);
 const TurnOnPoolPage = later(
   () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
   { heading: 'Turn on the pool' },
@@ -253,6 +257,10 @@ export function App({
                 <Route path="setup/pool/:owner/:name" element={<RepositoryDetail />} />
                 <Route path="setup/machines/add" element={<AddMachinePage />} />
                 <Route path="setup/machines/:id" element={<MachineDetail />} />
+                <Route
+                  path="setup/machines/:id/restart"
+                  element={<MachineRestartPage />}
+                />
                 <Route path="setup/runners/add" element={<AddRunnersPage />} />
                 <Route path="setup/runners/:id" element={<RunnerPage />} />
                 <Route path="setup/images/:imageId" element={<ImageDetail />} />

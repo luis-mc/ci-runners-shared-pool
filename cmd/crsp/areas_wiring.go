@@ -353,8 +353,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	d.Machines.SetLeftoverSources(localLeftoverSource(logger), remoteLeftoverSource(d.Link))
 
 	// Doctor: the M1 check registry over the controller's own data.
+	fleet := doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc, health: d.Health}
 	_, docSvc := wire.NewDoctor(wire.DoctorDeps{
-		Fleet: doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc, health: d.Health},
+		Fleet: fleet,
 		GitHub: func(context.Context) (doctor.GitHub, error) {
 			if gh.AppID() == 0 {
 				return nil, nil
@@ -362,8 +363,8 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			return gh, nil
 		},
 		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
-		KVM:          reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
-		Engines:      reportSources{fleet: doctorFleet{machines: d.Machines}, link: d.Link},
+		KVM:          reportSources{fleet: fleet, link: d.Link},
+		Engines:      reportSources{fleet: fleet, link: d.Link},
 		Extra:        append(checks.KVMReportedChecks(), checks.HealthChecks()...),
 		Demand:       quietSource{wd: quietDemand},
 		Ephemeral:    runnerSvc,

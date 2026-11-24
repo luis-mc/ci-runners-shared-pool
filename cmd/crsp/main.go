@@ -129,6 +129,7 @@ func runController() error {
 	}
 	logger := logging.New(os.Stderr, cfg.LogLevel, secretRedactor)
 	slog.SetDefault(logger)
+	logServiceLogPath(logger)
 
 	ctx, stop := signal.NotifyContext(baseContext, os.Interrupt, syscall.SIGTERM)
 	defer stop()

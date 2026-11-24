@@ -13,10 +13,12 @@ import {
   type UpdatePolicy,
 } from '@crsp/ui/lifecycle';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { errorText } from '../../api/api';
 import { useCommand, useLoad } from '../../api/hooks';
 import { useRefreshTick } from '../../api/machines';
 import { useLifecycle, type FleetItem, type UpdateStatusV2 } from '../../api/lifecycle';
+import { useSession } from '../../auth/session';
 import { Load } from '../common';
 import { cardFailure, fmtTime } from './lifecycleView';
 
@@ -32,6 +34,8 @@ const fleetRow = (f: FleetItem): FleetRow => ({
 
 export function UpdatesSettings() {
   const api = useLifecycle();
+  const navigate = useNavigate();
+  const session = useSession();
   const tick = useRefreshTick(REFRESH_MS);
   const status = useLoad(() => api.status(), [tick]);
   const history = useLoad(() => api.history(), [tick]);
@@ -136,6 +140,19 @@ export function UpdatesSettings() {
           );
         }}
       </Load>
+      <Stack gap="tight">
+        <Text>
+          Stop and start the service after the running jobs end. No running job is
+          stopped.
+        </Text>
+        <Button
+          onPress={() => void navigate('/settings/updates/review?kind=restart')}
+          disabled={!session.can('admin')}
+          reason={session.can('admin') ? undefined : session.whyNot('admin')}
+        >
+          Restart the service
+        </Button>
+      </Stack>
       {removeStarted ? (
         <Message tone="note" dismissible={false}>
           {lw('remove.started', { product: PRODUCT })}

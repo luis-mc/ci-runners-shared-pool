@@ -82,16 +82,15 @@ func (h *serviceHandler) Execute(_ []string, req <-chan svc.ChangeRequest, statu
 }
 
 // openServiceLog opens <data folder>\logs\crsp.log for the controller's log; a
-// service has no console. Nil when it cannot be opened.
+// service has no console. When that cannot be opened (an upgrade can leave the
+// folder or file unwritable) it uses another file, and the controller logs why
+// at startup. Nil only when no file can be opened at all.
 func openServiceLog() *os.File {
 	paths := config.DefaultPaths("windows", os.Getenv)
-	dir := filepath.Join(paths.DataDir, "logs")
-	if err := os.MkdirAll(dir, 0o750); err != nil {
-		return nil
-	}
-	f, err := os.OpenFile(filepath.Join(dir, "crsp.log"), os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o640)
-	if err != nil {
-		return nil
+	f, problems, _ := openLogFile(filepath.Join(paths.DataDir, "logs"), os.TempDir(), os.Getpid())
+	serviceLogProblems = problems
+	if f != nil {
+		serviceLogPath = f.Name()
 	}
 	return f
 }

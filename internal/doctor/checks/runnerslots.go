@@ -8,6 +8,10 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
 )
 
+// GateMaxWaitAnchor is the part of the machine page's address that opens it at
+// the Gate maximum wait field (CRSP235).
+const GateMaxWaitAnchor = "#gate-max-wait"
+
 // runnerSlots: a machine has no more runners for one repository than job
 // slots, and the longest the job-started hook holds a job is within the 2 minute
 // hold cap (scheduling R5.75). A job that a runner takes and then holds for a slot loses that time
@@ -38,7 +42,7 @@ func runnerSlots(ctx context.Context, env doctor.Env) []doctor.Finding {
 			f.Severity = doctor.Warn
 			f.Title = fmt.Sprintf("%s holds a job up to %d min, above the %d min hold cap", m.Name, m.GateMaxWaitMin, slots.MaxHoldMin)
 			f.Detail = fmt.Sprintf("The hold counts against the job's timeout-minutes. The hook cuts any wait to %d min, but the saved setting should say so.", slots.MaxHoldMin)
-			f.Fix = doctor.Fix{Text: fmt.Sprintf("On the machine page set Gate maximum wait to %d minutes or less.", slots.MaxHoldMin), Link: machineLink(m)}
+			f.Fix = doctor.Fix{Text: fmt.Sprintf("On the machine page set Gate maximum wait to %d minutes or less.", slots.MaxHoldMin), Link: machineLink(m) + GateMaxWaitAnchor}
 		}
 		out = append(out, f)
 	}

@@ -157,15 +157,16 @@ func (b *Backend) psOK(ctx context.Context, step, script string, env, secret map
 func (b *Backend) accountSID(ctx context.Context, account string, env map[string]string) (string, error) {
 	if b.cfg.LookupSID != nil {
 		sid, err := b.cfg.LookupSID(account)
-		if err != nil || !strings.HasPrefix(sid, "S-1-") {
-			if err == nil {
-				err = fmt.Errorf("answer %q is not a SID", sid)
-			}
-			e := &FolderResetError{Detail: b.redact(fmt.Sprintf("read SID of %s: %v", account, err)), Err: err}
-			b.log("acl", e.Detail)
-			return "", e
+		if err == nil && strings.HasPrefix(sid, "S-1-") {
+			return sid, nil
 		}
-		return sid, nil
+		// CRSP234: the in-process lookup can miss an account that exists
+		// (ERROR_NONE_MAPPED); Get-LocalUser asks the SAM by exact name, so it
+		// is the second try. Only when both fail is the folder reset refused.
+		if err == nil {
+			err = fmt.Errorf("answer %q is not a SID", sid)
+		}
+		b.log("acl", fmt.Sprintf("native SID lookup of %s failed (%v); trying PowerShell", account, err))
 	}
 	res, err := b.ps(ctx, scriptAccountSID, env, nil)
 	if err != nil {
