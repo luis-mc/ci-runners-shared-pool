@@ -24,3 +24,9 @@ E2E gate: pre-push demands a gate record for changed specs, and the whole-branch
 - Size classes, Timers, Reservation numbers and Gating have no console screen to link to (no UI yet), so those sections have no Open link.
 - Where things are: the prototype has the parts as a map of boxes; live keeps its table (the gap list says the text and table are the same).
 - Commits use 'Luis Carvalho' with the author email of `origin/main`, as the brief says (a stop hook asked for another identity; the brief wins).
+
+## CI
+
+First run (746b10b): prettier failed on four Help files (fixed) and `internal/machines` `TestControllerJoinsItsOwnAgentWithoutACode` failed once (Go code is not touched by this branch; it passed on the second run). Second run, workflow_dispatch on ebec5ec: all jobs green, run 45307292378.
+
+CODE DONE ebec5ec0c8177b4e81a3daa67b77d7388c44aabb
