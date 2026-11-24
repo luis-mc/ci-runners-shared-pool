@@ -3,6 +3,7 @@
 // a spec asserts the list is empty. No screenshots.
 import type { Page } from '@playwright/test';
 import { failure, machine, repository, runner, signedIn, type Mock } from './fixtures';
+import { insightsApi } from './insights-fixtures';
 import { jobsAndDoctor } from './jobs-doctor-fixtures';
 import type { ConsoleRoute } from './routes';
 import {
@@ -225,7 +226,7 @@ export async function openRoute(
 ): Promise<Mock> {
   const mode = opts.mode ?? 'dark';
   const state = opts.state ?? 'data';
-  const mock = jobsAndDoctor(signedIn());
+  const mock = insightsApi(jobsAndDoctor(signedIn()));
   mock.on('GET', '/api/v1/me/preferences', { theme: mode });
   if (state === 'stress') stressData(mock);
   if (route.signedOut)
