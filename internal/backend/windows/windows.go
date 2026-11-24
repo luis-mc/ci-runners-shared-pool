@@ -174,7 +174,9 @@ func (b *Backend) accountSID(ctx context.Context, account string, env map[string
 	}
 	sid := strings.TrimSpace(res.Stdout)
 	if res.ExitCode == 0 && sid == "" {
-		e := &FolderResetError{Detail: fmt.Sprintf("read SID of %s: powershell exited 0 but printed nothing on stdout (stderr: %q); the script output did not reach the agent", account, b.redact(strings.TrimSpace(res.Stderr)))}
+		// Never an empty success: Get-LocalUser found nothing or its output
+		// was lost, and either way there is no SID (OPS88).
+		e := &FolderResetError{Detail: fmt.Sprintf("read SID of %s: account not found (powershell exited 0 but printed nothing on stdout; stderr: %q)", account, b.redact(strings.TrimSpace(res.Stderr)))}
 		b.log("acl", e.Detail)
 		return "", e
 	}
@@ -375,7 +377,7 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	secret := map[string]string{"CRSP_PASSWORD": password}
 	env["CRSP_GROUP"] = runners.RunnersGroup
 	st.account = true
-	if err := b.psOK(ctx, "account", scriptAccount, env, secret); err != nil {
+	if err := b.makeAccount(ctx, account, env, secret); err != nil {
 		return h, err
 	}
 	if err := b.rights.Grant(ctx, account, r.WindowsSymlinkRight); err != nil {
@@ -425,6 +427,24 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	}
 	b.log("start", "service "+wantMeta.Service+" started as "+account)
 	return h, nil
+}
+
+// makeAccount makes the account and checks it exists before anything reads its
+// SID: the script confirms with one line, and a run that exits 0 without it
+// did not make the account (OPS88). Every add, also a retry after a clean-up
+// that deleted the account, goes through here first.
+func (b *Backend) makeAccount(ctx context.Context, account string, env, secret map[string]string) error {
+	res, err := b.ps(ctx, scriptAccount, env, secret)
+	if err != nil {
+		return fmt.Errorf("account: %w", err)
+	}
+	if res.ExitCode != 0 {
+		return fmt.Errorf("account: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
+	}
+	if !strings.Contains(res.Stdout, "account-ready "+account) {
+		return fmt.Errorf("account: %s was not made: powershell exited 0 without confirming it (stderr: %q)", account, b.redact(strings.TrimSpace(res.Stderr)))
+	}
+	return nil
 }
 
 func flag(v bool) string {

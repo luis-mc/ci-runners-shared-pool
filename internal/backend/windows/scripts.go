@@ -26,7 +26,10 @@ if (Get-LocalUser -Name $env:CRSP_ACCOUNT -ErrorAction SilentlyContinue) {
 if (-not (Get-LocalGroupMember -Group $env:CRSP_GROUP -Member $env:CRSP_ACCOUNT -ErrorAction SilentlyContinue)) {
     Add-LocalGroupMember -Group $env:CRSP_GROUP -Member $env:CRSP_ACCOUNT
 }
-if (-not (Get-LocalUser -Name $env:CRSP_ACCOUNT).Enabled) { throw "the account $($env:CRSP_ACCOUNT) is disabled" }
+$made = Get-LocalUser -Name $env:CRSP_ACCOUNT -ErrorAction SilentlyContinue
+if (-not $made) { throw "the account $($env:CRSP_ACCOUNT) was not found after it was made" }
+if (-not $made.Enabled) { throw "the account $($env:CRSP_ACCOUNT) is disabled" }
+Write-Output ('account-ready ' + $env:CRSP_ACCOUNT)
 `
 
 	// scriptAccountSID writes the SID of the account that was made, one line
@@ -34,7 +37,9 @@ if (-not (Get-LocalUser -Name $env:CRSP_ACCOUNT).Enabled) { throw "the account $
 	// is redirected). The agent reads the SID in Go first (sid_windows.go); this
 	// is the fallback. Needs CRSP_ACCOUNT.
 	scriptAccountSID = scriptHeader + `
-$sid = (Get-LocalUser -Name $env:CRSP_ACCOUNT).SID.Value
+$user = Get-LocalUser -Name $env:CRSP_ACCOUNT -ErrorAction SilentlyContinue
+if (-not $user) { throw "account not found: $($env:CRSP_ACCOUNT)" }
+$sid = $user.SID.Value
 if (-not $sid) { throw "no SID for the account $($env:CRSP_ACCOUNT)" }
 Write-Output $sid
 `
@@ -215,6 +220,9 @@ if ($svc) {
 	scriptRemoveAccount = scriptHeader + `
 if (Get-LocalUser -Name $env:CRSP_ACCOUNT -ErrorAction SilentlyContinue) {
     Remove-LocalUser -Name $env:CRSP_ACCOUNT
+    Write-Output 'account-removed'
+} else {
+    Write-Output 'account-absent'
 }
 `
 
