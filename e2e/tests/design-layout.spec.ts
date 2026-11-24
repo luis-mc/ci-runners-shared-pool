@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { expectDomLayout } from '../../scripts/design/dom-layout';
 import {
   failure,
+  machine,
   needingRecovery,
   publicRows,
   signedIn,
@@ -42,6 +43,46 @@ const SCREENS: {
       }),
   },
   { name: 'overview', path: '/', ready: 'Overview' },
+  // LOOK61: machine cards with their size, Next to start and Routing labels filled.
+  {
+    name: 'overview with sizes, a queue and labels',
+    path: '/',
+    ready: 'Overview',
+    tweak: (m: ReturnType<typeof signedIn>) => {
+      const job = (id: number, name: string, label: string) => ({
+        id,
+        repository: 'octo/app',
+        run_id: id,
+        run_attempt: 1,
+        github_job_id: id,
+        job_name: name,
+        labels: [label],
+        state: 'queued',
+        queue_position: id,
+        wait_reason: 'free_slot',
+      });
+      m.on('GET', '/api/v1/machines', {
+        items: [
+          {
+            ...machine(),
+            name: 'GameRoomPC with a long name for a narrow phone',
+            facts: { threads: 6, cores: 6, memory_bytes: 9 * 1024 ** 3 },
+          },
+        ],
+      });
+      return m.on('GET', '/api/v1/overview', {
+        machines: [],
+        queued_count: 3,
+        queued: [
+          job(1, 'build', 'crsp-small-4c1d'),
+          job(2, 'e2e-1', 'crsp-e2e-7f3a'),
+          job(3, 'e2e-2', 'crsp-e2e-7f3a'),
+        ],
+        running: [],
+        last_event_id: '1',
+      });
+    },
+  },
   { name: 'repositories', path: '/setup/pool', ready: 'Repositories' },
   {
     name: 'repositories with a public row while the setting is off',
