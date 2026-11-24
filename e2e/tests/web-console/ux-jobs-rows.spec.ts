@@ -117,7 +117,11 @@ for (const s of SCREENS) {
 test('Open run lands on the Run page and the page does not scroll sideways at 1300 px', async ({
   page,
 }) => {
-  await openRoute(page, { url: '/pool/jobs?view=runs', signedOut: false }, { width: 1300 });
+  await openRoute(
+    page,
+    { url: '/pool/jobs?view=runs', signedOut: false },
+    { width: 1300 },
+  );
   await page
     .getByRole('button', { name: /^Open run/ })
     .first()
