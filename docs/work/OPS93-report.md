@@ -6,3 +6,4 @@
 - Not verified (needs admin Windows): LSA rights script, LogonUser check, `Set-Acl` with a fresh DirectorySecurity (no owner) in scriptLock, `Get-LocalGroupMember` on a group with orphaned SIDs under PS 5.1, New-Service with credential, RunnerService.exe start, scriptRunner against a real Runner.Listener.
 
 - CI run 45372973130 green on fcb2b0d (Windows job ran the parse and read-only tests). windows package moved to the integration tier in scripts/ci/go-tiers.json (real powershell.exe, ~11 s).
+CODE DONE fcb2b0d1f39c4dba104f07bf8be1dcc8792ff2e8
