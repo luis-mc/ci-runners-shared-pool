@@ -280,6 +280,33 @@ export function ChoiceField(
   );
 }
 
+/** A drop-down at any count of choices: the filters of a list, where a row of radios would fill the pane (LOOK62). */
+export function SelectField(
+  props: FieldShellProps & {
+    value: string;
+    choices: readonly Choice[];
+    onChange: (value: string) => void;
+  },
+) {
+  const id = useId();
+  return (
+    <Shell {...props} htmlFor={id} helpId={`${id}-h`} errorId={`${id}-e`}>
+      <select
+        id={id}
+        className="ds-input"
+        value={props.value}
+        onChange={(e) => props.onChange(e.target.value)}
+      >
+        {props.choices.map((c) => (
+          <option key={c.value} value={c.value} disabled={Boolean(c.disabledReason)}>
+            {c.label}
+          </option>
+        ))}
+      </select>
+    </Shell>
+  );
+}
+
 /** Component 22: a check box row. It waits for Save (UX-22). */
 export function CheckRow({
   label,

@@ -1144,6 +1144,7 @@ One word set for the button at the end of a table row. The guard reads this tabl
 |---|---|
 | Open run | Row action of a run row (Queue, Running, Done): opens the Run page. |
 | Open | Row action of a group row (By repository, machine, runner, runner type, job type). The group's name is already in the row. |
+| Why | Row action of a job row in the Jobs list (Pool > Jobs): opens the inspector of the job beside the list. A press, not a link. |
 | Open job | Row action of a job row (Jobs view of Queue, Running, Done): opens the Job page. |
 | Remove | Row action of a failed runner (Runners): removes it and does not open a page. A press, not a link. Admin only (busy word: Removing). |
 | Edit | Row action of a user (Settings, Access): opens the change of its role. A press, not a link. Admin only. |
@@ -1212,6 +1213,23 @@ The words of the one search list of Live, Done and Run elsewhere (component 67) 
 | Failed jobs | Overview card: how many of the finished jobs of the last 7 days failed; it opens the finished jobs. |
 | Each number is compared with the 7 days before. | Line under the Overview cards. |
 | Showing {n} of {m} finished {runs or jobs} in the last {days} days. | Note under the list when it holds finished rows. |
+
+## Jobs list as approved words (LOOK62, owner decision of 23 Nov 2026)
+
+The words of Pool > Jobs as the owner approved it: the Jobs list first, the open Filters pane, and the inspector beside the list.
+
+| Where | Word |
+|---|---|
+| Columns | Job, Status, Machine, Start |
+| Button | Why (row action, Row action words) |
+| Filters pane | Filters; open; {n} set; Open the filters; Close the filters |
+| Fields | Range (Last 7 days, Last 30 days, Last 90 days), Group by (No grouping, Repository, Machine, Runner, Runner type, Job type), Repository (All repositories), Machine (All machines), Runner type (Any, Persistent, Ephemeral), Branch (Any branch) |
+| Tags of a closed pane | State: {state}, {range}, Group: none, {filter}: {value} |
+| View switch | Jobs, Runs (label: Show runs or jobs) |
+| Start | Starts about {hh:mm}; since {hh:mm}; finished {hh:mm}; Start not known |
+| Machine | the machine name, or an em dash when no runner has the job yet |
+| Inspector | title `{job}: {status}`; the facts; the reason line; Open job; Close details |
+| Reserved | Status: Reserved. Reason: waits for the room another job holds on its machine. Short: room held for it. |
 
 ## Runner leftover words
 

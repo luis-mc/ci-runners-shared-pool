@@ -3332,6 +3332,75 @@ button.ds-jobpath__box {
   }
 }
 
+/* Component 67, filter pane and inspector (LOOK62): the filters in a pane beside the list, open at first, and the
+   inspector of a row beside the list. From 900 px the filters take the top row and the inspector is the second
+   column; from 1400 px (UX-84) the filters are the first column and stay open. */
+.ds-filter-pane__body,
+.ds-filter-pane__fields {
+  display: grid;
+  gap: var(--ds-space-3);
+  min-inline-size: 0;
+}
+.ds-filter-pane__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-2);
+}
+.ds-filter-pane__summary {
+  display: grid;
+  gap: var(--ds-space-3);
+  justify-items: start;
+}
+.ds-filter-pane[data-open='true'] .ds-filter-pane__summary,
+.ds-filter-pane[data-open='false'] .ds-filter-pane__fields {
+  display: none;
+}
+.ds-filter-pane__fields .ds-filter-pane__grid {
+  display: grid;
+  gap: var(--ds-space-3);
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+}
+/* The panes of the list are the sections of the page: one section gap apart (UX-10). */
+.ds-search-table[data-filters] .ds-search-table__grid {
+  gap: var(--ds-space-6);
+}
+@media (min-width: 900px) {
+  .ds-search-table[data-filters] .ds-search-table__grid[data-open] {
+    grid-template-columns: minmax(0, 1fr) calc(var(--ds-width-field-medium) * 1.3);
+  }
+  .ds-search-table[data-filters] .ds-filter-pane {
+    grid-column: 1 / -1;
+  }
+}
+@media (min-width: 1400px) {
+  .ds-search-table[data-filters] .ds-search-table__grid {
+    grid-template-columns: calc(var(--ds-width-field-medium) * 0.95) minmax(0, 1fr);
+  }
+  .ds-search-table[data-filters] .ds-search-table__grid[data-open] {
+    grid-template-columns:
+      calc(var(--ds-width-field-medium) * 0.95) minmax(0, 1fr)
+      calc(var(--ds-width-field-medium) * 1.35);
+  }
+  .ds-search-table[data-filters] .ds-filter-pane {
+    grid-column: auto;
+  }
+  .ds-filter-pane[data-open] .ds-filter-pane__fields {
+    display: grid;
+  }
+  .ds-filter-pane .ds-filter-pane__summary,
+  .ds-filter-pane .ds-filter-pane__close {
+    display: none;
+  }
+  .ds-filter-pane__fields .ds-filter-pane__grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 700px) {
+  .ds-search-table[data-filters] .ds-search-table__grid[data-open] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* Component 58: stat tile. */
 .ds-stat-grid {
   display: grid;
