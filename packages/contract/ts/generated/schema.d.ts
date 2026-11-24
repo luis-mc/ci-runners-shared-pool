@@ -3431,7 +3431,7 @@ export interface paths {
         };
         /**
          * Wait, hold and run per repository, job key, runner label or day
-         * @description ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
+         * @description ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
          */
         get: operations["getWaitSplit"];
         put?: never;

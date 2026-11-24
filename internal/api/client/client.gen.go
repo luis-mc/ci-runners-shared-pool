@@ -10559,7 +10559,7 @@ type ClientInterface interface {
 
 	// GetWaitSplit Wait, hold and run per repository, job key, runner label or day
 	//
-	// ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
+	// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 	//
 	// Corresponds with GET /api/v1/insights/waits (the `GetWaitSplit` operationId).
 	GetWaitSplit(ctx context.Context, params *GetWaitSplitParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -13278,7 +13278,7 @@ func (c *Client) GetPoolTimeline(ctx context.Context, params *GetPoolTimelinePar
 
 // GetWaitSplit Wait, hold and run per repository, job key, runner label or day
 //
-// ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
+// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 //
 // Corresponds with GET /api/v1/insights/waits (the `GetWaitSplit` operationId).
 func (c *Client) GetWaitSplit(ctx context.Context, params *GetWaitSplitParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -27238,7 +27238,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetWaitSplitWithResponse Wait, hold and run per repository, job key, runner label or day
 	//
-	// ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
+	// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -39986,7 +39986,7 @@ func (c *ClientWithResponses) GetPoolTimelineWithResponse(ctx context.Context, p
 
 // GetWaitSplitWithResponse Wait, hold and run per repository, job key, runner label or day
 //
-// ci-run-insights R5.12 to R5.14, R5.46 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
+// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 //
 // Returns a wrapper object for the known response body format(s).
 //
