@@ -33,6 +33,25 @@ export const titleWithRepository = (f: Pick<Finding, 'title' | 'repository'>): s
 /** The minutes of a finding, always an estimate (R5.9). */
 export const minutesWords = (n: number): string => `about ${n} min a week`;
 
+/** How sure a finding is (LOOK65, UX-76). The API has no confidence field: a change crsp can make from measured numbers is
+ * *sure*, a finding that saves minutes is *likely*, a finding with no minutes is *a guess*. */
+export const CONFIDENCE = ['sure', 'likely', 'a guess'] as const;
+export function confidenceOf(
+  f: Pick<Finding, 'action_kind' | 'minutes_saved_week'>,
+): (typeof CONFIDENCE)[number] {
+  if (f.action_kind) return 'sure';
+  return f.minutes_saved_week > 0 ? 'likely' : 'a guess';
+}
+
+/** Who decides a change: crsp makes it after the owner's Review; any other fix is made by the owner outside crsp. */
+export const decidesWords = (f: Pick<Finding, 'action_kind'>): string =>
+  f.action_kind ? 'your yes' : 'you, in the repository';
+
+export const FIX_LABEL = 'Fix:';
+
+/** The minutes of a finding in the Saves a week column. */
+export const minutesWeekWords = (n: number): string => `about ${n} min`;
+
 /** The order of Do next: most minutes first, a tie to the older finding (R5.11). */
 export function ranked(items: readonly Finding[]): Finding[] {
   return [...items].sort(

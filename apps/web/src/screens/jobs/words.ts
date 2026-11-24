@@ -9,6 +9,7 @@ export type Eta = Schemas['Eta'];
 
 const REASON_WORDS: Record<Schemas['WaitReason'], string> = {
   free_slot: 'waits for a free slot',
+  reserved: 'is reserved: the machine keeps room free for it',
   load_over_budget: 'waits until the machine load is under its budget',
   no_runner_with_labels: 'waits for a runner with its labels',
   repository_parallel_limit: "waits for the repository's parallel limit",
@@ -47,6 +48,7 @@ export function waitWords(j: Waiting): string {
 
 const REASON_SHORT: Record<Schemas['WaitReason'], string> = {
   free_slot: 'waits for a slot',
+  reserved: 'reserved',
   load_over_budget: 'machine load too high',
   no_runner_with_labels: 'no runner with its labels',
   repository_parallel_limit: 'repository limit',

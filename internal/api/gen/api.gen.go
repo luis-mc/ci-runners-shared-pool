@@ -3924,6 +3924,7 @@ const (
 	WaitReasonOverMemory              WaitReason = "over_memory"
 	WaitReasonPaused                  WaitReason = "paused"
 	WaitReasonRepositoryParallelLimit WaitReason = "repository_parallel_limit"
+	WaitReasonReserved                WaitReason = "reserved"
 	WaitReasonUnknown                 WaitReason = "unknown"
 )
 
@@ -3947,6 +3948,8 @@ func (e WaitReason) Valid() bool {
 	case WaitReasonPaused:
 		return true
 	case WaitReasonRepositoryParallelLimit:
+		return true
+	case WaitReasonReserved:
 		return true
 	case WaitReasonUnknown:
 		return true
@@ -5724,6 +5727,12 @@ type Job struct {
 	QueuedAt      *time.Time `json:"queued_at,omitempty"`
 	Repository    string     `json:"repository"`
 	RepositoryId  *int64     `json:"repository_id,omitempty"`
+
+	// ReservedExpectedStart LOOK65. When the reserved job is expected to start, when the forecasts allow a guess.
+	ReservedExpectedStart *time.Time `json:"reserved_expected_start,omitempty"`
+
+	// ReservedSince LOOK65. When the job became its machine's reserved job. Only with wait_reason `reserved`.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
 	Result        *JobResult `json:"result,omitempty"`
 	RunAttempt    int        `json:"run_attempt"`
 	RunId         int64      `json:"run_id"`
@@ -5749,10 +5758,13 @@ type Job struct {
 	StepsSource *JobStepsSource `json:"steps_source,omitempty"`
 
 	// TaskId The task id the branch starts with, when it does.
-	TaskId  *string `json:"task_id,omitempty"`
-	Trigger *string `json:"trigger,omitempty"`
+	TaskId *string `json:"task_id,omitempty"`
 
-	// WaitReason observability R5.5.
+	// TimerDeadline LOOK65. The job's timer ran out; this is the end of its grace, then crsp stops the job. Absent when the timer has not run out.
+	TimerDeadline *time.Time `json:"timer_deadline,omitempty"`
+	Trigger       *string    `json:"trigger,omitempty"`
+
+	// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 
 	// WaitText The reason with its machine, numbers or labels.
@@ -5824,6 +5836,12 @@ type JobDetail struct {
 	QueuedAt      *time.Time `json:"queued_at,omitempty"`
 	Repository    string     `json:"repository"`
 	RepositoryId  *int64     `json:"repository_id,omitempty"`
+
+	// ReservedExpectedStart LOOK65. When the reserved job is expected to start, when the forecasts allow a guess.
+	ReservedExpectedStart *time.Time `json:"reserved_expected_start,omitempty"`
+
+	// ReservedSince LOOK65. When the job became its machine's reserved job. Only with wait_reason `reserved`.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
 	Result        *JobResult `json:"result,omitempty"`
 	RunAttempt    int        `json:"run_attempt"`
 
@@ -5853,10 +5871,13 @@ type JobDetail struct {
 	StepsSource *JobDetailStepsSource `json:"steps_source,omitempty"`
 
 	// TaskId The task id the branch starts with, when it does.
-	TaskId  *string `json:"task_id,omitempty"`
-	Trigger *string `json:"trigger,omitempty"`
+	TaskId *string `json:"task_id,omitempty"`
 
-	// WaitReason observability R5.5.
+	// TimerDeadline LOOK65. The job's timer ran out; this is the end of its grace, then crsp stops the job. Absent when the timer has not run out.
+	TimerDeadline *time.Time `json:"timer_deadline,omitempty"`
+	Trigger       *string    `json:"trigger,omitempty"`
+
+	// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 
 	// WaitText The reason with its machine, numbers or labels.
@@ -8663,7 +8684,7 @@ type Ticket struct {
 	RunAttempt int       `json:"run_attempt"`
 	RunId      int64     `json:"run_id"`
 
-	// WaitReason observability R5.5.
+	// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 }
 
@@ -8690,14 +8711,20 @@ type TimelineBar struct {
 	End   *time.Time `json:"end,omitempty"`
 	EndHi *time.Time `json:"end_hi,omitempty"`
 	EndLo *time.Time `json:"end_lo,omitempty"`
-	Id    string     `json:"id"`
+
+	// ExpiresAt LOOK65. On a `timer_ran_out` bar of a running job, the end of its grace; then crsp stops the job.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	Id        string     `json:"id"`
 
 	// JobId Absent when the bar is a forecast of a job that has no record yet.
-	JobId      *int64    `json:"job_id,omitempty"`
-	Label      string    `json:"label"`
-	Repository *string   `json:"repository,omitempty"`
-	RowId      string    `json:"row_id"`
-	Start      time.Time `json:"start"`
+	JobId      *int64  `json:"job_id,omitempty"`
+	Label      string  `json:"label"`
+	Repository *string `json:"repository,omitempty"`
+
+	// ReservedSince LOOK65. On a `reserved` bar, when the job became its machine's reserved job.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
+	RowId         string     `json:"row_id"`
+	Start         time.Time  `json:"start"`
 
 	// State How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
 	State TimelineBarState `json:"state"`
@@ -9040,7 +9067,7 @@ type UserList struct {
 // VariableStatus defines model for VariableStatus.
 type VariableStatus string
 
-// WaitReason observability R5.5.
+// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 type WaitReason string
 
 // WaitSplit defines model for WaitSplit.
@@ -9075,7 +9102,7 @@ type WaitingJob struct {
 	JobName   string  `json:"job_name"`
 	MachineId *string `json:"machine_id,omitempty"`
 
-	// Reason observability R5.5.
+	// Reason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	Reason     WaitReason `json:"reason"`
 	Repository string     `json:"repository"`
 

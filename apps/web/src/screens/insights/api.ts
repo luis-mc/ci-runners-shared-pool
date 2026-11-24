@@ -1,5 +1,5 @@
-// Reads of the insights API for the screens. Until CIX21 joins they answer from mock.ts (except useJobResources, which calls the API since OPS66); the join swaps each body
-// for a call of the generated client and deletes mock.ts. Every hook has the shape of the Jobs hooks.
+// Reads of the insights API for the screens, through the generated client. The sample data in mock.ts only feeds the test server and the
+// hooks that are not wired yet (a finding, its plan, sizing, tests, guardrails, savings). Every hook has the shape of the Jobs hooks.
 import { useLoad, type Loaded } from '../../api/hooks';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import * as mock from './mock';
@@ -7,13 +7,22 @@ import * as mock from './mock';
 type Hook<T> = { result: Loaded<T>; reload: () => void };
 type S = Schemas;
 
-export const useFindings = (
+export function useFindings(
   repositoryId: number | undefined,
-): Hook<S['InsightFindingList']> =>
-  useLoad(
-    () => Promise.resolve(mock.mockFindings({ repository_id: repositoryId })),
-    [repositoryId],
+): Hook<S['InsightFindingList']> {
+  const client = useClient();
+  return useLoad(
+    () =>
+      unwrap(
+        client.GET('/api/v1/insights/findings', {
+          params: {
+            query: repositoryId === undefined ? {} : { repository_id: repositoryId },
+          },
+        }),
+      ),
+    [client, repositoryId],
   );
+}
 
 export const useFinding = (id: number): Hook<S['InsightFinding']> =>
   useLoad(() => {
@@ -23,20 +32,42 @@ export const useFinding = (id: number): Hook<S['InsightFinding']> =>
       : Promise.reject(new Error('This finding is not there any more.'));
   }, [id]);
 
-export const useInsightSummary = (): Hook<S['InsightSummary']> =>
-  useLoad(() => Promise.resolve(mock.mockSummary()), []);
+export function useInsightSummary(): Hook<S['InsightSummary']> {
+  const client = useClient();
+  return useLoad(() => unwrap(client.GET('/api/v1/insights/summary')), [client]);
+}
 
-export const useDigests = (): Hook<S['InsightDigestList']> =>
-  useLoad(() => Promise.resolve(mock.mockDigests()), []);
+export function useDigests(): Hook<S['InsightDigestList']> {
+  const client = useClient();
+  return useLoad(() => unwrap(client.GET('/api/v1/insights/digests')), [client]);
+}
 
-export const useWaits = (
+export function useWaits(
   days: 7 | 14 | 30,
   group: 'repository' | 'job_key' | 'day',
-): Hook<S['WaitSplit']> =>
-  useLoad(() => Promise.resolve(mock.mockWaits(days, group)), [days, group]);
+): Hook<S['WaitSplit']> {
+  const client = useClient();
+  return useLoad(
+    () =>
+      unwrap(
+        client.GET('/api/v1/insights/waits', { params: { query: { days, group } } }),
+      ),
+    [client, days, group],
+  );
+}
 
-export const useTimeline = (hours: number): Hook<S['PoolTimeline']> =>
-  useLoad(() => Promise.resolve(mock.mockTimeline(hours)), [hours]);
+export function useTimeline(hours: number): Hook<S['PoolTimeline']> {
+  const client = useClient();
+  return useLoad(() => {
+    const to = new Date();
+    const from = new Date(to.getTime() - hours * 3_600_000);
+    return unwrap(
+      client.GET('/api/v1/insights/timeline', {
+        params: { query: { from: from.toISOString(), to: to.toISOString() } },
+      }),
+    );
+  }, [client, hours]);
+}
 
 export const usePoolSizing = (days: 7 | 14 | 30): Hook<S['PoolSizing']> =>
   useLoad(() => Promise.resolve(mock.mockSizing(days)), [days]);

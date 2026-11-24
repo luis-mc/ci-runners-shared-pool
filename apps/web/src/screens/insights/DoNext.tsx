@@ -1,24 +1,30 @@
 // Run insights, Do next (spec 4.1, design system UX-25, UX-72): what to do, ranked by minutes saved a week. The
 // latest weekly digest sits folded under the table (component 47).
 import {
+  ActionBar,
   Disclosure,
   Empty,
   Message,
+  LinkButton,
   Section,
   Stack,
+  Strong,
   Table,
+  Tag,
   Text,
-  formatShortDateTime,
+  TextLink,
   type Column,
 } from '@crsp/ui';
 import { Load } from '../common';
 import { useDigests, useFindings, useInsightSummary } from './api';
 import { useRepositoryFilter } from './InsightsLayout';
 import {
-  AREA_WORDS,
   BACKLOG_WORDS,
-  minutesWords,
-  projectOf,
+  CONFIDENCE,
+  FIX_LABEL,
+  confidenceOf,
+  decidesWords,
+  minutesWeekWords,
   ranked,
   titleWithRepository,
   type Finding,
@@ -27,46 +33,55 @@ import {
 export const findingPath = (f: Pick<Finding, 'id'>): string =>
   `/analytics/finding/${f.id}`;
 
-export const doNextColumns: Column<Finding>[] = [
+/** The columns of Suggestions (LOOK65): #, Change with its fix inline, Sure?, Saves a week, Who decides. */
+export const doNextColumns = (items: readonly Finding[]): Column<Finding>[] => [
   {
-    id: 'what',
-    header: 'What to do',
-    cell: (f) =>
-      f.guardrail ? `${f.guardrail}: ${titleWithRepository(f)}` : titleWithRepository(f),
+    id: 'rank',
+    header: '#',
+    cell: (f) => String(items.indexOf(f) + 1),
+    sort: (f) => items.indexOf(f),
+    kind: 'fit',
+  },
+  {
+    id: 'change',
+    header: 'Change',
+    cell: (f) => (
+      <Stack gap="tight">
+        <TextLink to={findingPath(f)}>
+          <Strong>
+            {f.guardrail
+              ? `${f.guardrail}: ${titleWithRepository(f)}`
+              : titleWithRepository(f)}
+          </Strong>
+        </TextLink>
+        <Text tone="muted">{`${FIX_LABEL} ${f.fix}`}</Text>
+      </Stack>
+    ),
+    title: (f) => `${f.title}. ${FIX_LABEL} ${f.fix}`,
     sort: (f) => f.title,
     kind: 'grow',
-    grow: 3,
+    grow: 4,
   },
   {
-    id: 'project',
-    header: 'Project',
-    cell: (f) => projectOf(f),
-    sort: (f) => projectOf(f),
-    kind: 'grow',
-    grow: 1,
-  },
-  {
-    id: 'area',
-    header: 'Area',
-    cell: (f) => AREA_WORDS[f.area],
-    sort: (f) => f.area,
+    id: 'sure',
+    header: 'Sure?',
+    cell: (f) => <Tag>{confidenceOf(f)}</Tag>,
+    sort: (f) => CONFIDENCE.indexOf(confidenceOf(f)),
     kind: 'fit',
-    secondary: true,
   },
   {
-    id: 'minutes',
-    header: 'Saves',
-    cell: (f) => minutesWords(f.minutes_saved_week),
+    id: 'saves',
+    header: 'Saves a week',
+    cell: (f) => minutesWeekWords(f.minutes_saved_week),
     sort: (f) => f.minutes_saved_week,
     kind: 'fit',
   },
   {
-    id: 'since',
-    header: 'Since',
-    cell: (f) => formatShortDateTime(f.first_seen),
-    sort: (f) => f.first_seen,
+    id: 'decides',
+    header: 'Who decides',
+    cell: (f) => decidesWords(f),
+    sort: (f) => decidesWords(f),
     kind: 'fit',
-    secondary: true,
   },
 ];
 
@@ -93,7 +108,7 @@ export function DoNext() {
               </Message>
             ) : null}
             <Section
-              title="Do next"
+              title="Suggestions, best first"
               count={items.length}
               hint="About how many minutes a week each change saves. An estimate."
             >
@@ -107,16 +122,24 @@ export function DoNext() {
                 />
               ) : (
                 <Table
-                  caption="Things to do next"
+                  caption="Suggestions"
                   oneLine
-                  columns={doNextColumns}
+                  columns={doNextColumns(items)}
                   rows={items}
                   rowKey={(f) => String(f.id)}
                   rowLabel={(f) => f.title}
-                  action={{ label: 'Open', to: findingPath, name: (f) => f.title }}
                 />
               )}
             </Section>
+            {items.length > 0 ? (
+              <ActionBar
+                primary={
+                  <LinkButton to={findingPath(items[0]!)} kind="primary">
+                    Review the first change
+                  </LinkButton>
+                }
+              />
+            ) : null}
             {digest ? (
               <Disclosure summary={`Weekly digest, ${digest.week}`}>
                 <Text>{digest.text}</Text>

@@ -1731,3 +1731,39 @@ The repository variables crsp writes, as the console, the CLI and the Doctor nam
 | Runs-on finding, a workflow reads an old name | job {job} reads RUNS_ON_{OS}, an old name crsp no longer writes; read CRSP_RUNS_ON_{OS} instead |
 | Doctor fix, literal labels | Use `runs-on: ${{ fromJSON(vars.CRSP_<JOB> \|\| vars.CRSP_RUNS_ON_<OS> \|\| '"ubuntu-latest"') }}` so the product keeps the labels correct. |
 | Retired | the setting Old variable names (legacy_vars), and the names CI_RUNS_ON and CI_RUNS_ON_WINDOWS as crsp's |
+
+## Analytics and reserved job words (LOOK65, web-console R5.165, R5.166)
+
+The words of the four Analytics tabs as the approved LOOK54 prototype shows them, and of a reserved job. Built from the shared Pane, Card, Table, Tag, Status, Section, LinkButton, TrendChart and Timeline parts; no rule, token or component changes.
+
+| Word | Where |
+|---|---|
+| Suggestions, best first | Title of the pane of the first Analytics tab. |
+| #, Change, Sure?, Saves a week, Who decides | The five columns of Suggestions. |
+| Fix: {text} | The second line of a Change cell: what to do. |
+| about {n} min | The Saves a week cell. An estimate. |
+| your yes | Who decides a change crsp makes after Review. |
+| you, in the repository | Who decides a change that is made outside crsp. |
+| Review the first change | The one primary under the Suggestions table. |
+| {machine}: CPU today | Title of a pane of the Charts tab: the machine's CPU since midnight. |
+| Percent of the CPU the machine gives the pool, measured every 15 seconds since midnight. | Note above the per-machine CPU panes. |
+| No load measured on this machine today. | Empty per-machine CPU chart. |
+| No machine yet, so there is no CPU to draw. | Empty Charts when no machine exists. |
+| Free CPU, with and without a reservation | Title of the pane with the worked example. |
+| A worked example, not your pool: a job that needs 8 CPU, on a machine where small jobs keep taking the CPU that frees up. | Hint of that pane. |
+| Without a reservation, With a reservation, Free CPU, What the big job needs | Labels of the two example charts and their lines. |
+| minute {n} | The axis labels of the example. |
+| Run elsewhere | Title of the plain table of the last Analytics tab. |
+| Job, Repository, Runner, Took, Result | Its columns. |
+| No job runs on another runner. | Its empty state. |
+| Waits | Pane on Insights: the waits by job. |
+| Label, Median, Slowest 5% | Its columns. The API gives the 95th percentile, so the word is 5%, not 10%. |
+| No finished jobs in the last 7 days. | Empty Waits pane. |
+| Runner timeline, Jobs of each runner | The Insights pane and the name of its chart. |
+| No runner took a job in the last 6 hours. | Empty runner timeline. |
+| Waited for a runner: {job}, follow-up run, after-merge work | The words of a runner timeline bar. |
+| Reserved | Filter chip of Pool > Queue Analysis: the job its machine keeps room free for. |
+| reserved, is reserved: the machine keeps room free for it | The short and the long wait reason of a reserved job in the Jobs tables. |
+| Reserved: {text}. / Reserved. The machine keeps room free for this job. | The overview line of a reserved job. |
+| is reserved: {machine} keeps room free for it since {time} UTC | The detail of a reserved bar on the slot timeline. |
+| {job} ran out of time after {span}; crsp stops it {now or in a span} | The detail of a timer ran out bar of a running job. |

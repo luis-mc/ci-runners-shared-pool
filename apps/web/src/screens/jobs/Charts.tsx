@@ -20,6 +20,7 @@ import { Load } from '../common';
 import { useClient } from '../../api/api';
 import { useStats } from './api';
 import { RETENTION_WORDS, insideRange } from './words';
+import { MachineCpuToday, ReservationExample } from './ChartsMachines';
 
 const SPANS = [
   { value: '7', label: '7 days' },
@@ -37,7 +38,18 @@ const WEEKDAYS = [
   'Sunday',
 ];
 
+/** Charts (LOOK65): the CPU of each machine today and the reservation example first, the run charts below them. */
 export function ChartsTab() {
+  return (
+    <Stack gap="section">
+      <MachineCpuToday />
+      <ReservationExample />
+      <ChartsBody />
+    </Stack>
+  );
+}
+
+function ChartsBody() {
   const [days, setDays] = useState<'7' | '14' | '30'>('14');
   const client = useClient();
   const { result, reload } = useStats(Number(days) as 7 | 14 | 30);
@@ -88,12 +100,12 @@ export function ChartsTab() {
         if (s.days.length === 0)
           return (
             <>
-              <Stack>
-                {bar}
-                <Section title="Charts">
+              <Section title="Charts">
+                <Stack>
+                  {bar}
                   <Empty title="No finished jobs in this range, so there is nothing to draw." />
-                </Section>
-              </Stack>
+                </Stack>
+              </Section>
               {actions}
             </>
           );
@@ -108,11 +120,11 @@ export function ChartsTab() {
         return (
           <>
             <Stack>
-              {bar}
               <Section
                 title="Run time and wait per day"
                 hint="The middle value and the slow end (p90) of each day."
               >
+                {bar}
                 <TrendChart
                   label="Run time and wait per day"
                   unit="seconds"

@@ -6248,10 +6248,13 @@ components:
       enum: [success, failure, cancelled, timed_out, lost]
     WaitReason:
       type: string
-      description: observability R5.5.
+      description: >-
+        observability R5.5. `reserved` (LOOK65): the job is its machine's reserved
+        job; the machine keeps room free for it and other jobs start only as backfill.
       enum:
         [
           free_slot,
+          reserved,
           load_over_budget,
           no_runner_with_labels,
           repository_parallel_limit,
@@ -8716,6 +8719,18 @@ components:
         wait_text:
           type: string
           description: The reason with its machine, numbers or labels.
+        reserved_since:
+          type: string
+          format: date-time
+          description: LOOK65. When the job became its machine's reserved job. Only with wait_reason `reserved`.
+        reserved_expected_start:
+          type: string
+          format: date-time
+          description: LOOK65. When the reserved job is expected to start, when the forecasts allow a guess.
+        timer_deadline:
+          type: string
+          format: date-time
+          description: LOOK65. The job's timer ran out; this is the end of its grace, then crsp stops the job. Absent when the timer has not run out.
         machine_id:
           type: string
         runner_id:
@@ -9495,6 +9510,14 @@ components:
           type: string
           format: date-time
           description: When the job began to wait (the light part before the bar).
+        expires_at:
+          type: string
+          format: date-time
+          description: LOOK65. On a `timer_ran_out` bar of a running job, the end of its grace; then crsp stops the job.
+        reserved_since:
+          type: string
+          format: date-time
+          description: LOOK65. On a `reserved` bar, when the job became its machine's reserved job.
         detail:
           type: string
           description: The words of the bar for a screen reader and the tooltip.

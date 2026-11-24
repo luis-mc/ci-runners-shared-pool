@@ -50,6 +50,7 @@ func (s *server) GetTimeline(ctx context.Context, req gen.GetTimelineRequestObje
 	if in.Open, err = s.opts.JobsData.OpenJobs(ctx); err != nil {
 		return fail(err)
 	}
+	in.Flags = s.flagsFor(ctx, in.Open)
 	if in.Forecasts, err = newForecaster(s.opts.JobsData, now).forJobs(ctx, in.Open); err != nil {
 		return fail(err)
 	}

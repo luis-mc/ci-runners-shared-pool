@@ -47,6 +47,7 @@ func (s *server) GetOverview(ctx context.Context, _ gen.GetOverviewRequestObject
 		return gen.GetOverviewdefaultJSONResponse{StatusCode: http.StatusInternalServerError,
 			Body: gen.ErrorEnvelope{Error: gen.ErrorBody{Code: CodeInternal, Message: "the overview could not be built"}}}, nil
 	}
+	s.markOverview(ctx, &o)
 	return gen.GetOverview200JSONResponse(o), nil
 }
 

@@ -3987,10 +3987,10 @@ export interface components {
         /** @enum {string} */
         JobResult: "success" | "failure" | "cancelled" | "timed_out" | "lost";
         /**
-         * @description observability R5.5.
+         * @description observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
          * @enum {string}
          */
-        WaitReason: "free_slot" | "load_over_budget" | "no_runner_with_labels" | "repository_parallel_limit" | "machine_drained" | "load_not_measured" | "paused" | "on_battery" | "over_memory" | "unknown";
+        WaitReason: "free_slot" | "reserved" | "load_over_budget" | "no_runner_with_labels" | "repository_parallel_limit" | "machine_drained" | "load_not_measured" | "paused" | "on_battery" | "over_memory" | "unknown";
         /** @enum {string} */
         Severity: "ok" | "info" | "skip" | "warn" | "fail";
         /** @enum {string} */
@@ -5537,6 +5537,21 @@ export interface components {
             wait_reason?: components["schemas"]["WaitReason"];
             /** @description The reason with its machine, numbers or labels. */
             wait_text?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. When the job became its machine's reserved job. Only with wait_reason `reserved`.
+             */
+            reserved_since?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. When the reserved job is expected to start, when the forecasts allow a guess.
+             */
+            reserved_expected_start?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. The job's timer ran out; this is the end of its grace, then crsp stops the job. Absent when the timer has not run out.
+             */
+            timer_deadline?: string;
             machine_id?: string;
             runner_id?: string;
             runner_name?: string;
@@ -5936,6 +5951,16 @@ export interface components {
              * @description When the job began to wait (the light part before the bar).
              */
             wait_from?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. On a `timer_ran_out` bar of a running job, the end of its grace; then crsp stops the job.
+             */
+            expires_at?: string;
+            /**
+             * Format: date-time
+             * @description LOOK65. On a `reserved` bar, when the job became its machine's reserved job.
+             */
+            reserved_since?: string;
             /** @description The words of the bar for a screen reader and the tooltip. */
             detail?: string;
         };
