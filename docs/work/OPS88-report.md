@@ -15,3 +15,5 @@ There was no stale record. A pool runner (`gameroompc-pool-1`) has no account of
 - Spec R5.58 and a change note.
 
 Not changed: server-side discard of a failed registration with no service ref (the failed add's own cleanup already removed its account and folder).
+
+CODE DONE 4c15af198ed1d0034060388509a5fe96d2a9745f
