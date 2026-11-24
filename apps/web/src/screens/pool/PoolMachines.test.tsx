@@ -49,9 +49,9 @@ describe('Pool > Machines cards', () => {
     expect(within(card).getByText('Average run time')).toBeTruthy();
     expect(within(card).getByText('4 min 12 s')).toBeTruthy();
     expect(within(card).getByText('Stopped by crsp')).toBeTruthy();
-    // The runner of the machine, with its own stats.
-    expect(within(card).getByText('crsp-linux-1')).toBeTruthy();
-    expect(within(card).getByText(/24 jobs, 4 failed or cut short/)).toBeTruthy();
+    // The runners of the machine: one table in the card (LOOK66).
+    const table = within(card).getByRole('table', { name: 'Runners on build-1' });
+    expect(within(table).getByText('crsp-linux-1')).toBeTruthy();
     // The last failure links to the job.
     const link = within(card).getByRole('link', { name: 'build' });
     expect(link.getAttribute('href')).toBe('/pool/jobs/77');
@@ -121,6 +121,56 @@ describe('Pool > Machines cards', () => {
     await within(card).findByText('none in the last 24 hours');
     expect(within(card).getByText('No job failed in the last 24 hours.')).toBeTruthy();
     expect(within(card).getByText('No runner is on this machine.')).toBeTruthy();
+  });
+
+  // LOOK66: the card said "No runner is on this machine." while the runner list was still loading.
+  it('shows the runners of a machine, never "no runner" while the list loads', async () => {
+    let release: (v: { items: Schemas['Runner'][] }) => void = () => undefined;
+    const late = new Promise<{ items: Schemas['Runner'][] }>((r) => (release = r));
+    const mock = api().on('GET', '/api/v1/runners', () => late);
+    renderApp(mock, '/pool/machines');
+    const card = await screen.findByRole('region', { name: 'build-1' });
+    await within(card).findByText('1.2, 0.9, 0.7');
+    expect(within(card).queryByText('No runner is on this machine.')).toBeNull();
+    release({
+      items: [1, 2, 3, 4].map((n) =>
+        runner({
+          id: `p${n}`,
+          name: `gameroompc-pool-${n}`,
+          ...(n === 1 ? { size_class: 'large' as const } : {}),
+          ...(n === 2 ? { current_job: { job_name: 'unit' } as Schemas['Job'] } : {}),
+        }),
+      ),
+    });
+    const table = await within(card).findByRole('table', { name: 'Runners on build-1' });
+    expect(within(table).getByText('gameroompc-pool-4')).toBeTruthy();
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Runner', 'Type', 'Size', 'Doing now']);
+    expect(within(table).getByText('large')).toBeTruthy();
+    expect(within(table).getByText('unit')).toBeTruthy();
+    expect(within(table).getAllByText('idle')).toHaveLength(3);
+    expect(within(card).queryByText('No runner is on this machine.')).toBeNull();
+  });
+
+  it('puts each runner in the card of its own machine and keeps no shared Runners table', async () => {
+    const mock = api({
+      machines: [machine(), machine({ id: 'm2', name: 'build-2' })],
+      runners: [
+        runner({ id: 'a', name: 'on-one', machine_id: 'm1' }),
+        runner({ id: 'b', name: 'on-two', machine_id: 'm2' }),
+      ],
+    });
+    renderApp(mock, '/pool/machines');
+    const one = await screen.findByRole('region', { name: 'build-1' });
+    const two = await screen.findByRole('region', { name: 'build-2' });
+    expect(await within(one).findByText('on-one')).toBeTruthy();
+    expect(within(one).queryByText('on-two')).toBeNull();
+    expect(await within(two).findByText('on-two')).toBeTruthy();
+    expect(screen.queryByRole('table', { name: 'Runners by machine' })).toBeNull();
+    expect(screen.queryByRole('region', { name: 'Runners' })).toBeNull();
   });
 
   it('says no machine is in the pool yet', async () => {

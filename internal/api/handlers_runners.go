@@ -117,6 +117,10 @@ func toGenRunner(v runners.View) gen.Runner {
 	if r.Labels == nil {
 		out.Labels = []string{}
 	}
+	if r.SizeClass != "" {
+		c := gen.RunnerSizeClass(r.SizeClass)
+		out.SizeClass = &c
+	}
 	if r.KeepsState() {
 		keep, size := r.KeepDependencies, r.DependencyCacheBytes
 		out.KeepDependencies, out.DependencyCacheBytes = &keep, &size

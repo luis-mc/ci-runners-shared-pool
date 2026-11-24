@@ -6,8 +6,6 @@ import {
   mockFindings,
   mockResources,
   mockSummary,
-  mockTimeline,
-  mockWaits,
 } from '../screens/insights/mock';
 import { signedIn, type MockApi } from './mock';
 
@@ -270,19 +268,6 @@ export function jobsApi(data: JobsData = {}): MockApi {
     })
     .on('GET', '/api/v1/insights/summary', () => mockSummary())
     .on('GET', '/api/v1/insights/digests', () => mockDigests())
-    .on('GET', '/api/v1/insights/waits', (c) =>
-      mockWaits(
-        Number(c.query.get('days') ?? 7),
-        (c.query.get('group') ?? 'day') as 'repository' | 'job_key' | 'day',
-      ),
-    )
-    .on('GET', '/api/v1/insights/timeline', (c) => {
-      const from = Date.parse(c.query.get('from') ?? '');
-      const to = Date.parse(c.query.get('to') ?? '');
-      return mockTimeline(
-        Number.isNaN(from + to) ? 24 : Math.round((to - from) / 3_600_000),
-      );
-    })
     .on(
       'GET',
       '/api/v1/jobs/stats',

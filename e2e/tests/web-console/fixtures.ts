@@ -215,6 +215,17 @@ export const timeline = () => {
         end_hi: at(70),
         detail: 'starts in about 10 min',
       },
+      {
+        id: 'b4',
+        job_id: 14,
+        row_id: 'm1:2',
+        state: 'reserved',
+        label: 'e2e',
+        repository: 'acme/app',
+        start: at(-90),
+        end: at(-10),
+        detail: 'reserved: waits for room in the pool',
+      },
     ],
   };
 };
@@ -543,6 +554,22 @@ function signedInBase(user: unknown): Mock {
       ],
     })
     .on('GET', '/api/v1/runners', { items: [runner()] })
+    .on('GET', '/api/v1/insights/waits', {
+      days: 7,
+      group: 'label',
+      hold_cap_seconds: 120,
+      rows: [
+        ['crsp-e2e-7f3a', 240, 660],
+        ['crsp-build-c4a7', 540, 1320],
+        ['crsp-small-4c1d', 0, 120],
+      ].map(([key, p50, p90]) => ({
+        key,
+        jobs: 12,
+        wait: { total_seconds: 3600, p50_seconds: p50, p90_seconds: p90, known: 12 },
+        hold: { total_seconds: 0, known: 0 },
+        run: { total_seconds: 0, known: 0 },
+      })),
+    })
     .on('GET', '/api/v1/runners/:id', runner())
     .on('GET', '/api/v1/images', { items: [image()] })
     .on('GET', '/api/v1/images/:id', image())
@@ -634,3 +661,49 @@ export function publicRows() {
     stale: { stale: false },
   };
 }
+
+/**
+ * The jobs numbers of Analytics > Insights, shaped like the LOOK54 prototype (LOOK66): 4 jobs waiting, a slow end of 8
+ * minutes, 93% passed, and three busy repositories. `route` adds them to a mock.
+ */
+export const insightsJobs = <M extends { on: (m: string, p: string, r: unknown) => M }>(
+  mock: M,
+): M => {
+  const day = (back: number, jobs: number, failed: number, waitP90: number) => ({
+    day: new Date(Date.now() - back * 86_400_000).toISOString().slice(0, 10),
+    jobs,
+    failed,
+    wait_p50: 60,
+    wait_p90: waitP90,
+    run_p50: 300,
+    run_p90: 600,
+  });
+  const group = (name: string, done: number) => ({
+    name,
+    filter: `repository=${name}`,
+    done,
+    running: 0,
+    queued: 0,
+    failed: 0,
+    wait_p50: 60,
+    wait_p90: 300,
+    run_p50: 300,
+    run_p90: 600,
+    trend: [],
+  });
+  return mock
+    .on('GET', '/api/v1/jobs/stats', {
+      days: [
+        ...[13, 12, 11, 10, 9, 8, 7].map((b) => day(b, 5, 1, 600)),
+        ...[6, 5, 4, 3, 2, 1, 0].map((b) =>
+          day(b, 6, b === 3 ? 1 : 0, b % 2 ? 480 : 420),
+        ),
+      ],
+      hours: [],
+      forecast_points: [],
+    })
+    .on('GET', '/api/v1/jobs', { items: [], total: 4 })
+    .on('GET', '/api/v1/jobs/groups', {
+      items: [group('octo/app', 78), group('octo/desktop', 34), group('octo/docs', 6)],
+    });
+};
