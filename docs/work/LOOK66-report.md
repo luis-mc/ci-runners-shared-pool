@@ -20,3 +20,7 @@ Design system v4 followed (changes in next-version, C38). CORE-1, CORE-4, CORE-5
 - Live pane titles are 2-level panes; prototype's side-by-side split has no shared part, so they stack.
 - Prototype machine cards (budget text, CPU/memory charts) and the Failed jobs table are other gaps, not mine.
 - Shot data is a mock shaped like the prototype; the live shots use the built bin/crsp with e2e mocks.
+
+CI: run 45378130863 green on bfba654cde5a84925c5bd37b0db69b03694082c8.
+
+CODE DONE bfba654cde5a84925c5bd37b0db69b03694082c8
