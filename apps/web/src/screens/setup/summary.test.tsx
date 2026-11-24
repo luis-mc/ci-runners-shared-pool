@@ -6,7 +6,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderApp, repository, runner, signedIn } from '../../testing/mock';
 import { groupByMachine, runnerTotals } from '../runners/Runners';
 import { showStrip, STRIP_STORE_NAME } from '../overview/HowCrspWorks';
-import { poolTotals } from './SetupSummary';
+import { poolGives, poolTotals, runnerKinds } from './SetupSummary';
 
 afterEach(cleanup);
 beforeEach(() => {
@@ -103,24 +103,38 @@ describe('the seven areas and the Setup tabs (LOOK56)', () => {
 });
 
 describe('Shared Pool summary and first-run guide (D33)', () => {
-  it('shows the three steps on a pool with nothing in it, the later ones disabled with a reason', async () => {
+  it('shows the three cards and the steps; an empty pool has its next action', async () => {
     renderApp(empty(), '/setup/summary');
-    expect(await screen.findByText('1 Add a machine')).toBeTruthy();
-    expect(screen.getByText('2 Set runners')).toBeTruthy();
-    expect(screen.getByText('3 Choose repositories')).toBeTruthy();
+    expect(await screen.findByRole('region', { name: 'Setup steps' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Machines' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Runners' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Repositories' })).toBeTruthy();
     expect(screen.getByText('Add a machine').closest('a')?.getAttribute('href')).toBe(
       '/setup/machines/add',
     );
-    const later = screen.getByRole<HTMLButtonElement>('button', { name: 'Add runners' });
-    expect(later.disabled).toBe(true);
+    expect(
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Choose repositories' })
+        .disabled,
+    ).toBe(true);
   });
 
-  it('shows the figures and no guide once the pool is set up', async () => {
+  it('each card has an Open link and the steps are done on a set up pool', async () => {
     renderApp(ready(), '/setup/summary');
-    expect((await screen.findAllByText('1 of 1 online')).length).toBeGreaterThan(0);
-    expect(screen.queryByText('1 Add a machine')).toBeNull();
-    expect(screen.getByRole('table', { name: 'Runners per system' })).toBeTruthy();
-    expect(screen.getByText('1 use the pool')).toBeTruthy();
+    const link = await screen.findByRole('link', { name: 'Open Machines' });
+    expect(link.getAttribute('href')).toBe('/setup/machines');
+    expect(screen.getByRole('link', { name: 'Open Runners' }).getAttribute('href')).toBe(
+      '/setup/runners',
+    );
+    expect(
+      screen.getByRole('link', { name: 'Open Pool setup' }).getAttribute('href'),
+    ).toBe('/setup/pool');
+    expect(screen.getByText('1 repository uses the pool.')).toBeTruthy();
+    expect(screen.getByText('1 runner: 1 persistent, 0 ephemeral.')).toBeTruthy();
+  });
+
+  it('words the cards', () => {
+    expect(runnerKinds([])).toBe('0 runners: 0 persistent, 0 ephemeral.');
+    expect(poolGives([])).toBe('0 machines, pool size not set.');
   });
 
   it('words the totals', () => {

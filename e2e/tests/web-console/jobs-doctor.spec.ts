@@ -136,10 +136,10 @@ test('Doctor: findings by area, then Run checks again is busy until the run ends
     }));
   await mock.install(page);
   await page.goto('/doctor');
-  await expect(page.getByRole('region', { name: 'Machines' })).toContainText(
+  await expect(page.getByRole('region', { name: 'Fix: Machines' })).toContainText(
     'build-2 is offline',
   );
-  await expect(page.getByRole('region', { name: 'Workflow labels' })).toContainText(
+  await expect(page.getByRole('region', { name: 'Fix: Workflow labels' })).toContainText(
     'failed',
   );
   await page.getByRole('button', { name: 'Run checks again' }).click();

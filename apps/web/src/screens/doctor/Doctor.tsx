@@ -6,6 +6,8 @@ import {
   Badge,
   BulletList,
   Button,
+  Card,
+  CardGrid,
   CodeBlock,
   Cluster,
   Empty,
@@ -288,6 +290,50 @@ const needsYouColumns: Column<Finding>[] = [
   { id: 'area', header: 'Area', cell: (f) => areaOf(f.check), kind: 'fit' },
 ];
 
+/** Where the Open button of a Needs-you row goes: the fix link of the finding, else the Setup page of its area. */
+const AREA_PAGE: Record<string, string> = {
+  machine: '/setup/machines',
+  backend: '/setup/size',
+  runner: '/setup/runners',
+  github: '/setup/pool',
+  repo: '/setup/pool',
+  workflow: '/setup/pool',
+  controller: '/settings',
+};
+
+export function openTarget(f: Pick<Finding, 'check' | 'fix'>): string {
+  if (f.fix.link?.startsWith('/')) return consoleAddress(f.fix.link);
+  return AREA_PAGE[f.check.split('.')[0] ?? ''] ?? '/doctor';
+}
+
+export interface AreaChecks {
+  area: string;
+  total: number;
+  problems: number;
+  worst: Severity;
+}
+
+/** One line per area for the Checks pane: how many checks ran and how many are not ok. */
+export function areaChecks(items: readonly Finding[]): AreaChecks[] {
+  const order = AREAS.map(([, name]) => name);
+  const by = new Map<string, AreaChecks>();
+  for (const f of items) {
+    const area = areaOf(f.check);
+    const row = by.get(area) ?? { area, total: 0, problems: 0, worst: 'ok' as Severity };
+    row.total += 1;
+    if (isProblem(f)) {
+      row.problems += 1;
+      if (f.severity === 'fail' || row.worst !== 'fail') row.worst = f.severity;
+    }
+    by.set(area, row);
+  }
+  return [...by.values()].sort((a, b) => {
+    const x = order.indexOf(a.area);
+    const y = order.indexOf(b.area);
+    return (x < 0 ? 99 : x) - (y < 0 ? 99 : y) || a.area.localeCompare(b.area);
+  });
+}
+
 export function groupFindings(
   items: readonly Finding[],
 ): { area: string; items: Finding[] }[] {
@@ -451,6 +497,7 @@ export function DoctorScreen() {
         {(data) => {
           const problems = data.items.filter(isProblem);
           const groups = groupFindings(data.items);
+          const areas = areaChecks(data.items);
           if (data.items.length === 0 && !data.last_run_at)
             return (
               <Section title="Findings">
@@ -496,13 +543,34 @@ export function DoctorScreen() {
                     columns={needsYouColumns}
                     rows={problems}
                     rowKey={(f) => `needs:${f.check}:${f.subject.id}`}
+                    action={{
+                      label: 'Open',
+                      to: (f) => openTarget(f),
+                      name: (f) => f.title,
+                    }}
                   />
                 </Section>
               ) : null}
+              <Section title="Checks" count={areas.length}>
+                <CardGrid>
+                  {areas.map((a) => (
+                    <Card key={a.area} title={a.area}>
+                      {a.problems === 0 ? (
+                        <Status kind="ok" word={`${a.total} of ${a.total} ok`} />
+                      ) : (
+                        <Status
+                          kind={a.worst === 'fail' ? 'failed' : 'waiting'}
+                          word={`${formatCount(a.problems, 'problem')} in ${formatCount(a.total, 'check')}`}
+                        />
+                      )}
+                    </Card>
+                  ))}
+                </CardGrid>
+              </Section>
               {groups.map((g) => (
-                <Section key={g.area} title={g.area}>
+                <Section key={g.area} title={`Fix: ${g.area}`}>
                   <Table
-                    caption={g.area}
+                    caption={`Fix: ${g.area}`}
                     columns={columns}
                     rows={g.items}
                     rowKey={(f) => `${f.check}:${f.subject.id}`}

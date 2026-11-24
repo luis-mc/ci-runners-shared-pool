@@ -1,19 +1,17 @@
-// Setup > Summary (D24, LOOK31): what the pool is now (machines, runners per system, capacity, health) and,
-// until it is set up, the first-run guide: 1 Add a machine, 2 Set runners, 3 Choose repositories.
+// Setup > Summary (LOOK64): three cards (Machines, Runners, Repositories), each with an Open link, and the Setup steps.
 import {
-  ActionBar,
   Button,
+  Card,
+  CardGrid,
   Facts,
-  LevelBar,
   LinkButton,
   Page,
   PageHeader,
   Section,
   Stack,
   Status,
-  Table,
   Text,
-  type Column,
+  TextLink,
 } from '@crsp/ui';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useMachines } from '../../api/machines';
@@ -25,12 +23,6 @@ import { allRepositories } from '../repositories/plans';
 
 type Machine = Schemas['Machine'];
 type Runner = Schemas['Runner'];
-
-const SYSTEMS = [
-  { os: 'linux', label: 'Linux' },
-  { os: 'windows', label: 'Windows' },
-  { os: 'macos', label: 'macOS' },
-] as const;
 
 export interface PoolFigures {
   machines: number;
@@ -68,82 +60,70 @@ export function poolTotals(
   return `${n(f.machines, 'machine', 'machines')}, ${n(f.runners, 'runner', 'runners')}, ${f.busy} busy`;
 }
 
-export function FirstRunGuide({ f }: { f: PoolFigures }) {
+/** The pool CPU and memory the machines give, as the Machines card says them (machines R5.58). */
+export function poolGives(machines: readonly Machine[]): string {
+  const cpus = machines.reduce((n, m) => n + (m.settings.pool_cpus ?? 0), 0);
+  const gib = machines.reduce((n, m) => n + (m.settings.pool_memory_gib ?? 0), 0);
+  const n = machines.length;
+  const first = `${n} ${n === 1 ? 'machine' : 'machines'}`;
+  return cpus > 0 && gib > 0
+    ? `${first}, ${cpus} CPU and ${Number(gib.toFixed(1))} GiB in the pool.`
+    : `${first}, pool size not set.`;
+}
+
+/** The Runners card line: how many runners, how many persistent and how many ephemeral. */
+export function runnerKinds(runners: readonly Runner[]): string {
+  const p = runners.filter((r) => r.kind === 'persistent').length;
+  const e = runners.length - p;
+  const n = runners.length;
+  return `${n} ${n === 1 ? 'runner' : 'runners'}: ${p} persistent, ${e} ephemeral.`;
+}
+
+/** The "Setup steps" list (LOOK64): the three first-run steps, each done or with the action that does it. */
+export function SetupSteps({ f, app }: { f: PoolFigures; app: boolean | undefined }) {
   const session = useSession();
   const admin = session.can('admin');
   const why = session.whyNot('admin');
+  const done = <Status kind="ok" word="done" />;
   return (
-    <Section
-      title="Set up the pool"
-      hint="Three steps. A step opens when the one before it is done."
-    >
+    <Section title="Setup steps">
       <Facts
         items={[
           {
-            name: '1 Add a machine',
+            name: 'Connect GitHub',
+            value:
+              app === undefined ? (
+                <Text tone="muted">Not known yet.</Text>
+              ) : app ? (
+                done
+              ) : (
+                <Status kind="waiting" word="to do" />
+              ),
+          },
+          {
+            name: 'First machine',
             value:
               f.machines > 0 ? (
-                <Status
-                  kind="ok"
-                  word={`done, ${f.machines} ${f.machines === 1 ? 'machine' : 'machines'}`}
-                />
+                done
+              ) : admin ? (
+                <LinkButton to="/setup/machines/add">Add a machine</LinkButton>
               ) : (
-                <Stack>
-                  <Text>A computer that runs your jobs: Linux, Windows or macOS.</Text>
-                  {admin ? (
-                    <LinkButton to="/setup/machines/add">Add a machine</LinkButton>
-                  ) : (
-                    <Button disabled reason={why}>
-                      Add a machine
-                    </Button>
-                  )}
-                </Stack>
+                <Button disabled reason={why}>
+                  Add a machine
+                </Button>
               ),
           },
           {
-            name: '2 Set runners',
-            value:
-              f.runners > 0 ? (
-                <Status
-                  kind="ok"
-                  word={`done, ${f.runners} ${f.runners === 1 ? 'runner' : 'runners'}`}
-                />
-              ) : (
-                <Stack>
-                  <Text>How many runners each machine has, per system.</Text>
-                  {f.machines === 0 ? (
-                    <Button disabled reason="Add a machine first.">
-                      Add runners
-                    </Button>
-                  ) : admin ? (
-                    <LinkButton to="/setup/runners/add">Add runners</LinkButton>
-                  ) : (
-                    <Button disabled reason={why}>
-                      Add runners
-                    </Button>
-                  )}
-                </Stack>
-              ),
-          },
-          {
-            name: '3 Choose repositories',
+            name: 'First repository',
             value:
               f.repositories > 0 ? (
-                <Status
-                  kind="ok"
-                  word={`done, ${f.repositories} ${f.repositories === 1 ? 'repository uses' : 'repositories use'} the pool`}
-                />
+                done
+              ) : f.machines === 0 ? (
+                <Button disabled reason="Add a machine first.">
+                  Choose repositories
+                </Button>
               ) : (
-                <Stack>
-                  <Text>Pick the repositories that use the pool.</Text>
-                  {f.machines === 0 ? (
-                    <Button disabled reason="Add a machine first.">
-                      Choose repositories
-                    </Button>
-                  ) : (
-                    <LinkButton to="/setup/pool">Choose repositories</LinkButton>
-                  )}
-                </Stack>
+                <LinkButton to="/setup/pool">Choose repositories</LinkButton>
               ),
           },
         ]}
@@ -152,114 +132,62 @@ export function FirstRunGuide({ f }: { f: PoolFigures }) {
   );
 }
 
-interface SystemRow {
-  label: string;
-  machines: number;
-  runners: number;
-  busy: number;
-}
-
 export function SetupSummary() {
   const client = useClient();
   const machines = useMachines();
   const rv = useVersion('runners');
   const runners = useLoad(() => unwrap(client.GET('/api/v1/runners')), [rv]);
   const repos = useLoad(() => allRepositories(client, { pool: 'on' }), []);
-  const session = useSession();
+  const setup = useLoad(
+    () =>
+      unwrap(client.GET('/api/v1/setup')).then(
+        (s) => s.has_app,
+        () => undefined,
+      ),
+    [],
+  );
 
   return (
     <Page>
-      <PageHeader
-        title="Setup"
-        lead="One pool across your machines. Set it up here, then choose the repositories that use it."
-      />
+      <PageHeader title="Setup" lead="Machines, runners and sizes. Change things here." />
       <Load result={machines.result} what="the pool" reload={machines.reload}>
         {(m) => {
           const rs = runners.result.state === 'loading' ? undefined : runners.result.data;
           const rp = repos.result.state === 'loading' ? undefined : repos.result.data;
           if (!rs || !rp) return <Text tone="muted">Loading the pool figures.</Text>;
           const f = poolFigures(m.items, rs.items, rp.items.length);
-          const ready = f.machines > 0 && f.runners > 0 && f.repositories > 0;
-          const rows: SystemRow[] = SYSTEMS.map((s) => ({
-            label: s.label,
-            machines: m.items.filter((x) => x.os === s.os).length,
-            runners: rs.items.filter((r) => r.os === s.os).length,
-            busy: rs.items.filter((r) => r.os === s.os && r.state === 'busy').length,
-          })).filter((r) => r.machines > 0 || r.runners > 0);
-          const cols: Column<SystemRow>[] = [
-            { id: 'system', header: 'System', cell: (r) => r.label },
-            { id: 'machines', header: 'Machines', cell: (r) => String(r.machines) },
-            { id: 'runners', header: 'Runners', cell: (r) => String(r.runners) },
-            { id: 'busy', header: 'Busy', cell: (r) => String(r.busy) },
-          ];
+          const app = setup.result.state === 'ready' ? setup.result.data : undefined;
           return (
             <Stack>
-              {ready ? null : <FirstRunGuide f={f} />}
-              {f.machines > 0 ? (
-                <>
-                  <Section title="The pool">
-                    <Stack>
-                      <Facts
-                        items={[
-                          {
-                            name: 'Machines',
-                            value: `${f.online} of ${f.machines} online`,
-                          },
-                          { name: 'Runners', value: `${f.runners}, ${f.busy} busy` },
-                          {
-                            name: 'Repositories',
-                            value:
-                              f.repositories === 0
-                                ? 'none use the pool yet'
-                                : `${f.repositories} use the pool`,
-                          },
-                          {
-                            name: 'Health',
-                            value:
-                              f.online < f.machines || f.failed > 0 ? (
-                                <Status
-                                  kind="failed"
-                                  word={`${f.machines - f.online} offline, ${f.failed} not ready`}
-                                />
-                              ) : (
-                                <Status kind="ok" word="all ready" />
-                              ),
-                          },
-                        ]}
-                      />
-                      <LevelBar
-                        label="Capacity"
-                        value={f.slotsUsed}
-                        max={f.slots}
-                        text={`${f.slotsUsed} of ${f.slots} job slots in use`}
-                      />
-                    </Stack>
-                  </Section>
-                  <Section title="Runners per system">
-                    <Table
-                      caption="Runners per system"
-                      columns={cols}
-                      rows={rows}
-                      rowKey={(r) => r.label}
-                    />
-                  </Section>
-                </>
-              ) : null}
+              <CardGrid>
+                <Card title="Machines" count={f.machines}>
+                  <Stack>
+                    <Text>{poolGives(m.items)}</Text>
+                    <TextLink to="/setup/machines">Open Machines</TextLink>
+                  </Stack>
+                </Card>
+                <Card title="Runners" count={f.runners}>
+                  <Stack>
+                    <Text>{runnerKinds(rs.items)}</Text>
+                    <TextLink to="/setup/runners">Open Runners</TextLink>
+                  </Stack>
+                </Card>
+                <Card title="Repositories" count={f.repositories}>
+                  <Stack>
+                    <Text>
+                      {f.repositories === 0
+                        ? 'No repository uses the pool yet.'
+                        : `${f.repositories} ${f.repositories === 1 ? 'repository uses' : 'repositories use'} the pool.`}
+                    </Text>
+                    <TextLink to="/setup/pool">Open Pool setup</TextLink>
+                  </Stack>
+                </Card>
+              </CardGrid>
+              <SetupSteps f={f} app={app} />
             </Stack>
           );
         }}
       </Load>
-      {machines.result.state === 'ready' &&
-      machines.result.data.items.length > 0 &&
-      session.can('admin') ? (
-        <ActionBar
-          primary={
-            <LinkButton to="/setup/runners/add" kind="primary">
-              Add runners
-            </LinkButton>
-          }
-        />
-      ) : null}
     </Page>
   );
 }

@@ -1625,6 +1625,29 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | Path forward | Pane title: Path forward. Line: Do these in order for {repository}. List name: Steps |
 | Doctor | Needs you is the first pane. Doctor shows no suggestions. |
 
+## Setup and Doctor words (LOOK64, from the LOOK54 prototype)
+
+`{n}` is a number, `{name}` a machine or an area. Built from the shared Card, CardGrid, LevelBar, Table, Facts, Status and Tag parts; no rule, token or component changes.
+
+| Where | Words |
+|---|---|
+| Summary, cards | Machines, Runners, Repositories; each has a link: Open Machines, Open Runners, Open Pool setup |
+| Summary, Machines card | {n} machines, {cpu} CPU and {gib} GiB in the pool. (`pool size not set.` until a machine has a size) |
+| Summary, Runners card | {n} runners: {p} persistent, {e} ephemeral. |
+| Summary, Repositories card | {n} repositories use the pool. / No repository uses the pool yet. |
+| Summary, pane and rows | Setup steps: Connect GitHub, First machine, First repository; each is done, to do, or its action (Add a machine, Choose repositories) |
+| Machines, columns | Machine, System, Pool, Load budget, State |
+| Machines, Pool cell and Load budget cell | {cpu} CPU / {gib} GiB, or not set; {n}% memory, {n}% CPU |
+| Machines, pool size card | Title {name}: pool size. Bars: CPU in the pool ({n} of {total} CPU), Memory in the pool ({n} of {total} GiB). Link: Change the pool size |
+| Size and backends, panes | Size classes (columns Class, CPU, Memory; line Preset: {preset}.), Backends (columns Backend, Allowed, Version), Machines, Demand |
+| Backends, Allowed cell | allowed, allowed on {n} of {m}, off |
+| Pool setup, columns | Repository, Pool, Runner type, Fallback label, Jobs now |
+| Pool setup, Pool cell | pool on, pool off, left the installation |
+| Pool setup, Jobs now cell | {n} jobs (running and queued) |
+| Pool setup, pane | GitHub App; rows App (installed), Webhooks (delivering, or {n} repositories missed a delivery), Owners |
+| Doctor, Needs you rows | Each row has its own Open button that goes to the fix |
+| Doctor, panes | Needs you, Checks (one card per area: {n} of {n} ok, or {n} problems in {m} checks), Fix: {area} (what to do about each problem of the area) |
+
 ### Suggestion steps words
 
 The numbered steps of a suggestion, by its kind. `{repository}` is the repository the suggestion is about; `{subject}` the workflow file, job or test it names. Every step sentence is in the page's words and nowhere else (`apps/web/src/screens/insights/steps.ts`).
