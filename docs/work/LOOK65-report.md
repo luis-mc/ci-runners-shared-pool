@@ -46,3 +46,10 @@ Screenshot pairs are in `docs/work/LOOK65-shots/` as `<page>-live.png` and `<pag
 - `bin/crsp` built with `go tool task build`. The console has no demo data of its own: the e2e specs run against the binary with the browser-side API mocks of `e2e/tests/web-console/`. The shots use richer mocks shaped like the prototype's sample data (3 machines, 4 suggestions, 4 queued jobs with one reserved, a timer ran out bar), at 1278x1248, full page.
 - New e2e spec `analytics-layout.spec.ts` (DOM layout at 360, 393 and 1300 px: no sideways scroll, the columns and panes, the Reserved chip, the reserved and timer ran out bars) and fixtures `insights-fixtures.ts` (also wired into `ux-guards.ts`, so the UX guards see the insights API).
 - Branch e2e gate, whole suite (3212 cases), before the last two fixes: 3207 passed, 3 failed (`tableHead` on Insights, `section-gap` on Charts in dark and light). Both fixed; the 420 Analytics and queue cases pass.
+
+## CI
+
+Run 45311464581 on `67b0a46` is green. Two earlier runs were red and fixed: lint (Prettier on `DoNext.test.tsx`), and the Web tests and guards step (a primary button outside `<ActionBar>`; the Suggestions primary now sits in the bar). The first run also had Go tests on Windows time out in test migrations (`context deadline exceeded` after 10 s on a slow runner); they passed on the next run with no code change. One e2e case (`ux h1: /analytics/finding/:id/change` loading, 1800 px, light) failed once in a shard and passed on the next run and locally; that page does not use anything this branch changed.
+
+
+CODE DONE 67b0a465448f0bf0a7442b37e034b82c888493cc
