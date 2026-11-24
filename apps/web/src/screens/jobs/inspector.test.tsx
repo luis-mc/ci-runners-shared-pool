@@ -145,9 +145,7 @@ describe('the words of a reserved job', () => {
   it('reads the wait reason reserved of a queued job only', () => {
     const q = { state: 'queued' as const, wait_reason: 'reserved' as never };
     expect(isReserved(q)).toBe(true);
-    expect(isReserved({ state: 'running', wait_reason: 'reserved' })).toBe(
-      false,
-    );
+    expect(isReserved({ state: 'running', wait_reason: 'reserved' })).toBe(false);
     expect(jobStatus(q)).toEqual({ kind: 'waiting', word: 'Reserved' });
     expect(waitWords(q)).toMatch(/room another job holds/);
     expect(waitShort(q)).toBe('room held for it');

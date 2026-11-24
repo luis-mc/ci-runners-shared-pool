@@ -14,9 +14,9 @@ import (
 	"testing"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/notify"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/secrets"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 const (
@@ -69,7 +69,7 @@ func newNotifyEnv(t *testing.T, trust *x509.CertPool) *notifyEnv {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	db, err := backup.OpenDB(ctx, t.TempDir())
+	db, err := store.OpenForTests(ctx, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
