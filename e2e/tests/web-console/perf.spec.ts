@@ -97,8 +97,10 @@ test('a live event shows on screen within the budget', async ({ page }) => {
   await signedIn().install(page);
   await fakeStream(page);
   await page.goto('/');
-  await expect(page.getByText('Queued jobs')).toBeVisible();
-  await expect(page.getByText('Queued jobs').locator('..')).toContainText('2');
+  // LOOK61: the Queued count of the Overview is the second tile.
+  const queued = page.getByRole('link', { name: 'Open the queue plan' });
+  await expect(queued).toBeVisible();
+  await expect(queued).toContainText('2');
   const start = Date.now();
   await page.evaluate(
     (snap) =>
@@ -110,7 +112,7 @@ test('a live event shows on screen within the budget', async ({ page }) => {
       }),
     overview(),
   );
-  await expect(page.getByText('Queued jobs').locator('..')).toContainText('37', {
+  await expect(queued).toContainText('37', {
     timeout: budgets.liveEventOnScreenMs,
   });
   const ms = Date.now() - start;

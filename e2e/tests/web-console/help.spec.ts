@@ -138,12 +138,13 @@ test('the ? beside Slots opens a short answer that links to its Help card', asyn
 });
 
 test('Escape closes the ? answer', async ({ page }) => {
-  await signedIn().install(page);
-  await page.goto('/');
-  await page.getByRole('button', { name: 'What does Queue mean?' }).click();
-  await expect(page.getByRole('group', { name: 'Queue' })).toBeVisible();
+  // LOOK61: the Overview no longer carries the Queue term; the machine page's Slots term shows the same.
+  await signedIn().on('GET', '/api/v1/machines/:id', real).install(page);
+  await page.goto('/setup/machines/m1');
+  await page.getByRole('button', { name: 'What does Slots mean?' }).click();
+  await expect(page.getByRole('group', { name: 'Slots' })).toBeVisible();
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('group', { name: 'Queue' })).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'Slots' })).toHaveCount(0);
 });
 
 test('Down and j reach the boxes of the picture, Up and k come back', async ({

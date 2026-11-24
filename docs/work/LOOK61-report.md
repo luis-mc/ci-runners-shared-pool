@@ -29,3 +29,4 @@ Tests: `Overview.test.tsx` (order, card in cores and GiB, percent fallback, Next
 - **Jobs over time** shows the console's 24 h past and forecast window, not 30 minutes (later-decision, LOOK58).
 - A header `live updates` word is the shell's, not mine.
 - `Updates.test.tsx` "names the running jobs" failed once in a full parallel run and passes alone and on the base: load flake, not touched.
+- The Overview no longer has the `?` help of `Queued jobs` (that fact is gone with the old section). `help.spec.ts` (Escape closes the answer) now uses the Slots `?` on the machine page; `perf.spec.ts` reads the Queued tile. The shared `StatTile` has `changeText` for the sublines, but `PoolCountTiles` is in Pool (not my screen) and does not pass it.
