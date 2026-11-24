@@ -62,7 +62,7 @@ for (const width of [360, 393, 1300]) {
       await page.goto('/analytics/insights');
       const waits = page.getByRole('region', { name: 'Waits' });
       await expect(waits.getByRole('columnheader', { name: 'Slowest 10%' })).toBeVisible();
-      await expect(page.getByRole('region', { name: 'Runner timeline' })).toBeVisible();
+      await expect(page.getByRole('region', { name: 'Runner timeline' }).first()).toBeVisible();
       await noSideways(page);
     });
 
