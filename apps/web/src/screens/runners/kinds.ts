@@ -58,9 +58,17 @@ export function kindReasons(
   } else if (!ready) {
     ephemeral = `Ephemeral needs the container backend, ${containerWhy(m)}.`;
   }
-  // OPS78 (runners R5.134): a persistent runner is offered only where it runs on the machine itself. A
-  // container, a WSL2 distro or a VM is not offered; those places use ephemeral runners.
-  const persistent = crosses ? PERSISTENT_ELSEWHERE(m.os, os) : undefined;
+  // OPS87 (runners R5.93, R5.139): Persistent is offered on the machine itself and, for Linux on a Windows
+  // machine, as a long-lived container when the container backend is ready. A WSL2 distro, a Hyper-V VM or a
+  // macOS VM is not offered; those places use ephemeral runners.
+  let persistent: string | undefined;
+  if (crosses && m.os === 'windows' && os === 'linux' && m.container_os === 'linux') {
+    persistent = ready
+      ? undefined
+      : `Persistent Linux runners on this Windows machine need the container backend, ${containerWhy(m)}.`;
+  } else if (crosses) {
+    persistent = PERSISTENT_ELSEWHERE(m.os, os);
+  }
   return { persistent, ephemeral };
 }
 

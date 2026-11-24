@@ -346,10 +346,12 @@ describe('Add runners', () => {
     const no = await screen.findByRole<HTMLInputElement>('radio', { name: /win-2/ });
     expect(no.disabled).toBe(true);
     expect(screen.getByText('This machine runs windows, not linux.')).toBeTruthy();
-    // OPS78 (runners R5.134): Persistent is not offered for Linux on a Windows machine; it says why.
+    // OPS87 (runners R5.93, R5.139): Persistent Linux is offered on a Windows machine whose container backend is ready.
     expect(
-      await screen.findByText(/Persistent runners run on the machine itself/),
-    ).toBeTruthy();
+      (await screen.findByRole<HTMLInputElement>('radio', { name: /^Persistent/ }))
+        .disabled,
+    ).toBe(false);
+    expect(screen.queryByText(/Persistent runners run on the machine itself/)).toBeNull();
   });
 
   it('knows which systems a machine can run', () => {
@@ -560,6 +562,7 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
       .on('GET', '/api/v1/runner-plans/:id', { ...failed, state: 'failed' });
     renderApp(api, '/setup/runners/add');
     await screen.findByRole('group', { name: 'Add runners' });
+    fireEvent.click(await screen.findByRole('radio', { name: /^Ephemeral/ }));
     fireEvent.click(await screen.findByRole('button', { name: 'Next' }));
     fireEvent.click(
       await screen.findByRole('button', { name: 'Allow 1 ephemeral runner' }),
