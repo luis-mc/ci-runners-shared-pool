@@ -1042,6 +1042,8 @@ The words of Add runners step 1, the Runners list, the runner page and the Repos
 | Allow {n} ephemeral runner(s) | The primary of Review for ephemeral runners (busy word: Registering). |
 | {n} persistent runner(s) on {machine}. | Review text, then the dependency sentence: Downloaded dependencies are kept between jobs. / Downloaded dependencies are removed after each job too. / Each job gets a fresh container (ephemeral: Up to {n} ephemeral runner(s) at once on {machine}.). |
 | Persistent. Keeps dependencies: yes | Third line of the Isolation cell in the Runners list. Ephemeral shows Ephemeral only. |
+| System | Head of the column of the Runners list that names the system of each runner: Linux, Windows or macOS. |
+| {Machine}-pool-{n}, {Machine}-win-{n}, {Machine}-mac-{n} | The default name of a new pool runner: it carries its system (Linux, Windows, macOS), so a name of a removed runner of another system is never reused. Runners that exist keep their names. |
 | Dependencies | Section of the runner page for a persistent runner. |
 | Dependency cache size | Fact of the runner page. Not measured yet when the controller has no size. |
 | Clear now | Button of the runner page (busy word: Clearing). |

@@ -111,3 +111,46 @@ func TestPoolLinuxContainerRunnerOnWindowsPlansAndApplies(t *testing.T) {
 		t.Fatalf("not allowed: %v", err)
 	}
 }
+
+// OPS87 (R5.93): a persistent Linux container runner counts against the machine's job slots like any other
+// runner, so a plan over the slots is refused.
+func TestPersistentLinuxOnWindowsCountsAgainstTheJobSlots(t *testing.T) {
+	ctx := context.Background()
+	m := winDockerMachine("linux", true)
+	m.JobSlots = 2
+	r := newRig(m)
+	req := AddRequest{OS: "linux", Kind: "persistent", MachineID: "m1", Count: 2, Scope: Scope{Kind: ScopePool}}
+	p, err := r.svc.PlanAdd(ctx, req, "u")
+	if err != nil {
+		t.Fatalf("two on two slots: %v", err)
+	}
+	if got, _ := r.svc.Apply(ctx, p.ID, nil, "u"); got.State != PlanDone {
+		t.Fatalf("apply %+v", got)
+	}
+	req.Count = 1
+	_, err = r.svc.PlanAdd(ctx, req, "u")
+	var re *RefusalError
+	if !errors.As(err, &re) || !strings.Contains(re.Reason, "2 job slots") {
+		t.Fatalf("third runner on two slots: %v", err)
+	}
+}
+
+// OPS87: a default pool name carries its system, so a Windows runner never takes the name a removed Linux runner had.
+func TestDefaultPoolNameCarriesTheSystem(t *testing.T) {
+	ctx := context.Background()
+	pool := Scope{Kind: ScopePool}
+	for _, c := range []struct{ os, want string }{{"linux", "win-box-pool-1"}, {"windows", "win-box-win-1"}} {
+		m := winDockerMachine("linux", true)
+		m.Name = "win-box"
+		p, err := newRig(m).svc.PlanAdd(ctx, AddRequest{OS: c.os, Kind: "persistent", MachineID: "m1", Count: 1, Scope: pool}, "u")
+		if err != nil || p.Adds[0].Name != c.want {
+			t.Fatalf("%s: %+v %v", c.os, p, err)
+		}
+	}
+	if got := nameInfix(pool, "macos"); got != "-mac" {
+		t.Fatalf("macos %q", got)
+	}
+	if got := nameInfix(Scope{Kind: "repository"}, "windows"); got != "" {
+		t.Fatalf("repository scope %q", got)
+	}
+}

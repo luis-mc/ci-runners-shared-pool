@@ -33,7 +33,7 @@ import { useSession } from '../../auth/session';
 import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import { needsYes } from '../repositories/plans';
-import { KIND_NAMES } from './kinds';
+import { KIND_NAMES, OS_WORD, oneStop } from './kinds';
 import { keepsText, uncleanText } from './RunnerPage';
 
 type Runner = Schemas['Runner'];
@@ -228,6 +228,12 @@ export function RunnersList() {
         ].join('. '),
       sort: (r) => r.isolation,
     },
+    {
+      id: 'os',
+      header: 'System',
+      cell: (r) => OS_WORD[r.os],
+      sort: (r) => r.os,
+    },
     { id: 'labels', header: 'Labels', cell: (r) => <CappedList items={r.labels} /> },
     {
       id: 'state',
@@ -241,7 +247,7 @@ export function RunnersList() {
         const full = r.unclean_reason
           ? uncleanText(r.unclean_reason)
           : (r.reason ?? (r.state === 'failed' ? r.failed_reason : null));
-        return full ? { full } : null;
+        return full ? { full: oneStop(full) } : null;
       },
       sort: (r) => r.state,
     },

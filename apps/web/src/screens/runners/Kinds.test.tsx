@@ -164,18 +164,41 @@ describe('Add runners: kind (D93, D94(b))', () => {
     expect((await radio(/^Ephemeral/)).disabled).toBe(true);
   });
 
-  it('offers Persistent only where it runs on the machine itself (runners R5.134)', () => {
+  it('offers Persistent Linux on a Windows machine when the container backend is ready (runners R5.93, R5.139)', () => {
     const win = machine({ os: 'windows', container_os: 'linux' });
     expect(kindReasons(win, 'linux')).toEqual({
-      persistent: PERSISTENT_ELSEWHERE('windows', 'linux'),
+      persistent: undefined,
       ephemeral: undefined,
     });
-    expect(chooseKind(win, 'linux', [], undefined).kind).toBe('ephemeral');
+    expect(chooseKind(win, 'linux', [], undefined).kind).toBe('persistent');
+    expect(chooseKind(win, 'linux', [], undefined).none).toBe(false);
+  });
+
+  it('gives the reason for Persistent Linux on Windows without a usable container backend', () => {
     const off = machine({ os: 'windows', container_os: 'linux', backends: [] });
     expect(kindReasons(off, 'linux').persistent).toBe(
-      PERSISTENT_ELSEWHERE('windows', 'linux'),
+      'Persistent Linux runners on this Windows machine need the container backend, which is not allowed on this machine.',
+    );
+    const broken = machine({
+      os: 'windows',
+      container_os: 'linux',
+      backends: [{ name: 'docker', present: true, usable: false, allowed: true }],
+    });
+    expect(kindReasons(broken, 'linux').persistent).toBe(
+      'Persistent Linux runners on this Windows machine need the container backend, which does not work on this machine.',
     );
     expect(chooseKind(off, 'linux', [], undefined).none).toBe(true);
+  });
+
+  it('does not offer Persistent for other places that are not the machine itself', () => {
+    const win = machine({ os: 'windows' });
+    expect(kindReasons(win, 'linux').persistent).toBe(
+      PERSISTENT_ELSEWHERE('windows', 'linux'),
+    );
+    const mac = machine({ os: 'macos' });
+    expect(kindReasons(mac, 'linux').persistent).toBe(
+      PERSISTENT_ELSEWHERE('macos', 'linux'),
+    );
     expect(kindReasons(machine({ os: 'linux' }), 'linux').persistent).toBeUndefined();
   });
 });

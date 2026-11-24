@@ -30,3 +30,21 @@ func TestOnlyAPersistentRunnerOnTheMachineItselfIsGated(t *testing.T) {
 		}
 	}
 }
+
+// OPS87 (runners R5.93, R5.134): the persistent Linux container runner of a Windows machine is always on, never
+// gated, whatever its scope. The pool runner and each repository registration it makes are both left alone.
+func TestPersistentLinuxContainerRunnerOnWindowsIsNeverGated(t *testing.T) {
+	pool := runners.Record{Kind: "persistent", Backend: "docker", OS: "linux", Isolation: "container", Managed: true,
+		Scope: runners.Scope{Kind: runners.ScopePool}, ServiceName: "crsp-persistent-pool:gameroompc-linux-1", GitHubRunnerID: 9, State: runners.Idle}
+	reg := pool
+	reg.Scope = runners.Scope{Kind: "repository", RepositoryID: 7}
+	reg.PoolRunnerID = "r_pool"
+	repoScoped := reg
+	repoScoped.PoolRunnerID = ""
+	repoScoped.ServiceName = "gameroompc-linux-1"
+	for name, r := range map[string]runners.Record{"pool runner": pool, "registration": reg, "repository runner": repoScoped} {
+		if onMachineItself(r) {
+			t.Errorf("%s of the container is gated", name)
+		}
+	}
+}

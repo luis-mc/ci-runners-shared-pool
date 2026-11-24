@@ -215,6 +215,7 @@ test('Add runners: Linux on a Windows machine is planned and added to the pool',
     .on('GET', '/api/v1/runner-plans/:id', poolPlan('done', 'done'));
   await mock.install(page);
   await page.goto('/setup/runners/add');
+  await page.getByRole('radio', { name: /^Ephemeral/ }).check();
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByText('Add ephemeral runner crsp-pool-1')).toBeVisible();
   await page.getByRole('button', { name: 'Allow 1 ephemeral runner' }).click();
@@ -238,6 +239,7 @@ test('Add runners: a failed runner ends at Done with its reason and a next step'
     .on('GET', '/api/v1/runner-plans/:id', failedPlan);
   await mock.install(page);
   await page.goto('/setup/runners/add');
+  await page.getByRole('radio', { name: /^Ephemeral/ }).check();
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Allow 1 ephemeral runner' }).click();
   await expect(
