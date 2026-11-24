@@ -17,7 +17,6 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/configexport"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines/secretstest"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 type opsEnv struct {
@@ -30,7 +29,7 @@ func newOpsEnv(t *testing.T) *opsEnv {
 	t.Helper()
 	ctx, cancel := context.WithCancel(context.Background())
 	dir := t.TempDir()
-	db, err := store.OpenForTests(ctx, dir)
+	db, err := backup.OpenDBForTests(ctx, dir)
 	if err != nil {
 		t.Fatal(err)
 	}

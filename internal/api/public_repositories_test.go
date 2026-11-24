@@ -7,16 +7,16 @@ import (
 	"testing"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 // publicHarness is the console with a real settings service behind the
 // setting Public repositories.
 func publicHarness(t *testing.T) (*harness, *settings.Service, *audit.Log) {
 	t.Helper()
-	db, err := store.OpenForTests(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

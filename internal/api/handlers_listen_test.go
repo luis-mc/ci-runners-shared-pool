@@ -12,9 +12,9 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 type oneNIC struct{}
@@ -25,7 +25,7 @@ func (oneNIC) Interfaces() ([]listenaddr.Iface, error) {
 
 func listenMux(t *testing.T, role auth.Role, env string, up UpdateService) (*http.ServeMux, *audit.Log) {
 	t.Helper()
-	db, err := store.OpenForTests(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -11,9 +11,9 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 type imageMachines struct {
@@ -105,7 +105,7 @@ func TestImageLayersSaveWithoutBuild(t *testing.T) {
 
 // A saved choice shows ticked on the next read.
 func TestImageLayersSaved(t *testing.T) {
-	db, err := store.OpenForTests(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestImageLayersSaved(t *testing.T) {
 
 func testSettings(t *testing.T) *settings.Service {
 	t.Helper()
-	db, err := store.OpenForTests(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
