@@ -7,6 +7,7 @@ import (
 
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler/slots"
 )
 
 func setup(t *testing.T) (*env, string, string) {
@@ -113,5 +114,38 @@ func TestRename(t *testing.T) {
 	}
 	if _, _, err := e.Svc.UpdateSettings(context.Background(), "owner", id, machines.SettingsUpdate{Name: ptr("")}); !errors.Is(err, machines.ErrInvalid) {
 		t.Fatalf("empty name: %v", err)
+	}
+}
+
+// CRSP235 (scheduling R5.75): Gate maximum wait is 1 or 2 minutes, saved from the
+// console, sent to the agent, and never above the hold cap. The default is the cap.
+func TestGateMaxWaitIsSavedWithinTheHoldCap(t *testing.T) {
+	if machines.MaxGateWaitMinutes != slots.MaxHoldMin {
+		t.Fatalf("the saved maximum %d must equal the hold cap %d", machines.MaxGateWaitMinutes, slots.MaxHoldMin)
+	}
+	e, id, key := setup(t)
+	fa, err := e.session(id, key, &agentv1.Hello{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	if v, _ := e.Svc.Get(ctx, id); v.Settings.GateMaxWaitMinutes != slots.MaxHoldMin {
+		t.Fatalf("default = %d, want the hold cap", v.Settings.GateMaxWaitMinutes)
+	}
+	for _, bad := range []int{0, -1, slots.MaxHoldMin + 1, 30} {
+		if _, _, err := e.Svc.UpdateSettings(ctx, "owner", id, machines.SettingsUpdate{GateMaxWaitMinutes: &bad}); !errors.Is(err, machines.ErrInvalid) {
+			t.Fatalf("%d: err = %v, want invalid", bad, err)
+		}
+	}
+	one := 1
+	v, _, err := e.Svc.UpdateSettings(ctx, "owner", id, machines.SettingsUpdate{GateMaxWaitMinutes: &one})
+	if err != nil || v.Settings.GateMaxWaitMinutes != 1 {
+		t.Fatalf("saved = %+v, %v", v.Settings, err)
+	}
+	got := fa.Next(func(m *agentv1.SessionResponse) bool {
+		return m.GetSettings() != nil && m.GetSettings().GetGateMaxWaitMinutes() == 1
+	})
+	if got == nil {
+		t.Fatal("the agent did not get the new wait")
 	}
 }

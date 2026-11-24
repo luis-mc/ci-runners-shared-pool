@@ -8,7 +8,7 @@ import "testing"
 func TestMachineRoutesDeclareTheRoleTheySpecRequires(t *testing.T) {
 	want := map[string]string{
 		"listMachines": "user", "getMachine": "user", "getMachineLoad": "user", "getMachineChange": "user",
-		"updateMachine": "admin", "drainMachine": "admin", "resumeMachine": "admin", "removeMachine": "admin",
+		"updateMachine": "admin", "drainMachine": "admin", "resumeMachine": "admin", "restartMachineService": "admin", "removeMachine": "admin",
 		"redetectMachine": "admin", "recoverMachine": "admin", "checkMachinePoolSize": "admin", "decideMachineChange": "admin",
 		"runMachineCommand": "owner", "removeRunnerLeftovers": "admin", "createJoinCode": "admin", "joinMachineOverSsh": "admin", "getJoinCode": "admin", "revokeJoinCode": "admin", "getInstallCommand": "admin",
 		"getCaCertificate": "public", "createJoinFile": "admin", "getPackage": "public",

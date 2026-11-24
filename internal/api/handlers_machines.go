@@ -21,6 +21,7 @@ type MachinesService interface {
 	Get(ctx context.Context, id string) (machines.View, error)
 	UpdateSettings(ctx context.Context, actor, id string, u machines.SettingsUpdate) (machines.View, *machines.Change, error)
 	Drain(ctx context.Context, actor, id, reason string) (machines.Change, error)
+	RestartService(ctx context.Context, actor, id string, confirm bool) (machines.Change, error)
 	Resume(ctx context.Context, actor, id string, confirm bool) (machines.View, error)
 	Remove(ctx context.Context, actor, id string, confirm bool) (machines.Change, error)
 	Redetect(ctx context.Context, actor, id string) error
@@ -401,6 +402,7 @@ func (s *server) UpdateMachine(ctx context.Context, r gen.UpdateMachineRequestOb
 	if b.GateOnTimeout != nil {
 		u.GateOnTimeout = machinesPtr(string(*b.GateOnTimeout))
 	}
+	u.GateMaxWaitMinutes = b.GateMaxWaitMinutes
 	if b.Mode != nil {
 		u.Mode = machinesPtr(string(*b.Mode))
 	}
@@ -463,6 +465,19 @@ func (s *server) DrainMachine(ctx context.Context, r gen.DrainMachineRequestObje
 		return fail[gen.DrainMachinedefaultJSONResponse](s, err), nil
 	}
 	return gen.DrainMachine202JSONResponse(changeToAPI(ch)), nil
+}
+
+// RestartMachineService implements POST /api/v1/machines/{machineId}/restart (machines R5.78).
+func (s *server) RestartMachineService(ctx context.Context, r gen.RestartMachineServiceRequestObject) (gen.RestartMachineServiceResponseObject, error) {
+	if s.machinesOff() {
+		return machinesUnavailable[gen.RestartMachineServicedefaultJSONResponse](), nil
+	}
+	confirmed := r.Params.Confirmed != nil && *r.Params.Confirmed
+	ch, err := s.opts.Machines.RestartService(ctx, s.actor(ctx), r.MachineId, confirmed)
+	if err != nil {
+		return fail[gen.RestartMachineServicedefaultJSONResponse](s, err), nil
+	}
+	return gen.RestartMachineService202JSONResponse(changeToAPI(ch)), nil
 }
 
 // RunMachineCommand implements POST /api/v1/machines/{machineId}/command (cli R5.29).

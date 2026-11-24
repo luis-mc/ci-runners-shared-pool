@@ -1470,6 +1470,35 @@ paths:
                 $ref: '#/components/schemas/Machine'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/restart:
+    post:
+      operationId: restartMachineService
+      tags: [machines]
+      summary: Restart the service of one agent machine after its running jobs end
+      description: >-
+        machines R5.81, operations R5.15 (CRSP235). The machine takes no new
+        jobs, waits for its running jobs, and its agent restarts its service.
+        No running job is cut. The controller's own machine restarts through
+        `restartService`; this operation answers 409 for it. Without
+        `confirmed` it changes nothing and answers 409 `needs_confirmation`
+        with the jobs it waits for. The change is audited as
+        `machine.service_restart` with the actor.
+      x-cli: none
+      x-cli-reason: 'Later: the CLI gets a restart command with the machines commands (cli open question 7).'
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/Confirmed'
+      responses:
+        '202':
+          description: Draining, then restarting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachineChange'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/machines/{machineId}/pool-size-check:
     post:
       operationId: checkMachinePoolSize
@@ -7784,6 +7813,8 @@ components:
         gate_max_wait_minutes:
           type: integer
           minimum: 1
+          maximum: 2
+          description: How long the job-started hook may hold a job for a slot, in minutes. Never more than the hold cap of 2 (scheduling R5.75), and the default is 2. Saved from the machine page (machines R5.82).
         gate_on_timeout:
           type: string
           enum: [fail, run]
@@ -8107,6 +8138,11 @@ components:
           type: array
           items:
             type: string
+        gate_max_wait_minutes:
+          type: integer
+          minimum: 1
+          maximum: 2
+          description: How long the job-started hook may hold a job for a slot, 1 or 2 minutes. The hold is never longer than 2 (scheduling R5.75).
         gate_on_timeout:
           type: string
           enum: [fail, run]

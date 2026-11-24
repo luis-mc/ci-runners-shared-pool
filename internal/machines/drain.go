@@ -379,6 +379,12 @@ func (s *Service) execute(ctx context.Context, c Change) error {
 		s.finishRemove(ctx, c.StartedBy, m)
 		return nil
 	default:
+		if c.Kind == KindServiceRestart && !m.IsController {
+			// An agent machine restarts its own service. The change stays running
+			// until the agent connects again (finishRestart), so the machine keeps
+			// no new jobs while it restarts (CRSP235).
+			return s.askRestart(ctx, c)
+		}
 		if s.o.OnIdle != nil {
 			if err := s.o.OnIdle(ctx, c); err != nil {
 				c.State = ChangeNeedsYou
@@ -424,4 +430,78 @@ func mergeChange(cur Settings, base *Settings, snap Settings) Settings {
 		}
 	}
 	return out
+}
+
+// RestartService is the owner's Restart the service for an agent machine
+// (machines R5.81, operations R5.15). Without confirm it answers
+// NeedsConfirmationError that names the running jobs it waits for; with it the
+// machine takes no new jobs, waits for them, and its agent restarts its own
+// service. No job is cut. The controller's own machine restarts through the
+// update service, so it answers ErrConflict here.
+func (s *Service) RestartService(ctx context.Context, actor, id string, confirm bool) (Change, error) {
+	m, err := s.o.Repo.GetMachine(ctx, id)
+	if err != nil {
+		return Change{}, err
+	}
+	if !m.RemovedAt.IsZero() {
+		return Change{}, ErrNotFound
+	}
+	if m.IsController {
+		return Change{}, fmt.Errorf("%w: the controller's own service restarts through the service restart of Settings", ErrConflict)
+	}
+	if !s.sessions.Connected(id) {
+		return Change{}, ErrOffline
+	}
+	if !confirm {
+		names := []string{"no new jobs start on " + m.Name, "the service restarts when the running jobs have ended; no job is stopped"}
+		return Change{}, &NeedsConfirmationError{
+			Message: "restarting the service of " + m.Name + " drains it first",
+			Names:   append(names, jobNames(s.runningJobs(id))...),
+		}
+	}
+	return s.StartChange(ctx, actor, id, KindServiceRestart, "restart the service")
+}
+
+// askRestart tells the agent to restart once the drain found it idle. The
+// change stays running; finishRestart ends it when the agent is back.
+func (s *Service) askRestart(ctx context.Context, c Change) error {
+	if err := s.sessions.send(c.MachineID, &agentv1.SessionResponse{Message: &agentv1.SessionResponse_RestartAgent{
+		RestartAgent: &agentv1.RestartAgent{CommandId: c.ID}}}); err != nil {
+		c.State = ChangeNeedsYou
+		c.Detail.Reason = "the service could not be asked to restart: " + err.Error()
+		_ = s.o.Repo.UpdateChange(ctx, c)
+		return err
+	}
+	c.Detail.Reason = "restarting the service"
+	if err := s.o.Repo.UpdateChange(ctx, c); err != nil {
+		return err
+	}
+	s.notifyMachine(c.MachineID)
+	return nil
+}
+
+// finishRestart ends a service restart that waits for its agent: the agent has
+// connected again, so the machine takes jobs again (machines R5.81).
+func (s *Service) finishRestart(ctx context.Context, id string) {
+	c, open, err := s.o.Repo.OpenChange(ctx, id)
+	if err != nil || !open || c.Kind != KindServiceRestart || c.State != ChangeRunning {
+		return
+	}
+	c.State, c.FinishedAt = ChangeDone, s.now()
+	if err := s.o.Repo.UpdateChange(ctx, c); err != nil {
+		return
+	}
+	s.setActive(ctx, id, c.StartedBy)
+}
+
+// failRestart marks a service restart the agent could not do as needing the
+// owner: the machine stays drained until Resume.
+func (s *Service) failRestart(ctx context.Context, id, why string) {
+	c, open, err := s.o.Repo.OpenChange(ctx, id)
+	if err != nil || !open || c.Kind != KindServiceRestart || c.State != ChangeRunning {
+		return
+	}
+	c.State, c.Detail.Reason = ChangeNeedsYou, "the service did not restart: "+why
+	_ = s.o.Repo.UpdateChange(ctx, c)
+	s.notifyMachine(id)
 }

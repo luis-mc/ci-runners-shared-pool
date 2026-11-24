@@ -164,6 +164,7 @@ func (l *Link) Session(ctx context.Context, stream *connect.BidiStream[agentv1.S
 	if svc.hooks.OnHello != nil {
 		svc.hooks.OnHello(ctx, m.ID, hello)
 	}
+	svc.finishRestart(ctx, m.ID) // a restart that waited for this agent is over
 
 	cur, _ := svc.o.Repo.GetSettings(ctx, m.ID)
 	mach, _ := svc.o.Repo.GetMachine(ctx, m.ID)
