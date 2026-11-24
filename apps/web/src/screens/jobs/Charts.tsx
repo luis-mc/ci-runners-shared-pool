@@ -41,11 +41,11 @@ const WEEKDAYS = [
 /** Charts (LOOK65): the CPU of each machine today and the reservation example first, the run charts below them. */
 export function ChartsTab() {
   return (
-    <>
+    <Stack gap="section">
       <MachineCpuToday />
       <ReservationExample />
       <ChartsBody />
-    </>
+    </Stack>
   );
 }
 
@@ -100,12 +100,12 @@ function ChartsBody() {
         if (s.days.length === 0)
           return (
             <>
-              <Stack>
-                {bar}
-                <Section title="Charts">
+              <Section title="Charts">
+                <Stack>
+                  {bar}
                   <Empty title="No finished jobs in this range, so there is nothing to draw." />
-                </Section>
-              </Stack>
+                </Stack>
+              </Section>
               {actions}
             </>
           );
@@ -120,11 +120,11 @@ function ChartsBody() {
         return (
           <>
             <Stack>
-              {bar}
               <Section
                 title="Run time and wait per day"
                 hint="The middle value and the slow end (p90) of each day."
               >
+                {bar}
                 <TrendChart
                   label="Run time and wait per day"
                   unit="seconds"

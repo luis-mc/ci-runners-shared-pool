@@ -1,7 +1,7 @@
 // Analytics > Insights, the two panes at the foot of the page (LOOK65): Waits, a small table of the waits by job, and the
-// Runner timeline, one row for each runner, drawn by the shared timeline part. The screens pass data only (UX-41).
+// Runner timeline (full width: its table view needs the room), one row for each runner, drawn by the shared timeline part. The screens pass data only (UX-41).
 import {
-  Card,
+  Section,
   Empty,
   Table,
   Timeline,
@@ -56,7 +56,7 @@ export function WaitsPane() {
   const repository = useRepositoryFilter();
   const { result, reload } = useWaits(7, 'job_key');
   return (
-    <Card title={WAITS_WORDS.title}>
+    <Section title={WAITS_WORDS.title}>
       <Load result={result} what="the waits" reload={reload}>
         {(d) => {
           const rows = d.rows.filter((r) => !repository || r.key.startsWith(repository));
@@ -73,7 +73,7 @@ export function WaitsPane() {
           );
         }}
       </Load>
-    </Card>
+    </Section>
   );
 }
 
@@ -139,7 +139,7 @@ export function RunnerTimelinePane() {
   const nowMs = useNow();
   const { result, reload } = useTimeline(RUNNER_TIMELINE_WORDS.hours);
   return (
-    <Card title={RUNNER_TIMELINE_WORDS.title}>
+    <Section title={RUNNER_TIMELINE_WORDS.title}>
       <Load result={result} what="the runner timeline" reload={reload}>
         {(t) => {
           const { rows, bars } = lanesToTimeline(t.lanes, nowMs, repository);
@@ -158,6 +158,6 @@ export function RunnerTimelinePane() {
           );
         }}
       </Load>
-    </Card>
+    </Section>
   );
 }

@@ -139,10 +139,8 @@ export function Insights() {
                 <TextLink to="/analytics/charts">Open the charts</TextLink> for longer
                 ranges.
               </Text>
-              <CardGrid>
-                <WaitsPane />
-                <RunnerTimelinePane />
-              </CardGrid>
+              <WaitsPane />
+              <RunnerTimelinePane />
             </>
           );
         }}
