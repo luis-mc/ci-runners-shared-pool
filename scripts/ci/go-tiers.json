@@ -1,11 +1,12 @@
 {
-  "_note": "CRSP209 (guardrail G1). `go test -timeout` limits one package binary, not one test, so packages run in tiers. Unit tier (everything not listed): -timeout 10s, packages measured under 3 s with `go test -race` on 4 cores. integration: -timeout 60s, packages that start servers, sockets, SQLite or subprocesses, or measured 3 s to 40 s. slow: packages measured over 40 s that do not fit 60 s with honest headroom; OPS82: they run in chunks (`chunks` gives the count per package): each chunk is one `go test -run` of a share of the package's tests, with the 60 s limit, so no limit is raised. Pick the count so a chunk measures under about 30 s with -race; measured 22 Nov 2026 on 4 cores: agent 82 s, api 71 s, notify 37 s, scheduler 92 s, settings 25 s, store 126 s; packaging/hooks timed out at 60 s on Windows (CRSP208). Measured on 20 Nov 2026 (docs/work/CRSP209-report.md). Move a package up a tier only with a new measurement. CRSP208: internal/api (55.8 s), internal/notify (50.1 s), internal/settings (44.0 s) and packaging/hooks (60.1 s, timed out) measured on the Windows runner in CI run 44811042030, moved to slow.",
+  "_note": "CRSP209 (guardrail G1). `go test -timeout` limits one package binary, not one test, so packages run in tiers. Unit tier (everything not listed): -timeout 10s, packages measured under 3 s with `go test -race` on 4 cores. integration: -timeout 60s, packages that start servers, sockets, SQLite or subprocesses, or measured 3 s to 40 s. slow: packages measured over 40 s that do not fit 60 s with honest headroom; OPS82: they run in chunks (`chunks` gives the count per package): each chunk is one `go test -run` of a share of the package's tests, with the 60 s limit, so no limit is raised. Pick the count so a chunk measures under about 30 s with -race; measured 22 Nov 2026 on 4 cores: agent 82 s, api 71 s, notify 37 s, scheduler 92 s, settings 25 s, store 126 s; packaging/hooks timed out at 60 s on Windows (CRSP208). OPS93: internal/backend/windows runs real powershell.exe (two cold starts of about 5 s each on the Windows runner, 10.9 s in CI run 45369765727), so it is integration. Measured on 20 Nov 2026 (docs/work/CRSP209-report.md). Move a package up a tier only with a new measurement. CRSP208: internal/api (55.8 s), internal/notify (50.1 s), internal/settings (44.0 s) and packaging/hooks (60.1 s, timed out) measured on the Windows runner in CI run 44811042030, moved to slow.",
   "integration": [
     "./cmd/crsp",
     "./guards",
     "./images",
     "./internal/addresses",
     "./internal/audit",
+    "./internal/backend/windows",
     "./internal/backend/windows/hostcheck",
     "./internal/backup",
     "./internal/cli",
