@@ -3074,9 +3074,9 @@ button.ds-jobpath__box {
 .ds-jobpath__line {
   color: var(--ds-color-text-muted);
 }
-/* A live example is a name that may be long (crsp-linux-1): it stays on one line and its column grows to fit it, never cut (LOOK48, LOOK56). */
+/* A live example is a name that may be long (crsp-linux-build-machine-1): it breaks anywhere to fit its box, never cut and never wider than the frame, so nothing scrolls sideways at 1278 px (LOOK63, UX-49). The full text stays the hover text. */
 .ds-jobpath__line[data-example] {
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 @media (max-width: 600px) {
   .ds-jobpath {
