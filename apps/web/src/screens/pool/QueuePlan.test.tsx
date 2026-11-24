@@ -38,8 +38,6 @@ describe('Queue Analysis chips', () => {
       '/pool/queue',
     );
     await screen.findByText(/1\. plain/);
-      0,
-    );
     for (const name of ['Waiting for room', 'Reserved', 'No runner fits']) {
       expect(screen.getByRole('button', { name })).toBeTruthy();
     }
