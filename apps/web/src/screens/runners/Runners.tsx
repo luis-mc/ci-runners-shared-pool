@@ -33,7 +33,7 @@ import { useSession } from '../../auth/session';
 import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import { needsYes } from '../repositories/plans';
-import { KIND_NAMES, OS_WORD, oneStop } from './kinds';
+import { KIND_NAMES, oneStop } from './kinds';
 import { keepsText, uncleanText } from './RunnerPage';
 
 type Runner = Schemas['Runner'];
@@ -227,12 +227,6 @@ export function RunnersList() {
           [KIND_NAMES[r.kind], keepsText(r)].filter(Boolean).join('. '),
         ].join('. '),
       sort: (r) => r.isolation,
-    },
-    {
-      id: 'os',
-      header: 'System',
-      cell: (r) => OS_WORD[r.os],
-      sort: (r) => r.os,
     },
     { id: 'labels', header: 'Labels', cell: (r) => <CappedList items={r.labels} /> },
     {

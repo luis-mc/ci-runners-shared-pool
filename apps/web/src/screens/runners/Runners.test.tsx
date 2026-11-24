@@ -116,9 +116,8 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
-    // OPS87: the system of each runner has its own column; the backend stays in the hover text.
-    expect(within(table).getByRole('columnheader', { name: 'System' })).toBeTruthy();
-    expect(within(table).getByText('Windows')).toBeTruthy();
+    // The system and the backend are in the hover text, so the one-line table fits its pane at 1300 px (UX-72).
+    expect(within(table).queryByRole('columnheader', { name: 'System' })).toBeNull();
     expect(within(table).queryByRole('columnheader', { name: 'Backend' })).toBeNull();
     expect(table.querySelector('[title*="windows x64, persistent"]')).toBeTruthy();
     expect(within(table).getByText('self-hosted, windows +2')).toBeTruthy();
