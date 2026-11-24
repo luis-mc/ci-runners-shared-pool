@@ -42,6 +42,8 @@ func waitReason(r string) *gen.WaitReason {
 	switch r {
 	case "free_slot", "lost_race":
 		out = gen.WaitReasonFreeSlot
+	case "reserved":
+		out = gen.WaitReasonReserved
 	case "load_over_budget":
 		out = gen.WaitReasonLoadOverBudget
 	case "no_runner_with_labels":
@@ -310,10 +312,13 @@ func (s *server) jobItems(ctx context.Context, rows []jobsdata.Job) ([]gen.Job, 
 	if err != nil {
 		return nil, err
 	}
+	flags := s.flagsFor(ctx, rows)
 	items := make([]gen.Job, 0, len(rows))
 	for _, r := range rows {
 		q, hasQ := qi[r.ID]
-		items = append(items, jobWithForecast(r, fcs[r.ID], q, hasQ))
+		it := jobWithForecast(r, fcs[r.ID], q, hasQ)
+		flags.markJob(&it)
+		items = append(items, it)
 	}
 	return items, nil
 }

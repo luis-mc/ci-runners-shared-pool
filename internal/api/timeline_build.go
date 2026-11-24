@@ -39,6 +39,7 @@ type timelineInput struct {
 	Finished  []jobsdata.Job // done jobs, any order; those that ended before now - 24 h are ignored
 	Open      []jobsdata.Job // queued and running jobs
 	Forecasts map[int64]forecast.Forecast
+	Flags     jobFlags   // reserved jobs and timers that ran out (LOOK65)
 	Before    *time.Time // nil on the first call
 	Hours     int
 	MachineID string // "" for all machines
@@ -241,7 +242,15 @@ func (b *tlBuilder) runningBars() {
 				detail += ", ends in " + humanSpan(secondsDur(left.P50))
 			}
 		}
-		b.bars = append(b.bars, b.bar(j, "running", b.rowKey(j.MachineID, b.held[j.ID]), start, detail))
+		state := gen.TimelineBarState("running")
+		var expires *time.Time
+		if d, ok := b.in.Flags.grace[j.ID]; ok {
+			state, expires = "timer_ran_out", tptr(d)
+			detail = j.Name + " ran out of time after " + humanSpan(elapsed) + "; crsp stops it " + startWords(d.Sub(b.in.Now))
+		}
+		bar := b.bar(j, state, b.rowKey(j.MachineID, b.held[j.ID]), start, detail)
+		bar.ExpiresAt = expires
+		b.bars = append(b.bars, bar)
 	}
 }
 
@@ -300,6 +309,12 @@ func (b *tlBuilder) forecastBars() {
 	for _, j := range queued {
 		if j.MachineID != "" && b.byID[j.MachineID] == nil {
 			continue // a machine that is gone has no row
+		}
+		if since, ok := b.in.Flags.reserved[j.ID]; ok {
+			m := b.byID[b.homeMachine(j)]
+			b.waitingBar(j, m.ID, "reserved", "is reserved: "+m.Name+" keeps room free for it since "+since.Format("15:04")+" UTC")
+			b.bars[len(b.bars)-1].ReservedSince = tptr(since)
+			continue
 		}
 		switch j.WaitReason {
 		case "no_runner_with_labels":

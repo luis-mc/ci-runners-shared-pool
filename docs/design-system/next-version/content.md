@@ -1042,6 +1042,8 @@ The words of Add runners step 1, the Runners list, the runner page and the Repos
 | Allow {n} ephemeral runner(s) | The primary of Review for ephemeral runners (busy word: Registering). |
 | {n} persistent runner(s) on {machine}. | Review text, then the dependency sentence: Downloaded dependencies are kept between jobs. / Downloaded dependencies are removed after each job too. / Each job gets a fresh container (ephemeral: Up to {n} ephemeral runner(s) at once on {machine}.). |
 | Persistent. Keeps dependencies: yes | Third line of the Isolation cell in the Runners list. Ephemeral shows Ephemeral only. |
+| System | Head of the column of the Runners list that names the system of each runner: Linux, Windows or macOS. |
+| {Machine}-pool-{n}, {Machine}-win-{n}, {Machine}-mac-{n} | The default name of a new pool runner: it carries its system (Linux, Windows, macOS), so a name of a removed runner of another system is never reused. Runners that exist keep their names. |
 | Dependencies | Section of the runner page for a persistent runner. |
 | Dependency cache size | Fact of the runner page. Not measured yet when the controller has no size. |
 | Clear now | Button of the runner page (busy word: Clearing). |
@@ -1144,6 +1146,7 @@ One word set for the button at the end of a table row. The guard reads this tabl
 |---|---|
 | Open run | Row action of a run row (Queue, Running, Done): opens the Run page. |
 | Open | Row action of a group row (By repository, machine, runner, runner type, job type). The group's name is already in the row. |
+| Why | Row action of a job row in the Jobs list (Pool > Jobs): opens the inspector of the job beside the list. A press, not a link. |
 | Open job | Row action of a job row (Jobs view of Queue, Running, Done): opens the Job page. |
 | Remove | Row action of a failed runner (Runners): removes it and does not open a page. A press, not a link. Admin only (busy word: Removing). |
 | Edit | Row action of a user (Settings, Access): opens the change of its role. A press, not a link. Admin only. |
@@ -1212,6 +1215,23 @@ The words of the one search list of Live, Done and Run elsewhere (component 67) 
 | Failed jobs | Overview card: how many of the finished jobs of the last 7 days failed; it opens the finished jobs. |
 | Each number is compared with the 7 days before. | Line under the Overview cards. |
 | Showing {n} of {m} finished {runs or jobs} in the last {days} days. | Note under the list when it holds finished rows. |
+
+## Jobs list as approved words (LOOK62, owner decision of 23 Nov 2026)
+
+The words of Pool > Jobs as the owner approved it: the Jobs list first, the open Filters pane, and the inspector beside the list.
+
+| Where | Word |
+|---|---|
+| Columns | Job, Status, Machine, Start |
+| Button | Why (row action, Row action words) |
+| Filters pane | Filters; open; {n} set; Open the filters; Close the filters |
+| Fields | Range (Last 7 days, Last 30 days, Last 90 days), Group by (No grouping, Repository, Machine, Runner, Runner type, Job type), Repository (All repositories), Machine (All machines), Runner type (Any, Persistent, Ephemeral), Branch (Any branch) |
+| Tags of a closed pane | State: {state}, {range}, Group: none, {filter}: {value} |
+| View switch | Jobs, Runs (label: Show runs or jobs) |
+| Start | Starts about {hh:mm}; since {hh:mm}; finished {hh:mm}; Start not known |
+| Machine | the machine name, or an em dash when no runner has the job yet |
+| Inspector | title `{job}: {status}`; the facts; the reason line; Open job; Close details |
+| Reserved | Status: Reserved. Reason: waits for the room another job holds on its machine. Short: room held for it. |
 
 ## Runner leftover words
 
@@ -1356,6 +1376,42 @@ The measured block of the Job page, in the CPU and memory pane. `{n}` is a numbe
 | Job page, job key, not measured | Not measured yet: {runs} of 5 good runs. |
 | Job page, job key, no good run | No good run yet. |
 
+## Restart the service and Gate maximum wait words (CRSP235; machines R5.81, R5.82)
+
+The Service section of the machine page, the Restart the service wizard of an agent machine and the field Gate maximum wait. Built from the shared Section, Button, Cluster, Wizard, Facts, BulletList, Message, Text and NumberField parts. The action word is Restart the service, as in the action vocabulary; the same button is on Settings, Updates for the controller's own service.
+
+| Where | Words |
+|---|---|
+| Machine page, section title | Service |
+| Machine page and Settings, Updates, line | Stop and start the service after the running jobs end. No running job is stopped. |
+| Button | Restart the service |
+| Button, locked for an offline machine | The machine is offline. |
+| Wizard name and page title | Restart the service |
+| Wizard steps | Review, Restarting, Done |
+| Review text | Restart the service of {machine}. This machine takes no new jobs, waits for the running jobs to end (up to {n} minutes), then restarts its service. No running job is stopped. |
+| Review, jobs | These jobs run now and are waited for: |
+| Review, no job | No job runs on this machine now. |
+| Restarting, State | Waiting for {n} running jobs to end; Waiting for running jobs to end; Restarting the service |
+| Restarting, facts | State; Jobs still running; the jobs as rows with the value running |
+| Restarting, progress | {State}: {n} jobs left |
+| Restarting, console not answering | The console is not answering. This page waits for it. |
+| Paused (page reloaded while it runs) | Paused. The page closed while the service restarted. It goes on without this page. Start again to follow it. |
+| Offline, first run | {machine} is offline. Its service can restart only while it is connected. Try again when it is back. |
+| Offline, busy word | Looking |
+| Looking | Looking at {machine}. |
+| The controller's machine, stopped | Stopped. Nothing changed: {machine} is the controller. Its service restarts from Settings, Updates. |
+| Failed | The restart did not finish. {reason} The service keeps running. Try again. |
+| Failed, reasons | The service could not restart. Resume the machine, then try again. The service did not come back within 5 minutes. |
+| Done | The service of {machine} restarted. |
+| Done, facts | Version; Jobs stopped: 0 |
+| Done, next action | Open the machine |
+| Field label | Gate maximum wait |
+| Field unit | min |
+| Field help | How long a job may wait for a free slot before it starts. Never more than 2 minutes. |
+| Field mistake, on Save | Gate maximum wait must be from 1 to 2 minutes. |
+| Field note, a saved value above 2 | Saved as {n} minutes. The hook cuts the wait to 2. Set 2 or less and press Save. |
+| Doctor fix | On the machine page set Gate maximum wait to 2 minutes or less. (The Open button goes to the field.) |
+
 ## Disk floor words (OPS86, runners R5.83)
 
 The free disk a machine keeps before it starts a job or a VM, on the machine page under Disk (the Save bar saves it). `{x}` is a number of GB (1 decimal at most).
@@ -1377,20 +1433,27 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | Word | Where and meaning |
 |---|---|
 | Help | The seventh area of the menu and the page title. |
-| One picture, then the questions people ask. Each card names its box. | Lead of Help (LOOK48; replaces *How crsp runs your jobs, and what its words mean.*). |
+| How crsp runs jobs. Pictures use your own pool. | Lead of Help (LOOK63; replaces *One picture, then the questions people ask. Each card names its box.*, which replaced *How crsp runs your jobs, and what its words mean.*). |
 | How a job gets run | Pane of the picture on Help and on the first-run Overview. |
 | On GitHub / In your pool | The two groups of the picture. |
-| 1 to 3 happen on GitHub. 4 to 7 happen in your pool. | Quiet line under the picture (LOOK48; replaces *7 parts. Press a part to jump to its question.*). |
+| ~~1 to 3 happen on GitHub. 4 to 7 happen in your pool.~~ | Retired (LOOK63): the picture stands alone, as in the approved prototype. |
 | 2 waiting / none waiting / {n} of {m} busy | Examples in the Queue and Slot boxes. The other boxes show a repository, `#{run}, {event}`, `{job} + labels`, a runner name and a machine name, or their short meaning when nothing is known. |
 | Repository, Run, Job, Queue, Slot, Runner, Machine | The seven parts. Their lines: a GitHub project; one start of a workflow; asks for a runner; waits for a slot; room for one job; does the work; your computer. |
-| Questions, in the order a job meets them | Pane with every question card at once, ordered by box (no steps, no Back, Next or Start again since LOOK47; title since LOOK48). |
-| Box {n}: {Name} | Badge on every card, with the numbered circle; a link to that box in the picture (LOOK48). |
+| Questions | Pane of the nine question cards, with their count (LOOK63; replaces *Questions, in the order a job meets them*). |
+| ~~Box {n}: {Name}~~ | Retired (LOOK63): the cards carry no box badge and no small picture. |
 | {n} of {m} slots busy | Text of the slots picture on the slot card. |
 | Memory {n}% of {b}% / CPU {n}% of {b}% | Text of the load budget picture; {b} is the machine's own budget. |
 | first one takes the free slot / Runner type. Linux or Windows is the OS. / the tray icon, bottom right of the PC | Words inside the card pictures. |
-| What does shared mean? / What are a run and a job? / What are labels? / What does Run elsewhere mean? | Cards about GitHub, first in the grid. |
-| Why is my job waiting? / What is a slot? / What is the load budget? / What is the queue? / What is a runner type? | Cards about the pool, second in the grid. |
-| What is the Doctor? / What is the tray app? / What are images and caches? | Cards about looking after the pool, last in the grid. |
+| What does shared mean? | Card 1 (LOOK63). Answer: Every repository you turn the pool on for uses the same machines and runners. Link: Open Setup > Pool setup. |
+| What are a run and a job? | Card 2. Answer: A run is one start of a workflow. A job is one part of a run. Link: Open Pool > Jobs. |
+| What are labels? | Card 3. Answer: Words on a job and on a runner. A job goes to a runner that has all of its labels. Link: Open Pool > Overview. |
+| What does Run elsewhere mean? | Card 4. Answer: Another runner runs the job, not your pool. Link: Open Analytics > Run elsewhere. |
+| Why is my job waiting? | Card 5. Answer: Open Why waiting on its row. Queue Analysis ranks every waiting job. Link: Open Pool > Queue Analysis. |
+| How big is a slot? | Card 6. Answer: The pool is what is left after the load budget. Link: Open Setup > Size and backends. |
+| Where do I see what runs now? | Card 7. Answer: The picture of running and queued jobs. Link: Open Pool > Live. |
+| Something is wrong | Card 8. Answer: Doctor lists what needs you and checks the pool. Link: Open Doctor. |
+| How do I make it faster? | Card 9. Answer: Suggestions are ranked by the time they save. Link: Open Analytics > Suggestions. |
+| ~~What is a slot? / What is the load budget? / What is the queue? / What is a runner type? / What are images and caches? / What is the tray app? / What is the Doctor?~~ | Retired as cards (LOOK63). The ? answers of Slots, Load budget, Queue and Runner type stay (below) and link to their Help section. |
 | Slot | Room for one job at a time on a machine. |
 | Pool size makes slots: you set memory and CPUs on Pool size, and crsp turns that into slots, the number of jobs that run at once. | The sentence of the slot card and of the ? on Slots. |
 | Load budget | The most memory and CPU a machine may use for jobs. Over it, new jobs wait. The card shows each machine's own budget (`memory 70%, CPU 55%`), read from the API. |
@@ -1400,8 +1463,27 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | No machine yet. Add a machine to see its slots. / ... its load budget. | The card when the pool has no machine. |
 | What does {term} mean? | Name of the ? button. {term} is Slots, Load budget, Queue, Runner type or Run elsewhere. |
 | More about this in Help | The link in the ? answer. |
-| Open Pool size / Open Jobs / Open the Doctor / Open Images and caches | Links on the cards. |
+| Open ... | The link at the foot of each question card: Open Setup > Pool setup, Open Pool > Jobs, Open Pool > Overview, Open Analytics > Run elsewhere, Open Pool > Queue Analysis, Open Setup > Size and backends, Open Pool > Live, Open Doctor, Open Analytics > Suggestions. |
 | Load budget | Fact row on the machine page: `memory {n}%, CPU {m}%`. |
+
+## Help guide words (LOOK63)
+
+The ten guide sections of the Help side menu, written from how the scheduler really works. Each is one pane: the title, one lead sentence, a list of facts and a link when a screen shows it. The side menu lists them, in this order, after *Where things are*: Pool and load budget, Runner types, Size classes, Admission and passing, Reservation, Job size, Before assignment, Gating, Routing labels, Timers; *Reading Queue Analysis* is last. *Admission and passing* is the words of the approved prototype.
+
+| Section | Words |
+|---|---|
+| Pool and load budget | Lead: The pool is the memory and CPUs crsp may use for jobs on a machine. The load budget is the most the whole machine may use. Point 1: The default budget is 85% of memory and 60% of CPU, for everything on the machine, not only jobs. Point 2: You set the pool size on Size and backends. A size that does not fit the budget is refused, and the page names the sizes that do. Point 3: Over the budget, a new job waits until the load is under it. Jobs that already run are never stopped for it. Point 4: When crsp cannot measure the load, a new job waits until it can. Point 5: A machine over its budget while jobs run shows a warning. It clears after a minute under the budget. Link: Open Setup > Size and backends. |
+| Runner types | Lead: A runner is persistent or ephemeral. That is its type. Linux, Windows or macOS is its system, not its type. Point 1: Persistent keeps its tools, caches and folder between jobs. It runs on the machine itself, as a service. Point 2: Ephemeral is a fresh container or VM for one job. crsp removes it when the job ends. Point 3: You choose the type when you add a runner. The list shows only the machines that can run that system and type. Point 4: A persistent runner on the machine itself is gated: see Gating. Link: Open Setup > Runners. |
+| Size classes | Lead: A runner has a size class: small, medium, large or xl. The class is the biggest job that runner takes. Point 1: Each class has CPUs and GiB of memory. The Standard preset is small 2 CPUs and 4 GiB, medium 4 and 8, large 8 and 16, xl 16 and 32. Point 2: The classes grow from small to xl, in CPUs and in memory. Point 3: A job that needs more than the class of a runner does not go to that runner. |
+| Admission and passing | Lead: A job is admitted when its CPU and memory fit the free pool and the class ceiling. Lighter jobs may pass a big one that does not fit yet. Point 1: Check 1: class ceiling. Check 2: free CPU. Check 3: free memory. Point 2: A big job can be passed up to 3 times, or for 10 min. Point 3: Then it is reserved (see Reservation). Link: See it live in Pool > Live. |
+| Reservation | Lead: A job that is passed too often is reserved: its machine keeps room for it. Point 1: After 3 passes, or 10 minutes of waiting, the job becomes the reserved job of its machine. A machine has one at a time. Point 2: Its line reads reserved since a time, expected start a time. The expected start is when a running job ends and leaves room. Point 3: A later job starts only if it ends before that time, or if the pool still has room for the reserved job. Point 4: The reservation ends when the job starts. Link: Open Pool > Queue Analysis. |
+| Job size | Lead: crsp gives every job a size: the CPUs and memory it needs. Admission reads it. Point 1: The size comes from the first source that knows the job: your override in the console, the sizes in .crsp.yml, the size crsp measured, a scan of the repository, the job name, then 1 CPU and 1 GiB. Point 2: A measured size counts after 5 runs. Point 3: In .crsp.yml, a job name or pattern is light, normal or heavy. Point 4: Sizing never holds a job. A new job with no history uses the scan or the default. Link: Open Setup > Pool setup. |
+| Before assignment | Lead: Before GitHub gives a job to a runner, the job waits in the queue. crsp decides when it may start. Point 1: crsp learns of a job when GitHub tells it, and by looking again every so often. Point 2: By default the order is: repository priority, then pull requests that are ready and the default branch, then fair share between repositories, then the one that waited longest. Point 3: The first job that has room gets a runner. A job that has none waits for one reason, and Why waiting names it. Point 4: A repository may have a limit on parallel jobs. A job over it waits, and jobs of other repositories may take the free slot. Point 5: crsp tells you when a job has waited 12 hours. GitHub cancels a job that waits 24 hours. Link: Open Pool > Queue Analysis. |
+| Gating | Lead: A persistent runner on the machine itself is gated: it is offline by design, and crsp switches it on only when a job needs it. Point 1: When a job is admitted for it, crsp adds the job name as a label and starts the runner. The runner takes the job, and crsp makes no other runner. Point 2: When the job ends the runner stops and the label is removed. A runner with a job is never stopped. Point 3: Once a week each gated runner is switched on for about a minute, so GitHub never removes it for staying offline. Point 4: Gating starts in observe mode: crsp writes what it would do, and the job takes the normal way. Link: Open Setup > Runners. |
+| Routing labels | Lead: Routing labels send a job to your pool. The workflow reads them from a variable of the repository. Point 1: For each system crsp writes CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS or CRSP_RUNS_ON_MACOS: a list of labels, for example self-hosted, linux, x64. Point 2: A variable exists only while the pool is on for that system. With no variable the job runs on a GitHub-hosted runner. Point 3: A job may have a variable of its own, CRSP_ and its name, for example CRSP_E2E. The workflow reads it first and the system variable second. Point 4: Labels are not case sensitive. If a variable is changed outside crsp, crsp puts it back and the repository row shows it. Link: Open Setup > Pool setup. |
+| Timers | Lead: crsp times every running job and every run. When a timer runs out, crsp waits 30 seconds, then acts. Point 1: The job timer is 30 minutes from the first real step of the job. The run timer is 45 minutes from the start of its first job. A repository may set its own job times in .crsp.yml. Point 2: In the 30 seconds you can press Stop now, Cancel now or Extend 10 min. Extend works once for each job. Point 3: A job that ends in those 30 seconds is not stopped. Point 4: When the job timer ends, crsp stops that job. When the run timer ends, crsp cancels the run. Point 5: Timers start in observe mode: they show and write what they would do, and stop nothing until the owner turns Enforce on. Point 6: A job that holds a start waits at most 2 minutes. |
+| In your pool right now | Pane of *Admission and passing* and *Reading Queue Analysis*: the first waiting job. Facts *Job* (on Admission and passing), *Next to start* (on Reading Queue Analysis), *Why it waits*, *Result* (Admission) or *Start* (Queue Analysis), and *Nothing is waiting. Every job has a slot.* |
+| Help sections | Name of the side menu of Help. |
 
 ## Run follow-up words (CIX24, owner decision D27 of 21 Nov 2026)
 
@@ -1511,6 +1593,14 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | Pool, page title and line | Pool. What runs, what waits and why. Nothing to configure here. |
 | Pool tabs | Overview, Live, Queue Analysis, Jobs, Machines |
 | Pool, four counts | Running, Starting, Queued, No runner fits |
+| Overview, line | The pool at a glance. Open a card for the detail. |
+| Overview, order | The four counts; the timer alert; Best next change; a card per machine; Next to start and Routing labels; Jobs over time |
+| Overview, Best next change | One line: {title}, Saves about {n} min a week (estimate)., link Open it in Analytics > Suggestions |
+| Overview, machine card | Title {machine} {cpus} CPU / {gib} GiB; bars CPU and Memory, text {used} of {total} and {used} of {total} GiB; the running job names; link Open in Pool > Machines |
+| Overview, timer alert | The job timer's own words (for example Job timer ran out at 30:00; stopping in 20 s); link Open {job} in Pool > Jobs |
+| Overview, Next to start | Card title Next to start with the count; each job: its name, one of Waiting for room, Behind another job, No runner fits, Waiting, and the clock time (starts about {time}); empty: No job is waiting.; link See the whole plan in Pool > Queue Analysis ({n}) |
+| Overview, Routing labels | Card title Routing labels; the labels as tags (first five); empty: No job carries a routing label right now.; link See all {n} labels in Pool > Overview |
+| Overview, Jobs over time | Pane Jobs over time (Each row is a slot of a machine. Scroll left for the past, right for the forecast.) |
 | Pool > Overview, panes | Queue plan (In the order crsp will start them.), Running jobs, Routing labels in use |
 | Queue plan columns | #, Job, Why it waits, Start, Machine and runner |
 | Start, a waiting job | Starts about {time} |
@@ -1536,6 +1626,29 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | A suggestion about a project | The title names the repository: {title} ({repository}) unless the title has it already |
 | Path forward | Pane title: Path forward. Line: Do these in order for {repository}. List name: Steps |
 | Doctor | Needs you is the first pane. Doctor shows no suggestions. |
+
+## Setup and Doctor words (LOOK64, from the LOOK54 prototype)
+
+`{n}` is a number, `{name}` a machine or an area. Built from the shared Card, CardGrid, LevelBar, Table, Facts, Status and Tag parts; no rule, token or component changes.
+
+| Where | Words |
+|---|---|
+| Summary, cards | Machines, Runners, Repositories; each has a link: Open Machines, Open Runners, Open Pool setup |
+| Summary, Machines card | {n} machines, {cpu} CPU and {gib} GiB in the pool. (`pool size not set.` until a machine has a size) |
+| Summary, Runners card | {n} runners: {p} persistent, {e} ephemeral. |
+| Summary, Repositories card | {n} repositories use the pool. / No repository uses the pool yet. |
+| Summary, pane and rows | Setup steps: Connect GitHub, First machine, First repository; each is done, to do, or its action (Add a machine, Choose repositories) |
+| Machines, columns | Machine, System, Pool, Load budget, State |
+| Machines, Pool cell and Load budget cell | {cpu} CPU / {gib} GiB, or not set; {n}% memory, {n}% CPU |
+| Machines, pool size card | Title {name}: pool size. Bars: CPU in the pool ({n} of {total} CPU), Memory in the pool ({n} of {total} GiB). Link: Change the pool size |
+| Size and backends, panes | Size classes (columns Class, CPU, Memory; line Preset: {preset}.), Backends (columns Backend, Allowed, Version), Machines, Demand |
+| Backends, Allowed cell | allowed, allowed on {n} of {m}, off |
+| Pool setup, columns | Repository, Pool, Runner type, Fallback label, Jobs now |
+| Pool setup, Pool cell | pool on, pool off, left the installation |
+| Pool setup, Jobs now cell | {n} jobs (running and queued) |
+| Pool setup, pane | GitHub App; rows App (installed), Webhooks (delivering, or {n} repositories missed a delivery), Owners |
+| Doctor, Needs you rows | Each row has its own Open button that goes to the fix |
+| Doctor, panes | Needs you, Checks (one card per area: {n} of {n} ok, or {n} problems in {m} checks), Fix: {area} (what to do about each problem of the area) |
 
 ### Suggestion steps words
 
@@ -1620,3 +1733,39 @@ The repository variables crsp writes, as the console, the CLI and the Doctor nam
 | Runs-on finding, a workflow reads an old name | job {job} reads RUNS_ON_{OS}, an old name crsp no longer writes; read CRSP_RUNS_ON_{OS} instead |
 | Doctor fix, literal labels | Use `runs-on: ${{ fromJSON(vars.CRSP_<JOB> \|\| vars.CRSP_RUNS_ON_<OS> \|\| '"ubuntu-latest"') }}` so the product keeps the labels correct. |
 | Retired | the setting Old variable names (legacy_vars), and the names CI_RUNS_ON and CI_RUNS_ON_WINDOWS as crsp's |
+
+## Analytics and reserved job words (LOOK65, web-console R5.165, R5.166)
+
+The words of the four Analytics tabs as the approved LOOK54 prototype shows them, and of a reserved job. Built from the shared Pane, Card, Table, Tag, Status, Section, LinkButton, TrendChart and Timeline parts; no rule, token or component changes.
+
+| Word | Where |
+|---|---|
+| Suggestions, best first | Title of the pane of the first Analytics tab. |
+| #, Change, Sure?, Saves a week, Who decides | The five columns of Suggestions. |
+| Fix: {text} | The second line of a Change cell: what to do. |
+| about {n} min | The Saves a week cell. An estimate. |
+| your yes | Who decides a change crsp makes after Review. |
+| you, in the repository | Who decides a change that is made outside crsp. |
+| Review the first change | The one primary under the Suggestions table. |
+| {machine}: CPU today | Title of a pane of the Charts tab: the machine's CPU since midnight. |
+| Percent of the CPU the machine gives the pool, measured every 15 seconds since midnight. | Note above the per-machine CPU panes. |
+| No load measured on this machine today. | Empty per-machine CPU chart. |
+| No machine yet, so there is no CPU to draw. | Empty Charts when no machine exists. |
+| Free CPU, with and without a reservation | Title of the pane with the worked example. |
+| A worked example, not your pool: a job that needs 8 CPU, on a machine where small jobs keep taking the CPU that frees up. | Hint of that pane. |
+| Without a reservation, With a reservation, Free CPU, What the big job needs | Labels of the two example charts and their lines. |
+| minute {n} | The axis labels of the example. |
+| Run elsewhere | Title of the plain table of the last Analytics tab. |
+| Job, Repository, Runner, Took, Result | Its columns. |
+| No job runs on another runner. | Its empty state. |
+| Waits | Pane on Insights: the waits by job. |
+| Label, Median, Slowest 5% | Its columns. The API gives the 95th percentile, so the word is 5%, not 10%. |
+| No finished jobs in the last 7 days. | Empty Waits pane. |
+| Runner timeline, Jobs of each runner | The Insights pane and the name of its chart. |
+| No runner took a job in the last 6 hours. | Empty runner timeline. |
+| Waited for a runner: {job}, follow-up run, after-merge work | The words of a runner timeline bar. |
+| Reserved | Filter chip of Pool > Queue Analysis: the job its machine keeps room free for. |
+| reserved, is reserved: the machine keeps room free for it | The short and the long wait reason of a reserved job in the Jobs tables. |
+| Reserved: {text}. / Reserved. The machine keeps room free for this job. | The overview line of a reserved job. |
+| is reserved: {machine} keeps room free for it since {time} UTC | The detail of a reserved bar on the slot timeline. |
+| {job} ran out of time after {span}; crsp stops it {now or in a span} | The detail of a timer ran out bar of a running job. |

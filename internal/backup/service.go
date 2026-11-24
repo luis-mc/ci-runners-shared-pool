@@ -32,6 +32,12 @@ type (
 // OpenDB opens the controller database in dataDir.
 func OpenDB(ctx context.Context, dataDir string) (*DB, error) { return store.Open(ctx, dataDir) }
 
+// OpenDBForTests is OpenDB without the disk flushes (store.OpenForTests), for
+// tests in packages that may not import internal/store. Production code uses OpenDB.
+func OpenDBForTests(ctx context.Context, dataDir string) (*DB, error) {
+	return store.OpenForTests(ctx, dataDir)
+}
+
 // Errors the API maps to status codes.
 var (
 	ErrNotFound      = store.ErrNotFound

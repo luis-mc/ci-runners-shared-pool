@@ -4,5 +4,5 @@ import { TERMS, type TermKey } from './helpContent';
 
 export function HelpTerm({ term }: { term: TermKey }) {
   const t = TERMS[term];
-  return <TermHelp term={t.term} answer={t.answer} to={`/help#${t.card}`} />;
+  return <TermHelp term={t.term} answer={t.answer} to={t.to} />;
 }

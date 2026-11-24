@@ -27,7 +27,7 @@ const m1 = "m1"
 func newEnv(t *testing.T) *env {
 	t.Helper()
 	ctx := context.Background()
-	st, err := store.Open(ctx, filepath.Join(t.TempDir(), "data"))
+	st, err := store.OpenForTests(ctx, filepath.Join(t.TempDir(), "data"))
 	if err != nil {
 		t.Fatal(err)
 	}

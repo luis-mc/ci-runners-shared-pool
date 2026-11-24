@@ -105,7 +105,7 @@ func TestImageLayersSaveWithoutBuild(t *testing.T) {
 
 // A saved choice shows ticked on the next read.
 func TestImageLayersSaved(t *testing.T) {
-	db, err := backup.OpenDB(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestImageLayersSaved(t *testing.T) {
 
 func testSettings(t *testing.T) *settings.Service {
 	t.Helper()
-	db, err := backup.OpenDB(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

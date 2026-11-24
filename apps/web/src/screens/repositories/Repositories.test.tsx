@@ -3,6 +3,7 @@
 import { cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { TIMING } from '../../timing';
+import { fallbackLabel, jobsNowText } from './Repositories';
 import {
   MockApi,
   apiError,
@@ -36,7 +37,7 @@ async function repoHeading(name: string) {
 }
 
 describe('Repositories list', () => {
-  it('shows four columns, and limits and variable status as a muted line under the name (LOOK29)', async () => {
+  it('shows five columns, and limits and variable status as a muted line under the name (LOOK29)', async () => {
     renderApp(withRepos(signedIn()), '/setup/pool');
     const table = await screen.findByRole('table', { name: 'octo repositories' });
     expect(
@@ -44,9 +45,9 @@ describe('Repositories list', () => {
         .getAllByRole('columnheader')
         .map((h) => (h.textContent ?? '').replace(/[ ▲▼]+$/, '').trim())
         .filter(Boolean),
-    ).toEqual(['Repository', 'Pool', 'Jobs go to', 'Runner type', 'Last delivery']);
-    expect(within(table).getByText('on')).toBeTruthy();
-    expect(within(table).getByText('off')).toBeTruthy();
+    ).toEqual(['Repository', 'Pool', 'Runner type', 'Fallback label', 'Jobs now']);
+    expect(within(table).getByText('pool on')).toBeTruthy();
+    expect(within(table).getByText('pool off')).toBeTruthy();
     expect(
       within(table).getByText(/parallel · priority \d+ · wrong variable/),
     ).toBeTruthy();
@@ -338,10 +339,15 @@ describe('Repository detail', () => {
         used_minutes: 0,
       },
     });
-    renderApp(withRepos(signedIn(), [hosted, waiting]), '/setup/pool');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
-    expect(within(table).getByText('GitHub-hosted runners')).toBeTruthy();
-    expect(within(table).getByText('waiting for a machine')).toBeTruthy();
+    renderApp(
+      withRepos(signedIn(), [hosted, waiting]).on(
+        'GET',
+        '/api/v1/repositories/:id',
+        hosted,
+      ),
+      '/setup/pool/octo/live',
+    );
+    expect(await screen.findByText('GitHub-hosted runners')).toBeTruthy();
   });
 
   it('says why on the repository page and keeps fallback off by default', async () => {
@@ -539,11 +545,11 @@ describe('Webhook health (RES14)', () => {
     },
   });
 
-  it('shows the last delivery result per repository in the list', async () => {
+  it('says in the GitHub App pane how many repositories missed a delivery', async () => {
     renderApp(withRepos(signedIn(), [polling, healthy, repository()]), '/setup/pool');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
-    expect(within(table).getByText('delivery failed')).toBeTruthy();
-    expect(within(table).getByText('delivered')).toBeTruthy();
+    await screen.findByRole('table', { name: 'octo repositories' });
+    const app = screen.getByRole('region', { name: 'GitHub App' });
+    expect(within(app).getByText('1 repository missed a delivery')).toBeTruthy();
   });
 
   it('says plainly when the App has no webhook (OPS22)', async () => {
@@ -726,5 +732,23 @@ describe('Missing App permission on Repositories (R5.86)', () => {
     );
     expect(screen.queryByRole('button', { name: /on GitHub$/ })).toBeNull();
     expect(api.count('GET', '/api/v1/github/grant')).toBe(0);
+  });
+});
+
+describe('Pool setup columns (LOOK64)', () => {
+  it('words the fallback label and the jobs now', () => {
+    expect(fallbackLabel(repository())).toBe('—');
+    const hosted = repository({
+      pool_on: true,
+      policy: {
+        ...repository().policy,
+        hosted_fallback: true,
+        hosted_labels: { linux: 'ubuntu-latest' },
+      },
+    });
+    expect(fallbackLabel(hosted)).toBe('ubuntu-latest');
+    expect(jobsNowText(undefined)).toBe('0 jobs');
+    expect(jobsNowText({ running: 1, queued: 0 })).toBe('1 job');
+    expect(jobsNowText({ running: 2, queued: 1 })).toBe('3 jobs');
   });
 });

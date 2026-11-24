@@ -3,7 +3,8 @@
 import { ClockProvider } from '@crsp/ui';
 import { Outlet, Route } from 'react-router-dom';
 import { later } from '../lazy';
-import { ElsewhereTab, JobsTab } from './JobsHome';
+import { JobsTab } from './JobsHome';
+import { ElsewhereTab } from './Elsewhere';
 import { JobPage } from './JobPage';
 import { RunPage } from './RunPage';
 import { AnalyticsLayout } from '../analytics/AnalyticsLayout';

@@ -26,7 +26,7 @@ type seeded struct {
 
 func newSeeded(t *testing.T) *seeded {
 	t.Helper()
-	db, err := store.Open(context.Background(), t.TempDir())
+	db, err := store.OpenForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

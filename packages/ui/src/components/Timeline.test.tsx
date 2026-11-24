@@ -114,6 +114,35 @@ describe('rendering', () => {
     expect(run.style.inlineSize).toBe(`${px(NOW) - px(bars[0]!.startMs)}px`);
   });
 
+  it('LOOK65: a timer-ran-out bar of a running job ends at now; a reserved bar is a mark at its start', () => {
+    const out: TimelineBarData = {
+      id: 'late',
+      rowKey: 'm1:1',
+      state: 'timer_ran_out',
+      label: 'job late',
+      startMs: NOW - 40 * MIN,
+      detail: 'ran out of time',
+    };
+    const held: TimelineBarData = {
+      id: 'held',
+      rowKey: 'm2:1',
+      state: 'reserved',
+      label: 'job held',
+      startMs: NOW,
+      detail: 'is reserved',
+    };
+    render(<Timeline {...props({ bars: [out, held] })} />);
+    const late = document.querySelector<HTMLElement>(
+      '[data-state="timer_ran_out"].ds-timeline__item',
+    )!;
+    expect(late.style.inlineSize).toBe(`${px(NOW) - px(out.startMs)}px`);
+    const mark = document.querySelector<HTMLElement>(
+      '[data-state="reserved"].ds-timeline__item',
+    )!;
+    expect(mark.style.insetInlineStart).toBe(`${px(NOW)}px`);
+    expect(mark.textContent).toContain('reserved');
+  });
+
   it('draws the light wait part and the forecast bracket', () => {
     const b: TimelineBarData = {
       id: 'f',

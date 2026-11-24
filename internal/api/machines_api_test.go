@@ -275,3 +275,27 @@ func TestMachineShowsContainerOS(t *testing.T) {
 		t.Fatal("container_os with the engine down")
 	}
 }
+
+// CRSP235: the console saves Gate maximum wait (1 or 2 minutes), and Restart the
+// service refuses what it cannot do with a conflict, never with a cut job.
+func TestGateMaxWaitSavesWithinTheCapAndRestartRefusesOffline(t *testing.T) {
+	mux, _, id := machinesMux(t)
+	rec := doM(t, mux, "PATCH", "/api/v1/machines/"+id, map[string]any{"gate_max_wait_minutes": 1})
+	var m gen.Machine
+	if rec.Code != 200 || json.Unmarshal(rec.Body.Bytes(), &m) != nil || m.Settings.GateMaxWaitMinutes == nil || *m.Settings.GateMaxWaitMinutes != 1 {
+		t.Fatalf("%d %s", rec.Code, rec.Body)
+	}
+	for _, bad := range []int{0, 3, 30} {
+		if rec := doM(t, mux, "PATCH", "/api/v1/machines/"+id, map[string]any{"gate_max_wait_minutes": bad}); rec.Code != 400 {
+			t.Fatalf("%d: %d %s", bad, rec.Code, rec.Body)
+		}
+	}
+	// The agent is not connected: nothing is started.
+	rec = doM(t, mux, "POST", "/api/v1/machines/"+id+"/restart?confirmed=true", nil)
+	if rec.Code != 409 {
+		t.Fatalf("%d %s", rec.Code, rec.Body)
+	}
+	if rec := doM(t, mux, "POST", "/api/v1/machines/m_nope/restart?confirmed=true", nil); rec.Code != 404 {
+		t.Fatalf("%d", rec.Code)
+	}
+}

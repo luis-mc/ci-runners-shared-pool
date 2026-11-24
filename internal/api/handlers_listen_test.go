@@ -25,7 +25,7 @@ func (oneNIC) Interfaces() ([]listenaddr.Iface, error) {
 
 func listenMux(t *testing.T, role auth.Role, env string, up UpdateService) (*http.ServeMux, *audit.Log) {
 	t.Helper()
-	db, err := backup.OpenDB(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

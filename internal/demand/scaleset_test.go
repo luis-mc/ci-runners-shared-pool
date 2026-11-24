@@ -226,7 +226,7 @@ func TestScaleSetJobGetsScaleSetJIT(t *testing.T) {
 	for _, s := range fr.started {
 		byName[s.Name] = s.JIT != nil
 	}
-	if !byName["crsp-job-1"] || byName["crsp-job-2"] {
+	if !byName["crsp-job-1-1"] || byName["crsp-job-2-1"] {
 		t.Fatalf("JIT source by runner = %v", byName)
 	}
 }

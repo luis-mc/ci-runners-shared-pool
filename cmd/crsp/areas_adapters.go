@@ -336,7 +336,12 @@ func (f doctorFleet) Machines(ctx context.Context) ([]doctor.Machine, error) {
 		return nil, err
 	}
 	out := make([]doctor.Machine, 0, len(views))
-	allRunners, _ := f.runners.ListRunners(ctx, runners.Filter{})
+	// A fleet built with only the machines service (the KVM and engine report
+	// sources) has no runner store: it lists the machines without runner facts.
+	var allRunners []runners.Record
+	if f.runners != nil {
+		allRunners, _ = f.runners.ListRunners(ctx, runners.Filter{})
+	}
 	signs, _ := f.machines.ResetSigns(ctx)
 	known := map[string]bool{}
 	for _, v := range views {

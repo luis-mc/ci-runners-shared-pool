@@ -27,6 +27,10 @@ const TABS = [
     url: '/setup/images?tab=registry',
     signedOut: false,
   },
+  // LOOK63: the Help sections are states of one route; the first and the longest of the new guides are checked like screens.
+  { pattern: '/help/where', url: '/help/where', signedOut: false },
+  { pattern: '/help/admission', url: '/help/admission', signedOut: false },
+  { pattern: '/help/timers', url: '/help/timers', signedOut: false },
 ];
 
 // Every case opens its own page against the shared read-only server, so the cases run in parallel and Playwright

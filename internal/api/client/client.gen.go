@@ -3925,6 +3925,7 @@ const (
 	WaitReasonOverMemory              WaitReason = "over_memory"
 	WaitReasonPaused                  WaitReason = "paused"
 	WaitReasonRepositoryParallelLimit WaitReason = "repository_parallel_limit"
+	WaitReasonReserved                WaitReason = "reserved"
 	WaitReasonUnknown                 WaitReason = "unknown"
 )
 
@@ -3948,6 +3949,8 @@ func (e WaitReason) Valid() bool {
 	case WaitReasonPaused:
 		return true
 	case WaitReasonRepositoryParallelLimit:
+		return true
+	case WaitReasonReserved:
 		return true
 	case WaitReasonUnknown:
 		return true
@@ -5725,6 +5728,12 @@ type Job struct {
 	QueuedAt      *time.Time `json:"queued_at,omitempty"`
 	Repository    string     `json:"repository"`
 	RepositoryId  *int64     `json:"repository_id,omitempty"`
+
+	// ReservedExpectedStart LOOK65. When the reserved job is expected to start, when the forecasts allow a guess.
+	ReservedExpectedStart *time.Time `json:"reserved_expected_start,omitempty"`
+
+	// ReservedSince LOOK65. When the job became its machine's reserved job. Only with wait_reason `reserved`.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
 	Result        *JobResult `json:"result,omitempty"`
 	RunAttempt    int        `json:"run_attempt"`
 	RunId         int64      `json:"run_id"`
@@ -5750,10 +5759,13 @@ type Job struct {
 	StepsSource *JobStepsSource `json:"steps_source,omitempty"`
 
 	// TaskId The task id the branch starts with, when it does.
-	TaskId  *string `json:"task_id,omitempty"`
-	Trigger *string `json:"trigger,omitempty"`
+	TaskId *string `json:"task_id,omitempty"`
 
-	// WaitReason observability R5.5.
+	// TimerDeadline LOOK65. The job's timer ran out; this is the end of its grace, then crsp stops the job. Absent when the timer has not run out.
+	TimerDeadline *time.Time `json:"timer_deadline,omitempty"`
+	Trigger       *string    `json:"trigger,omitempty"`
+
+	// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 
 	// WaitText The reason with its machine, numbers or labels.
@@ -5825,6 +5837,12 @@ type JobDetail struct {
 	QueuedAt      *time.Time `json:"queued_at,omitempty"`
 	Repository    string     `json:"repository"`
 	RepositoryId  *int64     `json:"repository_id,omitempty"`
+
+	// ReservedExpectedStart LOOK65. When the reserved job is expected to start, when the forecasts allow a guess.
+	ReservedExpectedStart *time.Time `json:"reserved_expected_start,omitempty"`
+
+	// ReservedSince LOOK65. When the job became its machine's reserved job. Only with wait_reason `reserved`.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
 	Result        *JobResult `json:"result,omitempty"`
 	RunAttempt    int        `json:"run_attempt"`
 
@@ -5854,10 +5872,13 @@ type JobDetail struct {
 	StepsSource *JobDetailStepsSource `json:"steps_source,omitempty"`
 
 	// TaskId The task id the branch starts with, when it does.
-	TaskId  *string `json:"task_id,omitempty"`
-	Trigger *string `json:"trigger,omitempty"`
+	TaskId *string `json:"task_id,omitempty"`
 
-	// WaitReason observability R5.5.
+	// TimerDeadline LOOK65. The job's timer ran out; this is the end of its grace, then crsp stops the job. Absent when the timer has not run out.
+	TimerDeadline *time.Time `json:"timer_deadline,omitempty"`
+	Trigger       *string    `json:"trigger,omitempty"`
+
+	// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 
 	// WaitText The reason with its machine, numbers or labels.
@@ -6599,16 +6620,18 @@ type MachineSettings struct {
 	DockerCompactIdleMinutes *int `json:"docker_compact_idle_minutes,omitempty"`
 
 	// DockerCompactThresholdGib How many GiB of Docker's disk file must be reclaimable (file size minus what Docker uses) before the compact runs. 0 takes 30 (caches R5.51 to R5.54).
-	DockerCompactThresholdGib *int                          `json:"docker_compact_threshold_gib,omitempty"`
-	DrainTimeoutMinutes       int                           `json:"drain_timeout_minutes"`
-	GateMaxWaitMinutes        *int                          `json:"gate_max_wait_minutes,omitempty"`
-	GateOnTimeout             *MachineSettingsGateOnTimeout `json:"gate_on_timeout,omitempty"`
-	GatePollSeconds           *int                          `json:"gate_poll_seconds,omitempty"`
-	HeavyJobs                 *[]string                     `json:"heavy_jobs,omitempty"`
-	HeavySlots                int                           `json:"heavy_slots"`
-	JobSlots                  int                           `json:"job_slots"`
-	LightJobs                 *[]string                     `json:"light_jobs,omitempty"`
-	LightSlots                int                           `json:"light_slots"`
+	DockerCompactThresholdGib *int `json:"docker_compact_threshold_gib,omitempty"`
+	DrainTimeoutMinutes       int  `json:"drain_timeout_minutes"`
+
+	// GateMaxWaitMinutes How long the job-started hook may hold a job for a slot, in minutes. Never more than the hold cap of 2 (scheduling R5.75), and the default is 2. Saved from the machine page (machines R5.82).
+	GateMaxWaitMinutes *int                          `json:"gate_max_wait_minutes,omitempty"`
+	GateOnTimeout      *MachineSettingsGateOnTimeout `json:"gate_on_timeout,omitempty"`
+	GatePollSeconds    *int                          `json:"gate_poll_seconds,omitempty"`
+	HeavyJobs          *[]string                     `json:"heavy_jobs,omitempty"`
+	HeavySlots         int                           `json:"heavy_slots"`
+	JobSlots           int                           `json:"job_slots"`
+	LightJobs          *[]string                     `json:"light_jobs,omitempty"`
+	LightSlots         int                           `json:"light_slots"`
 
 	// Mode Automatic (default) takes jobs and pauses on battery and on a pause from the tray; Always ignores the battery; Paused takes no new job and finishes the running ones (machines R5.61).
 	Mode *MachineMode `json:"mode,omitempty"`
@@ -6662,14 +6685,17 @@ type MachineSettingsUpdate struct {
 	DockerCompactIdleMinutes *int `json:"docker_compact_idle_minutes,omitempty"`
 
 	// DockerCompactThresholdGib How many GiB of Docker's disk file must be reclaimable (file size minus what Docker uses) before the compact runs. 0 takes 30 (caches R5.51 to R5.54).
-	DockerCompactThresholdGib *int                                `json:"docker_compact_threshold_gib,omitempty"`
-	DrainTimeoutMinutes       *int                                `json:"drain_timeout_minutes,omitempty"`
-	GateOnTimeout             *MachineSettingsUpdateGateOnTimeout `json:"gate_on_timeout,omitempty"`
-	HeavyJobs                 *[]string                           `json:"heavy_jobs,omitempty"`
-	HeavySlots                *int                                `json:"heavy_slots,omitempty"`
-	JobSlots                  *int                                `json:"job_slots,omitempty"`
-	LightJobs                 *[]string                           `json:"light_jobs,omitempty"`
-	LightSlots                *int                                `json:"light_slots,omitempty"`
+	DockerCompactThresholdGib *int `json:"docker_compact_threshold_gib,omitempty"`
+	DrainTimeoutMinutes       *int `json:"drain_timeout_minutes,omitempty"`
+
+	// GateMaxWaitMinutes How long the job-started hook may hold a job for a slot, 1 or 2 minutes. The hold is never longer than 2 (scheduling R5.75).
+	GateMaxWaitMinutes *int                                `json:"gate_max_wait_minutes,omitempty"`
+	GateOnTimeout      *MachineSettingsUpdateGateOnTimeout `json:"gate_on_timeout,omitempty"`
+	HeavyJobs          *[]string                           `json:"heavy_jobs,omitempty"`
+	HeavySlots         *int                                `json:"heavy_slots,omitempty"`
+	JobSlots           *int                                `json:"job_slots,omitempty"`
+	LightJobs          *[]string                           `json:"light_jobs,omitempty"`
+	LightSlots         *int                                `json:"light_slots,omitempty"`
 
 	// Mode Automatic (default) takes jobs and pauses on battery and on a pause from the tray; Always ignores the battery; Paused takes no new job and finishes the running ones (machines R5.61).
 	Mode *MachineMode `json:"mode,omitempty"`
@@ -8659,7 +8685,7 @@ type Ticket struct {
 	RunAttempt int       `json:"run_attempt"`
 	RunId      int64     `json:"run_id"`
 
-	// WaitReason observability R5.5.
+	// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	WaitReason *WaitReason `json:"wait_reason,omitempty"`
 }
 
@@ -8686,14 +8712,20 @@ type TimelineBar struct {
 	End   *time.Time `json:"end,omitempty"`
 	EndHi *time.Time `json:"end_hi,omitempty"`
 	EndLo *time.Time `json:"end_lo,omitempty"`
-	Id    string     `json:"id"`
+
+	// ExpiresAt LOOK65. On a `timer_ran_out` bar of a running job, the end of its grace; then crsp stops the job.
+	ExpiresAt *time.Time `json:"expires_at,omitempty"`
+	Id        string     `json:"id"`
 
 	// JobId Absent when the bar is a forecast of a job that has no record yet.
-	JobId      *int64    `json:"job_id,omitempty"`
-	Label      string    `json:"label"`
-	Repository *string   `json:"repository,omitempty"`
-	RowId      string    `json:"row_id"`
-	Start      time.Time `json:"start"`
+	JobId      *int64  `json:"job_id,omitempty"`
+	Label      string  `json:"label"`
+	Repository *string `json:"repository,omitempty"`
+
+	// ReservedSince LOOK65. On a `reserved` bar, when the job became its machine's reserved job.
+	ReservedSince *time.Time `json:"reserved_since,omitempty"`
+	RowId         string     `json:"row_id"`
+	Start         time.Time  `json:"start"`
 
 	// State How a bar reads. `done` and `failed` are finished jobs; the others are LOOK58's seven states.
 	State TimelineBarState `json:"state"`
@@ -9036,7 +9068,7 @@ type UserList struct {
 // VariableStatus defines model for VariableStatus.
 type VariableStatus string
 
-// WaitReason observability R5.5.
+// WaitReason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 type WaitReason string
 
 // WaitSplit defines model for WaitSplit.
@@ -9071,7 +9103,7 @@ type WaitingJob struct {
 	JobName   string  `json:"job_name"`
 	MachineId *string `json:"machine_id,omitempty"`
 
-	// Reason observability R5.5.
+	// Reason observability R5.5. `reserved` (LOOK65): the job is its machine's reserved job; the machine keeps room free for it and other jobs start only as backfill.
 	Reason     WaitReason `json:"reason"`
 	Repository string     `json:"repository"`
 
@@ -9574,6 +9606,12 @@ type GetMachineJobStatsParamsWindow string
 type GetMachineLoadParams struct {
 	From *From `form:"from,omitempty" json:"from,omitempty"`
 	To   *To   `form:"to,omitempty" json:"to,omitempty"`
+}
+
+// RestartMachineServiceParams defines parameters for RestartMachineService.
+type RestartMachineServiceParams struct {
+	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
+	Confirmed *Confirmed `form:"confirmed,omitempty" json:"confirmed,omitempty"`
 }
 
 // ResumeMachineParams defines parameters for ResumeMachine.
@@ -10862,6 +10900,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/redetect (the `RedetectMachine` operationId).
 	RedetectMachine(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RestartMachineService Restart the service of one agent machine after its running jobs end
+	//
+	// machines R5.81, operations R5.15 (CRSP235). The machine takes no new jobs, waits for its running jobs, and its agent restarts its service. No running job is cut. The controller's own machine restarts through `restartService`; this operation answers 409 for it. Without `confirmed` it changes nothing and answers 409 `needs_confirmation` with the jobs it waits for. The change is audited as `machine.service_restart` with the actor.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/restart (the `RestartMachineService` operationId).
+	RestartMachineService(ctx context.Context, machineId MachineId, params *RestartMachineServiceParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ResumeMachine Return a drained machine to active
 	//
@@ -14025,6 +14070,23 @@ func (c *Client) RecoverMachine(ctx context.Context, machineId MachineId, reqEdi
 // Corresponds with POST /api/v1/machines/{machineId}/redetect (the `RedetectMachine` operationId).
 func (c *Client) RedetectMachine(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRedetectMachineRequest(c.Server, machineId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RestartMachineService Restart the service of one agent machine after its running jobs end
+//
+// machines R5.81, operations R5.15 (CRSP235). The machine takes no new jobs, waits for its running jobs, and its agent restarts its service. No running job is cut. The controller's own machine restarts through `restartService`; this operation answers 409 for it. Without `confirmed` it changes nothing and answers 409 `needs_confirmation` with the jobs it waits for. The change is audited as `machine.service_restart` with the actor.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/restart (the `RestartMachineService` operationId).
+func (c *Client) RestartMachineService(ctx context.Context, machineId MachineId, params *RestartMachineServiceParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRestartMachineServiceRequest(c.Server, machineId, params)
 	if err != nil {
 		return nil, err
 	}
@@ -21611,6 +21673,67 @@ func NewRedetectMachineRequest(server string, machineId MachineId) (*http.Reques
 	return req, nil
 }
 
+// NewRestartMachineServiceRequest constructs an http.Request for the RestartMachineService method
+func NewRestartMachineServiceRequest(server string, machineId MachineId, params *RestartMachineServiceParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/restart", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Confirmed != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "confirmed", *params.Confirmed, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewResumeMachineRequest constructs an http.Request for the ResumeMachine method
 func NewResumeMachineRequest(server string, machineId MachineId, params *ResumeMachineParams) (*http.Request, error) {
 	var err error
@@ -27509,6 +27632,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/v1/machines/{machineId}/redetect (the `RedetectMachine` operationId).
 	RedetectMachineWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*RedetectMachineResponse, error)
 
+	// RestartMachineServiceWithResponse Restart the service of one agent machine after its running jobs end
+	//
+	// machines R5.81, operations R5.15 (CRSP235). The machine takes no new jobs, waits for its running jobs, and its agent restarts its service. No running job is cut. The controller's own machine restarts through `restartService`; this operation answers 409 for it. Without `confirmed` it changes nothing and answers 409 `needs_confirmation` with the jobs it waits for. The change is audited as `machine.service_restart` with the actor.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/restart (the `RestartMachineService` operationId).
+	RestartMachineServiceWithResponse(ctx context.Context, machineId MachineId, params *RestartMachineServiceParams, reqEditors ...RequestEditorFn) (*RestartMachineServiceResponse, error)
+
 	// ResumeMachineWithResponse Return a drained machine to active
 	//
 	// machines R5.34. A waiting change is cancelled first, with `confirm`.
@@ -33356,6 +33488,54 @@ func (r RedetectMachineResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r RedetectMachineResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RestartMachineServiceResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *MachineChange
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r RestartMachineServiceResponse) GetJSON202() *MachineChange {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r RestartMachineServiceResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r RestartMachineServiceResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RestartMachineServiceResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RestartMachineServiceResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RestartMachineServiceResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -40476,6 +40656,21 @@ func (c *ClientWithResponses) RedetectMachineWithResponse(ctx context.Context, m
 	return ParseRedetectMachineResponse(rsp)
 }
 
+// RestartMachineServiceWithResponse Restart the service of one agent machine after its running jobs end
+//
+// machines R5.81, operations R5.15 (CRSP235). The machine takes no new jobs, waits for its running jobs, and its agent restarts its service. No running job is cut. The controller's own machine restarts through `restartService`; this operation answers 409 for it. Without `confirmed` it changes nothing and answers 409 `needs_confirmation` with the jobs it waits for. The change is audited as `machine.service_restart` with the actor.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/restart (the `RestartMachineService` operationId).
+func (c *ClientWithResponses) RestartMachineServiceWithResponse(ctx context.Context, machineId MachineId, params *RestartMachineServiceParams, reqEditors ...RequestEditorFn) (*RestartMachineServiceResponse, error) {
+	rsp, err := c.RestartMachineService(ctx, machineId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRestartMachineServiceResponse(rsp)
+}
+
 // ResumeMachineWithResponse Return a drained machine to active
 //
 // machines R5.34. A waiting change is cancelled first, with `confirm`.
@@ -45887,6 +46082,39 @@ func ParseRedetectMachineResponse(rsp *http.Response) (*RedetectMachineResponse,
 	switch {
 	case rsp.StatusCode == 202:
 		break // No content-type
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRestartMachineServiceResponse parses an HTTP response from a RestartMachineServiceWithResponse call
+func ParseRestartMachineServiceResponse(rsp *http.Response) (*RestartMachineServiceResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RestartMachineServiceResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest MachineChange
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error

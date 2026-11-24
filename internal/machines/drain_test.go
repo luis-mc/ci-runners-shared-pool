@@ -198,3 +198,70 @@ func TestDrainOfflineMachineStillWaits(t *testing.T) {
 		t.Fatalf("second drain: %v", err)
 	}
 }
+
+// CRSP235 (machines R5.81): Restart the service of an agent machine names the
+// running jobs, never cuts one, asks the agent only when idle, and ends when the
+// agent connects again. The change is audited with its actor.
+func TestRestartServiceWaitsForJobsAsksTheAgentAndEndsOnReconnect(t *testing.T) {
+	e, id, key := setup(t)
+	fa, err := e.session(id, key, &agentv1.Hello{Holders: &agentv1.HolderReport{Running: []*agentv1.JobRef{oneJob}}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	ctx := context.Background()
+	_, err = e.Svc.RestartService(ctx, "owner", id, false)
+	var nc *machines.NeedsConfirmationError
+	if !errors.As(err, &nc) || !strings.Contains(strings.Join(nc.Names, "\n"), "o/r") {
+		t.Fatalf("err = %v, want a question that names the running job", err)
+	}
+	ch, err := e.Svc.RestartService(ctx, "owner", id, true)
+	if err != nil || ch.Kind != machines.KindServiceRestart {
+		t.Fatalf("change = %+v, %v", ch, err)
+	}
+	fa.Next(isDrain)
+	// A job still runs: the agent is not asked.
+	fa.Send(drainStatus(ch.ID, false, oneJob))
+	// Idle: the agent is asked to restart; the change stays running and the machine stays held.
+	fa.Send(drainStatus(ch.ID, true))
+	if r := fa.Next(func(m *agentv1.SessionResponse) bool { return m.GetRestartAgent() != nil }).GetRestartAgent(); r.GetCommandId() != ch.ID {
+		t.Fatalf("restart command = %+v", r)
+	}
+	waitFor(t, "running, not done", func() bool {
+		c, _ := e.Svc.GetChange(ctx, id, ch.ID)
+		return c.State == machines.ChangeRunning
+	})
+	if v, _ := e.Svc.Get(ctx, id); v.Machine.State == machines.StateActive || v.PendingChange == nil {
+		t.Fatalf("the machine must keep no new jobs while the service restarts: %v", v.Machine.State)
+	}
+	// The agent connects again: the change is done and the machine takes jobs.
+	if _, err := e.session(id, key, &agentv1.Hello{}); err != nil {
+		t.Fatal(err)
+	}
+	waitFor(t, "done and active", func() bool {
+		c, _ := e.Svc.GetChange(ctx, id, ch.ID)
+		v, _ := e.Svc.Get(ctx, id)
+		return c.State == machines.ChangeDone && v.Machine.State == machines.StateActive && v.PendingChange == nil
+	})
+}
+
+func TestRestartServiceRefusesTheControllerAndAnOfflineMachine(t *testing.T) {
+	e, id, fa := running(t)
+	ctx := context.Background()
+	if _, err := e.Svc.RestartService(ctx, "owner", "m_unknown", true); !errors.Is(err, machines.ErrNotFound) {
+		t.Fatalf("unknown machine: %v", err)
+	}
+	m, _ := e.Repo.GetMachine(ctx, id)
+	m.IsController = true
+	_ = e.Repo.UpdateMachine(ctx, m)
+	if _, err := e.Svc.RestartService(ctx, "owner", id, true); !errors.Is(err, machines.ErrConflict) {
+		t.Fatalf("controller: %v", err)
+	}
+
+	m.IsController = false
+	_ = e.Repo.UpdateMachine(ctx, m)
+	fa.Close() // the agent leaves: nothing to ask
+	waitFor(t, "offline", func() bool { return !e.Svc.Connected(id) })
+	if _, err := e.Svc.RestartService(ctx, "owner", id, true); !errors.Is(err, machines.ErrOffline) {
+		t.Fatalf("offline: %v", err)
+	}
+}

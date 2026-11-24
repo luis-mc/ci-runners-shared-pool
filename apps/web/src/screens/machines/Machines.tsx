@@ -2,8 +2,13 @@
 import { HelpTerm } from '../help/HelpTerm';
 import {
   Button,
+  Card,
+  CardGrid,
+  LevelBar,
+  LinkButton,
   Chips,
   CheckRow,
+  Cluster,
   Empty,
   ErrorSummary,
   Facts,
@@ -25,13 +30,12 @@ import {
   formatPast,
   formatPercent,
   formatSize,
-  useNow,
   type Column,
   ActionBar,
   EditBar,
 } from '@crsp/ui';
-import { lazy, Suspense, useMemo, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
@@ -48,16 +52,62 @@ const MachineRemove = lazy(() => import('./MachineRemove'));
 
 type Machine = Schemas['Machine'];
 
+/** The longest the job-started hook holds a job: the cap of scheduling R5.75. The saved value is 1 or 2. */
+const GATE_WAIT_MAX = 2;
+/** The address part the Doctor fix opens the page at (internal/doctor/checks GateMaxWaitAnchor). */
+const GATE_WAIT_ANCHOR = 'gate-max-wait';
+
 const STATES = [
   { value: 'active', label: 'Online' },
   { value: 'draining', label: 'Finishing jobs' },
   { value: 'drained', label: 'Not taking jobs' },
 ] as const;
 
+/** The pool of a machine in one cell: "6 CPU / 9 GiB", or "not set" until the owner sizes it (machines R5.58). */
+export function poolText(m: Machine): string {
+  const cpus = m.settings.pool_cpus ?? 0;
+  const gib = m.settings.pool_memory_gib ?? 0;
+  return cpus > 0 && gib > 0 ? `${cpus} CPU / ${Number(gib.toFixed(1))} GiB` : 'not set';
+}
+
+/** One "pool size" card per machine (LOOK64): CPU and memory in the pool against what the machine has. */
+export function PoolSizeCard({ m }: { m: Machine }) {
+  const cpus = m.settings.pool_cpus ?? 0;
+  const gib = m.settings.pool_memory_gib ?? 0;
+  const cores = m.facts?.cores;
+  const total = m.facts?.memory_bytes ? m.facts.memory_bytes / 2 ** 30 : undefined;
+  return (
+    <Card title={`${m.name}: pool size`}>
+      <Stack>
+        {cpus > 0 && cores ? (
+          <LevelBar
+            label="CPU in the pool"
+            value={cpus}
+            max={cores}
+            text={`${cpus} of ${cores} CPU`}
+          />
+        ) : (
+          <Text>{`CPU in the pool: ${cpus > 0 ? `${cpus} CPU` : 'not set'}`}</Text>
+        )}
+        {gib > 0 && total ? (
+          <LevelBar
+            label="Memory in the pool"
+            value={gib}
+            max={Number(total.toFixed(1))}
+            text={`${Number(gib.toFixed(1))} of ${Number(total.toFixed(1))} GiB`}
+          />
+        ) : (
+          <Text>{`Memory in the pool: ${gib > 0 ? `${Number(gib.toFixed(1))} GiB` : 'not set'}`}</Text>
+        )}
+        <LinkButton to={`/setup/machines/${m.id}`}>Change the pool size</LinkButton>
+      </Stack>
+    </Card>
+  );
+}
+
 export function MachinesList() {
   const session = useSession();
   const navigate = useNavigate();
-  const now = useNow();
   const { result, reload } = useMachines();
   const [q, setQ] = useState('');
   const [state, setState] = useState<'' | 'active' | 'draining' | 'drained'>('');
@@ -65,53 +115,31 @@ export function MachinesList() {
   const columns: Column<Machine>[] = [
     {
       id: 'name',
-      header: 'Name',
+      header: 'Machine',
       cell: (m) => <TextLink to={`/setup/machines/${m.id}`}>{m.name}</TextLink>,
       sort: (m) => m.name,
     },
     { id: 'os', header: 'System', cell: (m) => systemText(m), sort: (m) => m.os },
+    { id: 'pool', header: 'Pool', cell: (m) => poolText(m) },
+    {
+      id: 'budget',
+      header: 'Load budget',
+      cell: (m) =>
+        `${m.settings.budget_memory_pct}% memory, ${m.settings.budget_cpu_pct}% CPU`,
+    },
     {
       id: 'state',
       header: 'State',
+      // One word: offline and the like first, else whether it takes jobs (UX-58).
       cell: (m) => {
         const s = machineStatus(m);
-        return <Status kind={s.kind} word={s.word} />;
+        return s.kind === 'ok' ? (
+          <PolicyStatus m={m} />
+        ) : (
+          <Status kind={s.kind} word={s.word} />
+        );
       },
       sort: (m) => machineStatus(m).word,
-    },
-    {
-      id: 'takes',
-      header: 'Takes jobs',
-      cell: (m) => <PolicyStatus m={m} />,
-      sort: (m) => (m.accepting === false ? 1 : 0),
-    },
-    {
-      id: 'backends',
-      header: 'Backends',
-      cell: (m) =>
-        m.backends
-          .filter((b) => b.allowed && b.usable)
-          .map((b) => b.name)
-          .join(', ') || 'none',
-    },
-    {
-      id: 'load',
-      header: 'Load',
-      cell: (m) =>
-        m.load
-          ? `memory ${m.load.memory_pct === undefined ? 'not known' : formatPercent(m.load.memory_pct)}, CPU ${m.load.cpu_pct === undefined ? 'not known' : formatPercent(m.load.cpu_pct)}`
-          : 'not known',
-    },
-    {
-      id: 'slots',
-      header: 'Slots',
-      cell: (m) => `${m.slots_used} of ${m.settings.job_slots}`,
-    },
-    {
-      id: 'seen',
-      header: 'Last seen',
-      cell: (m) => formatPast(m.last_seen_at, now),
-      sort: (m) => m.last_seen_at,
     },
   ];
 
@@ -171,6 +199,13 @@ export function MachinesList() {
           );
         }}
       </Load>
+      {result.state === 'ready' && result.data.items.length > 0 ? (
+        <CardGrid>
+          {result.data.items.map((m) => (
+            <PoolSizeCard key={m.id} m={m} />
+          ))}
+        </CardGrid>
+      ) : null}
       <ActionBar
         primary={
           <Button
@@ -241,10 +276,19 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
       : { kind: t.kind, word: t.word };
   const jobs = (m.running_jobs ?? []).map((j) => `${j.repository} ${j.job_name}`);
 
+  // Doctor fixes open this page at a field (#gate-max-wait): scroll to it once the page is drawn.
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash)
+      document.getElementById(hash.slice(1))?.scrollIntoView?.({ block: 'center' });
+  }, [hash]);
+
   const [mem, setMem] = useState(m.settings.budget_memory_pct);
   const [cpu, setCpu] = useState(m.settings.budget_cpu_pct);
   const [slots, setSlots] = useState(m.settings.job_slots);
   const [drain, setDrain] = useState(m.settings.drain_timeout_minutes);
+  const gateSaved = m.settings.gate_max_wait_minutes ?? GATE_WAIT_MAX;
+  const [gate, setGate] = useState(gateSaved);
   const [allowed, setAllowed] = useState<string[]>(m.settings.allowed_backends);
   // The floor in force: the console value, else what the agent started with (runners R5.83, OPS86).
   const floorOff = m.policy?.disk_floor_off === true;
@@ -259,6 +303,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     (cpu !== m.settings.budget_cpu_pct ? 1 : 0) +
     (slots !== m.settings.job_slots ? 1 : 0) +
     (drain !== m.settings.drain_timeout_minutes ? 1 : 0) +
+    (gate !== gateSaved ? 1 : 0) +
     (!floorOff && floor !== floorSaved ? 1 : 0) +
     (allowed.slice().sort().join() !== m.settings.allowed_backends.slice().sort().join()
       ? 1
@@ -270,11 +315,13 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
       budget_cpu_pct: cpu,
       job_slots: slots,
       drain_timeout_minutes: drain,
+      // Sent only when changed: a stored longer value must not block saving the other fields.
+      ...(gate !== gateSaved ? { gate_max_wait_minutes: gate } : {}),
       allowed_backends: allowed as Schemas['BackendName'][],
       // Sent only when changed: saving other fields must not pin the value of the start.
       ...(!floorOff && floor !== floorSaved ? { disk_floor_gib: floor } : {}),
     }),
-    [mem, cpu, slots, drain, allowed, floor, floorOff, floorSaved],
+    [mem, cpu, slots, drain, gate, gateSaved, allowed, floor, floorOff, floorSaved],
   );
 
   const saveAsk = useQuestion(
@@ -295,6 +342,8 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
     if (mem < 1 || mem > 100) problems.push('Memory budget must be from 1% to 100%.');
     if (cpu < 1 || cpu > 100) problems.push('CPU budget must be from 1% to 100%.');
     if (slots < 1) problems.push('Job slots must be at least 1.');
+    if (gate !== gateSaved && (gate < 1 || gate > GATE_WAIT_MAX))
+      problems.push(`Gate maximum wait must be from 1 to ${GATE_WAIT_MAX} minutes.`);
     if (!floorOff && (floor < 1 || floor > 2000))
       problems.push('Free disk to keep must be from 1 GB to 2000 GB.');
     setErrors(problems);
@@ -423,6 +472,35 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
         />
       </Section>
       <RecoverySection m={m} onChanged={onChanged} />
+      <Section title="Service">
+        <Stack gap="tight">
+          <Text>
+            Stop and start the service after the running jobs end. No running job is
+            stopped.
+          </Text>
+          <Cluster>
+            <Button
+              onPress={() =>
+                void navigate(
+                  m.is_controller
+                    ? '/settings/updates/review?kind=restart'
+                    : `/setup/machines/${m.id}/restart`,
+                )
+              }
+              disabled={!admin || (!m.online && !m.is_controller)}
+              reason={
+                !admin
+                  ? why
+                  : !m.online && !m.is_controller
+                    ? 'The machine is offline.'
+                    : undefined
+              }
+            >
+              Restart the service
+            </Button>
+          </Cluster>
+        </Stack>
+      </Section>
       <MachinePolicySection m={m} onChanged={onChanged} />
       <MachineDockerDiskSection m={m} onChanged={onChanged} />
       <form
@@ -512,6 +590,23 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
                 changed={drain !== m.settings.drain_timeout_minutes}
                 onChange={setDrain}
               />
+              <div id={GATE_WAIT_ANCHOR}>
+                <NumberField
+                  label="Gate maximum wait"
+                  help="How long a job may wait for a free slot before it starts. Never more than 2 minutes."
+                  value={gate}
+                  unit=" min"
+                  min={1}
+                  max={GATE_WAIT_MAX}
+                  changed={gate !== gateSaved}
+                  error={
+                    gateSaved > GATE_WAIT_MAX && gate === gateSaved
+                      ? `Saved as ${gateSaved} minutes. The hook cuts the wait to ${GATE_WAIT_MAX}. Set ${GATE_WAIT_MAX} or less and press Save.`
+                      : undefined
+                  }
+                  onChange={setGate}
+                />
+              </div>
             </FieldGrid>
           </Section>
           <Section title="Disk">
@@ -570,6 +665,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           setCpu(m.settings.budget_cpu_pct);
           setSlots(m.settings.job_slots);
           setDrain(m.settings.drain_timeout_minutes);
+          setGate(gateSaved);
           setFloor(floorSaved);
           setAllowed(m.settings.allowed_backends);
           setErrors([]);

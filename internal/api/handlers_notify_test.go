@@ -69,7 +69,7 @@ func newNotifyEnv(t *testing.T, trust *x509.CertPool) *notifyEnv {
 	}
 	ctx, cancel := context.WithCancel(context.Background())
 	t.Cleanup(cancel)
-	db, err := backup.OpenDB(ctx, t.TempDir())
+	db, err := backup.OpenDBForTests(ctx, t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -3,6 +3,7 @@ package container
 import (
 	"context"
 	"fmt"
+	"runtime"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backend/sys"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/runnercache"
@@ -29,6 +30,11 @@ func (b *Backend) ownLane(ctx context.Context, uid int, lane runnercache.LaneDir
 	if b.cfg.IDs == nil || uid == 0 {
 		return nil
 	}
+	// OPS89: a Windows host has no chown and NTFS has no uid; the bind mount
+	// through the engine (Docker Desktop/WSL2) is owned as the engine decides.
+	if b.hostOS() == "windows" {
+		return nil
+	}
 	own := fmt.Sprintf("%d:%d", uid, uid)
 	for _, dir := range lane.Folders() {
 		if dir == "" {
@@ -43,4 +49,12 @@ func (b *Backend) ownLane(ctx context.Context, uid int, lane runnercache.LaneDir
 		}
 	}
 	return nil
+}
+
+// hostOS is the system the agent runs on; tests set Config.HostOS.
+func (b *Backend) hostOS() string {
+	if b.cfg.HostOS != "" {
+		return b.cfg.HostOS
+	}
+	return runtime.GOOS
 }

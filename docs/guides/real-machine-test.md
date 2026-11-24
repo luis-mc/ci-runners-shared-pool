@@ -89,7 +89,7 @@ Do this on a second PC (the Windows PC when you test Linux, and the reverse) or 
 
 ## 8. A job runs on the pool
 
-- [ ] Push a workflow to the test repository with `runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX) }}` (or `CRSP_RUNS_ON_WINDOWS`), or start one by hand. Make it last about two minutes (a `sleep 120` step) so you can watch it.
+- [ ] Push a workflow to the test repository with `runs-on: ${{ fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}` (`CRSP_RUNS_ON_WINDOWS` on Windows; `CRSP_<JOB>` is the per-job variable, upper case, and may be unset), or start one by hand. Make it last about two minutes (a `sleep 120` step) so you can watch it.
 - [ ] The job runs on this PC and ends green on GitHub.
 - Report if: the job waits more than a minute with a free runner (Doctor then says why, step 11), or fails with an error that names crsp.
 
@@ -123,8 +123,8 @@ Watch while the step 8 job runs. Open **Jobs**.
 
 ## 12. Restart the service
 
-- [ ] Choose **Restart the service** (the tray menu has it; the console asks first in its Review step). Press it. A question card names the running jobs it waits for; nothing happens until you confirm.
-- [ ] The console shows it waits, then the service comes back by itself, and the console reconnects with the same version and your machines and runners still there. A job that was running finishes first and is not cut.
+- [ ] Choose **Restart the service**. The console has it in two places: **Settings, Updates** for the controller's own service (the tray menu opens the same page), and **Setup, Machines, the machine, Service** for an agent machine. Both open the Review step, which names the running jobs it waits for; nothing happens until you press **Restart the service** there.
+- [ ] The console shows it waits (Waiting for running jobs to end), then Restarting the service, then Done once the service answers again (the controller) or the agent connects again (an agent machine). It comes back by itself with the same version and your machines and runners still there. A job that was running finishes first and is not cut. For an agent machine the machine page takes no new job until the restart is done.
 - [ ] After a restart the tray shows **Running** again.
 - Report if: the console does not come back within two minutes, or a running job is cut.
 

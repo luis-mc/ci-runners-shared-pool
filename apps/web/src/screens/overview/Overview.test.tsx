@@ -7,26 +7,82 @@ import {
   machine,
   overview,
   renderApp,
-  signedIn,
+  signedIn as signedInBase,
 } from '../../testing/mock';
+
+/** The routes the Overview draws besides the overview itself: the slot timeline (LOOK61). */
+const signedIn = () =>
+  signedInBase().on('GET', '/api/v1/timeline', {
+    from: '2026-11-13T10:00:00Z',
+    to: '2026-11-14T10:00:00Z',
+    more_before: false,
+    rows: [],
+    bars: [],
+  });
+
+const facts = { threads: 6, cores: 6, memory_bytes: 9 * 1024 ** 3 };
 
 afterEach(cleanup);
 
 describe('Overview (R5.20)', () => {
-  it('shows a card per machine with a state word and three level bars', async () => {
-    renderApp(signedIn(), '/');
-    const card = await screen.findByRole('region', { name: 'build-1' });
-    expect(within(card).getByText('online')).toBeTruthy();
+  it('shows a card per machine: pool size in the title, CPU and Memory in cores and GiB, a link to Pool > Machines', async () => {
+    const m = machine({
+      facts,
+      load: {
+        cpu_pct: 50,
+        memory_pct: 100,
+        cpu_known: true,
+        memory_known: true,
+        sampled_at: 'x',
+        stale: false,
+      },
+    });
+    const api = signedIn()
+      .on('GET', '/api/v1/overview', overview({ machines: [m] }))
+      .on('GET', '/api/v1/machines', { items: [m] });
+    renderApp(api, '/');
+    const card = await screen.findByRole('region', { name: 'build-1 6 CPU / 9 GiB' });
+    expect(
+      within(card).getByRole('meter', { name: 'CPU' }).getAttribute('aria-valuetext'),
+    ).toBe('3 of 6');
     expect(
       within(card).getByRole('meter', { name: 'Memory' }).getAttribute('aria-valuetext'),
-    ).toBe('40% of 80%');
-    expect(within(card).getByRole('meter', { name: 'CPU' })).toBeTruthy();
+    ).toBe('9 of 9 GiB');
+    expect(within(card).queryByRole('meter', { name: 'Slots' })).toBeNull();
     expect(
-      within(card).getByRole('meter', { name: 'Slots' }).getAttribute('aria-valuetext'),
-    ).toBe('1 of 4');
-    expect(within(card).getByRole('link', { name: 'build-1' }).getAttribute('href')).toBe(
-      '/setup/machines/m1',
+      within(card)
+        .getByRole('link', { name: 'Open in Pool > Machines' })
+        .getAttribute('href'),
+    ).toBe('/pool/machines/m1');
+  });
+
+  it('falls back to percent while the machine facts are not known', async () => {
+    renderApp(signedIn(), '/');
+    const card = await screen.findByRole('region', { name: 'build-1' });
+    expect(
+      within(card).getByRole('meter', { name: 'Memory' }).getAttribute('aria-valuetext'),
+    ).toBe('40%');
+  });
+
+  it('puts the tiles first, then Best next change, then the machines (LOOK61)', async () => {
+    const api = signedIn();
+    renderApp(api, '/');
+    await screen.findByRole('region', { name: 'build-1' });
+    const main = screen.getByRole('main');
+    const order = Array.from(main.querySelectorAll('section.ds-pane, .ds-stat-grid')).map(
+      (e) => e.getAttribute('aria-label') ?? e.className,
     );
+    expect(order.indexOf('ds-stat-grid')).toBeLessThan(order.indexOf('build-1'));
+    expect(order.indexOf('Next to start')).toBeGreaterThan(order.indexOf('build-1'));
+    expect(order.indexOf('Routing labels')).toBeGreaterThan(
+      order.indexOf('Next to start'),
+    );
+    expect(order.indexOf('Jobs over time')).toBeGreaterThan(
+      order.indexOf('Routing labels'),
+    );
+    expect(
+      screen.getByText('The pool at a glance. Open a card for the detail.'),
+    ).toBeTruthy();
   });
 
   it('names an offline machine with a word, not only a colour (UX-58)', async () => {
@@ -55,8 +111,8 @@ describe('Overview (R5.20)', () => {
       state: 'queued' as const,
     };
     act(() => es.emit({ id: '2', type: 'job.queued', at: 'x', job }));
-    expect(await screen.findByText('Queued jobs')).toBeTruthy();
-    expect(screen.getByText('Queued jobs').nextElementSibling?.textContent).toBe('1');
+    const next = await screen.findByRole('region', { name: 'Next to start' });
+    expect(within(next).getByText('unit tests')).toBeTruthy();
     act(() =>
       es.emit({
         id: '3',
@@ -65,7 +121,6 @@ describe('Overview (R5.20)', () => {
         job: { ...job, state: 'running', runner_name: 'crsp-linux-1' },
       }),
     );
-    expect(await screen.findByText('unit tests')).toBeTruthy();
     act(() =>
       es.emit({
         id: '4',
@@ -87,56 +142,107 @@ describe('Overview (R5.20)', () => {
     const card = screen.getByRole('region', { name: 'build-1' });
     expect(
       within(card).getByRole('meter', { name: 'Memory' }).getAttribute('aria-valuetext'),
-    ).toBe('60% of 80%');
+    ).toBe('60%');
   });
 
-  it('lists each waiting job with the first reason in words (scheduling R5.48)', async () => {
+  it('lists the first waiting jobs in start order under Next to start, with a word for why', async () => {
     const base = {
       repository: 'octo/app',
       run_id: 1,
       run_attempt: 1,
       github_job_id: 1,
-      labels: [],
+      labels: ['crsp-small', 'crsp-rust'],
       state: 'queued' as const,
     };
     const api = signedIn().on(
       'GET',
       '/api/v1/overview',
       overview({
-        queued_count: 3,
+        queued_count: 4,
         queued: [
-          { ...base, id: 1, job_name: 'unit', wait_reason: 'load_not_measured' },
-          { ...base, id: 2, job_name: 'lint', wait_reason: 'free_slot' },
-          { ...base, id: 3, job_name: 'e2e', wait_reason: 'load_over_budget' },
-        ],
-        waiting: [
           {
-            job_id: 1,
-            repository: 'octo/app',
+            ...base,
+            id: 1,
             job_name: 'unit',
-            reason: 'load_not_measured',
-            words:
-              'Load not measured yet. The machine cannot read its load, so the job waits.',
+            wait_reason: 'free_slot',
+            queue_position: 2,
           },
           {
-            job_id: 3,
-            repository: 'octo/app',
+            ...base,
+            id: 2,
+            job_name: 'lint',
+            wait_reason: 'repository_parallel_limit',
+            queue_position: 3,
+          },
+          {
+            ...base,
+            id: 3,
             job_name: 'e2e',
-            reason: 'load_over_budget',
-            words: 'Over the load budget: memory 91% > 85%.',
+            wait_reason: 'no_runner_with_labels',
+            queue_position: 1,
+            labels: ['crsp-e2e'],
+          },
+          {
+            ...base,
+            id: 4,
+            job_name: 'docs',
+            wait_reason: 'free_slot',
+            queue_position: 4,
           },
         ],
       }),
     );
     renderApp(api, '/', { stream: false });
-    const table = await screen.findByRole('table', { name: 'Waiting jobs' });
-    expect(within(table).getByText(/^Load not measured yet\./)).toBeTruthy();
+    const pane = await screen.findByRole('region', { name: 'Next to start' });
+    const codes = Array.from(pane.querySelectorAll('code')).map((c) => c.textContent);
+    expect(codes).toEqual(['e2e', 'unit', 'lint']);
+    expect(within(pane).getByText('No runner fits')).toBeTruthy();
+    expect(within(pane).getByText('Waiting for room')).toBeTruthy();
+    expect(within(pane).getByText('Behind another job')).toBeTruthy();
     expect(
-      within(table).getByText('Over the load budget: memory 91% > 85%.'),
+      within(pane)
+        .getByRole('link', { name: 'See the whole plan in Pool > Queue Analysis (4)' })
+        .getAttribute('href'),
+    ).toBe('/pool/queue');
+    const labels = screen.getByRole('region', { name: 'Routing labels' });
+    expect(
+      Array.from(labels.querySelectorAll('.ds-tag')).map((t) => t.textContent),
+    ).toEqual(['crsp-e2e', 'crsp-rust', 'crsp-small']);
+    expect(
+      within(labels).getByRole('link', { name: 'See all 3 labels in Pool > Overview' }),
     ).toBeTruthy();
-    // no server words for this job: its own reason, in words
-    expect(within(table).getByText('Waits for a free slot.')).toBeTruthy();
-    expect(within(table).getAllByRole('row')).toHaveLength(4);
+  });
+
+  it('shows a timer alert for a job whose timer ran out (scheduling R5.100)', async () => {
+    const job = {
+      id: 7,
+      repository: 'octo/app',
+      run_id: 1,
+      run_attempt: 1,
+      github_job_id: 1,
+      job_name: 'rust',
+      labels: [],
+      state: 'running' as const,
+    };
+    const api = signedIn()
+      .on('GET', '/api/v1/overview', overview({ running: [job] }))
+      .on('GET', '/api/v1/jobs/7/timer', {
+        job_id: 7,
+        state: 'grace',
+        text: 'Job timer ran out at 30:00; stopping in 20 s',
+        can_stop_now: true,
+        can_extend: true,
+        extended: false,
+        covered_by_run: false,
+      });
+    renderApp(api, '/', { stream: false });
+    const alert = await screen.findByRole('alert');
+    expect(alert.textContent).toContain('Job timer ran out at 30:00; stopping in 20 s');
+    expect(
+      within(alert)
+        .getByRole('link', { name: 'Open rust in Pool > Jobs' })
+        .getAttribute('href'),
+    ).toBe('/pool/jobs/7');
   });
 
   it('says what to do when there is no machine yet', async () => {
@@ -175,8 +281,8 @@ describe('Overview (R5.20)', () => {
     renderApp(signedIn(), '/');
     await screen.findByRole('region', { name: 'build-1' });
     const main = screen.getByRole('main');
-    const h2 = Array.from(main.querySelectorAll('h2'));
-    expect(h2.length).toBeGreaterThanOrEqual(3);
+    const h2 = Array.from(main.querySelectorAll('h2, h3'));
+    expect(h2.length).toBeGreaterThanOrEqual(4);
     expect(h2.every((h) => h.closest('section.ds-pane') !== null)).toBe(true);
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   });

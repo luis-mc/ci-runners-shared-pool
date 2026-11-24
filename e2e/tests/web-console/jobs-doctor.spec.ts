@@ -10,7 +10,7 @@ test('Jobs: the queue says why a run waits and when it should start, Done lists 
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/pool/jobs?state=queued');
+  await page.goto('/pool/jobs?state=queued&view=runs');
   await expect(page.getByRole('heading', { level: 1, name: 'Pool' })).toBeVisible();
   const queue = page.getByRole('table', { name: 'Queue runs' });
   // CRSP210: the row shows the short reason; Why opens the whole sentence under the row.
@@ -50,7 +50,7 @@ test('Jobs: the Done range asks for a from date, and Export holds the same filte
   });
   await page.goto('/pool/jobs?state=done&view=jobs');
   await expect(page.getByRole('table', { name: 'Done jobs' })).toBeVisible();
-  await page.getByRole('button', { name: 'Last 7 days' }).click();
+  await page.getByLabel('Range').selectOption('7');
   await expect
     .poll(() =>
       mock.calls.some(
@@ -77,7 +77,13 @@ test('Jobs: a job row opens the Job page with a link to the run on GitHub', asyn
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
   await page.goto('/pool/jobs?state=done&view=jobs');
-  await page.getByRole('button', { name: 'Open job: test-2' }).click();
+  // LOOK62: the row opens the inspector beside the list; its Open job button goes to the Job page.
+  const row = page.getByRole('row').filter({ hasText: 'test-2' });
+  await row.getByRole('button', { name: 'Why' }).click();
+  await page
+    .getByRole('complementary', { name: /^Details: / })
+    .getByRole('button', { name: 'Open job' })
+    .click();
   await expect(page.getByRole('heading', { level: 1, name: 'test-2' })).toBeVisible();
   await expect(
     page.getByRole('button', { name: 'Open the run on GitHub' }),
@@ -88,7 +94,7 @@ test('Jobs: Open run goes straight to the Run page', async ({ page }) => {
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/pool/jobs');
+  await page.goto('/pool/jobs?view=runs');
   await page.getByRole('button', { name: 'Open run' }).first().click();
   await expect(page.getByText('Open run page')).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toContainText('ci.yml on');
@@ -130,10 +136,10 @@ test('Doctor: findings by area, then Run checks again is busy until the run ends
     }));
   await mock.install(page);
   await page.goto('/doctor');
-  await expect(page.getByRole('region', { name: 'Machines' })).toContainText(
+  await expect(page.getByRole('region', { name: 'Fix: Machines' })).toContainText(
     'build-2 is offline',
   );
-  await expect(page.getByRole('region', { name: 'Workflow labels' })).toContainText(
+  await expect(page.getByRole('region', { name: 'Fix: Workflow labels' })).toContainText(
     'failed',
   );
   await page.getByRole('button', { name: 'Run checks again' }).click();
@@ -193,7 +199,7 @@ test('Jobs: the list starts with focus in the search box and the search narrows 
   await expect(page.getByText(/Nothing matches/)).toBeVisible();
 });
 
-test('Jobs: Down, Up, j and k move from the search box through the controls to the rows', async ({
+test('Jobs: Down, Up, j and k move from the search box through the filters to the rows', async ({
   page,
 }) => {
   await jobsAndDoctor(signedIn())
@@ -203,28 +209,25 @@ test('Jobs: Down, Up, j and k move from the search box through the controls to t
   await expect(page.getByRole('textbox', { name: /Search/ })).toBeFocused();
   const rows = page.locator('table.ds-table tbody tr[data-list-row]');
   await expect(rows.first()).toBeVisible();
-  // The box, the State choices, the Runs and Jobs choice, the details button, then the rows.
-  for (let i = 0; i < 7; i++) await page.keyboard.press('ArrowDown');
-  await expect(page.getByRole('button', { name: 'Show details' })).toBeFocused();
-  // After the button come the sortable heads of the table, then each row and its own controls: the keys walk them all.
+  // After the search box come the State and view choices (Down walks them), then the filter drop-downs, which keep
+  // Up and Down for their own options (the keys of a select): Tab passes them. Then the rows, which Down, Up, `j` and
+  // `k` walk.
   const walk = async (key: string, until: () => Promise<boolean>) => {
-    for (let i = 0; i < 20 && !(await until()); i++) await page.keyboard.press(key);
+    for (let i = 0; i < 40 && !(await until()); i++) await page.keyboard.press(key);
     expect(await until()).toBe(true);
   };
+  for (let i = 0; i < 6; i++) await page.keyboard.press('ArrowDown');
+  await expect(page.getByRole('button', { name: 'Runs' })).toBeFocused();
   const rowIndex = () =>
     page.evaluate(() =>
       Array.from(document.querySelectorAll('tbody tr[data-list-row]')).findIndex(
         (r) => r === document.activeElement,
       ),
     );
-  await walk('j', async () => (await rowIndex()) === 0);
+  await walk('Tab', async () => (await rowIndex()) === 0);
   await walk('j', async () => (await rowIndex()) === 1);
   await walk('k', async () => (await rowIndex()) === 0);
-  await walk('ArrowUp', async () =>
-    page
-      .getByRole('button', { name: 'Show details' })
-      .evaluate((e) => e === document.activeElement),
-  );
+  await walk('ArrowUp', async () => (await rowIndex()) === -1);
 });
 
 test('Jobs: Show details opens the panel of the chosen row, Hide details closes it', async ({
@@ -233,7 +236,7 @@ test('Jobs: Show details opens the panel of the chosen row, Hide details closes 
   await jobsAndDoctor(signedIn())
     .on('GET', '/api/v1/machines', { items: [] })
     .install(page);
-  await page.goto('/pool/jobs');
+  await page.goto('/pool/jobs?view=runs');
   const toggle = page.getByRole('button', { name: 'Show details' });
   await expect(toggle).toHaveAttribute('title', 'Show details');
   await toggle.click();
@@ -241,6 +244,22 @@ test('Jobs: Show details opens the panel of the chosen row, Hide details closes 
   await expect(side).toBeVisible();
   await expect(side.getByText('Repository')).toBeVisible();
   await page.getByRole('button', { name: 'Hide details' }).click();
+  await expect(side).toHaveCount(0);
+});
+
+test('Jobs: Why opens the inspector beside the list, Close details closes it', async ({
+  page,
+}) => {
+  await jobsAndDoctor(signedIn())
+    .on('GET', '/api/v1/machines', { items: [] })
+    .install(page);
+  await page.goto('/pool/jobs');
+  const table = page.getByRole('table', { name: 'All jobs' });
+  await table.getByRole('button', { name: 'Why' }).first().click();
+  const side = page.getByRole('complementary', { name: /^Details: / });
+  await expect(side).toBeVisible();
+  await expect(table).toBeVisible();
+  await side.getByRole('button', { name: 'Close details' }).click();
   await expect(side).toHaveCount(0);
 });
 
