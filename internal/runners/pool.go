@@ -75,7 +75,7 @@ func (s *Service) addPoolRunner(ctx context.Context, a AddSpec, version, actor s
 	rec := Record{ID: s.newID("r_"), Name: a.Name, MachineID: a.MachineID, OS: a.OS, Arch: a.Arch, Kind: a.Kind,
 		Backend: a.Backend, Isolation: isolationOf(a), Labels: a.Labels, Route: RouteForLabels(s.PoolName, a.Labels),
 		SizeClass: size, Scope: Scope{Kind: ScopePool}, RunnerVersion: version, State: Idle,
-		Reason: "no repository uses the pool yet", Managed: true, CreatedAt: s.now(), KeepDependencies: a.KeepDependencies}
+		Reason: poolIdleReason(a.Kind), Managed: true, CreatedAt: s.now(), KeepDependencies: a.KeepDependencies}
 	if err := s.Store.InsertRunner(ctx, rec); err != nil {
 		return err
 	}
@@ -453,7 +453,7 @@ func poolView(p Record, kids []View, names map[int64]string, machine string) Vie
 }
 
 func poolViewBase(p Record, kids []View, names map[int64]string, machine string) View {
-	v := View{Record: p, State: Idle, Reason: "no repository uses the pool yet", MachineName: machine, Registrations: len(kids)}
+	v := View{Record: p, State: Idle, Reason: poolIdleReason(p.Kind), MachineName: machine, Registrations: len(kids)}
 	if len(kids) == 0 {
 		return v
 	}
@@ -482,4 +482,15 @@ func poolViewBase(p Record, kids []View, names map[int64]string, machine string)
 		v.CurrentJob = best.CurrentJob
 	}
 	return v
+}
+
+// poolIdleReason is why a pool runner with no registration is idle. An
+// ephemeral pool runner is a slot: it holds no hidden registration, because
+// each job gets its own one-job runner with a JIT config, so "no repository
+// uses the pool yet" would be wrong for it (OPS89).
+func poolIdleReason(kind string) string {
+	if kind == "ephemeral" {
+		return "a container starts for each job of the pool"
+	}
+	return "no repository uses the pool yet"
 }

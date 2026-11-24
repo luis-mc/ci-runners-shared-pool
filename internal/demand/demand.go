@@ -70,6 +70,8 @@ type Runners interface {
 	// RemoveIdleRunner removes a runner that never got a job, after asking
 	// GitHub that it is not busy. It returns runners.ErrRunnerBusy when it is.
 	RemoveIdleRunner(ctx context.Context, runnerID, actor string) error
+	// ClearFailedStarts removes the failed records of the tries for one job.
+	ClearFailedStarts(ctx context.Context, jobKey string) error
 }
 
 // DefaultIdleAfter is how long a runner may wait with no job before the loop
@@ -109,6 +111,7 @@ type Loop struct {
 	seenAt  map[int64]time.Time  // when the last event of an open job came
 	pending map[int64]*waiting
 	started map[int64]startedRunner // job id -> runner made for it
+	gaveUp  map[int64]bool          // jobs left after maxFails tries; a new queued event does not start them again (OPS89)
 }
 
 type waiting struct {
@@ -133,6 +136,7 @@ func (l *Loop) init() {
 		l.seenAt = map[int64]time.Time{}
 		l.pending = map[int64]*waiting{}
 		l.started = map[int64]startedRunner{}
+		l.gaveUp = map[int64]bool{}
 	}
 	if l.IdleAfter <= 0 {
 		l.IdleAfter = DefaultIdleAfter
@@ -193,7 +197,7 @@ func (l *Loop) Observe(ctx context.Context, j github.Job) {
 	case "queued":
 		l.seen[j.ID] = j
 		l.seenAt[j.ID] = l.Now()
-		if _, done := l.started[j.ID]; !done && l.pending[j.ID] == nil {
+		if _, done := l.started[j.ID]; !done && l.pending[j.ID] == nil && !l.gaveUp[j.ID] {
 			l.pending[j.ID] = &waiting{}
 		}
 	case "in_progress":
@@ -213,6 +217,7 @@ func (l *Loop) Observe(ctx context.Context, j github.Job) {
 		delete(l.seen, j.ID)
 		delete(l.seenAt, j.ID)
 		delete(l.pending, j.ID)
+		delete(l.gaveUp, j.ID)
 	}
 	var finish []startedRunner
 	if j.Status == "completed" && strings.HasPrefix(j.RunnerName, RunnerPrefix) {
@@ -234,6 +239,12 @@ func (l *Loop) Observe(ctx context.Context, j github.Job) {
 		delete(l.started, j.ID)
 	}
 	l.mu.Unlock()
+	if j.Status == "completed" {
+		// The job ended: the failed rows of its tries go (OPS89).
+		if err := l.Runners.ClearFailedStarts(ctx, fmt.Sprintf("%s%d-", RunnerPrefix, j.ID)); err != nil {
+			l.Logger.Warn("clear the failed starts of an ended job", "job", j.ID, "err", err)
+		}
+	}
 	for _, st := range finish {
 		if st.id == "" {
 			continue
@@ -407,9 +418,12 @@ func (l *Loop) try(ctx context.Context, j github.Job, w *waiting, hosts []Host, 
 		if !l.stillQueued(ctx, j, repo) {
 			return
 		}
-		name := fmt.Sprintf("%s%d", RunnerPrefix, j.ID)
+		// One name for each try: GitHub may still hold the registration of
+		// an earlier try and answers 409 to the same name (OPS89).
+		key := fmt.Sprintf("%s%d-", RunnerPrefix, j.ID)
+		name := fmt.Sprintf("%s%d", key, w.fails+1)
 		jr := runners.JobRunner{Name: name, MachineID: h.MachineID, Arch: h.Arch,
-			Backend: "docker", Labels: labels, Scope: repo.Scope, ExtraPackages: repo.ExtraPackages}
+			Backend: "docker", JobKey: key, Labels: labels, Scope: repo.Scope, ExtraPackages: repo.ExtraPackages}
 		if j.ScaleSetID != 0 && l.ScaleJIT != nil {
 			jr.JIT = l.ScaleJIT(j, name)
 		}
@@ -491,6 +505,7 @@ func (l *Loop) fail(j github.Job, w *waiting, err error) {
 	w.nextTry = l.Now().Add(time.Duration(1<<min(w.fails, 6)) * 5 * time.Second)
 	if gone {
 		delete(l.pending, j.ID)
+		l.gaveUp[j.ID] = true
 	}
 	l.mu.Unlock()
 	l.Logger.Warn("start a runner for a queued job", "job", j.ID, "repository", j.Repository, "try", w.fails, "gave_up", gone, "err", err)
