@@ -1431,20 +1431,27 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | Word | Where and meaning |
 |---|---|
 | Help | The seventh area of the menu and the page title. |
-| One picture, then the questions people ask. Each card names its box. | Lead of Help (LOOK48; replaces *How crsp runs your jobs, and what its words mean.*). |
+| How crsp runs jobs. Pictures use your own pool. | Lead of Help (LOOK63; replaces *One picture, then the questions people ask. Each card names its box.*, which replaced *How crsp runs your jobs, and what its words mean.*). |
 | How a job gets run | Pane of the picture on Help and on the first-run Overview. |
 | On GitHub / In your pool | The two groups of the picture. |
-| 1 to 3 happen on GitHub. 4 to 7 happen in your pool. | Quiet line under the picture (LOOK48; replaces *7 parts. Press a part to jump to its question.*). |
+| ~~1 to 3 happen on GitHub. 4 to 7 happen in your pool.~~ | Retired (LOOK63): the picture stands alone, as in the approved prototype. |
 | 2 waiting / none waiting / {n} of {m} busy | Examples in the Queue and Slot boxes. The other boxes show a repository, `#{run}, {event}`, `{job} + labels`, a runner name and a machine name, or their short meaning when nothing is known. |
 | Repository, Run, Job, Queue, Slot, Runner, Machine | The seven parts. Their lines: a GitHub project; one start of a workflow; asks for a runner; waits for a slot; room for one job; does the work; your computer. |
-| Questions, in the order a job meets them | Pane with every question card at once, ordered by box (no steps, no Back, Next or Start again since LOOK47; title since LOOK48). |
-| Box {n}: {Name} | Badge on every card, with the numbered circle; a link to that box in the picture (LOOK48). |
+| Questions | Pane of the nine question cards, with their count (LOOK63; replaces *Questions, in the order a job meets them*). |
+| ~~Box {n}: {Name}~~ | Retired (LOOK63): the cards carry no box badge and no small picture. |
 | {n} of {m} slots busy | Text of the slots picture on the slot card. |
 | Memory {n}% of {b}% / CPU {n}% of {b}% | Text of the load budget picture; {b} is the machine's own budget. |
 | first one takes the free slot / Runner type. Linux or Windows is the OS. / the tray icon, bottom right of the PC | Words inside the card pictures. |
-| What does shared mean? / What are a run and a job? / What are labels? / What does Run elsewhere mean? | Cards about GitHub, first in the grid. |
-| Why is my job waiting? / What is a slot? / What is the load budget? / What is the queue? / What is a runner type? | Cards about the pool, second in the grid. |
-| What is the Doctor? / What is the tray app? / What are images and caches? | Cards about looking after the pool, last in the grid. |
+| What does shared mean? | Card 1 (LOOK63). Answer: Every repository you turn the pool on for uses the same machines and runners. Link: Open Setup > Pool setup. |
+| What are a run and a job? | Card 2. Answer: A run is one start of a workflow. A job is one part of a run. Link: Open Pool > Jobs. |
+| What are labels? | Card 3. Answer: Words on a job and on a runner. A job goes to a runner that has all of its labels. Link: Open Pool > Overview. |
+| What does Run elsewhere mean? | Card 4. Answer: Another runner runs the job, not your pool. Link: Open Analytics > Run elsewhere. |
+| Why is my job waiting? | Card 5. Answer: Open Why waiting on its row. Queue Analysis ranks every waiting job. Link: Open Pool > Queue Analysis. |
+| How big is a slot? | Card 6. Answer: The pool is what is left after the load budget. Link: Open Setup > Size and backends. |
+| Where do I see what runs now? | Card 7. Answer: The picture of running and queued jobs. Link: Open Pool > Live. |
+| Something is wrong | Card 8. Answer: Doctor lists what needs you and checks the pool. Link: Open Doctor. |
+| How do I make it faster? | Card 9. Answer: Suggestions are ranked by the time they save. Link: Open Analytics > Suggestions. |
+| ~~What is a slot? / What is the load budget? / What is the queue? / What is a runner type? / What are images and caches? / What is the tray app? / What is the Doctor?~~ | Retired as cards (LOOK63). The ? answers of Slots, Load budget, Queue and Runner type stay (below) and link to their Help section. |
 | Slot | Room for one job at a time on a machine. |
 | Pool size makes slots: you set memory and CPUs on Pool size, and crsp turns that into slots, the number of jobs that run at once. | The sentence of the slot card and of the ? on Slots. |
 | Load budget | The most memory and CPU a machine may use for jobs. Over it, new jobs wait. The card shows each machine's own budget (`memory 70%, CPU 55%`), read from the API. |
@@ -1454,8 +1461,27 @@ The words of the Help page and of the ? beside a term (LOOK44, owner pick I of 2
 | No machine yet. Add a machine to see its slots. / ... its load budget. | The card when the pool has no machine. |
 | What does {term} mean? | Name of the ? button. {term} is Slots, Load budget, Queue, Runner type or Run elsewhere. |
 | More about this in Help | The link in the ? answer. |
-| Open Pool size / Open Jobs / Open the Doctor / Open Images and caches | Links on the cards. |
+| Open ... | The link at the foot of each question card: Open Setup > Pool setup, Open Pool > Jobs, Open Pool > Overview, Open Analytics > Run elsewhere, Open Pool > Queue Analysis, Open Setup > Size and backends, Open Pool > Live, Open Doctor, Open Analytics > Suggestions. |
 | Load budget | Fact row on the machine page: `memory {n}%, CPU {m}%`. |
+
+## Help guide words (LOOK63)
+
+The ten guide sections of the Help side menu, written from how the scheduler really works. Each is one pane: the title, one lead sentence, a list of facts and a link when a screen shows it. The side menu lists them, in this order, after *Where things are*: Pool and load budget, Runner types, Size classes, Admission and passing, Reservation, Job size, Before assignment, Gating, Routing labels, Timers; *Reading Queue Analysis* is last. *Admission and passing* is the words of the approved prototype.
+
+| Section | Words |
+|---|---|
+| Pool and load budget | Lead: The pool is the memory and CPUs crsp may use for jobs on a machine. The load budget is the most the whole machine may use. Point 1: The default budget is 85% of memory and 60% of CPU, for everything on the machine, not only jobs. Point 2: You set the pool size on Size and backends. A size that does not fit the budget is refused, and the page names the sizes that do. Point 3: Over the budget, a new job waits until the load is under it. Jobs that already run are never stopped for it. Point 4: When crsp cannot measure the load, a new job waits until it can. Point 5: A machine over its budget while jobs run shows a warning. It clears after a minute under the budget. Link: Open Setup > Size and backends. |
+| Runner types | Lead: A runner is persistent or ephemeral. That is its type. Linux, Windows or macOS is its system, not its type. Point 1: Persistent keeps its tools, caches and folder between jobs. It runs on the machine itself, as a service. Point 2: Ephemeral is a fresh container or VM for one job. crsp removes it when the job ends. Point 3: You choose the type when you add a runner. The list shows only the machines that can run that system and type. Point 4: A persistent runner on the machine itself is gated: see Gating. Link: Open Setup > Runners. |
+| Size classes | Lead: A runner has a size class: small, medium, large or xl. The class is the biggest job that runner takes. Point 1: Each class has CPUs and GiB of memory. The Standard preset is small 2 CPUs and 4 GiB, medium 4 and 8, large 8 and 16, xl 16 and 32. Point 2: The classes grow from small to xl, in CPUs and in memory. Point 3: A job that needs more than the class of a runner does not go to that runner. |
+| Admission and passing | Lead: A job is admitted when its CPU and memory fit the free pool and the class ceiling. Lighter jobs may pass a big one that does not fit yet. Point 1: Check 1: class ceiling. Check 2: free CPU. Check 3: free memory. Point 2: A big job can be passed up to 3 times, or for 10 min. Point 3: Then it is reserved (see Reservation). Link: See it live in Pool > Live. |
+| Reservation | Lead: A job that is passed too often is reserved: its machine keeps room for it. Point 1: After 3 passes, or 10 minutes of waiting, the job becomes the reserved job of its machine. A machine has one at a time. Point 2: Its line reads reserved since a time, expected start a time. The expected start is when a running job ends and leaves room. Point 3: A later job starts only if it ends before that time, or if the pool still has room for the reserved job. Point 4: The reservation ends when the job starts. Link: Open Pool > Queue Analysis. |
+| Job size | Lead: crsp gives every job a size: the CPUs and memory it needs. Admission reads it. Point 1: The size comes from the first source that knows the job: your override in the console, the sizes in .crsp.yml, the size crsp measured, a scan of the repository, the job name, then 1 CPU and 1 GiB. Point 2: A measured size counts after 5 runs. Point 3: In .crsp.yml, a job name or pattern is light, normal or heavy. Point 4: Sizing never holds a job. A new job with no history uses the scan or the default. Link: Open Setup > Pool setup. |
+| Before assignment | Lead: Before GitHub gives a job to a runner, the job waits in the queue. crsp decides when it may start. Point 1: crsp learns of a job when GitHub tells it, and by looking again every so often. Point 2: By default the order is: repository priority, then pull requests that are ready and the default branch, then fair share between repositories, then the one that waited longest. Point 3: The first job that has room gets a runner. A job that has none waits for one reason, and Why waiting names it. Point 4: A repository may have a limit on parallel jobs. A job over it waits, and jobs of other repositories may take the free slot. Point 5: crsp tells you when a job has waited 12 hours. GitHub cancels a job that waits 24 hours. Link: Open Pool > Queue Analysis. |
+| Gating | Lead: A persistent runner on the machine itself is gated: it is offline by design, and crsp switches it on only when a job needs it. Point 1: When a job is admitted for it, crsp adds the job name as a label and starts the runner. The runner takes the job, and crsp makes no other runner. Point 2: When the job ends the runner stops and the label is removed. A runner with a job is never stopped. Point 3: Once a week each gated runner is switched on for about a minute, so GitHub never removes it for staying offline. Point 4: Gating starts in observe mode: crsp writes what it would do, and the job takes the normal way. Link: Open Setup > Runners. |
+| Routing labels | Lead: Routing labels send a job to your pool. The workflow reads them from a variable of the repository. Point 1: For each system crsp writes CRSP_RUNS_ON_LINUX, CRSP_RUNS_ON_WINDOWS or CRSP_RUNS_ON_MACOS: a list of labels, for example self-hosted, linux, x64. Point 2: A variable exists only while the pool is on for that system. With no variable the job runs on a GitHub-hosted runner. Point 3: A job may have a variable of its own, CRSP_ and its name, for example CRSP_E2E. The workflow reads it first and the system variable second. Point 4: Labels are not case sensitive. If a variable is changed outside crsp, crsp puts it back and the repository row shows it. Link: Open Setup > Pool setup. |
+| Timers | Lead: crsp times every running job and every run. When a timer runs out, crsp waits 30 seconds, then acts. Point 1: The job timer is 30 minutes from the first real step of the job. The run timer is 45 minutes from the start of its first job. A repository may set its own job times in .crsp.yml. Point 2: In the 30 seconds you can press Stop now, Cancel now or Extend 10 min. Extend works once for each job. Point 3: A job that ends in those 30 seconds is not stopped. Point 4: When the job timer ends, crsp stops that job. When the run timer ends, crsp cancels the run. Point 5: Timers start in observe mode: they show and write what they would do, and stop nothing until the owner turns Enforce on. Point 6: A job that holds a start waits at most 2 minutes. |
+| In your pool right now | Pane of *Admission and passing* and *Reading Queue Analysis*: the first waiting job. Facts *Job* (on Admission and passing), *Next to start* (on Reading Queue Analysis), *Why it waits*, *Result* (Admission) or *Start* (Queue Analysis), and *Nothing is waiting. Every job has a slot.* |
+| Help sections | Name of the side menu of Help. |
 
 ## Run follow-up words (CIX24, owner decision D27 of 21 Nov 2026)
 
