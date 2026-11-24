@@ -41,7 +41,7 @@ func TestRunArgsUsesPersistentUID(t *testing.T) {
 // R5.72: the lane keeps its owner across a new container.
 func TestOwnLaneChownsToUID(t *testing.T) {
 	cmd := &sysfake.Commands{}
-	b := New(sys.Deps{Cmd: cmd}, newFake(), Config{IDs: fixedID(64010)})
+	b := New(sys.Deps{Cmd: cmd}, newFake(), Config{IDs: fixedID(64010), HostOS: "linux"})
 	lane := runnercache.LaneFor("/cache", "repo1", 1)
 	uid, err := b.identity(context.Background(), "pool")
 	if err != nil || uid != 64010 {
