@@ -1,0 +1,31 @@
+<!-- title: Baseline asks to compare with crsp's own advice -->
+<p>Owner decision of 20 Nov, 14:35: no pool changes on the old pool now. The order is:</p>
+<ol>
+  <li>Move the projects to the crsp pool.</li>
+  <li>Let them run there.</li>
+  <li>Let CI run insights detect improvements and recommend actions.</li>
+  <li>Compare those recommendations with the asks below, which people and studies made by hand before crsp could make them. A difference in either direction is a finding: crsp missed something, or the hand-made ask was wrong.</li>
+</ol>
+
+<h3>Asks recorded on 20 Nov</h3>
+<table>
+  <thead><tr><th>#</th><th>From</th><th>Ask</th><th>Evidence given</th><th>What crsp should say when it runs the project</th></tr></thead>
+  <tbody>
+    <tr><td>B1</td><td>comics-organizer, task CO1147 (owner choice 18 Nov)</td><td>A second Windows CI slot for comics-organizer on GameRoomPC</td><td>Windows Rust job p90 112 min; installers queue behind it (study #3)</td><td>Slots advice (idea 12) for the Windows label set, with the measured memory headroom. Today it is 73% of RAM against an 85% budget, so a second Rust slot may not fit.</td></tr>
+    <tr><td>B2</td><td>comics-organizer, CO1147</td><td>A release-only Linux label, so release PR runs don't queue behind branch runs</td><td>Release PR runs wait on the single Linux slot</td><td>Wait split (idea 11) by event and branch, plus slots or priority advice. Compare with crsp's own fix (scheduling priority per run kind) before advising a new label.</td></tr>
+    <tr><td>B3</td><td>dev-standards study #1</td><td>A second Linux slot for comics-organizer; 2 concurrent jobs per agent while memory stays under 70%</td><td>Queue wait ~620 min a day in comics-organizer; 30.7 job-h in moobable and 18.4 in lan-link over 10 to 12 days</td><td>Slots per repository advice (idea 12) and pool sizing (idea 2)</td></tr>
+    <tr><td>B4</td><td>dev-standards study #19</td><td>Cap the job-start hold at 2 min and requeue, with the reason</td><td>Hold p90 5.5 to 7 min, at most 30 min</td><td>Hold flagged in the wait, hold and run split (idea 11)</td></tr>
+    <tr><td>B5</td><td>dev-standards study #16</td><td>Artifact prune once a day on a schedule, not after every workflow</td><td>38 prune runs a day in comics-organizer; one waited 421 min</td><td>Housekeeping advice (idea 13)</td></tr>
+    <tr><td>B6</td><td>dev-standards study #2, #9</td><td>Cancel superseded jobs; trust the PR result on master</td><td>3,109 job-min in 12 days on replaced commits</td><td>Superseded and duplicate run finder (idea 14)</td></tr>
+    <tr><td>B7</td><td>dev-standards study #8, G6</td><td>Mutation runs nightly only, not on every release PR</td><td>25 runs, 310 job-min, 923 min of queue</td><td>Workflow file checks (idea 5) and guardrail status (idea 6)</td></tr>
+    <tr><td>B8</td><td>comics-organizer (20 Nov, data point)</td><td>Find out whether host overload caused 76 integration tests to time out at server start</td><td>release/241 integration pool on main-comics-organizer, 13:04-13:40: 76 tests timed out at a 30 s limit (about 2 s each on their own); no other comics-organizer job overlapped</td><td>CPU and memory per job (idea 9) and the cross-project timeline (idea 3): say what else ran on the machine and the VM in that window, and whether the 8.5 GiB / 5 CPU VM cap saturated. crsp keeps machine-wide load samples for 24 h.</td></tr>
+  </tbody>
+</table>
+
+<h3>Why the old pool plan was not used</h3>
+<p>A dry run of <code>delivery_ci_setup.py pool-plan --windows-repos luis-mc/comics-organizer</code> on 20 Nov:</p>
+<ul>
+  <li>It does not add a second slot. It rebuilds the one Windows runner.</li>
+  <li>On the way it plans to delete crsp's runner folder (<code>C:/ProgramData/crsp/runners/gameroompc-1</code>) and a runner service that crsp made, because the two pools collide on this PC.</li>
+</ul>
+<p>The collision is itself a finding for the move: the old pool's tools must not touch crsp's files.</p>

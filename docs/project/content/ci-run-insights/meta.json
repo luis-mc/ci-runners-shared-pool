@@ -1,0 +1,6 @@
+{
+  "title": "Feature: CI run insights",
+  "hero": "crsp audits every CI run it serves and says what to change: in the pool, in each project's CI, and against the test guardrails.",
+  "lede": "Three CI studies (crsp, comics-organizer, then six repositories by dev-standards) agree: waiting for runners, not testing, costs the hours. Three decisions are open.",
+  "extra_css": ""
+}

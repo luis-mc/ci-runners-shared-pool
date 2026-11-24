@@ -1,0 +1,23 @@
+<!-- title: Where the guardrails live in dev-standards -->
+<p>Goal: the seven guardrails hold in every project without anyone having to remember them. They should stop Claude in the session, stop a push, and fail CI.</p>
+<h3>Recommendation: extend luismc-delivery, put the numbers in STACKSPEC, no new plugin</h3>
+<table>
+  <thead><tr><th>Layer</th><th>What it does</th><th>Where</th></tr></thead>
+  <tbody>
+    <tr><td>Every Claude session</td><td>A rule file with the seven guardrails, each tagged with a DL check ID, delivered at session start.</td><td><code>delivery/rules/test-guardrails.md</code>, added to <code>RULE_FILES</code> in <code>hook_session_start.py</code>; new rows in DELIVERYSPEC</td></tr>
+    <tr><td>While Claude edits</td><td>An edit that raises a timeout or <code>timeout-minutes</code>, adds retries, adds a sleep or adds more than 20 cases is warned the first time and refused the second time in a turn.</td><td>A new <code>hook_test_edit.py</code>, built like <code>hook_design_edit.py</code></td></tr>
+    <tr><td>Before a push and in CI</td><td>A guard script checks config (per-test and job timeouts, retries), scans added lines (sleeps, case counts, new matrix axes) and the workflows (mutation and property tests off PR CI). Existing breaches go in a known list that may only shrink.</td><td><code>templates/shared/scripts/delivery/test_guardrails.py</code> as a <code>gate.json</code> step (pre-push, branch gate, CI); <code>test-guardrails.known.json</code> checked by <code>change_notes.py</code></td></tr>
+    <tr><td>New test times (G7)</td><td>Reads the runner's report (vitest JSON, Playwright JSON, <code>go test -json</code>, cargo, dotnet TRX), prints each new test's time in the job summary and fails a test over its tier limit.</td><td><code>test_guardrails.py times</code>, next to <code>ci_run_times.py</code></td></tr>
+    <tr><td>New projects</td><td>STACKSPEC section 11.4 holds the limits. The track templates set them: vitest 10 / 60 s, Playwright 120 s, go <code>-timeout</code>, <code>timeout-minutes: 30</code> on every CI job. The Mode 2 audit runs the guard.</td><td><code>tech-stack-setup/references/invariants.md</code> and <code>assets/tooling/*</code></td></tr>
+  </tbody>
+</table>
+<p><strong>Why not a new plugin:</strong> delivery already has every layer: rules at session start, edit hooks, the installer that ships guard scripts to every project and track, and the shrink-only known-list check (the design-system kit, DL-92). A separate plugin would duplicate all of that and need its own installer and setup step.</p>
+<p><strong>Why not STACKSPEC alone:</strong> nothing runs after a project is generated, so a later edit that raises a timeout would not be caught.</p>
+<h3>Template gaps found while looking</h3>
+<ul>
+  <li>The ts template's <code>vitest.config.ts</code> sets 60 s for the guard and integration projects and nothing for unit.</li>
+  <li>The Playwright template sets no test timeout.</li>
+  <li>None of the four <code>ci.yml</code> templates (ts, go, rust, dotnet) sets a job <code>timeout-minutes</code>.</li>
+  <li><code>ci-fallback.yml</code> uses 90 minutes.</li>
+  <li>The <code>dev-standards.yml</code> checks job seems to have no limit (only its first 80 lines were read).</li>
+</ul>

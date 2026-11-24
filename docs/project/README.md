@@ -12,6 +12,7 @@ rendered HTML by hand.
 | Feature: Console look | `feature-console-look.html` | a file in the repository, open it in a browser; never published |
 | Feature: CRSP Features Research | `feature-crsp-features-research.html` | a file in the repository, open it in a browser; never published |
 | Feature: Runner Pool Handover | `feature-runner-pool-handover.html` | a file in the repository, open it in a browser; never published |
+| Feature: CI run insights | `feature-ci-run-insights.html` | a file in the repository, open it in a browser; never published |
 
 A feature artifact is a standalone HTML file: open it in a browser, no server needed. It is
 never published. Only the full-progress artifact is a claude.ai artifact; it links to the

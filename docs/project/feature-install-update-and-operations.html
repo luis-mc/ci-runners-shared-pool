@@ -902,33 +902,133 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.6.1 <span class="gen-flag gen-update">update: 2.6.2</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: Install, update and operations</h1><p>Where Install, update and operations stands.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.16.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: Install, update and operations</h1><p>Where Install, update and operations stands.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-16T00:37+00:00">16 Nov 00:37</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">16 Nov 00:32</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-24T15:04+00:00">24 Nov 15:04</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">24 Nov 17:59</a> (Lisbon)</p>
 <p class="lede">Planned. Work has not started.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">10 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">7 tasks</span></summary>
 <ul>
-<li data-glance-task="OPS1"><span class="task-id">OPS1</span>Native installers: macOS .pkg, Linux .deb and .rpm</li>
-<li data-glance-task="OPS11"><span class="task-id">OPS11</span>Lesson 27 recorded in the handover notes (DL367)</li>
-<li data-glance-task="OPS12"><span class="task-id">OPS12</span>Lesson 28 recorded in the handover notes (DL369)</li>
-<li data-glance-task="OPS10"><span class="task-id">OPS10</span><span class="release-name">RELEASE-11</span>v0.1.1: App setup fails on Windows (empty webhook secret); setup shows errors</li>
-<li data-glance-task="OPS8"><span class="task-id">OPS8</span>Handover lessons 24-25: Rust cache disk cap; KVM loader after WSL/Docker restart</li>
-<li data-glance-task="OPS9"><span class="task-id">OPS9</span>Handover lesson 26: stop the whole process group on drain</li>
-<li data-glance-task="OPS5"><span class="task-id">OPS5</span>v0.1.0 test finding: Start Menu entry is &#x27;crsp&#x27; with a blank icon</li>
-<li data-glance-task="OPS6"><span class="task-id">OPS6</span>v0.1.0 test finding: the tray does not start after install</li>
-<li class="glance-more">and 2 more</li>
+<li data-glance-task="OPS68"><span class="task-id">OPS68</span>Updater passes lifecycle conformance; Ed25519 manifest; new asset names</li>
+<li data-glance-task="OPS69"><span class="task-id">OPS69</span>MSI lifecycle lanes, release check, signed manifest and renamed assets</li>
+<li data-glance-task="OPS55"><span class="task-id">OPS55</span>Slot cap vs runners: slot wait apart from job time, doctor warns, hold &lt; timeout</li>
+<li data-glance-task="OPS51"><span class="task-id">OPS51</span>Drop quiet hours: specs, words, pause reason, settings</li>
+<li data-glance-task="OPS54"><span class="task-id">OPS54</span>Postgres: copy role settings and memberships to every runner login (PG16)</li>
+<li data-glance-task="OPS53"><span class="task-id">OPS53</span>Postgres rights shared by every runner of one repo (pool finding 21 Nov)</li>
+<li data-glance-task="OPS52"><span class="task-id">OPS52</span>Spec crsp handling of dev-standards pool findings (20 Nov, 7 items)</li>
+</ul>
+</details>
+<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="OPS90"><span class="task-id">OPS90</span><span class="glance-dep">no progress since 24 Nov; waits on owner decision</span> Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke <span class="glance-expected">25 Nov ~10:00</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">6 tasks</span></summary>
+<ul>
+<li data-glance-task="OPS93"><span class="task-id">OPS93</span>Windows runner register passes the configure verb to Runner.Listener</li>
+<li data-glance-task="OPS91"><span class="task-id">OPS91</span><span class="release-name">RELEASE-64</span>Windows runner PowerShell steps run again</li>
+<li data-glance-task="OPS92"><span class="task-id">OPS92</span>PowerShell scripts fed on stdin never run: end them with a blank line</li>
+<li data-glance-task="OPS87"><span class="task-id">OPS87</span>Persistent Linux runner on a Windows machine again (R5.93), listener always on</li>
+<li data-glance-task="OPS88"><span class="task-id">OPS88</span>Windows runner add still fails on 0.1.24: stale account reused, empty SID</li>
+<li data-glance-task="OPS89"><span class="task-id">OPS89</span>Ephemeral Linux job on Windows fails: chown on host, then JIT 409 retry loop</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">11</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">81</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">7</div><div class="label">tasks built</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">4</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">12 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="OPS90"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">OPS90</span>Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke<span class="no-release-line">ships nothing: operations check on the owner&#x27;s PC</span></td><td>Update via Settings &gt; Updates; add 2 persistent Linux; remove failed rows and re-add Windows; push crsp2-pool-smoke</td><td>25 Nov ~10:00<span class="expected-basis">no progress since 24 Nov; waits on owner decision</span></td></tr>
+<tr data-task="OPS94"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">OPS94</span>pool-add-agent: lost agents volume leaves runners unregistered</td><td>pool-add-agent says already added when slug is in /agents.json but /agents/&lt;slug&gt; is missing. Fix: treat a missing dir as not added and recreate it. Source: pool main volume loss 24 Nov (dev-standards-03).</td><td>26 Nov ~12:00<span class="expected-basis">not started; needs owner priority</span></td></tr>
+<tr data-task="OPS95"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">OPS95</span>pool-refresh --yes: build ok but missing container not created</td><td>pool-refresh builds the image but fails &#x27;could not compare the image ids&#x27; when the container is gone; compose up -d was needed by hand. Fix: create the container when absent. Source: 24 Nov (dev-standards-03).</td><td>26 Nov ~12:00<span class="expected-basis">not started; needs owner priority</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">7 built, 85 live</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="OPS93"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS93</span>Windows runner register passes the configure verb to Runner.Listener<span class="release-line"><span class="release-name">RELEASE-65</span></span></td><td>register runs Runner.Listener.exe with --unattended... but no &#x27;configure&#x27;, so it fails &#x27;Not configured&#x27;; hidden until OPS92 made the step run</td><td>24 Nov</td></tr>
+<tr data-task="OPS91"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS91</span><span class="release-name">RELEASE-64</span>Windows runner PowerShell steps run again</td><td>join, PR CI, merge; tag v0.1.26 waits for the owner&#x27;s yes</td><td>24 Nov</td></tr>
+<tr data-task="OPS92"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS92</span>PowerShell scripts fed on stdin never run: end them with a blank line<span class="release-line"><span class="release-name">RELEASE-64</span></span></td><td>wrapScript ends with &#x27;}&#x27; and no blank line; powershell -Command - then runs nothing and exits 0, so Windows runner steps do nothing</td><td>24 Nov</td></tr>
+<tr data-task="OPS87"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS87</span>Persistent Linux runner on a Windows machine again (R5.93), listener always on<span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td>Owner 24 Nov 00:35: Bring back persistent Linux. Plus failed-row display fixes on Setup &gt; Runners.</td><td>24 Nov</td></tr>
+<tr data-task="OPS88"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS88</span>Windows runner add still fails on 0.1.24: stale account reused, empty SID<span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td>24 Nov 01:18: new runner r_386d65a6 used old account crsp-gameroompc-33e8 and old folder; PowerShell fallback printed nothing</td><td>24 Nov</td></tr>
+<tr data-task="OPS89"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS89</span>Ephemeral Linux job on Windows fails: chown on host, then JIT 409 retry loop<span class="release-line"><span class="release-name">RELEASE-63</span></span></td><td>24 Nov 01:20 lan-link smoke job 138144007503 on 0.1.24</td><td>24 Nov</td></tr>
+<tr data-task="OPS71"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS71</span>Sync scripts/delivery, hooks, workflows to luismc-delivery 1.54.1<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>delivery_ci_install update; template + re-apply crsp edits for 12 files; take templates for .gitleaks.toml, package.yml, gate.json, smoke.json (owner 21 Nov)</td><td>22 Nov</td></tr>
+<tr data-task="OPS77"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS77</span><span class="release-name">RELEASE-55</span>job sizing wave 1 (T2 labels, T5 classes, T9 tool store)</td><td>join OPS73-75, CI, merge on green; tag v0.1.23 and install (owner OK)</td><td>22 Nov</td></tr>
+<tr data-task="OPS78"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS78</span>Job sizing T7: gate persistent runners on the hosts<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>Wave 3, after wave 2 is green. Add the label and start the listener on admit; stop and unlabel after; weekly wake ~1 min; hosts only (Linux, Windows, macOS).</td><td>22 Nov</td></tr>
+<tr data-task="OPS83"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS83</span>Machine health and per-machine/runner job stats (back end)<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>Agent collects uptime, disk per volume + days to full, swap/OOM, connectivity, restart pending/OS updates, sleep/power, clock skew, versions, Docker disk, temperature, load avg/steal; job stats per machine and runner (24 h / 7 d); Doctor findings.</td><td>22 Nov</td></tr>
+<tr data-task="OPS85"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS85</span>Open the runs-on PRs from crsp: API, console button and CLI for OpenPR<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>Owner 22 Nov 08:00: open the runs-on PRs now. OPS73 OpenPR is only called from tests; wire it</td><td>22 Nov</td></tr>
+<tr data-task="OPS86"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS86</span>Disk floor editable per machine in the console; this PC at 150 GB<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>Owner 22 Nov 08:00: raise floor to 150 GB (OS error 112 on comics-organizer). disk_floor_gib only in config.toml today</td><td>22 Nov</td></tr>
+<tr data-task="OPS73"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS73</span>Job sizing T2: per-job labels and variables (option A routing)<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>wave 1; back end only</td><td>22 Nov</td></tr>
+<tr data-task="OPS74"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS74</span>Job sizing T5: runner classes, admission, reservation, memory cap<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>wave 1; back end only; over memory stops the job</td><td>22 Nov</td></tr>
+<tr data-task="OPS75"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS75</span>Job sizing T9: Windows and macOS tool store, private job home<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>wave 1; back end only; macOS included</td><td>22 Nov</td></tr>
+<tr data-task="OPS80"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS80</span>Job sizing T6: runners created per job before assignment, ephemeral + warm<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>Wave 2. Admit by pool room, create a runner with the job-name label, one lease per job id, reconcile, poll for lost webhooks, one warm runner per busy label set. All OSes. Back end.</td><td>22 Nov</td></tr>
+<tr data-task="OPS81"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS81</span>Job sizing T8: crsp timers with the 30 s grace<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>Wave 2. Hold cap 2 min, job/run timers 30/45, 30 s grace with countdown, stop runner or cancel run, Stop now and Extend 10 min once, audit rows. All OSes. Back end.</td><td>22 Nov</td></tr>
+<tr data-task="OPS82"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS82</span>Test guardrails G1: per-test timeouts for pytest and go test<span class="release-line"><span class="release-name">RELEASE-55</span></span></td><td>pytest per-test timeout; go test -timeout in ci.yml; scripts/ci/go-test.sh unit limit 10 s (owner 22 Nov 00:45).</td><td>22 Nov</td></tr>
+<tr data-task="OPS79"><td><span class="status-chip status-dropped">Dropped</span></td><td><span class="task-id">OPS79</span><span class="release-name">RELEASE-56</span>job sizing wave 2 join, CI, merge, tag<span class="dropped-line">dropped: folded into RELEASE-55</span></td><td>Join T6 + T8, PR CI, merge on green, tag and install.</td><td>22 Nov</td></tr>
+<tr data-task="OPS76"><td><span class="status-chip status-dropped">Dropped</span></td><td><span class="task-id">OPS76</span><span class="release-name">RELEASE-54</span>delivery scripts synced to luismc-delivery 1.54.1<span class="dropped-line">dropped: folded into RELEASE-56</span></td><td>OPS71 join, CI, merge on green (owner OK overnight)</td><td>22 Nov</td></tr>
+<tr data-task="OPS84"><td><span class="status-chip status-dropped">Dropped</span></td><td><span class="task-id">OPS84</span><span class="release-name">RELEASE-58</span>Release: job sizing T7 listener gate (OPS78)<span class="dropped-line">dropped: folded into RELEASE-56</span></td><td>RELEASE-58: join OPS78 after RELEASE-56, CI, merge, tag</td><td>22 Nov</td></tr>
+<tr data-task="OPS72"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS72</span>Draft dev-standards request: crsp&#x27;s 12 local delivery edits as options<span class="no-release-line">ships nothing: draft file for the owner, ships nothing</span></td><td>message file listing each crsp edit to vendored delivery files, so updates apply cleanly</td><td>22 Nov</td></tr>
+<tr data-task="OPS61"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS61</span>Size WSL and pool memory caps from host RAM minus measured Windows use<span class="release-line"><span class="release-name">RELEASE-52</span></span></td><td>dev-standards 21 Nov: 32 GB PC, WSL 19 GB + pool 17 GB reached 95-97% with 2 heavy jobs (Windows ~13 GB). Owner set WSL 15, pool 12. Container cap applies live; WSL cap needs wsl --shutdown + modprobe kvm_intel</td><td>21 Nov</td></tr>
+<tr data-task="OPS66"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS66</span>Per-job CPU and memory peak sampling on Linux, Windows, macOS<span class="release-line"><span class="release-name">RELEASE-52</span></span></td><td>Build plan T3: cgroups/container stats, Job Objects, process lists; shared Go sizing; store peaks per job</td><td>21 Nov</td></tr>
+<tr data-task="OPS67"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS67</span>Scan and count: size guess from workflow, test counts, tool config, services<span class="release-line"><span class="release-name">RELEASE-52</span></span></td><td>Build plan T4: Playwright, Vitest/Jest, Go first; editable cost table; reset at &gt;2x; never block a new job</td><td>21 Nov</td></tr>
+<tr data-task="OPS70"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS70</span>Persistent Linux runner: console shows stopped, and one runner starts twice<span class="release-line"><span class="release-name">RELEASE-52</span></span></td><td>v0.1.21 retest 19:09: pool files OK, Runner.Listener runs, but view.go sees no service; two r-dirs per runner</td><td>21 Nov</td></tr>
+<tr data-task="OPS68"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS68</span>Updater passes lifecycle conformance; Ed25519 manifest; new asset names<span class="release-line"><span class="release-name">RELEASE-53</span></span></td><td>Test interface, policies, retry 1 h/4 h/skip, no check before pairing, audit, Crsp-&lt;v&gt;-win-&lt;arch&gt;.msi</td><td>21 Nov</td></tr>
+<tr data-task="OPS69"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS69</span>MSI lifecycle lanes, release check, signed manifest and renamed assets<span class="release-line"><span class="release-name">RELEASE-53</span></span></td><td>Lanes on windows-latest and windows-11-arm; install, upgrade, rollback, downgrade, remove, purge, leftovers</td><td>21 Nov</td></tr>
+<tr data-task="OPS62"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS62</span>Linux persistent runner: write pool files as the pool&#x27;s uid, not runner<span class="release-line"><span class="release-name">RELEASE-51</span></span></td><td>0.1.20 21 Nov 14:08: pool files exit 1, mkdir /state/bin denied; container user 64000 owns /state, exec -u runner (1001) in persistent.go:214</td><td>21 Nov</td></tr>
+<tr data-task="OPS63"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS63</span>Do not delete RUNS_ON_* while machine facts are unknown after a restart<span class="release-line"><span class="release-name">RELEASE-51</span></span></td><td>21 Nov 13:21 and 07:32: syncVariables deleted RUNS_ON_LINUX right after restart (no backends reported yet), restored ~10 min later</td><td>21 Nov</td></tr>
+<tr data-task="OPS65"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS65</span>Test GitHub routing facts on a scratch repo (vars in runs-on, labels API)<span class="no-release-line">ships nothing: study, ships nothing</span></td><td>Build plan T1: private luis-mc/crsp-routing-test, deleted after; vars resolve time, || fallback, queued labels, runner label cap and API, 14-day rule docs</td><td>21 Nov</td></tr>
+<tr data-task="OPS56"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS56</span>Runners sharing one CPU cap: per-runner CPU budget, heavy jobs by label glob<span class="no-release-line">ships nothing: study page, ships nothing</span></td><td>dev-standards finding 21 Nov 02:58: two runners in one 5-CPU container; integration job got half the CPU and failed on timeouts (no OOM). Heavy-job patterns were exact names and missed linux-integration-2. Options: per-runner CPU budget or cpuset; heavy-job class keyed on labels or globs (*integration*, *e2e*). Needs owner pick; ask in the morning</td><td>21 Nov</td></tr>
+<tr data-task="OPS64"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS64</span>Hold jobs before assignment, not in job-started hook; own job/run timers<span class="no-release-line">ships nothing: study page, ships nothing</span></td><td>Peer dev-standards-77, 21 Nov: in-hook gate burns timeout-minutes (comiclex jobs held 13-19 min, cancelled). crsp slots hook holds up to MaxHoldMin=10 (slots/config.go:25). Ideas: listen only when slot free; timers from first real step; queue/gate/run times apart</td><td>21 Nov</td></tr>
+<tr data-task="OPS57"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS57</span>Runners of one repo: compare tools on PATH, reload .env/.path without admin<span class="release-line"><span class="release-name">RELEASE-50</span></span></td><td>dev-standards finding 21 Nov 03:40: a cloned 2nd Windows runner failed on plain cargo (ENOENT); the 1st passed only via cached helper binaries. Ideas: doctor check comparing tool availability (cargo, rustc, node) across a repo&#x27;s runners; a way to apply .env/.path changes without an admin restart; flag CARGO_HOME/RUSTUP_HOME pointing at empty folders</td><td>21 Nov</td></tr>
+<tr data-task="OPS58"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS58</span>Load gate checks memory only at job start; running jobs can push PC past limit<span class="release-line"><span class="release-name">RELEASE-50</span></span></td><td>dev-standards finding 21 Nov 04:30: PC hit 96% memory (limit 85%) with jobs already running. Ideas: watch memory while jobs run, pause new starts and warn; per-job memory cap. Ask owner with OPS56/OPS57</td><td>21 Nov</td></tr>
+<tr data-task="OPS59"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS59</span>Machine settings (backends, pool size) reset to defaults after updates<span class="release-line"><span class="release-name">RELEASE-50</span></span></td><td>Owner 21 Nov: ticked backends and pool size revert from version to version. Code: settings change only on Save; reset means new machine row (local agent re-joins when its key is refused) or a new store. Needs evidence</td><td>21 Nov</td></tr>
+<tr data-task="OPS60"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS60</span>Linux runner on Windows gets Windows crsp.exe; wizard says Done on failure<span class="release-line"><span class="release-name">RELEASE-50</span></span></td><td>21 Nov 07:2x: gameroompc-pool-1 (linux, docker) failed: Dockerfile COPY crsp got the Windows binary, RUN crsp version exit 1 (WSL interop error). Wizard showed Done. Took over 2 min</td><td>21 Nov</td></tr>
+<tr data-task="OPS55"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS55</span>Slot cap vs runners: slot wait apart from job time, doctor warns, hold &lt; timeout<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>dev-standards finding 21 Nov 02:40: 4 runners, ci_slots 2, job held 767 s in job-started hook, counted against timeout-minutes. Check crsp: runners per repo vs machine slots, slot wait recorded as its own phase, max hold below job timeout</td><td>21 Nov ~06:40</td></tr>
+<tr data-task="OPS51"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS51</span>Drop quiet hours: specs, words, pause reason, settings<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>Owner decision 20 Nov: quiet hours are dropped as a concept (machines R5.28 never built; Docker compact skip window). Remove from specs, content.md, the pause reason and settings.</td><td>21 Nov ~05:30</td></tr>
+<tr data-task="OPS54"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS54</span>Postgres: copy role settings and memberships to every runner login (PG16)<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>createrole_self_grant=&#x27;set, inherit&#x27; as role setting (PG16 CREATEROLE gives only ADMIN); copy attributes, rolconfig, memberships of the repo&#x27;s first login; temp DBs owned by the shared role so any runner drops them</td><td>21 Nov ~04:45</td></tr>
+<tr data-task="OPS53"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS53</span>Postgres rights shared by every runner of one repo (pool finding 21 Nov)<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>Second runner&#x27;s DB user lacked CREATEROLE and ADMIN membership of app roles the first created (42501). Per-repo shared owner role both runner users join; Doctor flags unused DB users</td><td>21 Nov ~04:35</td></tr>
+<tr data-task="OPS52"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">OPS52</span>Spec crsp handling of dev-standards pool findings (20 Nov, 7 items)<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>1 shared tool cache per runner user (ACL/own folders); 2 register on GitHub only after local record, roll back on failure, Doctor finds orphans; 3 &#x27;session already exists&#x27; after restart = wait, not error; 4 Windows service account without password quirks; 5 orphan agent folders cleaned/flagged; 6 Docker vhdx compact needs drained pool (ties to OPS51); 7 already covered by repository parallel limit</td><td>21 Nov ~04:35</td></tr>
+<tr data-task="OPS50"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS50</span>Installer: hidden close step; stop crsp-agent before Validating install<span class="release-line"><span class="release-name">RELEASE-46</span></span></td><td>Code done, branch CI green; second join 10:13</td><td>20 Nov</td></tr>
+<tr data-task="OPS46"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS46</span>Fix: Linux container runners, Remove, light runner retries, folder error, table<span class="release-line"><span class="release-name">RELEASE-43</span></span></td><td>CODE DONE 62b88ee, draft #279; waits for the RELEASE-43 join</td><td>19 Nov</td></tr>
+<tr data-task="OPS47"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS47</span>Machine page: Save bar sticks to the foot; pool size option preselected<span class="release-line"><span class="release-name">RELEASE-43</span></span></td><td>code pushed 99f7ff5, draft #281; waits for the RELEASE-43 join</td><td>19 Nov</td></tr>
+<tr data-task="OPS48"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS48</span>Overview: machine card title overlaps the Machines section title<span class="release-line"><span class="release-name">RELEASE-43</span></span></td><td>code pushed ce8ebb3, draft #280; waits for the RELEASE-43 join</td><td>19 Nov</td></tr>
+<tr data-task="OPS49"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS49</span>Drop light runners: light jobs run on pool runners (D110)<span class="release-line"><span class="release-name">RELEASE-43</span></span></td><td>Draft #282 head ff5c53e; joined into RELEASE-43</td><td>19 Nov</td></tr>
+<tr data-task="OPS36"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS36</span>Jobs tables: weighted grow columns, charts check on the real console<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS37"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS37</span>CRSP_VM_IMAGE_MIRROR setting for VM image downloads<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS38"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS38</span>CLI command to remove runner leftovers; web tests wait 5 s by default<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS39"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS39</span>Real-machine test pass for v0.1.14: checklist and script<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS40"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS40</span>Release installers carry the version: crsp-windows-amd64_0.1.15.msi<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS41"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS41</span>CI base image: build only when images change; reuse cached layers<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS42"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS42</span>Run page: one Jobs table for graph and timeline, small fixes<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS43"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS43</span>Jobs: Open run goes straight to the Run page (no in-place waterfall)<span class="release-line"><span class="release-name">RELEASE-42</span></span></td><td>released in v0.1.15 (RELEASE-42), 11:23</td><td>19 Nov</td></tr>
+<tr data-task="OPS44"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS44</span>GameRoomPC runners: no engine, folder prep, remove, light runners, table<span class="no-release-line">ships nothing: duplicate row of the OPS45 diagnosis (made by a retried add)</span></td><td>duplicate of OPS45; diagnosis done, fixes in OPS46 and OPS49</td><td>19 Nov</td></tr>
+<tr data-task="OPS45"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS45</span>GameRoomPC runners: no engine, folder prep, remove, light runners, table<span class="no-release-line">ships nothing: diagnosis first; the fix gets its own task</span></td><td>cause found: container backend engine never detected (code bug); light runner retry counter resets; folder error detail not logged; table cells</td><td>19 Nov</td></tr>
+<tr data-task="OPS31"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS31</span>Real symbolic-link check in Windows CI<span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td>v0.1.14, merged 08:19 as 03b4c50f (#266)</td><td>19 Nov</td></tr>
+<tr data-task="OPS33"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS33</span>Doctor finds runner services no controller owns<span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td>v0.1.14, merged 08:19 as 03b4c50f (#266)</td><td>19 Nov</td></tr>
+<tr data-task="OPS34"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS34</span>Jobs section: runs, jobs, steps, timing and forecasts (build)<span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td>v0.1.14, merged 08:19 as 03b4c50f (#266)</td><td>19 Nov</td></tr>
+<tr data-task="OPS35"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS35</span>No hard-coded addresses: GitHub and download hosts from env settings<span class="release-line"><span class="release-name">RELEASE-41</span></span></td><td>v0.1.14, merged 08:19 as 03b4c50f (#266)</td><td>19 Nov</td></tr>
+<tr data-task="OPS27"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS27</span>Add runners fails: Linux on a Windows machine is refused as ephemeral<span class="release-line"><span class="release-name">RELEASE-40</span></span></td><td>Owner 18 Nov 14:23 recording, v0.1.12: Linux, GameRoomPC, 1 runner. Web sends kind ephemeral (Linux on Windows = container); controller refuses ephemeral for pool scope. Review step list empty; Done marks Registering done; error text runs into &#x27;Try again&#x27;.</td><td>19 Nov</td></tr>
+<tr data-task="OPS28"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS28</span>Runner kind choice; public repositories default to ephemeral<span class="release-line"><span class="release-name">RELEASE-40</span></span></td><td>Owner 18 Nov: D93 choose persistent or ephemeral; D94 public repos default to ephemeral (routing + preselect); D95 persistent runners always clean temp files, keeping dependencies is a per-runner setting.</td><td>19 Nov</td></tr>
+<tr data-task="OPS29"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS29</span>Machine page: Now, State and the stop/resume button disagree<span class="release-line"><span class="release-name">RELEASE-40</span></span></td><td>Same recording: before Stop, State online, Now Paused with note &#x27;takes no new job&#x27;, Mode Always; after Stop, State not taking jobs but Now Taking jobs; Pause on battery shows On while Always ignores the battery.</td><td>19 Nov</td></tr>
+<tr data-task="OPS32"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS32</span>Why gameroompc-1 is stopped and not on GitHub<span class="no-release-line">ships nothing: read-only look at this PC</span></td><td>Found 18 Nov: made 16 Nov 00:48 by an earlier crsp (runner 2.330.0, labels self-hosted/windows/x64, no pool labels); never registered (no .runner or .credentials file), so GitHub never listed it; service fails to start: logon failure 17 Nov 23:57 and 18 Nov 06:54 (Log on as a service). Whether today&#x27;s controller still owns it needs the console (CLI not signed in). OPS33 Doctor will flag it if not owned.</td><td>18 Nov</td></tr>
+<tr data-task="OPS30"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS30</span>Remove the two leftover crsp-light runner services for home-automation<span class="no-release-line">ships nothing: local cleanup on this PC</span></td><td>Owner ran the script 18 Nov: one service left (Get-Service could not open its long name); folders and both accounts removed. Last step: sc.exe delete in an elevated shell, and the leftover 99 MB _download-crsp-light-comics-organizer-windows.zip.</td><td>18 Nov</td></tr>
+<tr data-task="OPS22"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS22</span>Webhook delivery missed for comics-organizer at 21:48: find cause, fix<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td>Seen on repository page 2026-11-17; maybe the controller address change</td><td>18 Nov</td></tr>
+<tr data-task="OPS23"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS23</span>Long-lived runners serve every pool repo: hidden per-repo registrations<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td>Owner D30, D31: Windows/macOS runners registered per pool repository behind the scenes, one job per slot at a time</td><td>18 Nov</td></tr>
+<tr data-task="OPS24"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS24</span>Runner service loses Log on as a service after reboot: grant, check, alert<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td>18 Nov 06:54 restart: services for .\crsp-gameroompc-1 and .\crsp-crsp-light-25fb failed with logon type not granted. Grant SeServiceLogonRight when creating the account, doctor check after each boot, banner and tray alert when a runner service fails to start.</td><td>18 Nov</td></tr>
+<tr data-task="OPS25"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS25</span>Real webhooks: console screen for a public webhook address and secret<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td>Owner D89 (2026-11-18): after OPS22, let the owner set a public https webhook address and secret from the console so jobs start at once instead of within 15 s of polling.</td><td>18 Nov</td></tr>
+<tr data-task="OPS26"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS26</span>Flaky TestSettingsGetAndPatch on macOS: TempDir not empty at cleanup<span class="release-line"><span class="release-name">RELEASE-39</span></span></td><td>RELEASE-38 CI 18 Nov: internal/api TestSettingsGetAndPatch failed on macos-latest with TempDir RemoveAll &#x27;directory not empty&#x27;: something writes in the test dir after the test ends. Stop background work in newOpsEnv cleanup.</td><td>18 Nov</td></tr>
+<tr data-task="OPS18"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS18</span>Windows runner folder reset fails: icacls 1332 on crsp-crsp-light account<span class="release-line"><span class="release-name">RELEASE-36</span></span></td><td>Seen on GameRoomPC comics-organizer windows runner; doubled crsp- prefix or account removed before reset</td><td>18 Nov</td></tr>
+<tr data-task="OPS19"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS19</span>Runner delete: no false &#x27;no such runner&#x27; problem; list updates without reload<span class="release-line"><span class="release-name">RELEASE-36</span></span></td><td>Owner video 21:34: delete dialog listed a false problem, row stayed draining until manual reload</td><td>18 Nov</td></tr>
+<tr data-task="OPS20"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS20</span>CPU for runners 100% fails on Windows: &#x27;The parameter is incorrect&#x27;<span class="release-line"><span class="release-name">RELEASE-36</span></span></td><td>SetCap(100) sends flags 0 rate 0, Windows rejects; 100% must set a 10000 hard cap; message unclear to owner</td><td>18 Nov</td></tr>
+<tr data-task="OPS21"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS21</span>CPU cap error stays one change too long: state reported lags the setting<span class="release-line"><span class="release-name">RELEASE-36</span></span></td><td>Owner video 21:42: after the 100% error, the error clears only on the second other choice</td><td>18 Nov</td></tr>
+<tr data-task="OPS16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS16</span>New controller address: GitHub sign-in keeps working (callback URL)<span class="release-line"><span class="release-name">RELEASE-35</span></span></td><td>Code done, draft PR</td><td>17 Nov</td></tr>
+<tr data-task="OPS17"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS17</span>Sign-in on the local address after TLS: no &#x27;internal&#x27; failure, reason logged<span class="release-line"><span class="release-name">RELEASE-35</span></span></td><td>Code done, draft PR</td><td>17 Nov</td></tr>
+<tr data-task="OPS15"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS15</span>Admin flags read via the App when the sign-in token is gone<span class="release-line"><span class="release-name">RELEASE-35</span></span></td><td>Code done (draft PR); joins RELEASE-35</td><td>17 Nov</td></tr>
+<tr data-task="OPS13"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS13</span>Repository list via the GitHub App; Sign in again button on the warning<span class="release-line"><span class="release-name">RELEASE-31</span></span></td><td>Merged in RELEASE-31 (#204), tagged v0.1.7</td><td>17 Nov</td></tr>
+<tr data-task="OPS14"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS14</span>Choose the controller address in the console (no CRSP_LISTEN_ADDR by hand)<span class="release-line"><span class="release-name">RELEASE-31</span></span></td><td>Merged in RELEASE-31 (#204), tagged v0.1.7</td><td>17 Nov</td></tr>
 <tr data-task="OPS1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS1</span>Native installers: macOS .pkg, Linux .deb and .rpm<span class="release-line"><span class="release-name">RELEASE-1</span></span></td><td>Installer files written (WIP). Cloud routine from 12:00: root service, nfpm pin, PR CI smoke for deb/rpm/pkg, release.yml, spec, draft PR.</td><td>16 Nov</td></tr>
 <tr data-task="OPS11"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS11</span>Lesson 27 recorded in the handover notes (DL367)<span class="release-line"><span class="release-name">RELEASE-11</span></span></td><td>dev-standards draft PR #78, branch handover-lesson-27</td><td>15 Nov</td></tr>
 <tr data-task="OPS12"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS12</span>Lesson 28 recorded in the handover notes (DL369)<span class="release-line"><span class="release-name">RELEASE-11</span></span></td><td>dev-standards draft PR #79, branch handover-lesson-28; affects OPS8 KVM loader</td><td>15 Nov</td></tr>
@@ -949,6 +1049,1570 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s2"><h2><span class="section-number">&sect; 2</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D162">
+<h3 class="decision-head"><span class="decision-id">D162</span> <span class="decision-question">What idle means for updates</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS68</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">No job on this machine</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">per machine</p>
+<blockquote class="decision-words">&ldquo;No job on this machine (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No job in the pool</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">whole pool</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D161">
+<h3 class="decision-head"><span class="decision-id">D161</span> <span class="decision-question">OS code signing of the MSI</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS69</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">unsigned, manifest protects updates</p>
+<blockquote class="decision-words">&ldquo;Not now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Sign the MSI</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">certificate needed</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D160">
+<h3 class="decision-head"><span class="decision-id">D160</span> <span class="decision-question">Lifecycle timing vs job sizing</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task CRSP222</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Parallel now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">rides RELEASE-53</p>
+<blockquote class="decision-words">&ldquo;Parallel now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">After RELEASE-52</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">start ~20:20</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D159">
+<h3 class="decision-head"><span class="decision-id">D159</span> <span class="decision-question">What Delete my data too deletes</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS69</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Everything crsp made</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">settings, db, logs, caches, images, WSL distro</p>
+<blockquote class="decision-words">&ldquo;Everything crsp made (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Settings, database, logs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">caches and images stay</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D158">
+<h3 class="decision-head"><span class="decision-id">D158</span> <span class="decision-question">Product word in asset names</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS69</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Crsp</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Crsp-0.1.22-win-x64.msi</p>
+<blockquote class="decision-words">&ldquo;Crsp (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">CiRunnersSharedPool</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">repo name</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">SharedPool</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">short</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D157">
+<h3 class="decision-head"><span class="decision-id">D157</span> <span class="decision-question">Asset rename transition</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS69</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both names, 2 releases</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">old copies keep updating</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Switch at once</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">manual reinstall once</p>
+<blockquote class="decision-words">&ldquo;Switch at once&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D156">
+<h3 class="decision-head"><span class="decision-id">D156</span> <span class="decision-question">Ed25519 manifest signing key</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS68</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">You run one command</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">owner makes key, stores secret</p>
+<blockquote class="decision-words">&ldquo;You run one command (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Provenance only, opt out</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">no Ed25519</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D155">
+<h3 class="decision-head"><span class="decision-id">D155</span> <span class="decision-question">Where lifecycle lanes run</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS69</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">GitHub-hosted</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">clean throwaway machines</p>
+<blockquote class="decision-words">&ldquo;GitHub-hosted (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">crsp pool</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">dogfood on pool</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Mixed</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Linux on pool, rest hosted</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D154">
+<h3 class="decision-head"><span class="decision-id">D154</span> <span class="decision-question">Lifecycle targets for crsp</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS69</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Windows MSI x64+arm64</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Windows lanes</p>
+<blockquote class="decision-words">&ldquo;turn of linux and macos OSes as targets for this project, for now&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Linux deb and rpm</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Ubuntu and Fedora lanes</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">macOS pkg</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">macOS lanes</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D153">
+<h3 class="decision-head"><span class="decision-id">D153</span> <span class="decision-question">Weekly wake method (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Listener on for a minute</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">No job</p>
+<blockquote class="decision-words">&ldquo;Listener on for a minute (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Run a tiny job</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">End-to-end proof</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D152">
+<h3 class="decision-head"><span class="decision-id">D152</span> <span class="decision-question">Grace buttons (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both buttons</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Stop now and Extend 10 min</p>
+<blockquote class="decision-words">&ldquo;Both buttons (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Stop now only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No extend</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D151">
+<h3 class="decision-head"><span class="decision-id">D151</span> <span class="decision-question">Timer grace edge cases (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, both</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Cancel stop if job ended; run cancel only when both run out</p>
+<blockquote class="decision-words">&ldquo;Yes, both (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always act</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Act anyway</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D150">
+<h3 class="decision-head"><span class="decision-id">D150</span> <span class="decision-question">runs-on change on repos not owned (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Show patch</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Copy or download</p>
+<blockquote class="decision-words">&ldquo;Show patch (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Plain RUNS_ON_&lt;OS&gt;</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D149">
+<h3 class="decision-head"><span class="decision-id">D149</span> <span class="decision-question">Runner label cap (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Group by size class</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Same-size job names share one label over the cap</p>
+<blockquote class="decision-words">&ldquo;Group by size class (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add another runner</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Spread labels</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D148">
+<h3 class="decision-head"><span class="decision-id">D148</span> <span class="decision-question">One console word for persistent/ephemeral (LOOK50)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task LOOK50</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Runner type</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Help&#x27;s word</p>
+<blockquote class="decision-words">&ldquo;Runner type (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Kind</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Runner page&#x27;s word</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D147">
+<h3 class="decision-head"><span class="decision-id">D147</span> <span class="decision-question">Weekly wake for gated runners (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Weekly wake, confirm rule</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Confirm 14-day rule in test</p>
+<blockquote class="decision-words">&ldquo;Weekly wake, confirm rule (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No wake</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Re-register if removed</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D146">
+<h3 class="decision-head"><span class="decision-id">D146</span> <span class="decision-question">Timer 30 s meaning (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Act now, escalate after 30 s</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hard stop if lingering</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">30 s grace first</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Grace before first action</p>
+<blockquote class="decision-words">&ldquo;option 2, show user clearly what is happening&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D145">
+<h3 class="decision-head"><span class="decision-id">D145</span> <span class="decision-question">Copy to .crsp.yml (OPS56 #5)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Copy a YAML line</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Clipboard</p>
+<blockquote class="decision-words">&ldquo;Copy a YAML line (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Download the whole file</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Full file</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D144">
+<h3 class="decision-head"><span class="decision-id">D144</span> <span class="decision-question">Console or .crsp.yml wins (OPS56 #5)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Console wins</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Latest console change</p>
+<blockquote class="decision-words">&ldquo;Console wins (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">.crsp.yml wins</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">File is final</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D143">
+<h3 class="decision-head"><span class="decision-id">D143</span> <span class="decision-question">crsp opens the one-time runs-on PR (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">crsp opens a PR</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">One PR per repo</p>
+<blockquote class="decision-words">&ldquo;crsp opens a PR (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Show the patch only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Copy/download</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D142">
+<h3 class="decision-head"><span class="decision-id">D142</span> <span class="decision-question">Test GitHub routing facts first (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Test first</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Scratch repo, ~30 min</p>
+<blockquote class="decision-words">&ldquo;Test first (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build and test as we go</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Build and test as we go</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D141">
+<h3 class="decision-head"><span class="decision-id">D141</span> <span class="decision-question">Persistent runners with listener gating on all runner types (OPS64). Owner: option 1 for host, containers, VMs, WSL2, Hyper-V; research feasibility per type.</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Persistent, listener gated</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Listener on only when admitted</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">JIT on all OSes</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fresh runner per job</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Machine itself only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Gate persistent runners on Linux, Windows, macOS hosts; containers and VMs use ephemeral</p>
+<blockquote class="decision-words">&ldquo;option 3 - but wording &quot;kind&quot; and &quot;type&quot; is not consistent; help calls it runner type&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D140">
+<h3 class="decision-head"><span class="decision-id">D140</span> <span class="decision-question">Job routing by per-job crsp variable (OPS64). Owner asked how first runs work; page update explains scan at opt-in and push, fallback variable.</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Per-job crsp variable</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">crsp picks size class per job</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Size labels by hand</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Authors pick</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Label per job name</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">crsp-generated label per repo job name in a repo variable; only chosen runners (persistent via labels API, or ephemeral) carry it</p>
+<blockquote class="decision-words">&ldquo;option 1, but explain better what you mean by &quot;crsp makes exactly one runner with that unique label&quot;; can persistent runners be used with option 1 too?&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D139">
+<h3 class="decision-head"><span class="decision-id">D139</span> <span class="decision-question">Saving .crsp.yml edits from the console (OPS56 #5)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Save in crsp, instant</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">File stays the base; console shows which wins</p>
+<blockquote class="decision-words">&ldquo;Save in crsp, instant (Recommended); replaces earlier &#x27;Pull request&#x27; answer after owner asked why a merge was needed&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Direct commit</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Default branch</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pull request</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Counts after merge</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D138">
+<h3 class="decision-head"><span class="decision-id">D138</span> <span class="decision-question">Timer defaults (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">30/45/2/60 min</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Job, run, start-up, timeout-minutes</p>
+<blockquote class="decision-words">&ldquo;Use these (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">60/90/3/120 min</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Longer</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D137">
+<h3 class="decision-head"><span class="decision-id">D137</span> <span class="decision-question">Timer actions (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">As proposed</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Job timer stops runner; run timer cancels run; both after 30 s</p>
+<blockquote class="decision-words">&ldquo;As proposed (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always cancel the run</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Any timer</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D136">
+<h3 class="decision-head"><span class="decision-id">D136</span> <span class="decision-question">Runner class enforcement (OPS56 #7)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Count + hard memory cap</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">CPU counted only</p>
+<blockquote class="decision-words">&ldquo;Count + hard memory cap (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Count only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No caps</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hard caps on CPU and memory</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Strict</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D135">
+<h3 class="decision-head"><span class="decision-id">D135</span> <span class="decision-question">Runner class presets (OPS56 #7)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All three + Custom</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Standard, Compact, Memory-heavy</p>
+<blockquote class="decision-words">&ldquo;All three + Custom (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Standard + Custom only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Simpler</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D134">
+<h3 class="decision-head"><span class="decision-id">D134</span> <span class="decision-question">Runner class validation (OPS56 #7)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Use ratio and step limits</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">1.5x step, 1.5-8 GiB/CPU, floor</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Only order + fit</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">small&lt;medium&lt;large&lt;xl, fits pool</p>
+<blockquote class="decision-words">&ldquo;option 2, but show recommended setups that follow option 1&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D133">
+<h3 class="decision-head"><span class="decision-id">D133</span> <span class="decision-question">Starvation rule for passed jobs (OPS56 #7)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">3 passes or 10 min</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Then reserve and backfill</p>
+<blockquote class="decision-words">&ldquo;3 passes or 10 min (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1 pass or 5 min</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Stricter</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">5 passes or 20 min</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Looser</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D132">
+<h3 class="decision-head"><span class="decision-id">D132</span> <span class="decision-question">Installer for the tool store (OPS56 #11)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">mise, own managers as fallback</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One config</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Each tool&#x27;s own manager</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">rustup, nvm/volta, pyenv, SDKMAN</p>
+<blockquote class="decision-words">&ldquo;Each tool&#x27;s own manager&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D131">
+<h3 class="decision-head"><span class="decision-id">D131</span> <span class="decision-question">Who installs Windows/macOS tools (OPS56 #11)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Agent installs</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Into crsp&#x27;s own store only</p>
+<blockquote class="decision-words">&ldquo;Agent installs (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Report only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Doctor lists commands</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D130">
+<h3 class="decision-head"><span class="decision-id">D130</span> <span class="decision-question">Start-up delay for JIT runners (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Warm 1 per busy label</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">One ready runner per busy label set</p>
+<blockquote class="decision-words">&ldquo;Warm 1 per busy label (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always cold</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">15-30 s per job</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D129">
+<h3 class="decision-head"><span class="decision-id">D129</span> <span class="decision-question">Tools on Windows and macOS (OPS56 #11). Owner: explore image-like tool setup, versioned dependency caches, no cross-project contamination.</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Report, then a tool list</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Doctor checks .crsp.yml tool list</p>
+<blockquote class="decision-words">&ldquo;Yes, this design (Recommended): tool plan from scan, read-only versioned tool store, wiped job home, keyed caches, OS user per runner; throwaway VMs for untrusted jobs&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Doctor reports only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">OPS57</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Also auto-install</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">crsp installs</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D128">
+<h3 class="decision-head"><span class="decision-id">D128</span> <span class="decision-question">Waiting before or after assignment (OPS56 #9). Owner: explore before-assignment everywhere; show 1-3 machine examples and race fixes.</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hook + JIT trial on one label</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Capped hook, JIT trial</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Before assignment everywhere</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Runners listen only when a slot is free</p>
+<blockquote class="decision-words">&ldquo;Yes, everywhere (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Capped hook only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Today</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D127">
+<h3 class="decision-head"><span class="decision-id">D127</span> <span class="decision-question">crsp-owned job and run timers (OPS64)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS64</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, crsp-owned timers</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">From first real step, API cancel, timeout-minutes as safety net</p>
+<blockquote class="decision-words">&ldquo;Option 1, including timers for hold, and if possible timers for how long a job stayed in GitHub before crsp accepted it under the new accept-only-when-slots-and-budget-allow; visual examples on the page, including runs with multiple jobs needing different runner types and sizes&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Record only, no cancel</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record and alert</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No timers</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D126">
+<h3 class="decision-head"><span class="decision-id">D126</span> <span class="decision-question">Hold cap in the hook (OPS56 #10)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">10 min max, below timeout</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep today&#x27;s cap</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">2 min</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Hold briefly</p>
+<blockquote class="decision-words">&ldquo;2 min&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Longer than 10 min</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Longer holds</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D125">
+<h3 class="decision-head"><span class="decision-id">D125</span> <span class="decision-question">A new job with no history (OPS56 #8)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Scan, else 1/1, never block</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Never waits for sizing</p>
+<blockquote class="decision-words">&ldquo;Scan, else 1/1, never block (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold until scanned</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">First run waits</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D124">
+<h3 class="decision-head"><span class="decision-id">D124</span> <span class="decision-question">Runner classes and job size (OPS56 #7)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later; one runner per CPU set now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Own CPUs per runner now</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Connect classes now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Gate reads runner class</p>
+<blockquote class="decision-words">&ldquo;Option 2 + runners share the machine CPU and memory, so they do not &quot;own&quot; a specific CPU or memory block; a runner has a CPU and memory allocation, and before taking a job the pool must check if those allocation requirements are met; if met the runner can take the job, if not the job waits and other lighter jobs can pass it in the queue; small, medium, large, xl can have default values, but use...&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D123">
+<h3 class="decision-head"><span class="decision-id">D123</span> <span class="decision-question">Per-job CPU and memory sampling (OPS56 #6)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Linux first, then Windows</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">cgroups first</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All OSes together</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">One step</p>
+<blockquote class="decision-words">&ldquo;All OSes together&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No sampling</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D122">
+<h3 class="decision-head"><span class="decision-id">D122</span> <span class="decision-question">Where the size override lives (OPS56 #5)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">.crsp.yml + console</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">File in repo or console setting</p>
+<blockquote class="decision-words">&ldquo;option 1 + in console allow visualizing and editing .crsp.yml&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">runs-on label</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Risks jobs waiting forever</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Job env value</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">CRSP_SIZE</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D121">
+<h3 class="decision-head"><span class="decision-id">D121</span> <span class="decision-question">When the test count jumps (OPS56 #4)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Reset at over 2x, show it</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Back to scan guess, shown in console</p>
+<blockquote class="decision-words">&ldquo;Reset at over 2x, show it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask the owner</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Console asks</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Never reset</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">History adjusts slowly</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D120">
+<h3 class="decision-head"><span class="decision-id">D120</span> <span class="decision-question">Per-test starting costs (OPS56 #3)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One editable cost table</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Cost class per framework and service, replaced by measurements</p>
+<blockquote class="decision-words">&ldquo;One editable cost table (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No table</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Unmeasured jobs stay 1/1</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D119">
+<h3 class="decision-head"><span class="decision-id">D119</span> <span class="decision-question">How deep the scan counts (OPS56 #2)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Counts + tool config + services</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Tests, workers, projects, shards, services; Playwright, Vitest/Jest, Go first</p>
+<blockquote class="decision-words">&ldquo;Counts + tool config + services (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Stack + file and test counts</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No workers or shards</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Stack only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Tools only</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D118">
+<h3 class="decision-head"><span class="decision-id">D118</span> <span class="decision-question">Sizing approach (OPS56 #1)</span></h3>
+<p class="decision-meta">Asked 21 Nov · Decided 21 Nov · Task OPS56</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Scan+count, then measure</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 21 Nov</span></div>
+<p class="decision-summary">Scan and count first, measured peaks after ~5 runs, override on top</p>
+<blockquote class="decision-words">&ldquo;Scan+count, then measure (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Measure only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Real CPU/memory per job</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Scan only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Guess from workflow and tools</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Override only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hand labels</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D117">
+<h3 class="decision-head"><span class="decision-id">D117</span> <span class="decision-question">Console update from 0.1.13 or 0.1.14 cannot find versioned installers (v0.1.15 and later)</span></h3>
+<p class="decision-meta">Asked 20 Nov · Decided 20 Nov · Task CRSP2</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Install by hand now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 20 Nov</span></div>
+<p class="decision-summary">Owner runs crsp-windows-amd64_0.1.17.msi once; later updates work from the console; no change to published releases.</p>
+<blockquote class="decision-words">&ldquo;Install by hand now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fix old updaters too</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Publish old-name copies with SHA256SUMS lines on v0.1.17 and every future release.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hand install now plus old-name copies for other old machines.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D116">
+<h3 class="decision-head"><span class="decision-id">D116</span> <span class="decision-question">Time limit on new waves while away (replaces D113 cutoff)</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP190</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">No time limit</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">start all needed waves</p>
+<blockquote class="decision-words">&ldquo;you can start all needed waves without time limit&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No new waves after 20:00</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">D113</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D115">
+<h3 class="decision-head"><span class="decision-id">D115</span> <span class="decision-question">Do the design checks, design fixes and title/phone fixes ride RELEASE-45 with the registry wave?</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP190</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All in RELEASE-45</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">one release, one CI, one tag</p>
+<blockquote class="decision-words">&ldquo;can all these go into release 45?&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Separate releases</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">design fixes ship first</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D114">
+<h3 class="decision-head"><span class="decision-id">D114</span> <span class="decision-question">Connectors on cloud agents</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP190</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Remove them</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">clear_mcp_connections</p>
+<blockquote class="decision-words">&ldquo;Remove them&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">no change</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D113">
+<h3 class="decision-head"><span class="decision-id">D113</span> <span class="decision-question">Owner back</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP190</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Tomorrow morning</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">all night</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Tonight, ~22:00</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">no new waves after 20:00</p>
+<blockquote class="decision-words">&ldquo;Tonight, ~22:00&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">In a few hours</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">keep going</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D112">
+<h3 class="decision-head"><span class="decision-id">D112</span> <span class="decision-question">Fix rounds per release while away</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP190</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">2 rounds</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">as before</p>
+<blockquote class="decision-words">&ldquo;2 rounds&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">3 rounds</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">more</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1 round</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">fewer</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D111">
+<h3 class="decision-head"><span class="decision-id">D111</span> <span class="decision-question">Tags while away 19 Nov evening</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP190</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, tag each green release</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">v0.1.17, v0.1.18</p>
+<blockquote class="decision-words">&ldquo;Yes, tag each green release&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One tag at the end</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">once</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No tags</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">owner tags</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D110">
+<h3 class="decision-head"><span class="decision-id">D110</span> <span class="decision-question">Light runners under the pool model: who creates them?</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task OPS49</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">You add them; crsp suggests</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Light is a runner type in Add runners; Doctor suggests one when light jobs have none; never automatic.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">crsp keeps one per OS automatically</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One light pool runner per OS, placed and kept by crsp without asking.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Drop light runners</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">No light runners at all; light jobs run on the normal pool runners.</p>
+<blockquote class="decision-words">&ldquo;Per-repository light runners do not fit the design (pool model). Chose: Drop light runners.&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D109">
+<h3 class="decision-head"><span class="decision-id">D109</span> <span class="decision-question">Run page: the job graph and timeline tables repeat the same jobs</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task OPS42</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One Jobs table</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One Jobs table below both charts, used as their shared text alternative, plus small fixes; next release (RELEASE-43).</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep both, fix the small items</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Each chart keeps its own table; only the plural, repeated PR, worktree row and empty box are fixed.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add it to RELEASE-42</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">One Jobs table and the small fixes ride RELEASE-42 now; about 30 min more.</p>
+<blockquote class="decision-words">&ldquo;Add it to RELEASE-42&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D108">
+<h3 class="decision-head"><span class="decision-id">D108</span> <span class="decision-question">Version in the installer file names</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task OPS40</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both, keep old names</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Versioned names next to the plain ones; old updaters and latest links keep working.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Local download only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only the downloaded copy under ProgramData gets the version.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Release names only, versioned</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Release assets renamed; 0.1.14 and older need one manual install.</p>
+<blockquote class="decision-words">&ldquo;Release names only, versioned&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D107">
+<h3 class="decision-head"><span class="decision-id">D107</span> <span class="decision-question">Next train after RELEASE-41</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Jobs section polish</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Weighted widths, charts review on the real console.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">VM image mirror</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">CRSP_VM_IMAGE_MIRROR.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Real-machine test pass</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Checklist and script for v0.1.14 on real machines.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Something else</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner names it.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Jobs polish, VM mirror and real-machine test pass</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">The owner picked three of the options (multi-select).</p>
+<blockquote class="decision-words">&ldquo;Jobs section polish, VM image mirror, Real-machine test pass&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D106">
+<h3 class="decision-head"><span class="decision-id">D106</span> <span class="decision-question">Cleanup of review servers and RES15 draft</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Stop all, close #260</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Stop 8772/8773/8774, remove review worktrees, close #260.</p>
+<blockquote class="decision-words">&ldquo;Stop all, close #260&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep 8774 and #260</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the Jobs review build.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep everything</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave all.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D105">
+<h3 class="decision-head"><span class="decision-id">D105</span> <span class="decision-question">Default wait of web tests</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Raise default to 5 s</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">testing-library async wait 5 s in the web vitest setup.</p>
+<blockquote class="decision-words">&ldquo;Raise default to 5 s&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep per-test fixes</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fix each flaky test when it shows.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D104">
+<h3 class="decision-head"><span class="decision-id">D104</span> <span class="decision-question">Terminal command for removing runner leftovers</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Console only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leftovers are picked on the doctor finding.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add a CLI command</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">crsp machine leftovers remove NAME... with tests.</p>
+<blockquote class="decision-words">&ldquo;Add a CLI command&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D103">
+<h3 class="decision-head"><span class="decision-id">D103</span> <span class="decision-question">VM image mirror setting (OPS35 follow-up)</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Next train</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">CRSP_VM_IMAGE_MIRROR in RELEASE-42.</p>
+<blockquote class="decision-words">&ldquo;Next train&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Open task, not scheduled.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not needed</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Close the follow-up.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D102">
+<h3 class="decision-head"><span class="decision-id">D102</span> <span class="decision-question">Wide columns of the Jobs tables</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Weighted widths</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Each grow column gets a weight so long names are cut less.</p>
+<blockquote class="decision-words">&ldquo;Weighted widths&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add Slowest job to real list</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Send the slowest job per run in the runs list and show it.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Cut names, full text on hover.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D101">
+<h3 class="decision-head"><span class="decision-id">D101</span> <span class="decision-question">Tag v0.1.14 after RELEASE-41</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task CRSP184</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Tag when green</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Merge #266 on green, tag v0.1.14, watch Release.</p>
+<blockquote class="decision-words">&ldquo;Tag when green&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Merge, no tag yet</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hold the tag until the owner tries main.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold the merge too</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave #266 green and unmerged.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D100">
+<h3 class="decision-head"><span class="decision-id">D100</span> <span class="decision-question">Leftover runner services and gameroompc-1</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS30</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Owner runs the two commands</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">sc.exe delete and remove the zip</p>
+<blockquote class="decision-words">&ldquo;I&#x27;ll run the two commands, Look into gameroompc-1, Doctor should find these (all three)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Look into gameroompc-1</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Why crsp&#x27;s own runner is stopped</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Doctor should find these</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Doctor lists unowned runner services, offers Remove</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D99">
+<h3 class="decision-head"><span class="decision-id">D99</span> <span class="decision-question">Real symbolic-link check in Windows CI</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS31</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, next release</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">One Windows CI step with Developer Mode</p>
+<blockquote class="decision-words">&ldquo;Yes, next release (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, stand-in is enough</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Logic test only</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D98">
+<h3 class="decision-head"><span class="decision-id">D98</span> <span class="decision-question">When to do the CRSP2 review</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task CRSP2</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Tonight, after v0.1.13</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">~19:20</p>
+<blockquote class="decision-words">&ldquo;Tonight, after v0.1.13&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Tomorrow morning</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No chase tonight</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D97">
+<h3 class="decision-head"><span class="decision-id">D97</span> <span class="decision-question">Two stopped crsp-light runner services for home-automation on this PC</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS30</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Investigate and fix</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Task finds the owner controller</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Remove them</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Leftovers of an old test controller</p>
+<blockquote class="decision-words">&ldquo;Remove them&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave them stopped</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Nothing</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D96">
+<h3 class="decision-head"><span class="decision-id">D96</span> <span class="decision-question">TRAY5: own release or ride RELEASE-40</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task CRSP183</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">RELEASE-41 alone</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">RELEASE-40 merges ~18:00 without TRAY5</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Merge TRAY5 into RELEASE-40</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">One release, one review</p>
+<blockquote class="decision-words">&ldquo;merge TRAY5 into RELEASE-40 so I review once&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D95">
+<h3 class="decision-head"><span class="decision-id">D95</span> <span class="decision-question">What a persistent runner keeps between jobs</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS28</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Temp files always cleaned; keeping downloaded dependencies is a per-runner setting</p>
+<blockquote class="decision-words">&ldquo;in persistent runners, pool must always clean temporary files used by the last job; its ok to leave dependencies downloaded to speed up future runs of the same job but make it a config of the persistent runner&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep everything between jobs</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D94">
+<h3 class="decision-head"><span class="decision-id">D94</span> <span class="decision-question">Default to ephemeral for public repositories: how</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS28</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Route public jobs to ephemeral</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Public repos&#x27; jobs run only on ephemeral runners; per-repo override</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ephemeral preselected in Add runners</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Preselect Ephemeral while a public repo uses the pool</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Route public jobs to ephemeral and preselect Ephemeral</p>
+<blockquote class="decision-words">&ldquo;default to ephemeral for public repos; Both&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D93">
+<h3 class="decision-head"><span class="decision-id">D93</span> <span class="decision-question">Linux runners on a Windows machine: persistent (dev-standards model) or ephemeral</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS27</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Persistent, like dev-standards</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Long-lived container, runners take many jobs, cleaned after each</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ephemeral only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fresh container per job</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">User chooses</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Add runners offers persistent and ephemeral</p>
+<blockquote class="decision-words">&ldquo;User should be able to choose between persistant and ephemeral&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D92">
+<h3 class="decision-head"><span class="decision-id">D92</span> <span class="decision-question">When to do the CRSP2 review</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task CRSP2</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Now, on v0.1.12</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Today</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">After RELEASE-40</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">After the tray window fix</p>
+<blockquote class="decision-words">&ldquo;After RELEASE-40&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No chase before 18:00</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D91">
+<h3 class="decision-head"><span class="decision-id">D91</span> <span class="decision-question">RELEASE-38 CI re-run lost its build file</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task CRSP181</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Full re-run now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Re-run CI on df92b26</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Merge RELEASE-38 into RELEASE-39</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">One CI run, one tag</p>
+<blockquote class="decision-words">&ldquo;Merge RELEASE-38 into RELEASE-39&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner looks first</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D90">
+<h3 class="decision-head"><span class="decision-id">D90</span> <span class="decision-question">Version for the real-machine milestone review</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task CRSP2</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">v0.1.11 now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Review today</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Wait for v0.1.13</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">After the runner fixes</p>
+<blockquote class="decision-words">&ldquo;Wait for v0.1.13&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Close CRSP2</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D89">
+<h3 class="decision-head"><span class="decision-id">D89</span> <span class="decision-question">Webhook delivery missed: next step</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task OPS22</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ship fix in RELEASE-39</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Stop the false alarm</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Ship + real webhooks task</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Also a console screen for a public webhook address and secret</p>
+<blockquote class="decision-words">&ldquo;Ship + real webhooks task&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Do not ship</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D88">
+<h3 class="decision-head"><span class="decision-id">D88</span> <span class="decision-question">Parity needs a reachable controller address; build the console address chooser (mockup board Address)?</span></h3>
+<p class="decision-meta">Asked 17 Nov · Decided 17 Nov · Task OPS14</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Approve, build it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 17 Nov</span></div>
+<p class="decision-summary">Choose an address dialog: LAN address, Docker/WSL only, or another; one restart.</p>
+<blockquote class="decision-words">&ldquo;Approve, build it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Docker/WSL only, no network</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only the host address reachable from containers.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Change the mockup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Comment on the canvas first.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D87">
+<h3 class="decision-head"><span class="decision-id">D87</span> <span class="decision-question">Repositories says &#x27;Your GitHub sign-in ended&#x27; after every restart and after 8 hours: what fix?</span></h3>
+<p class="decision-meta">Asked 17 Nov · Decided 17 Nov · Task OPS13</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">List with the App, button too</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 17 Nov</span></div>
+<p class="decision-summary">Read the repository list with the GitHub App&#x27;s own key; sign-in only for admin checks; the warning gets a Sign in with GitHub again button.</p>
+<blockquote class="decision-words">&ldquo;List with the App, button too (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add the button only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep today&#x27;s design; add a Sign in with GitHub again button to the warning.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the sign-in across restarts</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Store GitHub&#x27;s refresh token encrypted on disk (changes R6.2), plus the button.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D86">
+<h3 class="decision-head"><span class="decision-id">D86</span> <span class="decision-question">How should crsp follow luismc-docs 2.7.0 CORE-1..7?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Switch to CORE-1..7 (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Follow-up after RELEASE-26 replaces UX-63..67 with CORE rules, keeps UX-57..62, bumps CI pin.</p>
+<blockquote class="decision-words">&ldquo;Switch to CORE-1..7 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep UX-63..67</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Own IDs; docs check warns.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pull CRSP144 from RELEASE-26</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Redo with CORE ids before merge.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D85">
+<h3 class="decision-head"><span class="decision-id">D85</span> <span class="decision-question">Add the five missing points of the owner&#x27;s seven core rules to crsp&#x27;s design system?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add all five (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">New UX rules from UX-63 in next-version with CHANGES entries; v2 on owner approval.</p>
+<blockquote class="decision-words">&ldquo;Add all five (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add some</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner names which.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave v1 as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No change to crsp&#x27;s rules.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D84">
+<h3 class="decision-head"><span class="decision-id">D84</span> <span class="decision-question">How should a missing GitHub App permission be handled in the console?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One guided action with live step states</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">One action leads the grant; each step shows done or missing from GitHub; re-check on return; fresh token after accept.</p>
+<blockquote class="decision-words">&ldquo;UX is not intuitive at all; multiple buttons needed to run actions, not guiding the user on what is needed; even if action is done button still shows action is needed, and UX says nothing about what is missing&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Two buttons and a static note</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">As built in v0.1.2.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D83">
+<h3 class="decision-head"><span class="decision-id">D83</span> <span class="decision-question">Approval policy for outside contributors&#x27; workflow runs on the public crsp repository (now that a pool runner serves parity)?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Raise to all outside collaborators</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every run from someone without write access waits for the owner.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave as first-time only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">GitHub default; parity has no pull-request trigger.</p>
+<blockquote class="decision-words">&ldquo;Leave as first-time only&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D82">
+<h3 class="decision-head"><span class="decision-id">D82</span> <span class="decision-question">How should list filters and actions be laid out?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One row, shared part, toggle for two-state filters</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Search, filters, selection actions and Add on one line when it fits; one reusable toolbar part; Pool on/off uses the toggle.</p>
+<blockquote class="decision-words">&ldquo;improve list filtering to use only line when possible; use reusable components as much as possible to ensure UX consistent; toogle option should use the toggle component&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep stacked rows</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Search, filter pills and actions on separate rows as today.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D81">
+<h3 class="decision-head"><span class="decision-id">D81</span> <span class="decision-question">Should the Repositories table show each repository&#x27;s visibility?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Visibility column per repository</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Each row says Private or Public.</p>
+<blockquote class="decision-words">&ldquo;in the repositories tables should also for each repo say if its public or private&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No column</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only the page-level active types line.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D80">
+<h3 class="decision-head"><span class="decision-id">D80</span> <span class="decision-question">Where does the public-repositories setting live, and how is it shown?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Settings page toggle; Repositories shows the active types</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Toggle on Settings with the other product settings; Repositories shows Private (default) or Private &amp; Public.</p>
+<blockquote class="decision-words">&ldquo;Enable for Public Repositories option should in the Settings page, together with other settings for the product, and in the Repositories section should highlight the types of repositories are active be used Private (default) or both Private &amp; Public&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Toggle on the Repositories page</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The toggle sits on the Repositories page itself.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D79">
+<h3 class="decision-head"><span class="decision-id">D79</span> <span class="decision-question">Which repositories should crsp offer?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Private first, public behind a confirmed toggle</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Private repositories by default; an Enable for public repositories toggle asks Are you sure? and explains the impact.</p>
+<blockquote class="decision-words">&ldquo;CRSP should offer Private Repos primarely; User should have an option to make it available for Public Repos and when user sets the toggle it ask the user Are you sure? and explains the potential impacts&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">All repositories as today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Public and private both offered; fork jobs refused per R5.26.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D78">
+<h3 class="decision-head"><span class="decision-id">D78</span> <span class="decision-question">Which release does CRSP130 (release guard) ride?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Next release</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Ride the release after RELEASE-23.</p>
+<blockquote class="decision-words">&ldquo;Next release (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">RELEASE-23</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One more agent now, joins RELEASE-23 if ready.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D77">
+<h3 class="decision-head"><span class="decision-id">D77</span> <span class="decision-question">v0.1.1 release page has no What&#x27;s Changed list: who fixes it?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Owner pastes the draft</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner edits the release page with the draft.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Orchestrator edits it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Orchestrator runs gh release edit with the draft.</p>
+<blockquote class="decision-words">&ldquo;You edit it&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep it; remind briefs that agents never comment.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D76">
+<h3 class="decision-head"><span class="decision-id">D76</span> <span class="decision-question">What to do with the agent-posted comment on closed PR #155?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Keep it; remind briefs that agents never comment.</p>
+<blockquote class="decision-words">&ldquo;Leave it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Delete it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete the one comment on #155.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D75">
+<h3 class="decision-head"><span class="decision-id">D75</span> <span class="decision-question">How should crsp parity get a self-hosted Linux runner?</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Set PARITY_RUNS_ON to pool-main labels</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Point parity at the dev-standards pool labels.</p>
+<blockquote class="decision-words">&ldquo;Set PARITY_RUNS_ON (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Register a runner myself</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Owner registers a self-hosted Linux runner.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip parity for now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hold HND13/14 and cancel the queued run.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D74">
+<h3 class="decision-head"><span class="decision-id">D74</span> <span class="decision-question">Overnight: launch fix agents for newly found bugs</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, fix and ride</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Log, launch cloud fix, merge on green, list in the morning.</p>
+<blockquote class="decision-words">&ldquo;Yes, fix and ride&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Log only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">To do tasks only.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D73">
+<h3 class="decision-head"><span class="decision-id">D73</span> <span class="decision-question">Start CRSP122 (download installer) and CRSP123 (SSH for Windows) tonight</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, start tonight</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">After RELEASE-22 merges, alongside CRSP124.</p>
+<blockquote class="decision-words">&ldquo;Yes, start tonight&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for my review</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave To do.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D72">
+<h3 class="decision-head"><span class="decision-id">D72</span> <span class="decision-question">If tonight&#x27;s v0.1.2 work is not all green by ~06:00</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Tag what is green, rest in v0.1.3</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Ship merged fixes at ~06:00.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Hold v0.1.2 until all is green</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">No stable tag until every item of tonight&#x27;s plan is merged.</p>
+<blockquote class="decision-words">&ldquo;Hold v0.1.2 until all is green&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D71">
+<h3 class="decision-head"><span class="decision-id">D71</span> <span class="decision-question">Should stable v0.1.2 wait for the first-run UX rework (CRSP124)</span></h3>
+<p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ship v0.1.2 at ~03:00, UX in v0.1.3</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fixes sooner; reworked first run ~06:00 as v0.1.3.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Hold v0.1.2 for the UX rework</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">One stable release ~06:00 with fixes and the reworked first run.</p>
+<blockquote class="decision-words">&ldquo;Hold v0.1.2 for the UX rework&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D70">
 <h3 class="decision-head"><span class="decision-id">D70</span> <span class="decision-question">How the console adds other machines without typing a command</span></h3>
 <p class="decision-meta">Asked 16 Nov · Decided 16 Nov</p>
@@ -961,14 +2625,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option-head"><span class="decision-label">SSH for Windows too</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Extend &#x27;I have SSH&#x27; to Windows with the OpenSSH server.</p>
 </div>
-<div class="decision-option decision-chosen">
-<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Download installer for all OSes, plus SSH for Windows.</p>
-<blockquote class="decision-words">&ldquo;Both&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Command only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Keep copy-and-run for other machines.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both, and keep the copy-and-run command</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 16 Nov</span></div>
+<p class="decision-summary">Installer and SSH, with the command kept for those who want it.</p>
+<blockquote class="decision-words">&ldquo;offer ssh, download agent, and keep the current option of user copying the command and running it&rdquo;</blockquote>
 </div>
 </div>
 </article>
@@ -2142,6 +3810,62 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>24 Nov 09:17</td><td>09:13 0.1.26 installed; Windows add passed the account steps, failed at register (OPS93); row removed</td></tr>
+<tr><td>24 Nov 09:05</td><td>09:05 PR #402 merged 108bee12; v0.1.26 tagged</td></tr>
+<tr><td>24 Nov 07:16</td><td>07:15 Docker back; 2 persistent Linux runners added, idle; lan-link smoke green on gameroompc-pool-4</td></tr>
+<tr><td>24 Nov 07:10</td><td>06:25 owner: restarts Docker himself; v0.1.26 tag approved when RELEASE-64 green</td></tr>
+<tr><td>24 Nov 06:21</td><td>06:13 0.1.25 installed; 6 failed rows removed; Windows add failed (PowerShell stdin); Linux not offered: Docker engine does not answer</td></tr>
+<tr><td>24 Nov 03:46</td><td>03:30 branch CI green 858762b0; joined</td></tr>
+<tr><td>24 Nov 02:29</td><td>02:29 first agent blocked on e2e push; finish agent launched</td></tr>
+<tr><td>22 Nov 08:32</td><td>dropped: folded into RELEASE-55</td></tr>
+<tr><td>22 Nov 08:24</td><td>dropped: folded into RELEASE-56</td></tr>
+<tr><td>22 Nov 08:24</td><td>dropped: folded into RELEASE-56</td></tr>
+<tr><td>21 Nov 12:42</td><td>v0.1.20 tagged 12:41</td></tr>
+<tr><td>21 Nov 12:42</td><td>v0.1.20 tagged 12:41</td></tr>
+<tr><td>21 Nov 12:42</td><td>v0.1.20 tagged 12:41</td></tr>
+<tr><td>21 Nov 12:42</td><td>v0.1.20 tagged 12:41</td></tr>
+<tr><td>21 Nov 09:18</td><td>page reworked visual + all stacks</td></tr>
+<tr><td>21 Nov 08:48</td><td>Linux crsp fetched for image; wizard shows failure; failed runner stays visible</td></tr>
+<tr><td>21 Nov 08:12</td><td>cause: runners kept in memory only; machines DB + rejoin + audit + doctor built</td></tr>
+<tr><td>21 Nov 07:40</td><td>rerun: Go green; web pool.test heading flake, file not touched</td></tr>
+<tr><td>21 Nov 07:37</td><td>full CI green</td></tr>
+<tr><td>21 Nov 07:30</td><td>full CI failed in internal/cli TestMaintainReleasesWhenCancelledWhileRunning; rerun</td></tr>
+<tr><td>21 Nov 07:22</td><td>owner: runners vanished too; brief extended</td></tr>
+<tr><td>21 Nov 07:22</td><td>agent launched</td></tr>
+<tr><td>21 Nov 07:21</td><td>owner: all four fixes; cause = automatic v0.1.18 update 20 Nov 17:21</td></tr>
+<tr><td>21 Nov 07:19</td><td>machine m_p7fsaimerpsrmxzv joined 20 Nov 17:21 with defaults; DB audit from 15 Nov intact; machines live in machines.json, not the DB</td></tr>
+<tr><td>21 Nov 07:13</td><td>code done 5554cb32, PR #350</td></tr>
+<tr><td>21 Nov 07:13</td><td>PR-event CI skipped 10 of 11 jobs; full dispatched CI is the gate</td></tr>
+<tr><td>21 Nov 07:11</td><td>code done e034f541, PR #348, CI green</td></tr>
+<tr><td>21 Nov 07:08</td><td>proposals page docs/project/proposals/job-sizing-and-runners.html</td></tr>
+<tr><td>21 Nov 07:05</td><td>owner: same-label tool check; agent launched</td></tr>
+<tr><td>21 Nov 07:05</td><td>owner: Watch, hold, warn; agent launched</td></tr>
+<tr><td>21 Nov 07:04</td><td>owner: measured sizes, no tag-based sizing; asked for proposals page</td></tr>
+<tr><td>21 Nov 04:20</td><td>PR CI green</td></tr>
+<tr><td>21 Nov 04:18</td><td>agent could not open PR or start CI; orchestrator opened #346 and started CI</td></tr>
+<tr><td>21 Nov 03:51</td><td>rebased and pushed 6e5e0609, CI green</td></tr>
+<tr><td>21 Nov 03:00</td><td>443c65d2, CI green</td></tr>
+<tr><td>21 Nov 02:58</td><td>push blocked by secret scan on old insights test tokens; fixed, agent told to rebase</td></tr>
+<tr><td>21 Nov 02:34</td><td>launched from dev-standards finding 02:40</td></tr>
+<tr><td>21 Nov 01:52</td><td>launched from dev-standards findings 01:38 and 01:52</td></tr>
+<tr><td>21 Nov 01:52</td><td>CODE DONE d0206cd8, PR #340 draft, CI green</td></tr>
+<tr><td>21 Nov 01:08</td><td>relaunched with background gate allowed</td></tr>
+<tr><td>21 Nov 00:40</td><td>pool finding 00:50 from dev-standards; agent launched</td></tr>
+<tr><td>21 Nov 00:28</td><td>blocked: e2e gate &gt;10 min foreground cap; told to run it in background</td></tr>
+<tr><td>20 Nov 23:56</td><td>CODE DONE 8a28f09, CI green (dev-standards W1 docs/work only)</td></tr>
+<tr><td>20 Nov 23:38</td><td>dev-standards compact ran 23:30: 313-&gt;112 GB, ~2 min down; procedure sent to agent (fstrim, wsl shutdown, diskpart, kvm check)</td></tr>
+<tr><td>20 Nov 23:32</td><td>owner: build all 6 now, ride RELEASE-48</td></tr>
+<tr><td>20 Nov 23:13</td><td>added to RELEASE-48 at owner&#x27;s ask; agent starts 23:20</td></tr>
+<tr><td>18 Nov 14:45</td><td>OPS28 item changed from &quot;Add runners: the user chooses persistent or ephemeral&quot; to &quot;Runner kind choice; public repositories default to ephemeral&quot;</td></tr>
+<tr><td>18 Nov 12:59</td><td>Shipped in RELEASE-39, v0.1.12</td></tr>
+<tr><td>18 Nov 12:59</td><td>Shipped in RELEASE-39, v0.1.12</td></tr>
+<tr><td>18 Nov 12:59</td><td>Shipped in RELEASE-39, v0.1.12</td></tr>
+<tr><td>18 Nov 12:59</td><td>Shipped in RELEASE-39, v0.1.12</td></tr>
+<tr><td>18 Nov 12:59</td><td>Shipped in RELEASE-39, v0.1.12</td></tr>
+<tr><td>18 Nov 07:00</td><td>Shipped in RELEASE-36, v0.1.11</td></tr>
+<tr><td>18 Nov 07:00</td><td>Shipped in RELEASE-36, v0.1.11</td></tr>
+<tr><td>18 Nov 07:00</td><td>Shipped in RELEASE-36, v0.1.11</td></tr>
+<tr><td>18 Nov 07:00</td><td>Shipped in RELEASE-36, v0.1.11</td></tr>
 <tr><td>15 Nov 11:33</td><td>OPS12 item changed from &quot;Pool lesson 28: /dev/kvm via device_cgroup_rules and supervisor mknod (DL369)&quot; to &quot;Lesson 28 recorded in the handover notes (DL369)&quot;</td></tr>
 <tr><td>15 Nov 11:33</td><td>OPS11 item changed from &quot;Pool lesson 27: stopped pool container counts as drained (DL367)&quot; to &quot;Lesson 27 recorded in the handover notes (DL367)&quot;</td></tr>
 <tr><td>15 Nov 11:27</td><td>RELEASE-11 merged as PR #80 (8706dae); v0.1.1 released</td></tr>

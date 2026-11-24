@@ -1,0 +1,31 @@
+<!-- title: What the first two audits found -->
+<p>Two projects audited on 20 Nov 2026, each from the logs of its 10 slowest CI runs. Neither audit changed or deleted a test. Saving figures are estimates.</p>
+<ul>
+  <li><strong>crsp</strong> (this repo): <a href="https://claude.ai/artifact/YL1NhuP6vzHsVYhcaaoht7">CI time page</a>, 3,486 tests checked against the guardrails.</li>
+  <li><strong>comics-organizer:</strong> <a href="https://claude.ai/artifact/RzJHEcPxYuzSmEKFPYErS5">Slow CI Tests page</a>.</li>
+</ul>
+<table>
+  <thead><tr><th></th><th>crsp</th><th>comics-organizer</th></tr></thead>
+  <tbody>
+    <tr><td>Slowest run</td><td>90 min; parity once queued 4 h 53 min</td><td>367 min (a PC restart in the middle)</td></tr>
+    <tr><td>Main time sink</td><td>Waiting for runners: 15–70 min in 7 of 10 runs</td><td>Waiting and chaining: jobs queued 50–221 min for the single Linux runner; the Windows runner idled 51 min behind a needs chain</td></tr>
+    <tr><td>Serial work</td><td>verify runs everything in series, 11–13 min</td><td>Linux suites in series: e2e 16–17, then integration 12–30, then budgets 9–10 min</td></tr>
+    <tr><td>Job timeout not working</td><td>e2e shard cut at 30 min in 5 of 10 runs</td><td>MSI job ran 150 min and its timeout never fired</td></tr>
+    <tr><td>G1 per-test timeout</td><td>Breaks: none in Go or Playwright; vitest guard project 60 s; one test 163 s</td><td>Breaks: <code>cargo test</code> has none; vitest 30 s; one binary ran 2,981 s</td></tr>
+    <tr><td>G2 job timeout ≤ 30</td><td>4 jobs</td><td>11 jobs (limits up to 180 min)</td></tr>
+    <tr><td>G3 no retries</td><td>Passes</td><td>Breaks: Playwright retries 1; flaky integration files re-run</td></tr>
+    <tr><td>G4 sleeps</td><td>91 tests (68 e2e definitions share one page-load wait)</td><td>Sleeps in 163 files</td></tr>
+    <tr><td>G5 ≤ 20 cases</td><td>17 tests; one definition makes 969 cases</td><td>Partly met: 3 sites over 20</td></tr>
+    <tr><td>G6 mutation / property</td><td>Passes (none)</td><td>Partly met: mutation 81–156 min on master held the Linux runner</td></tr>
+    <tr><td>G7 measured times</td><td>Go per test; vitest per file; e2e estimated (line reporter)</td><td>Breaks: cargo gives per-binary times only</td></tr>
+  </tbody>
+</table>
+<h3>Patterns across both projects</h3>
+<ol>
+  <li><strong>Queueing beats test time.</strong> In both projects the longest delays were jobs waiting for a runner, not tests running. That is a pool sizing and scheduling problem, which is crsp's own job.</li>
+  <li><strong>Idle runners next to busy ones.</strong> comics-organizer's Windows runner sat idle for 51 min because of a <code>needs</code> chain, while the one Linux runner had a queue. A cross-project view would show this at once.</li>
+  <li><strong>After-merge work holds the shared runner.</strong> Mutation tests (81–156 min) and full nightly suites on master blocked PR jobs behind them. Scheduling that knows the job's purpose could keep PR work moving.</li>
+  <li><strong>Timeouts are missing or do not fire.</strong> Both projects have test runners with no per-test limit, and one MSI job ran 150 min past its own timeout. crsp sees the job's real duration and can flag this.</li>
+  <li><strong>Fixed waits and generated cases are the biggest test-time costs</strong>, and both are easy to detect statically.</li>
+  <li><strong>Per-test times are often missing.</strong> Playwright's line reporter and <code>cargo test</code> do not give them. A JUnit or JSON report from every runner would.</li>
+</ol>

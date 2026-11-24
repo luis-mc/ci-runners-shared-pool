@@ -1,5 +1,201 @@
 [
   {
+    "date": "24 Nov 09:16",
+    "change": "LOOK67 item changed from \"RELEASE-65: Pool > Machines runners per card, Insights waits and timeline\" to \"RELEASE-65: Windows runner register with the configure verb\""
+  },
+  {
+    "date": "24 Nov 07:20",
+    "change": "07:22 below-the-fold check on 0.1.25: 2 match, 3 gaps (P10); comparison page v2"
+  },
+  {
+    "date": "24 Nov 06:04",
+    "change": "06:02 PR #401 merged d0b86de2; v0.1.25 tagged"
+  },
+  {
+    "date": "24 Nov 05:11",
+    "change": "05:18 first PR CI red (prettier, docs strict, Windows Go migration timeouts); fixed and pushed ad6809d3"
+  },
+  {
+    "date": "24 Nov 04:40",
+    "change": "04:40 cloud join pushed c6d6fbcc, full e2e passed; ready PR #401 opened"
+  },
+  {
+    "date": "24 Nov 03:50",
+    "change": "03:50 local e2e push gate can't run on this PC (port 8461 in use by live crsp); join moved to cloud"
+  },
+  {
+    "date": "24 Nov 03:18",
+    "change": "03:18 joined LOOK61-65, OPS88, OPS89, CRSP237; checks green"
+  },
+  {
+    "date": "22 Nov 08:24",
+    "change": "dropped: folded into RELEASE-56"
+  },
+  {
+    "date": "22 Nov 08:23",
+    "change": "dropped: folded into RELEASE-56"
+  },
+  {
+    "date": "21 Nov 23:10",
+    "change": "dropped: folded into LOOK54"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 12:42",
+    "change": "v0.1.20 tagged 12:41"
+  },
+  {
+    "date": "21 Nov 11:36",
+    "change": "CI green; join moved to cloud"
+  },
+  {
+    "date": "21 Nov 09:26",
+    "change": "layout G green; no draft PR yet"
+  },
+  {
+    "date": "21 Nov 09:23",
+    "change": "re-promoted v4 green"
+  },
+  {
+    "date": "21 Nov 09:18",
+    "change": "DS4 gallery rebuilt, CI rerun"
+  },
+  {
+    "date": "21 Nov 08:55",
+    "change": "CI: Help.tsx prettier fail; fix sent"
+  },
+  {
+    "date": "21 Nov 08:55",
+    "change": "v4 guard cell missing comma; fixed in next-version, re-promoted"
+  },
+  {
+    "date": "21 Nov 07:57",
+    "change": "owner: G, no wizard (D58)"
+  },
+  {
+    "date": "21 Nov 07:30",
+    "change": "owner: 32 px everywhere"
+  },
+  {
+    "date": "21 Nov 04:48",
+    "change": "v3 draft in RELEASE-48; waits for merge"
+  },
+  {
+    "date": "21 Nov 03:51",
+    "change": "rebased and pushed 6e5e0609, CI green"
+  },
+  {
+    "date": "21 Nov 03:00",
+    "change": "relaunch done: 6873612f, CI green"
+  },
+  {
+    "date": "21 Nov 02:58",
+    "change": "push blocked by secret scan on old insights test tokens; fixed, agent told to rebase"
+  },
+  {
+    "date": "21 Nov 02:58",
+    "change": "relaunch done: e3c0b25b, CI green"
+  },
+  {
+    "date": "21 Nov 01:08",
+    "change": "relaunched with background gate allowed"
+  },
+  {
+    "date": "21 Nov 01:08",
+    "change": "first agent blocked: brief forbade background e2e gate; relaunched"
+  },
+  {
+    "date": "21 Nov 01:08",
+    "change": "first agent blocked: brief forbade background e2e gate; relaunched"
+  },
+  {
+    "date": "21 Nov 00:28",
+    "change": "blocked: e2e gate >10 min foreground cap; told to run it in background"
+  },
+  {
+    "date": "20 Nov 23:13",
+    "change": "added to RELEASE-48 at owner's ask; agent starts 23:20"
+  },
+  {
+    "date": "20 Nov 23:13",
+    "change": "added to RELEASE-48 at owner's ask; agent starts 23:20"
+  },
+  {
+    "date": "20 Nov 23:13",
+    "change": "added to RELEASE-48 at owner's ask; agent starts 23:20"
+  },
+  {
+    "date": "20 Nov 20:31",
+    "change": "owner picked I"
+  },
+  {
+    "date": "20 Nov 20:23",
+    "change": "G-K built, page opened 20:24"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 12:59",
+    "change": "Shipped in RELEASE-39, v0.1.12"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
+    "date": "18 Nov 07:00",
+    "change": "Shipped in RELEASE-36, v0.1.11"
+  },
+  {
     "date": "15 Nov 10:23",
     "change": "Feature artifact created."
   }

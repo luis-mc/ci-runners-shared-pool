@@ -1526,6 +1526,10 @@
         {
           "label": "Command only",
           "summary": "Keep copy-and-run for other machines."
+        },
+        {
+          "label": "Both, and keep the copy-and-run command",
+          "summary": "Installer and SSH, with the command kept for those who want it."
         }
       ],
       "chosen": "Both, and keep the copy-and-run command",
@@ -1853,6 +1857,1738 @@
       "decided": "2026-11-16",
       "asked": "2026-11-16",
       "owner_words": "Switch to CORE-1..7 (Recommended)"
+    },
+    {
+      "id": "D87",
+      "question": "Repositories says 'Your GitHub sign-in ended' after every restart and after 8 hours: what fix?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "List with the App, button too",
+          "summary": "Read the repository list with the GitHub App's own key; sign-in only for admin checks; the warning gets a Sign in with GitHub again button."
+        },
+        {
+          "label": "Add the button only",
+          "summary": "Keep today's design; add a Sign in with GitHub again button to the warning."
+        },
+        {
+          "label": "Keep the sign-in across restarts",
+          "summary": "Store GitHub's refresh token encrypted on disk (changes R6.2), plus the button."
+        }
+      ],
+      "chosen": "List with the App, button too",
+      "decided": "2026-11-17",
+      "owner_words": "List with the App, button too (Recommended)",
+      "task": "OPS13"
+    },
+    {
+      "id": "D88",
+      "question": "Parity needs a reachable controller address; build the console address chooser (mockup board Address)?",
+      "asked": "2026-11-17",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Approve, build it",
+          "summary": "Choose an address dialog: LAN address, Docker/WSL only, or another; one restart."
+        },
+        {
+          "label": "Docker/WSL only, no network",
+          "summary": "Only the host address reachable from containers."
+        },
+        {
+          "label": "Change the mockup",
+          "summary": "Comment on the canvas first."
+        }
+      ],
+      "chosen": "Approve, build it",
+      "decided": "2026-11-17",
+      "owner_words": "Approve, build it (Recommended)",
+      "task": "OPS14"
+    },
+    {
+      "id": "D89",
+      "question": "Webhook delivery missed: next step",
+      "task": "OPS22",
+      "options": [
+        {
+          "label": "Ship fix in RELEASE-39",
+          "summary": "Stop the false alarm"
+        },
+        {
+          "label": "Ship + real webhooks task",
+          "summary": "Also a console screen for a public webhook address and secret"
+        },
+        {
+          "label": "Hold",
+          "summary": "Do not ship"
+        }
+      ],
+      "chosen": "Ship + real webhooks task",
+      "owner_words": "Ship + real webhooks task",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D90",
+      "question": "Version for the real-machine milestone review",
+      "task": "CRSP2",
+      "options": [
+        {
+          "label": "v0.1.11 now",
+          "summary": "Review today"
+        },
+        {
+          "label": "Wait for v0.1.13",
+          "summary": "After the runner fixes"
+        },
+        {
+          "label": "Drop it",
+          "summary": "Close CRSP2"
+        }
+      ],
+      "chosen": "Wait for v0.1.13",
+      "owner_words": "Wait for v0.1.13",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D91",
+      "question": "RELEASE-38 CI re-run lost its build file",
+      "task": "CRSP181",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18",
+      "options": [
+        {
+          "label": "Full re-run now",
+          "summary": "Re-run CI on df92b26"
+        },
+        {
+          "label": "Merge RELEASE-38 into RELEASE-39",
+          "summary": "One CI run, one tag"
+        },
+        {
+          "label": "Hold",
+          "summary": "Owner looks first"
+        }
+      ],
+      "chosen": "Merge RELEASE-38 into RELEASE-39",
+      "owner_words": "Merge RELEASE-38 into RELEASE-39"
+    },
+    {
+      "id": "D92",
+      "question": "When to do the CRSP2 review",
+      "task": "CRSP2",
+      "options": [
+        {
+          "label": "Now, on v0.1.12",
+          "summary": "Today"
+        },
+        {
+          "label": "After RELEASE-40",
+          "summary": "After the tray window fix"
+        },
+        {
+          "label": "Later today",
+          "summary": "No chase before 18:00"
+        }
+      ],
+      "chosen": "After RELEASE-40",
+      "owner_words": "After RELEASE-40",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D93",
+      "question": "Linux runners on a Windows machine: persistent (dev-standards model) or ephemeral",
+      "task": "OPS27",
+      "options": [
+        {
+          "label": "Persistent, like dev-standards",
+          "summary": "Long-lived container, runners take many jobs, cleaned after each"
+        },
+        {
+          "label": "Ephemeral only",
+          "summary": "Fresh container per job"
+        },
+        {
+          "label": "User chooses",
+          "summary": "Add runners offers persistent and ephemeral"
+        }
+      ],
+      "chosen": "User chooses",
+      "owner_words": "User should be able to choose between persistant and ephemeral",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D94",
+      "question": "Default to ephemeral for public repositories: how",
+      "task": "OPS28",
+      "options": [
+        {
+          "label": "Route public jobs to ephemeral",
+          "summary": "Public repos' jobs run only on ephemeral runners; per-repo override"
+        },
+        {
+          "label": "Ephemeral preselected in Add runners",
+          "summary": "Preselect Ephemeral while a public repo uses the pool"
+        },
+        {
+          "label": "Both",
+          "summary": "Route public jobs to ephemeral and preselect Ephemeral"
+        }
+      ],
+      "chosen": "Both",
+      "owner_words": "default to ephemeral for public repos; Both",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D95",
+      "question": "What a persistent runner keeps between jobs",
+      "task": "OPS28",
+      "options": [
+        {
+          "label": "Yes",
+          "summary": "Temp files always cleaned; keeping downloaded dependencies is a per-runner setting"
+        },
+        {
+          "label": "No",
+          "summary": "Keep everything between jobs"
+        }
+      ],
+      "chosen": "Yes",
+      "owner_words": "in persistent runners, pool must always clean temporary files used by the last job; its ok to leave dependencies downloaded to speed up future runs of the same job but make it a config of the persistent runner",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D96",
+      "question": "TRAY5: own release or ride RELEASE-40",
+      "task": "CRSP183",
+      "options": [
+        {
+          "label": "RELEASE-41 alone",
+          "summary": "RELEASE-40 merges ~18:00 without TRAY5"
+        },
+        {
+          "label": "Merge TRAY5 into RELEASE-40",
+          "summary": "One release, one review"
+        }
+      ],
+      "chosen": "Merge TRAY5 into RELEASE-40",
+      "owner_words": "merge TRAY5 into RELEASE-40 so I review once",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D97",
+      "question": "Two stopped crsp-light runner services for home-automation on this PC",
+      "task": "OPS30",
+      "options": [
+        {
+          "label": "Investigate and fix",
+          "summary": "Task finds the owner controller"
+        },
+        {
+          "label": "Remove them",
+          "summary": "Leftovers of an old test controller"
+        },
+        {
+          "label": "Leave them stopped",
+          "summary": "Nothing"
+        }
+      ],
+      "chosen": "Remove them",
+      "owner_words": "Remove them",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D98",
+      "question": "When to do the CRSP2 review",
+      "task": "CRSP2",
+      "options": [
+        {
+          "label": "Tonight, after v0.1.13",
+          "summary": "~19:20"
+        },
+        {
+          "label": "Tomorrow morning",
+          "summary": "No chase tonight"
+        }
+      ],
+      "chosen": "Tonight, after v0.1.13",
+      "owner_words": "Tonight, after v0.1.13",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D99",
+      "question": "Real symbolic-link check in Windows CI",
+      "task": "OPS31",
+      "options": [
+        {
+          "label": "Yes, next release",
+          "summary": "One Windows CI step with Developer Mode"
+        },
+        {
+          "label": "No, stand-in is enough",
+          "summary": "Logic test only"
+        }
+      ],
+      "chosen": "Yes, next release",
+      "owner_words": "Yes, next release (Recommended)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D100",
+      "question": "Leftover runner services and gameroompc-1",
+      "task": "OPS30",
+      "options": [
+        {
+          "label": "Owner runs the two commands",
+          "summary": "sc.exe delete and remove the zip"
+        },
+        {
+          "label": "Look into gameroompc-1",
+          "summary": "Why crsp's own runner is stopped"
+        },
+        {
+          "label": "Doctor should find these",
+          "summary": "Doctor lists unowned runner services, offers Remove"
+        }
+      ],
+      "chosen": "Owner runs the two commands",
+      "owner_words": "I'll run the two commands, Look into gameroompc-1, Doctor should find these (all three)",
+      "asked": "2026-11-18",
+      "status": "decided",
+      "decided": "2026-11-18"
+    },
+    {
+      "id": "D101",
+      "question": "Tag v0.1.14 after RELEASE-41",
+      "options": [
+        {
+          "label": "Tag when green",
+          "summary": "Merge #266 on green, tag v0.1.14, watch Release."
+        },
+        {
+          "label": "Merge, no tag yet",
+          "summary": "Hold the tag until the owner tries main."
+        },
+        {
+          "label": "Hold the merge too",
+          "summary": "Leave #266 green and unmerged."
+        }
+      ],
+      "chosen": "Tag when green",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Tag when green",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D102",
+      "question": "Wide columns of the Jobs tables",
+      "options": [
+        {
+          "label": "Weighted widths",
+          "summary": "Each grow column gets a weight so long names are cut less."
+        },
+        {
+          "label": "Add Slowest job to real list",
+          "summary": "Send the slowest job per run in the runs list and show it."
+        },
+        {
+          "label": "Keep as is",
+          "summary": "Cut names, full text on hover."
+        }
+      ],
+      "chosen": "Weighted widths",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Weighted widths",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D103",
+      "question": "VM image mirror setting (OPS35 follow-up)",
+      "options": [
+        {
+          "label": "Next train",
+          "summary": "CRSP_VM_IMAGE_MIRROR in RELEASE-42."
+        },
+        {
+          "label": "Later",
+          "summary": "Open task, not scheduled."
+        },
+        {
+          "label": "Not needed",
+          "summary": "Close the follow-up."
+        }
+      ],
+      "chosen": "Next train",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Next train",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D104",
+      "question": "Terminal command for removing runner leftovers",
+      "options": [
+        {
+          "label": "Console only",
+          "summary": "Leftovers are picked on the doctor finding."
+        },
+        {
+          "label": "Add a CLI command",
+          "summary": "crsp machine leftovers remove NAME... with tests."
+        }
+      ],
+      "chosen": "Add a CLI command",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Add a CLI command",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D105",
+      "question": "Default wait of web tests",
+      "options": [
+        {
+          "label": "Raise default to 5 s",
+          "summary": "testing-library async wait 5 s in the web vitest setup."
+        },
+        {
+          "label": "Keep per-test fixes",
+          "summary": "Fix each flaky test when it shows."
+        }
+      ],
+      "chosen": "Raise default to 5 s",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Raise default to 5 s",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D106",
+      "question": "Cleanup of review servers and RES15 draft",
+      "options": [
+        {
+          "label": "Stop all, close #260",
+          "summary": "Stop 8772/8773/8774, remove review worktrees, close #260."
+        },
+        {
+          "label": "Keep 8774 and #260",
+          "summary": "Keep the Jobs review build."
+        },
+        {
+          "label": "Keep everything",
+          "summary": "Leave all."
+        }
+      ],
+      "chosen": "Stop all, close #260",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Stop all, close #260",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D107",
+      "question": "Next train after RELEASE-41",
+      "options": [
+        {
+          "label": "Jobs section polish",
+          "summary": "Weighted widths, charts review on the real console."
+        },
+        {
+          "label": "VM image mirror",
+          "summary": "CRSP_VM_IMAGE_MIRROR."
+        },
+        {
+          "label": "Real-machine test pass",
+          "summary": "Checklist and script for v0.1.14 on real machines."
+        },
+        {
+          "label": "Something else",
+          "summary": "Owner names it."
+        },
+        {
+          "label": "Jobs polish, VM mirror and real-machine test pass",
+          "summary": "The owner picked three of the options (multi-select)."
+        }
+      ],
+      "chosen": "Jobs polish, VM mirror and real-machine test pass",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Jobs section polish, VM image mirror, Real-machine test pass",
+      "asked": "2026-11-19",
+      "task": "CRSP184"
+    },
+    {
+      "id": "D108",
+      "question": "Version in the installer file names",
+      "options": [
+        {
+          "label": "Both, keep old names",
+          "summary": "Versioned names next to the plain ones; old updaters and latest links keep working."
+        },
+        {
+          "label": "Local download only",
+          "summary": "Only the downloaded copy under ProgramData gets the version."
+        },
+        {
+          "label": "Release names only, versioned",
+          "summary": "Release assets renamed; 0.1.14 and older need one manual install."
+        }
+      ],
+      "chosen": "Release names only, versioned",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Release names only, versioned",
+      "asked": "2026-11-19",
+      "task": "OPS40"
+    },
+    {
+      "id": "D109",
+      "question": "Run page: the job graph and timeline tables repeat the same jobs",
+      "options": [
+        {
+          "label": "One Jobs table",
+          "summary": "One Jobs table below both charts, used as their shared text alternative, plus small fixes; next release (RELEASE-43)."
+        },
+        {
+          "label": "Keep both, fix the small items",
+          "summary": "Each chart keeps its own table; only the plural, repeated PR, worktree row and empty box are fixed."
+        },
+        {
+          "label": "Add it to RELEASE-42",
+          "summary": "One Jobs table and the small fixes ride RELEASE-42 now; about 30 min more."
+        }
+      ],
+      "chosen": "Add it to RELEASE-42",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Add it to RELEASE-42",
+      "asked": "2026-11-19",
+      "task": "OPS42"
+    },
+    {
+      "id": "D110",
+      "question": "Light runners under the pool model: who creates them?",
+      "options": [
+        {
+          "label": "You add them; crsp suggests",
+          "summary": "Light is a runner type in Add runners; Doctor suggests one when light jobs have none; never automatic."
+        },
+        {
+          "label": "crsp keeps one per OS automatically",
+          "summary": "One light pool runner per OS, placed and kept by crsp without asking."
+        },
+        {
+          "label": "Drop light runners",
+          "summary": "No light runners at all; light jobs run on the normal pool runners."
+        }
+      ],
+      "chosen": "Drop light runners",
+      "status": "decided",
+      "decided": "2026-11-19",
+      "owner_words": "Per-repository light runners do not fit the design (pool model). Chose: Drop light runners.",
+      "asked": "2026-11-19",
+      "task": "OPS49"
+    },
+    {
+      "id": "D111",
+      "question": "Tags while away 19 Nov evening",
+      "task": "CRSP190",
+      "options": [
+        {
+          "label": "Yes, tag each green release",
+          "summary": "v0.1.17, v0.1.18"
+        },
+        {
+          "label": "One tag at the end",
+          "summary": "once"
+        },
+        {
+          "label": "No tags",
+          "summary": "owner tags"
+        }
+      ],
+      "chosen": "Yes, tag each green release",
+      "owner_words": "Yes, tag each green release",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D112",
+      "question": "Fix rounds per release while away",
+      "task": "CRSP190",
+      "options": [
+        {
+          "label": "2 rounds",
+          "summary": "as before"
+        },
+        {
+          "label": "3 rounds",
+          "summary": "more"
+        },
+        {
+          "label": "1 round",
+          "summary": "fewer"
+        }
+      ],
+      "chosen": "2 rounds",
+      "owner_words": "2 rounds",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D113",
+      "question": "Owner back",
+      "task": "CRSP190",
+      "options": [
+        {
+          "label": "Tomorrow morning",
+          "summary": "all night"
+        },
+        {
+          "label": "Tonight, ~22:00",
+          "summary": "no new waves after 20:00"
+        },
+        {
+          "label": "In a few hours",
+          "summary": "keep going"
+        }
+      ],
+      "chosen": "Tonight, ~22:00",
+      "owner_words": "Tonight, ~22:00",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D114",
+      "question": "Connectors on cloud agents",
+      "task": "CRSP190",
+      "options": [
+        {
+          "label": "Remove them",
+          "summary": "clear_mcp_connections"
+        },
+        {
+          "label": "Keep as is",
+          "summary": "no change"
+        }
+      ],
+      "chosen": "Remove them",
+      "owner_words": "Remove them",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D115",
+      "question": "Do the design checks, design fixes and title/phone fixes ride RELEASE-45 with the registry wave?",
+      "task": "CRSP190",
+      "options": [
+        {
+          "label": "All in RELEASE-45",
+          "summary": "one release, one CI, one tag"
+        },
+        {
+          "label": "Separate releases",
+          "summary": "design fixes ship first"
+        }
+      ],
+      "chosen": "All in RELEASE-45",
+      "owner_words": "can all these go into release 45?",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D116",
+      "question": "Time limit on new waves while away (replaces D113 cutoff)",
+      "task": "CRSP190",
+      "options": [
+        {
+          "label": "No time limit",
+          "summary": "start all needed waves"
+        },
+        {
+          "label": "No new waves after 20:00",
+          "summary": "D113"
+        }
+      ],
+      "chosen": "No time limit",
+      "owner_words": "you can start all needed waves without time limit",
+      "asked": "2026-11-19",
+      "status": "decided",
+      "decided": "2026-11-19"
+    },
+    {
+      "id": "D117",
+      "question": "Console update from 0.1.13 or 0.1.14 cannot find versioned installers (v0.1.15 and later)",
+      "options": [
+        {
+          "label": "Install by hand now",
+          "summary": "Owner runs crsp-windows-amd64_0.1.17.msi once; later updates work from the console; no change to published releases."
+        },
+        {
+          "label": "Fix old updaters too",
+          "summary": "Publish old-name copies with SHA256SUMS lines on v0.1.17 and every future release."
+        },
+        {
+          "label": "Both",
+          "summary": "Hand install now plus old-name copies for other old machines."
+        }
+      ],
+      "chosen": "Install by hand now",
+      "status": "decided",
+      "decided": "2026-11-20",
+      "asked": "2026-11-20",
+      "owner_words": "Install by hand now (Recommended)",
+      "task": "CRSP2"
+    },
+    {
+      "id": "D118",
+      "question": "Sizing approach (OPS56 #1)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Scan+count, then measure",
+          "summary": "Scan and count first, measured peaks after ~5 runs, override on top",
+          "recommended": true
+        },
+        {
+          "label": "Measure only",
+          "summary": "Real CPU/memory per job"
+        },
+        {
+          "label": "Scan only",
+          "summary": "Guess from workflow and tools"
+        },
+        {
+          "label": "Override only",
+          "summary": "Hand labels"
+        }
+      ],
+      "chosen": "Scan+count, then measure",
+      "decided": "2026-11-21",
+      "owner_words": "Scan+count, then measure (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D119",
+      "question": "How deep the scan counts (OPS56 #2)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Counts + tool config + services",
+          "summary": "Tests, workers, projects, shards, services; Playwright, Vitest/Jest, Go first",
+          "recommended": true
+        },
+        {
+          "label": "Stack + file and test counts",
+          "summary": "No workers or shards"
+        },
+        {
+          "label": "Stack only",
+          "summary": "Tools only"
+        }
+      ],
+      "chosen": "Counts + tool config + services",
+      "decided": "2026-11-21",
+      "owner_words": "Counts + tool config + services (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D120",
+      "question": "Per-test starting costs (OPS56 #3)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "One editable cost table",
+          "summary": "Cost class per framework and service, replaced by measurements",
+          "recommended": true
+        },
+        {
+          "label": "No table",
+          "summary": "Unmeasured jobs stay 1/1"
+        }
+      ],
+      "chosen": "One editable cost table",
+      "decided": "2026-11-21",
+      "owner_words": "One editable cost table (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D121",
+      "question": "When the test count jumps (OPS56 #4)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Reset at over 2x, show it",
+          "summary": "Back to scan guess, shown in console",
+          "recommended": true
+        },
+        {
+          "label": "Ask the owner",
+          "summary": "Console asks"
+        },
+        {
+          "label": "Never reset",
+          "summary": "History adjusts slowly"
+        }
+      ],
+      "chosen": "Reset at over 2x, show it",
+      "decided": "2026-11-21",
+      "owner_words": "Reset at over 2x, show it (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D122",
+      "question": "Where the size override lives (OPS56 #5)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": ".crsp.yml + console",
+          "summary": "File in repo or console setting",
+          "recommended": true
+        },
+        {
+          "label": "runs-on label",
+          "summary": "Risks jobs waiting forever"
+        },
+        {
+          "label": "Job env value",
+          "summary": "CRSP_SIZE"
+        }
+      ],
+      "chosen": ".crsp.yml + console",
+      "decided": "2026-11-21",
+      "owner_words": "option 1 + in console allow visualizing and editing .crsp.yml",
+      "task": "OPS56"
+    },
+    {
+      "id": "D123",
+      "question": "Per-job CPU and memory sampling (OPS56 #6)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Linux first, then Windows",
+          "summary": "cgroups first",
+          "recommended": true
+        },
+        {
+          "label": "All OSes together",
+          "summary": "One step"
+        },
+        {
+          "label": "Not now",
+          "summary": "No sampling"
+        }
+      ],
+      "chosen": "All OSes together",
+      "decided": "2026-11-21",
+      "owner_words": "All OSes together",
+      "task": "OPS56"
+    },
+    {
+      "id": "D124",
+      "question": "Runner classes and job size (OPS56 #7)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Later; one runner per CPU set now",
+          "summary": "Own CPUs per runner now",
+          "recommended": true
+        },
+        {
+          "label": "Connect classes now",
+          "summary": "Gate reads runner class"
+        }
+      ],
+      "chosen": "Connect classes now",
+      "decided": "2026-11-21",
+      "owner_words": "Option 2 + runners share the machine CPU and memory, so they do not \"own\" a specific CPU or memory block; a runner has a CPU and memory allocation, and before taking a job the pool must check if those allocation requirements are met; if met the runner can take the job, if not the job waits and other lighter jobs can pass it in the queue; small, medium, large, xl can have default values, but use...",
+      "task": "OPS56"
+    },
+    {
+      "id": "D125",
+      "question": "A new job with no history (OPS56 #8)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Scan, else 1/1, never block",
+          "summary": "Never waits for sizing",
+          "recommended": true
+        },
+        {
+          "label": "Hold until scanned",
+          "summary": "First run waits"
+        }
+      ],
+      "chosen": "Scan, else 1/1, never block",
+      "decided": "2026-11-21",
+      "owner_words": "Scan, else 1/1, never block (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D126",
+      "question": "Hold cap in the hook (OPS56 #10)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "10 min max, below timeout",
+          "summary": "Keep today's cap",
+          "recommended": true
+        },
+        {
+          "label": "2 min",
+          "summary": "Hold briefly"
+        },
+        {
+          "label": "Longer than 10 min",
+          "summary": "Longer holds"
+        }
+      ],
+      "chosen": "2 min",
+      "decided": "2026-11-21",
+      "owner_words": "2 min",
+      "task": "OPS56"
+    },
+    {
+      "id": "D127",
+      "question": "crsp-owned job and run timers (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, crsp-owned timers",
+          "summary": "From first real step, API cancel, timeout-minutes as safety net",
+          "recommended": true
+        },
+        {
+          "label": "Record only, no cancel",
+          "summary": "Record and alert"
+        },
+        {
+          "label": "Not now",
+          "summary": "No timers"
+        }
+      ],
+      "chosen": "Yes, crsp-owned timers",
+      "decided": "2026-11-21",
+      "owner_words": "Option 1, including timers for hold, and if possible timers for how long a job stayed in GitHub before crsp accepted it under the new accept-only-when-slots-and-budget-allow; visual examples on the page, including runs with multiple jobs needing different runner types and sizes",
+      "task": "OPS64"
+    },
+    {
+      "id": "D128",
+      "question": "Waiting before or after assignment (OPS56 #9). Owner: explore before-assignment everywhere; show 1-3 machine examples and race fixes.",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Hook + JIT trial on one label",
+          "summary": "Capped hook, JIT trial",
+          "recommended": true
+        },
+        {
+          "label": "Before assignment everywhere",
+          "summary": "Runners listen only when a slot is free"
+        },
+        {
+          "label": "Capped hook only",
+          "summary": "Today"
+        }
+      ],
+      "chosen": "Before assignment everywhere",
+      "decided": "2026-11-21",
+      "task": "OPS64",
+      "owner_words": "Yes, everywhere (Recommended)"
+    },
+    {
+      "id": "D129",
+      "question": "Tools on Windows and macOS (OPS56 #11). Owner: explore image-like tool setup, versioned dependency caches, no cross-project contamination.",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Report, then a tool list",
+          "summary": "Doctor checks .crsp.yml tool list",
+          "recommended": true
+        },
+        {
+          "label": "Doctor reports only",
+          "summary": "OPS57"
+        },
+        {
+          "label": "Also auto-install",
+          "summary": "crsp installs"
+        }
+      ],
+      "chosen": "Report, then a tool list",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "Yes, this design (Recommended): tool plan from scan, read-only versioned tool store, wiped job home, keyed caches, OS user per runner; throwaway VMs for untrusted jobs"
+    },
+    {
+      "id": "D130",
+      "question": "Start-up delay for JIT runners (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Warm 1 per busy label",
+          "summary": "One ready runner per busy label set",
+          "recommended": true
+        },
+        {
+          "label": "Always cold",
+          "summary": "15-30 s per job"
+        }
+      ],
+      "chosen": "Warm 1 per busy label",
+      "decided": "2026-11-21",
+      "task": "OPS64",
+      "owner_words": "Warm 1 per busy label (Recommended)"
+    },
+    {
+      "id": "D131",
+      "question": "Who installs Windows/macOS tools (OPS56 #11)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Agent installs",
+          "summary": "Into crsp's own store only",
+          "recommended": true
+        },
+        {
+          "label": "Report only",
+          "summary": "Doctor lists commands"
+        }
+      ],
+      "chosen": "Agent installs",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "Agent installs (Recommended)"
+    },
+    {
+      "id": "D132",
+      "question": "Installer for the tool store (OPS56 #11)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "mise, own managers as fallback",
+          "summary": "One config",
+          "recommended": true
+        },
+        {
+          "label": "Each tool's own manager",
+          "summary": "rustup, nvm/volta, pyenv, SDKMAN"
+        }
+      ],
+      "chosen": "Each tool's own manager",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "Each tool's own manager"
+    },
+    {
+      "id": "D133",
+      "question": "Starvation rule for passed jobs (OPS56 #7)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "3 passes or 10 min",
+          "summary": "Then reserve and backfill",
+          "recommended": true
+        },
+        {
+          "label": "1 pass or 5 min",
+          "summary": "Stricter"
+        },
+        {
+          "label": "5 passes or 20 min",
+          "summary": "Looser"
+        }
+      ],
+      "chosen": "3 passes or 10 min",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "3 passes or 10 min (Recommended)"
+    },
+    {
+      "id": "D134",
+      "question": "Runner class validation (OPS56 #7)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Use ratio and step limits",
+          "summary": "1.5x step, 1.5-8 GiB/CPU, floor",
+          "recommended": true
+        },
+        {
+          "label": "Only order + fit",
+          "summary": "small<medium<large<xl, fits pool"
+        }
+      ],
+      "chosen": "Only order + fit",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "option 2, but show recommended setups that follow option 1"
+    },
+    {
+      "id": "D135",
+      "question": "Runner class presets (OPS56 #7)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "All three + Custom",
+          "summary": "Standard, Compact, Memory-heavy",
+          "recommended": true
+        },
+        {
+          "label": "Standard + Custom only",
+          "summary": "Simpler"
+        }
+      ],
+      "chosen": "All three + Custom",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "All three + Custom (Recommended)"
+    },
+    {
+      "id": "D136",
+      "question": "Runner class enforcement (OPS56 #7)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Count + hard memory cap",
+          "summary": "CPU counted only",
+          "recommended": true
+        },
+        {
+          "label": "Count only",
+          "summary": "No caps"
+        },
+        {
+          "label": "Hard caps on CPU and memory",
+          "summary": "Strict"
+        }
+      ],
+      "chosen": "Count + hard memory cap",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "Count + hard memory cap (Recommended)"
+    },
+    {
+      "id": "D137",
+      "question": "Timer actions (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "As proposed",
+          "summary": "Job timer stops runner; run timer cancels run; both after 30 s",
+          "recommended": true
+        },
+        {
+          "label": "Always cancel the run",
+          "summary": "Any timer"
+        }
+      ],
+      "chosen": "As proposed",
+      "decided": "2026-11-21",
+      "task": "OPS64",
+      "owner_words": "As proposed (Recommended)"
+    },
+    {
+      "id": "D138",
+      "question": "Timer defaults (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "30/45/2/60 min",
+          "summary": "Job, run, start-up, timeout-minutes",
+          "recommended": true
+        },
+        {
+          "label": "60/90/3/120 min",
+          "summary": "Longer"
+        }
+      ],
+      "chosen": "30/45/2/60 min",
+      "decided": "2026-11-21",
+      "task": "OPS64",
+      "owner_words": "Use these (Recommended)"
+    },
+    {
+      "id": "D139",
+      "question": "Saving .crsp.yml edits from the console (OPS56 #5)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Save in crsp, instant",
+          "summary": "File stays the base; console shows which wins",
+          "recommended": true
+        },
+        {
+          "label": "Direct commit",
+          "summary": "Default branch"
+        },
+        {
+          "label": "Pull request",
+          "summary": "Counts after merge"
+        }
+      ],
+      "chosen": "Save in crsp, instant",
+      "decided": "2026-11-21",
+      "task": "OPS56",
+      "owner_words": "Save in crsp, instant (Recommended); replaces earlier 'Pull request' answer after owner asked why a merge was needed"
+    },
+    {
+      "id": "D140",
+      "question": "Job routing by per-job crsp variable (OPS64). Owner asked how first runs work; page update explains scan at opt-in and push, fallback variable.",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Per-job crsp variable",
+          "summary": "crsp picks size class per job",
+          "recommended": true
+        },
+        {
+          "label": "Size labels by hand",
+          "summary": "Authors pick"
+        },
+        {
+          "label": "Label per job name",
+          "summary": "crsp-generated label per repo job name in a repo variable; only chosen runners (persistent via labels API, or ephemeral) carry it"
+        }
+      ],
+      "chosen": "Label per job name",
+      "decided": "2026-11-21",
+      "task": "OPS64",
+      "owner_words": "option 1, but explain better what you mean by \"crsp makes exactly one runner with that unique label\"; can persistent runners be used with option 1 too?"
+    },
+    {
+      "id": "D141",
+      "question": "Persistent runners with listener gating on all runner types (OPS64). Owner: option 1 for host, containers, VMs, WSL2, Hyper-V; research feasibility per type.",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Persistent, listener gated",
+          "summary": "Listener on only when admitted",
+          "recommended": true
+        },
+        {
+          "label": "JIT on all OSes",
+          "summary": "Fresh runner per job"
+        },
+        {
+          "label": "Machine itself only",
+          "summary": "Gate persistent runners on Linux, Windows, macOS hosts; containers and VMs use ephemeral"
+        }
+      ],
+      "chosen": "Machine itself only",
+      "decided": "2026-11-21",
+      "task": "OPS64",
+      "owner_words": "option 3 - but wording \"kind\" and \"type\" is not consistent; help calls it runner type"
+    },
+    {
+      "id": "D142",
+      "question": "Test GitHub routing facts first (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Test first",
+          "summary": "Scratch repo, ~30 min",
+          "recommended": true
+        },
+        {
+          "label": "Build and test as we go",
+          "summary": "Build and test as we go"
+        }
+      ],
+      "chosen": "Test first",
+      "decided": "2026-11-21",
+      "owner_words": "Test first (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D143",
+      "question": "crsp opens the one-time runs-on PR (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "crsp opens a PR",
+          "summary": "One PR per repo",
+          "recommended": true
+        },
+        {
+          "label": "Show the patch only",
+          "summary": "Copy/download"
+        }
+      ],
+      "chosen": "crsp opens a PR",
+      "decided": "2026-11-21",
+      "owner_words": "crsp opens a PR (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D144",
+      "question": "Console or .crsp.yml wins (OPS56 #5)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Console wins",
+          "summary": "Latest console change",
+          "recommended": true
+        },
+        {
+          "label": ".crsp.yml wins",
+          "summary": "File is final"
+        }
+      ],
+      "chosen": "Console wins",
+      "decided": "2026-11-21",
+      "owner_words": "Console wins (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D145",
+      "question": "Copy to .crsp.yml (OPS56 #5)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Copy a YAML line",
+          "summary": "Clipboard",
+          "recommended": true
+        },
+        {
+          "label": "Download the whole file",
+          "summary": "Full file"
+        }
+      ],
+      "chosen": "Copy a YAML line",
+      "decided": "2026-11-21",
+      "owner_words": "Copy a YAML line (Recommended)",
+      "task": "OPS56"
+    },
+    {
+      "id": "D146",
+      "question": "Timer 30 s meaning (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Act now, escalate after 30 s",
+          "summary": "Hard stop if lingering",
+          "recommended": true
+        },
+        {
+          "label": "30 s grace first",
+          "summary": "Grace before first action"
+        }
+      ],
+      "chosen": "30 s grace first",
+      "decided": "2026-11-21",
+      "owner_words": "option 2, show user clearly what is happening",
+      "task": "OPS64"
+    },
+    {
+      "id": "D147",
+      "question": "Weekly wake for gated runners (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Weekly wake, confirm rule",
+          "summary": "Confirm 14-day rule in test",
+          "recommended": true
+        },
+        {
+          "label": "No wake",
+          "summary": "Re-register if removed"
+        }
+      ],
+      "chosen": "Weekly wake, confirm rule",
+      "decided": "2026-11-21",
+      "owner_words": "Weekly wake, confirm rule (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D148",
+      "question": "One console word for persistent/ephemeral (LOOK50)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Runner type",
+          "summary": "Help's word",
+          "recommended": true
+        },
+        {
+          "label": "Kind",
+          "summary": "Runner page's word"
+        }
+      ],
+      "chosen": "Runner type",
+      "decided": "2026-11-21",
+      "owner_words": "Runner type (Recommended)",
+      "task": "LOOK50"
+    },
+    {
+      "id": "D149",
+      "question": "Runner label cap (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Group by size class",
+          "summary": "Same-size job names share one label over the cap",
+          "recommended": true
+        },
+        {
+          "label": "Add another runner",
+          "summary": "Spread labels"
+        }
+      ],
+      "chosen": "Group by size class",
+      "decided": "2026-11-21",
+      "owner_words": "Group by size class (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D150",
+      "question": "runs-on change on repos not owned (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Show patch",
+          "summary": "Copy or download",
+          "recommended": true
+        },
+        {
+          "label": "Skip them",
+          "summary": "Plain RUNS_ON_<OS>"
+        }
+      ],
+      "chosen": "Show patch",
+      "decided": "2026-11-21",
+      "owner_words": "Show patch (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D151",
+      "question": "Timer grace edge cases (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, both",
+          "summary": "Cancel stop if job ended; run cancel only when both run out",
+          "recommended": true
+        },
+        {
+          "label": "Always act",
+          "summary": "Act anyway"
+        }
+      ],
+      "chosen": "Yes, both",
+      "decided": "2026-11-21",
+      "owner_words": "Yes, both (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D152",
+      "question": "Grace buttons (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Both buttons",
+          "summary": "Stop now and Extend 10 min",
+          "recommended": true
+        },
+        {
+          "label": "Stop now only",
+          "summary": "No extend"
+        }
+      ],
+      "chosen": "Both buttons",
+      "decided": "2026-11-21",
+      "owner_words": "Both buttons (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D153",
+      "question": "Weekly wake method (OPS64)",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Listener on for a minute",
+          "summary": "No job",
+          "recommended": true
+        },
+        {
+          "label": "Run a tiny job",
+          "summary": "End-to-end proof"
+        }
+      ],
+      "chosen": "Listener on for a minute",
+      "decided": "2026-11-21",
+      "owner_words": "Listener on for a minute (Recommended)",
+      "task": "OPS64"
+    },
+    {
+      "id": "D154",
+      "question": "Lifecycle targets for crsp",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Windows MSI x64+arm64",
+          "summary": "Windows lanes"
+        },
+        {
+          "label": "Linux deb and rpm",
+          "summary": "Ubuntu and Fedora lanes"
+        },
+        {
+          "label": "macOS pkg",
+          "summary": "macOS lanes"
+        }
+      ],
+      "chosen": "Windows MSI x64+arm64",
+      "decided": "2026-11-21",
+      "owner_words": "turn of linux and macos OSes as targets for this project, for now",
+      "task": "OPS69"
+    },
+    {
+      "id": "D155",
+      "question": "Where lifecycle lanes run",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "GitHub-hosted",
+          "summary": "clean throwaway machines",
+          "recommended": true
+        },
+        {
+          "label": "crsp pool",
+          "summary": "dogfood on pool"
+        },
+        {
+          "label": "Mixed",
+          "summary": "Linux on pool, rest hosted"
+        }
+      ],
+      "chosen": "GitHub-hosted",
+      "decided": "2026-11-21",
+      "owner_words": "GitHub-hosted (Recommended)",
+      "task": "OPS69"
+    },
+    {
+      "id": "D156",
+      "question": "Ed25519 manifest signing key",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "You run one command",
+          "summary": "owner makes key, stores secret",
+          "recommended": true
+        },
+        {
+          "label": "Provenance only, opt out",
+          "summary": "no Ed25519"
+        }
+      ],
+      "chosen": "You run one command",
+      "decided": "2026-11-21",
+      "owner_words": "You run one command (Recommended)",
+      "task": "OPS68"
+    },
+    {
+      "id": "D157",
+      "question": "Asset rename transition",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Both names, 2 releases",
+          "summary": "old copies keep updating",
+          "recommended": true
+        },
+        {
+          "label": "Switch at once",
+          "summary": "manual reinstall once"
+        }
+      ],
+      "chosen": "Switch at once",
+      "decided": "2026-11-21",
+      "owner_words": "Switch at once",
+      "task": "OPS69"
+    },
+    {
+      "id": "D158",
+      "question": "Product word in asset names",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Crsp",
+          "summary": "Crsp-0.1.22-win-x64.msi",
+          "recommended": true
+        },
+        {
+          "label": "CiRunnersSharedPool",
+          "summary": "repo name"
+        },
+        {
+          "label": "SharedPool",
+          "summary": "short"
+        }
+      ],
+      "chosen": "Crsp",
+      "decided": "2026-11-21",
+      "owner_words": "Crsp (Recommended)",
+      "task": "OPS69"
+    },
+    {
+      "id": "D159",
+      "question": "What Delete my data too deletes",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Everything crsp made",
+          "summary": "settings, db, logs, caches, images, WSL distro",
+          "recommended": true
+        },
+        {
+          "label": "Settings, database, logs",
+          "summary": "caches and images stay"
+        }
+      ],
+      "chosen": "Everything crsp made",
+      "decided": "2026-11-21",
+      "owner_words": "Everything crsp made (Recommended)",
+      "task": "OPS69"
+    },
+    {
+      "id": "D160",
+      "question": "Lifecycle timing vs job sizing",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Parallel now",
+          "summary": "rides RELEASE-53",
+          "recommended": true
+        },
+        {
+          "label": "After RELEASE-52",
+          "summary": "start ~20:20"
+        }
+      ],
+      "chosen": "Parallel now",
+      "decided": "2026-11-21",
+      "owner_words": "Parallel now (Recommended)",
+      "task": "CRSP222"
+    },
+    {
+      "id": "D161",
+      "question": "OS code signing of the MSI",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Not now",
+          "summary": "unsigned, manifest protects updates",
+          "recommended": true
+        },
+        {
+          "label": "Sign the MSI",
+          "summary": "certificate needed"
+        }
+      ],
+      "chosen": "Not now",
+      "decided": "2026-11-21",
+      "owner_words": "Not now (Recommended)",
+      "task": "OPS69"
+    },
+    {
+      "id": "D162",
+      "question": "What idle means for updates",
+      "asked": "2026-11-21",
+      "status": "decided",
+      "options": [
+        {
+          "label": "No job on this machine",
+          "summary": "per machine",
+          "recommended": true
+        },
+        {
+          "label": "No job in the pool",
+          "summary": "whole pool"
+        }
+      ],
+      "chosen": "No job on this machine",
+      "decided": "2026-11-21",
+      "owner_words": "No job on this machine (Recommended)",
+      "task": "OPS68"
     }
   ]
 }

@@ -15,16 +15,33 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | caches | D2 | [How to send `actions/cache` to the pool](../features/caches/spec.md) | A runner patched at install for the pinned runner version (section 7.2); owner to confirm (Q1) | decided | 2026-11-14 (proposed) |
 | caches | D3 | [Tool cache language](../features/caches/spec.md) | A Go port of `ci_tool.py` inside the one binary, with its tests ported | decided | 2026-11-14 (proposed) |
 | caches | D4 | [Wipe at drain timeout](../features/caches/spec.md) | Delete nothing and say so; never cut a job | decided | 2026-11-14 (proposed) |
-| ci-run-insights | D1 | [Build which ideas, when?](../features/ci-run-insights/spec.md) | All 16 ideas and the Job page faults, one wave, one release (owner) | decided | 2026-11-20 |
-| ci-run-insights | D2 | [May crsp store CI logs and reports?](../features/ci-run-insights/spec.md) | Yes, on the owner's machines only, redacted, with retention and a size cap per repository (owner decision D4; observability R5.38 reworded) | decided | 2026-11-20 |
-| ci-run-insights | D27 | [Is a run finished while the run it started next is not?](../features/ci-run-insights/spec.md) | No. A run linked to follow-ups (event `workflow_run`) shows *follow-up running* and "Started next" until they finish; its own result stays (owner decision D27 of 21 Nov, after run 44877168728 showed done while the Installers run 44877464364 still ran; R5.46 to R5.49) | decided | 2026-11-21 |
-| ci-run-insights | D3 | [Can a finding be dismissed?](../features/ci-run-insights/spec.md) | Changed by owner decision D17 (20 Nov): an admin can hide it for 7 days and it comes back if it is still true; nothing closes or deletes it by hand (R5.8) | decided | 2026-11-20 |
-| ci-run-insights | D4 | [May crsp change the pool to follow its advice?](../features/ci-run-insights/spec.md) | Only as an action the owner reviews and an admin starts (Review, work, Done); no auto-resize, no auto-merge (owner) | decided | 2026-11-20 |
-| ci-run-insights | D5 | [Where does Do next live?](../features/ci-run-insights/spec.md) | Jobs, Charts area; the Overview shows a count and a link (owner, UX-52) | decided | 2026-11-20 |
-| ci-run-insights | D6 | [How is the wait after a change estimated?](../features/ci-run-insights/spec.md) | Allen-Cunneen G/G/c with Sakasegawa's waiting probability, shown as an estimate with its inputs | decided | 2026-11-20 |
-| ci-run-insights | D7 | [Static test scan?](../features/ci-run-insights/spec.md) | Out of scope; only test reports and logs (owner) | decided | 2026-11-20 |
-| ci-run-insights | D8 | [When do insights update, and what may they cost?](../features/ci-run-insights/spec.md) | After each CI run and on a timer; a pass over 5% CPU, 300 MB or 1 GB shows a warning with a slower period to choose (owner decisions D18, D19; R5.44, R5.45) | decided | 2026-11-20 |
-| ci-run-insights | D9 | [When is the weekly digest written, and how long is the flaky window?](../features/ci-run-insights/spec.md) | Monday 08:00 Europe/Lisbon, a draft file the tray links to; 14 days for flaky tests (owner decisions D18, D21; R5.38, R5.35) | decided | 2026-11-20 |
+| ci-run-insights | D1 | Where do the seven test guardrails live in dev-standards? | Extend luismc-delivery + STACKSPEC numbers | decided | 2026-11-20 |
+| ci-run-insights | D10 | What is the first page of Jobs? | Overview first | decided | 2026-11-20 |
+| ci-run-insights | D11 | Default range and comparison on the Jobs Overview? | 7 days vs previous 7 | decided | 2026-11-20 |
+| ci-run-insights | D12 | Which 4 key numbers on the Overview? | Keep the 4 | decided | 2026-11-20 |
+| ci-run-insights | D13 | Run elsewhere: own Jobs tab or a section in Live and Done? | Own tab | decided | 2026-11-20 |
+| ci-run-insights | D14 | Table text: may rows differ in height when a name wraps (UX-72)? | Visible where possible, else ellipsis + full text | decided | 2026-11-20 |
+| ci-run-insights | D15 | How is the full text of a cut cell shown? | Tooltip + tap to expand row | decided | 2026-11-20 |
+| ci-run-insights | D16 | May Run insights show estimated savings? | Show, marked by confidence | decided | 2026-11-20 |
+| ci-run-insights | D17 | Does a dismissed finding come back by itself? | Back after 7 days if still true | decided | 2026-11-20 |
+| ci-run-insights | D18 | Weekly digest timing and where it shows; how often insights update? | Mon 08:00 file + tray; refresh after each run | decided | 2026-11-20 |
+| ci-run-insights | D19 | What is 'too much' for one insights analysis pass? | Over 5% CPU or 300 MB RAM or 1 GB disk | decided | 2026-11-20 |
+| ci-run-insights | D2 | Which crsp slice of CI run insights comes first? | All 16 at once | decided | 2026-11-20 |
+| ci-run-insights | D20 | Runner timeline: all machines only, or also per machine? | Both | decided | 2026-11-20 |
+| ci-run-insights | D21 | Flaky window (same commit, different result)? | 14 days | decided | 2026-11-20 |
+| ci-run-insights | D22 | New shared parts: v3 draft and approval before building? | v3 draft, I approve, then build | decided | 2026-11-20 |
+| ci-run-insights | D23 | When is the Jobs concept A redesign built? | Next release after RELEASE-48 | decided | 2026-11-20 |
+| ci-run-insights | D24 | Wait for the 10 list layouts (CRSP211) before building the list? | Wait, I'll pick from the 10 | decided | 2026-11-20 |
+| ci-run-insights | D25 | Turn on the dev-standards CI fallback (ci-shards.json)? | Off for now | decided | 2026-11-20 |
+| ci-run-insights | D26 | How many slots does comics-organizer get once it moves to the shared pool (its release CI takes 87 min on one slot per OS)? | Only after crsp runs and analyses it | decided | 2026-11-20 |
+| ci-run-insights | D27 | Should a run link to the follow-up workflows it starts (e.g. Installers after CI)? | Yes, add it | decided | 2026-11-21 |
+| ci-run-insights | D3 | Which of crsp's own open CI fixes from the dev-standards study go into the next release? | All of them | decided | 2026-11-20 |
+| ci-run-insights | D4 | May crsp store CI job logs and test reports itself, given observability R5.38 says logs are never stored? | Yes, locally | decided | 2026-11-20 |
+| ci-run-insights | D5 | When do the leftover guardrail fixes from the first crsp audit (91 sleeps, 17 tests over 20 cases, 3 jobs without a valid timeout-minutes) go in? | With D3 | decided | 2026-11-20 |
+| ci-run-insights | D6 | Fix the Job page faults seen on a comics-organizer job (does not say another runner runs it, 0 steps for poller-only jobs, stale 'queued' card)? | Yes, with slice 1 | decided | 2026-11-20 |
+| ci-run-insights | D7 | How should crsp treat jobs that another runner runs (e.g. the old pool, while a repository's RUNS_ON still points there)? | Show apart, marked | decided | 2026-11-20 |
+| ci-run-insights | D8 | Where does CI run insights live in the console? | A Jobs tab before Charts | decided | 2026-11-20 |
+| ci-run-insights | D9 | Which concept should the Jobs section become (CRSP212 study)? | A Ops cockpit | decided | 2026-11-20 |
 | cli | D1 | [How does the CLI sign in?](../features/cli/spec.md) | GitHub device flow through the controller; the CLI keeps only a controller token (decision 0002). | decided | 2026-11-13 |
 | cli | D2 | [How does the CLI reach the API?](../features/cli/spec.md) | The Go client generated from the same OpenAPI contract as the web console (decision 0001). | decided | 2026-11-13 |
 | cli | D3 | [How does a headless machine open the console?](../features/cli/spec.md) | `crsp open` prints a one-time link (decision 0005). | decided | 2026-11-13 |
@@ -37,8 +54,84 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | doctor | D5 | [How runners are found](../features/doctor/spec.md) | From the OS service list first, then the database; never only by reading runner folders (learning 6) | decided | 2026-11-14 |
 | doctor | D6 | [Which milestone starts the doctor](../features/doctor/spec.md) | Milestone 1, with the checks of milestone 1 parts, since every milestone ends with the doctor covering its parts | decided | 2026-11-14 |
 | look | D1 | Console frame style | B TUI panes | decided | 2026-11-15 |
+| look | D10 | Arrow keys in option groups and multi-line text | Always move on | decided | 2026-11-16 |
+| look | D11 | Default theme for a new install | Phosphor dark | decided | 2026-11-16 |
+| look | D12 | Light theme versions | Keep as on the look page (Recommended) | decided | 2026-11-16 |
+| look | D13 | Tag v0.1.5 after the partial RELEASE-28, or wait for RELEASE-29 | Wait for RELEASE-29 (Recommended) | decided | 2026-11-16 |
+| look | D14 | Console alignment from top bar to footer (mockup https://claude.ai/artifact/8yFs1FD6abz9mKvSqXffwN): what next? | Approve, apply to every screen | decided | 2026-11-17 |
+| look | D15 | Which new mockups to build now (canvas boards Repos, FilePicker, Themes, Fields, Keypad)? | Grouped repositories | decided | 2026-11-17 |
+| look | D16 | Only private repositories are active; should Repositories still list public ones? | Hide inactive types | decided | 2026-11-17 |
+| look | D17 | Build the shared File field (canvas board FilePicker)? | Approve the file field | decided | 2026-11-17 |
+| look | D18 | Update review page is narrower than Overview (narrow 40rem frame, centred). How should wizard pages sit? | Wide frame, left edge | decided | 2026-11-17 |
+| look | D19 | Queue order lets the same key be picked in all 4 positions. Which single-list ordering UX? | A. List + up/down buttons | decided | 2026-11-17 |
 | look | D2 | Console colours | All six as user themes | decided | 2026-11-15 |
+| look | D20 | The machine 'Drain' button is not clear. How should it read? | Rename + hint line | decided | 2026-11-17 |
+| look | D21 | Build the Images and caches redesign (mockup 'what an image holds')? | Approve, build it | decided | 2026-11-17 |
+| look | D22 | Dimmed text is hard to tell from normal text. Which treatment? | A. Grey plus a tag | decided | 2026-11-17 |
+| look | D23 | Images screen for several machines and repositories: too much at once. Simplified prototype (list of images with one status line each, open one to see layers) OK? | Simplified: list then detail | decided | 2026-11-17 |
+| look | D24 | Top navigation of the console (one shared pool model) | Six items with Shared Pool | decided | 2026-11-17 |
+| look | D25 | Main action: name on Repositories and where main actions sit | Use pool, sticky bottom action bar | decided | 2026-11-17 |
+| look | D26 | Settings tabs with the one bottom action bar | One Save per tab | decided | 2026-11-18 |
+| look | D27 | Doctor fix buttons with one main action per screen | Fix buttons stay in rows | decided | 2026-11-18 |
+| look | D28 | Repositories table without a horizontal scroll bar | A Fewer columns | decided | 2026-11-18 |
+| look | D29 | Word for the capacity added per machine | Runners | decided | 2026-11-18 |
 | look | D3 | Default colour scheme for a new install | Tokyo Night | decided | 2026-11-15 |
+| look | D30 | Hidden per-repository long-lived runner registrations | Yes, hide them | decided | 2026-11-18 |
+| look | D31 | Split of the one-pool build | Menu now, runners in steps | decided | 2026-11-18 |
+| look | D32 | Runners view inside Shared Pool | B Grouped by machine | decided | 2026-11-18 |
+| look | D33 | How crsp works strip on Overview | Yes, on first run only | decided | 2026-11-18 |
+| look | D34 | Done jobs kept in the Jobs list | Last 100 | decided | 2026-11-18 |
+| look | D35 | Gap between Settings sections | A: 32px | decided | 2026-11-18 |
+| look | D36 | Long error text in table cells | B: one line + expand | decided | 2026-11-18 |
+| look | D37 | Tables that use the long-text pattern | Yes, all three | decided | 2026-11-18 |
+| look | D38 | Unsaved changes on edit pages | Count + leave guard | decided | 2026-11-18 |
+| look | D39 | Pool size layout on the machine page | A: plain section | decided | 2026-11-18 |
+| look | D4 | Default colour mode of the console | Dark by default (Recommended) | decided | 2026-11-16 |
+| look | D40 | How Recommended pool size is computed | Both, labelled | decided | 2026-11-18 |
+| look | D41 | Pool size Save | Yes, one Save | decided | 2026-11-18 |
+| look | D42 | Release for LOOK16, LOOK19, LOOK21, LOOK22 | RELEASE-39 | decided | 2026-11-18 |
+| look | D43 | Pool size 'leaves little for this PC' threshold | Keep 3 GiB | decided | 2026-11-18 |
+| look | D44 | LOOK33 block caret as built | Ship as is | decided | 2026-11-18 |
+| look | D45 | RES21 design-system fixes: launch? | Launch all, guards first | decided | 2026-11-19 |
+| look | D46 | RES21 G1: guards enforce v1 while the owner rules live in next-version | Promote next-version as v2 | decided | 2026-11-19 |
+| look | D47 | Which Jobs list layout (CRSP211, 10 options as real screens)? | Option 11: new combination | decided | 2026-11-20 |
+| look | D48 | Which Help section proposal (LOOK42)? | 5 new: A + (F+C) + D | decided | 2026-11-20 |
+| look | D49 | Approve the design system v3 draft (LOOK40)? | Approve as is | decided | 2026-11-20 |
+| look | D5 | When to start the look-parity fix | After my audit review | decided | 2026-11-16 |
+| look | D50 | Where does Help live in the console? | 7th menu item | decided | 2026-11-20 |
+| look | D51 | Word for persistent vs ephemeral runners? | Runner type | decided | 2026-11-20 |
+| look | D52 | Quiet hours (machines R5.28, never built): keep or drop? | Drop the concept | decided | 2026-11-20 |
+| look | D53 | Help details | Show my real load budget | decided | 2026-11-20 |
+| look | D54 | Where does the Updates pane live in Settings? | Its own section after Console | decided | 2026-11-20 |
+| look | D55 | Which of the five Help proposals G to K is built? | I stepper walks the diagram | decided | 2026-11-20 |
+| look | D56 | Which words do Help and the app use for job capacity: slots or pool size? | Pool size makes slots | decided | 2026-11-20 |
+| look | D57 | May the new shared UI parts (stepper, popover, search+list) ship tonight before the owner approves design system v4? | Yes, approve v4 tomorrow | decided | 2026-11-20 |
+| look | D58 | Help page: replace the stepper (I, built as a wizard) with a layout where all info is reachable? | G diagram, then all questions | decided | 2026-11-21 |
+| look | D59 | Execution plan start times: clock or relative | Clock times, about | decided | 2026-11-21 |
+| look | D6 | How Settings shows its many sections with no sideways scroll | Tabs wrap to rows | decided | 2026-11-16 |
+| look | D60 | Queued job at risk of its run timer shows Needs you | Yes, Needs you | decided | 2026-11-21 |
+| look | D61 | How to unblock the LOOK51 re-render push | Wait for the DL387 fix | decided | 2026-11-21 |
+| look | D62 | Pool tab order in the consolidated layout | Overview first | decided | 2026-11-21 |
+| look | D63 | Where Repositories goes in Setup | A 'Pool setup' tab holds Repositories | decided | 2026-11-21 |
+| look | D64 | Machines in both Setup and Pool | Both: Setup = config, Pool = live | decided | 2026-11-21 |
+| look | D65 | Where Needs you sits on Doctor | First pane on Doctor | decided | 2026-11-21 |
+| look | D66 | When to render the consolidated option | Now, fresh branch | decided | 2026-11-21 |
+| look | D67 | Re-render options A to F too | Only the consolidated one | decided | 2026-11-21 |
+| look | D68 | Help in the consolidated option | Merge: live guide + useful G parts | decided | 2026-11-21 |
+| look | D69 | Desktop frame width (--ds-frame-wide, now 76rem) | Up to 96rem (1536 px) | decided | 2026-11-21 |
+| look | D7 | When to build the menu and phone fixes | With the audit fixes | decided | 2026-11-16 |
+| look | D70 | Wide-screen layouts above ~1400 px | Yes, wide layouts | decided | 2026-11-21 |
+| look | D71 | How the wider frame is shown and shipped | In LOOK54 shots, then build | decided | 2026-11-21 |
+| look | D72 | Analytics position in the top menu | After Doctor | decided | 2026-11-21 |
+| look | D73 | Analytics tabs | Suggestions, Insights, Charts | decided | 2026-11-21 |
+| look | D74 | Where Run elsewhere goes | Analytics tab | decided | 2026-11-21 |
+| look | D75 | Strong suggestions on Doctor too | No, Analytics only | decided | 2026-11-21 |
+| look | D76 | Theme of the LOOK54 screenshots | All dark | decided | 2026-11-21 |
+| look | D77 | Which LOOK54 gap-fix groups start now? | P1 Overview | decided | 2026-11-23 |
+| look | D78 | Which should Pool > Jobs be? | Approved Jobs list first | decided | 2026-11-23 |
+| look | D79 | When should the fix agents start? | Now, in parallel | decided | 2026-11-23 |
+| look | D8 | How to group the 12 Settings sections | 5 groups (Recommended) | decided | 2026-11-16 |
+| look | D9 | Keyboard movement rule for the whole console | Up/Down and j/k move through every control and list item | decided | 2026-11-16 |
 | observability | D1 | [SSE or WebSocket for the live view?](../features/observability/spec.md) | SSE: one-way flow, plain `net/http`, built-in reconnect and replay, no extra library (section 7) | decided | 2026-11-14 |
 | observability | D2 | [Where do runner and agent logs live?](../features/observability/spec.md) | A separate SQLite file `logs.db` with FTS5, so log volume never blocks the scheduler | decided | 2026-11-14 |
 | observability | D3 | [How is an audit row kept with its change?](../features/observability/spec.md) | Same transaction; no audit row, no change | decided | 2026-11-14 |
@@ -47,12 +140,75 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | observability | D6 | [Error tracking?](../features/observability/spec.md) | Local only: structured logs, crash files, doctor (stack profile, section 14) | decided | 2026-11-13 |
 | operations | D1 | Windows install form | WiX v5 on Windows | decided | 2026-11-14 |
 | operations | D10 | Where updates come from | GitHub Releases of this repo | decided | 2026-11-14 |
+| operations | D100 | Leftover runner services and gameroompc-1 | Owner runs the two commands | decided | 2026-11-18 |
+| operations | D101 | Tag v0.1.14 after RELEASE-41 | Tag when green | decided | 2026-11-19 |
+| operations | D102 | Wide columns of the Jobs tables | Weighted widths | decided | 2026-11-19 |
+| operations | D103 | VM image mirror setting (OPS35 follow-up) | Next train | decided | 2026-11-19 |
+| operations | D104 | Terminal command for removing runner leftovers | Add a CLI command | decided | 2026-11-19 |
+| operations | D105 | Default wait of web tests | Raise default to 5 s | decided | 2026-11-19 |
+| operations | D106 | Cleanup of review servers and RES15 draft | Stop all, close #260 | decided | 2026-11-19 |
+| operations | D107 | Next train after RELEASE-41 | Jobs polish, VM mirror and real-machine test pass | decided | 2026-11-19 |
+| operations | D108 | Version in the installer file names | Release names only, versioned | decided | 2026-11-19 |
+| operations | D109 | Run page: the job graph and timeline tables repeat the same jobs | Add it to RELEASE-42 | decided | 2026-11-19 |
 | operations | D11 | Auto-update on all OSes, on by default, user can turn it off? | Yes | decided | 2026-11-14 |
+| operations | D110 | Light runners under the pool model: who creates them? | Drop light runners | decided | 2026-11-19 |
+| operations | D111 | Tags while away 19 Nov evening | Yes, tag each green release | decided | 2026-11-19 |
+| operations | D112 | Fix rounds per release while away | 2 rounds | decided | 2026-11-19 |
+| operations | D113 | Owner back | Tonight, ~22:00 | decided | 2026-11-19 |
+| operations | D114 | Connectors on cloud agents | Remove them | decided | 2026-11-19 |
+| operations | D115 | Do the design checks, design fixes and title/phone fixes ride RELEASE-45 with the registry wave? | All in RELEASE-45 | decided | 2026-11-19 |
+| operations | D116 | Time limit on new waves while away (replaces D113 cutoff) | No time limit | decided | 2026-11-19 |
+| operations | D117 | Console update from 0.1.13 or 0.1.14 cannot find versioned installers (v0.1.15 and later) | Install by hand now | decided | 2026-11-20 |
+| operations | D118 | Sizing approach (OPS56 #1) | Scan+count, then measure | decided | 2026-11-21 |
+| operations | D119 | How deep the scan counts (OPS56 #2) | Counts + tool config + services | decided | 2026-11-21 |
 | operations | D12 | With auto-update on, install with no question after the drain? | Yes, install after drain | decided | 2026-11-14 |
+| operations | D120 | Per-test starting costs (OPS56 #3) | One editable cost table | decided | 2026-11-21 |
+| operations | D121 | When the test count jumps (OPS56 #4) | Reset at over 2x, show it | decided | 2026-11-21 |
+| operations | D122 | Where the size override lives (OPS56 #5) | .crsp.yml + console | decided | 2026-11-21 |
+| operations | D123 | Per-job CPU and memory sampling (OPS56 #6) | All OSes together | decided | 2026-11-21 |
+| operations | D124 | Runner classes and job size (OPS56 #7) | Connect classes now | decided | 2026-11-21 |
+| operations | D125 | A new job with no history (OPS56 #8) | Scan, else 1/1, never block | decided | 2026-11-21 |
+| operations | D126 | Hold cap in the hook (OPS56 #10) | 2 min | decided | 2026-11-21 |
+| operations | D127 | crsp-owned job and run timers (OPS64) | Yes, crsp-owned timers | decided | 2026-11-21 |
+| operations | D128 | Waiting before or after assignment (OPS56 #9). Owner: explore before-assignment everywhere; show 1-3 machine examples and race fixes. | Before assignment everywhere | decided | 2026-11-21 |
+| operations | D129 | Tools on Windows and macOS (OPS56 #11). Owner: explore image-like tool setup, versioned dependency caches, no cross-project contamination. | Report, then a tool list | decided | 2026-11-21 |
 | operations | D13 | Drain limit before an update or restart | 60 min, then postpone | decided | 2026-11-14 |
+| operations | D130 | Start-up delay for JIT runners (OPS64) | Warm 1 per busy label | decided | 2026-11-21 |
+| operations | D131 | Who installs Windows/macOS tools (OPS56 #11) | Agent installs | decided | 2026-11-21 |
+| operations | D132 | Installer for the tool store (OPS56 #11) | Each tool's own manager | decided | 2026-11-21 |
+| operations | D133 | Starvation rule for passed jobs (OPS56 #7) | 3 passes or 10 min | decided | 2026-11-21 |
+| operations | D134 | Runner class validation (OPS56 #7) | Only order + fit | decided | 2026-11-21 |
+| operations | D135 | Runner class presets (OPS56 #7) | All three + Custom | decided | 2026-11-21 |
+| operations | D136 | Runner class enforcement (OPS56 #7) | Count + hard memory cap | decided | 2026-11-21 |
+| operations | D137 | Timer actions (OPS64) | As proposed | decided | 2026-11-21 |
+| operations | D138 | Timer defaults (OPS64) | 30/45/2/60 min | decided | 2026-11-21 |
+| operations | D139 | Saving .crsp.yml edits from the console (OPS56 #5) | Save in crsp, instant | decided | 2026-11-21 |
 | operations | D14 | When to check for and install updates | Check every 6 h, install any time | decided | 2026-11-14 |
+| operations | D140 | Job routing by per-job crsp variable (OPS64). Owner asked how first runs work; page update explains scan at opt-in and push, fallback variable. | Label per job name | decided | 2026-11-21 |
+| operations | D141 | Persistent runners with listener gating on all runner types (OPS64). Owner: option 1 for host, containers, VMs, WSL2, Hyper-V; research feasibility per type. | Machine itself only | decided | 2026-11-21 |
+| operations | D142 | Test GitHub routing facts first (OPS64) | Test first | decided | 2026-11-21 |
+| operations | D143 | crsp opens the one-time runs-on PR (OPS64) | crsp opens a PR | decided | 2026-11-21 |
+| operations | D144 | Console or .crsp.yml wins (OPS56 #5) | Console wins | decided | 2026-11-21 |
+| operations | D145 | Copy to .crsp.yml (OPS56 #5) | Copy a YAML line | decided | 2026-11-21 |
+| operations | D146 | Timer 30 s meaning (OPS64) | 30 s grace first | decided | 2026-11-21 |
+| operations | D147 | Weekly wake for gated runners (OPS64) | Weekly wake, confirm rule | decided | 2026-11-21 |
+| operations | D148 | One console word for persistent/ephemeral (LOOK50) | Runner type | decided | 2026-11-21 |
+| operations | D149 | Runner label cap (OPS64) | Group by size class | decided | 2026-11-21 |
 | operations | D15 | Update channel | Stable only | decided | 2026-11-14 |
+| operations | D150 | runs-on change on repos not owned (OPS64) | Show patch | decided | 2026-11-21 |
+| operations | D151 | Timer grace edge cases (OPS64) | Yes, both | decided | 2026-11-21 |
+| operations | D152 | Grace buttons (OPS64) | Both buttons | decided | 2026-11-21 |
+| operations | D153 | Weekly wake method (OPS64) | Listener on for a minute | decided | 2026-11-21 |
+| operations | D154 | Lifecycle targets for crsp | Windows MSI x64+arm64 | decided | 2026-11-21 |
+| operations | D155 | Where lifecycle lanes run | GitHub-hosted | decided | 2026-11-21 |
+| operations | D156 | Ed25519 manifest signing key | You run one command | decided | 2026-11-21 |
+| operations | D157 | Asset rename transition | Switch at once | decided | 2026-11-21 |
+| operations | D158 | Product word in asset names | Crsp | decided | 2026-11-21 |
+| operations | D159 | What Delete my data too deletes | Everything crsp made | decided | 2026-11-21 |
 | operations | D16 | How agent-only machines update | Follow the controller | decided | 2026-11-14 |
+| operations | D160 | Lifecycle timing vs job sizing | Parallel now | decided | 2026-11-21 |
+| operations | D161 | OS code signing of the MSI | Not now | decided | 2026-11-21 |
+| operations | D162 | What idle means for updates | No job on this machine | decided | 2026-11-21 |
 | operations | D17 | Tell the user after an automatic update? | Desktop notice + tray header | decided | 2026-11-14 |
 | operations | D18 | Native installers for macOS and Linux now | macOS .pkg, Linux .deb and .rpm | decided | 2026-11-14 |
 | operations | D19 | Default of the uninstall 'also delete data' checkbox | Unchecked | decided | 2026-11-14 |
@@ -130,7 +286,20 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | operations | D84 | How should a missing GitHub App permission be handled in the console? | One guided action with live step states | decided | 2026-11-16 |
 | operations | D85 | Add the five missing points of the owner's seven core rules to crsp's design system? | Add all five (Recommended) | decided | 2026-11-16 |
 | operations | D86 | How should crsp follow luismc-docs 2.7.0 CORE-1..7? | Switch to CORE-1..7 (Recommended) | decided | 2026-11-16 |
+| operations | D87 | Repositories says 'Your GitHub sign-in ended' after every restart and after 8 hours: what fix? | List with the App, button too | decided | 2026-11-17 |
+| operations | D88 | Parity needs a reachable controller address; build the console address chooser (mockup board Address)? | Approve, build it | decided | 2026-11-17 |
+| operations | D89 | Webhook delivery missed: next step | Ship + real webhooks task | decided | 2026-11-18 |
 | operations | D9 | Does v0.1.0 wait for the MSI and the new tray menu | v0.1.0 waits for both | decided | 2026-11-14 |
+| operations | D90 | Version for the real-machine milestone review | Wait for v0.1.13 | decided | 2026-11-18 |
+| operations | D91 | RELEASE-38 CI re-run lost its build file | Merge RELEASE-38 into RELEASE-39 | decided | 2026-11-18 |
+| operations | D92 | When to do the CRSP2 review | After RELEASE-40 | decided | 2026-11-18 |
+| operations | D93 | Linux runners on a Windows machine: persistent (dev-standards model) or ephemeral | User chooses | decided | 2026-11-18 |
+| operations | D94 | Default to ephemeral for public repositories: how | Both | decided | 2026-11-18 |
+| operations | D95 | What a persistent runner keeps between jobs | Yes | decided | 2026-11-18 |
+| operations | D96 | TRAY5: own release or ride RELEASE-40 | Merge TRAY5 into RELEASE-40 | decided | 2026-11-18 |
+| operations | D97 | Two stopped crsp-light runner services for home-automation on this PC | Remove them | decided | 2026-11-18 |
+| operations | D98 | When to do the CRSP2 review | Tonight, after v0.1.13 | decided | 2026-11-18 |
+| operations | D99 | Real symbolic-link check in Windows CI | Yes, next release | decided | 2026-11-18 |
 | registry | D1 | [Where the registry runs](../features/registry/spec.md) | Embedded in the controller, Distribution v3, `/v2/` on its HTTPS listener, private LAN rule | decided | 2026-11-19 |
 | registry | D10 | [Mirror of upstream bases](../features/registry/spec.md) | Built now, a second registry instance in proxy mode | decided | 2026-11-19 |
 | registry | D11 | [Controller offline](../features/registry/spec.md) | The job waits; local build only when the controller answers "not in registry" | decided | 2026-11-19 |
@@ -144,6 +313,48 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | registry | D7 | [Repository that moves](../features/registry/spec.md) | The old image stays for other repositories (pointer per repository) | decided | 2026-11-19 |
 | registry | D8 | [Dismiss recommendations](../features/registry/spec.md) | Not possible | decided | 2026-11-19 |
 | registry | D9 | [Integrity](../features/registry/spec.md) | Digest pinning now, no cosign | decided | 2026-11-19 |
+| research | D1 | RES15: Done jobs kept and shown | 90 days, show 25 | decided | 2026-11-18 |
+| research | D10 | RES15: Runner type grouping | Kind; backend a column | decided | 2026-11-18 |
+| research | D11 | RES15: Job type meaning | Job name, light/heavy badge | decided | 2026-11-18 |
+| research | D12 | RES15: Charts range | 14 days, switch 7/30 | decided | 2026-11-18 |
+| research | D13 | RES15: Export | List and daily summaries | decided | 2026-11-18 |
+| research | D14 | RES15: Replace current Jobs screens | Replace at once | decided | 2026-11-18 |
+| research | D15 | Image profile model | Profiles plus tool cache | decided | 2026-11-19 |
+| research | D16 | Who confirms scan findings | Auto for low-risk, you for new | decided | 2026-11-19 |
+| research | D17 | How service containers start | Sidecars plus compose groups | decided | 2026-11-19 |
+| research | D18 | Ready-made images and the registry | Every image, standard and custom | decided | 2026-11-19 |
+| research | D19 | Scan source and scope | Per run's commit, local copy | decided | 2026-11-19 |
+| research | D2 | RES15: Step timings kept | 30 d steps, 90 d jobs | decided | 2026-11-18 |
+| research | D20 | Build limits | One at a time, half the cores busy | decided | 2026-11-19 |
+| research | D21 | Cache limits | Editable per cache, plus machine budget | decided | 2026-11-19 |
+| research | D22 | Image software list and vulnerability count | Yes, in crsp, every image | decided | 2026-11-19 |
+| research | D23 | Add runners work step with the image | Rename and show image progress | decided | 2026-11-19 |
+| research | D24 | Build logs kept | Last 5, 1 MB each | decided | 2026-11-19 |
+| research | D25 | Repository hint file .crsp.yml | Later | decided | 2026-11-19 |
+| research | D26 | Image registry: where it runs | Embedded in controller | decided | 2026-11-19 |
+| research | D27 | Image registry engine | Distribution v3 | decided | 2026-11-19 |
+| research | D28 | Image registry: who pushes | Staging, controller promotes | decided | 2026-11-19 |
+| research | D29 | Standard images: import ready-made images from CI | Never import from CI | decided | 2026-11-19 |
+| research | D3 | RES15: Read the workflow file for the job graph | Yes, read it | decided | 2026-11-18 |
+| research | D30 | Registry default budgets | 40 GB std, 30 GB custom | decided | 2026-11-19 |
+| research | D31 | May crsp delete registry images on its own (replaced after rollback days, merged branch variants, unused layers) | Yes, dates shown ahead | decided | 2026-11-19 |
+| research | D32 | Registry: unused after how many days | 30 days | decided | 2026-11-19 |
+| research | D33 | Registry: rollback days after a replace | 7 days | decided | 2026-11-19 |
+| research | D34 | Registry: one repository moves to a newer image, another still uses the old one | Old image stays for it | decided | 2026-11-19 |
+| research | D35 | Registry: can the owner dismiss a recommendation | No, stays until resolved | decided | 2026-11-19 |
+| research | D36 | Registry image signing | Digest pinning now, cosign later | decided | 2026-11-19 |
+| research | D37 | Pull-through mirror of upstream base images | Now | decided | 2026-11-19 |
+| research | D38 | Controller offline, a machine needs an image it lacks | Job waits for the controller | decided | 2026-11-19 |
+| research | D39 | Registry folder on a Windows controller | Data folder, editable | decided | 2026-11-19 |
+| research | D4 | RES15: Forecast wording | Range on page, number in tables | decided | 2026-11-18 |
+| research | D40 | When registry work starts | After RES21 fixes land | decided | 2026-11-19 |
+| research | D41 | REG-5 registry screens (RES20 review build) | Approve as shown | decided | 2026-11-19 |
+| research | D42 | Registry wave start (phases 1 to 3 in one go; replaces D40) | Now, contract first | decided | 2026-11-19 |
+| research | D5 | RES15: Runs vs jobs in Queue, Running, Done | Rows per run, jobs inside | decided | 2026-11-18 |
+| research | D6 | RES15: Where step times come from | GitHub now, both later | decided | 2026-11-18 |
+| research | D7 | RES15: Branch and worktree display | Branch, task, worktree if told | decided | 2026-11-18 |
+| research | D8 | RES15: Forecast with under 5 runs | Fallback, labelled | decided | 2026-11-18 |
+| research | D9 | RES15: Queue start ETA | Yes, start range | decided | 2026-11-18 |
 | scheduling | D1 | [Where do slots, tickets and the slot log live?](../features/scheduling/spec.md) | In the controller's SQLite tables, not lock files in a shared folder. A take is one transaction (decision 0001). | decided | 2026-11-14 |
 | scheduling | D2 | [Who judges whether a holder is dead?](../features/scheduling/spec.md) | The agent of the holder's machine judges the process; the controller judges ages on its own clock. This replaces "same host only" (learning 2). | decided | 2026-11-14 |
 | scheduling | D3 | [The order of service](../features/scheduling/spec.md) | Repository priority, then event class, then fair share, then queued time. Proposed; the owner confirms (section 11). | decided | 2026-11-14 |
@@ -153,10 +364,25 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | scheduling | D7 | [CPU smoothing](../features/scheduling/spec.md) | Two readers, two rules, both built. The one-shot hook reader (this spec, R5.42) takes the mean of up to 3 samples in 30 s. The agent's sampler (machines R5.16) samples every 5 s and decides on the median of the last 5. The median of 5 samples 1 s apart is for sizing (R5.47). | decided | 2026-11-14 |
 | scheduling | D8 | [Gate when the load cannot be measured](../features/scheduling/spec.md) | Fail open, as in the source. | decided | 2026-11-14 |
 | tray | D1 | Tray menu layout | Same plus Open on GitHub | decided | 2026-11-14 |
+| tray | D10 | How to organise the tray menu (6 alternatives)? | 5. Status + update first | decided | 2026-11-17 |
+| tray | D11 | Tag after RELEASE-40 (TRAY5) | Tag v0.1.13 when green | decided | 2026-11-18 |
+| tray | D12 | Look of the update and installer windows | Like comics-organizer | decided | 2026-11-18 |
+| tray | D13 | How an automatic update ends | One toast | decided | 2026-11-18 |
+| tray | D14 | How to build the native Windows update window | Go, in crsp itself | decided | 2026-11-18 |
+| tray | D15 | Cancel in the update window | Cancel before Installing | decided | 2026-11-18 |
+| tray | D16 | Colours of the native update window | Phosphor all over | decided | 2026-11-18 |
+| tray | D17 | Band and MSI picture art | Icon + name, faint scanlines | decided | 2026-11-18 |
+| tray | D18 | crsp icon in the web page | Yes | decided | 2026-11-18 |
+| tray | D19 | Own browser profile for the macOS/Linux web update window | Later, with the macOS and Linux versions | decided | 2026-11-18 |
 | tray | D2 | What 'check for plugins' means | Check for updates | decided | 2026-11-14 |
+| tray | D20 | First-start window on macOS and Linux | Yes, first start only | decided | 2026-11-18 |
+| tray | D21 | PR #253, the TRAY5 options review | Close it | decided | 2026-11-18 |
+| tray | D22 | When to start the macOS and Linux versions (TRAY7) | Later, owner says when | decided | 2026-11-18 |
+| tray | D23 | Hint while Remove is disabled in the native remove window | Choose what happens to your data first. | decided | 2026-11-21 |
 | tray | D3 | Where the yes for restart and update is asked | Console Review step | decided | 2026-11-14 |
 | tray | D4 | Tray menu platforms | Same menu on all three | decided | 2026-11-14 |
 | tray | D5 | Product name in the tray header | CI Runners Shared Pool | decided | 2026-11-14 |
 | tray | D6 | Bold Open item in the tray menu | Accept no bold | decided | 2026-11-14 |
 | tray | D7 | When is the tray's one-time sign-in link built? | Build it in v0.2.0 | decided | 2026-11-14 |
 | tray | D8 | The app icon, and the tray icon shapes | Disc with CRSP letters, everywhere | decided | 2026-11-15 |
+| tray | D9 | When RELEASE-30 (tray update dialog fix) merges green, tag v0.1.6 without asking? | Tag v0.1.6 when green | decided | 2026-11-17 |

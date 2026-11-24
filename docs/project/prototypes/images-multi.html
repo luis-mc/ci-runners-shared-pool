@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Images prototype</title>
+<style>
+:root{--bg:#040a05;--sf:#08130a;--tx:#b9f7b4;--mu:#78b874;--pr:#4dff88;--bd:#4a8a47;--dv:#1c371c;--am:#ffc94d}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.6 'JetBrains Mono',ui-monospace,monospace}
+.wrap{max-width:1100px;margin:0 auto;padding:20px 16px}
+h1{color:var(--pr);font-size:22px;margin:0}h2{font-size:16px;margin:0}.mu{color:var(--mu)}.am{color:var(--am)}
+button{font:inherit;min-height:44px;background:var(--bg);color:var(--tx);border:1px solid var(--bd);padding:0 16px;cursor:pointer}
+button.p{background:var(--pr);color:#021207;border-color:var(--pr);font-weight:700}button:disabled{opacity:.45;cursor:not-allowed}
+button.link{border:0;background:none;color:var(--pr);text-decoration:underline;padding:0;min-height:0}
+.list{border:1px solid var(--bd);margin-top:16px}
+.row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:14px 16px;border-top:1px solid var(--dv);cursor:pointer}
+.row:first-child{border-top:0}.row:hover{background:var(--sf)}
+.panel{border:1px solid var(--bd);margin-top:16px;padding:16px}
+.lay{display:grid;grid-template-columns:28px 1fr auto;gap:10px;padding:12px 0;border-top:1px solid var(--dv)}
+.ft{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
+details{margin-top:14px;border-top:1px solid var(--dv);padding-top:10px}summary{cursor:pointer;color:var(--mu)}
+@media(max-width:600px){.ft{flex-direction:column-reverse}.ft button{width:100%}}
+</style></head><body><div class="wrap">
+<p class="mu" style="font-size:12px">Prototype, invented data. Click an image to open it.</p>
+<div id="out"></div></div>
+<script>
+const L={browsers:["Browsers","for browser tests"],llvm:["LLVM","for Windows builds from Linux"],winpkg:["Windows packaging","for MSI installers"],linpkg:["Linux packaging","for .deb and .rpm packages"],kvm:["VMs","for tests that boot a VM"]};
+const R={"comics-organizer":["browsers"],"ci-runners-shared-pool":["llvm","winpkg","linpkg"],"photo-sync":["browsers"],"home-api":[],"vm-lab":["kvm"]};
+const I=[{id:1,m:"GameRoomPC",st:"ready",layers:["browsers"],repos:["comics-organizer","ci-runners-shared-pool","photo-sync"]},
+{id:2,m:"BuildBox",st:"ready",layers:["browsers","llvm","winpkg","linpkg"],repos:["ci-runners-shared-pool","home-api","photo-sync"]},
+{id:3,m:"OldLaptop",st:"not built",layers:[],repos:["vm-lab","home-api"]}];
+let open=null,draft=null;
+const needs=(im,k)=>im.repos.filter(r=>R[r].includes(k));
+const miss=(im,ls)=>Object.keys(L).filter(k=>needs(im,k).length&&!(ls||im.layers).includes(k));
+function status(im){const m=miss(im);
+ if(m.length)return `<span class="am">⚠ Missing ${m.map(k=>L[k][0]).join(", ")} · needed by ${[...new Set(m.flatMap(k=>needs(im,k)))].join(", ")}</span>`;
+ return im.st==="not built"?'<span class="mu">Not built yet</span>':'<span>✓ Has what its repositories need</span>'}
+function list(){return `<h1>Images</h1><div class="mu">Each machine has one Linux image. Its repositories' jobs run from it.</div>
+<div class="list">${I.map(im=>`<div class="row" data-open="${im.id}" tabindex="0"><div><h2>${im.m}</h2><div style="margin-top:2px">${status(im)}</div></div><span class="mu">${im.layers.length?im.layers.length+' extra layer'+(im.layers.length>1?'s':''):'base only'} ›</span></div>`).join("")}</div>`}
+function detail(im){const d=draft||im.layers,dirty=d.join()!==im.layers.join(),m=miss(im,d);
+ return `<button class="link" data-back>‹ Images</button><h1 style="margin-top:8px">${im.m}</h1>
+<div class="mu">${im.st==="not built"?'Not built yet. Choose layers now; it is built when its first runner starts.':'Built 17 Nov 14:40 · 2.1 GB'} · used by ${im.repos.join(", ")}</div>
+${m.length?`<div class="panel" style="border-color:var(--am)"><span class="am">⚠ ${m.map(k=>`${needs(im,k).join(", ")} needs ${L[k][0]}`).join("; ")}.</span> <button class="link" data-fix>Add ${m.length>1?'them':'it'}</button></div>`:''}
+<div class="panel"><h2>Layers</h2><div class="mu">Add what your repositories' jobs need. The basics are always included.</div>
+${Object.keys(L).map(k=>{const n=needs(im,k);return `<label class="lay"><input type="checkbox" data-k="${k}" ${d.includes(k)?'checked':''}><span><b>${L[k][0]}</b> <span class="mu">${L[k][1]}</span></span><span class="${n.length&&!d.includes(k)?'am':'mu'}">${n.length?'needed by '+n.length:''}</span></label>`}).join("")}
+<div class="ft"><button data-cancel ${dirty?'':'disabled'}>Cancel</button><button class="p" data-apply ${dirty?'':'disabled'}>${im.st==="not built"?'Save':'Save and rebuild'}</button></div>
+${dirty&&im.st!=="not built"?'<div class="mu" style="margin-top:8px">Rebuilds after running jobs finish. The old image keeps working until then.</div>':''}
+<details><summary>What is inside this image</summary><p><b>Always included:</b> <span class="mu">Ubuntu 24.04, git, curl, python3, jq, make, gcc, psql, gh, Node 26, pnpm, yarn</span></p>
+<p><b>Extra packages set by repositories:</b> <span class="mu">comics-organizer: imagemagick · photo-sync: ffmpeg</span></p></details></div>`}
+function draw(){const im=I.find(i=>i.id==open);document.getElementById("out").innerHTML=im?detail(im):list()}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-open],[data-back],[data-fix],[data-cancel],[data-apply]");if(!t)return;
+ if(t.dataset.open){open=+t.dataset.open;draft=null}
+ if("back" in t.dataset){open=null;draft=null}
+ const im=I.find(i=>i.id==open);
+ if("fix" in t.dataset){draft=[...new Set([...(draft||im.layers),...miss(im,draft)])]}
+ if("cancel" in t.dataset)draft=null;
+ if("apply" in t.dataset){im.layers=draft;draft=null;if(im.st!=="not built"){im.st="rebuilding";setTimeout(()=>{im.st="ready";draw()},1500)}}
+ draw()});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.open){open=+e.target.dataset.open;draw()}});
+document.addEventListener("change",e=>{const k=e.target.dataset.k;if(!k)return;const im=I.find(i=>i.id==open);let d=[...(draft||im.layers)];d=e.target.checked?[...d,k]:d.filter(x=>x!==k);draft=Object.keys(L).filter(x=>d.includes(x));draw()});
+draw();
+</script></body></html>

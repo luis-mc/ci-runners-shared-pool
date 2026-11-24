@@ -901,34 +901,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css">.rs-wrap{overflow-x:auto}.rs{width:100%;border-collapse:collapse;margin:8px 0 20px}.rs th,.rs td{border:1px solid var(--color-border,#8886);padding:6px 8px;text-align:left;vertical-align:top}.rs td:nth-child(n+2){white-space:nowrap}.rs td:first-child{min-width:260px}</style>
 </head>
 <body>
-<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Findings</a><a href="#s3"><b>3</b>Rules the findings follow</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.6.1 <span class="gen-flag gen-update">update: 2.7.0</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: CRSP Features Research</h1><p>What other runner pools do, checked, and what crsp takes from it.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Findings</a><a href="#s3"><b>3</b>Rules the findings follow</a><a href="#s4"><b>4</b>Decisions</a><a href="#s5"><b>5</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.16.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: CRSP Features Research</h1><p>What other runner pools do, checked, and what crsp takes from it.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-15T18:37+00:00">15 Nov 18:37</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">16 Nov 20:58</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-24T10:24+00:00">24 Nov 10:24</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">24 Nov 17:59</a> (Lisbon)</p>
 <p class="lede">52 findings. Several are being built now; the rest are written into the specs for their milestone.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">12 tasks</span></summary>
-<ul>
-<li data-glance-task="RES3"><span class="task-id">RES3</span>Join wizard waits until the machine connects; setup over SSH</li>
-<li data-glance-task="RES7"><span class="task-id">RES7</span>Console tells idle from busy runners at a glance</li>
-<li data-glance-task="RES14"><span class="task-id">RES14</span>Webhook health per repository with a visible switch to polling</li>
-<li data-glance-task="RES1"><span class="task-id">RES1</span>Test: never start a runner for a job that already finished</li>
-<li data-glance-task="RES2"><span class="task-id">RES2</span>Doctor: check the runner base image exists before starting jobs</li>
-<li data-glance-task="RES4"><span class="task-id">RES4</span>Named environment-variable sets, layered per runner</li>
-<li data-glance-task="RES5"><span class="task-id">RES5</span>Private registry credentials per backend, private CA trust</li>
-<li data-glance-task="RES10"><span class="task-id">RES10</span>Pin the runner image and runner download by digest</li>
-<li class="glance-more">and 4 more</li>
-</ul>
-</details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">12</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">19</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">2</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">14 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">21 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="RES20"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES20</span>Image registry in crsp: manage, usage, cleanup advice, version replace<span class="no-release-line">ships nothing: study; owner answered D26-D40</span></td><td>Registry decided: embedded Distribution v3, staging, mirror now; starts after RES21 fixes</td><td>19 Nov</td></tr>
+<tr data-task="RES21"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES21</span>Design-system audit of the whole console: every rule, every screen<span class="no-release-line">ships nothing: study; report on draft PR #283</span></td><td>25 breaches (5 high); fix tasks T1-T9 proposed; awaits owner go</td><td>19 Nov</td></tr>
+<tr data-task="RES19"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES19</span>Images and caches: research, repo stack scan, report and review build<span class="no-release-line">ships nothing: a study: report and review build, no product change</span></td><td>report, review build and 140 shots in draft #267 (CI green); 12 open questions; served at 127.0.0.1:8775</td><td>19 Nov</td></tr>
+<tr data-task="RES18"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES18</span>Jobs review: column widths by content, cut only long text<span class="no-release-line">ships nothing: review build only</span></td><td>42aef5a: fit/grow columns; Commit, Event, Result never cut; one row height 69 px; no sideways scroll at 1220 px (measured)</td><td>19 Nov</td></tr>
+<tr data-task="RES17"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES17</span>Jobs review: consistent row actions and one-line table rows<span class="no-release-line">ships nothing: review build only</span></td><td>Owner video 18 Nov 23:08: row buttons say Jobs / Open jobs / Open runs and wrap in some lists; table rows wrap to 3-5 lines. One label, one height, one-line cells, plus a guard.</td><td>19 Nov</td></tr>
+<tr data-task="RES16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES16</span>Jobs review build: apply the owner&#x27;s 14 answers<span class="no-release-line">ships nothing: review build only</span></td><td>Rows per run with jobs inside (Jobs switch for the flat list), range on job page and number in tables, labelled fallback, queue start range, kind grouping, job type badge, 14-day charts, export; rebuild app and screenshots on the RES15 branch.</td><td>18 Nov</td></tr>
+<tr data-task="RES15"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES15</span>Jobs section: what each job shows, timing data and forecasts<span class="no-release-line">ships nothing: research and review build; build is its own task</span></td><td>Owner 18 Nov: research best practice (CI job/step data, queue and run timing, forecasting job and step durations), propose, and build the Jobs section with fake data as an interactive review build of the real console.</td><td>18 Nov</td></tr>
 <tr data-task="RES3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES3</span>Join wizard waits until the machine connects; setup over SSH<span class="release-line"><span class="release-name">RELEASE-16</span></span></td><td>The add-machine wizard waits for the first heartbeat and can run the join over SSH</td><td>15 Nov</td></tr>
 <tr data-task="RES7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES7</span>Console tells idle from busy runners at a glance<span class="release-line"><span class="release-name">RELEASE-16</span></span></td><td>Risk seen elsewhere: users could not tell idle from busy</td><td>15 Nov</td></tr>
 <tr data-task="RES14"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">RES14</span>Webhook health per repository with a visible switch to polling<span class="release-line"><span class="release-name">RELEASE-16</span></span></td><td>Last delivery per repository; console says when polling is in use</td><td>15 Nov</td></tr>
@@ -970,7 +964,753 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li><b>Every finding is a requirement.</b> Each one is written into its feature spec and gets a task, so it is built in its milestone, not forgotten.</li>
 </ul>
 </section>
-<section id="s4"><h2><span class="section-number">&sect; 4</span>History</h2>
+<section id="s4"><h2><span class="section-number">&sect; 4</span>Decisions</h2>
+<div class="decision-list">
+<article class="decision decision-decided" data-decision="D42">
+<h3 class="decision-head"><span class="decision-id">D42</span> <span class="decision-question">Registry wave start (phases 1 to 3 in one go; replaces D40)</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Now, contract first</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">shared contract, then all agents in parallel</p>
+<blockquote class="decision-words">&ldquo;Now, contract first (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">After the design fixes land</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">keep D40</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D41">
+<h3 class="decision-head"><span class="decision-id">D41</span> <span class="decision-question">REG-5 registry screens (RES20 review build)</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Approve as shown</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">build as they are</p>
+<blockquote class="decision-words">&ldquo;Approve as shown&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Approve with changes</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">with listed changes</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not yet</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">look longer</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D40">
+<h3 class="decision-head"><span class="decision-id">D40</span> <span class="decision-question">When registry work starts</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">After RES21 fixes land</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">next wave with RES19 IMG-1/3/5</p>
+<blockquote class="decision-words">&ldquo;After RES21 fixes land (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Now, in parallel</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">REG-1 and REG-4 now</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later, I say when</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">parked</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D39">
+<h3 class="decision-head"><span class="decision-id">D39</span> <span class="decision-question">Registry folder on a Windows controller</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Data folder, editable</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">C:\ProgramData\crspegistry</p>
+<blockquote class="decision-words">&ldquo;Data folder, editable (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask folder and drive at setup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">setup asks</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D38">
+<h3 class="decision-head"><span class="decision-id">D38</span> <span class="decision-question">Controller offline, a machine needs an image it lacks</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build locally, push later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">a job never waits on the registry</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Job waits for the controller</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">no duplicate build, jobs stall</p>
+<blockquote class="decision-words">&ldquo;Job waits for the controller&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D37">
+<h3 class="decision-head"><span class="decision-id">D37</span> <span class="decision-question">Pull-through mirror of upstream base images</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">follow-up task</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">with the registry core</p>
+<blockquote class="decision-words">&ldquo;Now&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D36">
+<h3 class="decision-head"><span class="decision-id">D36</span> <span class="decision-question">Registry image signing</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Digest pinning now, cosign later</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">integrity covered</p>
+<blockquote class="decision-words">&ldquo;Digest pinning now, cosign later (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Cosign from the start</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">sign and verify every image</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D35">
+<h3 class="decision-head"><span class="decision-id">D35</span> <span class="decision-question">Registry: can the owner dismiss a recommendation</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">No, stays until resolved</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">fewer hidden states</p>
+<blockquote class="decision-words">&ldquo;No, stays until resolved (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Snooze for 7 days</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">hide for a week</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D34">
+<h3 class="decision-head"><span class="decision-id">D34</span> <span class="decision-question">Registry: one repository moves to a newer image, another still uses the old one</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Old image stays for it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">pointer per repository</p>
+<blockquote class="decision-words">&ldquo;Old image stays for it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Move both</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">all move together</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D33">
+<h3 class="decision-head"><span class="decision-id">D33</span> <span class="decision-question">Registry: rollback days after a replace</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">7 days</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">editable per replace</p>
+<blockquote class="decision-words">&ldquo;7 days (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">3 days</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">sooner</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">14 days</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">longer</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D32">
+<h3 class="decision-head"><span class="decision-id">D32</span> <span class="decision-question">Registry: unused after how many days</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">30 days</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">editable</p>
+<blockquote class="decision-words">&ldquo;30 days (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">60 days</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">longer</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">14 days</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">faster</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D31">
+<h3 class="decision-head"><span class="decision-id">D31</span> <span class="decision-question">May crsp delete registry images on its own (replaced after rollback days, merged branch variants, unused layers)</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, dates shown ahead</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">planned dates shown in advance</p>
+<blockquote class="decision-words">&ldquo;Yes, dates shown ahead (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always ask</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">every delete waits</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D30">
+<h3 class="decision-head"><span class="decision-id">D30</span> <span class="decision-question">Registry default budgets</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">40 GB std, 30 GB custom</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">editable, never above half the free disk</p>
+<blockquote class="decision-words">&ldquo;40 GB std, 30 GB custom (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Share of free disk at setup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">computed at setup</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask at setup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">wizard asks</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D29">
+<h3 class="decision-head"><span class="decision-id">D29</span> <span class="decision-question">Standard images: import ready-made images from CI</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build first now, CI import later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">follow-up after the registry core</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both in the first release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">CI import with the core</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Never import from CI</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">first machine always builds; nothing to ghcr.io</p>
+<blockquote class="decision-words">&ldquo;Never import from CI (after asking how the CI import would work)&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D28">
+<h3 class="decision-head"><span class="decision-id">D28</span> <span class="decision-question">Image registry: who pushes</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Staging, controller promotes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">a machine pushes only to its own staging area</p>
+<blockquote class="decision-words">&ldquo;Staging, controller promotes (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Push straight to final name</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">simpler, can poison others</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D27">
+<h3 class="decision-head"><span class="decision-id">D27</span> <span class="decision-question">Image registry engine</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Distribution v3</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">plain storage and events; weekly short read-only window</p>
+<blockquote class="decision-words">&ldquo;Distribution v3 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Zot</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">built-in retention kept off</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D26">
+<h3 class="decision-head"><span class="decision-id">D26</span> <span class="decision-question">Image registry: where it runs</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Embedded in controller</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">one binary, controller decides deletes</p>
+<blockquote class="decision-words">&ldquo;Embedded in controller (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Container on one machine</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">needs Docker there</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">On every machine, peers pull</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">every machine stores every image</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D25">
+<h3 class="decision-head"><span class="decision-id">D25</span> <span class="decision-question">Repository hint file .crsp.yml</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">See how often the scan is wrong first</p>
+<blockquote class="decision-words">&ldquo;Later (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Yes, now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Yes, now</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Never</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Never</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D24">
+<h3 class="decision-head"><span class="decision-id">D24</span> <span class="decision-question">Build logs kept</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Last 5, 1 MB each</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Last 5, 1 MB each</p>
+<blockquote class="decision-words">&ldquo;Last 5, 1 MB each (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Last 20</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Last 20</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only failed builds</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only failed builds</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D23">
+<h3 class="decision-head"><span class="decision-id">D23</span> <span class="decision-question">Add runners work step with the image</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Rename and show image progress</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">&#x27;Adding runners&#x27; with build or pull progress</p>
+<blockquote class="decision-words">&ldquo;option 1; if a valid image is already in the registry, can it be reused?&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep &#x27;Registering&#x27;, show progress</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep &#x27;Registering&#x27;, show progress</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Separate &#x27;Job image&#x27; step</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Separate &#x27;Job image&#x27; step</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D22">
+<h3 class="decision-head"><span class="decision-id">D22</span> <span class="decision-question">Image software list and vulnerability count</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, in crsp, every image</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Syft list and Trivy count when the registry stores an image; never blocks</p>
+<blockquote class="decision-words">&ldquo;Yes, in crsp, every image (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Software list only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Software list only</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Not now</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D21">
+<h3 class="decision-head"><span class="decision-id">D21</span> <span class="decision-question">Cache limits</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Editable per cache, plus machine budget</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Editable per cache, plus machine budget</p>
+<blockquote class="decision-words">&ldquo;Editable per cache, plus machine budget (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep two fixed limits</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">20 and 40 GiB</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One machine budget only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One machine budget only</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D20">
+<h3 class="decision-head"><span class="decision-id">D20</span> <span class="decision-question">Build limits</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One at a time, half the cores busy</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">One build per machine; half the cores while jobs run</p>
+<blockquote class="decision-words">&ldquo;One at a time, half the cores busy (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One at a time, no CPU cap</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One at a time, no CPU cap</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only when idle</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only when idle</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D19">
+<h3 class="decision-head"><span class="decision-id">D19</span> <span class="decision-question">Scan source and scope</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Per run&#x27;s commit, local copy</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Stack files of each queued run&#x27;s commit from a local shallow git copy; images keyed by file content</p>
+<blockquote class="decision-words">&ldquo;Per run&#x27;s commit, local copy (Recommended); earlier: default branch only, and asked why the scan cannot run on local disk&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Default branch only, local copy</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only main</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Per run&#x27;s commit, API reads</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Through the GitHub API</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D18">
+<h3 class="decision-head"><span class="decision-id">D18</span> <span class="decision-question">Ready-made images and the registry</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Every image, standard and custom</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Pull on a match, else build and push to crsp&#x27;s own private registry; one build per profile per CPU type</p>
+<blockquote class="decision-words">&ldquo;Pull a ready-made image when one matches, else build locally and push it to the registry; the registry is part of crsp and not public. Option 1 (every image), plus a Registry section under Images and caches: manage images, usage data and metrics, delete, recommendations (delete unused, max disk for standard and for custom), detect a newer version of a custom image and offer to replace the old o...&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Custom profiles only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Standard from releases</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Standard profiles only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Custom builds per machine</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D17">
+<h3 class="decision-head"><span class="decision-id">D17</span> <span class="decision-question">How service containers start</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Sidecars plus compose groups</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">crsp starts per-job sidecars; fixed groups like pool-main are a profile&#x27;s compose group; never a socket</p>
+<blockquote class="decision-words">&ldquo;Sidecars plus compose groups (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Sidecars per job only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Per-job only</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Compose groups only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fixed groups only</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D16">
+<h3 class="decision-head"><span class="decision-id">D16</span> <span class="decision-question">Who confirms scan findings</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Auto for low-risk, you for new</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Covered findings apply; new layers and every service need the owner</p>
+<blockquote class="decision-words">&ldquo;Auto for low-risk, you for new (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always you</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every finding waits</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fully automatic</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">crsp applies all</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D15">
+<h3 class="decision-head"><span class="decision-id">D15</span> <span class="decision-question">Image profile model</span></h3>
+<p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES19</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Profiles plus tool cache</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 19 Nov</span></div>
+<p class="decision-summary">Profile sets base, layers, services; versions from a shared tool cache</p>
+<blockquote class="decision-words">&ldquo;Profiles plus tool cache (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One image per profile</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Full image per profile</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One big image for all</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Like GitHub&#x27;s runner image</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D14">
+<h3 class="decision-head"><span class="decision-id">D14</span> <span class="decision-question">RES15: Replace current Jobs screens</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Replace at once</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Old links redirect</p>
+<blockquote class="decision-words">&ldquo;Replace at once (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both for one release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Side by side</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D13">
+<h3 class="decision-head"><span class="decision-id">D13</span> <span class="decision-question">RES15: Export</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">List and daily summaries</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">CSV</p>
+<blockquote class="decision-words">&ldquo;List and daily summaries (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">List only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">CSV</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D12">
+<h3 class="decision-head"><span class="decision-id">D12</span> <span class="decision-question">RES15: Charts range</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">14 days, switch 7/30</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Default 14</p>
+<blockquote class="decision-words">&ldquo;14 days, switch 7/30 (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">30 days fixed</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fixed</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D11">
+<h3 class="decision-head"><span class="decision-id">D11</span> <span class="decision-question">RES15: Job type meaning</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Job name, light/heavy badge</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Matrix values removed</p>
+<blockquote class="decision-words">&ldquo;Job name, light/heavy badge (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Light vs heavy</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Scheduler classes</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Label set</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">runs-on labels</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D10">
+<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">RES15: Runner type grouping</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Kind; backend a column</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Persistent vs ephemeral</p>
+<blockquote class="decision-words">&ldquo;Kind; backend a column (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Type = backend</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">docker/wsl2/hyperv</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both as filters</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One table</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D9">
+<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">RES15: Queue start ETA</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, start range</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">From slots and jobs ahead</p>
+<blockquote class="decision-words">&ldquo;Yes, start range (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Reason only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No time</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">RES15: Forecast with under 5 runs</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fallback, labelled</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Workflow or repo typical time, labelled</p>
+<blockquote class="decision-words">&ldquo;Fallback, labelled (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always a number</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Repo median</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Nothing until 20 runs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No forecast</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D7">
+<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">RES15: Branch and worktree display</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Branch, task, worktree if told</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Else not reported</p>
+<blockquote class="decision-words">&ldquo;Branch, task, worktree if told (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Branch only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No task or worktree</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Require a worktree label</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Every job reports it</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">RES15: Where step times come from</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">GitHub now, both later</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Hook marks later win</p>
+<blockquote class="decision-words">&ldquo;GitHub now, both later (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">GitHub only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Never a hook</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hook marks now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Workflow change</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D5">
+<h3 class="decision-head"><span class="decision-id">D5</span> <span class="decision-question">RES15: Runs vs jobs in Queue, Running, Done</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Rows per run, jobs inside</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Run row opens its jobs, then steps; a Jobs switch keeps the flat list</p>
+<blockquote class="decision-words">&ldquo;Rows per run, jobs inside (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Rows per job, grouped under run</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Run header lines</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Rows per job, as built</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Flat list</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">RES15: Forecast wording</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Range on page, number in tables</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">about 6 to 9 min / about 7 min</p>
+<blockquote class="decision-words">&ldquo;Range on page, number in tables (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Range everywhere</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">As built</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One number</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">about 7 min</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">RES15: Read the workflow file for the job graph</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, read it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Cached per commit; timing fallback</p>
+<blockquote class="decision-words">&ldquo;Yes, read it (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, timing only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Overlap only</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Per repository setting</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Switch in Settings</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">RES15: Step timings kept</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">30 d steps, 90 d jobs</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Daily summaries 400 d</p>
+<blockquote class="decision-words">&ldquo;30 d steps, 90 d jobs (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Steps as long as jobs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">90 d</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No steps stored</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Live from GitHub</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">RES15: Done jobs kept and shown</span></h3>
+<p class="decision-meta">Asked 18 Nov · Decided 18 Nov · Task RES15</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">90 days, show 25</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 18 Nov</span></div>
+<p class="decision-summary">Show more up to 100 a page</p>
+<blockquote class="decision-words">&ldquo;90 days, show 25 (recommended option picked, 18 Nov)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Last 100 only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Current spec D34</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">400 days, 25 at a time</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No cap</p>
+</div>
+</div>
+</article>
+</div>
+</section>
+<section id="s5"><h2><span class="section-number">&sect; 5</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
 <tr><td>15 Nov 15:12</td><td>dropped: folded into RES13: Duplicate of RES13 (D56)</td></tr>
 <tr><td>15 Nov 15:12</td><td>dropped: Owner chose machine policy, no popup (D60)</td></tr>

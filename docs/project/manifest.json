@@ -12,9 +12,9 @@
     "title": "Full Progress: CI Runners Shared Pool",
     "file": "full-progress-ci-runners-shared-pool.html",
     "url": "https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7",
-    "published_sha256": "72f7ef2d94801f472c7800f8c99c97718c65c36e69224ed7583877f90987e58d",
-    "published_at": "2026-11-16T20:58+00:00",
-    "published_fingerprint": "50294818dc196e0e3344bf90feb4a157498e1bd2cfac7a87ed7ace13e36550d3",
+    "published_sha256": "5bf6b1a54139fc4c1a0a58bae43141cf90cbc955d4e47645f384a6c886994f32",
+    "published_at": "2026-11-24T17:59+00:00",
+    "published_fingerprint": "493030930984d8a84ddd0cc6191be78917924b6d42ab06765919439e50e13842",
     "local_path": "C:\\Work\\full-progress\\ci-runners-shared-pool\\full-progress-ci-runners-shared-pool.html",
     "local_opened": true
   },
@@ -27,7 +27,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-16T00:37+00:00"
+      "updated": "2026-11-24T15:04+00:00"
     },
     {
       "key": "tray",
@@ -37,7 +37,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-15T04:30+00:00"
+      "updated": "2026-11-24T10:24+00:00"
     },
     {
       "key": "look",
@@ -47,7 +47,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-15T14:26+00:00"
+      "updated": "2026-11-24T17:57+00:00"
     },
     {
       "key": "research",
@@ -57,7 +57,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-15T18:37+00:00"
+      "updated": "2026-11-24T10:24+00:00"
     },
     {
       "key": "handover",
@@ -67,11 +67,27 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-16T20:59+00:00"
+      "updated": "2026-11-24T10:24+00:00"
+    },
+    {
+      "key": "ci-run-insights",
+      "title": "Feature: CI run insights",
+      "file": "feature-ci-run-insights.html",
+      "prefix": "CIX",
+      "apps": [
+        "controller",
+        "console",
+        "agent",
+        "dev-standards"
+      ],
+      "updated": "2026-11-24T10:24+00:00"
     }
   ],
   "project_prefixes": [
-    "CRSP"
+    "CRSP",
+    "DOC",
+    "IMG",
+    "REG"
   ],
-  "updated": "2026-11-16T21:00+00:00"
+  "updated": "2026-11-24T18:52+00:00"
 }

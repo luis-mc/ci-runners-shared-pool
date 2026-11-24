@@ -1,0 +1,68 @@
+<!-- title: Round 2: the dev-standards study (20 Nov) -->
+<p>dev-standards ran a read-only study of CI logs from 10 to 20 Nov: <a href="https://claude.ai/artifact/PohoNmDPF3f2p7RyoSFKi8">CI Test-Time Study (TC13)</a>.</p>
+<ul>
+  <li>It covers six repositories with CI: comics-organizer, ci-runners-shared-pool, moobable, lan-link, home-automation and dev-standards. shared-product-framework has no CI.</li>
+  <li>It ranks 20 causes by minutes saved per day and audits the seven guardrails in every repository.</li>
+  <li>Reviewed here on 20 Nov at 12:30 Lisbon. Every crsp claim that could be checked in the repository was checked.</li>
+</ul>
+
+<h3>Main finding: waiting, not testing</h3>
+<p>In five of the six repositories, tests take seconds to a few minutes. The hours go into waiting:</p>
+<ul>
+  <li><strong>Queues:</strong> about 55 job-hours of pool queue in moobable, lan-link and home-automation, and about 620 min a day in comics-organizer.</li>
+  <li><strong>The pool's job-start hold:</strong> the <code>Set up runner</code> step, p90 5.5 to 7 min, at most 30 min.</li>
+  <li><strong>Housekeeping jobs</strong> that take a slot: artifact prune runs after every workflow, 38 times a day in comics-organizer, and one of them waited 421 min.</li>
+</ul>
+<p>comics-organizer is the one exception: 4,581 Rust tests on 2 threads and one compile job, about 105 min per full run.</p>
+<p>This confirms round 1 (queueing beats test time) with a much larger sample.</p>
+<p><strong>Note:</strong> the "pool" in the study is today's dev-standards pool (the machine slots and one job per repository at a time), not crsp. crsp replaces it. So every pool finding is a requirement crsp must meet, not a bug in crsp.</p>
+
+<h3>Checked against the crsp repository</h3>
+<table>
+  <thead><tr><th>Study claim</th><th>Check</th><th>Result</th></tr></thead>
+  <tbody>
+    <tr><td>0 <code>t.Parallel</code> in 2,486 Go tests</td><td>grep of <code>*_test.go</code></td><td>Confirmed: 0 of 2,486</td></tr>
+    <tr><td>The llvm image layer is rebuilt without cache on every run (10.7 min amd64)</td><td><code>ci.yml</code> around line 337</td><td>Confirmed: the llvm build step has no <code>cache-from</code>. The step next to it has one.</td></tr>
+    <tr><td>Image job limit 35 min (G2)</td><td><code>ci.yml:238</code></td><td>Confirmed; also in round 1</td></tr>
+    <tr><td>Parity waits for a self-hosted label this repository no longer has (293 min queue)</td><td><code>parity.yml</code></td><td>Confirmed: <code>schedule:</code> trigger with <code>runs-on</code> falling back to <code>[self-hosted, linux]</code>. Round 1 saw the same as a 4 h 53 wait.</td></tr>
+    <tr><td>The quarantine step boots the server and Playwright for 0 specs</td><td><code>e2e/quarantine.json</code>, <code>ci.yml:424</code></td><td>Confirmed: the list is <code>[]</code>, yet the step runs in every shard.</td></tr>
+    <tr><td>Playwright reports with <code>line</code>, so there are no per-test times (G7)</td><td><code>playwright.config.ts:56</code></td><td>Confirmed</td></tr>
+    <tr><td><code>TestLogRowsAndTrim</code> 240 s</td><td>Round 1 said 163 s</td><td>Both were measured before the fix, on different runners. CRSP201 brings it to 3.3 s.</td></tr>
+    <tr><td><code>ux-routes.spec.ts</code> about 1,970 cases</td><td>Round 1 counted 969</td><td><strong>Open.</strong> The count may have grown with the REG5 registry tab, or the two counts differ in what they include. To be counted again in the next round.</td></tr>
+    <tr><td>crsp queue wait ≤ 0.3 min (GitHub-hosted)</td><td>Round 1's 10 slowest runs: time from run created to first job started</td><td><strong>Both hold.</strong> 6 of the 10 runs started within 0.1 min. 4 runs at night (20 Nov 00:14 to 01:41) waited 11.5 to 24.5 min while several 18-job runs ran at once. That is most likely the account's limit on concurrent GitHub-hosted jobs, not a slow test. The study's per-job median hides these bursts, and round 1's slowest-run sample over-weights them.</td></tr>
+  </tbody>
+</table>
+
+<h3>Already handled in RELEASE-46</h3>
+<p>Not yet merged; one CI run is pending. CRSP201 (the CI quick wins) covers four of the study's crsp items:</p>
+<ul>
+  <li><strong>#13:</strong> <code>TestLogRowsAndTrim</code> with a lower keep size.</li>
+  <li><strong>The Playwright browser cache.</strong></li>
+  <li><strong>Duplicate dispatch and pull-request runs:</strong> superseded runs are now cancelled for every event.</li>
+  <li><strong>Go per-test times:</strong> <code>go test -json</code> output uploaded as an artifact.</li>
+</ul>
+
+<h3>Still open for crsp's own CI</h3>
+<table>
+  <thead><tr><th>Item</th><th>Fix</th><th>Saving (study)</th><th>Size</th></tr></thead>
+  <tbody>
+    <tr><td>llvm layer without cache (#6)</td><td>Add a <code>cache-from</code> scope, or a stage that does not depend on <code>BASE_IMAGE</code></td><td>~135 wall, ~240 runner min a day</td><td>M</td></tr>
+    <tr><td><code>verify</code> is one serial job of 9.6 to 17 min (#11)</td><td>Split into lint, codegen + types, and tests</td><td>~110 wall min a day</td><td>M</td></tr>
+    <tr><td>Failed runs still run e2e and the image to the end (#12)</td><td>Format, lint and types first; e2e and image <code>needs</code> them on pull requests</td><td>~100 runner min a day</td><td>M</td></tr>
+    <tr><td>ux-routes loads each page twice with a <code>networkidle</code> wait (#17)</td><td>One test per route and state, waiting for the heading</td><td>~67 wall min a day</td><td>M</td></tr>
+    <tr><td>e2e shards unbalanced: 4.9 vs 9.5 to 10 min (#18)</td><td>Shard by file weight (dev-standards <code>shard_balance.py</code>)</td><td>~5 min per run</td><td>S</td></tr>
+    <tr><td>Parity <code>schedule</code> waits hours for a label nobody has</td><td>Remove the schedule, or point it at the crsp pool label</td><td>Ends the 293-min waits and 7 failures</td><td>S</td></tr>
+    <tr><td>The quarantine step runs for 0 specs</td><td>Skip the step when <code>quarantine.json</code> is empty</td><td>~1 min per shard</td><td>S</td></tr>
+    <tr><td>No <code>t.Parallel</code> (<code>internal/store</code> 54 s, <code>internal/api</code> 34 s)</td><td>Mark the independent tests parallel, package by package</td><td>Not measured</td><td>M</td></tr>
+    <tr><td>G1: Go has no <code>-timeout</code>; vitest guard project 60 s</td><td><code>-timeout</code> per tier and a vitest <code>testTimeout</code> per project, per D1</td><td>Limits each hang</td><td>S</td></tr>
+    <tr><td>G7: Playwright line reporter</td><td>Add a JSON reporter and a <code>ci-run-times</code> artifact</td><td>Gives per-test times</td><td>S</td></tr>
+  </tbody>
+</table>
+
+<h3>What it adds to the guardrail picture</h3>
+<ul>
+  <li><strong>G1 and G2 fail in all six repositories with CI</strong>, dev-standards included. Its templates ship no per-test timeout and no job <code>timeout-minutes</code>. That matches the template gaps in the guardrails section and is the strongest case for enforcing the guardrails in the templates and the guard (D1), not by memory.</li>
+  <li><strong>dev-standards breaks G6 itself:</strong> gate mutation shards run on pull requests (<code>spec-lint.yml:285-302</code>). That also conflicts with its own DL-12 rule (<code>--no-mutants</code> on branch work).</li>
+  <li><strong>G3 fails only in comics-organizer</strong> (Playwright <code>retries: 1</code> and <code>retry-crashed.ts</code>). Production smoke there also retries automatically.</li>
+  <li><strong>G4 sleeps are common</strong> everywhere except home-automation. Many are poll loops with deadlines of 30 to 90 s, which turn every failure into a long wait (study #4: 49 failures cost 91 min).</li>
+</ul>
