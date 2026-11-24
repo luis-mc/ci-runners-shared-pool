@@ -1,6 +1,7 @@
 // Run insights, Do next (spec 4.1, design system UX-25, UX-72): what to do, ranked by minutes saved a week. The
 // latest weekly digest sits folded under the table (component 47).
 import {
+  ActionBar,
   Disclosure,
   Empty,
   Message,
@@ -120,21 +121,25 @@ export function DoNext() {
                   }
                 />
               ) : (
-                <Stack>
-                  <Table
-                    caption="Suggestions"
-                    oneLine
-                    columns={doNextColumns(items)}
-                    rows={items}
-                    rowKey={(f) => String(f.id)}
-                    rowLabel={(f) => f.title}
-                  />
+                <Table
+                  caption="Suggestions"
+                  oneLine
+                  columns={doNextColumns(items)}
+                  rows={items}
+                  rowKey={(f) => String(f.id)}
+                  rowLabel={(f) => f.title}
+                />
+              )}
+            </Section>
+            {items.length > 0 ? (
+              <ActionBar
+                primary={
                   <LinkButton to={findingPath(items[0]!)} kind="primary">
                     Review the first change
                   </LinkButton>
-                </Stack>
-              )}
-            </Section>
+                }
+              />
+            ) : null}
             {digest ? (
               <Disclosure summary={`Weekly digest, ${digest.week}`}>
                 <Text>{digest.text}</Text>
