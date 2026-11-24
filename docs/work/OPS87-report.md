@@ -25,6 +25,6 @@ Branch OPS87-persistent-linux-on-windows (rides RELEASE-63).
 - Fix: `exports-stop.spec.ts` picks the Ephemeral radio on step 1 in the two Windows-machine specs that expect the ephemeral plan text. No other spec goes through /setup/runners/add with a Windows machine (design-layout uses the default machine; the OPS28 kind specs already choose the kind).
 - Chromium: symlinks in /dev/shm/pw to /opt/pw-browsers (chromium 1255 -> 1243, ffmpeg 1013 -> 1011), PLAYWRIGHT_BROWSERS_PATH=/dev/shm/pw.
 - Local gate `branch_gate.py --e2e-only`: PASS, 3247 passed, 2 skipped (23.6m).
-- Branch CI: pending.
+- Branch CI run 45316940800 on 858762b: green (24m39s).
 
-BLOCKED branch CI not yet run
+CODE DONE 858762b0df
