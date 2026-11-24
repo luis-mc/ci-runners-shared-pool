@@ -88,13 +88,7 @@ import {
   usePublicSwitch,
   visibilityWord,
 } from './publicRepositories';
-import {
-  DeliveryStatus,
-  DeliveryWhen,
-  PollingNotice,
-  deliveryStatus,
-  learnedBy,
-} from './webhookHealth';
+import { DeliveryWhen, PollingNotice, deliveryStatus, learnedBy } from './webhookHealth';
 
 const PAGE = 25;
 
@@ -334,7 +328,10 @@ export function RepositoriesList() {
       id: 'jobsNow',
       header: 'Jobs now',
       cell: (r) => jobsNowText(groupByName.get(r.full_name)),
-      sort: (r) => String(groupByName.get(r.full_name) ?? 0),
+      sort: (r) => {
+        const g = groupByName.get(r.full_name);
+        return String((g?.running ?? 0) + (g?.queued ?? 0)).padStart(6, '0');
+      },
     },
   ];
 

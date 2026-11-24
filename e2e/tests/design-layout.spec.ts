@@ -57,6 +57,27 @@ const SCREENS: {
     policy: true,
   },
   { name: 'turn on the pool', path: '/setup/pool/turn-on', ready: 'Turn on the pool' },
+  { name: 'setup summary', path: '/setup/summary', ready: 'Setup' },
+  {
+    name: 'setup size and backends',
+    path: '/setup/size',
+    ready: 'Size and backends',
+    tweak: (m: ReturnType<typeof signedIn>) =>
+      m.on('GET', '/api/v1/runner-classes', {
+        preset: 'standard',
+        presets: ['standard', 'compact', 'memory-heavy', 'custom'],
+        classes: [
+          { class: 'small', cpus: 2, memory_gib: 4 },
+          { class: 'medium', cpus: 4, memory_gib: 8 },
+          { class: 'large', cpus: 8, memory_gib: 16 },
+          { class: 'xl', cpus: 16, memory_gib: 32 },
+        ],
+        hints: [],
+        unheld: [],
+        reserve_after_passes: 3,
+        reserve_after_minutes: 10,
+      }),
+  },
   { name: 'machines', path: '/setup/machines', ready: 'Machines' },
   { name: 'machine detail', path: '/setup/machines/m1', ready: 'build-1' },
   {

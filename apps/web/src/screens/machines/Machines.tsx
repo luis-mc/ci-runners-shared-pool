@@ -29,7 +29,6 @@ import {
   formatPast,
   formatPercent,
   formatSize,
-  useNow,
   type Column,
   ActionBar,
   EditBar,
@@ -103,7 +102,6 @@ export function PoolSizeCard({ m }: { m: Machine }) {
 export function MachinesList() {
   const session = useSession();
   const navigate = useNavigate();
-  const now = useNow();
   const { result, reload } = useMachines();
   const [q, setQ] = useState('');
   const [state, setState] = useState<'' | 'active' | 'draining' | 'drained'>('');
