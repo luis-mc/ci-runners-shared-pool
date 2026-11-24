@@ -154,11 +154,18 @@ Remove-LocalUser -Name $env:CRSP_ACCOUNT
 `
 )
 
+// psStdin ends a script with a blank line. `powershell -Command -` reads
+// stdin line by line and runs a multi-line statement only after a blank line
+// (OPS92).
+func psStdin(script string) string {
+	return strings.TrimRight(script, "\r\n") + "\n\n"
+}
+
 func (h *hostOS) ps(ctx context.Context, script string, env map[string]string) (sys.Result, error) {
 	return h.cmd.Run(ctx, sys.Command{
 		Name:  "powershell.exe",
 		Args:  []string{"-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", "-"},
-		Stdin: script,
+		Stdin: psStdin(script),
 		Env:   env,
 	})
 }

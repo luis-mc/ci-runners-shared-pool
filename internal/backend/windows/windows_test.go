@@ -332,6 +332,9 @@ func TestNoCmdQuotedCommandLine(t *testing.T) {
 	}
 	// Configure gets each argument as its own JSON element.
 	c := r.cmd.Calls[idx(r, "Runner.Listener.exe")]
+	if !strings.HasPrefix(c.Env["CRSP_ARGS"], `["configure","--unattended"`) {
+		t.Errorf("the listener gets the configure verb first (OPS93), got %s", c.Env["CRSP_ARGS"])
+	}
 	if !strings.Contains(c.Env["CRSP_ARGS"], `"--labels","self-hosted,windows,x64"`) ||
 		!strings.Contains(c.Env["CRSP_ARGS"], `"--disableupdate"`) {
 		t.Errorf("configure args = %s", c.Env["CRSP_ARGS"])
