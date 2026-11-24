@@ -6,7 +6,6 @@ import {
   Facts,
   LinkButton,
   Page,
-  PageHeader,
   Section,
   Stack,
   Status,
@@ -149,7 +148,6 @@ export function SetupSummary() {
 
   return (
     <Page>
-      <PageHeader title="Setup" lead="Machines, runners and sizes. Change things here." />
       <Load result={machines.result} what="the pool" reload={machines.reload}>
         {(m) => {
           const rs = runners.result.state === 'loading' ? undefined : runners.result.data;

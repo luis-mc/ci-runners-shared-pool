@@ -379,7 +379,7 @@ describe('sessions (R5.8 to R5.12)', () => {
     expect(
       within(dialog).getByRole('button', { name: 'Sign in with GitHub' }),
     ).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Machines' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeTruthy();
     fireEvent.click(within(dialog).getByRole('button', { name: 'Sign in with GitHub' }));
     expect(assign).toHaveBeenCalledWith(
       '/auth/github/login?return_to=%2Fsetup%2Fmachines',
@@ -417,7 +417,7 @@ describe('sessions (R5.8 to R5.12)', () => {
       })
       .on('POST', '/api/v1/auth/logout', undefined);
     renderApp(api, '/setup/machines');
-    await screen.findByRole('heading', { name: 'Machines' });
+    await screen.findByRole('heading', { level: 1, name: 'Setup' });
     expect(screen.getByRole('img', { name: 'GitHub sign-in ended' })).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: /octo/ }));
     expect(screen.getByText('GitHub sign-in: ended')).toBeTruthy();
@@ -534,7 +534,7 @@ describe('a runner service that did not start', () => {
     const off = { ...broken(), online: false };
     const api = signedIn().on('GET', '/api/v1/machines', { items: [machine(), off] });
     renderApp(api, '/setup/runners');
-    await screen.findByRole('heading', { level: 1, name: 'Runners' });
+    await screen.findByRole('tab', { name: 'Runners', selected: true });
     expect(screen.queryByText(/did not start/)).toBeNull();
   });
 });
