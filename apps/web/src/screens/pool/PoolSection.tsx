@@ -1,5 +1,5 @@
 // Pool (LOOK56): what runs, what waits and why. One row of tabs (Overview, Live, Queue Analysis, Jobs, Machines) and
-// the four counts above Overview, Live and Queue Analysis. Nothing is configured here (Setup does that). Timers of
+// the four counts above Overview and Live (LOOK70). Nothing is configured here (Setup does that). Timers of
 // the section count every second in the browser (R5.150); when the stream drops the screens poll and the shell banner
 // says "Live updates paused" until it is back.
 import { ClockProvider, Page, PageHeader, StatGrid, StatTile, Tabs } from '@crsp/ui';
@@ -15,7 +15,7 @@ export const POOL_TABS = [
   { id: 'machines', label: 'Machines', to: '/pool/machines' },
 ] as const;
 
-const WITH_COUNTS = new Set(['overview', 'live', 'queue']);
+const WITH_COUNTS = new Set(['overview', 'live']);
 
 /** The four counts of the pool: Running, Starting, Queued, No runner fits. */
 export function PoolCountTiles({

@@ -119,23 +119,30 @@ const series = (free: number[], id: string, label: string) => [
   },
 ];
 
+/** The two charts of the worked example, without a pane: Pool > Queue Analysis puts them in its Reservation pane (LOOK70). */
+export function ReservationCharts() {
+  return (
+    <Stack>
+      <TrendChart
+        label={RESERVATION_WORDS.without}
+        unit="count"
+        emptyText={RESERVATION_WORDS.empty}
+        series={series(exampleWithout(), 'without', RESERVATION_WORDS.free)}
+      />
+      <TrendChart
+        label={RESERVATION_WORDS.withRes}
+        unit="count"
+        emptyText={RESERVATION_WORDS.empty}
+        series={series(exampleWith(), 'with', RESERVATION_WORDS.free)}
+      />
+    </Stack>
+  );
+}
+
 export function ReservationExample() {
   return (
     <Section title={RESERVATION_WORDS.title} hint={RESERVATION_WORDS.hint}>
-      <Stack>
-        <TrendChart
-          label={RESERVATION_WORDS.without}
-          unit="count"
-          emptyText={RESERVATION_WORDS.empty}
-          series={series(exampleWithout(), 'without', RESERVATION_WORDS.free)}
-        />
-        <TrendChart
-          label={RESERVATION_WORDS.withRes}
-          unit="count"
-          emptyText={RESERVATION_WORDS.empty}
-          series={series(exampleWith(), 'with', RESERVATION_WORDS.free)}
-        />
-      </Stack>
+      <ReservationCharts />
     </Section>
   );
 }

@@ -1,11 +1,23 @@
 // Pool > Queue Analysis (LOOK56, option C): every waiting job in start order, why it waits, and "Starts about HH:MM".
-// A job that will not start by itself is marked "Needs you" and says what to do (UX-29, UX-58).
-import { Empty, Message, Section, Segmented, Stack, Status, TextLink } from '@crsp/ui';
+// A job that will not start by itself is marked "Needs you" and says what to do (UX-29, UX-58). LOOK70: as the approved
+// prototype, no count tiles, no slot timeline, and a Reservation pane beside the running jobs.
+import {
+  Empty,
+  FieldGrid,
+  Message,
+  Section,
+  Segmented,
+  Stack,
+  Status,
+  Strong,
+  Text,
+  TextLink,
+} from '@crsp/ui';
 import { useState } from 'react';
 import type { Schemas } from '../../api/api';
-import { type Job } from '../jobs/words';
+import { RESERVATION_WORDS, ReservationCharts } from '../jobs/ChartsMachines';
+import { isReserved, type Job } from '../jobs/words';
 import { RunningTable } from './PoolOverview';
-import { SlotTimeline } from './SlotTimeline';
 import { WithOverview } from './OverviewState';
 import { needsYou, needsYouWords, placeWords, startsAbout, waitWords } from './poolWords';
 
@@ -57,18 +69,54 @@ export function QueuePlan() {
                 </Stack>
               )}
             </Section>
-            <Section
-              title="Where the queue lands on the slots"
-              hint="Waiting jobs are placed on the slots the scheduler gives them. A forecast is not a promise."
-            >
-              <SlotTimeline compact />
-            </Section>
-            <RunningTable title="Where running jobs are going" running={o.running} />
+            <FieldGrid>
+              <ReservationPane readAt={readAt} queue={queue} />
+              <RunningTable title="Where running jobs are going" running={o.running} />
+            </FieldGrid>
           </Stack>
         );
       }}
     </WithOverview>
   );
+}
+
+const clock = (iso: string): string => {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+};
+
+/**
+ * The Reservation pane (LOOK70): the job its machine holds room for, one link to it, and the two free-CPU charts.
+ * The API sends no free-CPU series, so the charts are the worked example (R5.166); the pane shows only when a job is
+ * reserved.
+ */
+function ReservationPane({ queue, readAt }: { queue: readonly Job[]; readAt: number }) {
+  const held = queue.find((j) => isReserved(j));
+  if (!held) return null;
+  return (
+    <Section title="Reservation" hint={RESERVATION_WORDS.hint}>
+      <Stack>
+        <Text>
+          <Strong>{held.job_name}</Strong>
+          {held.reserved_since
+            ? ` reserved since ${clock(held.reserved_since)}. `
+            : ' is reserved. '}
+          {waitWords(held)}. {startsAbout(held.queue_eta, readAt)}.
+        </Text>
+        <TextLink
+          to={`/pool/jobs/${held.id}`}
+        >{`Open ${held.job_name} in Pool > Jobs`}</TextLink>
+        <ReservationCharts />
+      </Stack>
+    </Section>
+  );
+}
+
+function stateWord(j: Job): string {
+  if (isReserved(j)) return 'Reserved';
+  if (j.wait_reason === 'no_runner_with_labels') return 'No runner fits';
+  if (j.wait_reason === 'machine_drained') return 'Machine not taking jobs';
+  return 'Waiting for room';
 }
 
 function QueueEntry({ j, place, readAt }: { j: Job; place: number; readAt: number }) {
@@ -78,10 +126,12 @@ function QueueEntry({ j, place, readAt }: { j: Job; place: number; readAt: numbe
       title={`${place}. ${j.job_name} ${j.repository} #${j.run_id}`}
       hint={waitWords(j)}
     >
-      <Status
-        kind={risk ? 'failed' : 'waiting'}
-        word={risk ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt)}
-      />
+      <Status kind={risk ? 'failed' : 'waiting'} word={stateWord(j)} />
+      <Text>
+        <Strong>
+          {risk ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt)}
+        </Strong>
+      </Text>
       <p>
         {placeWords(j) === 'none yet' ? 'No machine yet.' : `Plan: ${placeWords(j)}.`}{' '}
         {j.labels.length ? `Label ${j.labels.join(', ')}.` : ''}
