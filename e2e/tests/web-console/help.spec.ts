@@ -61,9 +61,7 @@ test('every new section opens from the menu', async ({ page }) => {
   }
 });
 
-test('an Open link of a card goes to its console screen', async ({
-  page,
-}) => {
+test('an Open link of a card goes to its console screen', async ({ page }) => {
   await signedIn().install(page);
   await page.goto('/help');
   const link = page.getByRole('link', { name: 'Open Pool > Live' });
@@ -129,8 +127,7 @@ for (const width of [360, 393, 1278, 1300]) {
       await expect(page.getByRole('heading', { level: 1, name: 'Help' })).toBeVisible();
       await expect(page.getByRole('navigation', { name: 'Help sections' })).toBeVisible();
       const over = await page.evaluate(
-        () =>
-          document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
       );
       expect(over, `/help${section}`).toBeLessThanOrEqual(0);
     }
@@ -199,7 +196,9 @@ test('the picture fits the frame at 1278 px with long real names', async ({ page
   await expect(
     picture.getByText('crsp-linux-build-machine-number-1', { exact: true }),
   ).toBeVisible();
-  const frame = await page.locator('main').evaluate((m) => m.getBoundingClientRect().right);
+  const frame = await page
+    .locator('main')
+    .evaluate((m) => m.getBoundingClientRect().right);
   const boxes = await picture
     .locator('.ds-jobpath__box')
     .evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().right)));
