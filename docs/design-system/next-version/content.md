@@ -1562,13 +1562,15 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | Pool > Live, empty | No job runs or waits. Jobs show here as they come. |
 | Pool > Machines, note | This page shows what runs where. To change a machine, its pool size or its load budget, go to Setup > Machines. |
 | Pool > Machines, link | Change {machine} in Setup > Machines |
-| Pool > Machines, runner table | Runner, Type, Doing now; Runners on {machine} |
+| Pool > Machines, runner table | In each machine card: the line Runners on {machine} above a table; columns Runner, Type, Size, Doing now (Size is the class: small, medium, large or xl; idle when the runner holds no job). Empty: No runner is on this machine. (LOOK66) |
 | Pool > Jobs | One list of every job: filter All, Queue, Running, Done; Range; Group by; Export CSV. A row's button says Details; for a waiting job its panel says why it waits and when it starts. |
 | Live updates paused | The shell banner says: Live updates paused. The data on screen is the last that arrived. The lists ask again every 5 seconds, and the console reconnects by itself. |
 | Analytics tabs | Suggestions, Insights, Charts, Run elsewhere |
 | Analytics lines | Suggestions: Changes that would make the pool faster. Ranked by the time they save. Insights: Where the time goes, from past runs. Charts: Numbers over time. Run elsewhere: Jobs that another runner ran, not your pool. |
 | Suggestions segments | Do next, Tests, Guardrails |
-| Insights panes | Four numbers; Where the time goes; Busiest repositories; Failed jobs; Waits; Timeline |
+| Insights panes | Four numbers; Where the time goes; Busiest repositories; Failed jobs; Waits; Runner timeline |
+| Insights, Waits pane | Pane Waits: columns Label, Median, Slowest 10%; a value the data does not give reads not known; empty: No finished jobs in the last 7 days.; error: Could not load the waits. (LOOK66) |
+| Insights, Runner timeline pane | Pane Runner timeline: the shared slot timeline, compact; empty: No job ran, runs or waits in the last 24 hours. (LOOK66) |
 | A suggestion about a project | The title names the repository: {title} ({repository}) unless the title has it already |
 | Path forward | Pane title: Path forward. Line: Do these in order for {repository}. List name: Steps |
 | Doctor | Needs you is the first pane. Doctor shows no suggestions. |

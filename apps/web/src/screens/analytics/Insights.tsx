@@ -1,9 +1,11 @@
 // Analytics > Insights (LOOK56, UX-75): four numbers with their change and trend, where the time goes, the busiest
-// repositories, the failed jobs, then the waits and the runner timeline. Cards only show and link (UX-52).
+// repositories, the failed jobs, then the waits by label and the runner timeline: the shared slot timeline, one row
+// per slot (LOOK66). Cards only show and link (UX-52).
 import {
   BarList,
   Card,
   CardGrid,
+  Section,
   Sparkline,
   Stack,
   StatGrid,
@@ -15,8 +17,8 @@ import {
 } from '@crsp/ui';
 import { unwrap, useClient } from '../../api/api';
 import { useLoad } from '../../api/hooks';
-import { Timeline } from '../insights/Timeline';
-import { Waits } from '../insights/Waits';
+import { SlotTimeline } from '../pool/SlotTimeline';
+import { LabelWaits } from './LabelWaits';
 import { Load } from '../common';
 import { useGroups, useJobList, useStats } from '../jobs/api';
 import { groupLink } from '../jobs/Groups';
@@ -140,12 +142,17 @@ export function Insights() {
                 <TextLink to="/analytics/charts">Open the charts</TextLink> for longer
                 ranges.
               </Text>
-              <Waits />
-              <Timeline />
             </>
           );
         }}
       </Load>
+      {/* Not inside the overview: the waits and the timeline load on their own and name themselves when they fail. */}
+      <Section title="Waits">
+        <LabelWaits />
+      </Section>
+      <Section title="Runner timeline">
+        <SlotTimeline compact label="Runner timeline" />
+      </Section>
     </Stack>
   );
 }

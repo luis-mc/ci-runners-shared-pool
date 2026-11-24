@@ -29,15 +29,6 @@ export const useInsightSummary = (): Hook<S['InsightSummary']> =>
 export const useDigests = (): Hook<S['InsightDigestList']> =>
   useLoad(() => Promise.resolve(mock.mockDigests()), []);
 
-export const useWaits = (
-  days: 7 | 14 | 30,
-  group: 'repository' | 'job_key' | 'day',
-): Hook<S['WaitSplit']> =>
-  useLoad(() => Promise.resolve(mock.mockWaits(days, group)), [days, group]);
-
-export const useTimeline = (hours: number): Hook<S['PoolTimeline']> =>
-  useLoad(() => Promise.resolve(mock.mockTimeline(hours)), [hours]);
-
 export const usePoolSizing = (days: 7 | 14 | 30): Hook<S['PoolSizing']> =>
   useLoad(() => Promise.resolve(mock.mockSizing(days)), [days]);
 
