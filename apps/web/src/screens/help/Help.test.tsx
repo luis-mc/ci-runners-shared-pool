@@ -31,14 +31,18 @@ describe('Help (LOOK63)', () => {
     expect(links.map((a) => a.textContent?.replace(/^\d+/, ''))).toEqual(MENU);
     expect(TOPICS.map((t) => t.label)).toEqual(MENU);
     expect(
-      within(menu).getByRole('link', { name: /Start here/ }).getAttribute('aria-current'),
+      within(menu)
+        .getByRole('link', { name: /Start here/ })
+        .getAttribute('aria-current'),
     ).toBe('page');
   });
 
   it('opens at /help with the picture and nine cards, each with an Open link, and no wizard', async () => {
     renderApp(signedIn(), '/help');
     expect(await screen.findByRole('heading', { level: 1, name: 'Help' })).toBeTruthy();
-    expect(screen.getByText('How crsp runs jobs. Pictures use your own pool.')).toBeTruthy();
+    expect(
+      screen.getByText('How crsp runs jobs. Pictures use your own pool.'),
+    ).toBeTruthy();
     expect(screen.getByRole('region', { name: 'How a job gets run' })).toBeTruthy();
     const questions = screen.getByRole('region', { name: 'Questions' });
     expect(CARDS).toHaveLength(9);
@@ -69,7 +73,9 @@ describe('Help (LOOK63)', () => {
     expect(
       await screen.findByRole('heading', { name: 'What does Run elsewhere mean?' }),
     ).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'How do I make it faster?' })).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { name: 'How do I make it faster?' }),
+    ).toBeTruthy();
   });
 
   it('shows each new section at its address with its title, lead and list', async () => {
@@ -96,14 +102,22 @@ describe('Help (LOOK63)', () => {
       ),
     ).toBeTruthy();
     expect(
-      within(pane).getByText('Check 1: class ceiling. Check 2: free CPU. Check 3: free memory.'),
+      within(pane).getByText(
+        'Check 1: class ceiling. Check 2: free CPU. Check 3: free memory.',
+      ),
     ).toBeTruthy();
-    expect(within(pane).getByText('A big job can be passed up to 3 times, or for 10 min.')).toBeTruthy();
+    expect(
+      within(pane).getByText('A big job can be passed up to 3 times, or for 10 min.'),
+    ).toBeTruthy();
     expect(within(pane).getByText('Then it is reserved (see Reservation).')).toBeTruthy();
     expect(
-      within(pane).getByRole('link', { name: 'See it live in Pool > Live' }).getAttribute('href'),
+      within(pane)
+        .getByRole('link', { name: 'See it live in Pool > Live' })
+        .getAttribute('href'),
     ).toBe('/pool/live');
-    expect(await screen.findByRole('region', { name: 'In your pool right now' })).toBeTruthy();
+    expect(
+      await screen.findByRole('region', { name: 'In your pool right now' }),
+    ).toBeTruthy();
   });
 
   it('shows the first waiting job and why it waits on Admission and passing', async () => {
@@ -118,7 +132,8 @@ describe('Help (LOOK63)', () => {
             repository: 'octo/app',
             state: 'queued',
             wait_reason: 'free_slot',
-            wait_text: 'the job needs 4 CPUs and 8 GiB; the pool has 2 CPUs and 4 GiB free',
+            wait_text:
+              'the job needs 4 CPUs and 8 GiB; the pool has 2 CPUs and 4 GiB free',
             queue_position: 1,
           }),
         ],
@@ -136,10 +151,14 @@ describe('Help (LOOK63)', () => {
 
   it('keeps Where things are and Reading Queue Analysis', async () => {
     renderApp(signedIn(), '/help/where');
-    expect(await screen.findByRole('table', { name: 'The parts of the console' })).toBeTruthy();
+    expect(
+      await screen.findByRole('table', { name: 'The parts of the console' }),
+    ).toBeTruthy();
     cleanup();
     renderApp(signedIn(), '/help/queue');
-    expect(await screen.findByRole('region', { name: 'In your pool right now' })).toBeTruthy();
+    expect(
+      await screen.findByRole('region', { name: 'In your pool right now' }),
+    ).toBeTruthy();
   });
 });
 
@@ -198,7 +217,10 @@ describe('Help is the picture and the cards (LOOK48, LOOK63)', () => {
 
 describe('the ? beside a term (LOOK44, LOOK63)', () => {
   it('opens a short answer with a link to its Help section and closes with Escape', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines/:id', machine()), '/setup/machines/m1');
+    renderApp(
+      signedIn().on('GET', '/api/v1/machines/:id', machine()),
+      '/setup/machines/m1',
+    );
     const ask = await screen.findByRole('button', { name: 'What does Slots mean?' });
     expect(ask.getAttribute('aria-expanded')).toBe('false');
     fireEvent.click(ask);

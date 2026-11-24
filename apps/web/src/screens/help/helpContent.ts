@@ -29,7 +29,8 @@ export const CARDS: readonly HelpCard[] = [
   {
     id: 'q-shared',
     title: 'What does shared mean?',
-    answer: 'Every repository you turn the pool on for uses the same machines and runners.',
+    answer:
+      'Every repository you turn the pool on for uses the same machines and runners.',
     link: { label: 'Open Setup > Pool setup', to: '/setup/pool' },
   },
   {
@@ -54,8 +55,7 @@ export const CARDS: readonly HelpCard[] = [
   {
     id: 'q-waiting',
     title: 'Why is my job waiting?',
-    answer:
-      'Open Why waiting on its row. Queue Analysis ranks every waiting job.',
+    answer: 'Open Why waiting on its row. Queue Analysis ranks every waiting job.',
     link: { label: 'Open Pool > Queue Analysis', to: '/pool/queue' },
   },
   {

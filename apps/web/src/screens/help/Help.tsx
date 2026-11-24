@@ -179,7 +179,9 @@ function Guide({ section, live }: { section: GuideSection; live?: boolean }) {
       <Pane title={section.title}>
         <Text>{section.lead}</Text>
         <BulletList items={section.points} />
-        {section.link ? <TextLink to={section.link.to}>{section.link.label}</TextLink> : null}
+        {section.link ? (
+          <TextLink to={section.link.to}>{section.link.label}</TextLink>
+        ) : null}
       </Pane>
       {live ? <AdmissionNow /> : null}
     </>
