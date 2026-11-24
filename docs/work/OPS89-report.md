@@ -16,3 +16,5 @@ Branch `OPS89-ephemeral-linux-on-windows`. Source: GameRoomPC, crsp 0.1.24, job 
 ## Proof
 
 Tests: TestOwnLaneNeverRunsChownOnAWindowsHost, TestFailedStartDeletesTheRegistration, TestOneFailedRowForEachJob, TestEachTryHasItsOwnName, TestRetryLimitHoldsAndFailedRowsClear, TestEphemeralPoolRunnerViewDoesNotBlameTheRepositories. golangci-lint v2.15.0 clean (linux and GOOS=windows); vet and `test -c` with GOOS=windows pass for the three packages.
+
+CODE DONE 3e81147e47e3a62218f17015edd46d01fe460fb6
