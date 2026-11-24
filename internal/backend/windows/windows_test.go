@@ -28,11 +28,34 @@ type rig struct {
 	fe   *sysfake.Fetcher
 	logs []string
 	body []byte
+	// accounts are the local accounts the fake machine has; the account
+	// scripts add and remove them and answer as the real scripts do.
+	accounts map[string]bool
+}
+
+func (r *rig) accountScripts(c sys.Command) (sys.Result, bool) {
+	acct := c.Env["CRSP_ACCOUNT"]
+	switch {
+	case strings.Contains(c.Stdin, "Expand-Archive"):
+		_ = r.fs.MkdirAll(c.Env["CRSP_FOLDER"], 0o755)
+	case strings.Contains(c.Stdin, "account-ready"):
+		r.accounts[acct] = true
+		return sys.Result{Stdout: "account-ready " + acct + "\r\n"}, true
+	case strings.Contains(c.Stdin, "account-absent"):
+		if !r.accounts[acct] {
+			return sys.Result{Stdout: "account-absent\r\n"}, true
+		}
+		delete(r.accounts, acct)
+		return sys.Result{Stdout: "account-removed\r\n"}, true
+	}
+	return sys.Result{}, false
 }
 
 func newRig(t *testing.T) *rig {
 	t.Helper()
 	r := &rig{cmd: &sysfake.Commands{Rules: []sysfake.Rule{{Match: "SID.Value", Result: sys.Result{Stdout: testSID + "\r\n"}}}}, fs: sysfake.NewFS(), body: []byte("zip bytes")}
+	r.accounts = map[string]bool{}
+	r.cmd.Fallback = r.accountScripts
 	r.fe = &sysfake.Fetcher{FS: r.fs, Body: r.body}
 	verify := func(path, want string) error {
 		d, err := r.fs.ReadFile(path)
@@ -733,7 +756,7 @@ func TestAccountSIDEmptyOutputNamesCause(t *testing.T) {
 	r := newRig(t)
 	r.cmd.Rules = []sysfake.Rule{{Match: "SID.Value", Result: sys.Result{}}}
 	_, err := r.b.accountSID(context.Background(), "crsp-box-1", map[string]string{"CRSP_ACCOUNT": "crsp-box-1"})
-	if err == nil || !strings.Contains(err.Error(), "exited 0 but printed nothing on stdout") {
+	if err == nil || !strings.Contains(err.Error(), "account not found") {
 		t.Fatalf("err = %v", err)
 	}
 }

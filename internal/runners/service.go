@@ -267,6 +267,14 @@ func addText(a AddSpec, machine string) string {
 	if a.Kind == "ephemeral" {
 		return fmt.Sprintf("Add ephemeral runner %s on machine %s (%s, in a container, takes one job and is removed)", a.Name, machine, OSName(a.OS))
 	}
+	if a.Scope.Kind == ScopePool {
+		// A pool runner has no account of its own: each repository that uses
+		// the pool gets a registration (regName) with its own service,
+		// account and folder, so the parent's name would name an account that
+		// is never made (OPS88).
+		return fmt.Sprintf("Add %s runner %s on machine %s (%s, keeps state between jobs, one own account for each repository that uses the pool)",
+			a.Kind, a.Name, machine, OSName(a.OS))
+	}
 	return fmt.Sprintf("Add %s runner %s on machine %s (%s, keeps state between jobs, own account %s)",
 		a.Kind, a.Name, machine, OSName(a.OS), AccountName(a.Name, nil))
 }

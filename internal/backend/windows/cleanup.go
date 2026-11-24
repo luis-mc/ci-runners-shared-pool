@@ -2,6 +2,7 @@ package windows
 
 import (
 	"context"
+	"fmt"
 	"strings"
 	"time"
 
@@ -29,7 +30,8 @@ type StartFailure struct {
 // Error implements error.
 func (e *StartFailure) Error() string {
 	var b strings.Builder
-	b.WriteString(e.Err.Error())
+	// The cause often ends in a full stop already; each part adds one.
+	b.WriteString(strings.TrimRight(strings.TrimSpace(e.Err.Error()), ". "))
 	if len(e.Cleaned) > 0 {
 		b.WriteString(". Cleaned up: " + strings.Join(e.Cleaned, ", "))
 	}
@@ -67,9 +69,21 @@ func (b *Backend) cleanFailedStart(ctx context.Context, r backend.RunnerSpec, cf
 		done("GitHub registration "+r.Name, b.runner(ctx, "remove registration", folder, []string{"remove"}, cfg.Removal))
 	}
 	if st.account {
-		done("account "+account, b.psOK(ctx, "remove account", scriptRemoveAccount, map[string]string{"CRSP_ACCOUNT": account}, nil))
+		res, err := b.ps(ctx, scriptRemoveAccount, map[string]string{"CRSP_ACCOUNT": account}, nil)
+		switch {
+		case err != nil:
+			done("account "+account, fmt.Errorf("remove account: %w", err))
+		case res.ExitCode != 0:
+			done("account "+account, fmt.Errorf("remove account: powershell exited %d: %s", res.ExitCode, plainError(res.Stderr, res.Stdout)))
+		case strings.Contains(res.Stdout, "account-absent"):
+			// Never made, or taken away by an earlier clean-up: nothing to claim.
+		default:
+			done("account "+account, nil)
+		}
 	}
-	done("folder "+folder, b.d.FS.RemoveAll(folder))
+	if b.d.FS.Exists(folder) {
+		done("folder "+folder, b.d.FS.RemoveAll(folder))
+	}
 	b.log("cleanup", out.Error())
 	return out
 }
