@@ -367,7 +367,7 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	// goes in the environment of this one process.
 	st.registered = true
 	if err := b.runner(ctx, "register", folder,
-		persistent.ConfigArgs(r.GitHubURL, r.Name, r.Group, r.Labels), cfg.Registration); err != nil {
+		ConfigureArgs(r.GitHubURL, r.Name, r.Group, r.Labels), cfg.Registration); err != nil {
 		return h, err
 	}
 
@@ -452,6 +452,15 @@ func flag(v bool) string {
 		return "1"
 	}
 	return "0"
+}
+
+// ConfigureArgs are the Runner.Listener arguments to register a runner. Windows
+// calls Runner.Listener.exe directly, and config.cmd is only
+// `Runner.Listener.exe configure %*`, so the verb goes first; without it the
+// listener starts in run mode and says "Not configured" (OPS93). Linux and
+// macOS call config.sh, which adds the verb itself.
+func ConfigureArgs(githubURL, name, group string, labels []string) []string {
+	return append([]string{"configure"}, persistent.ConfigArgs(githubURL, name, group, labels)...)
 }
 
 // runner runs Runner.Listener (configure or remove). The arguments are one
