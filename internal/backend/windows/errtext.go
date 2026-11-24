@@ -14,12 +14,29 @@ const errMarker = "CRSP-ERROR: "
 // so PowerShell never sends its CLIXML error stream and the reason that sits
 // in an inner exception (for example the logon failure behind "cannot be
 // started") is not lost.
+//
+// The script goes to `powershell -Command -` on stdin. There PowerShell reads
+// line by line and runs a multi-line statement only when a blank line follows
+// it, so the text must end with a blank line (OPS92) and must not hold one
+// inside: a blank line inside the open try block would end it early.
 func wrapScript(script string) string {
-	return "try {\n" + script + "\n} catch {\n" +
+	return "try {\n" + dropBlankLines(script) + "\n} catch {\n" +
 		"    $m = @(); $e = $_.Exception\n" +
 		"    while ($e) { $t = ($e.Message -replace '\\s+', ' ').Trim(); if ($t -and $m -notcontains $t) { $m += $t }; $e = $e.InnerException }\n" +
 		"    [Console]::Error.WriteLine('" + errMarker + "' + ($m -join ' | '))\n" +
-		"    exit 1\n}\n"
+		"    exit 1\n}\n\n"
+}
+
+// dropBlankLines removes the empty and whitespace-only lines of a script.
+func dropBlankLines(script string) string {
+	lines := strings.Split(script, "\n")
+	kept := lines[:0]
+	for _, l := range lines {
+		if strings.TrimSpace(l) != "" {
+			kept = append(kept, l)
+		}
+	}
+	return strings.Join(kept, "\n")
 }
 
 var (
