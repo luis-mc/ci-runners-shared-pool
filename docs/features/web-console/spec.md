@@ -502,7 +502,11 @@ A command the role does not allow is shown disabled with its reason. The API ref
 
 **R5.169** (LOOK66; design system CORE-1, CORE-4, UX-1, UX-17, UX-29) — **Pool > Machines: the runners sit in the card of their machine.** Each machine card holds the line *Runners on {machine}* above the shared Table (Runner, Type, Size, Doing now); the page has no shared Runners table under the cards. Size is the runner's declared class (`size_class` of the runner, medium when none). The card reads the loaded runner list and shows *No runner is on this machine.* only once the list has loaded and holds none for the machine: while the list loads the pane says it loads, and a failed list names the runners with a Try again (the bug of 24 Nov was an empty list passed to the card before the list had loaded). Built (LOOK66).
 
+Proof: CORE-4 `e2e/tests/web-console/pool-machines.spec.ts`
+
 **R5.170** (LOOK66; ci-run-insights R5.111; design system CORE-1, CORE-4, UX-1, UX-17, UX-29) — **Analytics > Insights: Waits and Runner timeline.** Two panes under the failed jobs. *Waits* is the shared Table of the waits by runner label over the last 7 days (Label, Median, Slowest 10%, the longest slow end first; a value the data does not give reads *not known*), from `getWaitSplit` with `group=label`; empty: *No finished jobs in the last 7 days.* *Runner timeline* is the one shared slot timeline in its compact form, one row per slot (owner decision 22 Nov), so reserved and timer-ran-out bars draw as they do on Pool > Live. Each pane names itself when it cannot load. The day-range buttons and the per-day chart of the old Waits view are gone from this page; the charts stay on Analytics > Charts. Built (LOOK66).
+
+Proof: CORE-4 `e2e/tests/web-console/analytics-layout.spec.ts`
 
 **R5.118** (OPS34; UX-49) — **Layout.** Every Jobs route fits at 360, 393 and 1300 px with no sideways scroll, and passes the no-app-CSS scan and the keyboard rule (UX-57).
 
