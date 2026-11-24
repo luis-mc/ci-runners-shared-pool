@@ -1,6 +1,8 @@
 package api
 
 import (
+	"context"
+	"log/slog"
 	"testing"
 	"time"
 
@@ -81,5 +83,26 @@ func TestMarkJobShowsReservationAndTimer(t *testing.T) {
 	f.markJob(&other)
 	if other.WaitReason != nil || other.TimerDeadline != nil {
 		t.Fatalf("a plain job is left alone: %+v", other)
+	}
+}
+
+type reservedLeases []assign.Lease
+
+func (f reservedLeases) List(context.Context, ...assign.State) ([]assign.Lease, error) { return f, nil }
+
+func TestOverviewShowsTheReservedJobAsReserved(t *testing.T) {
+	s := &server{opts: Options{Logger: slog.Default(), Assign: reservedLeases{{JobID: 4, State: assign.Waiting, ReservedSince: ago(time.Minute)}}}}
+	queued := []gen.Job{{Id: 4, State: gen.JobStateQueued}, {Id: 5, State: gen.JobStateQueued}}
+	waiting := []gen.WaitingJob{{JobId: 4, Reason: gen.WaitReasonFreeSlot}, {JobId: 5, Reason: gen.WaitReasonFreeSlot}}
+	o := gen.Overview{Queued: &queued, Waiting: &waiting}
+	s.markOverview(context.Background(), &o)
+	if r := queued[0].WaitReason; r == nil || *r != gen.WaitReasonReserved {
+		t.Fatalf("job 4 %+v", queued[0])
+	}
+	if queued[1].WaitReason != nil {
+		t.Fatalf("job 5 is not reserved: %+v", queued[1])
+	}
+	if waiting[0].Reason != gen.WaitReasonReserved || waiting[1].Reason != gen.WaitReasonFreeSlot {
+		t.Fatalf("reasons %+v", waiting)
 	}
 }

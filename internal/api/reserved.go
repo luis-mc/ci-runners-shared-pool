@@ -7,6 +7,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/assign"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsdata"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/timers"
 )
 
@@ -41,18 +42,29 @@ func graceOf(v timers.JobView, found bool) (time.Time, bool) {
 
 // flagsFor reads the reservations and timers of the open jobs in rows. A service that is not wired says nothing.
 func (s *server) flagsFor(ctx context.Context, rows []jobsdata.Job) jobFlags {
-	f := jobFlags{reserved: map[int64]time.Time{}, grace: map[int64]time.Time{}}
 	var queued bool
+	var running []int64
 	for _, r := range rows {
 		queued = queued || r.State == jobsdata.Queued
-		if r.State == jobsdata.Running && s.opts.Timers != nil {
-			v, ok := s.opts.Timers.Job(ctx, r.ID)
+		if r.State == jobsdata.Running {
+			running = append(running, r.ID)
+		}
+	}
+	return s.flagsOf(ctx, queued, running)
+}
+
+// flagsOf reads the reservations (when some job is queued) and the timers of the running jobs.
+func (s *server) flagsOf(ctx context.Context, anyQueued bool, running []int64) jobFlags {
+	f := jobFlags{reserved: map[int64]time.Time{}, grace: map[int64]time.Time{}}
+	if s.opts.Timers != nil {
+		for _, id := range running {
+			v, ok := s.opts.Timers.Job(ctx, id)
 			if d, ok := graceOf(v, ok); ok {
-				f.grace[r.ID] = d
+				f.grace[id] = d
 			}
 		}
 	}
-	if queued && s.opts.Assign != nil {
+	if anyQueued && s.opts.Assign != nil {
 		if ls, err := s.opts.Assign.List(ctx, assign.Waiting); err == nil {
 			f.reserved = reservedOf(ls)
 		} else {
@@ -60,6 +72,33 @@ func (s *server) flagsFor(ctx context.Context, rows []jobsdata.Job) jobFlags {
 		}
 	}
 	return f
+}
+
+// markOverview puts the flags on the jobs of the overview and on its list of reasons.
+func (s *server) markOverview(ctx context.Context, o *gen.Overview) {
+	var running []int64
+	for _, j := range o.Running {
+		running = append(running, j.Id)
+	}
+	queued := o.Queued != nil && len(*o.Queued) > 0
+	f := s.flagsOf(ctx, queued, running)
+	for i := range o.Running {
+		f.markJob(&o.Running[i])
+	}
+	if o.Queued == nil {
+		return
+	}
+	for i := range *o.Queued {
+		f.markJob(&(*o.Queued)[i])
+	}
+	if o.Waiting != nil {
+		for i, w := range *o.Waiting {
+			if _, ok := f.reserved[w.JobId]; ok {
+				(*o.Waiting)[i].Reason = gen.WaitReasonReserved
+				(*o.Waiting)[i].Words = scheduler.WaitWords(scheduler.WaitReserved, "")
+			}
+		}
+	}
 }
 
 // markJob puts the reservation or the timer on the job as the contract shows it.

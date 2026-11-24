@@ -9,17 +9,19 @@ import { SlotTimeline } from './SlotTimeline';
 import { WithOverview } from './OverviewState';
 import { needsYou, needsYouWords, placeWords, startsAbout, waitWords } from './poolWords';
 
-type Filter = '' | 'room' | 'none';
+type Filter = '' | 'room' | 'reserved' | 'none';
 const FILTERS = [
   { value: 'room', label: 'Waiting for room' },
+  { value: 'reserved', label: 'Reserved' },
   { value: 'none', label: 'No runner fits' },
 ] as const;
 
-const matches = (f: Filter, j: Job): boolean =>
-  f === '' ||
-  (f === 'none'
-    ? j.wait_reason === 'no_runner_with_labels'
-    : j.wait_reason !== 'no_runner_with_labels');
+const matches = (f: Filter, j: Job): boolean => {
+  if (f === '') return true;
+  if (f === 'none') return j.wait_reason === 'no_runner_with_labels';
+  if (f === 'reserved') return j.wait_reason === 'reserved';
+  return j.wait_reason !== 'no_runner_with_labels' && j.wait_reason !== 'reserved';
+};
 
 export function QueuePlan() {
   const [filter, setFilter] = useState<Filter>('');
