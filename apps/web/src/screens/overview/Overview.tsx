@@ -12,22 +12,19 @@ import {
   PageHeader,
   Section,
   Status,
-  Table,
   TextLink,
   formatNumber,
   formatPercent,
-  type Column,
 } from '@crsp/ui';
 import { useEffect, useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLiveState, useLiveStore } from '../../live/LiveProvider';
 import { useLoad } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
-import { waitWords } from '../jobs/words';
 import { Load } from '../common';
 import { BestNextChange } from '../insights/OverviewLine';
 import { PoolCountTiles } from '../pool/PoolSection';
-import { poolCounts, startsAbout } from '../pool/poolWords';
+import { poolCounts } from '../pool/poolWords';
 import { SlotTimeline } from '../pool/SlotTimeline';
 import {
   NextToStart,
@@ -39,7 +36,6 @@ import { HowCrspWorks } from './HowCrspWorks';
 import { HelpTerm } from '../help/HelpTerm';
 
 type Machine = Schemas['Machine'];
-type Job = Schemas['Job'];
 
 export function machineStatus(m: Machine): {
   kind: 'ok' | 'waiting' | 'failed' | 'off';
@@ -107,49 +103,6 @@ export function MachineCard({ m }: { m: Machine }) {
     </Card>
   );
 }
-
-const jobColumns: Column<Job>[] = [
-  { id: 'repo', header: 'Repository', cell: (j) => j.repository },
-  { id: 'job', header: 'Job', cell: (j) => j.job_name },
-  {
-    id: 'where',
-    header: 'Machine',
-    cell: (j) => j.runner_name ?? j.machine_id ?? 'not placed',
-  },
-];
-
-/** Why each queued job waits (scheduling R5.48): the server's words, else the job's own reason (UX-34). */
-export interface WaitingRow {
-  id: number;
-  eta: Job['queue_eta'];
-  repository: string;
-  job: string;
-  words: string;
-}
-
-export function waitingRows(
-  o: Pick<Schemas['Overview'], 'queued' | 'waiting'>,
-): WaitingRow[] {
-  const words = new Map((o.waiting ?? []).map((w) => [w.job_id, w.words]));
-  return (o.queued ?? []).map((j) => ({
-    id: j.id,
-    eta: j.queue_eta,
-    repository: j.repository,
-    job: j.job_name,
-    words: words.get(j.id) ?? sentence(waitWords(j)),
-  }));
-}
-
-function sentence(w: string): string {
-  return `${w.charAt(0).toUpperCase()}${w.slice(1)}.`;
-}
-
-const waitingColumns = (readAt: number): Column<WaitingRow>[] => [
-  { id: 'repo', header: 'Repository', cell: (r) => r.repository },
-  { id: 'job', header: 'Job', cell: (r) => r.job },
-  { id: 'why', header: 'Why it waits', cell: (r) => r.words },
-  { id: 'start', header: 'Start', cell: (r) => startsAbout(r.eta, readAt) },
-];
 
 /** The App-gone banner (github-integration R5.6): GitHub work is stopped, jobs that run keep running, and the
  * setup wizard is offered again. Nothing is drawn while the App answers or while the answer is not known. */

@@ -1511,6 +1511,14 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | Pool, page title and line | Pool. What runs, what waits and why. Nothing to configure here. |
 | Pool tabs | Overview, Live, Queue Analysis, Jobs, Machines |
 | Pool, four counts | Running, Starting, Queued, No runner fits |
+| Overview, line | The pool at a glance. Open a card for the detail. |
+| Overview, order | The four counts; the timer alert; Best next change; a card per machine; Next to start and Routing labels; Jobs over time |
+| Overview, Best next change | One line: {title}, Saves about {n} min a week (estimate)., link Open it in Analytics > Suggestions |
+| Overview, machine card | Title {machine} {cpus} CPU / {gib} GiB; bars CPU and Memory, text {used} of {total} and {used} of {total} GiB; the running job names; link Open in Pool > Machines |
+| Overview, timer alert | The job timer's own words (for example Job timer ran out at 30:00; stopping in 20 s); link Open {job} in Pool > Jobs |
+| Overview, Next to start | Card title Next to start with the count; each job: its name, one of Waiting for room, Behind another job, No runner fits, Waiting, and the clock time (starts about {time}); empty: No job is waiting.; link See the whole plan in Pool > Queue Analysis ({n}) |
+| Overview, Routing labels | Card title Routing labels; the labels as tags (first five); empty: No job carries a routing label right now.; link See all {n} labels in Pool > Overview |
+| Overview, Jobs over time | Pane Jobs over time (Each row is a slot of a machine. Scroll left for the past, right for the forecast.) |
 | Pool > Overview, panes | Queue plan (In the order crsp will start them.), Running jobs, Routing labels in use |
 | Queue plan columns | #, Job, Why it waits, Start, Machine and runner |
 | Start, a waiting job | Starts about {time} |
