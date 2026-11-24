@@ -3360,6 +3360,10 @@ button.ds-jobpath__box {
   gap: var(--ds-space-3);
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
 }
+/* The panes of the list are the sections of the page: one section gap apart (UX-10). */
+.ds-search-table[data-filters] .ds-search-table__grid {
+  gap: var(--ds-space-6);
+}
 @media (min-width: 900px) {
   .ds-search-table[data-filters] .ds-search-table__grid[data-open] {
     grid-template-columns: minmax(0, 1fr) calc(var(--ds-width-field-medium) * 1.3);
