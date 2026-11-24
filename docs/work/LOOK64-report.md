@@ -30,3 +30,7 @@ Design system: highest version v4 (`next-version` for the words). Checked: CORE-
 - `pnpm -r typecheck` and `pnpm -r lint`: clean. `pnpm lint:root`: clean.
 - DOM layout spec at 360, 393, 1300 px: added "setup summary" and "setup size and backends"; with machines, repositories and both doctor entries they pass (`e2e/tests/design-layout.spec.ts`).
 - Spec: `docs/features/web-console/spec.md` (4.3, 4.3a, 4.4, 4.8) and change note `docs/features/web-console/changes/LOOK64.md`.
+
+- Branch CI (ci.yml run 45303382815, head bf92740d25): green. The local e2e gate also passed (3197 tests). A first gate run found the Doctor e2e reading panes by their old names; fixed in bf92740d25.
+
+CODE DONE bf92740d25db42d4a0d7947224c1ef77609f5fcd
