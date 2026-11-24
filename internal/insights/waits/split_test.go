@@ -83,3 +83,32 @@ func TestReaderWindowAndDays(t *testing.T) {
 		t.Fatal("days 5 accepted")
 	}
 }
+
+// LOOK66: a group per runner label (the crsp- one first) and the slowest 10% (p90, nearest rank).
+func TestGroupByLabelAndP90(t *testing.T) {
+	var jobs []insights.JobFact
+	for i := 1; i <= 10; i++ {
+		j := crspJob(int64(i), "k", 0, float64(i), 1, 1)
+		j.Labels = []string{"self-hosted", "crsp-build-c4a7"}
+		jobs = append(jobs, j)
+	}
+	other := crspJob(11, "k", 0, 1, 1, 1)
+	other.Labels = []string{"self-hosted", "linux"}
+	none := crspJob(12, "k", 0, 1, 1, 1)
+	jobs = append(jobs, other, none)
+	rows, err := Aggregate(context.Background(), jobs, ByLabel, 0, nil)
+	if err != nil || len(rows) != 3 {
+		t.Fatalf("rows = %v %v", rows, err)
+	}
+	got := map[string]Row{}
+	for _, r := range rows {
+		got[r.Key] = r
+	}
+	b := got["crsp-build-c4a7"]
+	if b.Jobs != 10 || b.Wait.P50 != 5*time.Minute || b.Wait.P90 != 9*time.Minute || b.Wait.P95 != 10*time.Minute {
+		t.Fatalf("crsp-build = %+v", b)
+	}
+	if got["self-hosted, linux"].Jobs != 1 || got["no label"].Jobs != 1 {
+		t.Fatalf("others = %+v", got)
+	}
+}

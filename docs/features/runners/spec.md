@@ -101,7 +101,7 @@ stateDiagram-v2
 
 No mocks yet. The Runners screen and the Create runner wizard follow design system v1.
 
-- Runners list: one row per runner with machine, OS, backend, isolation, labels, state, current job and age. Rows compare more than three facts, so it is a table (design system UX-25). Age keeps ageing (UX-53).
+- Runners list: one row per runner with machine, isolation (the system and backend are in its hover text), labels, state, current job and age. Rows compare more than three facts, so it is a table (design system UX-25). Age keeps ageing (UX-53).
 - Isolation: every row and detail names the isolation, and a persistent runner says it keeps state between jobs (design system UX-61).
 - State: each state is a word, a glyph and a colour (design system UX-58), read from one source (UX-19).
 - Create runner: a wizard (design system UX-5) that ends with Review, Creating, Done (UX-30). A machine that cannot take the runner is shown disabled with its reason (UX-38).

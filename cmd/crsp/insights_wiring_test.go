@@ -11,7 +11,9 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/waits"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 type fakeEngine struct{ ran chan struct{} }
@@ -120,5 +122,23 @@ func TestNewInsightsEngineMeasuresEachPass(t *testing.T) {
 	}
 	if len(fs.synced) != 1 || len(fs.synced[0]) != 1 || fs.synced[0][0] != insights.KindCost {
 		t.Fatalf("synced = %v, want one sync of the cost kind", fs.synced)
+	}
+}
+
+// LOOK66: the controller mounts the waits reader over the store, so getWaitSplit answers from the jobs it keeps.
+func TestInsightsAreaReadsWaitsFromTheStore(t *testing.T) {
+	ctx := context.Background()
+	db, err := store.OpenForTests(ctx, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = db.Close() })
+	area := newInsightsArea(db)
+	if area.Waits == nil || area.Resources == nil {
+		t.Fatalf("area = %+v", area)
+	}
+	rows, err := area.Waits.SplitBy(ctx, 7, waits.ByLabel, 0, 2*time.Minute)
+	if err != nil || len(rows) != 0 {
+		t.Fatalf("empty store: %v %v", rows, err)
 	}
 }

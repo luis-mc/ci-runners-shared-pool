@@ -42,11 +42,11 @@ type HoldExplainer interface {
 	Explain(ctx context.Context, j insights.JobFact) (HoldReason, error)
 }
 
-// Stats is count, total, median and p95 of one part over known values.
+// Stats is count, total, median, p90 (the slowest 10%) and p95 of one part over known values.
 type Stats struct {
-	Known    int
-	Total    time.Duration
-	P50, P95 time.Duration
+	Known         int
+	Total         time.Duration
+	P50, P90, P95 time.Duration
 }
 
 // Group is how getWaitSplit groups rows (R5.13).
@@ -56,6 +56,7 @@ type Group string
 const (
 	ByRepository Group = "repository"
 	ByJobKey     Group = "job_key"
+	ByLabel      Group = "label"
 	ByDay        Group = "day"
 )
 

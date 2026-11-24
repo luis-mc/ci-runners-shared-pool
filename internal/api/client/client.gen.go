@@ -2993,24 +2993,48 @@ func (e RunWasteKind) Valid() bool {
 	}
 }
 
+// Defines values for RunnerSizeClass.
+const (
+	RunnerSizeClassLarge  RunnerSizeClass = "large"
+	RunnerSizeClassMedium RunnerSizeClass = "medium"
+	RunnerSizeClassSmall  RunnerSizeClass = "small"
+	RunnerSizeClassXl     RunnerSizeClass = "xl"
+)
+
+// Valid indicates whether the value is a known member of the RunnerSizeClass enum.
+func (e RunnerSizeClass) Valid() bool {
+	switch e {
+	case RunnerSizeClassLarge:
+		return true
+	case RunnerSizeClassMedium:
+		return true
+	case RunnerSizeClassSmall:
+		return true
+	case RunnerSizeClassXl:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for RunnerClassSizeClass.
 const (
-	Large  RunnerClassSizeClass = "large"
-	Medium RunnerClassSizeClass = "medium"
-	Small  RunnerClassSizeClass = "small"
-	Xl     RunnerClassSizeClass = "xl"
+	RunnerClassSizeClassLarge  RunnerClassSizeClass = "large"
+	RunnerClassSizeClassMedium RunnerClassSizeClass = "medium"
+	RunnerClassSizeClassSmall  RunnerClassSizeClass = "small"
+	RunnerClassSizeClassXl     RunnerClassSizeClass = "xl"
 )
 
 // Valid indicates whether the value is a known member of the RunnerClassSizeClass enum.
 func (e RunnerClassSizeClass) Valid() bool {
 	switch e {
-	case Large:
+	case RunnerClassSizeClassLarge:
 		return true
-	case Medium:
+	case RunnerClassSizeClassMedium:
 		return true
-	case Small:
+	case RunnerClassSizeClassSmall:
 		return true
-	case Xl:
+	case RunnerClassSizeClassXl:
 		return true
 	default:
 		return false
@@ -3963,6 +3987,7 @@ func (e WaitReason) Valid() bool {
 const (
 	WaitSplitGroupDay        WaitSplitGroup = "day"
 	WaitSplitGroupJobKey     WaitSplitGroup = "job_key"
+	WaitSplitGroupLabel      WaitSplitGroup = "label"
 	WaitSplitGroupRepository WaitSplitGroup = "repository"
 )
 
@@ -3972,6 +3997,8 @@ func (e WaitSplitGroup) Valid() bool {
 	case WaitSplitGroupDay:
 		return true
 	case WaitSplitGroupJobKey:
+		return true
+	case WaitSplitGroupLabel:
 		return true
 	case WaitSplitGroupRepository:
 		return true
@@ -4287,6 +4314,7 @@ func (e GetWaitSplitParamsDays) Valid() bool {
 const (
 	GetWaitSplitParamsGroupDay        GetWaitSplitParamsGroup = "day"
 	GetWaitSplitParamsGroupJobKey     GetWaitSplitParamsGroup = "job_key"
+	GetWaitSplitParamsGroupLabel      GetWaitSplitParamsGroup = "label"
 	GetWaitSplitParamsGroupRepository GetWaitSplitParamsGroup = "repository"
 )
 
@@ -4296,6 +4324,8 @@ func (e GetWaitSplitParamsGroup) Valid() bool {
 	case GetWaitSplitParamsGroupDay:
 		return true
 	case GetWaitSplitParamsGroupJobKey:
+		return true
+	case GetWaitSplitParamsGroupLabel:
 		return true
 	case GetWaitSplitParamsGroupRepository:
 		return true
@@ -4915,8 +4945,11 @@ type DrainRequest struct {
 // DurationStats defines model for DurationStats.
 type DurationStats struct {
 	// Known Jobs with a known value; unknown is never counted as 0.
-	Known        *int  `json:"known,omitempty"`
-	P50Seconds   *int  `json:"p50_seconds,omitempty"`
+	Known      *int `json:"known,omitempty"`
+	P50Seconds *int `json:"p50_seconds,omitempty"`
+
+	// P90Seconds The slowest 10%, nearest rank (LOOK66).
+	P90Seconds   *int  `json:"p90_seconds,omitempty"`
 	P95Seconds   *int  `json:"p95_seconds,omitempty"`
 	TotalSeconds int64 `json:"total_seconds"`
 }
@@ -8150,12 +8183,18 @@ type Runner struct {
 	// Serving Pool runner only: the repository (owner/name) of the job it runs now. Absent when it is idle (runners R5.88).
 	Serving *string `json:"serving,omitempty"`
 
+	// SizeClass The declared size class of the runner (runners R5.71). Absent when none is declared; the default class is medium.
+	SizeClass *RunnerSizeClass `json:"size_class,omitempty"`
+
 	// State What the runner really is (web-console UX-19). idle only when GitHub reports it online and not busy and its service runs; not_registered, stopped and unknown say why it is not.
 	State RunnerState `json:"state"`
 
 	// UncleanReason Set when the clean-up after (or before) a job failed (runners R5.91). The runner takes no new job until it is clean. Absent when clean.
 	UncleanReason *string `json:"unclean_reason,omitempty"`
 }
+
+// RunnerSizeClass The declared size class of the runner (runners R5.71). Absent when none is declared; the default class is medium.
+type RunnerSizeClass string
 
 // RunnerClassSize defines model for RunnerClassSize.
 type RunnerClassSize struct {
@@ -9091,7 +9130,7 @@ type WaitSplitRow struct {
 	HoldsOverCap *int            `json:"holds_over_cap,omitempty"`
 	Jobs         int             `json:"jobs"`
 
-	// Key The repository, the job key or the day (year-month-day, UTC).
+	// Key The repository, the job key, the runner label or the day (year-month-day, UTC).
 	Key  string        `json:"key"`
 	Run  DurationStats `json:"run"`
 	Wait DurationStats `json:"wait"`
@@ -10545,9 +10584,9 @@ type ClientInterface interface {
 	// Corresponds with GET /api/v1/insights/timeline (the `GetPoolTimeline` operationId).
 	GetPoolTimeline(ctx context.Context, params *GetPoolTimelineParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
-	// GetWaitSplit Wait, hold and run per repository, job key or day
+	// GetWaitSplit Wait, hold and run per repository, job key, runner label or day
 	//
-	// ci-run-insights R5.12 to R5.14 (CIX).
+	// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 	//
 	// Corresponds with GET /api/v1/insights/waits (the `GetWaitSplit` operationId).
 	GetWaitSplit(ctx context.Context, params *GetWaitSplitParams, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -13264,9 +13303,9 @@ func (c *Client) GetPoolTimeline(ctx context.Context, params *GetPoolTimelinePar
 	return c.Client.Do(req)
 }
 
-// GetWaitSplit Wait, hold and run per repository, job key or day
+// GetWaitSplit Wait, hold and run per repository, job key, runner label or day
 //
-// ci-run-insights R5.12 to R5.14 (CIX).
+// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 //
 // Corresponds with GET /api/v1/insights/waits (the `GetWaitSplit` operationId).
 func (c *Client) GetWaitSplit(ctx context.Context, params *GetWaitSplitParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -27224,9 +27263,9 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/insights/timeline (the `GetPoolTimeline` operationId).
 	GetPoolTimelineWithResponse(ctx context.Context, params *GetPoolTimelineParams, reqEditors ...RequestEditorFn) (*GetPoolTimelineResponse, error)
 
-	// GetWaitSplitWithResponse Wait, hold and run per repository, job key or day
+	// GetWaitSplitWithResponse Wait, hold and run per repository, job key, runner label or day
 	//
-	// ci-run-insights R5.12 to R5.14 (CIX).
+	// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -39972,9 +40011,9 @@ func (c *ClientWithResponses) GetPoolTimelineWithResponse(ctx context.Context, p
 	return ParseGetPoolTimelineResponse(rsp)
 }
 
-// GetWaitSplitWithResponse Wait, hold and run per repository, job key or day
+// GetWaitSplitWithResponse Wait, hold and run per repository, job key, runner label or day
 //
-// ci-run-insights R5.12 to R5.14 (CIX).
+// ci-run-insights R5.12 to R5.14, R5.111 (CIX, LOOK66). Group `label` is the runner label a job asked for (the crsp-prefixed one, else the labels joined).
 //
 // Returns a wrapper object for the known response body format(s).
 //

@@ -180,6 +180,8 @@ Requirement IDs are this spec's own. "Idea n" is the owner's list of 20 Nov 2026
 
 **R5.13** — **Per repository and day.** `getWaitSplit` groups the split by repository, job key or day over 7, 14 or 30 days, with count, median and p95 of each part and the total minutes.
 
+**R5.111** (LOOK66; web-console R5.170) — **Waits by runner label, and the slowest 10%.** `getWaitSplit` also groups by `label`: the runner label a job asked for (the one that starts with `crsp-`, else all its labels joined, else *no label*). Every duration part (`wait`, `hold`, `run`) now carries `p90_seconds`, the slowest 10% by nearest rank, next to the median and p95; a part with no known value leaves it out, never 0. The controller wires the waits reader over the job facts it keeps (`store.InsightJobSource`), so the route answers real data and no longer 501 *not built yet*. Built (LOOK66).
+
 **R5.14** — **Hold over the cap.** A hold over the cap (default 2 min, setting `insights_hold_cap_seconds`, 30 to 900) is flagged with its reason from the runner set-up log and wait reasons: image pull, runner start, registration, load over budget, unknown. A job key whose holds over the cap add up to 10 min or more a week gives a `wait.hold` finding.
 
 ### Pool sizing (idea 2) and job slots (idea 12)
@@ -409,6 +411,7 @@ Every row is planned; the paths are where each test will live (wave CIX).
 | R5.11 | internal/insights/rank_test.go TestRankByMinutesThenAge, TestRankZeroMinutesByGuardrail, internal/store/insights_test.go TestListRankFilterPage; apps/web/src/screens/insights/DoNext.test.tsx |
 | R5.12 | internal/insights/waits/split_test.go TestCrspSplit, TestOtherRunnerNoHold, TestUnknownNotZero |
 | R5.13 | internal/insights/waits/split_test.go TestGroupByRepositoryKeyDay |
+| R5.111 | internal/insights/waits/split_test.go TestGroupByLabelAndP90; internal/api/handlers_insights_test.go TestWaitSplitHoldCapAndRanges; cmd/crsp/insights_wiring_test.go TestInsightsAreaReadsWaitsFromTheStore |
 | R5.14 | internal/insights/waits/hold_test.go TestHoldOverCapWithReason |
 | R5.15 | internal/insights/capacity/demand_test.go TestUtilisationAndArrivals |
 | R5.16 | internal/insights/capacity/queue_test.go TestAllenCunneenKnownValues, TestSaturatedGivesMinimumSlots |

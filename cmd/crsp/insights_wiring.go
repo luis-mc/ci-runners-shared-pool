@@ -8,11 +8,14 @@ import (
 	"sort"
 	"strings"
 	"sync/atomic"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/digest"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/insights/waits"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 // insightsDeps is what the CI run insights routes and the engine run on (docs/features/ci-run-insights R5.42).
@@ -26,6 +29,15 @@ type insightsDeps struct {
 	Engine insights.Engine
 	// Digest writes the weekly digest draft on Monday 08:00 Europe/Lisbon (R5.38); nil writes none.
 	Digest digest.Writer
+}
+
+// newInsightsArea is the insights area over the store: the resources and peaks of a job, and the waits read from
+// the job facts the controller keeps (LOOK66, ci-run-insights R5.46). Fields still nil answer 501 on their routes.
+func newInsightsArea(db *store.Store) *api.InsightsArea {
+	return &api.InsightsArea{
+		Resources: db.Resources(), Peaks: db.Resources(),
+		Waits: waits.NewReader(db.InsightJobSource(), nil, time.Now),
+	}
 }
 
 // insightsBridge carries "a CI run finished" from the job ingest to the engine. The ingest is built before the

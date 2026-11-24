@@ -270,7 +270,7 @@ func runController() error {
 	defer func() { _ = mirrorProxy.Close() }()
 	ctl.Options.RegistryMirror = mirrorSvc
 	// CI run insights: routes and the analyser engine (ci-run-insights R5.42).
-	startInsights(ctx, logger, &ctl.Options, insightsDeps{Area: &api.InsightsArea{Resources: db.Resources(), Peaks: db.Resources()}})
+	startInsights(ctx, logger, &ctl.Options, insightsDeps{Area: newInsightsArea(db)})
 
 	mux := http.NewServeMux()
 	api.Register(mux, ctl.Options)

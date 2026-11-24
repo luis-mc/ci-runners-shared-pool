@@ -431,6 +431,7 @@ func durStats(st waits.Stats) gen.DurationStats {
 	out := gen.DurationStats{TotalSeconds: int64(st.Total / time.Second), Known: ptrOf(st.Known)}
 	if st.Known > 0 {
 		out.P50Seconds = ptr(int(st.P50 / time.Second))
+		out.P90Seconds = ptr(int(st.P90 / time.Second))
 		out.P95Seconds = ptr(int(st.P95 / time.Second))
 	}
 	return out
@@ -455,10 +456,10 @@ func (s *server) GetWaitSplit(ctx context.Context, req gen.GetWaitSplitRequestOb
 	group := waits.ByDay
 	if req.Params.Group != nil {
 		switch g := waits.Group(*req.Params.Group); g {
-		case waits.ByRepository, waits.ByJobKey, waits.ByDay:
+		case waits.ByRepository, waits.ByJobKey, waits.ByLabel, waits.ByDay:
 			group = g
 		default:
-			return fail(insightBad("group must be repository, job_key or day"))
+			return fail(insightBad("group must be repository, job_key, label or day"))
 		}
 	}
 	var repo int64
