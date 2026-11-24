@@ -15,8 +15,7 @@ import {
 } from '@crsp/ui';
 import { unwrap, useClient } from '../../api/api';
 import { useLoad } from '../../api/hooks';
-import { Timeline } from '../insights/Timeline';
-import { Waits } from '../insights/Waits';
+import { RunnerTimelinePane, WaitsPane } from './InsightsPanes';
 import { Load } from '../common';
 import { useGroups, useJobList, useStats } from '../jobs/api';
 import { groupLink } from '../jobs/Groups';
@@ -140,8 +139,10 @@ export function Insights() {
                 <TextLink to="/analytics/charts">Open the charts</TextLink> for longer
                 ranges.
               </Text>
-              <Waits />
-              <Timeline />
+              <CardGrid>
+                <WaitsPane />
+                <RunnerTimelinePane />
+              </CardGrid>
             </>
           );
         }}
