@@ -1,14 +1,6 @@
 // Pool > Machines (LOOK56, LOOK66): what runs where; each card holds the table of its own runners. It only shows,
 // and links to Setup > Machines, where machines change.
-import {
-  ActionBar,
-  Empty,
-  LinkButton,
-  Message,
-  Section,
-  Stack,
-  TextLink,
-} from '@crsp/ui';
+import { ActionBar, Empty, LinkButton, Message, Stack, TextLink } from '@crsp/ui';
 import { unwrap, useClient } from '../../api/api';
 import { useLoad } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
@@ -34,18 +26,16 @@ export function PoolMachines() {
             <Empty title="No machine is in the pool yet." />
           ) : (
             <>
-              <Section title="Machines" count={d.items.length}>
-                <Stack gap="section">
-                  {d.items.map((m) => (
-                    <PoolMachineCard
-                      key={m.id}
-                      m={withLiveLoad(m, live.overview)}
-                      runners={runners.result}
-                      reloadRunners={runners.reload}
-                    />
-                  ))}
-                </Stack>
-              </Section>
+              <Stack gap="section">
+                {d.items.map((m) => (
+                  <PoolMachineCard
+                    key={m.id}
+                    m={withLiveLoad(m, live.overview)}
+                    runners={runners.result}
+                    reloadRunners={runners.reload}
+                  />
+                ))}
+              </Stack>
             </>
           )
         }
