@@ -11,6 +11,7 @@ import { SearchBar, ListToolbar } from './Controls';
 import { Text } from './layout';
 import { Pane } from './Pane';
 import { Empty } from './State';
+import { Tag } from './Status';
 import { Table, type Column, type RowActionSpec } from './Table';
 
 export const SEARCH_TABLE_WORDS = {
@@ -20,7 +21,26 @@ export const SEARCH_TABLE_WORDS = {
   close: 'Close details',
   none: 'Choose a row to see its details.',
   noMatch: 'Nothing matches. Clear the search or choose All.',
+  filters: 'Filters',
+  openFilters: 'Open the filters',
+  closeFilters: 'Close the filters',
 } as const;
+
+/** A list whose filters sit in a pane beside it and whose rows open an inspector beside the list (LOOK62). */
+export interface FilterPaneSpec {
+  /** What is set, as short tags, shown while the pane is closed ("State: All", "Last 7 days"). */
+  summary: readonly string[];
+  /** The fields of the pane, after the search box and the `filters` of the list. */
+  children: ReactNode;
+}
+
+/** A row's Why button opens the inspector of that row beside the list; the row itself does the same. */
+export interface InspectSpec<T> {
+  /** The word of the button: Why. */
+  label: string;
+  /** What the button is about, for a screen reader. */
+  name: (row: T) => string;
+}
 
 /** A search query cut into words: a plain word, or `field:word` for a field the page names. */
 export interface SearchTerm {
@@ -102,6 +122,8 @@ export function SearchTable<T>({
   empty = SEARCH_TABLE_WORDS.noMatch,
   below,
   autoFocus = true,
+  filterPane,
+  inspect,
 }: {
   /** The name of the list, for screen readers. */
   label: string;
@@ -137,8 +159,13 @@ export function SearchTable<T>({
   /** Under the table: a count line, Show more. */
   below?: ReactNode;
   autoFocus?: boolean | undefined;
+  /** The filters in a pane at the side of the list, open at first; the search box and `filters` move into it. */
+  filterPane?: FilterPaneSpec | undefined;
+  /** Rows open the `detail` panel beside the list (a row and its Why button); there is no details toggle. */
+  inspect?: InspectSpec<T> | undefined;
 }) {
   const [open, setOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(true);
   const [chosen, setChosen] = useState<string | undefined>(undefined);
   const toggle = useRef<HTMLButtonElement>(null);
   const names = Object.keys(fields);
@@ -154,39 +181,109 @@ export function SearchTable<T>({
   const current = shown.find((r) => rowKey(r) === chosen) ?? shown[0];
   const word = open ? SEARCH_TABLE_WORDS.hide : SEARCH_TABLE_WORDS.show;
   const panel = open && detail && current ? detail : undefined;
+  const select = (r: T) => setChosen(rowKey(r));
+  // A row opens its inspector with a click, Enter or its Why button; reaching it by keys only marks it (UX-57).
+  const choose = (r: T) => {
+    select(r);
+    setOpen(true);
+  };
+  const searchBar = (
+    <SearchBar
+      value={query}
+      onChange={onQuery}
+      label={searchLabel ?? `Search ${label.toLowerCase()}`}
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+    />
+  );
+  const rowAction: RowActionSpec<T> | undefined = inspect
+    ? {
+        label: inspect.label,
+        name: inspect.name,
+        press: (r) => ({ onPress: () => choose(r) }),
+      }
+    : action;
   return (
-    <div className="ds-search-table">
-      <ListToolbar
-        label={label}
-        search={
-          <SearchBar
-            value={query}
-            onChange={onQuery}
-            label={searchLabel ?? `Search ${label.toLowerCase()}`}
-            placeholder={placeholder}
-            autoFocus={autoFocus}
-          />
-        }
-        filters={filters}
-        count={count}
-        actions={
-          detail ? (
-            <button
-              ref={toggle}
-              type="button"
-              className="ds-button ds-panel-toggle"
-              data-icon
-              aria-pressed={open}
-              aria-label={word}
-              title={word}
-              onClick={() => setOpen((o) => !o)}
-            >
-              <PanelRightIcon />
-            </button>
-          ) : undefined
-        }
-      />
+    <div className="ds-search-table" data-filters={filterPane ? true : undefined}>
+      {filterPane ? null : (
+        <ListToolbar
+          label={label}
+          search={searchBar}
+          filters={filters}
+          count={count}
+          actions={
+            detail ? (
+              <button
+                ref={toggle}
+                type="button"
+                className="ds-button ds-panel-toggle"
+                data-icon
+                aria-pressed={open}
+                aria-label={word}
+                title={word}
+                onClick={() => setOpen((o) => !o)}
+              >
+                <PanelRightIcon />
+              </button>
+            ) : undefined
+          }
+        />
+      )}
       <div className="ds-search-table__grid" data-open={panel ? true : undefined}>
+        {filterPane ? (
+          <section
+            className="ds-pane ds-filter-pane"
+            aria-label={SEARCH_TABLE_WORDS.filters}
+            data-open={filtersOpen}
+          >
+            <h2 className="ds-pane__title">
+              <span className="ds-clamp">{SEARCH_TABLE_WORDS.filters}</span>
+              <span className="ds-pane__count">
+                {filtersOpen ? 'open' : `${filterPane.summary.length} set`}
+              </span>
+            </h2>
+            <div className="ds-pane__body">
+              <div className="ds-filter-pane__body">
+                {searchBar}
+                <div className="ds-filter-pane__summary">
+                  <div className="ds-filter-pane__tags">
+                    {filterPane.summary.map((t) => (
+                      <Tag key={t}>{t}</Tag>
+                    ))}
+                  </div>
+                  <Button onPress={() => setFiltersOpen(true)}>
+                    {SEARCH_TABLE_WORDS.openFilters}
+                  </Button>
+                </div>
+                <div className="ds-filter-pane__fields">
+                  {filters}
+                  <div className="ds-filter-pane__grid">{filterPane.children}</div>
+                  {detail && !inspect ? (
+                    <button
+                      ref={toggle}
+                      type="button"
+                      className="ds-button ds-panel-toggle"
+                      data-icon
+                      aria-pressed={open}
+                      aria-label={word}
+                      title={word}
+                      onClick={() => setOpen((o) => !o)}
+                    >
+                      <PanelRightIcon />
+                    </button>
+                  ) : null}
+                  {filtersOpen ? (
+                    <div className="ds-filter-pane__close">
+                      <Button onPress={() => setFiltersOpen(false)}>
+                        {SEARCH_TABLE_WORDS.closeFilters}
+                      </Button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          </section>
+        ) : null}
         <div className="ds-search-table__main">
           <Pane title={title} count={shown.length}>
             {hint ? <Text tone="muted">{hint}</Text> : null}
@@ -200,11 +297,12 @@ export function SearchTable<T>({
                 rowKey={rowKey}
                 expandLabel={expandLabel}
                 rowLabel={rowLabel}
-                onOpen={onOpen}
-                action={action}
+                onOpen={inspect ? choose : onOpen}
+                onPick={inspect ? choose : undefined}
+                action={rowAction}
                 oneLine={oneLine}
                 current={panel && current ? rowKey(current) : undefined}
-                onSelect={detail ? (r) => setChosen(rowKey(r)) : undefined}
+                onSelect={detail ? select : undefined}
               />
             )}
             {below}

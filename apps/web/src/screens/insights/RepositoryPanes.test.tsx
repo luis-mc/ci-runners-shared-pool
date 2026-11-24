@@ -3,6 +3,7 @@ import { cleanup, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp, repository, signedIn } from '../../testing/mock';
 import { jobDetail, jobsApi } from '../../testing/jobsData';
+import { mockFindings } from './mock';
 
 afterEach(cleanup);
 
@@ -11,7 +12,8 @@ describe('Repository insight panes', () => {
     const r = repository({ id: 7, full_name: 'octo/app' });
     const api = signedIn()
       .on('GET', '/api/v1/github/repositories', { items: [r], stale: { stale: false } })
-      .on('GET', '/api/v1/repositories/:id', r);
+      .on('GET', '/api/v1/repositories/:id', r)
+      .on('GET', '/api/v1/insights/findings', () => mockFindings({}));
     renderApp(api, '/setup/pool/octo/app');
     expect(await screen.findByRole('region', { name: 'CI checks' })).toBeTruthy();
     expect(screen.getByText('The job has no timeout-minutes.')).toBeTruthy();

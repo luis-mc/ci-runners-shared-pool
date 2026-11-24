@@ -110,13 +110,19 @@ func TestThreePassesReserveAndBlockLaterJobs(t *testing.T) {
 		d := e.gate(e.req("g-"+name, j, 1, quiet))
 		goes(t, d)
 		e.release("g-"+name, j, d)
-		waits(t, e.gate(e.req("g-mid", job("o/r", 2, "mid"), 1, quiet)), scheduler.WaitFreeSlot)
+		want := scheduler.WaitFreeSlot
+		if i == 2 {
+			want = scheduler.WaitReserved // the third pass makes it the reserved job
+		}
+		waits(t, e.gate(e.req("g-mid", job("o/r", 2, "mid"), 1, quiet)), want)
 	}
 	res, err := e.st.Reservations(context.Background())
 	if err != nil || len(res) != 1 || res[0].TicketID != "g-mid" {
 		t.Fatalf("reservations %+v %v", res, err)
 	}
 	d := e.gate(e.req("g-mid", job("o/r", 2, "mid"), 1, quiet))
+	// LOOK65: the reserved job itself waits as "reserved"; the jobs behind it wait for a slot.
+	waits(t, d, scheduler.WaitReserved)
 	if !strings.Contains(d.WaitText, "reserved since 10:00") {
 		t.Fatalf("text %q", d.WaitText)
 	}

@@ -7,13 +7,13 @@ import { openRoute } from './ux-guards';
 import { rowActionWords } from './ux-measure-source';
 
 const SCREENS = [
-  { name: 'All', url: '/pool/jobs' },
+  { name: 'All', url: '/pool/jobs?view=runs' },
   { name: 'All, jobs', url: '/pool/jobs?view=jobs' },
-  { name: 'Queue', url: '/pool/jobs?state=queued' },
+  { name: 'Queue', url: '/pool/jobs?state=queued&view=runs' },
   { name: 'Queue, jobs', url: '/pool/jobs?state=queued&view=jobs' },
-  { name: 'Running', url: '/pool/jobs?state=running' },
+  { name: 'Running', url: '/pool/jobs?state=running&view=runs' },
   { name: 'Running, jobs', url: '/pool/jobs?state=running&view=jobs' },
-  { name: 'Done', url: '/pool/jobs?state=done' },
+  { name: 'Done', url: '/pool/jobs?state=done&view=runs' },
   { name: 'Done, jobs', url: '/pool/jobs?state=done&view=jobs' },
   { name: 'Run elsewhere', url: '/analytics/elsewhere' },
   { name: 'Group by repository', url: '/pool/jobs?group=repository' },
@@ -117,7 +117,11 @@ for (const s of SCREENS) {
 test('Open run lands on the Run page and the page does not scroll sideways at 1300 px', async ({
   page,
 }) => {
-  await openRoute(page, { url: '/pool/jobs', signedOut: false }, { width: 1300 });
+  await openRoute(
+    page,
+    { url: '/pool/jobs?view=runs', signedOut: false },
+    { width: 1300 },
+  );
   await page
     .getByRole('button', { name: /^Open run/ })
     .first()

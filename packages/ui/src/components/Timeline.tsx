@@ -69,13 +69,13 @@ export const TIMELINE_WORDS = {
 
 function endOf(bar: TimelineBarData, nowMs: number): number {
   if (bar.endMs !== undefined) return bar.endMs;
-  if (bar.state === 'running') return nowMs;
+  if (bar.state === 'running' || bar.state === 'timer_ran_out') return nowMs;
   return bar.endHiMs ?? bar.endLoMs ?? bar.startMs;
 }
 
 function endText(bar: TimelineBarData): string {
   if (bar.endMs !== undefined) return formatShortDateTime(bar.endMs);
-  if (bar.state === 'running') return TIMELINE_WORDS.now;
+  if (bar.state === 'running' || bar.state === 'timer_ran_out') return TIMELINE_WORDS.now;
   if (bar.endLoMs !== undefined && bar.endHiMs !== undefined)
     return `${TIMELINE_WORDS.about} ${formatTime(bar.endLoMs)} ${TIMELINE_WORDS.to} ${formatTime(bar.endHiMs)}`;
   const one = bar.endHiMs ?? bar.endLoMs;

@@ -16,7 +16,7 @@ import (
 // setting Public repositories.
 func publicHarness(t *testing.T) (*harness, *settings.Service, *audit.Log) {
 	t.Helper()
-	db, err := backup.OpenDB(context.Background(), t.TempDir())
+	db, err := backup.OpenDBForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

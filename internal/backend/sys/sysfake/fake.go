@@ -19,6 +19,8 @@ type Commands struct {
 	Calls []sys.Command
 	// Rules answer the first call whose full text contains Match.
 	Rules []Rule
+	// Fallback answers a call no rule matched; ok false means the empty result.
+	Fallback func(cmd sys.Command) (sys.Result, bool)
 }
 
 // Rule is one canned answer.
@@ -37,6 +39,11 @@ func (c *Commands) Run(_ context.Context, cmd sys.Command) (sys.Result, error) {
 	for _, r := range c.Rules {
 		if strings.Contains(text, r.Match) {
 			return r.Result, r.Err
+		}
+	}
+	if c.Fallback != nil {
+		if res, ok := c.Fallback(cmd); ok {
+			return res, nil
 		}
 	}
 	return sys.Result{}, nil

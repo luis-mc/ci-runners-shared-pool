@@ -11,7 +11,7 @@ import {
   signedIn,
   viewer,
 } from '../../testing/mock';
-import { areaOf, groupFindings, severityStatus } from './Doctor';
+import { areaChecks, areaOf, groupFindings, openTarget, severityStatus } from './Doctor';
 
 afterEach(cleanup);
 
@@ -128,14 +128,14 @@ describe('Doctor screen', () => {
       last_run_at: lastRun,
     });
     renderApp(api, '/doctor');
-    const machines = await screen.findByRole('region', { name: 'Machines' });
+    const machines = await screen.findByRole('region', { name: 'Fix: Machines' });
     expect(within(machines).getByText('warning')).toBeTruthy();
     expect(within(machines).getByText('build-2 is offline')).toBeTruthy();
     expect(within(machines).getByText('Start the agent.')).toBeTruthy();
     expect(within(machines).getByLabelText('Fix command').textContent).toBe(
       'crsp agent start',
     );
-    const labels = screen.getByRole('region', { name: 'Workflow labels' });
+    const labels = screen.getByRole('region', { name: 'Fix: Workflow labels' });
     expect(within(labels).getByText('failed')).toBeTruthy();
     // LOOK19: the detail is one clipped line with a Details button; the full text opens in a row under it.
     const details = within(labels).getByRole('button', { name: 'Details' });
@@ -198,7 +198,9 @@ describe('Doctor screen', () => {
     renderApp(api, '/doctor');
     expect(await screen.findByText('Could not load the doctor findings.')).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Try again' }));
-    expect(await screen.findByRole('region', { name: 'Workflow labels' })).toBeTruthy();
+    expect(
+      await screen.findByRole('region', { name: 'Fix: Workflow labels' }),
+    ).toBeTruthy();
   });
 
   it('runs the doctor: busy with progress while it runs, findings reload when it ends (UX-13, UX-29)', async () => {
@@ -227,7 +229,9 @@ describe('Doctor screen', () => {
     act(() =>
       FakeEventSource.latest().emit({ id: '2', type: 'doctor.progress', at: 'x' }),
     );
-    expect(await screen.findByRole('region', { name: 'Workflow labels' })).toBeTruthy();
+    expect(
+      await screen.findByRole('region', { name: 'Fix: Workflow labels' }),
+    ).toBeTruthy();
     const again = screen.getByRole<HTMLButtonElement>('button', {
       name: 'Run checks again',
     });
@@ -244,7 +248,7 @@ describe('Doctor screen', () => {
         apiError(500, 'internal', 'the doctor could not start'),
       );
     renderApp(api, '/doctor');
-    await screen.findByRole('region', { name: 'Workflow labels' });
+    await screen.findByRole('region', { name: 'Fix: Workflow labels' });
     fireEvent.click(screen.getByRole('button', { name: 'Run checks again' }));
     expect(
       await screen.findByText(/Could not run the doctor\. the doctor could not start/),
@@ -468,5 +472,49 @@ describe('runner leftovers finding (doctor R5.48, OPS33)', () => {
       fireEvent.click(within(card).getByRole('button', { name: 'Remove' }));
       await waitFor(() => expect(api.count('POST', REG)).toBe(1));
     });
+  });
+});
+
+describe('Doctor LOOK64: Open buttons and the Checks list', () => {
+  const many = [
+    finding({
+      check: 'machine.online',
+      severity: 'warn',
+      title: 'build-2 is offline',
+      fix: { text: 'Start the agent.' },
+    }),
+    finding({ check: 'machine.disk', severity: 'ok', title: 'Disk fine' }),
+    finding({ check: 'github.app', severity: 'ok', title: 'App fine' }),
+  ];
+
+  it('openTarget uses the fix link, else the page of the area', () => {
+    expect(openTarget({ check: 'machine.online', fix: { text: 'x' } })).toBe(
+      '/setup/machines',
+    );
+    expect(openTarget({ check: 'repo.var', fix: { text: 'x' } })).toBe('/setup/pool');
+    expect(openTarget({ check: 'zzz.q', fix: { text: 'x' } })).toBe('/doctor');
+  });
+
+  it('areaChecks counts checks and problems per area in screen order', () => {
+    const a = areaChecks(many);
+    expect(a.map((x) => [x.area, x.total, x.problems, x.worst])).toEqual([
+      ['Machines', 2, 1, 'warn'],
+      ['GitHub registration', 1, 0, 'ok'],
+    ]);
+  });
+
+  it('shows an Open button per Needs you row and a Checks card per area', async () => {
+    renderApp(
+      signedIn().on('GET', '/api/v1/doctor/findings', {
+        items: many,
+        last_run_at: lastRun,
+      }),
+      '/doctor',
+    );
+    const needs = await screen.findByRole('region', { name: 'Needs you' });
+    expect(within(needs).getByRole('button', { name: /Open/ })).toBeTruthy();
+    const checks = screen.getByRole('region', { name: 'Checks' });
+    expect(within(checks).getByText('1 problem in 2 checks')).toBeTruthy();
+    expect(within(checks).getByText('1 of 1 ok')).toBeTruthy();
   });
 });

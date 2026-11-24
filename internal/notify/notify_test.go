@@ -42,7 +42,7 @@ type env struct {
 
 func newEnv(t *testing.T, tweak func(*Config)) *env {
 	t.Helper()
-	db, err := store.Open(context.Background(), t.TempDir())
+	db, err := store.OpenForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

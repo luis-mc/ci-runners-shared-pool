@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { expectDomLayout } from '../../scripts/design/dom-layout';
 import {
   failure,
+  machine,
   needingRecovery,
   publicRows,
   signedIn,
@@ -42,6 +43,46 @@ const SCREENS: {
       }),
   },
   { name: 'overview', path: '/', ready: 'Overview' },
+  // LOOK61: machine cards with their size, Next to start and Routing labels filled.
+  {
+    name: 'overview with sizes, a queue and labels',
+    path: '/',
+    ready: 'Overview',
+    tweak: (m: ReturnType<typeof signedIn>) => {
+      const job = (id: number, name: string, label: string) => ({
+        id,
+        repository: 'octo/app',
+        run_id: id,
+        run_attempt: 1,
+        github_job_id: id,
+        job_name: name,
+        labels: [label],
+        state: 'queued',
+        queue_position: id,
+        wait_reason: 'free_slot',
+      });
+      m.on('GET', '/api/v1/machines', {
+        items: [
+          {
+            ...machine(),
+            name: 'GameRoomPC with a long name for a narrow phone',
+            facts: { threads: 6, cores: 6, memory_bytes: 9 * 1024 ** 3 },
+          },
+        ],
+      });
+      return m.on('GET', '/api/v1/overview', {
+        machines: [],
+        queued_count: 3,
+        queued: [
+          job(1, 'build', 'crsp-small-4c1d'),
+          job(2, 'e2e-1', 'crsp-e2e-7f3a'),
+          job(3, 'e2e-2', 'crsp-e2e-7f3a'),
+        ],
+        running: [],
+        last_event_id: '1',
+      });
+    },
+  },
   { name: 'repositories', path: '/setup/pool', ready: 'Repositories' },
   {
     name: 'repositories with a public row while the setting is off',
@@ -57,6 +98,27 @@ const SCREENS: {
     policy: true,
   },
   { name: 'turn on the pool', path: '/setup/pool/turn-on', ready: 'Turn on the pool' },
+  { name: 'setup summary', path: '/setup/summary', ready: 'Setup' },
+  {
+    name: 'setup size and backends',
+    path: '/setup/size',
+    ready: 'Size and backends',
+    tweak: (m: ReturnType<typeof signedIn>) =>
+      m.on('GET', '/api/v1/runner-classes', {
+        preset: 'standard',
+        presets: ['standard', 'compact', 'memory-heavy', 'custom'],
+        classes: [
+          { class: 'small', cpus: 2, memory_gib: 4 },
+          { class: 'medium', cpus: 4, memory_gib: 8 },
+          { class: 'large', cpus: 8, memory_gib: 16 },
+          { class: 'xl', cpus: 16, memory_gib: 32 },
+        ],
+        hints: [],
+        unheld: [],
+        reserve_after_passes: 3,
+        reserve_after_minutes: 10,
+      }),
+  },
   { name: 'machines', path: '/setup/machines', ready: 'Machines' },
   { name: 'machine detail', path: '/setup/machines/m1', ready: 'build-1' },
   {
@@ -319,7 +381,9 @@ for (const path of ['/setup/pool/turn-on', '/setup/runners/add', '/setup/machine
 }
 
 // CRSP132, UX-11: on a wide screen the toolbar above a list is one row (search, filters, selection, count, actions).
-for (const path of ['/setup/pool', '/setup/machines', '/setup/runners', '/pool/jobs']) {
+// Pool > Jobs has no toolbar above its list since LOOK62: its search and filters sit in the Filters pane, judged by
+// e2e/tests/web-console/pool-jobs.spec.ts at 360, 393 and 1300 px.
+for (const path of ['/setup/pool', '/setup/machines', '/setup/runners']) {
   test(`list toolbar is one row at 1300 px: ${path}`, async ({ page }) => {
     // The Repositories toolbar (search, Pool, Active types, Select all, count, Add) no longer fits one row inside its pane.
     test.fixme(

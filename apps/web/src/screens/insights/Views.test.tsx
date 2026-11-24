@@ -1,5 +1,5 @@
-// Run insights, Waits, Timeline, Tests and Guardrails (spec 4.1): each view reads its answer and keeps its h1.
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+// Run insights, Waits, Runner timeline, Tests and Guardrails (spec 4.1): each view reads its answer and keeps its h1.
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp } from '../../testing/mock';
 import { jobsApi } from '../../testing/jobsData';
@@ -7,33 +7,24 @@ import { jobsApi } from '../../testing/jobsData';
 afterEach(cleanup);
 
 describe('the insight views', () => {
-  it('Waits: names the range and lists repositories and jobs', async () => {
+  it('Waits: a small table of the waits by job, beside the runner timeline', async () => {
     renderApp(jobsApi(), '/analytics/insights');
-    await screen.findByRole('region', { name: 'By repository' });
+    const waits = await screen.findByRole('region', { name: 'Waits' });
     expect(
-      screen.getByRole('button', { name: '7 days' }).getAttribute('aria-pressed'),
-    ).toBe('true');
-    expect(screen.getByRole('region', { name: 'By job' })).toBeTruthy();
+      (await within(waits).findAllByRole('columnheader')).map((h) => h.textContent),
+    ).toEqual(['Label', 'Median', 'Slowest 5%']);
+    expect(screen.getByRole('region', { name: 'Runner timeline' })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1, name: 'Analytics' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: '30 days' }));
-    expect(await screen.findByRole('region', { name: 'By repository' })).toBeTruthy();
   });
 
-  it('Timeline: one lane for each runner, notes in words', async () => {
+  it('Runner timeline: one row for each runner, drawn by the shared timeline', async () => {
     renderApp(jobsApi(), '/analytics/insights');
-    await screen.findByRole('region', { name: 'crsp-linuxbox-1' });
-    expect(screen.getByRole('region', { name: 'old-pool-3' })).toBeTruthy();
-    expect(screen.getByText('after-merge work')).toBeTruthy();
-    expect(screen.getByText(/idle while a job waited/)).toBeTruthy();
-  });
-
-  it('Timeline: the runner wait of a follow-up run is a row of its own', async () => {
-    renderApp(jobsApi(), '/analytics/insights');
-    await screen.findByRole('region', { name: 'crsp-linuxbox-1' });
-    expect(
-      screen.getByText('Waited for a runner: octo/app installers.yml / msi'),
-    ).toBeTruthy();
-    expect(screen.getAllByText('follow-up run')).toHaveLength(2);
+    const pane = await screen.findByRole('region', { name: 'Runner timeline' });
+    expect((await within(pane).findAllByText('crsp-linuxbox-1')).length).toBeGreaterThan(
+      0,
+    );
+    expect(within(pane).getAllByText('old-pool-3').length).toBeGreaterThan(0);
+    expect(pane.querySelectorAll('.ds-timeline__row').length).toBeGreaterThanOrEqual(2);
   });
 
   it('Tests: shows the limit in words and switches the view', async () => {

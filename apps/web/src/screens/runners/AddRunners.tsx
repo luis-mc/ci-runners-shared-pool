@@ -32,7 +32,7 @@ import {
   type Repository,
 } from '../repositories/plans';
 import { PullingStep, ReadyMadeLine } from '../registry/PullingStep';
-import { chooseKind, KIND_HELP, KIND_NAMES, type Kind } from './kinds';
+import { chooseKind, KIND_HELP, KIND_NAMES, sentence, type Kind } from './kinds';
 
 const STEPS = ['Runners', 'Review', 'Registering', 'Done'] as const;
 type OS = Schemas['OS'];
@@ -50,11 +50,7 @@ export function containerBackendAllowed(m: Schemas['Machine']): boolean {
   return m.backends.some((b) => b.name === 'docker' && b.usable && b.allowed);
 }
 
-/** A reason ends with a full stop, so words can follow it. */
-export function sentence(text: string): string {
-  const t = text.trim();
-  return /[.!?]$/.test(t) ? t : `${t}.`;
-}
+export { sentence };
 
 const NOT_ALLOWED =
   'The container backend is not allowed on this machine. Linux runners here need it.';
@@ -512,7 +508,7 @@ export function AddRunnersWizard() {
             ...done.map((s) => ({ name: s.text, value: 'done' })),
             ...failed.map((s) => ({
               name: s.text,
-              value: `failed: ${s.error ?? 'no reason given'}`,
+              value: `failed: ${sentence(s.error ?? 'no reason given')}`,
             })),
             ...left.map((s) => ({ name: s.text, value: 'left' })),
             ...(plan ? [] : [{ name: 'Runners added', value: '0' }]),

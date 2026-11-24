@@ -36,7 +36,7 @@ type world struct {
 
 func newWorld(t *testing.T) *world {
 	t.Helper()
-	st, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "data"))
+	st, err := store.OpenForTests(context.Background(), filepath.Join(t.TempDir(), "data"))
 	if err != nil {
 		t.Fatal(err)
 	}

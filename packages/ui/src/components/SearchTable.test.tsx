@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
 import { ArrowNavigation, handleNavigationKey } from './Navigation';
+import { SelectField } from './Fields';
 import { SearchTable, matchesSearch, parseSearch } from './SearchTable';
 
 afterEach(cleanup);
@@ -127,5 +128,91 @@ describe('SearchTable', () => {
     Object.defineProperty(e, 'target', { value: svg });
     expect(handleNavigationKey(e)).toBe(true);
     expect(document.activeElement).toBe(rows()[0]);
+  });
+});
+
+describe('filter pane and inspector (LOOK62)', () => {
+  function Pane() {
+    const [q, setQ] = useState('');
+    const [repo, setRepo] = useState('');
+    return (
+      <MemoryRouter>
+        <SearchTable<Row>
+          label="Jobs"
+          title="Jobs"
+          rows={ROWS}
+          text={(r) => `${r.repo} ${r.state}`}
+          fields={{ repo: (r) => r.repo }}
+          query={q}
+          onQuery={setQ}
+          caption="Jobs"
+          columns={[{ id: 'repo', header: 'Repository', cell: (r) => r.repo }]}
+          rowKey={(r) => r.id}
+          rowLabel={(r) => `job ${r.id}`}
+          inspect={{ label: 'Why', name: (r) => `job ${r.id}` }}
+          detail={{
+            title: (r) => `job ${r.id}`,
+            render: (r) => <p>Branch {r.branch}</p>,
+          }}
+          filterPane={{
+            summary: ['State: All'],
+            children: (
+              <SelectField
+                label="Repository"
+                width="full"
+                value={repo}
+                choices={[
+                  { value: '', label: 'All repositories' },
+                  { value: 'octo/app', label: 'octo/app' },
+                ]}
+                onChange={setRepo}
+              />
+            ),
+          }}
+        />
+      </MemoryRouter>
+    );
+  }
+
+  it('puts the search and the fields in a Filters pane that is open at first and closes', async () => {
+    const user = userEvent.setup();
+    render(<Pane />);
+    const pane = screen.getByRole('region', { name: 'Filters' });
+    expect(within(pane).getByText('open')).toBeTruthy();
+    expect(within(pane).getByRole('textbox', { name: /Search/ })).toBeTruthy();
+    expect(within(pane).getByLabelText('Repository').tagName).toBe('SELECT');
+    // The toolbar above the table is not drawn: there is one search box.
+    expect(screen.getAllByRole('textbox')).toHaveLength(1);
+    await user.click(within(pane).getByRole('button', { name: 'Close the filters' }));
+    expect(within(pane).getByText('1 set')).toBeTruthy();
+    await user.click(within(pane).getByRole('button', { name: 'Open the filters' }));
+    expect(within(pane).getByText('open')).toBeTruthy();
+  });
+
+  it('opens the inspector beside the table from Why, a click and Enter, and Close details shuts it', async () => {
+    const user = userEvent.setup();
+    render(<Pane />);
+    expect(screen.queryByRole('complementary')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Show details' })).toBeNull();
+    await user.click(
+      within(rows()[1] as HTMLElement).getByRole('button', { name: 'Why' }),
+    );
+    const side = screen.getByRole('complementary');
+    expect(within(side).getByText('Branch LOOK41-jobs')).toBeTruthy();
+    expect(screen.getByRole('table')).toBeTruthy();
+    await user.click(within(side).getByRole('button', { name: 'Close details' }));
+    expect(screen.queryByRole('complementary')).toBeNull();
+    await user.click(within(rows()[2] as HTMLElement).getByText('octo/app'));
+    expect(
+      within(screen.getByRole('complementary')).getByText('Branch fix-login'),
+    ).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: 'Close details' }));
+    (rows()[0] as HTMLElement).focus();
+    // Reaching a row by keys marks it and opens nothing.
+    expect(screen.queryByRole('complementary')).toBeNull();
+    await user.keyboard('{Enter}');
+    expect(
+      within(screen.getByRole('complementary')).getByText('Branch main'),
+    ).toBeTruthy();
   });
 });

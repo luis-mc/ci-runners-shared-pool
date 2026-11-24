@@ -1,7 +1,14 @@
 // Fixtures of the Jobs section for the component tests: jobs, runs, groups and chart data in the wire shape of the
 // Jobs API, and a mocked API that answers them with the filters the real API takes.
 import type { Schemas } from '../api/api';
-import { mockResources } from '../screens/insights/mock';
+import {
+  mockDigests,
+  mockFindings,
+  mockResources,
+  mockSummary,
+  mockTimeline,
+  mockWaits,
+} from '../screens/insights/mock';
 import { signedIn, type MockApi } from './mock';
 
 export type Job = Schemas['Job'];
@@ -256,6 +263,26 @@ export function jobsApi(data: JobsData = {}): MockApi {
       };
     })
     .on('GET', '/api/v1/jobs/groups', () => ({ items: data.groups ?? [] }))
+    // The insights API answers with the screens' sample data (LOOK65: the hooks call the API, not mock.ts).
+    .on('GET', '/api/v1/insights/findings', (c) => {
+      const id = c.query.get('repository_id');
+      return mockFindings({ repository_id: id ? Number(id) : undefined });
+    })
+    .on('GET', '/api/v1/insights/summary', () => mockSummary())
+    .on('GET', '/api/v1/insights/digests', () => mockDigests())
+    .on('GET', '/api/v1/insights/waits', (c) =>
+      mockWaits(
+        Number(c.query.get('days') ?? 7),
+        (c.query.get('group') ?? 'day') as 'repository' | 'job_key' | 'day',
+      ),
+    )
+    .on('GET', '/api/v1/insights/timeline', (c) => {
+      const from = Date.parse(c.query.get('from') ?? '');
+      const to = Date.parse(c.query.get('to') ?? '');
+      return mockTimeline(
+        Number.isNaN(from + to) ? 24 : Math.round((to - from) / 3_600_000),
+      );
+    })
     .on(
       'GET',
       '/api/v1/jobs/stats',

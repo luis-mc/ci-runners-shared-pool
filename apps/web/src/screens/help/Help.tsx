@@ -1,158 +1,40 @@
-// The Help page (LOOK47, layout G, D58): the picture of how a job gets run on top, then every question card in one
-// grid, all visible at once (UX-10, UX-51). No wizard, no lock. The cards of a machine read its real slots and load
-// budget from the API. Pressing a part, or a link ending in `#q-slot`, scrolls to its card.
-// The Help page (LOOK47, LOOK48, layout G, D58): the picture of how a job gets run on top, with a live example in each
-// box, then every question card in one grid in the order of the box it explains, each with a badge for its box and a
-// small picture. All cards are visible at once (UX-10, UX-51). No wizard, no lock. The cards of a machine read its real
-// slots and load budget from the API. Pressing a box scrolls to its first card; pressing a badge lights its box.
+// The Help page (LOOK47, LOOK63): a side menu of 13 sections as in the approved prototype. Start here shows the picture
+// of how a job gets run, with a live example in each box, and nine question cards with a link each. Where things are
+// and Reading Queue Analysis read the console and the pool. The other ten are short guides written from how the
+// scheduler really works (helpContent.ts GUIDE); Admission and passing also reads the first waiting job of the pool.
 import {
+  BulletList,
   CardGrid,
+  Card,
   Facts,
   Page,
   PageHeader,
-  formatPercent,
   Pane,
-  PictureBudget,
-  PictureDoctor,
-  PictureElsewhere,
-  PictureLabels,
-  PictureQueue,
-  PictureRun,
-  PictureRunnerType,
-  PictureShared,
-  PictureSlots,
-  PictureTray,
-  HelpQuestionCard,
   SideMenu,
   Table,
   type Column,
   Text,
   TextLink,
 } from '@crsp/ui';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Load } from '../common';
-import { useMachines } from '../../api/machines';
 import {
-  boxOf,
   CARDS,
+  GUIDE,
   HELP_WORDS,
-  PART_CARD,
   TOPICS,
   WHERE_AREAS,
   WHERE_TABS,
+  type GuideSection,
 } from './helpContent';
 import { WithOverview } from '../pool/OverviewState';
 import { needsYou, startsAbout, waitWords } from '../pool/poolWords';
 import { JobPathPicture } from './JobPathPicture';
-import { useHelpData, type HelpData } from './useHelpData';
-
-/** The real numbers of every machine, read from the API: never a fixed 85% or 60%. Shown when there are two or more. */
-function MachineNumbers({ kind }: { kind: 'slots' | 'budget' }) {
-  const { result, reload } = useMachines();
-  return (
-    <Load result={result} what="your machines" reload={reload}>
-      {(data) =>
-        data.items.length === 0 ? (
-          <Text tone="muted">
-            No machine yet. <TextLink to="/setup/machines/add">Add a machine</TextLink> to
-            see its {kind === 'slots' ? 'slots' : 'load budget'}.
-          </Text>
-        ) : data.items.length === 1 ? null : (
-          <Facts
-            items={data.items.map((m) => ({
-              name: m.name,
-              value:
-                kind === 'slots'
-                  ? `${m.slots_used} of ${m.settings.job_slots} slots in use`
-                  : `memory ${formatPercent(m.settings.budget_memory_pct)}, CPU ${formatPercent(m.settings.budget_cpu_pct)}`,
-            }))}
-          />
-        )
-      }
-    </Load>
-  );
-}
-
-function extra(id: string): ReactNode {
-  switch (id) {
-    case 'q-slot':
-      return (
-        <>
-          <MachineNumbers kind="slots" />
-          <TextLink to="/setup/size">Open Pool size</TextLink>
-        </>
-      );
-    case 'q-budget':
-      return <MachineNumbers kind="budget" />;
-    case 'q-waiting':
-      return <TextLink to="/pool/queue">Open Queue Analysis</TextLink>;
-    case 'q-doctor':
-      return <TextLink to="/doctor">Open the Doctor</TextLink>;
-    case 'q-images':
-      return <TextLink to="/setup/images">Open Images and caches</TextLink>;
-    default:
-      return null;
-  }
-}
-
-/** The small picture of a card, drawn from real data when there is some (LOOK48). */
-function picture(id: string, d: HelpData): ReactNode {
-  const m = d.machine;
-  switch (id) {
-    case 'q-shared':
-      return (
-        <PictureShared
-          repositories={d.repositories}
-          machines={d.machines.length > 0 ? d.machines.length : undefined}
-        />
-      );
-    case 'q-run':
-      return <PictureRun />;
-    case 'q-labels':
-      return <PictureLabels />;
-    case 'q-elsewhere':
-      return <PictureElsewhere />;
-    case 'q-waiting':
-    case 'q-queue':
-      return <PictureQueue />;
-    case 'q-slot':
-      return m ? (
-        <PictureSlots busy={m.slots_used} total={m.settings.job_slots} machine={m.name} />
-      ) : (
-        <PictureSlots busy={2} total={4} />
-      );
-    case 'q-runner-type':
-      return <PictureRunnerType />;
-    case 'q-budget':
-      return m ? (
-        <PictureBudget
-          machine={m.name}
-          memory={{
-            budget: m.settings.budget_memory_pct,
-            now: m.load?.memory_known ? m.load.memory_pct : undefined,
-          }}
-          cpu={{
-            budget: m.settings.budget_cpu_pct,
-            now: m.load?.cpu_known ? m.load.cpu_pct : undefined,
-          }}
-        />
-      ) : (
-        <PictureBudget />
-      );
-    case 'q-tray':
-      return <PictureTray />;
-    case 'q-doctor':
-      return <PictureDoctor />;
-    default:
-      return null;
-  }
-}
+import { useHelpData } from './useHelpData';
 
 function StartHere() {
   const { hash } = useLocation();
   const data = useHelpData();
-  const [lit, setLit] = useState<string[] | undefined>(undefined);
 
   // An address that ends in a card brings the card into view. Nothing is hidden, so nothing has to open.
   useEffect(() => {
@@ -168,37 +50,15 @@ function StartHere() {
   return (
     <>
       <Pane title="How a job gets run">
-        <JobPathPicture
-          lit={lit}
-          examples={data.examples}
-          onSelect={(id) => {
-            setLit(undefined);
-            const card = PART_CARD[id];
-            if (card)
-              document.getElementById(card)?.scrollIntoView?.({ block: 'center' });
-          }}
-        />
-        <Text tone="muted">{HELP_WORDS.pictureNote}</Text>
+        <JobPathPicture examples={data.examples} />
       </Pane>
-      <Pane title={HELP_WORDS.questions} id="questions">
-        <CardGrid columns={4}>
+      <Pane title={HELP_WORDS.questions} count={CARDS.length} id="questions">
+        <CardGrid>
           {CARDS.map((c) => (
-            <HelpQuestionCard
-              key={c.id}
-              id={c.id}
-              title={c.title}
-              box={boxOf(c.box)}
-              onBox={(box) => {
-                setLit([box]);
-                document
-                  .getElementById(`box-${box}`)
-                  ?.scrollIntoView?.({ block: 'center' });
-              }}
-              picture={picture(c.id, data)}
-            >
+            <Card key={c.id} id={c.id} title={c.title}>
               <Text>{c.answer}</Text>
-              {extra(c.id)}
-            </HelpQuestionCard>
+              <TextLink to={c.link.to}>{c.link.label}</TextLink>
+            </Card>
           ))}
         </CardGrid>
       </Pane>
@@ -214,7 +74,6 @@ const areaColumns: Column<Area>[] = [
   { id: 'line', header: 'What it is for', cell: (a) => a.line, kind: 'grow', grow: 3 },
 ];
 const tabColumns: Column<Tab>[] = [
-  { id: 'section', header: 'Part', cell: (t) => t.section },
   { id: 'tab', header: 'Tab', cell: (t) => <TextLink to={t.to}>{t.tab}</TextLink> },
   { id: 'line', header: 'Use it to', cell: (t) => t.line, kind: 'grow', grow: 3 },
 ];
@@ -222,19 +81,25 @@ const tabColumns: Column<Tab>[] = [
 function WhereThingsAre() {
   return (
     <>
-      <Text>{HELP_WORDS.whereLead}</Text>
-      <Table
-        caption="The parts of the console"
-        columns={areaColumns}
-        rows={WHERE_AREAS}
-        rowKey={(a) => a.name}
-      />
-      <Table
-        caption="Setup and Pool tabs"
-        columns={tabColumns}
-        rows={WHERE_TABS}
-        rowKey={(t) => `${t.section}-${t.tab}`}
-      />
+      <Pane title="Where things are">
+        <Text>{HELP_WORDS.whereLead}</Text>
+        <Table
+          caption="The parts of the console"
+          columns={areaColumns}
+          rows={WHERE_AREAS}
+          rowKey={(a) => a.name}
+        />
+      </Pane>
+      {(['Setup', 'Pool'] as const).map((section) => (
+        <Pane key={section} title={`${section} tabs`}>
+          <Table
+            caption={`${section} tabs`}
+            columns={tabColumns}
+            rows={WHERE_TABS.filter((t) => t.section === section)}
+            rowKey={(t) => t.tab}
+          />
+        </Pane>
+      ))}
     </>
   );
 }
@@ -244,7 +109,7 @@ function ReadingQueue() {
   return (
     <>
       <Text>{HELP_WORDS.queueLead}</Text>
-      <Pane title="In your pool right now">
+      <Pane title={HELP_WORDS.nowTitle}>
         <WithOverview>
           {(o, readAt) => {
             const first = [...(o.queued ?? [])].sort(
@@ -267,7 +132,7 @@ function ReadingQueue() {
                 ]}
               />
             ) : (
-              <Text tone="muted">Nothing is waiting. Every job has a slot.</Text>
+              <Text tone="muted">{HELP_WORDS.nowNone}</Text>
             );
           }}
         </WithOverview>
@@ -277,17 +142,66 @@ function ReadingQueue() {
   );
 }
 
+/** The first waiting job of the pool, with what the scheduler said about it: the live part of Admission and passing. */
+function AdmissionNow() {
+  return (
+    <Pane title={HELP_WORDS.nowTitle}>
+      <WithOverview>
+        {(o, readAt) => {
+          const first = [...(o.queued ?? [])].sort(
+            (a, b) => (a.queue_position ?? 1e9) - (b.queue_position ?? 1e9),
+          )[0];
+          return first ? (
+            <Facts
+              items={[
+                { name: 'Job', value: `${first.job_name} ${first.repository}` },
+                { name: 'Why it waits', value: waitWords(first) },
+                {
+                  name: 'Result',
+                  value: needsYou(first)
+                    ? 'Does not start by itself'
+                    : startsAbout(first.queue_eta, readAt),
+                },
+              ]}
+            />
+          ) : (
+            <Text tone="muted">{HELP_WORDS.nowNone}</Text>
+          );
+        }}
+      </WithOverview>
+    </Pane>
+  );
+}
+
+function Guide({ section, live }: { section: GuideSection; live?: boolean }) {
+  return (
+    <>
+      <Pane title={section.title}>
+        <Text>{section.lead}</Text>
+        <BulletList items={section.points} />
+        {section.link ? (
+          <TextLink to={section.link.to}>{section.link.label}</TextLink>
+        ) : null}
+      </Pane>
+      {live ? <AdmissionNow /> : null}
+    </>
+  );
+}
+
 export function HelpScreen() {
   const { pathname } = useLocation();
   const topic = pathname.replace(/\/+$/, '').split('/')[2];
+  const section = topic ? GUIDE[topic] : undefined;
   return (
     <Page>
       <PageHeader title="Help" lead={HELP_WORDS.lead} />
-      <SideMenu label="Help topics" items={TOPICS}>
+      <SideMenu label={HELP_WORDS.sections} items={TOPICS}>
         {topic === 'where' ? (
           <WhereThingsAre />
         ) : topic === 'queue' ? (
           <ReadingQueue />
+        ) : section ? (
+          <Guide section={section} live={topic === 'admission'} />
         ) : (
           <StartHere />
         )}

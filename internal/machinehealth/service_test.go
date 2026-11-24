@@ -18,7 +18,7 @@ func (c *clock) now() time.Time { return c.t }
 
 func newSvc(t *testing.T) (*Service, *clock, *store.Store) {
 	t.Helper()
-	db, err := store.Open(context.Background(), t.TempDir())
+	db, err := store.OpenForTests(context.Background(), t.TempDir())
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -1,184 +1,168 @@
-// LOOK44, LOOK47: the Help page (layout G, no wizard), the job path and the ? popover.
+// LOOK44, LOOK47, LOOK63: the Help page (13 sections, nine question cards), the job path and the ? popover.
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { job } from '../../testing/jobsData';
 import { machine, overview, renderApp, runner, signedIn } from '../../testing/mock';
-import { CARDS, PART_CARD, PATH_PARTS } from './helpContent';
+import { CARDS, GUIDE, TOPICS } from './helpContent';
 
 afterEach(cleanup);
 
-const withBudget = () =>
-  signedIn().on('GET', '/api/v1/machines', {
-    items: [
-      machine({
-        name: 'build-1',
-        slots_used: 2,
-        settings: {
-          ...machine().settings,
-          job_slots: 4,
-          budget_memory_pct: 70,
-          budget_cpu_pct: 55,
-        },
-      }),
-    ],
+const MENU = [
+  'Start here',
+  'Where things are',
+  'Pool and load budget',
+  'Runner types',
+  'Size classes',
+  'Admission and passing',
+  'Reservation',
+  'Job size',
+  'Before assignment',
+  'Gating',
+  'Routing labels',
+  'Timers',
+  'Reading Queue Analysis',
+];
+
+describe('Help (LOOK63)', () => {
+  it('has the 13 sections of the approved prototype in its order', async () => {
+    renderApp(signedIn(), '/help');
+    const menu = await screen.findByRole('navigation', { name: 'Help sections' });
+    const links = within(menu).getAllByRole('link');
+    expect(links.map((a) => a.textContent?.replace(/^\d+/, ''))).toEqual(MENU);
+    expect(TOPICS.map((t) => t.label)).toEqual(MENU);
+    expect(
+      within(menu)
+        .getByRole('link', { name: /Start here/ })
+        .getAttribute('aria-current'),
+    ).toBe('page');
   });
 
-describe('Help (LOOK47)', () => {
-  it('opens at /help with the picture on top and every card visible, no wizard', async () => {
+  it('opens at /help with the picture and nine cards, each with an Open link, and no wizard', async () => {
     renderApp(signedIn(), '/help');
     expect(await screen.findByRole('heading', { level: 1, name: 'Help' })).toBeTruthy();
-    await screen.findByRole('region', {
-      name: 'Questions, in the order a job meets them',
-    });
-    const nav = screen.getByRole('navigation', { name: 'Areas' });
     expect(
-      within(nav).getByRole('link', { name: 'Help' }).getAttribute('aria-current'),
-    ).toBe('page');
-    expect(screen.getByRole('region', { name: 'How a job gets run' })).toBeTruthy();
-    expect(
-      screen.getByRole('region', { name: 'Questions, in the order a job meets them' }),
+      screen.getByText('How crsp runs jobs. Pictures use your own pool.'),
     ).toBeTruthy();
-    for (const t of [
-      'What does shared mean?',
-      'What is a slot?',
-      'What is the Doctor?',
-      'What is the tray app?',
-      'What does Run elsewhere mean?',
-    ]) {
-      expect(screen.getByRole('heading', { name: t })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'How a job gets run' })).toBeTruthy();
+    const questions = screen.getByRole('region', { name: 'Questions' });
+    expect(CARDS).toHaveLength(9);
+    expect(within(questions).getAllByRole('heading', { level: 3 })).toHaveLength(9);
+    for (const c of CARDS) {
+      const card = within(questions).getByRole('region', { name: c.title });
+      expect(within(card).getByText(c.answer)).toBeTruthy();
+      expect(
+        within(card).getByRole('link', { name: c.link.label }).getAttribute('href'),
+      ).toBe(c.link.to);
+      expect(c.link.label.startsWith('Open')).toBe(true);
     }
-    expect(screen.getAllByRole('heading', { level: 3 }).length).toBe(CARDS.length);
     expect(screen.queryByRole('list', { name: 'Steps' })).toBeNull();
     for (const n of ['Back', 'Next', 'Start again']) {
       expect(screen.queryByRole('button', { name: n })).toBeNull();
     }
   });
 
-  it('presses a part of the picture and nothing is locked', async () => {
+  it('draws the picture read only: no box is a button', async () => {
     renderApp(signedIn(), '/help');
-    await screen.findByRole('region', {
-      name: 'Questions, in the order a job meets them',
-    });
-    const box = await screen.findByRole<HTMLButtonElement>('button', {
-      name: /^Slot\s*1 of 4 busy/,
-    });
-    expect(box.disabled).toBe(false);
-    fireEvent.click(box);
-    expect(screen.getByRole('heading', { name: 'What is a slot?' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'What does shared mean?' })).toBeTruthy();
+    const picture = await screen.findByRole('list', { name: 'How a job gets run' });
+    expect(within(picture).queryAllByRole('button')).toHaveLength(0);
+    expect(within(picture).getAllByRole('listitem').length).toBeGreaterThanOrEqual(7);
   });
 
   it('keeps an address that ends in a card, with every card still shown', async () => {
-    renderApp(signedIn(), '/help#q-budget');
+    renderApp(signedIn(), '/help#q-elsewhere');
     expect(
-      await screen.findByRole('heading', { name: 'What is the load budget?' }),
-    ).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'What is the Doctor?' })).toBeTruthy();
-  });
-
-  it("draws the machine's real load budget in a picture, never a fixed 85% and 60%", async () => {
-    renderApp(withBudget(), '/help#q-budget');
-    expect(await screen.findByText('Memory 40% of 70%')).toBeTruthy();
-    expect(screen.getByText('CPU 20% of 55%')).toBeTruthy();
-    expect(screen.queryByText(/85/)).toBeNull();
-  });
-
-  it('draws the slots of the machine on the slot card', async () => {
-    renderApp(withBudget(), '/help#q-slot');
-    expect(await screen.findByText('2 of 4 slots busy')).toBeTruthy();
-    expect(screen.getByText(/Pool size makes slots/)).toBeTruthy();
-  });
-
-  it('lists every machine with its numbers when there are two', async () => {
-    renderApp(
-      signedIn().on('GET', '/api/v1/machines', {
-        items: [
-          machine({ name: 'build-1', slots_used: 2 }),
-          machine({ id: 'm2', name: 'win-box', slots_used: 0 }),
-        ],
-      }),
-      '/help#q-slot',
-    );
-    expect(await screen.findByText('2 of 4 slots in use')).toBeTruthy();
-    expect(screen.getByText('0 of 4 slots in use')).toBeTruthy();
-  });
-
-  it('says so when there is no machine yet', async () => {
-    renderApp(signedIn().on('GET', '/api/v1/machines', { items: [] }), '/help#q-slot');
-    expect((await screen.findAllByText(/No machine yet\./)).length).toBeGreaterThan(0);
-  });
-});
-
-describe('Help is layout G (LOOK48)', () => {
-  it('has the intro line, the note under the picture and the questions title', async () => {
-    renderApp(signedIn(), '/help');
-    expect(
-      await screen.findByText(
-        'One picture, then the questions people ask. Each card names its box.',
-      ),
+      await screen.findByRole('heading', { name: 'What does Run elsewhere mean?' }),
     ).toBeTruthy();
     expect(
-      screen.getByText('1 to 3 happen on GitHub. 4 to 7 happen in your pool.'),
-    ).toBeTruthy();
-    expect(
-      screen.getByRole('region', { name: 'Questions, in the order a job meets them' }),
+      screen.getByRole('heading', { name: 'How do I make it faster?' }),
     ).toBeTruthy();
   });
 
-  it('orders the cards by the box they explain and every card names its box', async () => {
-    renderApp(signedIn(), '/help');
-    await screen.findByRole('region', {
-      name: 'Questions, in the order a job meets them',
-    });
-    const order = PATH_PARTS.map((p) => p.id);
-    const boxes = CARDS.map((c) => order.indexOf(c.box));
-    expect(boxes).toEqual([...boxes].sort((a, b) => a - b));
-    const badges = screen
-      .getAllByRole('link', { name: /^Box \d: / })
-      .map((a) => a.textContent);
-    expect(badges).toHaveLength(CARDS.length);
-    expect(badges[0]).toBe('1Box 1: Repository');
-    expect(badges).toContain('5Box 5: Slot');
-    expect(badges).toContain('7Box 7: Machine');
-    expect(PART_CARD.slot).toBe('q-slot');
-    expect(PART_CARD.queue).toBe('q-waiting');
-  });
-
-  it('lights the diagram box when its badge is pressed', async () => {
-    renderApp(signedIn(), '/help');
-    await screen.findByRole('region', {
-      name: 'Questions, in the order a job meets them',
-    });
-    const slotBox = screen.getByRole('button', { name: /^Slot/ });
-    expect(slotBox.getAttribute('aria-pressed')).toBeNull();
-    const card = screen.getByRole('region', { name: 'What is a slot?' });
-    fireEvent.click(within(card).getByRole('link', { name: /Box 5: Slot/ }));
-    expect(slotBox.getAttribute('aria-pressed')).toBe('true');
-    expect(
-      screen.getByRole('button', { name: /^Run(?!ner)/ }).getAttribute('aria-pressed'),
-    ).toBe('false');
-  });
-
-  it('puts a small picture on the cards that have one', async () => {
-    renderApp(signedIn(), '/help');
-    await screen.findByRole('region', {
-      name: 'Questions, in the order a job meets them',
-    });
-    for (const t of [
-      'What does shared mean?',
-      'Why is my job waiting?',
-      'What is a slot?',
-      'What is the load budget?',
-      'What is a runner type?',
-      'What does Run elsewhere mean?',
-      'What is the tray app?',
-      'What is the Doctor?',
-    ]) {
-      const card = screen.getByRole('region', { name: t });
-      expect(within(card).getAllByRole('img').length).toBe(1);
+  it('shows each new section at its address with its title, lead and list', async () => {
+    const slugs = Object.keys(GUIDE);
+    expect(slugs).toHaveLength(10);
+    for (const slug of slugs) {
+      const g = GUIDE[slug]!;
+      expect(TOPICS.some((t) => t.to === `/help/${slug}`)).toBe(true);
+      renderApp(signedIn(), `/help/${slug}`);
+      expect(await screen.findByRole('region', { name: g.title })).toBeTruthy();
+      expect(screen.getByText(g.lead)).toBeTruthy();
+      for (const p of g.points) expect(screen.getByText(p)).toBeTruthy();
+      expect(screen.queryByRole('region', { name: 'Questions' })).toBeNull();
+      cleanup();
     }
   });
 
+  it('writes Admission and passing as the prototype does', async () => {
+    renderApp(signedIn(), '/help/admission');
+    const pane = await screen.findByRole('region', { name: 'Admission and passing' });
+    expect(
+      within(pane).getByText(
+        'A job is admitted when its CPU and memory fit the free pool and the class ceiling. Lighter jobs may pass a big one that does not fit yet.',
+      ),
+    ).toBeTruthy();
+    expect(
+      within(pane).getByText(
+        'Check 1: class ceiling. Check 2: free CPU. Check 3: free memory.',
+      ),
+    ).toBeTruthy();
+    expect(
+      within(pane).getByText('A big job can be passed up to 3 times, or for 10 min.'),
+    ).toBeTruthy();
+    expect(within(pane).getByText('Then it is reserved (see Reservation).')).toBeTruthy();
+    expect(
+      within(pane)
+        .getByRole('link', { name: 'See it live in Pool > Live' })
+        .getAttribute('href'),
+    ).toBe('/pool/live');
+    expect(
+      await screen.findByRole('region', { name: 'In your pool right now' }),
+    ).toBeTruthy();
+  });
+
+  it('shows the first waiting job and why it waits on Admission and passing', async () => {
+    const api = signedIn().on(
+      'GET',
+      '/api/v1/overview',
+      overview({
+        queued_count: 1,
+        queued: [
+          job({
+            job_name: 'e2e-1',
+            repository: 'octo/app',
+            state: 'queued',
+            wait_reason: 'free_slot',
+            wait_text:
+              'the job needs 4 CPUs and 8 GiB; the pool has 2 CPUs and 4 GiB free',
+            queue_position: 1,
+          }),
+        ],
+      }),
+    );
+    renderApp(api, '/help/admission');
+    const now = await screen.findByRole('region', { name: 'In your pool right now' });
+    expect(await within(now).findByText('e2e-1 octo/app')).toBeTruthy();
+    expect(
+      within(now).getByText(
+        'the job needs 4 CPUs and 8 GiB; the pool has 2 CPUs and 4 GiB free',
+      ),
+    ).toBeTruthy();
+  });
+
+  it('keeps Where things are and Reading Queue Analysis', async () => {
+    renderApp(signedIn(), '/help/where');
+    expect(
+      await screen.findByRole('table', { name: 'The parts of the console' }),
+    ).toBeTruthy();
+    cleanup();
+    renderApp(signedIn(), '/help/queue');
+    expect(
+      await screen.findByRole('region', { name: 'In your pool right now' }),
+    ).toBeTruthy();
+  });
+});
+
+describe('Help is the picture and the cards (LOOK48, LOOK63)', () => {
   it('shows a live example in each box from real data, else the short meaning', async () => {
     const api = signedIn()
       .on(
@@ -231,10 +215,10 @@ describe('Help is layout G (LOOK48)', () => {
   });
 });
 
-describe('the ? beside a term (LOOK44)', () => {
-  it('opens a short answer with a link to the Help card and closes with Escape', async () => {
+describe('the ? beside a term (LOOK44, LOOK63)', () => {
+  it('opens a short answer with a link to its Help section and closes with Escape', async () => {
     renderApp(
-      withBudget().on('GET', '/api/v1/machines/:id', machine()),
+      signedIn().on('GET', '/api/v1/machines/:id', machine()),
       '/setup/machines/m1',
     );
     const ask = await screen.findByRole('button', { name: 'What does Slots mean?' });
@@ -246,7 +230,7 @@ describe('the ? beside a term (LOOK44)', () => {
       within(panel)
         .getByRole('link', { name: 'More about this in Help' })
         .getAttribute('href'),
-    ).toBe('/help#q-slot');
+    ).toBe('/help/pool-and-load-budget');
     fireEvent.keyDown(document, { key: 'Escape' });
     expect(screen.queryByRole('group', { name: 'Slots' })).toBeNull();
   });

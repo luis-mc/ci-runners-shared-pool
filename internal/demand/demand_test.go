@@ -29,6 +29,7 @@ type fakeRunners struct {
 	mu        sync.Mutex
 	started   []runners.JobRunner
 	finished  []string
+	cleared   []string
 	removed   []string
 	removeErr error
 	running   map[string]int
@@ -50,6 +51,12 @@ func (f *fakeRunners) StartJobRunner(_ context.Context, j runners.JobRunner, _ s
 	f.started = append(f.started, j)
 	f.running[j.MachineID]++
 	return runners.Record{ID: "r_" + j.Name, Name: j.Name}, nil
+}
+func (f *fakeRunners) ClearFailedStarts(_ context.Context, key string) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.cleared = append(f.cleared, key)
+	return nil
 }
 func (f *fakeRunners) FinishJobRunner(_ context.Context, id, _ string) error {
 	f.mu.Lock()
@@ -119,7 +126,7 @@ func TestQueuedJobStartsOneRunner(t *testing.T) {
 		t.Fatalf("started %d runners, want 1", len(fr.started))
 	}
 	s := fr.started[0]
-	if s.Name != "crsp-job-1" || s.MachineID != "m1" || s.Backend != "docker" || s.Scope.RepositoryID != 7 ||
+	if s.Name != "crsp-job-1-1" || s.MachineID != "m1" || s.Backend != "docker" || s.Scope.RepositoryID != 7 ||
 		!reflect.DeepEqual(s.Labels, []string{"linux", "self-hosted", "x64"}) {
 		t.Fatalf("runner request %+v", s)
 	}
@@ -161,14 +168,14 @@ func TestSlotBudgetHoldsJobsBack(t *testing.T) {
 	if len(fr.started) != 2 || l.Waiting() != 1 {
 		t.Fatalf("started %d, waiting %d", len(fr.started), l.Waiting())
 	}
-	if fr.started[0].Name != "crsp-job-1" || fr.started[1].Name != "crsp-job-2" {
+	if fr.started[0].Name != "crsp-job-1-1" || fr.started[1].Name != "crsp-job-2-1" {
 		t.Fatalf("older jobs go first: %+v", fr.started)
 	}
 	// Job 1 ends on its runner: that runner is cleaned up and job 3 starts.
 	fr.running["m1"]--
-	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "completed", RunnerName: "crsp-job-1"})
+	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "completed", RunnerName: "crsp-job-1-1"})
 	l.Dispatch(ctx)
-	if !reflect.DeepEqual(fr.finished, []string{"r_crsp-job-1"}) || len(fr.started) != 3 || fr.started[2].Name != "crsp-job-3" {
+	if !reflect.DeepEqual(fr.finished, []string{"r_crsp-job-1-1"}) || len(fr.started) != 3 || fr.started[2].Name != "crsp-job-3-1" {
 		t.Fatalf("finished %v started %+v", fr.finished, fr.started)
 	}
 }
@@ -258,8 +265,8 @@ func TestRunnerTookAnotherJob(t *testing.T) {
 	l.Observe(ctx, queued(2, linuxLabels...))
 	l.Dispatch(ctx)
 	// Runner of job 2 ran job 1; job 2 is still queued.
-	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "completed", RunnerName: "crsp-job-2"})
-	if l.Waiting() != 1 || len(fr.finished) != 1 || fr.finished[0] != "r_crsp-job-2" {
+	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "completed", RunnerName: "crsp-job-2-1"})
+	if l.Waiting() != 1 || len(fr.finished) != 1 || fr.finished[0] != "r_crsp-job-2-1" {
 		t.Fatalf("waiting %d finished %v", l.Waiting(), fr.finished)
 	}
 }
@@ -300,7 +307,7 @@ func TestIdleRunnerRemovedAfterFifteenMinutes(t *testing.T) {
 	}
 	*now = now.Add(2 * time.Minute)
 	l.SweepIdle(ctx)
-	if len(fr.removed) != 1 || fr.removed[0] != "r_crsp-job-1" {
+	if len(fr.removed) != 1 || fr.removed[0] != "r_crsp-job-1-1" {
 		t.Fatalf("removed %v", fr.removed)
 	}
 	l.SweepIdle(ctx)
@@ -316,7 +323,7 @@ func TestIdleRunnerRemovedAfterFifteenMinutes(t *testing.T) {
 func TestRunnerWithAJobIsNotIdle(t *testing.T) {
 	l, fr, now := startOne(t)
 	ctx := context.Background()
-	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "in_progress", RunnerName: "crsp-job-1"})
+	l.Observe(ctx, github.Job{ID: 1, Repository: "alice/demo", Status: "in_progress", RunnerName: "crsp-job-1-1"})
 	*now = now.Add(time.Hour)
 	l.SweepIdle(ctx)
 	if len(fr.removed) != 0 {
@@ -458,5 +465,42 @@ func TestWebhookJobWaitsForForkFlag(t *testing.T) {
 	l.Dispatch(ctx)
 	if len(fr.started) != 1 {
 		t.Fatalf("a push job of a known origin got %d runners", len(fr.started))
+	}
+}
+
+// OPS89: each try has its own name, so GitHub never meets the name of a
+// registration an earlier try left (409), and all tries share one job key.
+func TestEachTryHasItsOwnName(t *testing.T) {
+	l, fr, now := newLoop(2)
+	ctx := context.Background()
+	l.Observe(ctx, queued(5, linuxLabels...))
+	fr.failNext = errors.New("engine down")
+	l.Dispatch(ctx)
+	*now = now.Add(time.Hour)
+	l.Dispatch(ctx)
+	if len(fr.started) != 1 || fr.started[0].Name != "crsp-job-5-2" || fr.started[0].JobKey != "crsp-job-5-" {
+		t.Fatalf("second try = %+v", fr.started)
+	}
+}
+
+// OPS89: after maxFails tries a new queued event does not start the loop again,
+// and the failed rows of the job are cleared when the job ends.
+func TestRetryLimitHoldsAndFailedRowsClear(t *testing.T) {
+	l, fr, now := newLoop(2)
+	ctx := context.Background()
+	for i := 0; i < maxFails; i++ {
+		l.Observe(ctx, queued(6, linuxLabels...))
+		fr.failNext = errors.New("engine down")
+		l.Dispatch(ctx)
+		*now = now.Add(time.Hour)
+	}
+	l.Observe(ctx, queued(6, linuxLabels...)) // the poller repeats it
+	l.Dispatch(ctx)
+	if len(fr.started) != 0 || l.Waiting() != 0 {
+		t.Fatalf("started %d waiting %d after the limit", len(fr.started), l.Waiting())
+	}
+	l.Observe(ctx, github.Job{ID: 6, Repository: "alice/demo", Status: "completed"})
+	if len(fr.cleared) != 1 || fr.cleared[0] != "crsp-job-6-" {
+		t.Fatalf("cleared = %v", fr.cleared)
 	}
 }

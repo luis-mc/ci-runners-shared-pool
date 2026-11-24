@@ -198,6 +198,22 @@ func contains(l []string, s string) bool {
 	return false
 }
 
+// nameInfix is the part of a default name between the machine and the number. A runner of the pool carries its
+// system, so a Windows runner is never given the name a removed Linux runner had (OPS87): box-pool-1 for Linux,
+// box-win-1 for Windows, box-mac-1 for macOS. A runner of one repository has none. Only new names change.
+func nameInfix(sc Scope, os string) string {
+	if sc.Kind != ScopePool {
+		return ""
+	}
+	switch os {
+	case "windows":
+		return "-win"
+	case "macos":
+		return "-mac"
+	}
+	return "-pool"
+}
+
 func (s *Service) freeName(ctx context.Context, m Machine, taken map[string]bool, infix string) (string, error) {
 	existing, err := s.Store.ListRunners(ctx, Filter{MachineID: m.ID})
 	if err != nil {
@@ -267,6 +283,14 @@ func addText(a AddSpec, machine string) string {
 	if a.Kind == "ephemeral" {
 		return fmt.Sprintf("Add ephemeral runner %s on machine %s (%s, in a container, takes one job and is removed)", a.Name, machine, OSName(a.OS))
 	}
+	if a.Scope.Kind == ScopePool {
+		// A pool runner has no account of its own: each repository that uses
+		// the pool gets a registration (regName) with its own service,
+		// account and folder, so the parent's name would name an account that
+		// is never made (OPS88).
+		return fmt.Sprintf("Add %s runner %s on machine %s (%s, keeps state between jobs, one own account for each repository that uses the pool)",
+			a.Kind, a.Name, machine, OSName(a.OS))
+	}
 	return fmt.Sprintf("Add %s runner %s on machine %s (%s, keeps state between jobs, own account %s)",
 		a.Kind, a.Name, machine, OSName(a.OS), AccountName(a.Name, nil))
 }
@@ -314,11 +338,7 @@ func (s *Service) addSpecs(ctx context.Context, m Machine, req AddRequest) ([]Ad
 	taken := map[string]bool{}
 	var out []AddSpec
 	for i := 0; i < req.Count; i++ {
-		infix := ""
-		if req.Scope.Kind == ScopePool {
-			infix = "-pool"
-		}
-		name, err := s.freeName(ctx, m, taken, infix)
+		name, err := s.freeName(ctx, m, taken, nameInfix(req.Scope, req.OS))
 		if err != nil {
 			return nil, err
 		}

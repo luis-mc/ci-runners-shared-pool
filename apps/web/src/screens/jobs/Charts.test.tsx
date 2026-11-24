@@ -4,6 +4,7 @@ import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { apiError, renderApp } from '../../testing/mock';
 import { jobsApi } from '../../testing/jobsData';
+import { exampleWith, exampleWithout } from './ChartsMachines';
 
 afterEach(cleanup);
 
@@ -48,6 +49,32 @@ const stats = {
     },
   ],
 };
+
+describe('Charts, LOOK65 first two charts', () => {
+  it('shows the CPU of each machine and the reservation example above the run charts', async () => {
+    renderApp(jobsApi({ stats }), '/analytics/charts');
+    await screen.findByRole('region', { name: 'Run time and wait per day' });
+    const example = await screen.findByRole('region', {
+      name: 'Free CPU, with and without a reservation',
+    });
+    const names = screen
+      .getAllByRole('region')
+      .map((r) => r.getAttribute('aria-label') ?? '');
+    expect(names.indexOf('Free CPU, with and without a reservation')).toBeLessThan(
+      names.indexOf('Run time and wait per day'),
+    );
+    expect(example.textContent).toContain('Without a reservation');
+    expect(example.textContent).toContain('With a reservation');
+    expect(await screen.findByRole('region', { name: /: CPU today$/ })).toBeTruthy();
+  });
+
+  it('the example never reaches 8 CPU without a reservation and does with one, then the job holds the CPU', () => {
+    expect(Math.max(...exampleWithout())).toBeLessThan(8);
+    const withRes = exampleWith();
+    expect(withRes[12]).toBe(8);
+    expect(withRes.slice(13).every((v) => v === 0)).toBe(true);
+  });
+});
 
 describe('Charts', () => {
   it('asks for 14 days first and switches to 7 and 30', async () => {

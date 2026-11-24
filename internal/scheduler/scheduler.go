@@ -53,7 +53,9 @@ type WaitReason string
 
 // Wait reasons.
 const (
-	WaitFreeSlot          WaitReason = "free_slot"
+	WaitFreeSlot WaitReason = "free_slot"
+	// WaitReserved: the job is its machine's reserved job (R5.93): the room is kept free for it.
+	WaitReserved          WaitReason = "reserved"
 	WaitLoadOverBudget    WaitReason = "load_over_budget"
 	WaitNoRunnerLabels    WaitReason = "no_runner_with_labels"
 	WaitRepoParallelLimit WaitReason = "repository_parallel_limit"

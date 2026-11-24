@@ -33,6 +33,15 @@ describe('Run elsewhere', () => {
     renderApp(jobsApi({ jobs: queued }), '/analytics/elsewhere');
     await screen.findByText('theirs');
     expect(screen.queryByText('mine')).toBeNull();
+    // LOOK65: a plain table, as the approved prototype shows it.
+    expect(screen.getAllByRole('columnheader').map((h) => h.textContent)).toEqual([
+      'Job',
+      'Repository',
+      'Runner',
+      'Took',
+      'Result',
+    ]);
+    expect(screen.queryByRole('searchbox')).toBeNull();
     expect(
       screen.getByText(/old-pool-3 \(group legacy; labels self-hosted, old\)/),
     ).toBeTruthy();
