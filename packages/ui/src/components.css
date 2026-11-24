@@ -980,8 +980,16 @@ body {
 .ds-table tr[data-active] .ds-table__clip {
   color: inherit;
 }
+/* A status word keeps its meaning in its word and sign, so on the reverse-video row it takes the row's own text
+   colour: a problem red on the primary fill cannot be read (OPS87). */
+.ds-table tr[data-list-row]:focus .ds-status,
+.ds-table tr[data-list-row]:focus-within .ds-status,
+.ds-table tr[data-active] .ds-status {
+  color: inherit;
+}
 .ds-table__expanded td {
   background: var(--ds-color-selection);
+  color: var(--ds-color-text);
   overflow-wrap: anywhere;
 }
 /* At phone width every row is a stack of "name  value" lines (UX-25, UX-69). The lead cell is the title line. A

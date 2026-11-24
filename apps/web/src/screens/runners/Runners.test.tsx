@@ -91,6 +91,18 @@ describe('Runners list', () => {
     expect(within(table).queryByRole('region', { name: /Full error/ })).toBeNull();
   });
 
+  it('ends a failed row text with one full stop (OPS87)', async () => {
+    const api = signedIn().on('GET', '/api/v1/runners', {
+      items: [runner({ state: 'failed', failed_reason: 'register service: no right..' })],
+    });
+    renderApp(api, '/setup/runners');
+    const table = await screen.findByRole('table', { name: /^Runners on/ });
+    fireEvent.click(within(table).getByRole('button', { name: 'Full error' }));
+    expect(within(table).getByRole('region', { name: /Full error/ }).textContent).toBe(
+      'register service: no right.',
+    );
+  });
+
   it('puts system and backend in the isolation cell and caps the labels at two', async () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
       items: [
@@ -104,7 +116,9 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
-    expect(within(table).queryByRole('columnheader', { name: 'System' })).toBeNull();
+    // OPS87: the system of each runner has its own column; the backend stays in the hover text.
+    expect(within(table).getByRole('columnheader', { name: 'System' })).toBeTruthy();
+    expect(within(table).getByText('Windows')).toBeTruthy();
     expect(within(table).queryByRole('columnheader', { name: 'Backend' })).toBeNull();
     expect(table.querySelector('[title*="windows x64, persistent"]')).toBeTruthy();
     expect(within(table).getByText('self-hosted, windows +2')).toBeTruthy();
@@ -503,6 +517,8 @@ describe('Add runners: Linux on a Windows machine (OPS27)', () => {
     expect(containerBackendAllowed(win(false))).toBe(false);
     expect(sentence('No way')).toBe('No way.');
     expect(sentence('No way.')).toBe('No way.');
+    expect(sentence('No way..')).toBe('No way.');
+    expect(sentence('Really?')).toBe('Really?');
   });
 
   it('says on step 1 that the container backend is off, links to the machine and locks Next', async () => {

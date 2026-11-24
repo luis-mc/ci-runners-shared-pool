@@ -198,6 +198,22 @@ func contains(l []string, s string) bool {
 	return false
 }
 
+// nameInfix is the part of a default name between the machine and the number. A runner of the pool carries its
+// system, so a Windows runner is never given the name a removed Linux runner had (OPS87): box-pool-1 for Linux,
+// box-win-1 for Windows, box-mac-1 for macOS. A runner of one repository has none. Only new names change.
+func nameInfix(sc Scope, os string) string {
+	if sc.Kind != ScopePool {
+		return ""
+	}
+	switch os {
+	case "windows":
+		return "-win"
+	case "macos":
+		return "-mac"
+	}
+	return "-pool"
+}
+
 func (s *Service) freeName(ctx context.Context, m Machine, taken map[string]bool, infix string) (string, error) {
 	existing, err := s.Store.ListRunners(ctx, Filter{MachineID: m.ID})
 	if err != nil {
@@ -314,11 +330,7 @@ func (s *Service) addSpecs(ctx context.Context, m Machine, req AddRequest) ([]Ad
 	taken := map[string]bool{}
 	var out []AddSpec
 	for i := 0; i < req.Count; i++ {
-		infix := ""
-		if req.Scope.Kind == ScopePool {
-			infix = "-pool"
-		}
-		name, err := s.freeName(ctx, m, taken, infix)
+		name, err := s.freeName(ctx, m, taken, nameInfix(req.Scope, req.OS))
 		if err != nil {
 			return nil, err
 		}
