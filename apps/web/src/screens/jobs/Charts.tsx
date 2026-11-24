@@ -20,6 +20,7 @@ import { Load } from '../common';
 import { useClient } from '../../api/api';
 import { useStats } from './api';
 import { RETENTION_WORDS, insideRange } from './words';
+import { MachineCpuToday, ReservationExample } from './ChartsMachines';
 
 const SPANS = [
   { value: '7', label: '7 days' },
@@ -37,7 +38,18 @@ const WEEKDAYS = [
   'Sunday',
 ];
 
+/** Charts (LOOK65): the CPU of each machine today and the reservation example first, the run charts below them. */
 export function ChartsTab() {
+  return (
+    <>
+      <MachineCpuToday />
+      <ReservationExample />
+      <ChartsBody />
+    </>
+  );
+}
+
+function ChartsBody() {
   const [days, setDays] = useState<'7' | '14' | '30'>('14');
   const client = useClient();
   const { result, reload } = useStats(Number(days) as 7 | 14 | 30);
