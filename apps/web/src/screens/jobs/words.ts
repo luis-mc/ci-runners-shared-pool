@@ -28,7 +28,8 @@ const REASON_WORDS: Record<Schemas['WaitReason'], string> = {
 export const isReserved = (j: {
   state?: Job['state'] | undefined;
   wait_reason?: Job['wait_reason'] | undefined;
-}): boolean => j.state === 'queued' && (j.wait_reason as string | undefined) === 'reserved';
+}): boolean =>
+  j.state === 'queued' && (j.wait_reason as string | undefined) === 'reserved';
 
 type Waiting = {
   state?: Job['state'] | undefined;

@@ -181,13 +181,11 @@ export function SearchTable<T>({
   const current = shown.find((r) => rowKey(r) === chosen) ?? shown[0];
   const word = open ? SEARCH_TABLE_WORDS.hide : SEARCH_TABLE_WORDS.show;
   const panel = open && detail && current ? detail : undefined;
+  const select = (r: T) => setChosen(rowKey(r));
+  // A row opens its inspector with a click, Enter or its Why button; reaching it by keys only marks it (UX-57).
   const choose = (r: T) => {
-    setChosen(rowKey(r));
-    if (inspect) {
-      setOpen(true);
-      // A narrow screen has one column: close the filters so the inspector is not far below them.
-      setFiltersOpen(false);
-    }
+    select(r);
+    setOpen(true);
   };
   const searchBar = (
     <SearchBar
@@ -208,28 +206,28 @@ export function SearchTable<T>({
   return (
     <div className="ds-search-table" data-filters={filterPane ? true : undefined}>
       {filterPane ? null : (
-      <ListToolbar
-        label={label}
-        search={searchBar}
-        filters={filters}
-        count={count}
-        actions={
-          detail ? (
-            <button
-              ref={toggle}
-              type="button"
-              className="ds-button ds-panel-toggle"
-              data-icon
-              aria-pressed={open}
-              aria-label={word}
-              title={word}
-              onClick={() => setOpen((o) => !o)}
-            >
-              <PanelRightIcon />
-            </button>
-          ) : undefined
-        }
-      />
+        <ListToolbar
+          label={label}
+          search={searchBar}
+          filters={filters}
+          count={count}
+          actions={
+            detail ? (
+              <button
+                ref={toggle}
+                type="button"
+                className="ds-button ds-panel-toggle"
+                data-icon
+                aria-pressed={open}
+                aria-label={word}
+                title={word}
+                onClick={() => setOpen((o) => !o)}
+              >
+                <PanelRightIcon />
+              </button>
+            ) : undefined
+          }
+        />
       )}
       <div className="ds-search-table__grid" data-open={panel ? true : undefined}>
         {filterPane ? (
@@ -299,11 +297,12 @@ export function SearchTable<T>({
                 rowKey={rowKey}
                 expandLabel={expandLabel}
                 rowLabel={rowLabel}
-                onOpen={inspect ? undefined : onOpen}
+                onOpen={inspect ? choose : onOpen}
+                onPick={inspect ? choose : undefined}
                 action={rowAction}
                 oneLine={oneLine}
                 current={panel && current ? rowKey(current) : undefined}
-                onSelect={detail ? choose : undefined}
+                onSelect={detail ? select : undefined}
               />
             )}
             {below}

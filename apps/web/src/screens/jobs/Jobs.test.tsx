@@ -29,7 +29,10 @@ const queued = (id: number, place: number, over: Parameters<typeof job>[0] = {})
 
 describe('Queue', () => {
   it('shows one row for a run with its place, start range and why it waits', async () => {
-    renderApp(jobsApi({ jobs: [queued(1, 1), queued(2, 2)] }), '/pool/jobs?state=queued&view=runs');
+    renderApp(
+      jobsApi({ jobs: [queued(1, 1), queued(2, 2)] }),
+      '/pool/jobs?state=queued&view=runs',
+    );
     const table = await screen.findByRole('table', { name: 'Queue runs' });
     const rows = within(table).getAllByRole('row');
     expect(rows).toHaveLength(2); // the head and one row for the run, not one for each job

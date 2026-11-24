@@ -64,7 +64,14 @@ describe('Pool > Jobs as approved', () => {
   it('shows the filters open at first, with Repository, Machine, Runner type and Branch', async () => {
     renderApp(jobsApi(data), '/pool/jobs');
     const pane = await screen.findByRole('region', { name: 'Filters' });
-    for (const name of ['Repository', 'Machine', 'Runner type', 'Branch', 'Range', 'Group by'])
+    for (const name of [
+      'Repository',
+      'Machine',
+      'Runner type',
+      'Branch',
+      'Range',
+      'Group by',
+    ])
       expect(within(pane).getByLabelText(name)).toBeTruthy();
     expect(within(pane).getByText('open')).toBeTruthy();
     expect(within(pane).getByRole('textbox', { name: /Search/ })).toBeTruthy();
@@ -91,7 +98,9 @@ describe('Pool > Jobs as approved', () => {
     fireEvent.click(within(row).getByRole('button', { name: 'Why' }));
     const side = await screen.findByRole('complementary');
     expect(within(side).getByRole('heading', { name: 'e2e-1: waiting' })).toBeTruthy();
-    expect(within(side).getAllByText('waits for a free slot on build-1').length).toBeGreaterThan(0);
+    expect(
+      within(side).getAllByText('waits for a free slot on build-1').length,
+    ).toBeGreaterThan(0);
     // The separate job page stays reachable from the inspector.
     expect(within(side).getByText('Open job')).toBeTruthy();
     expect(screen.getByRole('table', { name: 'All jobs' })).toBeTruthy();
@@ -136,7 +145,9 @@ describe('the words of a reserved job', () => {
   it('reads the wait reason reserved of a queued job only', () => {
     const q = { state: 'queued' as const, wait_reason: 'reserved' as never };
     expect(isReserved(q)).toBe(true);
-    expect(isReserved({ state: 'running', wait_reason: 'reserved' as never })).toBe(false);
+    expect(isReserved({ state: 'running', wait_reason: 'reserved' as never })).toBe(
+      false,
+    );
     expect(jobStatus(q)).toEqual({ kind: 'waiting', word: 'Reserved' });
     expect(waitWords(q)).toMatch(/room another job holds/);
     expect(waitShort(q)).toBe('room held for it');
@@ -148,9 +159,9 @@ describe('the words of a reserved job', () => {
     expect(startWords(job({ state: 'queued', queue_eta: undefined }), now)).toBe(
       'Start not known',
     );
-    expect(startWords(job({ state: 'queued', queue_eta: { p50: 0, lo: 0, hi: 0 } }), now)).toMatch(
-      /^Starts about \d\d:\d\d$/,
-    );
+    expect(
+      startWords(job({ state: 'queued', queue_eta: { p50: 0, lo: 0, hi: 0 } }), now),
+    ).toMatch(/^Starts about \d\d:\d\d$/);
     expect(startWords(job({ state: 'running' }), now)).toMatch(/^since \d\d:\d\d$/);
     expect(startWords(job({ state: 'done' }), now)).toMatch(/^finished \d\d:\d\d$/);
   });

@@ -182,6 +182,7 @@ export function Table<T>({
   oneLine = false,
   current,
   onSelect,
+  onPick,
 }: {
   caption: string;
   /** Draws the table inside a pane with this title and the row count; leave out when the page already has one. */
@@ -213,6 +214,8 @@ export function Table<T>({
   current?: string | undefined;
   /** A row was pressed or took focus: the screen shows it in a details panel. */
   onSelect?: ((row: T) => void) | undefined;
+  /** A click on the row (not a focus): a list whose rows open an inspector opens it here (LOOK62). */
+  onPick?: ((row: T) => void) | undefined;
 }) {
   const base = useId();
   const [open, setOpen] = useState<ReadonlySet<string>>(new Set());
@@ -305,7 +308,14 @@ export function Table<T>({
                   data-inactive={inactive?.(row) || undefined}
                   aria-current={current === key ? 'true' : undefined}
                   tabIndex={0}
-                  onClick={onSelect ? () => onSelect(row) : undefined}
+                  onClick={
+                    onSelect || onPick
+                      ? () => {
+                          onSelect?.(row);
+                          onPick?.(row);
+                        }
+                      : undefined
+                  }
                   onFocus={
                     onSelect
                       ? (e) => {

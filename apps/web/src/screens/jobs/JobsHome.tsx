@@ -71,12 +71,10 @@ import {
   eventWords,
   forecastOf,
   forecastOne,
-  isReserved,
   jobStatus,
   ranSeconds,
   secondsOrNone,
   startRange,
-  RESERVED_WORDS,
   startedNextWords,
   waitShort,
   waitWords,
@@ -640,7 +638,6 @@ function JobDetail({ j, now }: { j: Job; now: number }) {
                   name: 'Starts',
                   value: j.queue_eta ? startRange(j.queue_eta) : 'not known',
                 },
-                { name: 'Why it waits', value: waitWords(j) },
               ]
             : [
                 { name: 'Waited', value: secondsOrNone(waitedSeconds(j, now)) },
@@ -650,7 +647,7 @@ function JobDetail({ j, now }: { j: Job; now: number }) {
       />
       {j.state === 'queued' ? (
         <Message tone="note" dismissible={false}>
-          {isReserved(j) && !j.wait_text ? RESERVED_WORDS : waitWords(j)}
+          {waitWords(j)}
         </Message>
       ) : null}
       <LinkButton to={`/pool/jobs/${j.id}`}>Open job</LinkButton>
@@ -692,7 +689,10 @@ function useFilterChoices(
       { value: ANY, label: 'All machines' },
       ...withValue(machineList, filter.machine),
     ],
-    branch: [{ value: ANY, label: 'Any branch' }, ...withValue(branchList, filter.branch)],
+    branch: [
+      { value: ANY, label: 'Any branch' },
+      ...withValue(branchList, filter.branch),
+    ],
   };
 }
 
@@ -1150,7 +1150,10 @@ function JobsListTab({ tab }: { tab: Tab }) {
                     },
                   }
                 : {
-                    inspect: { label: 'Why', name: (j: Job) => `${j.job_name} ${j.repository}` },
+                    inspect: {
+                      label: 'Why',
+                      name: (j: Job) => `${j.job_name} ${j.repository}`,
+                    },
                   })}
               detail={{
                 title: (j) =>
