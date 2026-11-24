@@ -2,6 +2,10 @@
 import { HelpTerm } from '../help/HelpTerm';
 import {
   Button,
+  Card,
+  CardGrid,
+  LevelBar,
+  LinkButton,
   Chips,
   CheckRow,
   Empty,
@@ -54,6 +58,48 @@ const STATES = [
   { value: 'drained', label: 'Not taking jobs' },
 ] as const;
 
+/** The pool of a machine in one cell: "6 CPU / 9 GiB", or "not set" until the owner sizes it (machines R5.58). */
+export function poolText(m: Machine): string {
+  const cpus = m.settings.pool_cpus ?? 0;
+  const gib = m.settings.pool_memory_gib ?? 0;
+  return cpus > 0 && gib > 0 ? `${cpus} CPU / ${Number(gib.toFixed(1))} GiB` : 'not set';
+}
+
+/** One "pool size" card per machine (LOOK64): CPU and memory in the pool against what the machine has. */
+export function PoolSizeCard({ m }: { m: Machine }) {
+  const cpus = m.settings.pool_cpus ?? 0;
+  const gib = m.settings.pool_memory_gib ?? 0;
+  const cores = m.facts?.cores;
+  const total = m.facts?.memory_bytes ? m.facts.memory_bytes / 2 ** 30 : undefined;
+  return (
+    <Card title={`${m.name}: pool size`}>
+      <Stack>
+        {cpus > 0 && cores ? (
+          <LevelBar
+            label="CPU in the pool"
+            value={cpus}
+            max={cores}
+            text={`${cpus} of ${cores} CPU`}
+          />
+        ) : (
+          <Text>{`CPU in the pool: ${cpus > 0 ? `${cpus} CPU` : 'not set'}`}</Text>
+        )}
+        {gib > 0 && total ? (
+          <LevelBar
+            label="Memory in the pool"
+            value={gib}
+            max={Number(total.toFixed(1))}
+            text={`${Number(gib.toFixed(1))} of ${Number(total.toFixed(1))} GiB`}
+          />
+        ) : (
+          <Text>{`Memory in the pool: ${gib > 0 ? `${Number(gib.toFixed(1))} GiB` : 'not set'}`}</Text>
+        )}
+        <LinkButton to={`/setup/machines/${m.id}`}>Change the pool size</LinkButton>
+      </Stack>
+    </Card>
+  );
+}
+
 export function MachinesList() {
   const session = useSession();
   const navigate = useNavigate();
@@ -65,53 +111,31 @@ export function MachinesList() {
   const columns: Column<Machine>[] = [
     {
       id: 'name',
-      header: 'Name',
+      header: 'Machine',
       cell: (m) => <TextLink to={`/setup/machines/${m.id}`}>{m.name}</TextLink>,
       sort: (m) => m.name,
     },
     { id: 'os', header: 'System', cell: (m) => systemText(m), sort: (m) => m.os },
+    { id: 'pool', header: 'Pool', cell: (m) => poolText(m) },
+    {
+      id: 'budget',
+      header: 'Load budget',
+      cell: (m) =>
+        `${m.settings.budget_memory_pct}% memory, ${m.settings.budget_cpu_pct}% CPU`,
+    },
     {
       id: 'state',
       header: 'State',
+      // One word: offline and the like first, else whether it takes jobs (UX-58).
       cell: (m) => {
         const s = machineStatus(m);
-        return <Status kind={s.kind} word={s.word} />;
+        return s.kind === 'ok' ? (
+          <PolicyStatus m={m} />
+        ) : (
+          <Status kind={s.kind} word={s.word} />
+        );
       },
       sort: (m) => machineStatus(m).word,
-    },
-    {
-      id: 'takes',
-      header: 'Takes jobs',
-      cell: (m) => <PolicyStatus m={m} />,
-      sort: (m) => (m.accepting === false ? 1 : 0),
-    },
-    {
-      id: 'backends',
-      header: 'Backends',
-      cell: (m) =>
-        m.backends
-          .filter((b) => b.allowed && b.usable)
-          .map((b) => b.name)
-          .join(', ') || 'none',
-    },
-    {
-      id: 'load',
-      header: 'Load',
-      cell: (m) =>
-        m.load
-          ? `memory ${m.load.memory_pct === undefined ? 'not known' : formatPercent(m.load.memory_pct)}, CPU ${m.load.cpu_pct === undefined ? 'not known' : formatPercent(m.load.cpu_pct)}`
-          : 'not known',
-    },
-    {
-      id: 'slots',
-      header: 'Slots',
-      cell: (m) => `${m.slots_used} of ${m.settings.job_slots}`,
-    },
-    {
-      id: 'seen',
-      header: 'Last seen',
-      cell: (m) => formatPast(m.last_seen_at, now),
-      sort: (m) => m.last_seen_at,
     },
   ];
 
@@ -171,6 +195,13 @@ export function MachinesList() {
           );
         }}
       </Load>
+      {result.state === 'ready' && result.data.items.length > 0 ? (
+        <CardGrid>
+          {result.data.items.map((m) => (
+            <PoolSizeCard key={m.id} m={m} />
+          ))}
+        </CardGrid>
+      ) : null}
       <ActionBar
         primary={
           <Button

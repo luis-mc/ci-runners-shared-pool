@@ -41,7 +41,8 @@ import {
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { signInUrl } from '../../auth/session';
-import { ApiError, unwrap, useClient } from '../../api/api';
+import { ApiError, unwrap, useClient, type Schemas } from '../../api/api';
+import { useGroups } from '../jobs/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { RunsOnPrPane } from './RunsOnPr';
@@ -87,7 +88,13 @@ import {
   usePublicSwitch,
   visibilityWord,
 } from './publicRepositories';
-import { DeliveryStatus, DeliveryWhen, PollingNotice, learnedBy } from './webhookHealth';
+import {
+  DeliveryStatus,
+  DeliveryWhen,
+  PollingNotice,
+  deliveryStatus,
+  learnedBy,
+} from './webhookHealth';
 
 const PAGE = 25;
 
@@ -151,6 +158,53 @@ function typeWords(enabled: boolean | undefined, showPublic: boolean): string {
   return enabled || showPublic ? 'private & public ' : 'private ';
 }
 
+type JobGroupRow = Schemas['JobGroupRow'];
+
+/** The label the repository's jobs use on GitHub-hosted runners while no machine can take them (R5.42), or none. */
+export function fallbackLabel(r: Pick<Repository, 'policy' | 'pool_on'>): string {
+  if (!r.pool_on || !r.policy.hosted_fallback) return '—';
+  const labels = r.policy.hosted_labels ?? {};
+  const set = Object.values(labels).filter((x) => x);
+  return set.length > 0 ? set.join(', ') : 'default hosted labels';
+}
+
+/** Running and queued jobs of a repository, as the Jobs now column says them. */
+export function jobsNowText(
+  g: Pick<JobGroupRow, 'running' | 'queued'> | undefined,
+): string {
+  const n = g ? g.running + g.queued : 0;
+  return `${n} ${n === 1 ? 'job' : 'jobs'}`;
+}
+
+/** The "GitHub App" pane (LOOK64): the App, whether its webhooks deliver, and the owners whose repositories it sees. */
+export function GithubAppPane({ items }: { items: readonly Repository[] }) {
+  const on = items.filter((r) => r.pool_on);
+  const bad = on.filter((r) => deliveryStatus(r).kind === 'failed').length;
+  const owners = [...new Set(items.map((r) => r.owner))].sort();
+  return (
+    <Pane title="GitHub App">
+      <Facts
+        items={[
+          { name: 'App', value: <Status kind="ok" word="installed" /> },
+          {
+            name: 'Webhooks',
+            value:
+              bad > 0 ? (
+                <Status
+                  kind="failed"
+                  word={`${bad} ${bad === 1 ? 'repository' : 'repositories'} missed a delivery`}
+                />
+              ) : (
+                <Status kind="ok" word="delivering" />
+              ),
+          },
+          { name: 'Owners', value: owners.join(', ') },
+        ]}
+      />
+    </Pane>
+  );
+}
+
 export function RepositoriesList() {
   const location = useLocation();
   const client = useClient();
@@ -160,6 +214,12 @@ export function RepositoriesList() {
   const v = useVersion('plans');
   const { result, reload } = useLoad(() => allRepositories(client), [v]);
   const { setting, enabled } = usePublicRepositories();
+  const groups = useGroups('repository');
+  const groupByName = new Map(
+    (groups.result.state === 'ready' ? groups.result.data.items : []).map(
+      (g) => [g.name, g] as const,
+    ),
+  );
   const [q, setQ] = useState('');
   const showPublic = new URLSearchParams(useLocation().search).get('public') === '1';
   const [pool, setPool] = useState<'' | 'on' | 'off'>('');
@@ -239,15 +299,18 @@ export function RepositoriesList() {
       id: 'pool',
       header: 'Pool',
       cell: (r) => (
-        <Status kind={r.pool_on ? 'ok' : 'off'} word={r.pool_on ? 'on' : 'off'} />
+        <Status
+          kind={r.pool_on ? 'ok' : 'off'}
+          word={
+            r.pool_on
+              ? 'pool on'
+              : r.pool_off_reason === 'left_installation'
+                ? 'left the installation'
+                : 'pool off'
+          }
+        />
       ),
       sort: (r) => String(r.pool_on),
-    },
-    {
-      id: 'where',
-      header: 'Jobs go to',
-      cell: (r) => <WhereJobsGo r={r} />,
-      sort: (r) => r.routing?.where ?? '',
     },
     {
       id: 'runnerKind',
@@ -263,22 +326,15 @@ export function RepositoriesList() {
       sort: (r) => r.policy.runner_kinds ?? '',
     },
     {
-      id: 'delivery',
-      header: 'Last delivery',
-      cell: (r) =>
-        r.pool_on ? (
-          <DeliveryStatus r={r} />
-        ) : (
-          <Status
-            kind="off"
-            word={
-              r.pool_off_reason === 'left_installation'
-                ? 'left the installation'
-                : 'pool off'
-            }
-          />
-        ),
-      sort: (r) => r.webhook?.last_delivery_at ?? '',
+      id: 'fallback',
+      header: 'Fallback label',
+      cell: (r) => fallbackLabel(r),
+    },
+    {
+      id: 'jobsNow',
+      header: 'Jobs now',
+      cell: (r) => jobsNowText(groupByName.get(r.full_name)),
+      sort: (r) => String(groupByName.get(r.full_name) ?? 0),
     },
   ];
 
@@ -492,6 +548,7 @@ export function RepositoriesList() {
           }}
         </Load>
       </Pane>
+      {items && items.items.length > 0 ? <GithubAppPane items={items.items} /> : null}
       <MissingPermissionsGuide onReady={reload} />
       <OrgPools version={v} />
       {items?.items.some((r) => r.pool_on) ? <RunsOnPrPane /> : null}
@@ -817,7 +874,10 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
             {
               name: 'Pool',
               value: (
-                <Status kind={r.pool_on ? 'ok' : 'off'} word={r.pool_on ? 'on' : 'off'} />
+                <Status
+                  kind={r.pool_on ? 'ok' : 'off'}
+                  word={r.pool_on ? 'pool on' : 'pool off'}
+                />
               ),
             },
             ...(poolOffWhy(r) ? [{ name: 'Why it is off', value: poolOffWhy(r) }] : []),

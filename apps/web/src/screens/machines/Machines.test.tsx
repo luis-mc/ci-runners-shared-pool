@@ -20,7 +20,7 @@ const running = [
 ];
 
 describe('Machines list', () => {
-  it('lists machines with state word, backends, load and slots', async () => {
+  it('lists machines with the system, pool, load budget and state (LOOK64)', async () => {
     const api = signedIn().on('GET', '/api/v1/machines', {
       items: [
         machine(),
@@ -29,11 +29,15 @@ describe('Machines list', () => {
     });
     renderApp(api, '/setup/machines');
     const table = await screen.findByRole('table', { name: 'Machines' });
-    expect(within(table).getByText('online')).toBeTruthy();
+    expect(
+      within(table)
+        .getAllByRole('columnheader')
+        .map((h) => h.textContent),
+    ).toEqual(['Machine', 'System', 'Pool', 'Load budget', 'State']);
     expect(within(table).getByText('offline')).toBeTruthy();
-    expect(within(table).getAllByText('1 of 4').length).toBe(2);
-    expect(within(table).getAllByText('docker').length).toBe(2);
-    expect(within(table).getAllByText(/memory 40%, CPU 20%/).length).toBe(2);
+    expect(within(table).getAllByText(/% memory, \d+% CPU/).length).toBe(2);
+    expect(within(table).getAllByText('not set').length).toBe(2);
+    expect(screen.getByRole('region', { name: 'build-1: pool size' })).toBeTruthy();
   });
 
   it('says "Windows, runs Linux containers" for a Windows machine with Linux containers', async () => {
