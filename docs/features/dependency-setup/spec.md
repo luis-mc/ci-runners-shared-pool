@@ -3,7 +3,7 @@ id: dependency-setup
 title: Dependency setup
 apps: [controller, agent, web-console, cli]
 topics: [machines, runners, isolation, install, operations, ui]
-status: planned
+status: proposed
 version: 0.0.0
 owner: owner
 type: reference
