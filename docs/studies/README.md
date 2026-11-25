@@ -8,7 +8,7 @@ One line per study: title, date, status, link. New studies go in their own folde
 
 | Study | Date | Status | Link |
 |---|---|---|---|
-| runs-on.com versus CRSP (CRSP246) | 2026-11-25 | Done. runs-on.com was not readable; part inferred | [study](runs-on-vs-crsp/study.md), [reading page](runs-on-vs-crsp/index.html) |
+| runs-on.com versus CRSP (CRSP246) | 2026-11-25 | Done. Updated by CRSP250 with facts read from runs-on.com | [study](runs-on-vs-crsp/study.md), [reading page](runs-on-vs-crsp/index.html) |
 
 ## Earlier studies (not moved)
 
