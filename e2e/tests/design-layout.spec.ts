@@ -134,7 +134,7 @@ const SCREENS: {
     recovery: true,
   },
   { name: 'add a machine', path: '/setup/machines/add', ready: 'Add a machine' },
-  { name: 'runners', path: '/setup/runners', ready: 'Runners' },
+  { name: 'runners', path: '/setup/runners', ready: 'Setup' },
   { name: 'pool overview', path: '/pool', ready: 'Pool' },
   { name: 'pool live', path: '/pool/live', ready: 'Pool' },
   { name: 'pool queue analysis', path: '/pool/queue', ready: 'Pool' },
