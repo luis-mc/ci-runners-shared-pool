@@ -424,6 +424,195 @@ func (e CreateJoinFileRequestOs) Valid() bool {
 	}
 }
 
+// Defines values for DependencyCheckRequestRunnerKind.
+const (
+	DependencyCheckRequestRunnerKindEphemeral  DependencyCheckRequestRunnerKind = "ephemeral"
+	DependencyCheckRequestRunnerKindPersistent DependencyCheckRequestRunnerKind = "persistent"
+)
+
+// Valid indicates whether the value is a known member of the DependencyCheckRequestRunnerKind enum.
+func (e DependencyCheckRequestRunnerKind) Valid() bool {
+	switch e {
+	case DependencyCheckRequestRunnerKindEphemeral:
+		return true
+	case DependencyCheckRequestRunnerKindPersistent:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyCheckRequestRunnerOs.
+const (
+	DependencyCheckRequestRunnerOsLinux   DependencyCheckRequestRunnerOs = "linux"
+	DependencyCheckRequestRunnerOsMacos   DependencyCheckRequestRunnerOs = "macos"
+	DependencyCheckRequestRunnerOsWindows DependencyCheckRequestRunnerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the DependencyCheckRequestRunnerOs enum.
+func (e DependencyCheckRequestRunnerOs) Valid() bool {
+	switch e {
+	case DependencyCheckRequestRunnerOsLinux:
+		return true
+	case DependencyCheckRequestRunnerOsMacos:
+		return true
+	case DependencyCheckRequestRunnerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyEventStream.
+const (
+	Status DependencyEventStream = "status"
+	Stderr DependencyEventStream = "stderr"
+	Stdout DependencyEventStream = "stdout"
+)
+
+// Valid indicates whether the value is a known member of the DependencyEventStream enum.
+func (e DependencyEventStream) Valid() bool {
+	switch e {
+	case Status:
+		return true
+	case Stderr:
+		return true
+	case Stdout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyItemId.
+const (
+	DependencyItemIdDockerDesktop DependencyItemId = "docker-desktop"
+	DependencyItemIdDockerEngine  DependencyItemId = "docker-engine"
+	DependencyItemIdDockerInWsl2  DependencyItemId = "docker-in-wsl2"
+	DependencyItemIdWsl2          DependencyItemId = "wsl2"
+)
+
+// Valid indicates whether the value is a known member of the DependencyItemId enum.
+func (e DependencyItemId) Valid() bool {
+	switch e {
+	case DependencyItemIdDockerDesktop:
+		return true
+	case DependencyItemIdDockerEngine:
+		return true
+	case DependencyItemIdDockerInWsl2:
+		return true
+	case DependencyItemIdWsl2:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyItemState.
+const (
+	DependencyItemStateMissing   DependencyItemState = "missing"
+	DependencyItemStateOk        DependencyItemState = "ok"
+	DependencyItemStateStopped   DependencyItemState = "stopped"
+	DependencyItemStateWrongKind DependencyItemState = "wrong_kind"
+)
+
+// Valid indicates whether the value is a known member of the DependencyItemState enum.
+func (e DependencyItemState) Valid() bool {
+	switch e {
+	case DependencyItemStateMissing:
+		return true
+	case DependencyItemStateOk:
+		return true
+	case DependencyItemStateStopped:
+		return true
+	case DependencyItemStateWrongKind:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyJobState.
+const (
+	DependencyJobStateConsented     DependencyJobState = "consented"
+	DependencyJobStateDone          DependencyJobState = "done"
+	DependencyJobStateFailed        DependencyJobState = "failed"
+	DependencyJobStateInstalling    DependencyJobState = "installing"
+	DependencyJobStatePausedRestart DependencyJobState = "paused_restart"
+	DependencyJobStatePreparing     DependencyJobState = "preparing"
+	DependencyJobStateStopped       DependencyJobState = "stopped"
+	DependencyJobStateUndoing       DependencyJobState = "undoing"
+	DependencyJobStateUndone        DependencyJobState = "undone"
+	DependencyJobStateVerifying     DependencyJobState = "verifying"
+)
+
+// Valid indicates whether the value is a known member of the DependencyJobState enum.
+func (e DependencyJobState) Valid() bool {
+	switch e {
+	case DependencyJobStateConsented:
+		return true
+	case DependencyJobStateDone:
+		return true
+	case DependencyJobStateFailed:
+		return true
+	case DependencyJobStateInstalling:
+		return true
+	case DependencyJobStatePausedRestart:
+		return true
+	case DependencyJobStatePreparing:
+		return true
+	case DependencyJobStateStopped:
+		return true
+	case DependencyJobStateUndoing:
+		return true
+	case DependencyJobStateUndone:
+		return true
+	case DependencyJobStateVerifying:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyJobRequestRunnerKind.
+const (
+	DependencyJobRequestRunnerKindEphemeral  DependencyJobRequestRunnerKind = "ephemeral"
+	DependencyJobRequestRunnerKindPersistent DependencyJobRequestRunnerKind = "persistent"
+)
+
+// Valid indicates whether the value is a known member of the DependencyJobRequestRunnerKind enum.
+func (e DependencyJobRequestRunnerKind) Valid() bool {
+	switch e {
+	case DependencyJobRequestRunnerKindEphemeral:
+		return true
+	case DependencyJobRequestRunnerKindPersistent:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyJobRequestRunnerOs.
+const (
+	DependencyJobRequestRunnerOsLinux   DependencyJobRequestRunnerOs = "linux"
+	DependencyJobRequestRunnerOsMacos   DependencyJobRequestRunnerOs = "macos"
+	DependencyJobRequestRunnerOsWindows DependencyJobRequestRunnerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the DependencyJobRequestRunnerOs enum.
+func (e DependencyJobRequestRunnerOs) Valid() bool {
+	switch e {
+	case DependencyJobRequestRunnerOsLinux:
+		return true
+	case DependencyJobRequestRunnerOsMacos:
+		return true
+	case DependencyJobRequestRunnerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DockerCompactMode.
 const (
 	DockerCompactModeAuto DockerCompactMode = "auto"
@@ -4828,6 +5017,173 @@ type DayValue struct {
 	Value float32            `json:"value"`
 }
 
+// DependencyAdded defines model for DependencyAdded.
+type DependencyAdded struct {
+	ItemId  string `json:"item_id"`
+	Kind    string `json:"kind"`
+	Ref     string `json:"ref"`
+	Version string `json:"version"`
+}
+
+// DependencyCheck defines model for DependencyCheck.
+type DependencyCheck struct {
+	Admin bool    `json:"admin"`
+	Arch  *string `json:"arch,omitempty"`
+
+	// BlockedReason Why no install is offered (no admin rights, disk too small, virtualization off).
+	BlockedReason *string            `json:"blocked_reason,omitempty"`
+	Choices       []DependencyChoice `json:"choices"`
+	DiskFreeBytes int64              `json:"disk_free_bytes"`
+	Items         []DependencyItem   `json:"items"`
+	MachineId     string             `json:"machine_id"`
+	Os            *string            `json:"os,omitempty"`
+
+	// Ready True when nothing is missing for this runner choice.
+	Ready bool `json:"ready"`
+
+	// StartOnly The engine is installed but stopped; the fix is to start it, not to install.
+	StartOnly         *bool `json:"start_only,omitempty"`
+	VirtualizationOff bool  `json:"virtualization_off"`
+}
+
+// DependencyCheckRequest defines model for DependencyCheckRequest.
+type DependencyCheckRequest struct {
+	RunnerKind DependencyCheckRequestRunnerKind `json:"runner_kind"`
+	RunnerOs   DependencyCheckRequestRunnerOs   `json:"runner_os"`
+}
+
+// DependencyCheckRequestRunnerKind defines model for DependencyCheckRequest.RunnerKind.
+type DependencyCheckRequestRunnerKind string
+
+// DependencyCheckRequestRunnerOs defines model for DependencyCheckRequest.RunnerOs.
+type DependencyCheckRequestRunnerOs string
+
+// DependencyChoice One way to fix what is missing; one is recommended, the others stay visible (DEP3, CORE-4).
+type DependencyChoice struct {
+	// Facts One facts card per item the choice installs.
+	Facts   []DependencyFacts `json:"facts"`
+	Id      string            `json:"id"`
+	ItemIds []string          `json:"item_ids"`
+
+	// ManualSteps The exact commands for "Do it myself", one per line, copyable.
+	ManualSteps         []string `json:"manual_steps"`
+	Recommended         bool     `json:"recommended"`
+	RequiresLicenceTick bool     `json:"requires_licence_tick"`
+	Title               string   `json:"title"`
+}
+
+// DependencyEvent One progress event. Same shape as the shared progress contract (CRSP247) in snake_case: job_id, phase, phase_index, phase_count, phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec, machine, command, stream, line, ts.
+type DependencyEvent struct {
+	Bytes   *int64  `json:"bytes,omitempty"`
+	Command *string `json:"command,omitempty"`
+	EtaSec  *int64  `json:"eta_sec,omitempty"`
+	JobId   string  `json:"job_id"`
+	Line    *string `json:"line,omitempty"`
+	Machine struct {
+		Name string `json:"name"`
+		Os   string `json:"os"`
+		Role string `json:"role"`
+	} `json:"machine"`
+	Pct         float32               `json:"pct"`
+	Phase       string                `json:"phase"`
+	PhaseCount  int                   `json:"phase_count"`
+	PhaseIndex  int                   `json:"phase_index"`
+	PhaseWeight float32               `json:"phase_weight"`
+	Rate        *int64                `json:"rate,omitempty"`
+	Reason      *string               `json:"reason,omitempty"`
+	Stream      DependencyEventStream `json:"stream"`
+	Total       *int64                `json:"total,omitempty"`
+
+	// Ts Unix milliseconds.
+	Ts int64 `json:"ts"`
+}
+
+// DependencyEventStream defines model for DependencyEvent.Stream.
+type DependencyEventStream string
+
+// DependencyFacts The facts of one offered choice (DEP3).
+type DependencyFacts struct {
+	DiskBytes     int64   `json:"disk_bytes"`
+	DownloadBytes int64   `json:"download_bytes"`
+	LicenceNote   *string `json:"licence_note,omitempty"`
+	Name          string  `json:"name"`
+	NeedsAdmin    bool    `json:"needs_admin"`
+	RestartLikely bool    `json:"restart_likely"`
+
+	// Source Where it comes from (a host name, not a secret URL).
+	Source         string `json:"source"`
+	TypicalMinutes int    `json:"typical_minutes"`
+
+	// Undo How to undo it, in words.
+	Undo    string `json:"undo"`
+	Version string `json:"version"`
+}
+
+// DependencyItem defines model for DependencyItem.
+type DependencyItem struct {
+	Detail  *string             `json:"detail,omitempty"`
+	Id      DependencyItemId    `json:"id"`
+	Name    string              `json:"name"`
+	State   DependencyItemState `json:"state"`
+	Version *string             `json:"version,omitempty"`
+
+	// Why One sentence of why the plan needs it (DEP2).
+	Why string `json:"why"`
+}
+
+// DependencyItemId defines model for DependencyItem.Id.
+type DependencyItemId string
+
+// DependencyItemState defines model for DependencyItem.State.
+type DependencyItemState string
+
+// DependencyJob defines model for DependencyJob.
+type DependencyJob struct {
+	Actor *string `json:"actor,omitempty"`
+
+	// Added What this job added; the undo list.
+	Added         []DependencyAdded `json:"added"`
+	ChoiceId      string            `json:"choice_id"`
+	CreatedAt     time.Time         `json:"created_at"`
+	EngineVersion *string           `json:"engine_version,omitempty"`
+	Error         *string           `json:"error,omitempty"`
+	Id            string            `json:"id"`
+	ItemIds       []string          `json:"item_ids"`
+
+	// Last One progress event. Same shape as the shared progress contract (CRSP247) in snake_case: job_id, phase, phase_index, phase_count, phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec, machine, command, stream, line, ts.
+	Last *DependencyEvent `json:"last,omitempty"`
+
+	// Log The last 300 events, oldest first.
+	Log         []DependencyEvent  `json:"log"`
+	MachineId   string             `json:"machine_id"`
+	ManualSteps *[]string          `json:"manual_steps,omitempty"`
+	RunnerKind  string             `json:"runner_kind"`
+	RunnerOs    string             `json:"runner_os"`
+	State       DependencyJobState `json:"state"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+}
+
+// DependencyJobState defines model for DependencyJob.State.
+type DependencyJobState string
+
+// DependencyJobRequest defines model for DependencyJobRequest.
+type DependencyJobRequest struct {
+	// AcceptLicence The "I have the right to use it" tick for Docker Desktop.
+	AcceptLicence *bool  `json:"accept_licence,omitempty"`
+	ChoiceId      string `json:"choice_id"`
+
+	// Confirmed Must be true; the Review step is the consent.
+	Confirmed  bool                           `json:"confirmed"`
+	RunnerKind DependencyJobRequestRunnerKind `json:"runner_kind"`
+	RunnerOs   DependencyJobRequestRunnerOs   `json:"runner_os"`
+}
+
+// DependencyJobRequestRunnerKind defines model for DependencyJobRequest.RunnerKind.
+type DependencyJobRequestRunnerKind string
+
+// DependencyJobRequestRunnerOs defines model for DependencyJobRequest.RunnerOs.
+type DependencyJobRequestRunnerOs string
+
 // DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
 type DiskFloorGib = int
 
@@ -9229,6 +9585,9 @@ type Confirmed = bool
 // Cursor defines model for Cursor.
 type Cursor = string
 
+// DependencyJobId defines model for DependencyJobId.
+type DependencyJobId = string
+
 // FindingId defines model for FindingId.
 type FindingId = int64
 
@@ -9625,6 +9984,16 @@ type RemoveMachineParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// RestartMachineForDependencyJobParams defines parameters for RestartMachineForDependencyJob.
+type RestartMachineForDependencyJobParams struct {
+	Confirmed *bool `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
+// UndoMachineDependencyJobParams defines parameters for UndoMachineDependencyJob.
+type UndoMachineDependencyJobParams struct {
+	Confirmed *bool `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
 // StartDockerCompactParams defines parameters for StartDockerCompact.
 type StartDockerCompactParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -9893,6 +10262,12 @@ type DecideMachineChangeJSONRequestBody = MachineChangeDecision
 
 // RunMachineCommandJSONRequestBody defines body for RunMachineCommand for application/json ContentType.
 type RunMachineCommandJSONRequestBody = HostCommandRequest
+
+// CheckMachineDependenciesJSONRequestBody defines body for CheckMachineDependencies for application/json ContentType.
+type CheckMachineDependenciesJSONRequestBody = DependencyCheckRequest
+
+// StartMachineDependencyJobJSONRequestBody defines body for StartMachineDependencyJob for application/json ContentType.
+type StartMachineDependencyJobJSONRequestBody = DependencyJobRequest
 
 // DrainMachineJSONRequestBody defines body for DrainMachine for application/json ContentType.
 type DrainMachineJSONRequestBody = DrainRequest
@@ -10274,6 +10649,27 @@ type ServerInterface interface {
 	// RunMachineCommand Run one command on a drained machine (host maintenance)
 	// (POST /api/v1/machines/{machineId}/command)
 	RunMachineCommand(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// CheckMachineDependencies What a runner choice needs on a machine, what it has, and the offer
+	// (POST /api/v1/machines/{machineId}/dependencies/check)
+	CheckMachineDependencies(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// ListMachineDependencyJobs The dependency setup jobs of a machine, newest first
+	// (GET /api/v1/machines/{machineId}/dependencies/jobs)
+	ListMachineDependencyJobs(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// StartMachineDependencyJob Install the chosen items after the Review step
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs)
+	StartMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// GetMachineDependencyJob One dependency setup job with its live progress and log tail
+	// (GET /api/v1/machines/{machineId}/dependencies/jobs/{jobId})
+	GetMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId)
+	// RestartMachineForDependencyJob Restart the machine now, after the user chose it
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host)
+	RestartMachineForDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId, params RestartMachineForDependencyJobParams)
+	// StopMachineDependencyJob Stop a dependency job where it is safe
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop)
+	StopMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId)
+	// UndoMachineDependencyJob Remove only what this job added
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo)
+	UndoMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId, params UndoMachineDependencyJobParams)
 	// StartDockerCompact Make Docker's disk file smaller now
 	// (POST /api/v1/machines/{machineId}/docker-compact)
 	StartDockerCompact(w http.ResponseWriter, r *http.Request, machineId MachineId, params StartDockerCompactParams)
@@ -13779,6 +14175,256 @@ func (siw *ServerInterfaceWrapper) RunMachineCommand(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// CheckMachineDependencies operation middleware
+func (siw *ServerInterfaceWrapper) CheckMachineDependencies(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.CheckMachineDependencies(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListMachineDependencyJobs operation middleware
+func (siw *ServerInterfaceWrapper) ListMachineDependencyJobs(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListMachineDependencyJobs(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StartMachineDependencyJob operation middleware
+func (siw *ServerInterfaceWrapper) StartMachineDependencyJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartMachineDependencyJob(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetMachineDependencyJob operation middleware
+func (siw *ServerInterfaceWrapper) GetMachineDependencyJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId DependencyJobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMachineDependencyJob(w, r, machineId, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// RestartMachineForDependencyJob operation middleware
+func (siw *ServerInterfaceWrapper) RestartMachineForDependencyJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId DependencyJobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params RestartMachineForDependencyJobParams
+
+	// ------------- Optional query parameter "confirmed" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "confirmed", r.URL.Query(), &params.Confirmed, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "confirmed"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "confirmed", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.RestartMachineForDependencyJob(w, r, machineId, jobId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StopMachineDependencyJob operation middleware
+func (siw *ServerInterfaceWrapper) StopMachineDependencyJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId DependencyJobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopMachineDependencyJob(w, r, machineId, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UndoMachineDependencyJob operation middleware
+func (siw *ServerInterfaceWrapper) UndoMachineDependencyJob(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId DependencyJobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params UndoMachineDependencyJobParams
+
+	// ------------- Optional query parameter "confirmed" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "confirmed", r.URL.Query(), &params.Confirmed, runtime.BindQueryParameterOptions{Type: "boolean", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "confirmed"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "confirmed", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UndoMachineDependencyJob(w, r, machineId, jobId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // StartDockerCompact operation middleware
 func (siw *ServerInterfaceWrapper) StartDockerCompact(w http.ResponseWriter, r *http.Request) {
 
@@ -17228,6 +17874,13 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/api/v1/machines/{machineId}", wrapper.UpdateMachine)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/drain", wrapper.DrainMachine)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/command", wrapper.RunMachineCommand)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/check", wrapper.CheckMachineDependencies)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs", wrapper.ListMachineDependencyJobs)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs", wrapper.StartMachineDependencyJob)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}", wrapper.GetMachineDependencyJob)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop", wrapper.StopMachineDependencyJob)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo", wrapper.UndoMachineDependencyJob)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host", wrapper.RestartMachineForDependencyJob)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/doctor/registration-fixes", wrapper.RemoveRegistration)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/docker-compact", wrapper.StartDockerCompact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/runner-leftovers/remove", wrapper.RemoveRunnerLeftovers)
@@ -20935,6 +21588,287 @@ type RunMachineCommanddefaultJSONResponse struct {
 }
 
 func (response RunMachineCommanddefaultJSONResponse) VisitRunMachineCommandResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckMachineDependenciesRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+	Body      *CheckMachineDependenciesJSONRequestBody
+}
+
+type CheckMachineDependenciesResponseObject interface {
+	VisitCheckMachineDependenciesResponse(w http.ResponseWriter) error
+}
+
+type CheckMachineDependencies200JSONResponse DependencyCheck
+
+func (response CheckMachineDependencies200JSONResponse) VisitCheckMachineDependenciesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type CheckMachineDependenciesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response CheckMachineDependenciesdefaultJSONResponse) VisitCheckMachineDependenciesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMachineDependencyJobsRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+}
+
+type ListMachineDependencyJobsResponseObject interface {
+	VisitListMachineDependencyJobsResponse(w http.ResponseWriter) error
+}
+
+type ListMachineDependencyJobs200JSONResponse []DependencyJob
+
+func (response ListMachineDependencyJobs200JSONResponse) VisitListMachineDependencyJobsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListMachineDependencyJobsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListMachineDependencyJobsdefaultJSONResponse) VisitListMachineDependencyJobsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartMachineDependencyJobRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+	Body      *StartMachineDependencyJobJSONRequestBody
+}
+
+type StartMachineDependencyJobResponseObject interface {
+	VisitStartMachineDependencyJobResponse(w http.ResponseWriter) error
+}
+
+type StartMachineDependencyJob202JSONResponse DependencyJob
+
+func (response StartMachineDependencyJob202JSONResponse) VisitStartMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartMachineDependencyJobdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StartMachineDependencyJobdefaultJSONResponse) VisitStartMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineDependencyJobRequestObject struct {
+	MachineId MachineId       `json:"machineId"`
+	JobId     DependencyJobId `json:"jobId"`
+}
+
+type GetMachineDependencyJobResponseObject interface {
+	VisitGetMachineDependencyJobResponse(w http.ResponseWriter) error
+}
+
+type GetMachineDependencyJob200JSONResponse DependencyJob
+
+func (response GetMachineDependencyJob200JSONResponse) VisitGetMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineDependencyJobdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMachineDependencyJobdefaultJSONResponse) VisitGetMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RestartMachineForDependencyJobRequestObject struct {
+	MachineId MachineId       `json:"machineId"`
+	JobId     DependencyJobId `json:"jobId"`
+	Params    RestartMachineForDependencyJobParams
+}
+
+type RestartMachineForDependencyJobResponseObject interface {
+	VisitRestartMachineForDependencyJobResponse(w http.ResponseWriter) error
+}
+
+type RestartMachineForDependencyJob202JSONResponse DependencyJob
+
+func (response RestartMachineForDependencyJob202JSONResponse) VisitRestartMachineForDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type RestartMachineForDependencyJobdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response RestartMachineForDependencyJobdefaultJSONResponse) VisitRestartMachineForDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopMachineDependencyJobRequestObject struct {
+	MachineId MachineId       `json:"machineId"`
+	JobId     DependencyJobId `json:"jobId"`
+}
+
+type StopMachineDependencyJobResponseObject interface {
+	VisitStopMachineDependencyJobResponse(w http.ResponseWriter) error
+}
+
+type StopMachineDependencyJob200JSONResponse DependencyJob
+
+func (response StopMachineDependencyJob200JSONResponse) VisitStopMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopMachineDependencyJobdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StopMachineDependencyJobdefaultJSONResponse) VisitStopMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UndoMachineDependencyJobRequestObject struct {
+	MachineId MachineId       `json:"machineId"`
+	JobId     DependencyJobId `json:"jobId"`
+	Params    UndoMachineDependencyJobParams
+}
+
+type UndoMachineDependencyJobResponseObject interface {
+	VisitUndoMachineDependencyJobResponse(w http.ResponseWriter) error
+}
+
+type UndoMachineDependencyJob202JSONResponse DependencyJob
+
+func (response UndoMachineDependencyJob202JSONResponse) VisitUndoMachineDependencyJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UndoMachineDependencyJobdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response UndoMachineDependencyJobdefaultJSONResponse) VisitUndoMachineDependencyJobResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25960,6 +26894,27 @@ type StrictServerInterface interface {
 	// RunMachineCommand Run one command on a drained machine (host maintenance)
 	// (POST /api/v1/machines/{machineId}/command)
 	RunMachineCommand(ctx context.Context, request RunMachineCommandRequestObject) (RunMachineCommandResponseObject, error)
+	// CheckMachineDependencies What a runner choice needs on a machine, what it has, and the offer
+	// (POST /api/v1/machines/{machineId}/dependencies/check)
+	CheckMachineDependencies(ctx context.Context, request CheckMachineDependenciesRequestObject) (CheckMachineDependenciesResponseObject, error)
+	// ListMachineDependencyJobs The dependency setup jobs of a machine, newest first
+	// (GET /api/v1/machines/{machineId}/dependencies/jobs)
+	ListMachineDependencyJobs(ctx context.Context, request ListMachineDependencyJobsRequestObject) (ListMachineDependencyJobsResponseObject, error)
+	// StartMachineDependencyJob Install the chosen items after the Review step
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs)
+	StartMachineDependencyJob(ctx context.Context, request StartMachineDependencyJobRequestObject) (StartMachineDependencyJobResponseObject, error)
+	// GetMachineDependencyJob One dependency setup job with its live progress and log tail
+	// (GET /api/v1/machines/{machineId}/dependencies/jobs/{jobId})
+	GetMachineDependencyJob(ctx context.Context, request GetMachineDependencyJobRequestObject) (GetMachineDependencyJobResponseObject, error)
+	// RestartMachineForDependencyJob Restart the machine now, after the user chose it
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host)
+	RestartMachineForDependencyJob(ctx context.Context, request RestartMachineForDependencyJobRequestObject) (RestartMachineForDependencyJobResponseObject, error)
+	// StopMachineDependencyJob Stop a dependency job where it is safe
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop)
+	StopMachineDependencyJob(ctx context.Context, request StopMachineDependencyJobRequestObject) (StopMachineDependencyJobResponseObject, error)
+	// UndoMachineDependencyJob Remove only what this job added
+	// (POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo)
+	UndoMachineDependencyJob(ctx context.Context, request UndoMachineDependencyJobRequestObject) (UndoMachineDependencyJobResponseObject, error)
 	// StartDockerCompact Make Docker's disk file smaller now
 	// (POST /api/v1/machines/{machineId}/docker-compact)
 	StartDockerCompact(ctx context.Context, request StartDockerCompactRequestObject) (StartDockerCompactResponseObject, error)
@@ -28666,6 +29621,208 @@ func (sh *strictHandler) RunMachineCommand(w http.ResponseWriter, r *http.Reques
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RunMachineCommandResponseObject); ok {
 		if err := validResponse.VisitRunMachineCommandResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// CheckMachineDependencies operation middleware
+func (sh *strictHandler) CheckMachineDependencies(w http.ResponseWriter, r *http.Request, machineId MachineId) {
+	var request CheckMachineDependenciesRequestObject
+
+	request.MachineId = machineId
+
+	var body CheckMachineDependenciesJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.CheckMachineDependencies(ctx, request.(CheckMachineDependenciesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "CheckMachineDependencies")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(CheckMachineDependenciesResponseObject); ok {
+		if err := validResponse.VisitCheckMachineDependenciesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListMachineDependencyJobs operation middleware
+func (sh *strictHandler) ListMachineDependencyJobs(w http.ResponseWriter, r *http.Request, machineId MachineId) {
+	var request ListMachineDependencyJobsRequestObject
+
+	request.MachineId = machineId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListMachineDependencyJobs(ctx, request.(ListMachineDependencyJobsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListMachineDependencyJobs")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListMachineDependencyJobsResponseObject); ok {
+		if err := validResponse.VisitListMachineDependencyJobsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StartMachineDependencyJob operation middleware
+func (sh *strictHandler) StartMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId) {
+	var request StartMachineDependencyJobRequestObject
+
+	request.MachineId = machineId
+
+	var body StartMachineDependencyJobJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StartMachineDependencyJob(ctx, request.(StartMachineDependencyJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StartMachineDependencyJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StartMachineDependencyJobResponseObject); ok {
+		if err := validResponse.VisitStartMachineDependencyJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMachineDependencyJob operation middleware
+func (sh *strictHandler) GetMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId) {
+	var request GetMachineDependencyJobRequestObject
+
+	request.MachineId = machineId
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMachineDependencyJob(ctx, request.(GetMachineDependencyJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMachineDependencyJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMachineDependencyJobResponseObject); ok {
+		if err := validResponse.VisitGetMachineDependencyJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// RestartMachineForDependencyJob operation middleware
+func (sh *strictHandler) RestartMachineForDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId, params RestartMachineForDependencyJobParams) {
+	var request RestartMachineForDependencyJobRequestObject
+
+	request.MachineId = machineId
+	request.JobId = jobId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.RestartMachineForDependencyJob(ctx, request.(RestartMachineForDependencyJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "RestartMachineForDependencyJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(RestartMachineForDependencyJobResponseObject); ok {
+		if err := validResponse.VisitRestartMachineForDependencyJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StopMachineDependencyJob operation middleware
+func (sh *strictHandler) StopMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId) {
+	var request StopMachineDependencyJobRequestObject
+
+	request.MachineId = machineId
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StopMachineDependencyJob(ctx, request.(StopMachineDependencyJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StopMachineDependencyJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StopMachineDependencyJobResponseObject); ok {
+		if err := validResponse.VisitStopMachineDependencyJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UndoMachineDependencyJob operation middleware
+func (sh *strictHandler) UndoMachineDependencyJob(w http.ResponseWriter, r *http.Request, machineId MachineId, jobId DependencyJobId, params UndoMachineDependencyJobParams) {
+	var request UndoMachineDependencyJobRequestObject
+
+	request.MachineId = machineId
+	request.JobId = jobId
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UndoMachineDependencyJob(ctx, request.(UndoMachineDependencyJobRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UndoMachineDependencyJob")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UndoMachineDependencyJobResponseObject); ok {
+		if err := validResponse.VisitUndoMachineDependencyJobResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

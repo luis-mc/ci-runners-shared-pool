@@ -43,6 +43,10 @@ const (
 	// DefaultNodeDistURL holds one folder per Node version (v22.1.0/) with the archives and SHASUMS256.txt.
 	DefaultNodeDistURL = "https://nodejs.org/dist"
 
+	// DockerAptURL is the base of Docker's signed apt repository and its signing keys (dependency-setup DEP5);
+	// the family (ubuntu, debian) is appended.
+	DockerAptURL = "https://download.docker.com/linux"
+
 	// runnerReleasePath is where the GitHub Actions runner releases live under
 	// the GitHub address.
 	runnerReleasePath = "/actions/runner/releases/download"

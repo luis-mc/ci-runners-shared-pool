@@ -820,6 +820,8 @@ type SessionRequest struct {
 	//	*SessionRequest_BuildReport
 	//	*SessionRequest_JobResourceSamples
 	//	*SessionRequest_HealthReport
+	//	*SessionRequest_DepsReport
+	//	*SessionRequest_DepsEvent
 	Message       isSessionRequest_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1132,6 +1134,24 @@ func (x *SessionRequest) GetHealthReport() *HealthReport {
 	return nil
 }
 
+func (x *SessionRequest) GetDepsReport() *DepsReport {
+	if x != nil {
+		if x, ok := x.Message.(*SessionRequest_DepsReport); ok {
+			return x.DepsReport
+		}
+	}
+	return nil
+}
+
+func (x *SessionRequest) GetDepsEvent() *DepsEvent {
+	if x != nil {
+		if x, ok := x.Message.(*SessionRequest_DepsEvent); ok {
+			return x.DepsEvent
+		}
+	}
+	return nil
+}
+
 type isSessionRequest_Message interface {
 	isSessionRequest_Message()
 }
@@ -1266,6 +1286,16 @@ type SessionRequest_HealthReport struct {
 	HealthReport *HealthReport `protobuf:"bytes,32,opt,name=health_report,json=healthReport,proto3,oneof"`
 }
 
+type SessionRequest_DepsReport struct {
+	// CRSP248, dependency setup: the answer to DepsCheck, and the live events of
+	// DepsInstall, DepsUndo and DepsRestartHost.
+	DepsReport *DepsReport `protobuf:"bytes,33,opt,name=deps_report,json=depsReport,proto3,oneof"`
+}
+
+type SessionRequest_DepsEvent struct {
+	DepsEvent *DepsEvent `protobuf:"bytes,34,opt,name=deps_event,json=depsEvent,proto3,oneof"`
+}
+
 func (*SessionRequest_Hello) isSessionRequest_Message() {}
 
 func (*SessionRequest_Heartbeat) isSessionRequest_Message() {}
@@ -1326,6 +1356,10 @@ func (*SessionRequest_JobResourceSamples) isSessionRequest_Message() {}
 
 func (*SessionRequest_HealthReport) isSessionRequest_Message() {}
 
+func (*SessionRequest_DepsReport) isSessionRequest_Message() {}
+
+func (*SessionRequest_DepsEvent) isSessionRequest_Message() {}
+
 // SessionResponse is one message from the controller.
 type SessionResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1358,6 +1392,10 @@ type SessionResponse struct {
 	//	*SessionResponse_RegistryGrant
 	//	*SessionResponse_ListenerControl
 	//	*SessionResponse_RestartAgent
+	//	*SessionResponse_DepsCheck
+	//	*SessionResponse_DepsInstall
+	//	*SessionResponse_DepsUndo
+	//	*SessionResponse_DepsRestartHost
 	Message       isSessionResponse_Message `protobuf_oneof:"message"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1643,6 +1681,42 @@ func (x *SessionResponse) GetRestartAgent() *RestartAgent {
 	return nil
 }
 
+func (x *SessionResponse) GetDepsCheck() *DepsCheck {
+	if x != nil {
+		if x, ok := x.Message.(*SessionResponse_DepsCheck); ok {
+			return x.DepsCheck
+		}
+	}
+	return nil
+}
+
+func (x *SessionResponse) GetDepsInstall() *DepsInstall {
+	if x != nil {
+		if x, ok := x.Message.(*SessionResponse_DepsInstall); ok {
+			return x.DepsInstall
+		}
+	}
+	return nil
+}
+
+func (x *SessionResponse) GetDepsUndo() *DepsUndo {
+	if x != nil {
+		if x, ok := x.Message.(*SessionResponse_DepsUndo); ok {
+			return x.DepsUndo
+		}
+	}
+	return nil
+}
+
+func (x *SessionResponse) GetDepsRestartHost() *DepsRestartHost {
+	if x != nil {
+		if x, ok := x.Message.(*SessionResponse_DepsRestartHost); ok {
+			return x.DepsRestartHost
+		}
+	}
+	return nil
+}
+
 type isSessionResponse_Message interface {
 	isSessionResponse_Message()
 }
@@ -1764,6 +1838,24 @@ type SessionResponse_RestartAgent struct {
 	RestartAgent *RestartAgent `protobuf:"bytes,31,opt,name=restart_agent,json=restartAgent,proto3,oneof"`
 }
 
+type SessionResponse_DepsCheck struct {
+	// CRSP248, dependency setup (dependency-setup spec). The controller sends
+	// them only when the machine's report says `dependency_setup`.
+	DepsCheck *DepsCheck `protobuf:"bytes,32,opt,name=deps_check,json=depsCheck,proto3,oneof"`
+}
+
+type SessionResponse_DepsInstall struct {
+	DepsInstall *DepsInstall `protobuf:"bytes,33,opt,name=deps_install,json=depsInstall,proto3,oneof"`
+}
+
+type SessionResponse_DepsUndo struct {
+	DepsUndo *DepsUndo `protobuf:"bytes,34,opt,name=deps_undo,json=depsUndo,proto3,oneof"`
+}
+
+type SessionResponse_DepsRestartHost struct {
+	DepsRestartHost *DepsRestartHost `protobuf:"bytes,35,opt,name=deps_restart_host,json=depsRestartHost,proto3,oneof"`
+}
+
 func (*SessionResponse_HelloAck) isSessionResponse_Message() {}
 
 func (*SessionResponse_Heartbeat) isSessionResponse_Message() {}
@@ -1817,6 +1909,14 @@ func (*SessionResponse_RegistryGrant) isSessionResponse_Message() {}
 func (*SessionResponse_ListenerControl) isSessionResponse_Message() {}
 
 func (*SessionResponse_RestartAgent) isSessionResponse_Message() {}
+
+func (*SessionResponse_DepsCheck) isSessionResponse_Message() {}
+
+func (*SessionResponse_DepsInstall) isSessionResponse_Message() {}
+
+func (*SessionResponse_DepsUndo) isSessionResponse_Message() {}
+
+func (*SessionResponse_DepsRestartHost) isSessionResponse_Message() {}
 
 // Hello opens a session. On reconnect it carries what the agent runs now, so
 // the controller can reconcile (machines R5.38, scheduling R5.35).
@@ -6210,9 +6310,11 @@ type MachineReport struct {
 	// True when this agent understands ScanRunnerLeftovers and RemoveRunnerLeftovers (OPS33).
 	RunnerLeftovers bool `protobuf:"varint,14,opt,name=runner_leftovers,json=runnerLeftovers,proto3" json:"runner_leftovers,omitempty"`
 	// True when this agent understands the registry calls (protocol version 3, REG10).
-	Registry      bool `protobuf:"varint,15,opt,name=registry,proto3" json:"registry,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Registry bool `protobuf:"varint,15,opt,name=registry,proto3" json:"registry,omitempty"`
+	// True when this agent understands DepsCheck, DepsInstall, DepsUndo and DepsRestartHost (CRSP248).
+	DependencySetup bool `protobuf:"varint,16,opt,name=dependency_setup,json=dependencySetup,proto3" json:"dependency_setup,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *MachineReport) Reset() {
@@ -6346,6 +6448,13 @@ func (x *MachineReport) GetRunnerLeftovers() bool {
 func (x *MachineReport) GetRegistry() bool {
 	if x != nil {
 		return x.Registry
+	}
+	return false
+}
+
+func (x *MachineReport) GetDependencySetup() bool {
+	if x != nil {
+		return x.DependencySetup
 	}
 	return false
 }
@@ -9914,6 +10023,820 @@ func (x *LoadAverageHealth) GetStealPct() float64 {
 	return 0
 }
 
+// DepsCheck asks what the plan needs and what the machine has (DEP1). The agent
+// reads only; it changes nothing. It answers with one DepsReport.
+type DepsCheck struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	CommandId string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	// The runner choice that makes the need (spec 3.3): runner_os is linux,
+	// windows or macos; runner_kind is ephemeral or persistent.
+	RunnerOs      string `protobuf:"bytes,2,opt,name=runner_os,json=runnerOs,proto3" json:"runner_os,omitempty"`
+	RunnerKind    string `protobuf:"bytes,3,opt,name=runner_kind,json=runnerKind,proto3" json:"runner_kind,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsCheck) Reset() {
+	*x = DepsCheck{}
+	mi := &file_agent_v1_agent_proto_msgTypes[96]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsCheck) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsCheck) ProtoMessage() {}
+
+func (x *DepsCheck) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[96]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsCheck.ProtoReflect.Descriptor instead.
+func (*DepsCheck) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{96}
+}
+
+func (x *DepsCheck) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *DepsCheck) GetRunnerOs() string {
+	if x != nil {
+		return x.RunnerOs
+	}
+	return ""
+}
+
+func (x *DepsCheck) GetRunnerKind() string {
+	if x != nil {
+		return x.RunnerKind
+	}
+	return ""
+}
+
+// DepsItem is one dependency and what the agent found. id is one of the pinned
+// item ids (internal/depsetup): wsl2, docker-in-wsl2, docker-desktop,
+// docker-engine.
+type DepsItem struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	Id    string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// ok, missing, stopped or wrong_kind.
+	State   string `protobuf:"bytes,2,opt,name=state,proto3" json:"state,omitempty"`
+	Version string `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
+	// Why the state is not ok, in words the agent read (never a raw path as the main text).
+	Detail        string `protobuf:"bytes,4,opt,name=detail,proto3" json:"detail,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsItem) Reset() {
+	*x = DepsItem{}
+	mi := &file_agent_v1_agent_proto_msgTypes[97]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsItem) ProtoMessage() {}
+
+func (x *DepsItem) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[97]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsItem.ProtoReflect.Descriptor instead.
+func (*DepsItem) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{97}
+}
+
+func (x *DepsItem) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *DepsItem) GetState() string {
+	if x != nil {
+		return x.State
+	}
+	return ""
+}
+
+func (x *DepsItem) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *DepsItem) GetDetail() string {
+	if x != nil {
+		return x.Detail
+	}
+	return ""
+}
+
+// DepsReport answers DepsCheck.
+type DepsReport struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	CommandId string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	Items     []*DepsItem            `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	// windows, linux or darwin; x64 or arm64; the distro id on Linux ("ubuntu").
+	Os     string `protobuf:"bytes,3,opt,name=os,proto3" json:"os,omitempty"`
+	Arch   string `protobuf:"bytes,4,opt,name=arch,proto3" json:"arch,omitempty"`
+	Distro string `protobuf:"bytes,5,opt,name=distro,proto3" json:"distro,omitempty"`
+	// Whether the agent runs with the rights to install (root, LocalSystem).
+	Admin bool `protobuf:"varint,6,opt,name=admin,proto3" json:"admin,omitempty"`
+	// Free bytes of the volume the install writes to.
+	DiskFreeBytes int64 `protobuf:"varint,7,opt,name=disk_free_bytes,json=diskFreeBytes,proto3" json:"disk_free_bytes,omitempty"`
+	// Windows: virtualization is off in firmware (Verify says so; crsp cannot change it).
+	VirtualizationOff bool `protobuf:"varint,8,opt,name=virtualization_off,json=virtualizationOff,proto3" json:"virtualization_off,omitempty"`
+	// Set when the agent could not read the state.
+	Error         string `protobuf:"bytes,9,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsReport) Reset() {
+	*x = DepsReport{}
+	mi := &file_agent_v1_agent_proto_msgTypes[98]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsReport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsReport) ProtoMessage() {}
+
+func (x *DepsReport) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[98]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsReport.ProtoReflect.Descriptor instead.
+func (*DepsReport) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{98}
+}
+
+func (x *DepsReport) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *DepsReport) GetItems() []*DepsItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+func (x *DepsReport) GetOs() string {
+	if x != nil {
+		return x.Os
+	}
+	return ""
+}
+
+func (x *DepsReport) GetArch() string {
+	if x != nil {
+		return x.Arch
+	}
+	return ""
+}
+
+func (x *DepsReport) GetDistro() string {
+	if x != nil {
+		return x.Distro
+	}
+	return ""
+}
+
+func (x *DepsReport) GetAdmin() bool {
+	if x != nil {
+		return x.Admin
+	}
+	return false
+}
+
+func (x *DepsReport) GetDiskFreeBytes() int64 {
+	if x != nil {
+		return x.DiskFreeBytes
+	}
+	return 0
+}
+
+func (x *DepsReport) GetVirtualizationOff() bool {
+	if x != nil {
+		return x.VirtualizationOff
+	}
+	return false
+}
+
+func (x *DepsReport) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+// DepsInstall runs the consented plan (DEP5). The agent resolves each item id
+// in its own pinned list (it never takes a URL from this message), downloads,
+// checks the SHA-256 before running, installs, verifies and prepares. It sends
+// DepsEvent messages while it works and one final DepsEvent.
+type DepsInstall struct {
+	state     protoimpl.MessageState `protogen:"open.v1"`
+	CommandId string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	JobId     string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	ItemIds   []string               `protobuf:"bytes,3,rep,name=item_ids,json=itemIds,proto3" json:"item_ids,omitempty"`
+	// The user ticked "I have the right to use it" for Docker Desktop (D-DEP-4).
+	AcceptLicence bool `protobuf:"varint,4,opt,name=accept_licence,json=acceptLicence,proto3" json:"accept_licence,omitempty"`
+	// Resume after a restart: skip the install phases already done. Empty on a first run.
+	// One of the phase ids; "verify" is the usual value.
+	ResumeFrom string `protobuf:"bytes,5,opt,name=resume_from,json=resumeFrom,proto3" json:"resume_from,omitempty"`
+	// What an earlier part of this plan already added (kept for undo).
+	Added []*DepsAdded `protobuf:"bytes,6,rep,name=added,proto3" json:"added,omitempty"`
+	// The runner choice, so Verify and Prepare know what to check and make.
+	RunnerOs   string `protobuf:"bytes,7,opt,name=runner_os,json=runnerOs,proto3" json:"runner_os,omitempty"`
+	RunnerKind string `protobuf:"bytes,8,opt,name=runner_kind,json=runnerKind,proto3" json:"runner_kind,omitempty"`
+	// The machine, for the events' machine field.
+	MachineName   string `protobuf:"bytes,9,opt,name=machine_name,json=machineName,proto3" json:"machine_name,omitempty"`
+	MachineRole   string `protobuf:"bytes,10,opt,name=machine_role,json=machineRole,proto3" json:"machine_role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsInstall) Reset() {
+	*x = DepsInstall{}
+	mi := &file_agent_v1_agent_proto_msgTypes[99]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsInstall) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsInstall) ProtoMessage() {}
+
+func (x *DepsInstall) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[99]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsInstall.ProtoReflect.Descriptor instead.
+func (*DepsInstall) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{99}
+}
+
+func (x *DepsInstall) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *DepsInstall) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *DepsInstall) GetItemIds() []string {
+	if x != nil {
+		return x.ItemIds
+	}
+	return nil
+}
+
+func (x *DepsInstall) GetAcceptLicence() bool {
+	if x != nil {
+		return x.AcceptLicence
+	}
+	return false
+}
+
+func (x *DepsInstall) GetResumeFrom() string {
+	if x != nil {
+		return x.ResumeFrom
+	}
+	return ""
+}
+
+func (x *DepsInstall) GetAdded() []*DepsAdded {
+	if x != nil {
+		return x.Added
+	}
+	return nil
+}
+
+func (x *DepsInstall) GetRunnerOs() string {
+	if x != nil {
+		return x.RunnerOs
+	}
+	return ""
+}
+
+func (x *DepsInstall) GetRunnerKind() string {
+	if x != nil {
+		return x.RunnerKind
+	}
+	return ""
+}
+
+func (x *DepsInstall) GetMachineName() string {
+	if x != nil {
+		return x.MachineName
+	}
+	return ""
+}
+
+func (x *DepsInstall) GetMachineRole() string {
+	if x != nil {
+		return x.MachineRole
+	}
+	return ""
+}
+
+// DepsAdded is one thing this run added: the undo record (DEP10, D-DEP-7).
+type DepsAdded struct {
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	ItemId string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	// What was added: "wsl-feature", "wsl-distro", "apt-package", "apt-repo-file", "apt-key",
+	// "windows-installer", "systemd-enable".
+	Kind string `protobuf:"bytes,2,opt,name=kind,proto3" json:"kind,omitempty"`
+	// A name or path to remove; for a package the package name.
+	Ref           string `protobuf:"bytes,3,opt,name=ref,proto3" json:"ref,omitempty"`
+	Version       string `protobuf:"bytes,4,opt,name=version,proto3" json:"version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsAdded) Reset() {
+	*x = DepsAdded{}
+	mi := &file_agent_v1_agent_proto_msgTypes[100]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsAdded) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsAdded) ProtoMessage() {}
+
+func (x *DepsAdded) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[100]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsAdded.ProtoReflect.Descriptor instead.
+func (*DepsAdded) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{100}
+}
+
+func (x *DepsAdded) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *DepsAdded) GetKind() string {
+	if x != nil {
+		return x.Kind
+	}
+	return ""
+}
+
+func (x *DepsAdded) GetRef() string {
+	if x != nil {
+		return x.Ref
+	}
+	return ""
+}
+
+func (x *DepsAdded) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+// DepsUndo removes only what a run added, from its record (DEP10).
+type DepsUndo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	JobId         string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	Added         []*DepsAdded           `protobuf:"bytes,3,rep,name=added,proto3" json:"added,omitempty"`
+	MachineName   string                 `protobuf:"bytes,4,opt,name=machine_name,json=machineName,proto3" json:"machine_name,omitempty"`
+	MachineRole   string                 `protobuf:"bytes,5,opt,name=machine_role,json=machineRole,proto3" json:"machine_role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsUndo) Reset() {
+	*x = DepsUndo{}
+	mi := &file_agent_v1_agent_proto_msgTypes[101]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsUndo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsUndo) ProtoMessage() {}
+
+func (x *DepsUndo) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[101]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsUndo.ProtoReflect.Descriptor instead.
+func (*DepsUndo) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{101}
+}
+
+func (x *DepsUndo) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *DepsUndo) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *DepsUndo) GetAdded() []*DepsAdded {
+	if x != nil {
+		return x.Added
+	}
+	return nil
+}
+
+func (x *DepsUndo) GetMachineName() string {
+	if x != nil {
+		return x.MachineName
+	}
+	return ""
+}
+
+func (x *DepsUndo) GetMachineRole() string {
+	if x != nil {
+		return x.MachineRole
+	}
+	return ""
+}
+
+// DepsRestartHost restarts the machine after the user chose Restart now (D-DEP-2).
+// The agent refuses while a job runs on the machine.
+type DepsRestartHost struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	CommandId     string                 `protobuf:"bytes,1,opt,name=command_id,json=commandId,proto3" json:"command_id,omitempty"`
+	JobId         string                 `protobuf:"bytes,2,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsRestartHost) Reset() {
+	*x = DepsRestartHost{}
+	mi := &file_agent_v1_agent_proto_msgTypes[102]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsRestartHost) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsRestartHost) ProtoMessage() {}
+
+func (x *DepsRestartHost) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[102]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsRestartHost.ProtoReflect.Descriptor instead.
+func (*DepsRestartHost) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{102}
+}
+
+func (x *DepsRestartHost) GetCommandId() string {
+	if x != nil {
+		return x.CommandId
+	}
+	return ""
+}
+
+func (x *DepsRestartHost) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+// DepsEvent is one live event of a dependency job, and its last message. The
+// fields match the progress event contract of the shared Terminal and
+// ProgressBar parts (CRSP247): {jobId, phase, phaseIndex, phaseCount,
+// phaseWeight, pct|null, reason?, bytes?, total?, rate?, etaSec?, machine,
+// command?, stream, line?, ts}. Real command lines and real byte counts only.
+type DepsEvent struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	JobId string                 `protobuf:"bytes,1,opt,name=job_id,json=jobId,proto3" json:"job_id,omitempty"`
+	// Phase id: check, download, install, restart, verify, prepare, undo.
+	Phase       string  `protobuf:"bytes,2,opt,name=phase,proto3" json:"phase,omitempty"`
+	PhaseIndex  int32   `protobuf:"varint,3,opt,name=phase_index,json=phaseIndex,proto3" json:"phase_index,omitempty"`
+	PhaseCount  int32   `protobuf:"varint,4,opt,name=phase_count,json=phaseCount,proto3" json:"phase_count,omitempty"`
+	PhaseWeight float64 `protobuf:"fixed64,5,opt,name=phase_weight,json=phaseWeight,proto3" json:"phase_weight,omitempty"`
+	// Percent 0 to 100 of the phase. Unset = unknown (indeterminate), with reason.
+	Pct    *float64 `protobuf:"fixed64,6,opt,name=pct,proto3,oneof" json:"pct,omitempty"`
+	Reason string   `protobuf:"bytes,7,opt,name=reason,proto3" json:"reason,omitempty"`
+	Bytes  int64    `protobuf:"varint,8,opt,name=bytes,proto3" json:"bytes,omitempty"`
+	Total  int64    `protobuf:"varint,9,opt,name=total,proto3" json:"total,omitempty"`
+	// Bytes per second.
+	Rate        int64  `protobuf:"varint,10,opt,name=rate,proto3" json:"rate,omitempty"`
+	EtaSec      int64  `protobuf:"varint,11,opt,name=eta_sec,json=etaSec,proto3" json:"eta_sec,omitempty"`
+	MachineName string `protobuf:"bytes,12,opt,name=machine_name,json=machineName,proto3" json:"machine_name,omitempty"`
+	MachineRole string `protobuf:"bytes,13,opt,name=machine_role,json=machineRole,proto3" json:"machine_role,omitempty"`
+	MachineOs   string `protobuf:"bytes,14,opt,name=machine_os,json=machineOs,proto3" json:"machine_os,omitempty"`
+	// The command line that is run now (a real argv joined; redacted).
+	Command string `protobuf:"bytes,15,opt,name=command,proto3" json:"command,omitempty"`
+	// stdout, stderr or status.
+	Stream string `protobuf:"bytes,16,opt,name=stream,proto3" json:"stream,omitempty"`
+	Line   string `protobuf:"bytes,17,opt,name=line,proto3" json:"line,omitempty"`
+	// Unix milliseconds.
+	Ts int64 `protobuf:"varint,18,opt,name=ts,proto3" json:"ts,omitempty"`
+	// The last event of the job: outcome is done, paused_restart, failed or stopped.
+	Final   bool   `protobuf:"varint,19,opt,name=final,proto3" json:"final,omitempty"`
+	Outcome string `protobuf:"bytes,20,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	Error   string `protobuf:"bytes,21,opt,name=error,proto3" json:"error,omitempty"`
+	// What the job added so far (the undo record). Sent on the final event.
+	Added []*DepsAdded `protobuf:"bytes,22,rep,name=added,proto3" json:"added,omitempty"`
+	// The engine version Verify read, on done.
+	EngineVersion string `protobuf:"bytes,23,opt,name=engine_version,json=engineVersion,proto3" json:"engine_version,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DepsEvent) Reset() {
+	*x = DepsEvent{}
+	mi := &file_agent_v1_agent_proto_msgTypes[103]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DepsEvent) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DepsEvent) ProtoMessage() {}
+
+func (x *DepsEvent) ProtoReflect() protoreflect.Message {
+	mi := &file_agent_v1_agent_proto_msgTypes[103]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DepsEvent.ProtoReflect.Descriptor instead.
+func (*DepsEvent) Descriptor() ([]byte, []int) {
+	return file_agent_v1_agent_proto_rawDescGZIP(), []int{103}
+}
+
+func (x *DepsEvent) GetJobId() string {
+	if x != nil {
+		return x.JobId
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetPhase() string {
+	if x != nil {
+		return x.Phase
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetPhaseIndex() int32 {
+	if x != nil {
+		return x.PhaseIndex
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetPhaseCount() int32 {
+	if x != nil {
+		return x.PhaseCount
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetPhaseWeight() float64 {
+	if x != nil {
+		return x.PhaseWeight
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetPct() float64 {
+	if x != nil && x.Pct != nil {
+		return *x.Pct
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetReason() string {
+	if x != nil {
+		return x.Reason
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetBytes() int64 {
+	if x != nil {
+		return x.Bytes
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetTotal() int64 {
+	if x != nil {
+		return x.Total
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetRate() int64 {
+	if x != nil {
+		return x.Rate
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetEtaSec() int64 {
+	if x != nil {
+		return x.EtaSec
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetMachineName() string {
+	if x != nil {
+		return x.MachineName
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetMachineRole() string {
+	if x != nil {
+		return x.MachineRole
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetMachineOs() string {
+	if x != nil {
+		return x.MachineOs
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetCommand() string {
+	if x != nil {
+		return x.Command
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetStream() string {
+	if x != nil {
+		return x.Stream
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetLine() string {
+	if x != nil {
+		return x.Line
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetTs() int64 {
+	if x != nil {
+		return x.Ts
+	}
+	return 0
+}
+
+func (x *DepsEvent) GetFinal() bool {
+	if x != nil {
+		return x.Final
+	}
+	return false
+}
+
+func (x *DepsEvent) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+func (x *DepsEvent) GetAdded() []*DepsAdded {
+	if x != nil {
+		return x.Added
+	}
+	return nil
+}
+
+func (x *DepsEvent) GetEngineVersion() string {
+	if x != nil {
+		return x.EngineVersion
+	}
+	return ""
+}
+
 type GateDecision_Go struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	Slots []*SlotGrant           `protobuf:"bytes,1,rep,name=slots,proto3" json:"slots,omitempty"`
@@ -9925,7 +10848,7 @@ type GateDecision_Go struct {
 
 func (x *GateDecision_Go) Reset() {
 	*x = GateDecision_Go{}
-	mi := &file_agent_v1_agent_proto_msgTypes[96]
+	mi := &file_agent_v1_agent_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9937,7 +10860,7 @@ func (x *GateDecision_Go) String() string {
 func (*GateDecision_Go) ProtoMessage() {}
 
 func (x *GateDecision_Go) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_v1_agent_proto_msgTypes[96]
+	mi := &file_agent_v1_agent_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9982,7 +10905,7 @@ type GateDecision_Wait struct {
 
 func (x *GateDecision_Wait) Reset() {
 	*x = GateDecision_Wait{}
-	mi := &file_agent_v1_agent_proto_msgTypes[97]
+	mi := &file_agent_v1_agent_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9994,7 +10917,7 @@ func (x *GateDecision_Wait) String() string {
 func (*GateDecision_Wait) ProtoMessage() {}
 
 func (x *GateDecision_Wait) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_v1_agent_proto_msgTypes[97]
+	mi := &file_agent_v1_agent_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10048,7 +10971,7 @@ type GateDecision_Timeout struct {
 
 func (x *GateDecision_Timeout) Reset() {
 	*x = GateDecision_Timeout{}
-	mi := &file_agent_v1_agent_proto_msgTypes[98]
+	mi := &file_agent_v1_agent_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10060,7 +10983,7 @@ func (x *GateDecision_Timeout) String() string {
 func (*GateDecision_Timeout) ProtoMessage() {}
 
 func (x *GateDecision_Timeout) ProtoReflect() protoreflect.Message {
-	mi := &file_agent_v1_agent_proto_msgTypes[98]
+	mi := &file_agent_v1_agent_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10102,7 +11025,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x12machine_credential\x18\x02 \x01(\tR\x11machineCredential\x12\x1f\n" +
 	"\vcert_sha256\x18\x03 \x01(\tR\n" +
 	"certSha256\x125\n" +
-	"\bsettings\x18\x04 \x01(\v2\x19.agent.v1.MachineSettingsR\bsettings\"\xe3\x0e\n" +
+	"\bsettings\x18\x04 \x01(\v2\x19.agent.v1.MachineSettingsR\bsettings\"\xd2\x0f\n" +
 	"\x0eSessionRequest\x12'\n" +
 	"\x05hello\x18\x01 \x01(\v2\x0f.agent.v1.HelloH\x00R\x05hello\x123\n" +
 	"\theartbeat\x18\x02 \x01(\v2\x13.agent.v1.HeartbeatH\x00R\theartbeat\x127\n" +
@@ -10138,8 +11061,12 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"pullReport\x12:\n" +
 	"\fbuild_report\x18\x1e \x01(\v2\x15.agent.v1.BuildReportH\x00R\vbuildReport\x12P\n" +
 	"\x14job_resource_samples\x18\x1f \x01(\v2\x1c.agent.v1.JobResourceSamplesH\x00R\x12jobResourceSamples\x12=\n" +
-	"\rhealth_report\x18  \x01(\v2\x16.agent.v1.HealthReportH\x00R\fhealthReportB\t\n" +
-	"\amessage\"\xb6\r\n" +
+	"\rhealth_report\x18  \x01(\v2\x16.agent.v1.HealthReportH\x00R\fhealthReport\x127\n" +
+	"\vdeps_report\x18! \x01(\v2\x14.agent.v1.DepsReportH\x00R\n" +
+	"depsReport\x124\n" +
+	"\n" +
+	"deps_event\x18\" \x01(\v2\x13.agent.v1.DepsEventH\x00R\tdepsEventB\t\n" +
+	"\amessage\"\xa4\x0f\n" +
 	"\x0fSessionResponse\x121\n" +
 	"\thello_ack\x18\x01 \x01(\v2\x12.agent.v1.HelloAckH\x00R\bhelloAck\x123\n" +
 	"\theartbeat\x18\x02 \x01(\v2\x13.agent.v1.HeartbeatH\x00R\theartbeat\x127\n" +
@@ -10173,7 +11100,12 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x13ensure_image_answer\x18\x1c \x01(\v2\x1b.agent.v1.EnsureImageAnswerH\x00R\x11ensureImageAnswer\x12@\n" +
 	"\x0eregistry_grant\x18\x1d \x01(\v2\x17.agent.v1.RegistryTokenH\x00R\rregistryGrant\x12F\n" +
 	"\x10listener_control\x18\x1e \x01(\v2\x19.agent.v1.ListenerControlH\x00R\x0flistenerControl\x12=\n" +
-	"\rrestart_agent\x18\x1f \x01(\v2\x16.agent.v1.RestartAgentH\x00R\frestartAgentB\t\n" +
+	"\rrestart_agent\x18\x1f \x01(\v2\x16.agent.v1.RestartAgentH\x00R\frestartAgent\x124\n" +
+	"\n" +
+	"deps_check\x18  \x01(\v2\x13.agent.v1.DepsCheckH\x00R\tdepsCheck\x12:\n" +
+	"\fdeps_install\x18! \x01(\v2\x15.agent.v1.DepsInstallH\x00R\vdepsInstall\x121\n" +
+	"\tdeps_undo\x18\" \x01(\v2\x12.agent.v1.DepsUndoH\x00R\bdepsUndo\x12G\n" +
+	"\x11deps_restart_host\x18# \x01(\v2\x19.agent.v1.DepsRestartHostH\x00R\x0fdepsRestartHostB\t\n" +
 	"\amessage\"\xf1\x02\n" +
 	"\x05Hello\x12\x1d\n" +
 	"\n" +
@@ -10589,7 +11521,7 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\x05error\x18\x05 \x01(\tR\x05error\".\n" +
 	"\rReportMachine\x12\x1d\n" +
 	"\n" +
-	"command_id\x18\x01 \x01(\tR\tcommandId\"\xc2\x05\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\"\xed\x05\n" +
 	"\rMachineReport\x12\x1d\n" +
 	"\n" +
 	"command_id\x18\x01 \x01(\tR\tcommandId\x12-\n" +
@@ -10609,7 +11541,8 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"dockerDisk\x12F\n" +
 	"\x0frunner_services\x18\r \x03(\v2\x1d.agent.v1.RunnerServiceReportR\x0erunnerServices\x12)\n" +
 	"\x10runner_leftovers\x18\x0e \x01(\bR\x0frunnerLeftovers\x12\x1a\n" +
-	"\bregistry\x18\x0f \x01(\bR\bregistry\"D\n" +
+	"\bregistry\x18\x0f \x01(\bR\bregistry\x12)\n" +
+	"\x10dependency_setup\x18\x10 \x01(\bR\x0fdependencySetup\"D\n" +
 	"\vOwnedRunner\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12!\n" +
 	"\fservice_name\x18\x02 \x01(\tR\vserviceName\"a\n" +
@@ -10998,7 +11931,90 @@ const file_agent_v1_agent_proto_rawDesc = "" +
 	"\vsteal_known\x18\x06 \x01(\bR\n" +
 	"stealKnown\x120\n" +
 	"\x14steal_unknown_reason\x18\a \x01(\tR\x12stealUnknownReason\x12\x1b\n" +
-	"\tsteal_pct\x18\b \x01(\x01R\bstealPct*\x93\x01\n" +
+	"\tsteal_pct\x18\b \x01(\x01R\bstealPct\"h\n" +
+	"\tDepsCheck\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x1b\n" +
+	"\trunner_os\x18\x02 \x01(\tR\brunnerOs\x12\x1f\n" +
+	"\vrunner_kind\x18\x03 \x01(\tR\n" +
+	"runnerKind\"b\n" +
+	"\bDepsItem\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
+	"\x05state\x18\x02 \x01(\tR\x05state\x12\x18\n" +
+	"\aversion\x18\x03 \x01(\tR\aversion\x12\x16\n" +
+	"\x06detail\x18\x04 \x01(\tR\x06detail\"\x94\x02\n" +
+	"\n" +
+	"DepsReport\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12(\n" +
+	"\x05items\x18\x02 \x03(\v2\x12.agent.v1.DepsItemR\x05items\x12\x0e\n" +
+	"\x02os\x18\x03 \x01(\tR\x02os\x12\x12\n" +
+	"\x04arch\x18\x04 \x01(\tR\x04arch\x12\x16\n" +
+	"\x06distro\x18\x05 \x01(\tR\x06distro\x12\x14\n" +
+	"\x05admin\x18\x06 \x01(\bR\x05admin\x12&\n" +
+	"\x0fdisk_free_bytes\x18\a \x01(\x03R\rdiskFreeBytes\x12-\n" +
+	"\x12virtualization_off\x18\b \x01(\bR\x11virtualizationOff\x12\x14\n" +
+	"\x05error\x18\t \x01(\tR\x05error\"\xd5\x02\n" +
+	"\vDepsInstall\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\x12\x19\n" +
+	"\bitem_ids\x18\x03 \x03(\tR\aitemIds\x12%\n" +
+	"\x0eaccept_licence\x18\x04 \x01(\bR\racceptLicence\x12\x1f\n" +
+	"\vresume_from\x18\x05 \x01(\tR\n" +
+	"resumeFrom\x12)\n" +
+	"\x05added\x18\x06 \x03(\v2\x13.agent.v1.DepsAddedR\x05added\x12\x1b\n" +
+	"\trunner_os\x18\a \x01(\tR\brunnerOs\x12\x1f\n" +
+	"\vrunner_kind\x18\b \x01(\tR\n" +
+	"runnerKind\x12!\n" +
+	"\fmachine_name\x18\t \x01(\tR\vmachineName\x12!\n" +
+	"\fmachine_role\x18\n" +
+	" \x01(\tR\vmachineRole\"d\n" +
+	"\tDepsAdded\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x12\n" +
+	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x10\n" +
+	"\x03ref\x18\x03 \x01(\tR\x03ref\x12\x18\n" +
+	"\aversion\x18\x04 \x01(\tR\aversion\"\xb1\x01\n" +
+	"\bDepsUndo\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\x12)\n" +
+	"\x05added\x18\x03 \x03(\v2\x13.agent.v1.DepsAddedR\x05added\x12!\n" +
+	"\fmachine_name\x18\x04 \x01(\tR\vmachineName\x12!\n" +
+	"\fmachine_role\x18\x05 \x01(\tR\vmachineRole\"G\n" +
+	"\x0fDepsRestartHost\x12\x1d\n" +
+	"\n" +
+	"command_id\x18\x01 \x01(\tR\tcommandId\x12\x15\n" +
+	"\x06job_id\x18\x02 \x01(\tR\x05jobId\"\x80\x05\n" +
+	"\tDepsEvent\x12\x15\n" +
+	"\x06job_id\x18\x01 \x01(\tR\x05jobId\x12\x14\n" +
+	"\x05phase\x18\x02 \x01(\tR\x05phase\x12\x1f\n" +
+	"\vphase_index\x18\x03 \x01(\x05R\n" +
+	"phaseIndex\x12\x1f\n" +
+	"\vphase_count\x18\x04 \x01(\x05R\n" +
+	"phaseCount\x12!\n" +
+	"\fphase_weight\x18\x05 \x01(\x01R\vphaseWeight\x12\x15\n" +
+	"\x03pct\x18\x06 \x01(\x01H\x00R\x03pct\x88\x01\x01\x12\x16\n" +
+	"\x06reason\x18\a \x01(\tR\x06reason\x12\x14\n" +
+	"\x05bytes\x18\b \x01(\x03R\x05bytes\x12\x14\n" +
+	"\x05total\x18\t \x01(\x03R\x05total\x12\x12\n" +
+	"\x04rate\x18\n" +
+	" \x01(\x03R\x04rate\x12\x17\n" +
+	"\aeta_sec\x18\v \x01(\x03R\x06etaSec\x12!\n" +
+	"\fmachine_name\x18\f \x01(\tR\vmachineName\x12!\n" +
+	"\fmachine_role\x18\r \x01(\tR\vmachineRole\x12\x1d\n" +
+	"\n" +
+	"machine_os\x18\x0e \x01(\tR\tmachineOs\x12\x18\n" +
+	"\acommand\x18\x0f \x01(\tR\acommand\x12\x16\n" +
+	"\x06stream\x18\x10 \x01(\tR\x06stream\x12\x12\n" +
+	"\x04line\x18\x11 \x01(\tR\x04line\x12\x0e\n" +
+	"\x02ts\x18\x12 \x01(\x03R\x02ts\x12\x14\n" +
+	"\x05final\x18\x13 \x01(\bR\x05final\x12\x18\n" +
+	"\aoutcome\x18\x14 \x01(\tR\aoutcome\x12\x14\n" +
+	"\x05error\x18\x15 \x01(\tR\x05error\x12)\n" +
+	"\x05added\x18\x16 \x03(\v2\x13.agent.v1.DepsAddedR\x05added\x12%\n" +
+	"\x0eengine_version\x18\x17 \x01(\tR\rengineVersionB\x06\n" +
+	"\x04_pct*\x93\x01\n" +
 	"\x0fProtocolVersion\x12 \n" +
 	"\x1cPROTOCOL_VERSION_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12PROTOCOL_VERSION_1\x10\x01\x12\x16\n" +
@@ -11043,7 +12059,7 @@ func file_agent_v1_agent_proto_rawDescGZIP() []byte {
 }
 
 var file_agent_v1_agent_proto_enumTypes = make([]protoimpl.EnumInfo, 10)
-var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 99)
+var file_agent_v1_agent_proto_msgTypes = make([]protoimpl.MessageInfo, 107)
 var file_agent_v1_agent_proto_goTypes = []any{
 	(ProtocolVersion)(0),             // 0: agent.v1.ProtocolVersion
 	(RunnerState)(0),                 // 1: agent.v1.RunnerState
@@ -11151,9 +12167,17 @@ var file_agent_v1_agent_proto_goTypes = []any{
 	(*DockerUseHealth)(nil),          // 103: agent.v1.DockerUseHealth
 	(*ThermalHealth)(nil),            // 104: agent.v1.ThermalHealth
 	(*LoadAverageHealth)(nil),        // 105: agent.v1.LoadAverageHealth
-	(*GateDecision_Go)(nil),          // 106: agent.v1.GateDecision.Go
-	(*GateDecision_Wait)(nil),        // 107: agent.v1.GateDecision.Wait
-	(*GateDecision_Timeout)(nil),     // 108: agent.v1.GateDecision.Timeout
+	(*DepsCheck)(nil),                // 106: agent.v1.DepsCheck
+	(*DepsItem)(nil),                 // 107: agent.v1.DepsItem
+	(*DepsReport)(nil),               // 108: agent.v1.DepsReport
+	(*DepsInstall)(nil),              // 109: agent.v1.DepsInstall
+	(*DepsAdded)(nil),                // 110: agent.v1.DepsAdded
+	(*DepsUndo)(nil),                 // 111: agent.v1.DepsUndo
+	(*DepsRestartHost)(nil),          // 112: agent.v1.DepsRestartHost
+	(*DepsEvent)(nil),                // 113: agent.v1.DepsEvent
+	(*GateDecision_Go)(nil),          // 114: agent.v1.GateDecision.Go
+	(*GateDecision_Wait)(nil),        // 115: agent.v1.GateDecision.Wait
+	(*GateDecision_Timeout)(nil),     // 116: agent.v1.GateDecision.Timeout
 }
 var file_agent_v1_agent_proto_depIdxs = []int32{
 	17,  // 0: agent.v1.JoinRequest.facts:type_name -> agent.v1.Facts
@@ -11189,110 +12213,120 @@ var file_agent_v1_agent_proto_depIdxs = []int32{
 	89,  // 30: agent.v1.SessionRequest.build_report:type_name -> agent.v1.BuildReport
 	91,  // 31: agent.v1.SessionRequest.job_resource_samples:type_name -> agent.v1.JobResourceSamples
 	93,  // 32: agent.v1.SessionRequest.health_report:type_name -> agent.v1.HealthReport
-	15,  // 33: agent.v1.SessionResponse.hello_ack:type_name -> agent.v1.HelloAck
-	16,  // 34: agent.v1.SessionResponse.heartbeat:type_name -> agent.v1.Heartbeat
-	46,  // 35: agent.v1.SessionResponse.settings:type_name -> agent.v1.MachineSettings
-	42,  // 36: agent.v1.SessionResponse.gate_decision:type_name -> agent.v1.GateDecision
-	44,  // 37: agent.v1.SessionResponse.release_ack:type_name -> agent.v1.ReleaseAck
-	23,  // 38: agent.v1.SessionResponse.add_runner:type_name -> agent.v1.AddRunner
-	28,  // 39: agent.v1.SessionResponse.remove_runner:type_name -> agent.v1.RemoveRunner
-	29,  // 40: agent.v1.SessionResponse.drain_runner:type_name -> agent.v1.DrainRunner
-	47,  // 41: agent.v1.SessionResponse.drain:type_name -> agent.v1.Drain
-	48,  // 42: agent.v1.SessionResponse.resume:type_name -> agent.v1.Resume
-	50,  // 43: agent.v1.SessionResponse.redetect:type_name -> agent.v1.Redetect
-	55,  // 44: agent.v1.SessionResponse.run_checks:type_name -> agent.v1.RunChecks
-	51,  // 45: agent.v1.SessionResponse.machine_removed:type_name -> agent.v1.MachineRemoved
-	58,  // 46: agent.v1.SessionResponse.update_agent:type_name -> agent.v1.UpdateAgent
-	30,  // 47: agent.v1.SessionResponse.stop_runner:type_name -> agent.v1.StopRunner
-	61,  // 48: agent.v1.SessionResponse.measure_caches:type_name -> agent.v1.MeasureCaches
-	64,  // 49: agent.v1.SessionResponse.wipe_cache:type_name -> agent.v1.WipeCache
-	66,  // 50: agent.v1.SessionResponse.report_machine:type_name -> agent.v1.ReportMachine
-	34,  // 51: agent.v1.SessionResponse.update_runner_files:type_name -> agent.v1.UpdateRunnerFiles
-	33,  // 52: agent.v1.SessionResponse.run_host_command:type_name -> agent.v1.RunHostCommand
-	27,  // 53: agent.v1.SessionResponse.runner_hygiene:type_name -> agent.v1.RunnerHygiene
-	69,  // 54: agent.v1.SessionResponse.scan_runner_leftovers:type_name -> agent.v1.ScanRunnerLeftovers
-	71,  // 55: agent.v1.SessionResponse.remove_runner_leftovers:type_name -> agent.v1.RemoveRunnerLeftovers
-	85,  // 56: agent.v1.SessionResponse.ensure_image_answer:type_name -> agent.v1.EnsureImageAnswer
-	87,  // 57: agent.v1.SessionResponse.registry_grant:type_name -> agent.v1.RegistryToken
-	31,  // 58: agent.v1.SessionResponse.listener_control:type_name -> agent.v1.ListenerControl
-	59,  // 59: agent.v1.SessionResponse.restart_agent:type_name -> agent.v1.RestartAgent
-	0,   // 60: agent.v1.Hello.protocol_version:type_name -> agent.v1.ProtocolVersion
-	17,  // 61: agent.v1.Hello.facts:type_name -> agent.v1.Facts
-	20,  // 62: agent.v1.Hello.load:type_name -> agent.v1.LoadReport
-	21,  // 63: agent.v1.Hello.runners:type_name -> agent.v1.RunnerStates
-	45,  // 64: agent.v1.Hello.holders:type_name -> agent.v1.HolderReport
-	0,   // 65: agent.v1.HelloAck.protocol_version:type_name -> agent.v1.ProtocolVersion
-	46,  // 66: agent.v1.HelloAck.settings:type_name -> agent.v1.MachineSettings
-	18,  // 67: agent.v1.Facts.gpus:type_name -> agent.v1.Gpu
-	19,  // 68: agent.v1.Facts.backends:type_name -> agent.v1.BackendSupport
-	22,  // 69: agent.v1.RunnerStates.runners:type_name -> agent.v1.RunnerStatus
-	1,   // 70: agent.v1.RunnerStatus.state:type_name -> agent.v1.RunnerState
-	36,  // 71: agent.v1.RunnerStatus.current_job:type_name -> agent.v1.JobRef
-	24,  // 72: agent.v1.AddRunner.runner:type_name -> agent.v1.RunnerSpec
-	26,  // 73: agent.v1.RunnerClean.runners:type_name -> agent.v1.RunnerCleanStatus
-	1,   // 74: agent.v1.RunnerResult.state:type_name -> agent.v1.RunnerState
-	36,  // 75: agent.v1.UsageReport.job:type_name -> agent.v1.JobRef
-	36,  // 76: agent.v1.GateRequest.job:type_name -> agent.v1.JobRef
-	37,  // 77: agent.v1.GateRequest.holder:type_name -> agent.v1.Holder
-	2,   // 78: agent.v1.SlotGrant.kind:type_name -> agent.v1.SlotKind
-	106, // 79: agent.v1.GateDecision.go:type_name -> agent.v1.GateDecision.Go
-	107, // 80: agent.v1.GateDecision.wait:type_name -> agent.v1.GateDecision.Wait
-	108, // 81: agent.v1.GateDecision.timeout:type_name -> agent.v1.GateDecision.Timeout
-	36,  // 82: agent.v1.JobCompleted.job:type_name -> agent.v1.JobRef
-	36,  // 83: agent.v1.ReleaseAck.job:type_name -> agent.v1.JobRef
-	37,  // 84: agent.v1.HolderReport.alive:type_name -> agent.v1.Holder
-	36,  // 85: agent.v1.HolderReport.running:type_name -> agent.v1.JobRef
-	36,  // 86: agent.v1.DrainStatus.waiting_for:type_name -> agent.v1.JobRef
-	54,  // 87: agent.v1.LogBatch.lines:type_name -> agent.v1.LogLine
-	3,   // 88: agent.v1.LogLine.level:type_name -> agent.v1.LogLevel
-	36,  // 89: agent.v1.LogLine.job:type_name -> agent.v1.JobRef
-	57,  // 90: agent.v1.CheckResults.results:type_name -> agent.v1.CheckResult
-	36,  // 91: agent.v1.UpdateReport.waiting_for:type_name -> agent.v1.JobRef
-	63,  // 92: agent.v1.CacheReport.caches:type_name -> agent.v1.CacheStatus
-	36,  // 93: agent.v1.CacheWipeStatus.waiting_for:type_name -> agent.v1.JobRef
-	80,  // 94: agent.v1.MachineReport.kvm:type_name -> agent.v1.KvmReport
-	81,  // 95: agent.v1.MachineReport.engine:type_name -> agent.v1.EngineReport
-	82,  // 96: agent.v1.MachineReport.images:type_name -> agent.v1.ImageReport
-	79,  // 97: agent.v1.MachineReport.package_failures:type_name -> agent.v1.PackageFailure
-	77,  // 98: agent.v1.MachineReport.symlink:type_name -> agent.v1.SymlinkReport
-	78,  // 99: agent.v1.MachineReport.macos_vms:type_name -> agent.v1.MacVmReport
-	76,  // 100: agent.v1.MachineReport.docker_disk:type_name -> agent.v1.DockerDiskReport
-	75,  // 101: agent.v1.MachineReport.runner_services:type_name -> agent.v1.RunnerServiceReport
-	68,  // 102: agent.v1.ScanRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
-	68,  // 103: agent.v1.RemoveRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
-	70,  // 104: agent.v1.RemoveRunnerLeftovers.items:type_name -> agent.v1.LeftoverRef
-	72,  // 105: agent.v1.RunnerLeftoversReport.items:type_name -> agent.v1.Leftover
-	73,  // 106: agent.v1.RunnerLeftoversReport.results:type_name -> agent.v1.LeftoverResult
-	4,   // 107: agent.v1.EnsureImageAnswer.outcome:type_name -> agent.v1.EnsureImageAnswer.Outcome
-	5,   // 108: agent.v1.RegistryTokenRequest.action:type_name -> agent.v1.RegistryTokenRequest.Action
-	6,   // 109: agent.v1.PushReport.state:type_name -> agent.v1.PushReport.State
-	7,   // 110: agent.v1.BuildReport.phase:type_name -> agent.v1.BuildReport.Phase
-	8,   // 111: agent.v1.PullReport.source:type_name -> agent.v1.PullReport.Source
-	9,   // 112: agent.v1.PullReport.state:type_name -> agent.v1.PullReport.State
-	36,  // 113: agent.v1.JobResourceSamples.job:type_name -> agent.v1.JobRef
-	92,  // 114: agent.v1.JobResourceSamples.samples:type_name -> agent.v1.JobResourceSample
-	94,  // 115: agent.v1.HealthReport.boot:type_name -> agent.v1.BootHealth
-	95,  // 116: agent.v1.HealthReport.volumes:type_name -> agent.v1.VolumeHealth
-	96,  // 117: agent.v1.HealthReport.swap:type_name -> agent.v1.SwapHealth
-	97,  // 118: agent.v1.HealthReport.oom:type_name -> agent.v1.OomHealth
-	99,  // 119: agent.v1.HealthReport.connectivity:type_name -> agent.v1.ConnectivityHealth
-	100, // 120: agent.v1.HealthReport.versions:type_name -> agent.v1.VersionHealth
-	101, // 121: agent.v1.HealthReport.updates:type_name -> agent.v1.UpdateHealth
-	102, // 122: agent.v1.HealthReport.power:type_name -> agent.v1.PowerHealth
-	103, // 123: agent.v1.HealthReport.docker_use:type_name -> agent.v1.DockerUseHealth
-	104, // 124: agent.v1.HealthReport.thermal:type_name -> agent.v1.ThermalHealth
-	105, // 125: agent.v1.HealthReport.load_average:type_name -> agent.v1.LoadAverageHealth
-	98,  // 126: agent.v1.OomHealth.scopes:type_name -> agent.v1.OomScope
-	41,  // 127: agent.v1.GateDecision.Go.slots:type_name -> agent.v1.SlotGrant
-	10,  // 128: agent.v1.AgentService.Join:input_type -> agent.v1.JoinRequest
-	12,  // 129: agent.v1.AgentService.Session:input_type -> agent.v1.SessionRequest
-	11,  // 130: agent.v1.AgentService.Join:output_type -> agent.v1.JoinResponse
-	13,  // 131: agent.v1.AgentService.Session:output_type -> agent.v1.SessionResponse
-	130, // [130:132] is the sub-list for method output_type
-	128, // [128:130] is the sub-list for method input_type
-	128, // [128:128] is the sub-list for extension type_name
-	128, // [128:128] is the sub-list for extension extendee
-	0,   // [0:128] is the sub-list for field type_name
+	108, // 33: agent.v1.SessionRequest.deps_report:type_name -> agent.v1.DepsReport
+	113, // 34: agent.v1.SessionRequest.deps_event:type_name -> agent.v1.DepsEvent
+	15,  // 35: agent.v1.SessionResponse.hello_ack:type_name -> agent.v1.HelloAck
+	16,  // 36: agent.v1.SessionResponse.heartbeat:type_name -> agent.v1.Heartbeat
+	46,  // 37: agent.v1.SessionResponse.settings:type_name -> agent.v1.MachineSettings
+	42,  // 38: agent.v1.SessionResponse.gate_decision:type_name -> agent.v1.GateDecision
+	44,  // 39: agent.v1.SessionResponse.release_ack:type_name -> agent.v1.ReleaseAck
+	23,  // 40: agent.v1.SessionResponse.add_runner:type_name -> agent.v1.AddRunner
+	28,  // 41: agent.v1.SessionResponse.remove_runner:type_name -> agent.v1.RemoveRunner
+	29,  // 42: agent.v1.SessionResponse.drain_runner:type_name -> agent.v1.DrainRunner
+	47,  // 43: agent.v1.SessionResponse.drain:type_name -> agent.v1.Drain
+	48,  // 44: agent.v1.SessionResponse.resume:type_name -> agent.v1.Resume
+	50,  // 45: agent.v1.SessionResponse.redetect:type_name -> agent.v1.Redetect
+	55,  // 46: agent.v1.SessionResponse.run_checks:type_name -> agent.v1.RunChecks
+	51,  // 47: agent.v1.SessionResponse.machine_removed:type_name -> agent.v1.MachineRemoved
+	58,  // 48: agent.v1.SessionResponse.update_agent:type_name -> agent.v1.UpdateAgent
+	30,  // 49: agent.v1.SessionResponse.stop_runner:type_name -> agent.v1.StopRunner
+	61,  // 50: agent.v1.SessionResponse.measure_caches:type_name -> agent.v1.MeasureCaches
+	64,  // 51: agent.v1.SessionResponse.wipe_cache:type_name -> agent.v1.WipeCache
+	66,  // 52: agent.v1.SessionResponse.report_machine:type_name -> agent.v1.ReportMachine
+	34,  // 53: agent.v1.SessionResponse.update_runner_files:type_name -> agent.v1.UpdateRunnerFiles
+	33,  // 54: agent.v1.SessionResponse.run_host_command:type_name -> agent.v1.RunHostCommand
+	27,  // 55: agent.v1.SessionResponse.runner_hygiene:type_name -> agent.v1.RunnerHygiene
+	69,  // 56: agent.v1.SessionResponse.scan_runner_leftovers:type_name -> agent.v1.ScanRunnerLeftovers
+	71,  // 57: agent.v1.SessionResponse.remove_runner_leftovers:type_name -> agent.v1.RemoveRunnerLeftovers
+	85,  // 58: agent.v1.SessionResponse.ensure_image_answer:type_name -> agent.v1.EnsureImageAnswer
+	87,  // 59: agent.v1.SessionResponse.registry_grant:type_name -> agent.v1.RegistryToken
+	31,  // 60: agent.v1.SessionResponse.listener_control:type_name -> agent.v1.ListenerControl
+	59,  // 61: agent.v1.SessionResponse.restart_agent:type_name -> agent.v1.RestartAgent
+	106, // 62: agent.v1.SessionResponse.deps_check:type_name -> agent.v1.DepsCheck
+	109, // 63: agent.v1.SessionResponse.deps_install:type_name -> agent.v1.DepsInstall
+	111, // 64: agent.v1.SessionResponse.deps_undo:type_name -> agent.v1.DepsUndo
+	112, // 65: agent.v1.SessionResponse.deps_restart_host:type_name -> agent.v1.DepsRestartHost
+	0,   // 66: agent.v1.Hello.protocol_version:type_name -> agent.v1.ProtocolVersion
+	17,  // 67: agent.v1.Hello.facts:type_name -> agent.v1.Facts
+	20,  // 68: agent.v1.Hello.load:type_name -> agent.v1.LoadReport
+	21,  // 69: agent.v1.Hello.runners:type_name -> agent.v1.RunnerStates
+	45,  // 70: agent.v1.Hello.holders:type_name -> agent.v1.HolderReport
+	0,   // 71: agent.v1.HelloAck.protocol_version:type_name -> agent.v1.ProtocolVersion
+	46,  // 72: agent.v1.HelloAck.settings:type_name -> agent.v1.MachineSettings
+	18,  // 73: agent.v1.Facts.gpus:type_name -> agent.v1.Gpu
+	19,  // 74: agent.v1.Facts.backends:type_name -> agent.v1.BackendSupport
+	22,  // 75: agent.v1.RunnerStates.runners:type_name -> agent.v1.RunnerStatus
+	1,   // 76: agent.v1.RunnerStatus.state:type_name -> agent.v1.RunnerState
+	36,  // 77: agent.v1.RunnerStatus.current_job:type_name -> agent.v1.JobRef
+	24,  // 78: agent.v1.AddRunner.runner:type_name -> agent.v1.RunnerSpec
+	26,  // 79: agent.v1.RunnerClean.runners:type_name -> agent.v1.RunnerCleanStatus
+	1,   // 80: agent.v1.RunnerResult.state:type_name -> agent.v1.RunnerState
+	36,  // 81: agent.v1.UsageReport.job:type_name -> agent.v1.JobRef
+	36,  // 82: agent.v1.GateRequest.job:type_name -> agent.v1.JobRef
+	37,  // 83: agent.v1.GateRequest.holder:type_name -> agent.v1.Holder
+	2,   // 84: agent.v1.SlotGrant.kind:type_name -> agent.v1.SlotKind
+	114, // 85: agent.v1.GateDecision.go:type_name -> agent.v1.GateDecision.Go
+	115, // 86: agent.v1.GateDecision.wait:type_name -> agent.v1.GateDecision.Wait
+	116, // 87: agent.v1.GateDecision.timeout:type_name -> agent.v1.GateDecision.Timeout
+	36,  // 88: agent.v1.JobCompleted.job:type_name -> agent.v1.JobRef
+	36,  // 89: agent.v1.ReleaseAck.job:type_name -> agent.v1.JobRef
+	37,  // 90: agent.v1.HolderReport.alive:type_name -> agent.v1.Holder
+	36,  // 91: agent.v1.HolderReport.running:type_name -> agent.v1.JobRef
+	36,  // 92: agent.v1.DrainStatus.waiting_for:type_name -> agent.v1.JobRef
+	54,  // 93: agent.v1.LogBatch.lines:type_name -> agent.v1.LogLine
+	3,   // 94: agent.v1.LogLine.level:type_name -> agent.v1.LogLevel
+	36,  // 95: agent.v1.LogLine.job:type_name -> agent.v1.JobRef
+	57,  // 96: agent.v1.CheckResults.results:type_name -> agent.v1.CheckResult
+	36,  // 97: agent.v1.UpdateReport.waiting_for:type_name -> agent.v1.JobRef
+	63,  // 98: agent.v1.CacheReport.caches:type_name -> agent.v1.CacheStatus
+	36,  // 99: agent.v1.CacheWipeStatus.waiting_for:type_name -> agent.v1.JobRef
+	80,  // 100: agent.v1.MachineReport.kvm:type_name -> agent.v1.KvmReport
+	81,  // 101: agent.v1.MachineReport.engine:type_name -> agent.v1.EngineReport
+	82,  // 102: agent.v1.MachineReport.images:type_name -> agent.v1.ImageReport
+	79,  // 103: agent.v1.MachineReport.package_failures:type_name -> agent.v1.PackageFailure
+	77,  // 104: agent.v1.MachineReport.symlink:type_name -> agent.v1.SymlinkReport
+	78,  // 105: agent.v1.MachineReport.macos_vms:type_name -> agent.v1.MacVmReport
+	76,  // 106: agent.v1.MachineReport.docker_disk:type_name -> agent.v1.DockerDiskReport
+	75,  // 107: agent.v1.MachineReport.runner_services:type_name -> agent.v1.RunnerServiceReport
+	68,  // 108: agent.v1.ScanRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
+	68,  // 109: agent.v1.RemoveRunnerLeftovers.owned:type_name -> agent.v1.OwnedRunner
+	70,  // 110: agent.v1.RemoveRunnerLeftovers.items:type_name -> agent.v1.LeftoverRef
+	72,  // 111: agent.v1.RunnerLeftoversReport.items:type_name -> agent.v1.Leftover
+	73,  // 112: agent.v1.RunnerLeftoversReport.results:type_name -> agent.v1.LeftoverResult
+	4,   // 113: agent.v1.EnsureImageAnswer.outcome:type_name -> agent.v1.EnsureImageAnswer.Outcome
+	5,   // 114: agent.v1.RegistryTokenRequest.action:type_name -> agent.v1.RegistryTokenRequest.Action
+	6,   // 115: agent.v1.PushReport.state:type_name -> agent.v1.PushReport.State
+	7,   // 116: agent.v1.BuildReport.phase:type_name -> agent.v1.BuildReport.Phase
+	8,   // 117: agent.v1.PullReport.source:type_name -> agent.v1.PullReport.Source
+	9,   // 118: agent.v1.PullReport.state:type_name -> agent.v1.PullReport.State
+	36,  // 119: agent.v1.JobResourceSamples.job:type_name -> agent.v1.JobRef
+	92,  // 120: agent.v1.JobResourceSamples.samples:type_name -> agent.v1.JobResourceSample
+	94,  // 121: agent.v1.HealthReport.boot:type_name -> agent.v1.BootHealth
+	95,  // 122: agent.v1.HealthReport.volumes:type_name -> agent.v1.VolumeHealth
+	96,  // 123: agent.v1.HealthReport.swap:type_name -> agent.v1.SwapHealth
+	97,  // 124: agent.v1.HealthReport.oom:type_name -> agent.v1.OomHealth
+	99,  // 125: agent.v1.HealthReport.connectivity:type_name -> agent.v1.ConnectivityHealth
+	100, // 126: agent.v1.HealthReport.versions:type_name -> agent.v1.VersionHealth
+	101, // 127: agent.v1.HealthReport.updates:type_name -> agent.v1.UpdateHealth
+	102, // 128: agent.v1.HealthReport.power:type_name -> agent.v1.PowerHealth
+	103, // 129: agent.v1.HealthReport.docker_use:type_name -> agent.v1.DockerUseHealth
+	104, // 130: agent.v1.HealthReport.thermal:type_name -> agent.v1.ThermalHealth
+	105, // 131: agent.v1.HealthReport.load_average:type_name -> agent.v1.LoadAverageHealth
+	98,  // 132: agent.v1.OomHealth.scopes:type_name -> agent.v1.OomScope
+	107, // 133: agent.v1.DepsReport.items:type_name -> agent.v1.DepsItem
+	110, // 134: agent.v1.DepsInstall.added:type_name -> agent.v1.DepsAdded
+	110, // 135: agent.v1.DepsUndo.added:type_name -> agent.v1.DepsAdded
+	110, // 136: agent.v1.DepsEvent.added:type_name -> agent.v1.DepsAdded
+	41,  // 137: agent.v1.GateDecision.Go.slots:type_name -> agent.v1.SlotGrant
+	10,  // 138: agent.v1.AgentService.Join:input_type -> agent.v1.JoinRequest
+	12,  // 139: agent.v1.AgentService.Session:input_type -> agent.v1.SessionRequest
+	11,  // 140: agent.v1.AgentService.Join:output_type -> agent.v1.JoinResponse
+	13,  // 141: agent.v1.AgentService.Session:output_type -> agent.v1.SessionResponse
+	140, // [140:142] is the sub-list for method output_type
+	138, // [138:140] is the sub-list for method input_type
+	138, // [138:138] is the sub-list for extension type_name
+	138, // [138:138] is the sub-list for extension extendee
+	0,   // [0:138] is the sub-list for field type_name
 }
 
 func init() { file_agent_v1_agent_proto_init() }
@@ -11335,6 +12369,8 @@ func file_agent_v1_agent_proto_init() {
 		(*SessionRequest_BuildReport)(nil),
 		(*SessionRequest_JobResourceSamples)(nil),
 		(*SessionRequest_HealthReport)(nil),
+		(*SessionRequest_DepsReport)(nil),
+		(*SessionRequest_DepsEvent)(nil),
 	}
 	file_agent_v1_agent_proto_msgTypes[3].OneofWrappers = []any{
 		(*SessionResponse_HelloAck)(nil),
@@ -11364,6 +12400,10 @@ func file_agent_v1_agent_proto_init() {
 		(*SessionResponse_RegistryGrant)(nil),
 		(*SessionResponse_ListenerControl)(nil),
 		(*SessionResponse_RestartAgent)(nil),
+		(*SessionResponse_DepsCheck)(nil),
+		(*SessionResponse_DepsInstall)(nil),
+		(*SessionResponse_DepsUndo)(nil),
+		(*SessionResponse_DepsRestartHost)(nil),
 	}
 	file_agent_v1_agent_proto_msgTypes[13].OneofWrappers = []any{
 		(*AddRunner_Registration)(nil),
@@ -11375,13 +12415,14 @@ func file_agent_v1_agent_proto_init() {
 		(*GateDecision_Wait_)(nil),
 		(*GateDecision_Timeout_)(nil),
 	}
+	file_agent_v1_agent_proto_msgTypes[103].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_agent_v1_agent_proto_rawDesc), len(file_agent_v1_agent_proto_rawDesc)),
 			NumEnums:      10,
-			NumMessages:   99,
+			NumMessages:   107,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

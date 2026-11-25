@@ -32,6 +32,7 @@ import {
   type Repository,
 } from '../repositories/plans';
 import { PullingStep, ReadyMadeLine } from '../registry/PullingStep';
+import { ReadyDoor, needsEngine } from '../dependencies/ReadyDoor';
 import { chooseKind, KIND_HELP, KIND_NAMES, sentence, type Kind } from './kinds';
 
 const STEPS = ['Runners', 'Review', 'Registering', 'Done'] as const;
@@ -146,10 +147,27 @@ export function AddRunnersWizard() {
         if (!on) return;
         setMachines(m.items);
         setRepos(r.items);
-        const first = m.items.find((x) => machineSupports(x, 'linux')) ?? m.items[0];
+        // Coming back from "Get this machine ready" keeps the machine, system, type and count (DEP13).
+        const kept = m.items.find((x) => x.id === params.get('machine'));
+        const first =
+          kept ?? m.items.find((x) => machineSupports(x, 'linux')) ?? m.items[0];
         if (first) {
-          setOs(machineSupports(first, 'linux') ? 'linux' : first.os);
+          const keptOs = ['linux', 'windows', 'macos'].find(
+            (x) => x === params.get('os'),
+          );
+          setOs(
+            kept && keptOs
+              ? (keptOs as OS)
+              : machineSupports(first, 'linux')
+                ? 'linux'
+                : first.os,
+          );
           setMachineId(first.id);
+          const keptKind = params.get('kind');
+          if (kept && (keptKind === 'persistent' || keptKind === 'ephemeral'))
+            setKindPick(keptKind);
+          const keptCount = Number(params.get('count'));
+          if (kept && Number.isInteger(keptCount) && keptCount >= 1) setCount(keptCount);
         }
         if (storedPlan) {
           const p = await unwrap(
@@ -363,6 +381,14 @@ export function AddRunnersWizard() {
               : { disabledReason: `This machine runs ${m.os}, not ${os}.` }),
           }))}
         />
+        {picked && (ephemeral || containerRunner) && needsEngine(picked, os) ? (
+          <ReadyDoor
+            machine={picked}
+            os={os}
+            kind={choice.kind}
+            back={`/setup/runners/add?${new URLSearchParams({ machine: picked.id, os, kind: choice.kind, count: String(count) }).toString()}`}
+          />
+        ) : null}
         {picked && containerOff ? (
           <Message
             tone="needs-you"

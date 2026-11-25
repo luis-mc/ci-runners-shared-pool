@@ -22,8 +22,14 @@
     "apps/web/src/screens/registry/**": [
       "docs/features/registry/spec.md"
     ],
+    "apps/web/src/screens/runners/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
     "apps/web/src/screens/settings/InsightsUpdate*": [
       "docs/features/ci-run-insights/spec.md"
+    ],
+    "apps/web/src/screens/setup/**": [
+      "docs/features/dependency-setup/spec.md"
     ],
     "cmd/crsp/**": [
       "docs/features/cli/spec.md"
@@ -45,6 +51,12 @@
     ],
     "internal/agent/**": [
       "docs/features/machines/spec.md"
+    ],
+    "internal/agent/backends.go": [
+      "docs/features/dependency-setup/spec.md"
+    ],
+    "internal/agent/engine.go": [
+      "docs/features/dependency-setup/spec.md"
     ],
     "internal/agent/jobsample*.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -95,6 +107,9 @@
     "internal/backend/**": [
       "docs/features/runners/spec.md"
     ],
+    "internal/backend/container/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
     "internal/backend/container/buildstream.go": [
       "docs/features/registry/spec.md"
     ],
@@ -134,6 +149,9 @@
     ],
     "internal/doctor/**": [
       "docs/features/doctor/spec.md"
+    ],
+    "internal/doctor/checks/engine.go": [
+      "docs/features/dependency-setup/spec.md"
     ],
     "internal/doctor/checks/workflows*.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -184,6 +202,7 @@
       "docs/features/machines/spec.md"
     ],
     "internal/machines/**": [
+      "docs/features/dependency-setup/spec.md",
       "docs/features/machines/spec.md"
     ],
     "internal/mail/**": [
