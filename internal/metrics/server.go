@@ -53,7 +53,7 @@ type Server struct {
 
 // Start listens on addr and serves in the background. It returns the address in use.
 func Start(addr string, h http.Handler) (*Server, error) {
-	ln, err := net.Listen("tcp", addr)
+	ln, err := (&net.ListenConfig{}).Listen(context.Background(), "tcp", addr)
 	if err != nil {
 		return nil, fmt.Errorf("listen for metrics on %s: %w", addr, err)
 	}

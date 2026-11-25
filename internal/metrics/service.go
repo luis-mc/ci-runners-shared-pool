@@ -31,7 +31,7 @@ type InvalidError struct{ Problems []string }
 func (e *InvalidError) Error() string { return strings.Join(e.Problems, " ") }
 
 // ErrNoToken is returned when the page needs a token and none was made.
-var ErrNoToken = errors.New("Make a token first, or turn the token off.")
+var ErrNoToken error = problem("Make a token first, or turn the token off.")
 
 // State is what the settings screen shows.
 type State struct {

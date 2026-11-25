@@ -58,7 +58,7 @@ func TestHandlerToken(t *testing.T) {
 		auth string
 		code int
 	}{{"", 401}, {"Bearer nope", 401}, {"Bearer secret-token-123456", 200}} {
-		r := httptest.NewRequest("GET", "/metrics", nil)
+		r := httptest.NewRequestWithContext(context.Background(), "GET", "/metrics", nil)
 		if c.auth != "" {
 			r.Header.Set("Authorization", c.auth)
 		}
@@ -70,7 +70,7 @@ func TestHandlerToken(t *testing.T) {
 	}
 	open := Handler(SourceFunc(func(context.Context) (Snapshot, error) { return sample(), nil }), "")
 	w := httptest.NewRecorder()
-	open.ServeHTTP(w, httptest.NewRequest("GET", "/metrics", nil))
+	open.ServeHTTP(w, httptest.NewRequestWithContext(context.Background(), "GET", "/metrics", nil))
 	if w.Code != 200 {
 		t.Fatalf("no token: %d", w.Code)
 	}
@@ -234,16 +234,18 @@ func TestServiceLifecycle(t *testing.T) {
 	if !st.Running || !strings.HasPrefix(st.Addr, "127.0.0.1:") || !st.TokenSet {
 		t.Fatalf("state %+v", st)
 	}
-	r, _ := http.NewRequest("GET", "http://"+st.Addr+"/metrics", nil)
-	if resp, err := http.DefaultClient.Do(r); err != nil || resp.StatusCode != 401 {
+	r, _ := http.NewRequestWithContext(context.Background(), "GET", "http://"+st.Addr+"/metrics", nil)
+	resp, err := http.DefaultClient.Do(r)
+	if err != nil || resp.StatusCode != 401 {
 		t.Fatalf("no token must be 401: %v", err)
 	}
+	_ = resp.Body.Close()
 	r.Header.Set("Authorization", "Bearer "+tok)
-	resp, err := http.DefaultClient.Do(r)
+	resp, err = http.DefaultClient.Do(r)
 	if err != nil || resp.StatusCode != 200 {
 		t.Fatalf("with token: %v", err)
 	}
-	resp.Body.Close()
+	_ = resp.Body.Close()
 	c.Enabled = false
 	if st, _ := svc.Update(ctx, audit.Actor{Login: "owner"}, c); st.Running {
 		t.Fatal("must stop")

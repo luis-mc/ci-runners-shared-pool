@@ -1,7 +1,6 @@
 package metrics
 
 import (
-	"errors"
 	"fmt"
 	"net"
 	"net/url"
@@ -71,19 +70,25 @@ func (c Config) Validate() []string {
 	return p
 }
 
+// problem is a sentence for the owner. It is an error type so that it reads as
+// a sentence, with a capital and a full stop, where it is shown.
+type problem string
+
+func (p problem) Error() string { return string(p) }
+
 // OTLPURL turns an endpoint into the metrics URL of OTLP over HTTP. A bare
 // collector address gets /v1/metrics.
 func OTLPURL(endpoint string) (string, error) {
 	endpoint = strings.TrimSpace(endpoint)
 	if endpoint == "" {
-		return "", errors.New("Type the address of the OpenTelemetry collector.")
+		return "", problem("Type the address of the OpenTelemetry collector.")
 	}
 	u, err := url.Parse(endpoint)
 	if err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
-		return "", errors.New("The collector address must start with http:// or https://.")
+		return "", problem("The collector address must start with http:// or https://.")
 	}
 	if u.User != nil {
-		return "", errors.New("Do not put a password in the collector address.")
+		return "", problem("Do not put a password in the collector address.")
 	}
 	if u.Path == "" || u.Path == "/" {
 		u.Path = "/v1/metrics"

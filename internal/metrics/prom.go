@@ -1,6 +1,7 @@
 package metrics
 
 import (
+	"bytes"
 	"fmt"
 	"io"
 	"sort"
@@ -26,7 +27,7 @@ func escLabel(s string) string {
 
 func num(f float64) string { return strconv.FormatFloat(f, 'g', -1, 64) }
 
-func writeHist(w io.Writer, name, help string, h Hist) {
+func writeHist(w *bytes.Buffer, name, help string, h Hist) {
 	fmt.Fprintf(w, "# HELP %s %s\n# TYPE %s histogram\n", name, help, name)
 	for i, b := range h.Bounds {
 		fmt.Fprintf(w, "%s_bucket{le=\"%s\"} %d\n", name, num(b), h.Counts[i])
@@ -35,7 +36,13 @@ func writeHist(w io.Writer, name, help string, h Hist) {
 }
 
 // WritePrometheus writes s in the Prometheus text format (version 0.0.4).
-func WritePrometheus(w io.Writer, s Snapshot) {
+func WritePrometheus(out io.Writer, s Snapshot) {
+	var w bytes.Buffer
+	render(&w, s)
+	_, _ = out.Write(w.Bytes())
+}
+
+func render(w *bytes.Buffer, s Snapshot) {
 	fmt.Fprintf(w, "# HELP %s Runners by state.\n# TYPE %s gauge\n", NameRunners, NameRunners)
 	states := make([]string, 0, len(s.RunnersByState))
 	for k := range s.RunnersByState {
