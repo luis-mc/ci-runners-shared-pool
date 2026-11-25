@@ -98,6 +98,7 @@ func TestParentRunsQueryUsesPrimaryKey(t *testing.T) {
 		must(t, rows.Scan(&id, &parent, &unused, &detail))
 		plan += detail + "\n"
 	}
+	must(t, rows.Err())
 	if strings.Contains(plan, "SCAN run_follow_ups") || !strings.Contains(plan, "run_follow_ups") {
 		t.Fatalf("plan scans the table:\n%s", plan)
 	}
