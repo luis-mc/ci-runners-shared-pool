@@ -5780,10 +5780,29 @@ components:
         jobs: { type: integer }
         minutes: { type: integer }
         money: { type: number, format: double, description: US dollars, an estimate }
-        public_minutes: { type: integer, description: Minutes of public repositories, which save no money. }
+        public_minutes:
+          {
+            type: integer,
+            description: Minutes of public repositories,
+            which save no money.,
+          }
     SavingsReport:
       type: object
-      required: [range, from, to, total, by_repository, by_os, by_machine, not_priced, note, source_url, copied_on, rates_changed]
+      required:
+        [
+          range,
+          from,
+          to,
+          total,
+          by_repository,
+          by_os,
+          by_machine,
+          not_priced,
+          note,
+          source_url,
+          copied_on,
+          rates_changed,
+        ]
       properties:
         range: { type: string, enum: [today, 7d, 30d, custom] }
         from: { type: string, format: date-time }
@@ -5795,7 +5814,12 @@ components:
         not_priced: { type: integer, description: Jobs with no rate for their system. }
         note: { type: string }
         source_url: { type: string }
-        copied_on: { type: string, description: The date the shipped rates were copied, YYYY-MM-DD. }
+        copied_on:
+          {
+            type: string,
+            description: The date the shipped rates were copied,
+            YYYY-MM-DD.,
+          }
         rates_changed: { type: boolean }
     SavingsRate:
       type: object
@@ -5803,7 +5827,8 @@ components:
       properties:
         os: { type: string, enum: [linux, windows, macos] }
         size: { type: string }
-        per_minute: { type: number, format: double, description: US dollars per billed minute. }
+        per_minute:
+          { type: number, format: double, description: US dollars per billed minute. }
     SavingsRates:
       type: object
       required: [source_url, copied_on, changed, rates, machine_sizes]
