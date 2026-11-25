@@ -46,6 +46,8 @@ type Config struct {
 	// RemoveConflicts is the owner's yes to remove unofficial Docker packages
 	// (default no: the install is refused and names them).
 	RemoveConflicts bool
+	// Wait sleeps between engine checks on a Mac; nil sleeps for real.
+	Wait func(ctx context.Context, d time.Duration)
 	// TestImage is the tiny image of the Verify test container.
 	TestImage string
 }
@@ -67,6 +69,24 @@ const (
 	MsgNotPinned    = "This installer is not pinned in this release, so crsp will not run it. Use \"Do it myself\"."
 	MsgNeedsAdmin   = "This needs an administrator. Run the agent with administrator rights, or use \"Do it myself\"."
 )
+
+// The wait for Docker Desktop to answer on a Mac: 5 seconds, up to 4 minutes.
+const (
+	macEngineStep  = 5 * time.Second
+	macEngineWaits = 48
+)
+
+// wait sleeps for d, or less when ctx ends or the test's Wait says so.
+func (r *Runner) wait(ctx context.Context, d time.Duration) {
+	if r.cfg.Wait != nil {
+		r.cfg.Wait(ctx, d)
+		return
+	}
+	select {
+	case <-ctx.Done():
+	case <-time.After(d):
+	}
+}
 
 // StopPrefix: a DepsInstall with no item ids and a command_id of
 // "stop:<job_id>" asks the agent to stop that job at the next safe point.
@@ -250,6 +270,9 @@ func (r *Runner) validate(todo []todoItem, licence bool, sys System) string {
 		if p.NeedsAdmin && !sys.IsAdmin() {
 			return MsgNeedsAdmin
 		}
+		if p.ID == depsetup.ItemDockerDesktop && !licence && t.state != depsetup.StateStopped {
+			return "Docker Desktop needs your yes that you have the right to use it. Tick the box and try again."
+		}
 		if p.Method != depsetup.MethodDownload {
 			continue
 		}
@@ -258,9 +281,6 @@ func (r *Runner) validate(todo []todoItem, licence bool, sys System) string {
 		}
 		if !allowedURL(p.URL) {
 			return MsgNotPinned
-		}
-		if p.ID == depsetup.ItemDockerDesktop && !licence {
-			return "Docker Desktop needs your yes that you have the right to use it. Tick the box and try again."
 		}
 	}
 	return ""
@@ -391,14 +411,23 @@ func (r *Runner) installItem(ctx context.Context, j *job, req *agentv1.DepsInsta
 	case p.ID == depsetup.ItemDockerDesktop && goos == "windows":
 		return r.installDesktop(ctx, j, p, file)
 	case p.ID == depsetup.ItemDockerDesktop && goos == "darwin":
-		return false, errors.New("needs a person at the screen: approve one prompt. Download Docker Desktop, open it and approve the system prompt once, then check again. " + strings.Join(p.ManualSteps, " "))
+		return false, r.installDesktopMac(ctx, j, p)
 	}
 	return false, fmt.Errorf("crsp has no install method for %s on this machine", p.Name)
 }
 
 func (r *Runner) startStopped(ctx context.Context, j *job, p depsetup.Pinned) error {
-	if p.ID == depsetup.ItemDockerEngine && r.cfg.Sys.GOOS() == "linux" {
+	switch goos := r.cfg.Sys.GOOS(); {
+	case p.ID == depsetup.ItemDockerEngine && goos == "linux":
 		return r.mustRun(ctx, j, "install", "Starting Docker", []string{"systemctl", "start", "docker"})
+	case p.ID == depsetup.ItemDockerWSL2 && goos == "windows":
+		w := []string{"wsl", "-d", DistroName, "-u", "root", "--"}
+		if err := r.mustRun(ctx, j, "install", "Starting Docker", append(append([]string(nil), w...), "systemctl", "start", "docker")); err != nil {
+			return r.mustRun(ctx, j, "install", "Starting Docker", append(append([]string(nil), w...), "service", "docker", "start"))
+		}
+		return nil
+	case p.ID == depsetup.ItemDockerDesktop && goos == "darwin":
+		return r.openDockerApp(ctx, j)
 	}
 	return fmt.Errorf("%s is installed but not running. Start it, then check again; crsp does not start it for you.", p.Name) //nolint:revive,staticcheck // a sentence for the user
 }
@@ -486,9 +515,13 @@ func (r *Runner) installDockerEngine(ctx context.Context, j *job, p depsetup.Pin
 	if r.cfg.OSRelease != nil {
 		text = r.cfg.OSRelease()
 	}
-	family, codename, ok := ParseOSRelease(text).DockerRepo()
+	rel := ParseOSRelease(text)
+	family, codename, ok := rel.DockerRepo()
 	if !ok {
-		return errors.New("crsp installs Docker only on Ubuntu and Debian in this release. Use \"Do it myself\": " + strings.Join(ManualDockerEngine(), " "))
+		if rpm, isRPM := rel.DockerRPMRepo(); isRPM {
+			return r.installDockerEngineRPM(ctx, j, p, rpm)
+		}
+		return errors.New("crsp installs Docker on Ubuntu, Debian, Fedora and the Red Hat family. Use \"Do it myself\": " + strings.Join(ManualDockerEngine(), " "))
 	}
 	have, err := r.installedPackages(ctx, j, append(append([]string(nil), ConflictPackages...), DockerPackages...))
 	if err != nil {
@@ -563,6 +596,110 @@ func (r *Runner) installDockerEngine(ctx context.Context, j *job, p depsetup.Pin
 	return nil
 }
 
+// installDockerEngineRPM is the dnf path of Docker's install guide for Fedora and the
+// Red Hat family: the repository file comes from download.docker.com over https
+// (no dnf plugin and no config-manager version differences), then the packages.
+func (r *Runner) installDockerEngineRPM(ctx context.Context, j *job, p depsetup.Pinned, family string) error {
+	sys := r.cfg.Sys
+	have, err := r.rpmInstalled(ctx, j, append(append([]string(nil), RPMConflictPackages...), DockerPackages...))
+	if err != nil {
+		return err
+	}
+	var conflicts []string
+	for _, c := range RPMConflictPackages {
+		if have[c] {
+			conflicts = append(conflicts, c)
+		}
+	}
+	if len(conflicts) > 0 {
+		if !r.cfg.RemoveConflicts {
+			return fmt.Errorf("these packages conflict with Docker's own: %s. crsp removes them only with your yes; remove them yourself or say yes and try again", strings.Join(conflicts, ", "))
+		}
+		if err := r.mustRun(ctx, j, "install", "Removing the conflicting packages", append([]string{"dnf", "-y", "remove"}, conflicts...)); err != nil {
+			return err
+		}
+	}
+	if !allowedURL(RPMRepoURL(family)) {
+		return errors.New(MsgNotPinned) //nolint:staticcheck // ST1005: a sentence shown to the user
+	}
+	repoWas := sys.Exists(RPMRepoPath)
+	j.status("install", "Fetching Docker's package source from download.docker.com")
+	if err := sys.Download(ctx, RPMRepoURL(family), RPMRepoPath, j.progress("install", "Fetching Docker's package source")); err != nil {
+		return fmt.Errorf("the download of Docker's package source failed: %s", r.redact(err.Error()))
+	}
+	if !repoWas {
+		j.add(p.ID, "rpm-repo-file", RPMRepoPath, "")
+	}
+	if ctx.Err() != nil {
+		return ctx.Err()
+	}
+	if err := r.mustRun(ctx, j, "install", "Installing Docker Engine", append([]string{"dnf", "-y", "install"}, DockerPackages...)); err != nil {
+		return err
+	}
+	for _, pk := range DockerPackages {
+		if !have[pk] {
+			j.add(p.ID, "rpm-package", pk, "")
+		}
+	}
+	enabled, _ := sys.Run(context.WithoutCancel(ctx), []string{"systemctl", "is-enabled", "docker"}, func(string, string) {})
+	if err := r.mustRun(ctx, j, "install", "Starting Docker", []string{"systemctl", "enable", "--now", "docker"}); err != nil {
+		return err
+	}
+	if enabled != 0 {
+		j.add(p.ID, "systemd-enable", "docker", "")
+	}
+	return nil
+}
+
+// rpmInstalled asks rpm which of names are installed (read only).
+func (r *Runner) rpmInstalled(ctx context.Context, j *job, names []string) (map[string]bool, error) {
+	var out []string
+	argv := append([]string{"rpm", "-q", "--qf", "%{NAME} installed\\n"}, names...)
+	if _, err := r.cfgRunCapture(ctx, j, argv, &out); err != nil {
+		return nil, fmt.Errorf("the installed packages could not be read: %s", r.redact(err.Error()))
+	}
+	have := map[string]bool{}
+	for _, l := range out {
+		if f := strings.Fields(l); len(f) == 2 && f[1] == "installed" {
+			have[f[0]] = true
+		}
+	}
+	return have, nil
+}
+
+// BrewPaths are where Homebrew lives on Apple silicon and on Intel Macs.
+var BrewPaths = []string{"/opt/homebrew/bin/brew", "/usr/local/bin/brew"}
+
+func (r *Runner) brew() string {
+	for _, p := range BrewPaths {
+		if r.cfg.Sys.Exists(p) {
+			return p
+		}
+	}
+	return ""
+}
+
+// installDesktopMac installs Docker Desktop through the Homebrew cask, which
+// checks the file itself, then opens the app. The first start asks the person at
+// the screen for one system permission that crsp cannot click (D-DEP-9); crsp
+// waits for the engine and says so.
+func (r *Runner) installDesktopMac(ctx context.Context, j *job, p depsetup.Pinned) error {
+	brew := r.brew()
+	if brew == "" {
+		return errors.New("Homebrew is not installed on this Mac, and crsp does not install it. Use \"Do it myself\": " + strings.Join(p.ManualSteps, " ")) //nolint:staticcheck // a sentence for the user
+	}
+	if err := r.mustRun(ctx, j, "install", "Installing Docker Desktop", []string{brew, "install", "--cask", BrewCask}); err != nil {
+		return err
+	}
+	j.add(p.ID, "brew-cask", BrewCask, p.Version)
+	return r.openDockerApp(ctx, j)
+}
+
+func (r *Runner) openDockerApp(ctx context.Context, j *job) error {
+	j.status("install", "Opening Docker Desktop. If a system window asks for your permission, approve it once at this Mac.")
+	return r.mustRun(ctx, j, "install", "Opening Docker Desktop", []string{"open", "-a", "Docker"})
+}
+
 // installedPackages asks dpkg which of names are installed (read only).
 func (r *Runner) installedPackages(ctx context.Context, j *job, names []string) (map[string]bool, error) {
 	var out []string
@@ -618,6 +755,17 @@ func (r *Runner) verify(ctx context.Context, j *job, req *agentv1.DepsInstall) (
 	if r.cfg.Engine != nil {
 		eng = r.cfg.Engine(ctx)
 	}
+	// Docker Desktop on a Mac needs a person to approve one prompt at the first start:
+	// wait for the engine instead of failing at once (D-DEP-9).
+	for i := 0; !eng.Usable && r.cfg.Sys.GOOS() == "darwin" && i < macEngineWaits && ctx.Err() == nil; i++ {
+		if i == 0 {
+			j.status("verify", "Waiting for Docker Desktop to start. If a system window asks for your permission, approve it at this Mac.")
+		}
+		r.wait(ctx, macEngineStep)
+		if r.cfg.Engine != nil {
+			eng = r.cfg.Engine(ctx)
+		}
+	}
 	if !eng.Usable {
 		if r.cfg.Sys.GOOS() == "windows" && r.cfg.VirtualizationOff != nil && r.cfg.VirtualizationOff() {
 			return "", errors.New("Virtualization is turned off in this PC's firmware (BIOS or UEFI). Turn it on there, then check again; crsp cannot change it") //nolint:staticcheck // a sentence for the user
@@ -625,6 +773,9 @@ func (r *Runner) verify(ctx context.Context, j *job, req *agentv1.DepsInstall) (
 		why := eng.Reason
 		if why == "" {
 			why = "it does not answer"
+		}
+		if r.cfg.Sys.GOOS() == "darwin" {
+			return "", fmt.Errorf("Docker Desktop did not answer yet: %s. It may be waiting for your permission at this Mac. Approve it, then press Try again.", strings.TrimSuffix(why, ".")) //nolint:staticcheck // a sentence for the user
 		}
 		return "", fmt.Errorf("The container engine is not working: %s.", strings.TrimSuffix(why, ".")) //nolint:staticcheck // a sentence for the user
 	}

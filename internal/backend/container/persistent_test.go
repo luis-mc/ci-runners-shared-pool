@@ -193,3 +193,55 @@ func TestFindPersistentReadsTheContainerAndToleratesNoContainer(t *testing.T) {
 		t.Fatalf("found: %+v %v", got, err)
 	}
 }
+
+// DEP9: the image and the persistent pool container are made before the first
+// runner, with no runner registered; a second run builds and creates nothing.
+func TestPreparePoolMakesImageAndPersistentPoolOnce(t *testing.T) {
+	r := newPersistentRig(t, 64000)
+	img, err := r.b.PreparePool(ctx, "x64", true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if img.ID == "" || r.f.containers[PersistentPool] == nil {
+		t.Fatalf("image %+v pool %+v", img, r.f.containers[PersistentPool])
+	}
+	n := len(r.f.images)
+	creates := 0
+	for _, c := range r.f.calls {
+		if strings.HasPrefix(c, "docker run -d --name "+PersistentPool) {
+			creates++
+		}
+		if strings.Contains(c, "pool sh "+StateDir+"/bin/add-runner.sh") {
+			t.Errorf("a runner was registered: %s", c)
+		}
+	}
+	if creates != 1 {
+		t.Fatalf("pool created %d times", creates)
+	}
+	if _, err := r.b.PreparePool(ctx, "x64", true); err != nil {
+		t.Fatal(err)
+	}
+	again := 0
+	for _, c := range r.f.calls {
+		if strings.HasPrefix(c, "docker run -d --name "+PersistentPool) {
+			again++
+		}
+	}
+	if again != 1 || len(r.f.images) != n {
+		t.Errorf("second run created again: pool %d, images %d to %d", again, n, len(r.f.images))
+	}
+}
+
+// DEP9: a job-pool choice prepares the image only; no pool container is made.
+func TestPreparePoolImageOnlyForEphemeral(t *testing.T) {
+	r := newPersistentRig(t, 64000)
+	if _, err := r.b.PreparePool(ctx, "x64", false); err != nil {
+		t.Fatal(err)
+	}
+	if r.f.containers[PersistentPool] != nil {
+		t.Error("a persistent pool was made for an ephemeral choice")
+	}
+	if len(r.f.images) == 0 {
+		t.Error("no image was prepared")
+	}
+}
