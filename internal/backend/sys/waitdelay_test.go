@@ -19,10 +19,11 @@ const helperEnv = "CRSP_SYS_PIPE_HELPER"
 func TestPipeHelperProcess(t *testing.T) {
 	switch os.Getenv(helperEnv) {
 	case "child":
-		time.Sleep(60 * time.Second)
+		// A long-running program, bounded so it never outlives the run.
+		<-time.After(60 * time.Second)
 		os.Exit(0)
 	case "parent-exit", "parent-hang":
-		c := exec.Command(os.Args[0], "-test.run=^TestPipeHelperProcess$") //nolint:gosec // the test binary itself.
+		c := exec.CommandContext(context.Background(), os.Args[0], "-test.run=^TestPipeHelperProcess$") //nolint:gosec // the test binary itself.
 		c.Env = append(os.Environ(), helperEnv+"=child")
 		c.Stdout, c.Stderr = os.Stdout, os.Stderr // the child inherits the pipes
 		if err := c.Start(); err != nil {
@@ -31,13 +32,13 @@ func TestPipeHelperProcess(t *testing.T) {
 		}
 		fmt.Printf("child-pid %d\n", c.Process.Pid)
 		if os.Getenv(helperEnv) == "parent-hang" {
-			time.Sleep(60 * time.Second)
+			<-time.After(60 * time.Second)
 		}
 		os.Exit(0)
 	}
 }
 
-func runHelper(t *testing.T, ctx context.Context, mode string) (Result, error, time.Duration) {
+func runHelper(t *testing.T, ctx context.Context, mode string) (Result, time.Duration, error) {
 	t.Helper()
 	old := PipeWaitDelay
 	PipeWaitDelay = time.Second
@@ -50,7 +51,7 @@ func runHelper(t *testing.T, ctx context.Context, mode string) (Result, error, t
 	})
 	took := time.Since(begin)
 	killChild(t, res.Stdout)
-	return res, err, took
+	return res, took, err
 }
 
 func killChild(t *testing.T, out string) {
@@ -69,7 +70,7 @@ func killChild(t *testing.T, out string) {
 // OPS96: a program that ends but leaves a child holding its output pipes no
 // longer blocks Run until that child ends; its own exit code is the result.
 func TestRunReturnsWhenChildKeepsPipes(t *testing.T) {
-	res, err, took := runHelper(t, context.Background(), "parent-exit")
+	res, took, err := runHelper(t, context.Background(), "parent-exit")
 	if err != nil || res.ExitCode != 0 {
 		t.Fatalf("err %v, result %+v", err, res)
 	}
@@ -86,7 +87,7 @@ func TestRunReturnsWhenChildKeepsPipes(t *testing.T) {
 func TestRunReturnsOnCancelWhenChildKeepsPipes(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	_, _, took := runHelper(t, ctx, "parent-hang")
+	_, took, _ := runHelper(t, ctx, "parent-hang")
 	if took > 30*time.Second {
 		t.Fatalf("Run waited %s after ctx ended", took)
 	}
