@@ -11,7 +11,7 @@ test('Ctrl+K opens the palette, finds an area and goes to it', async ({ page }) 
   await expect(dialog).toBeVisible();
   await dialog.getByRole('textbox').fill('runn');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { level: 1, name: 'Setup' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Add runners' })).toBeVisible();
 });
 
 test('the palette lists a command only to a role that may use it', async ({ page }) => {
