@@ -9,6 +9,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	neturl "net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -25,6 +26,9 @@ import (
 // the words are the ones of the Windows window (model.go), so a state is one test, not two.
 
 // Window sizes of the two windows, width by height in pixels.
+// loopback is the address of this machine only; the page is served on it and nowhere else.
+const loopback = "127.0.0.1"
+
 const (
 	UpdateWidth, UpdateHeight         = 520, 440
 	FirstStartWidth, FirstStartHeight = 560, 520
@@ -134,7 +138,7 @@ func (w *Web) Handler(port string) http.Handler {
 		return func(rw http.ResponseWriter, r *http.Request) {
 			// Only the page itself, on the loopback address: a page of another site cannot
 			// reach this server through a rebinding name or a form post.
-			if r.Host != "127.0.0.1:"+port {
+			if r.Host != net.JoinHostPort(loopback, port) {
 				http.Error(rw, "not found", http.StatusNotFound)
 				return
 			}
@@ -200,7 +204,7 @@ func (w *Web) Run(ctx context.Context) int {
 			return 0 // one window per name: the first one shows
 		}
 	}
-	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	ln, err := net.Listen("tcp", net.JoinHostPort(loopback, "0"))
 	if err != nil {
 		say(w.Stderr, "error: "+err.Error())
 		return 1
@@ -213,7 +217,8 @@ func (w *Web) Run(ctx context.Context) int {
 		defer cancel()
 		_ = srv.Shutdown(sctx)
 	}()
-	url := "http://127.0.0.1:" + port + "/" + w.token + "/"
+	// Built, not written as an address: the loopback address of this process only (internal/addresses guard).
+	url := (&neturl.URL{Scheme: "http", Host: net.JoinHostPort(loopback, port), Path: "/" + w.token + "/"}).String()
 	w.writeAddress(url)
 	defer w.clearAddress()
 
