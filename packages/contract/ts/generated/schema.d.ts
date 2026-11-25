@@ -1119,6 +1119,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines/{machineId}/uptime": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The uptime of one machine and why it took no jobs
+         * @description machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+         */
+        get: operations["getMachineUptime"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/machines/{machineId}/job-stats": {
         parameters: {
             query?: never;
@@ -7635,6 +7655,60 @@ export interface components {
             /** @description An OOM kill this recent is a finding (default 60). */
             oom_window_minutes: number;
         };
+        /** @description The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC. */
+        MachineUptime: {
+            machine_id: string;
+            /** @description False until the controller has seen the machine; then the rest is empty. */
+            watched: boolean;
+            /**
+             * Format: date-time
+             * @description When the controller first saw the machine.
+             */
+            since?: string;
+            /** @description The windows 24h, 7d and 30d, in this order. */
+            windows: components["schemas"]["UptimeWindow"][];
+            /** @description Periods of the last 30 days in which the machine took no new job, newest first, at most 50. */
+            periods: components["schemas"]["UptimePeriod"][];
+        };
+        UptimeWindow: {
+            /** @enum {string} */
+            window: "24h" | "7d" | "30d";
+            /**
+             * Format: int64
+             * @description The part of the window the controller watched.
+             */
+            covered_seconds: number;
+            /** Format: int64 */
+            online_seconds: number;
+            /**
+             * Format: int64
+             * @description Online and taking new jobs.
+             */
+            taking_seconds: number;
+            /**
+             * Format: float
+             * @description Online share of the watched time; absent when nothing was watched.
+             */
+            uptime_pct?: number;
+            /**
+             * Format: float
+             * @description Online and taking share of the watched time; absent when nothing was watched.
+             */
+            taking_pct?: number;
+        };
+        UptimePeriod: {
+            /** Format: date-time */
+            started_at: string;
+            /**
+             * Format: date-time
+             * @description Absent while the period goes on.
+             */
+            ended_at?: string;
+            /** @description True when no heartbeat arrived; false when the machine was online but took no job. */
+            offline: boolean;
+            /** @description Offline: heartbeat_lost, clock_skew or controller_stopped. Online: stopped, mode_paused, tray_paused, on_battery, busy, base_image_missing or disk_low (machines R5.62). */
+            reason: string;
+        };
         /** @description A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC. */
         MachineHealth: {
             machine_id: string;
@@ -9516,6 +9590,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MachineHealth"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineUptime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The uptime. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineUptime"];
                 };
             };
             default: components["responses"]["Error"];
