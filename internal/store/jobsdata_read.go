@@ -161,53 +161,59 @@ func (s *JobsStore) ListRuns(ctx context.Context, f jobsdata.RunFilter) ([]jobsd
 	return out, total, nil
 }
 
+type runKey struct {
+	repo, run int64
+	attempt   int
+}
+
+type runCounts struct{ total, done, failed, running int }
+
 // fillRunCounts sets the job counts and the state of the page rows with one grouped query per 200 runs.
 func (s *JobsStore) fillRunCounts(ctx context.Context, rows []jobsdata.RunRow) error {
-	type key struct {
-		repo, run int64
-		attempt   int
-	}
-	type counts struct{ total, done, failed, running int }
-	got := make(map[key]counts, len(rows))
+	got := make(map[runKey]runCounts, len(rows))
 	const chunk = 200
 	for start := 0; start < len(rows); start += chunk {
-		part := rows[start:min(start+chunk, len(rows))]
-		args := make([]any, 0, len(part)*3)
-		marks := make([]string, len(part))
-		for i, r := range part {
-			marks[i] = "(?, ?, ?)"
-			args = append(args, r.RepositoryID, r.RunID, r.Attempt)
+		if err := s.countRunJobs(ctx, rows[start:min(start+chunk, len(rows))], got); err != nil {
+			return err
 		}
-		q, err := s.rdb.QueryContext(ctx, `SELECT j.repository_id, j.run_id, j.run_attempt, count(*),
-			COALESCE(sum(j.state = 'done'), 0),
-			COALESCE(sum(j.state = 'done' AND j.result IN ('failure', 'timed_out', 'lost')), 0),
-			COALESCE(sum(j.state = 'running'), 0)
-			FROM (VALUES `+strings.Join(marks, ", ")+`) v
-			JOIN jobs j ON j.repository_id = v.column1 AND j.run_id = v.column2 AND j.run_attempt = v.column3
-			GROUP BY j.repository_id, j.run_id, j.run_attempt`, args...)
-		if err != nil {
-			return fmt.Errorf("count run jobs: %w", err)
-		}
-		for q.Next() {
-			var k key
-			var c counts
-			if err := q.Scan(&k.repo, &k.run, &k.attempt, &c.total, &c.done, &c.failed, &c.running); err != nil {
-				_ = q.Close()
-				return fmt.Errorf("scan run jobs: %w", err)
-			}
-			got[k] = c
-		}
-		if err := q.Err(); err != nil {
-			_ = q.Close()
-			return fmt.Errorf("count run jobs: %w", err)
-		}
-		_ = q.Close()
 	}
 	for i := range rows {
 		r := &rows[i]
-		c := got[key{r.RepositoryID, r.RunID, r.Attempt}]
+		c := got[runKey{r.RepositoryID, r.RunID, r.Attempt}]
 		r.JobsTotal, r.JobsDone, r.JobsFailed = c.total, c.done, c.failed
 		r.State = runState(string(r.Conclusion), c.running, c.done)
+	}
+	return nil
+}
+
+func (s *JobsStore) countRunJobs(ctx context.Context, part []jobsdata.RunRow, got map[runKey]runCounts) error {
+	args := make([]any, 0, len(part)*3)
+	marks := make([]string, len(part))
+	for i, r := range part {
+		marks[i] = "(?, ?, ?)"
+		args = append(args, r.RepositoryID, r.RunID, r.Attempt)
+	}
+	q, err := s.rdb.QueryContext(ctx, `SELECT j.repository_id, j.run_id, j.run_attempt, count(*),
+		COALESCE(sum(j.state = 'done'), 0),
+		COALESCE(sum(j.state = 'done' AND j.result IN ('failure', 'timed_out', 'lost')), 0),
+		COALESCE(sum(j.state = 'running'), 0)
+		FROM (VALUES `+strings.Join(marks, ", ")+`) v
+		JOIN jobs j ON j.repository_id = v.column1 AND j.run_id = v.column2 AND j.run_attempt = v.column3
+		GROUP BY j.repository_id, j.run_id, j.run_attempt`, args...)
+	if err != nil {
+		return fmt.Errorf("count run jobs: %w", err)
+	}
+	defer func() { _ = q.Close() }()
+	for q.Next() {
+		var k runKey
+		var c runCounts
+		if err := q.Scan(&k.repo, &k.run, &k.attempt, &c.total, &c.done, &c.failed, &c.running); err != nil {
+			return fmt.Errorf("scan run jobs: %w", err)
+		}
+		got[k] = c
+	}
+	if err := q.Err(); err != nil {
+		return fmt.Errorf("count run jobs: %w", err)
 	}
 	return nil
 }

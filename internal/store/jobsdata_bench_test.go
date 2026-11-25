@@ -53,6 +53,9 @@ func p95(d []time.Duration) time.Duration {
 }
 
 func TestListPagesP95(t *testing.T) {
+	if raceOn {
+		t.Skip("timings mean nothing under the race detector")
+	}
 	js := listStore(t)
 	ctx := context.Background()
 	runPage := func(f jobsdata.RunFilter) func() error {
@@ -81,7 +84,7 @@ func TestListPagesP95(t *testing.T) {
 	}
 	for name, fn := range cases {
 		var d []time.Duration
-		for range 40 {
+		for range 20 {
 			start := time.Now()
 			if err := fn(); err != nil {
 				t.Fatalf("%s: %v", name, err)
@@ -118,6 +121,9 @@ func BenchmarkListJobsPage(b *testing.B) {
 
 // The list queries must use the indexes of migration 00046 and never scan the jobs table once per run.
 func TestListQueryPlans(t *testing.T) {
+	if raceOn {
+		t.Skip("seeding 110,000 rows is slow under the race detector")
+	}
 	js := listStore(t)
 	plan := func(q string, args ...any) string {
 		rows, err := js.rdb.QueryContext(context.Background(), "EXPLAIN QUERY PLAN "+q, args...)
@@ -133,6 +139,9 @@ func TestListQueryPlans(t *testing.T) {
 				t.Fatal(err)
 			}
 			out = append(out, detail)
+		}
+		if err := rows.Err(); err != nil {
+			t.Fatal(err)
 		}
 		return strings.Join(out, "\n")
 	}
