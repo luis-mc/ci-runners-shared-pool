@@ -20,6 +20,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/mirror"
 )
 
 // Kinds of cache this milestone knows (the API enum values).
@@ -29,6 +30,8 @@ const (
 	// KindDependency is the whole dependency folder of one persistent runner:
 	// one line per persistent runner with its size (caches R5.56, runners R5.90).
 	KindDependency = "dependency_cache"
+	// KindActions is the Actions cache receiver of the holder (R5.50 step 3).
+	KindActions = "actions_cache"
 )
 
 // State of a cache.
@@ -72,6 +75,13 @@ type Cache struct {
 	State       string
 	WaitingFor  []string
 	Error       string
+	// The rows of a cache holder (mirrors.go).
+	Name        string
+	Status      string
+	LastRefresh time.Time
+	Hits        int64
+	Misses      int64
+	BytesServed int64
 }
 
 // Machines is what the service needs from the machines area.
@@ -90,6 +100,10 @@ type Options struct {
 	Audit    audit.Recorder
 	Now      func() time.Time
 	NewID    func() string
+	// Mirrors serves the rows of the cache holder; nil gives none (R5.71).
+	Mirrors Mirrors
+	// HolderID is the machine id those rows carry; "controller" by default.
+	HolderID string
 }
 
 type entry struct {
@@ -114,6 +128,7 @@ type Service struct {
 	wiped   map[string]time.Time
 	wipes   map[string]*wipe // command id -> wipe
 	seq     int
+	mirror  mirrorState
 }
 
 // New returns a Service.
@@ -121,7 +136,8 @@ func New(o Options) *Service {
 	if o.Now == nil {
 		o.Now = func() time.Time { return time.Now().UTC() }
 	}
-	return &Service{o: o, reports: map[string][]entry{}, wiped: map[string]time.Time{}, wipes: map[string]*wipe{}}
+	return &Service{o: o, reports: map[string][]entry{}, wiped: map[string]time.Time{}, wipes: map[string]*wipe{},
+		mirror: mirrorState{wipes: map[string]*mirrorWipe{}, done: map[string]time.Time{}, last: map[string]string{}}}
 }
 
 func slug(s string) string {
@@ -194,6 +210,18 @@ func (s *Service) HandleReport(machineID string, r *agentv1.CacheReport) {
 // removed machine's caches are dropped. machineID and kind narrow the list when
 // not empty.
 func (s *Service) List(ctx context.Context, machineID, kind string) ([]Cache, error) {
+	out, err := s.listReports(ctx, machineID, kind)
+	if err != nil {
+		return nil, err
+	}
+	mr, err := s.mirrorRows(ctx, machineID, kind)
+	if err != nil {
+		return nil, err
+	}
+	return append(out, mr...), nil
+}
+
+func (s *Service) listReports(ctx context.Context, machineID, kind string) ([]Cache, error) {
 	ms, err := s.o.Machines.List(ctx)
 	if err != nil {
 		return nil, err
@@ -263,6 +291,9 @@ func KindName(kind string) string {
 // (UX-62). With confirm it sends the wipe to the agent and returns the cache as
 // wiping. Nothing is deleted here: the agent deletes when the runner is idle.
 func (s *Service) BeginWipe(ctx context.Context, actor audit.Actor, id string, confirm bool) (Cache, error) {
+	if strings.HasPrefix(id, mirror.IDPrefix) {
+		return s.beginMirrorWipe(ctx, actor, id, confirm)
+	}
 	e, ok := s.find(id)
 	if !ok {
 		return Cache{}, ErrNotFound
