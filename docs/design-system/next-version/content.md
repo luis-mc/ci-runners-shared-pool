@@ -959,6 +959,35 @@ The words of the native update window on Windows (tray R5.46 to R5.49). The step
 | Nothing changed. Still on {version}. | The line after a cancel. |
 | CI RUNNERS SHARED POOL | The name in the band and in the installer bitmaps (capitals: the art is drawn in a 5 by 7 pixel font). |
 
+The web window of macOS and Linux (TRAY7, tray R5.55) shows these same words on the same steps; nothing is added to the list above for it.
+
+## First-start window words
+
+The words of the first-start window of macOS and Linux (tray R5.56, owner decision D20): Welcome, Your choices, All set. The steps follow UX-30 and the buttons UX-71.
+
+| Words | Used for |
+|---|---|
+| Welcome - CI Runners Shared Pool | The title of the window. |
+| Step 1 of 3, Step 2 of 3, Step 3 of 3 | The small line above the heading. |
+| Welcome to CI Runners Shared Pool | The heading on Welcome. |
+| This computer can now run the jobs of your GitHub repositories. A small icon in the {where} shows how it is doing. | First line on Welcome. {where} is `menu bar` on macOS and `system tray` on Linux. |
+| Two quick choices, then you are done. | Second line on Welcome. |
+| Not now, Next | The two buttons on Welcome. Next is the main one and the default. Not now closes the window. |
+| Your choices | The heading on the choices step. |
+| Start at login | Tick box, on at the start. |
+| The icon comes back every time you sign in. | The line under Start at login. |
+| Open the console | Tick box, on at the start. |
+| Sign in and set up your pool in the browser. | The line under Open the console. |
+| Back, Save choices | The two buttons on the choices step. Save choices is the main one and the default. |
+| All set | The heading on Done. |
+| Click the icon in the {where} for the menu. Look for updates is there too. | First line on Done. |
+| Start at login is on. Start at login is off. | The line on Done after the choice was applied. |
+| Start at login did not change: {reason} | The line on Done when the entry could not be written. |
+| The console is opening in your browser. | The line on Done after Open the console. |
+| The console did not open: {reason} Use Open console in the menu. | The line on Done when the link could not be made. |
+| menu bar, system tray | The place of the icon, by OS. |
+| Close | The button on Done. |
+
 ## Shared Pool and Jobs words
 
 The words of the seven-item menu, Shared Pool and the Jobs sub-sections (owner decisions D24, D29, D31 to D34, LOOK31). "Runners" stays "runners" (D29).
