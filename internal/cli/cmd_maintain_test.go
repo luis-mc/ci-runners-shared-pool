@@ -2,7 +2,6 @@ package cli
 
 import (
 	"encoding/json"
-	"io"
 	"net/http"
 	"strings"
 	"sync/atomic"
@@ -156,12 +155,15 @@ func TestMaintainReleasesWhenCancelledWhileRunning(t *testing.T) {
 	var f *fixture
 	f = maintainFixture(t, func(w http.ResponseWriter, r *http.Request) {
 		f.cancel() // Ctrl-C
-		// Answer only after the client has dropped the request, so it can
-		// never see the answer before the cancel. The server notices the
-		// drop only once the request body is read.
-		_, _ = io.Copy(io.Discard, r.Body)
-		<-r.Context().Done()
-		writeJSON(w, 200, map[string]any{"ok": true, "exit_code": 0, "output": ""})
+		// Never answer: drop the connection. The client can then only fail with
+		// the cancel; with an answer on the wire it could, by a race inside the
+		// transport, still return the answer and the cancel would go unseen.
+		conn, _, err := w.(http.Hijacker).Hijack()
+		if err != nil {
+			t.Errorf("hijack: %v", err)
+			return
+		}
+		_ = conn.Close()
 	})
 	code, _, errOut := f.run("machine", "maintain", "build-01", "--yes", "--", "compact")
 	if code == 0 || !strings.Contains(errOut, "may still run on the machine") || f.count("POST /api/v1/machines/m_build-01/resume") != 1 {
