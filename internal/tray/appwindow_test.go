@@ -170,3 +170,52 @@ func TestLookWhileUpdatingOpensTheProgressWindow(t *testing.T) {
 		t.Fatalf("%v %q", err, opened)
 	}
 }
+
+func TestProfileWindowArgsUseTheOwnProfileAndTheSize(t *testing.T) {
+	got := ProfileWindowArgs("http://127.0.0.1:1/x/", "/p", 520, 440)
+	want := []string{"--app=http://127.0.0.1:1/x/", "--window-size=520,440", "--user-data-dir=/p", "--no-first-run", "--no-default-browser-check", "--disable-extensions"}
+	if len(got) != len(want) {
+		t.Fatalf("args = %v", got)
+	}
+	for i := range want {
+		if got[i] != want[i] {
+			t.Errorf("arg %d = %q, want %q", i, got[i], want[i])
+		}
+	}
+	if !strings.HasSuffix(filepath.ToSlash(ProfileDir()), "crsp/"+ProfileDirName) {
+		t.Errorf("profile dir = %s", ProfileDir())
+	}
+}
+
+func TestOpenProfileWindowNeedsABrowser(t *testing.T) {
+	l := BrowserLookup{GOOS: "linux", LookPath: func(string) (string, error) { return "", errors.New("no") }}
+	if err := OpenProfileWindow(l, nil, "http://x/", 1, 1); !errors.Is(err, ErrNoAppBrowser) {
+		t.Fatalf("err = %v", err)
+	}
+	var path string
+	l.LookPath = func(n string) (string, error) {
+		if n == "chromium" {
+			return "/usr/bin/chromium", nil
+		}
+		return "", errors.New("no")
+	}
+	err := OpenProfileWindow(l, func(p string, _ []string) error { path = p; return nil }, "http://x/", 1, 1)
+	if err != nil || path != "/usr/bin/chromium" {
+		t.Fatalf("err %v path %q", err, path)
+	}
+}
+
+func TestFirstStartIsShownOncePerUser(t *testing.T) {
+	t.Setenv("XDG_CONFIG_HOME", t.TempDir())
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv("AppData", t.TempDir())
+	if !FirstStartDue() {
+		t.Fatal("a new user is due")
+	}
+	if err := MarkFirstStartShown(); err != nil {
+		t.Fatal(err)
+	}
+	if FirstStartDue() {
+		t.Fatal("shown once, never again")
+	}
+}

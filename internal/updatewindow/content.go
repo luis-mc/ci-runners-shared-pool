@@ -1,6 +1,7 @@
 package updatewindow
 
 import (
+	"fmt"
 	"os"
 	"strings"
 
@@ -40,3 +41,5 @@ func releaseURL(version string) string {
 	}
 	return a.RepoPage(update.Repo + "/releases/tag/v" + strings.TrimPrefix(version, "v"))
 }
+
+func sprintf(format string, a ...any) string { return fmt.Sprintf(format, a...) }
