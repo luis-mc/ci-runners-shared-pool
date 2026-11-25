@@ -130,14 +130,17 @@ func TestMaintainReleasesWhenTheControllerRefusesTheCommand(t *testing.T) {
 func TestMaintainReleasesWhenCancelledWhileDraining(t *testing.T) {
 	f := maintainFixture(t, execOK(nil))
 	job := jobJSON(7, "luis-mc/app", "test", "running")
-	f.handle("GET /api/v1/machines/m_build-01/changes/c1", func(w http.ResponseWriter, r *http.Request) {
+	// The handler answers only after the run has returned, so the client can
+	// never see the answer: the cancel is the only way out of the call. (The
+	// server's request context is no proof the client saw the cancel.)
+	release := make(chan struct{})
+	f.handle("GET /api/v1/machines/m_build-01/changes/c1", func(w http.ResponseWriter, _ *http.Request) {
 		f.cancel() // Ctrl-C
-		// Answer only after the client has dropped the request, so it can
-		// never see the answer before the cancel.
-		<-r.Context().Done()
+		<-release
 		writeJSON(w, 200, change("waiting", job))
 	})
 	code, _, errOut := f.run("machine", "maintain", "build-01", "--yes", "--", "compact")
+	close(release)
 	if code != ExitFailed {
 		t.Fatalf("%d %q", code, errOut)
 	}
@@ -153,7 +156,7 @@ func TestMaintainReleasesWhenCancelledWhileDraining(t *testing.T) {
 // command may still run on the machine.
 func TestMaintainReleasesWhenCancelledWhileRunning(t *testing.T) {
 	var f *fixture
-	f = maintainFixture(t, func(w http.ResponseWriter, r *http.Request) {
+	f = maintainFixture(t, func(w http.ResponseWriter, _ *http.Request) {
 		f.cancel() // Ctrl-C
 		// Never answer: drop the connection. The client can then only fail with
 		// the cancel; with an answer on the wire it could, by a race inside the
