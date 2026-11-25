@@ -337,10 +337,6 @@ export function RepositoriesList() {
 
   return (
     <Page>
-      <PageHeader
-        title="Repositories"
-        lead="Choose which repositories use the pool, and with which limits."
-      />
       {returned ? (
         <Message
           tone={returned === 'request' ? 'needs-you' : 'done'}

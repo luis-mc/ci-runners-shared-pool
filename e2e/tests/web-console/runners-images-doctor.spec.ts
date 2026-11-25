@@ -22,14 +22,14 @@ const STATES: {
   {
     name: 'runners with rows',
     path: '/setup/runners',
-    h1: 'Runners',
+    h1: 'Setup',
     pane: 'Runners',
     primaries: 1,
   },
   {
     name: 'runners empty',
     path: '/setup/runners',
-    h1: 'Runners',
+    h1: 'Setup',
     pane: 'Runners',
     empty: ['/api/v1/runners', { items: [] }],
     primaries: 1,
@@ -37,14 +37,14 @@ const STATES: {
   {
     name: 'runners failed',
     path: '/setup/runners',
-    h1: 'Runners',
+    h1: 'Setup',
     failed: '/api/v1/runners',
     primaries: 1,
   },
   {
     name: 'images empty',
     path: '/setup/images',
-    h1: 'Images and caches',
+    h1: 'Setup',
     pane: 'Images',
     empty: ['/api/v1/images', { items: [] }],
     primaries: 1,
@@ -52,7 +52,7 @@ const STATES: {
   {
     name: 'caches empty',
     path: '/setup/images?tab=caches',
-    h1: 'Images and caches',
+    h1: 'Setup',
     pane: 'Caches',
     empty: ['/api/v1/caches', { items: [] }],
     primaries: 1,
@@ -67,7 +67,7 @@ const STATES: {
   {
     name: 'images failed',
     path: '/setup/images',
-    h1: 'Images and caches',
+    h1: 'Setup',
     failed: '/api/v1/images',
     primaries: 1,
   },

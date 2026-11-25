@@ -102,7 +102,7 @@ const SCREENS: {
   {
     name: 'setup size and backends',
     path: '/setup/size',
-    ready: 'Size and backends',
+    ready: 'Setup',
     tweak: (m: ReturnType<typeof signedIn>) =>
       m.on('GET', '/api/v1/runner-classes', {
         preset: 'standard',
@@ -119,7 +119,7 @@ const SCREENS: {
         reserve_after_minutes: 10,
       }),
   },
-  { name: 'machines', path: '/setup/machines', ready: 'Machines' },
+  { name: 'machines', path: '/setup/machines', ready: 'Setup' },
   { name: 'machine detail', path: '/setup/machines/m1', ready: 'build-1' },
   {
     name: 'machine detail stopped',
@@ -190,9 +190,9 @@ const SCREENS: {
       }),
   },
   { name: 'add runners', path: '/setup/runners/add', ready: 'Add runners' },
-  { name: 'images', path: '/setup/images', ready: 'Images and caches' },
+  { name: 'images', path: '/setup/images', ready: 'Setup' },
   { name: 'image detail', path: '/setup/images/img_m1_linux', ready: 'build-1' },
-  { name: 'caches', path: '/setup/images?tab=caches', ready: 'Images and caches' },
+  { name: 'caches', path: '/setup/images?tab=caches', ready: 'Setup' },
   { name: 'settings access', path: '/settings/access', ready: 'Settings' },
   {
     name: 'settings repositories',
