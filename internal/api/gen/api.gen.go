@@ -355,6 +355,27 @@ func (e CacheKind) Valid() bool {
 	}
 }
 
+// Defines values for ConfigChangeKind.
+const (
+	ConfigChangeKindAdded   ConfigChangeKind = "added"
+	ConfigChangeKindChanged ConfigChangeKind = "changed"
+	ConfigChangeKindRemoved ConfigChangeKind = "removed"
+)
+
+// Valid indicates whether the value is a known member of the ConfigChangeKind enum.
+func (e ConfigChangeKind) Valid() bool {
+	switch e {
+	case ConfigChangeKindAdded:
+		return true
+	case ConfigChangeKindChanged:
+		return true
+	case ConfigChangeKindRemoved:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CpuCapPct.
 const (
 	N100 CpuCapPct = 100
@@ -4777,6 +4798,56 @@ type CliTokenCreated struct {
 // CliTokenList defines model for CliTokenList.
 type CliTokenList struct {
 	Items []CliToken `json:"items"`
+}
+
+// ConfigApplyRequest defines model for ConfigApplyRequest.
+type ConfigApplyRequest struct {
+	ConfirmRemovals *[]string `json:"confirm_removals,omitempty"`
+}
+
+// ConfigApplyResult defines model for ConfigApplyResult.
+type ConfigApplyResult struct {
+	Applied []ConfigChange `json:"applied"`
+	PlanId  string         `json:"plan_id"`
+}
+
+// ConfigChange defines model for ConfigChange.
+type ConfigChange struct {
+	Fields *[]ConfigFieldChange `json:"fields,omitempty"`
+	Kind   ConfigChangeKind     `json:"kind"`
+
+	// Name Empty for a section that is one set of fields.
+	Name    string `json:"name"`
+	Section string `json:"section"`
+}
+
+// ConfigChangeKind defines model for ConfigChange.Kind.
+type ConfigChangeKind string
+
+// ConfigFieldChange defines model for ConfigFieldChange.
+type ConfigFieldChange struct {
+	Field string      `json:"field"`
+	New   interface{} `json:"new,omitempty"`
+	Old   interface{} `json:"old,omitempty"`
+}
+
+// ConfigPlan defines model for ConfigPlan.
+type ConfigPlan struct {
+	Changes   []ConfigChange `json:"changes"`
+	CreatedAt time.Time      `json:"created_at"`
+
+	// Id Tied to the file and the state it was planned against. Absent while `problems` is not empty.
+	Id       *string   `json:"id,omitempty"`
+	Problems *[]string `json:"problems,omitempty"`
+
+	// Removals The `section/name` of each removal; the apply needs a yes that names each one.
+	Removals *[]string `json:"removals,omitempty"`
+}
+
+// ConfigPlanRequest defines model for ConfigPlanRequest.
+type ConfigPlanRequest struct {
+	// File The text of the config file.
+	File string `json:"file"`
 }
 
 // ConsoleLink defines model for ConsoleLink.
@@ -9852,6 +9923,12 @@ type SetAppWebhookJSONRequestBody = AppWebhookUpdate
 // ExchangeCliTokenJSONRequestBody defines body for ExchangeCliToken for application/json ContentType.
 type ExchangeCliTokenJSONRequestBody = ExchangeCliTokenRequest
 
+// PlanConfigJSONRequestBody defines body for PlanConfig for application/json ContentType.
+type PlanConfigJSONRequestBody = ConfigPlanRequest
+
+// ApplyConfigPlanJSONRequestBody defines body for ApplyConfigPlan for application/json ContentType.
+type ApplyConfigPlanJSONRequestBody = ConfigApplyRequest
+
 // RemoveRegistrationJSONRequestBody defines body for RemoveRegistration for application/json ContentType.
 type RemoveRegistrationJSONRequestBody = RemoveRegistrationRequest
 
@@ -10076,6 +10153,15 @@ type ServerInterface interface {
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	// (GET /api/v1/compare)
 	GetSpeedComparison(w http.ResponseWriter, r *http.Request, params GetSpeedComparisonParams)
+	// ExportConfigFile Export the setup as one config file
+	// (GET /api/v1/config/export)
+	ExportConfigFile(w http.ResponseWriter, r *http.Request)
+	// PlanConfig Plan a config file
+	// (POST /api/v1/config/plans)
+	PlanConfig(w http.ResponseWriter, r *http.Request)
+	// ApplyConfigPlan Apply a config plan
+	// (POST /api/v1/config/plans/{configPlanId}/apply)
+	ApplyConfigPlan(w http.ResponseWriter, r *http.Request, configPlanId string)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(w http.ResponseWriter, r *http.Request, params ListDoctorFindingsParams)
@@ -11186,6 +11272,60 @@ func (siw *ServerInterfaceWrapper) GetSpeedComparison(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetSpeedComparison(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExportConfigFile operation middleware
+func (siw *ServerInterfaceWrapper) ExportConfigFile(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportConfigFile(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PlanConfig operation middleware
+func (siw *ServerInterfaceWrapper) PlanConfig(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PlanConfig(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApplyConfigPlan operation middleware
+func (siw *ServerInterfaceWrapper) ApplyConfigPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configPlanId" -------------
+	var configPlanId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configPlanId", r.PathValue("configPlanId"), &configPlanId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configPlanId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApplyConfigPlan(w, r, configPlanId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -17333,6 +17473,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/exports/job-summaries", wrapper.ExportJobSummaries)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/exports/audit", wrapper.ExportAuditEvents)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/exports/config", wrapper.ExportConfig)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/config/export", wrapper.ExportConfigFile)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/config/plans", wrapper.PlanConfig)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/config/plans/{configPlanId}/apply", wrapper.ApplyConfigPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/repository-plans/{planId}/stop", wrapper.StopRepositoryPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runner-plans/{planId}/stop", wrapper.StopRunnerPlan)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/images", wrapper.ListImages)
@@ -18167,6 +18310,162 @@ type GetSpeedComparisondefaultJSONResponse struct {
 }
 
 func (response GetSpeedComparisondefaultJSONResponse) VisitGetSpeedComparisonResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportConfigFileRequestObject struct {
+}
+
+type ExportConfigFileResponseObject interface {
+	VisitExportConfigFileResponse(w http.ResponseWriter) error
+}
+
+type ExportConfigFile200JSONResponse struct{ ExportFileJSONResponse }
+
+func (response ExportConfigFile200JSONResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportConfigFile200ApplicationyamlResponse struct {
+	ExportFileApplicationyamlResponse
+}
+
+func (response ExportConfigFile200ApplicationyamlResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/yaml")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ExportConfigFile200TextcsvResponse struct{ ExportFileTextcsvResponse }
+
+func (response ExportConfigFile200TextcsvResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "text/csv")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ExportConfigFiledefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExportConfigFiledefaultJSONResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PlanConfigRequestObject struct {
+	Body *PlanConfigJSONRequestBody
+}
+
+type PlanConfigResponseObject interface {
+	VisitPlanConfigResponse(w http.ResponseWriter) error
+}
+
+type PlanConfig201JSONResponse ConfigPlan
+
+func (response PlanConfig201JSONResponse) VisitPlanConfigResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PlanConfigdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PlanConfigdefaultJSONResponse) VisitPlanConfigResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyConfigPlanRequestObject struct {
+	ConfigPlanId string `json:"configPlanId"`
+	Body         *ApplyConfigPlanJSONRequestBody
+}
+
+type ApplyConfigPlanResponseObject interface {
+	VisitApplyConfigPlanResponse(w http.ResponseWriter) error
+}
+
+type ApplyConfigPlan200JSONResponse ConfigApplyResult
+
+func (response ApplyConfigPlan200JSONResponse) VisitApplyConfigPlanResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyConfigPlandefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ApplyConfigPlandefaultJSONResponse) VisitApplyConfigPlanResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25762,6 +26061,15 @@ type StrictServerInterface interface {
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	// (GET /api/v1/compare)
 	GetSpeedComparison(ctx context.Context, request GetSpeedComparisonRequestObject) (GetSpeedComparisonResponseObject, error)
+	// ExportConfigFile Export the setup as one config file
+	// (GET /api/v1/config/export)
+	ExportConfigFile(ctx context.Context, request ExportConfigFileRequestObject) (ExportConfigFileResponseObject, error)
+	// PlanConfig Plan a config file
+	// (POST /api/v1/config/plans)
+	PlanConfig(ctx context.Context, request PlanConfigRequestObject) (PlanConfigResponseObject, error)
+	// ApplyConfigPlan Apply a config plan
+	// (POST /api/v1/config/plans/{configPlanId}/apply)
+	ApplyConfigPlan(ctx context.Context, request ApplyConfigPlanRequestObject) (ApplyConfigPlanResponseObject, error)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(ctx context.Context, request ListDoctorFindingsRequestObject) (ListDoctorFindingsResponseObject, error)
@@ -26880,6 +27188,97 @@ func (sh *strictHandler) GetSpeedComparison(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetSpeedComparisonResponseObject); ok {
 		if err := validResponse.VisitGetSpeedComparisonResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportConfigFile operation middleware
+func (sh *strictHandler) ExportConfigFile(w http.ResponseWriter, r *http.Request) {
+	var request ExportConfigFileRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportConfigFile(ctx, request.(ExportConfigFileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportConfigFile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExportConfigFileResponseObject); ok {
+		if err := validResponse.VisitExportConfigFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PlanConfig operation middleware
+func (sh *strictHandler) PlanConfig(w http.ResponseWriter, r *http.Request) {
+	var request PlanConfigRequestObject
+
+	var body PlanConfigJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PlanConfig(ctx, request.(PlanConfigRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PlanConfig")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PlanConfigResponseObject); ok {
+		if err := validResponse.VisitPlanConfigResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ApplyConfigPlan operation middleware
+func (sh *strictHandler) ApplyConfigPlan(w http.ResponseWriter, r *http.Request, configPlanId string) {
+	var request ApplyConfigPlanRequestObject
+
+	request.ConfigPlanId = configPlanId
+
+	var body ApplyConfigPlanJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyConfigPlan(ctx, request.(ApplyConfigPlanRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyConfigPlan")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ApplyConfigPlanResponseObject); ok {
+		if err := validResponse.VisitApplyConfigPlanResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -4085,6 +4085,91 @@ paths:
           $ref: '#/components/responses/ExportFile'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/config/export:
+    get:
+      operationId: exportConfigFile
+      x-cli: none
+      x-cli-reason: 'Later: `crsp config export` follows in its own task; the API and the console are built (operations R5.28).'
+      tags: [settings]
+      summary: Export the setup as one config file
+      description: >-
+        operations R5.28. One versioned YAML file: settings, pool defaults,
+        queue order, machine settings, runner size classes, image layers,
+        repository policies and notification channels. It holds no secret, no
+        job history, no audit log and no machine key; each secret is named by
+        reference. Named `crsp-setup-<stamp>.yaml`.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      responses:
+        '200':
+          $ref: '#/components/responses/ExportFile'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/config/plans:
+    post:
+      operationId: planConfig
+      x-cli: none
+      x-cli-reason: 'Later: `crsp config plan` follows in its own task; the API and the console are built (operations R5.29).'
+      tags: [settings]
+      summary: Plan a config file
+      description: >-
+        operations R5.29. Checks the file and lists each change: added, changed
+        (field, old value, new value) or removed, by name. Nothing changes. A
+        file with a problem answers 201 with `problems` and no `id`. A file that
+        is not a config file at all answers 400.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigPlanRequest'
+      responses:
+        '201':
+          description: The plan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigPlan'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/config/plans/{configPlanId}/apply:
+    post:
+      operationId: applyConfigPlan
+      x-cli: none
+      x-cli-reason: 'Later: `crsp config apply` follows in its own task; the API and the console are built (operations R5.30).'
+      tags: [settings]
+      summary: Apply a config plan
+      description: >-
+        operations R5.30. Applies exactly that plan. 409 conflict when the setup
+        changed since the plan; 409 needs_confirmation, naming each removal,
+        until `confirm_removals` names them all. Each change is written to the
+        audit log. It stops at the first change that fails and says what was
+        applied.
+      x-auth: owner
+      x-rate-limit: 10/minute/user
+      parameters:
+        - name: configPlanId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigApplyRequest'
+      responses:
+        '200':
+          description: What was applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConfigApplyResult'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/repository-plans/{planId}/stop:
     post:
       operationId: stopRepositoryPlan
@@ -7304,6 +7389,78 @@ components:
           type: string
         stale:
           $ref: '#/components/schemas/Staleness'
+    ConfigPlanRequest:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          maxLength: 1048576
+          description: The text of the config file.
+    ConfigFieldChange:
+      type: object
+      required: [field]
+      properties:
+        field:
+          type: string
+        old: {}
+        new: {}
+    ConfigChange:
+      type: object
+      required: [section, name, kind]
+      properties:
+        section:
+          type: string
+        name:
+          type: string
+          description: Empty for a section that is one set of fields.
+        kind:
+          type: string
+          enum: [added, changed, removed]
+        fields:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigFieldChange'
+    ConfigPlan:
+      type: object
+      required: [changes, created_at]
+      properties:
+        id:
+          type: string
+          description: Tied to the file and the state it was planned against. Absent while `problems` is not empty.
+        problems:
+          type: array
+          items:
+            type: string
+        changes:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigChange'
+        removals:
+          type: array
+          items:
+            type: string
+          description: The `section/name` of each removal; the apply needs a yes that names each one.
+        created_at:
+          type: string
+          format: date-time
+    ConfigApplyRequest:
+      type: object
+      properties:
+        confirm_removals:
+          type: array
+          items:
+            type: string
+    ConfigApplyResult:
+      type: object
+      required: [plan_id, applied]
+      properties:
+        plan_id:
+          type: string
+        applied:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConfigChange'
     PlanRepositoryChangesRequest:
       type: object
       required: [changes]
