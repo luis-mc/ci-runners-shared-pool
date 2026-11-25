@@ -58,12 +58,17 @@ func machineEngine(ctx context.Context, env doctor.Env) []doctor.Finding {
 			}
 			f.Detail += " Container runners cannot start here."
 			f.Fix = engineFix(s)
-			f.Fix.Link = machineLink(s.Machine)
+			// DEP14: the wizard "Get this machine ready" opens from the machine page; the doctor still only reads.
+			f.Fix.Text += " Or use Get this machine ready on the machine page, and crsp installs it with your yes."
+			f.Fix.Link = machineLink(s.Machine) + EngineSetupQuery
 		}
 		out = append(out, f)
 	}
 	return out
 }
+
+// EngineSetupQuery opens the dependency setup wizard on the machine page (dependency-setup DEP14).
+const EngineSetupQuery = "?setup=deps"
 
 func engineFix(s doctor.EngineState) doctor.Fix {
 	switch {

@@ -78,6 +78,10 @@ const AddMachinePage = later(
   () => import('./screens/machines/AddMachine').then((m) => m.AddMachinePage),
   { heading: 'Add a machine' },
 );
+const GetReadyPage = later(
+  () => import('./screens/dependencies/GetReady').then((m) => m.GetReadyPage),
+  { heading: 'Get this machine ready' },
+);
 const MachineRestartPage = later(
   () => import('./screens/machines/MachineRestart').then((m) => m.MachineRestartPage),
   { heading: 'Restart the service' },
@@ -260,6 +264,7 @@ export function App({
                   path="setup/machines/:id/restart"
                   element={<MachineRestartPage />}
                 />
+                <Route path="setup/machines/:id/ready" element={<GetReadyPage />} />
                 <Route path="setup/runners/add" element={<AddRunnersPage />} />
                 <Route path="setup/runners/:id" element={<RunnerPage />} />
                 <Route path="setup/images/:imageId" element={<ImageDetail />} />

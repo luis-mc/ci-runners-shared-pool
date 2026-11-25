@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/doctor/**"]
 design_system: [UX-4, UX-6, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-31, UX-52, UX-53, UX-58, UX-61, "components 1, 10, 11, 12, 15, 16, 17, 18, 19, 21"]
-last_verified: 2026-11-22
+last_verified: 2026-11-25
 artifact:
 generator: luismc-docs 2.6.1
 ---

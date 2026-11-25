@@ -57,6 +57,8 @@ export interface WizardProps {
   /** The next action on Done, when it is not Start again ("Sign in with GitHub"). */
   donePrimary?: { label: string; onPress: () => void };
   onStartAgain?: (() => void) | undefined;
+  /** The primary of a paused or stopped wizard when it is not Start again ("Restart this PC now", "Continue"). */
+  endPrimary?: { label: string; onPress: () => void } | undefined;
   onTryAgain?: (() => void) | undefined;
   /** The first step the user acts on (a read-only step before it has no Back). */
   firstStep?: number | undefined;
@@ -138,9 +140,9 @@ export function Wizard(p: WizardProps) {
       <Button
         kind={kind}
         part={p.embedded ? 'primary' : undefined}
-        onPress={p.onStartAgain}
+        onPress={p.endPrimary?.onPress ?? p.onStartAgain}
       >
-        Start again
+        {p.endPrimary?.label ?? 'Start again'}
       </Button>
     );
   } else if (p.phase === 'failed') {

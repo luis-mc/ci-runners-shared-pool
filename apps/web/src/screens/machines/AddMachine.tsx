@@ -1,6 +1,7 @@
 // The "Add a machine" wizard (web-console 4.1 and 4.4, R5.17). Steps: Machine, Review, Joining, Done.
 // Its behaviour comes from the shared wizard (UX-54); this page passes data only. The phase is read from the
 // server: a stored join code that is still waiting with no live wait here reads Paused (UX-30).
+import { ReadyDoor, needsEngine } from '../dependencies/ReadyDoor';
 import {
   Breadcrumbs,
   CodeBlock,
@@ -543,6 +544,17 @@ export function AddMachineWizard({ onDone }: Props) {
                   ', ',
                 )} is installed on this machine but not turned on. Open the machine, tick it and press Save to let it run runners.`}
             </Message>
+          ) : null}
+          {machine &&
+          needsEngine(machine, 'linux') &&
+          !machine.backends.some((b) => b.usable) ? (
+            <ReadyDoor
+              machine={machine}
+              os="linux"
+              kind="ephemeral"
+              back="/setup/machines"
+              words={`No container engine answers on ${machine.name}. Linux runners need one.`}
+            />
           ) : null}
           {machine ? (
             <Facts
