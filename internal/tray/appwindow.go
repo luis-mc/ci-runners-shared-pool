@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 )
 
 // The update page opens in a small app-style window: a Chromium-family browser
@@ -135,4 +136,46 @@ func startDetached(path string, args []string) error {
 	}
 	go func() { _ = cmd.Wait() }()
 	return nil
+}
+
+// ProfileDirName is the folder (under the user's cache folder) of the browser profile that
+// only crsp's own windows use (TRAY7 D19). A browser opens a window at the size it is asked
+// for only when its profile has no remembered size; an own profile gives that on every start
+// and keeps the person's own browser untouched.
+const ProfileDirName = "crsp-window-profile"
+
+// ProfileDir is the folder of the own browser profile of this user.
+func ProfileDir() string {
+	base, err := os.UserCacheDir()
+	if err != nil || base == "" {
+		base = os.TempDir()
+	}
+	return filepath.Join(base, "crsp", ProfileDirName)
+}
+
+// ProfileWindowArgs are the arguments that open url as an app window of w by h pixels in the
+// own browser profile: no first-run page, no default-browser question, no extensions.
+func ProfileWindowArgs(url, profile string, w, h int) []string {
+	return []string{
+		"--app=" + url,
+		"--window-size=" + strconv.Itoa(w) + "," + strconv.Itoa(h),
+		"--user-data-dir=" + profile,
+		"--no-first-run",
+		"--no-default-browser-check",
+		"--disable-extensions",
+	}
+}
+
+// OpenProfileWindow opens url in an app window of the own profile. It returns
+// ErrNoAppBrowser when no Edge, Chrome or Chromium exists: the caller then keeps the console
+// page, since the default browser cannot be asked for a size or a profile.
+func OpenProfileWindow(l BrowserLookup, start func(path string, args []string) error, url string, w, h int) error {
+	path, err := l.Find()
+	if err != nil {
+		return err
+	}
+	if start == nil {
+		start = startDetached
+	}
+	return start(path, ProfileWindowArgs(url, ProfileDir(), w, h))
 }

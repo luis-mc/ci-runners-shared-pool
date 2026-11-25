@@ -124,6 +124,9 @@ func loop(o Options, smoke bool, hold time.Duration, updated bool) int {
 		Notify: DesktopNotice, Notices: &Notices{}, Current: current, LogDir: LogDir,
 		Native: OSNativeWindow(o.Exe, o.Version),
 	}
+	if !smoke && !updated {
+		go OSFirstStart(o.Exe) // once per user; macOS and Linux (TRAY7, D20)
+	}
 	if updated && o.Version != "" && !smoke {
 		go func() {
 			env := AfterEnv{

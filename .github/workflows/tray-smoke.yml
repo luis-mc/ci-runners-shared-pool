@@ -59,6 +59,12 @@ jobs:
           mkdir -p out
           go build -trimpath -o "out/crsp${exe}" ./cmd/crsp
           if [ "$RUNNER_OS" = "Linux" ]; then go build -o out/snihost ./internal/tray/testdata/snihost; fi
+      # TRAY7: the web update window and the first-start window are plain Go (a local page, a
+      # model, a browser lookup); their unit tests run on every OS, macOS included.
+      - name: Window unit tests (TRAY7)
+        env:
+          CGO_ENABLED: ${{ matrix.os == 'macos-latest' && '1' || '0' }}
+        run: go test -count=1 ./internal/updatewindow ./internal/tray
       - name: Install xvfb and dbus (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb dbus

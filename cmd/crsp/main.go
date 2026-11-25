@@ -78,6 +78,10 @@ func run(args []string, stdout, stderr io.Writer) int {
 		// Hidden: the tray starts a copy of this program with it for the native update window (Windows, TRAY5).
 		return updatewindow.Run(updatewindow.Options{Args: args[1:], Service: tray.NewClient(), Stdout: stdout, Stderr: stderr})
 	}
+	if len(args) > 0 && args[0] == tray.FirstStartCommand {
+		// Hidden: the tray starts it once per user on macOS and Linux (TRAY7): Welcome, choices, Done.
+		return updatewindow.RunFirstStart(updatewindow.Options{Args: args[1:], Stdout: stdout, Stderr: stderr})
+	}
 	if len(args) > 0 && args[0] == "lifecycle-window" { // the remove question: exit 10 keep, 11 delete, 1 cancel
 		return updatewindow.RunLifecycle(updatewindow.Options{Args: args[1:], Stdout: stdout, Stderr: stderr})
 	}

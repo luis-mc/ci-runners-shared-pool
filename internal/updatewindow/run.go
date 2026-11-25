@@ -35,6 +35,7 @@ type Config struct {
 	At          [2]int // a point on the screen of the tray icon; centred there
 	HasAt       bool
 	LayoutCheck bool
+	Web         bool   // the web page instead of the native window (the only window off Windows)
 	Shots       string // layout check: write a PNG of every state and DPI into this folder
 	// The remove question (ModeRemove): the product, the size of its data in GB and the folder.
 	Product, Size, Path string
@@ -47,6 +48,7 @@ func ParseArgs(args []string, stderr io.Writer) (Config, error) {
 	var c Config
 	mode := fs.String("mode", string(ModeReview), "review (the question) or live (what runs now)")
 	at := fs.String("at", "", "x,y: a point on the screen where the tray icon is; the window centres there")
+	fs.BoolVar(&c.Web, "web", false, "open the web page window (macOS and Linux always do)")
 	fs.StringVar(&c.From, "from", "", "the version that runs")
 	fs.StringVar(&c.To, "to", "", "the version offered")
 	fs.BoolVar(&c.LayoutCheck, "layout-check", false, "build the window off screen for every state and DPI; exit 1 when anything is clipped")
@@ -83,6 +85,9 @@ func Run(o Options) int {
 	}
 	if c.LayoutCheck {
 		return layoutCheck(c, o)
+	}
+	if c.Web && c.Mode != ModeRemove {
+		return RunWeb(NewUpdateScreen(c, o.Service), o)
 	}
 	return runWindow(c, o)
 }

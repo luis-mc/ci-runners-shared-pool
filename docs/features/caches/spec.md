@@ -161,6 +161,8 @@ Ported from dev-standards `claude/plugins/delivery/templates/shared/scripts/deli
 
 **R5.64** (M2, Built CRSP255: `internal/caches/toolcache/check.go`) — **The doctor reads the cache through one interface.** `toolcache.Checker` has one method, `CheckToolCache(ctx) Result`. The result has a state (`ok`, `warn`, `fail`), one plain sentence, the size, the cap, the entry count and the number of leftover stage or trash folders. It fails when the root is missing, cannot be written, or on Linux and macOS is not mode 1777. It warns at 90% of the cap and when leftovers wait for a sweep. The check changes nothing. The doctor package owns the finding and its wording; it takes a `Checker` and shows the result. **NOT YET IMPLEMENTED:** the doctor check that calls it (doctor feature).
 
+**R5.65** (M2, Built CRSP268: `.github/workflows/ci.yml`) — **This repository's own CI runs on the pool, and falls back to GitHub-hosted.** The jobs `lint`, `types`, `tests` and `e2e-shards` of `ci.yml` read `runs-on` as `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"')`. With `CRSP_RUNS_ON_LINUX` set to the `crsp-home` labels they run on the pool and use the shared tool cache (R5.63). With the variable unset (the owner removes it when the pool is offline) they run on GitHub-hosted runners. Job names, `verify`, `decide`, the Windows and macOS jobs and the release workflows are unchanged, so no required check changes.
+
 **Systems.** The logic is the same on Windows, Linux and macOS. What differs sits behind `Platform` (mode 1777 on Linux and macOS, `icacls` access list on Windows, R5.18, R5.19) and `FS`, with fakes in the tests. Verified here: Linux, by running the tests, and the Windows and macOS builds and vet by cross-compiling; the Windows `icacls` call is checked as a plan through a fake runner and is **not run on a real Windows machine in this change**. **macOS is compiled and unit-tested in CI only and has not been run on a real Mac.**
 
 **R5.20** — If a folder in the shared cache cannot be written, the tool fetch prints one warning and uses a private per-user cache instead.
@@ -391,6 +393,7 @@ Rows for R5.36 to R5.40, R5.42, R5.43, R5.44, R5.45, R5.48, R5.49 and R5.51 to R
 | R5.62 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestEvictRemovesLeastRecentlyUsedAndKeepsRecentOnes, TestEvictDropsEmptyToolFolderAndOrphans, TestLookupKeepsAnEntryOutOfEviction, TestWipe |
 | R5.63 | Built (CRSP255): internal/backend/container/toolcache_test.go TestToolCacheMountArgsMountReadWriteAndNameIt, TestToolCacheMountArgsRefuseBadPaths, TestRunArgsMountsToolCacheAndStaysSafe |
 | R5.64 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestCheckStates, TestUnixModeIsStickyAndVerifyCatchesAWideOpenRoot, TestPlatformsBehindInterfaces |
+| R5.65 | Built (CRSP268): `.github/workflows/ci.yml` four `runs-on` lines; the CI run of the pull request |
 | R5.15 | internal/tools/pins_test.go (port of test_ds199_tool_fetch.py test_every_pin_has_url_and_sha, test_missing_pin_and_platform) |
 | R5.16 | internal/tools/fetch_test.go (port of test_dl115_ci_tool.py test_first_fetch_downloads_and_verifies, test_second_fetch_makes_no_request, test_corrupted_cache_is_replaced, test_wrong_pin_exits_1_and_leaves_no_file) |
 | R5.17 | internal/tools/fetch_test.go (no temporary file after success, failure or kill) |

@@ -551,6 +551,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 - **Source:** `internal/updatewindow/` (`model.go` the states, `layout.go` the units, `art.go` the band and the installer bitmaps, `window_windows.go` the window), `internal/updatewindow/tokens_gen.go` (generated from `packages/ui/src/tokens.css` by `internal/updatewindow/genart`), `installer/build.ps1` and `installer/crsp.wxs` (`WixUIBannerBmp`, `WixUIDialogBmp`)
 - **Rules:** CORE-1 to CORE-7, UX-30 (steps in order, later steps cannot be pressed), UX-71 (the buttons on one bar at the foot), UX-4.
 - **Guard:** `internal/updatewindow/layout_test.go` and `art_test.go` (nothing clipped at every DPI, the palette equals the tokens), and `crsp update-window --layout-check` on the Windows runner (`.github/workflows/tray-smoke.yml`).
+- **Web form (macOS and Linux, TRAY7):** the same window as a page that the `crsp update-window` process serves on `127.0.0.1` and opens as an app window of Edge, Chrome or Chromium in an own browser profile at 520 by 440. It paints the same model (`model.go`) with the same words and the same tokens (written into the page from `tokens_gen.go`) and the same band art; the first-start window (Welcome, Your choices, All set; 560 by 520) uses the same page. Source: `internal/updatewindow/web.go`, `webpage.go`, `webupdate.go`, `firststart.go`. Guard: `internal/updatewindow/web_test.go`, `firststart_test.go`.
 
 ## 50. Waterfall
 
