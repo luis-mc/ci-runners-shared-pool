@@ -146,6 +146,9 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
             },
             { name: 'System', value: `${r.os} ${r.arch}` },
             { name: 'Labels', value: r.labels.join(', ') },
+            ...(r.created_at
+              ? [{ name: 'Created', value: <DateTime value={r.created_at} /> }]
+              : []),
           ]}
         />
       </Section>
