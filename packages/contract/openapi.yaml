@@ -7045,7 +7045,8 @@ components:
           runner_groups: []
     MetricsSettingsSet:
       type: object
-      required: [enabled, port, expose, needs_key, push_enabled, push_endpoint, push_seconds]
+      required:
+        [enabled, port, expose, needs_key, push_enabled, push_endpoint, push_seconds]
       properties:
         enabled:
           type: boolean
