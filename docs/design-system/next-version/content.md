@@ -149,6 +149,17 @@ A message is one or two short sentences in plain words. It names the thing, neve
 | Details | The note of the change as plain text, with no key name before it. |
 | Export | The word Export, at the end of the toolbar. |
 
+## Restart and new build words
+
+Used while the service restarts for an update and when an open page is older than the service (CRSP244; UX-6, UX-26, UX-28; CORE-1, CORE-7). Built from the shared Message, Loading, Failed and Button parts.
+
+| Where | Words |
+|---|---|
+| Note over the last copy, or the loading line with no data | The service is restarting, back in a moment. |
+| Route error page, new build (reloads once first: *The service has a new version. Refreshing*) | The service has a new version. Refresh to get the new version. |
+| Route error page, any other fault | This page could not open. Refresh the page. If it keeps happening, the details are in the service log. |
+| Button | Refresh |
+
 ## Empty, failed and waiting states
 
 - **Empty:** say what will appear here, and offer the action that fills it. "No reports yet. Add a report to start."
