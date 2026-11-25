@@ -8452,7 +8452,18 @@ components:
     DependencyFacts:
       type: object
       description: The facts of one offered choice (DEP3).
-      required: [name, version, source, download_bytes, disk_bytes, typical_minutes, needs_admin, restart_likely, undo]
+      required:
+        [
+          name,
+          version,
+          source,
+          download_bytes,
+          disk_bytes,
+          typical_minutes,
+          needs_admin,
+          restart_likely,
+          undo,
+        ]
       properties:
         name:
           type: string
@@ -8500,7 +8511,8 @@ components:
     DependencyChoice:
       type: object
       description: One way to fix what is missing; one is recommended, the others stay visible (DEP3, CORE-4).
-      required: [id, title, item_ids, recommended, facts, requires_licence_tick, manual_steps]
+      required:
+        [id, title, item_ids, recommended, facts, requires_licence_tick, manual_steps]
       properties:
         id:
           type: string
@@ -8526,7 +8538,8 @@ components:
             type: string
     DependencyCheck:
       type: object
-      required: [machine_id, ready, items, choices, admin, disk_free_bytes, virtualization_off]
+      required:
+        [machine_id, ready, items, choices, admin, disk_free_bytes, virtualization_off]
       properties:
         machine_id:
           type: string
@@ -8595,7 +8608,8 @@ components:
         (CRSP247) in snake_case: job_id, phase, phase_index, phase_count,
         phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec,
         machine, command, stream, line, ts.
-      required: [job_id, phase, phase_index, phase_count, phase_weight, pct, machine, stream, ts]
+      required:
+        [job_id, phase, phase_index, phase_count, phase_weight, pct, machine, stream, ts]
       properties:
         job_id:
           type: string
@@ -8647,7 +8661,20 @@ components:
           description: Unix milliseconds.
     DependencyJob:
       type: object
-      required: [id, machine_id, state, choice_id, item_ids, runner_os, runner_kind, created_at, updated_at, added, log]
+      required:
+        [
+          id,
+          machine_id,
+          state,
+          choice_id,
+          item_ids,
+          runner_os,
+          runner_kind,
+          created_at,
+          updated_at,
+          added,
+          log,
+        ]
       properties:
         id:
           type: string
@@ -8655,7 +8682,19 @@ components:
           type: string
         state:
           type: string
-          enum: [consented, installing, paused_restart, verifying, preparing, done, failed, stopped, undoing, undone]
+          enum:
+            [
+              consented,
+              installing,
+              paused_restart,
+              verifying,
+              preparing,
+              done,
+              failed,
+              stopped,
+              undoing,
+              undone,
+            ]
         choice_id:
           type: string
         item_ids:

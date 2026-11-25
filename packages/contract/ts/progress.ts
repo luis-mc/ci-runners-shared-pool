@@ -54,7 +54,10 @@ export interface ProgressPhase {
 
 /** The real percent of the whole job from its phases: finished phases count in full, the current one by its pct.
  * Returns null when the current phase reports no percent (the bar is indeterminate). */
-export function overallPct(phases: readonly ProgressPhase[], current: number): number | null {
+export function overallPct(
+  phases: readonly ProgressPhase[],
+  current: number,
+): number | null {
   const total = phases.reduce((s, p) => s + Math.max(0, p.weight), 0);
   if (total <= 0) return null;
   let done = 0;
