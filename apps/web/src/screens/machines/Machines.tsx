@@ -56,6 +56,7 @@ import { usePoolSize } from './PoolSize';
 import { RecoverySection } from './Recovery';
 
 const MachineRemove = lazy(() => import('./MachineRemove'));
+const MachineLeavePool = lazy(() => import('./MachineLeavePool'));
 
 type Machine = Schemas['Machine'];
 
@@ -657,6 +658,17 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           {poolSize.section}
         </Stack>
       </form>
+      {m.is_controller ? null : (
+        <Suspense fallback={null}>
+          <MachineLeavePool
+            machineId={m.id}
+            name={m.name}
+            online={m.online}
+            disabled={!admin}
+            onRemoved={() => void navigate('/setup/machines')}
+          />
+        </Suspense>
+      )}
       <Suspense fallback={null}>
         <MachineRemove
           machineId={m.id}

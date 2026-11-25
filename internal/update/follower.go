@@ -3,6 +3,7 @@ package update
 import (
 	"context"
 	"log/slog"
+	"sort"
 	"sync"
 	"time"
 )
@@ -27,7 +28,8 @@ type Fleet interface {
 // Follower makes the connected agent machines follow the controller's version
 // (operations R5.39): after the controller updated, each agent whose version
 // is older gets the ask, over the agent link, again at every tick until it
-// runs the same version. The agent applies the same drain rule as the
+// runs the same version. One agent is asked per tick, and none while another
+// reports an update in progress (R5.18: one machine at a time). The agent applies the same drain rule as the
 // controller (60 minutes, then it postpones and the next tick asks again) and
 // the same retry rule (three tries per version), so the follower itself keeps
 // no count.
@@ -73,21 +75,39 @@ func (f *Follower) Tick(ctx context.Context) []string {
 	if f.asked == nil {
 		f.asked = map[string]time.Time{}
 	}
-	var asked []string
+	// One machine at a time (operations R5.18): while an agent reports an update
+	// in progress nobody else is asked, and each tick asks one agent, the one
+	// asked least recently, so an agent that keeps postponing never starves the rest.
+	var due []Agent
 	for _, a := range agents {
 		if !Newer(a.Version, f.Current) {
 			delete(f.asked, a.ID) // same version, newer, or not a stable build: leave it alone
 			continue
 		}
 		if a.Updating && now().Sub(a.UpdatingSince) < activeFor {
-			continue
+			return nil
 		}
+		due = append(due, a)
+	}
+	if len(due) == 0 {
+		return nil
+	}
+	sort.SliceStable(due, func(i, j int) bool {
+		ti, tj := f.asked[due[i].ID], f.asked[due[j].ID]
+		if !ti.Equal(tj) {
+			return ti.Before(tj)
+		}
+		return due[i].ID < due[j].ID
+	})
+	var asked []string
+	for _, a := range due {
 		if err := f.Fleet.AskUpdate(a.ID, f.Current); err != nil {
 			log.Warn("follow: cannot ask the agent", "machine", a.Name, "err", err)
 			continue
 		}
 		f.asked[a.ID] = now()
 		asked = append(asked, a.ID)
+		break
 	}
 	return asked
 }

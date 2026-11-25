@@ -10,6 +10,8 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"regexp"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -72,4 +74,24 @@ func selfCheck(ctx context.Context, bin, version string) error {
 		return fmt.Errorf("it reports %q, not %s", strings.TrimSpace(string(out)), version)
 	}
 	return nil
+}
+
+var schemaLine = regexp.MustCompile(`(?m)^schema (\d+)\s*$`)
+
+// binarySchema reads the database schema version the new binary prints on the
+// second line of `version` (operations R5.13). ok is false when it prints none
+// (a build older than the line), which never blocks an update.
+func binarySchema(ctx context.Context, bin string) (v int64, ok bool, err error) {
+	ctx, cancel := context.WithTimeout(ctx, 20*time.Second)
+	defer cancel()
+	out, err := exec.CommandContext(ctx, bin, "version").Output() //nolint:gosec // a binary that passed SHA-256 and provenance
+	if err != nil {
+		return 0, false, err
+	}
+	m := schemaLine.FindStringSubmatch(string(out))
+	if m == nil {
+		return 0, false, nil
+	}
+	n, err := strconv.ParseInt(m[1], 10, 64)
+	return n, err == nil, err
 }

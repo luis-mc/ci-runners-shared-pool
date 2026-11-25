@@ -353,7 +353,17 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	// Runner leftovers (doctor R5.48): the machines service asks the agents, and
 	// builds what this controller owns from the runner records.
 	d.Machines.SetOwnedRunners(ownedRunners(rstore))
+	d.Machines.SetRunnerRemover(func(ctx context.Context, machineID, actor string, agentUp bool) []machines.RunnerRemoval {
+		var out []machines.RunnerRemoval
+		for _, r := range runnerSvc.RemoveMachineRunners(ctx, machineID, actor, agentUp) {
+			out = append(out, machines.RunnerRemoval{Name: r.Name, Done: r.Done, Reason: r.Reason})
+		}
+		return out
+	})
 	d.Machines.SetLeftoverSources(localLeftoverSource(logger), remoteLeftoverSource(d.Link))
+
+	// The runner pin follows the newest actions/runner release (operations R5.20).
+	pinMgr := wireRunnerPin(ctx, d.DB, logger, d.Cfg.Addresses.GitHubAPIURL, runnerSvc)
 
 	// Doctor: the M1 check registry over the controller's own data.
 	fleet := doctorFleet{machines: d.Machines, runners: rstore, repos: repoStore, rsvc: rsvc, health: d.Health}
@@ -373,6 +383,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		Ephemeral:    runnerSvc,
 		Timers:       timerSvc,
 		ListenerGate: gateSvc,
+		RunnerPin:    pinStatus{m: pinMgr},
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger

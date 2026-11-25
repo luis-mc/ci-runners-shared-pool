@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"reflect"
 	"sort"
+	"strings"
 	"time"
 
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1"
@@ -216,10 +217,14 @@ func (s *Service) Remove(ctx context.Context, actor, id string, confirm bool) (C
 			ID: newID("ch_"), MachineID: id, Kind: KindRemove, State: ChangeDone, StartedBy: actor, StartedAt: now, Deadline: now, FinishedAt: now,
 			Detail: ChangeDetail{Reason: "the machine is offline: its key is revoked now and its agent learns this on its next connect; its local files stay until it is uninstalled"},
 		}
+		note := s.removeMachineRunners(ctx, actor, m, false)
+		if note != "" {
+			c.Detail.Reason += "; " + note
+		}
 		if err := s.o.Repo.InsertChange(ctx, c); err != nil {
 			return Change{}, err
 		}
-		s.finishRemove(ctx, actor, m)
+		s.revokeAndClose(ctx, actor, m)
 		return c, nil
 	}
 	set, err := s.o.Repo.GetSettings(ctx, id)
@@ -229,8 +234,60 @@ func (s *Service) Remove(ctx context.Context, actor, id string, confirm bool) (C
 	return s.beginChange(ctx, actor, m, KindRemove, ChangeDetail{Reason: "remove machine"}, set.DrainTimeoutMinutes)
 }
 
-// finishRemove revokes the key at once and closes the link (R5.41, R6.4).
+// RunnerRemoval is the outcome for one runner of a machine that is removed.
+type RunnerRemoval struct {
+	Name   string
+	Done   bool
+	Reason string
+}
+
+// SetRunnerRemover sets how the runners of a removed machine are deregistered at
+// GitHub (R5.40, R5.42); agentUp says whether its agent can clean up its files.
+func (s *Service) SetRunnerRemover(f func(ctx context.Context, machineID, actor string, agentUp bool) []RunnerRemoval) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.removeRunners = f
+}
+
+// removeMachineRunners deregisters the runners of a machine about to go and says,
+// in plain words, what happened. It runs before the key is revoked, so an online
+// agent can still clean up its files.
+func (s *Service) removeMachineRunners(ctx context.Context, actor string, m Machine, agentUp bool) string {
+	s.mu.Lock()
+	f := s.removeRunners
+	s.mu.Unlock()
+	if f == nil {
+		return ""
+	}
+	res := f(ctx, m.ID, actor, agentUp)
+	var done, failed []string
+	for _, r := range res {
+		if r.Done {
+			done = append(done, r.Name)
+			continue
+		}
+		failed = append(failed, r.Name+" ("+r.Reason+")")
+		_ = s.o.Repo.Audit(ctx, actor, "machine.remove.runner_failed", m.ID, r.Name+": "+r.Reason)
+	}
+	for _, n := range done {
+		_ = s.o.Repo.Audit(ctx, actor, "machine.remove.runner", m.ID, n)
+	}
+	out := fmt.Sprintf("%d runners deregistered from GitHub", len(done))
+	if len(failed) > 0 {
+		out += "; not removed: " + strings.Join(failed, ", ")
+	}
+	return out
+}
+
+// finishRemove revokes the key at once and closes the link (R5.41, R6.4). The
+// runners are deregistered first, so an online agent still cleans up its files.
 func (s *Service) finishRemove(ctx context.Context, actor string, m Machine) {
+	_ = s.removeMachineRunners(ctx, actor, m, s.sessions.Connected(m.ID))
+	s.revokeAndClose(ctx, actor, m)
+}
+
+// revokeAndClose revokes the machine's keys, marks it removed and closes its link.
+func (s *Service) revokeAndClose(ctx context.Context, actor string, m Machine) {
 	_ = s.o.Repo.RevokeKeys(ctx, m.ID)
 	_ = s.o.Repo.MarkRemoved(ctx, m.ID, s.now())
 	_ = s.o.Repo.Audit(ctx, actor, "machine.key.revoke", m.ID, "")

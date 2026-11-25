@@ -692,7 +692,7 @@ export interface paths {
         get: operations["getRepositoryTrial"];
         /**
          * Set a repository's trial mode
-         * @description github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+         * @description github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
          */
         put: operations["setRepositoryTrial"];
         post?: never;
@@ -4546,7 +4546,9 @@ export interface components {
         };
         TrialSet: {
             /** @enum {string} */
-            mode: "off" | "observe" | "shadow" | "canary";
+            mode: "off" | "observe" | "shadow" | "canary" | "live";
+            /** @description The person said yes to the change. Without it nothing changes and the answer is 409 needs_confirmation, which says what the change does. */
+            confirmed?: boolean;
             /** @description Canary only. The share of jobs, chosen by job name. */
             percent?: number;
             /** @description Canary only. Jobs that always use crsp. */
@@ -4573,7 +4575,7 @@ export interface components {
         Trial: {
             repository: string;
             /** @enum {string} */
-            mode: "off" | "observe" | "shadow" | "canary";
+            mode: "off" | "observe" | "shadow" | "canary" | "live";
             /** Format: date-time */
             since?: string;
             percent?: number;

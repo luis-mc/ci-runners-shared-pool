@@ -50,11 +50,12 @@ func (c *call) trial(args []string) error {
 	} else {
 		mode := strings.ToLower(args[1])
 		switch mode {
-		case "observe", "shadow", "canary", "off":
+		case "observe", "shadow", "canary", "live", "off":
 		default:
-			return fail(ExitUsage, "The mode is observe, shadow, canary or off.")
+			return fail(ExitUsage, "The mode is observe, shadow, canary, live or off.")
 		}
-		body := client.TrialSet{Mode: client.TrialSetMode(mode)}
+		yes := true // the typed command is the yes
+		body := client.TrialSet{Mode: client.TrialSetMode(mode), Confirmed: &yes}
 		if p := c.fs.Lookup("percent").Value.String(); p != "0" {
 			var n int
 			if _, err := fmt.Sscanf(p, "%d", &n); err != nil {

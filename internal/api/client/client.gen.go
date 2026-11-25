@@ -3905,6 +3905,7 @@ func (e TimerSettingsProblemField) Valid() bool {
 // Defines values for TrialMode.
 const (
 	TrialModeCanary  TrialMode = "canary"
+	TrialModeLive    TrialMode = "live"
 	TrialModeObserve TrialMode = "observe"
 	TrialModeOff     TrialMode = "off"
 	TrialModeShadow  TrialMode = "shadow"
@@ -3914,6 +3915,8 @@ const (
 func (e TrialMode) Valid() bool {
 	switch e {
 	case TrialModeCanary:
+		return true
+	case TrialModeLive:
 		return true
 	case TrialModeObserve:
 		return true
@@ -3929,6 +3932,7 @@ func (e TrialMode) Valid() bool {
 // Defines values for TrialSetMode.
 const (
 	TrialSetModeCanary  TrialSetMode = "canary"
+	TrialSetModeLive    TrialSetMode = "live"
 	TrialSetModeObserve TrialSetMode = "observe"
 	TrialSetModeOff     TrialSetMode = "off"
 	TrialSetModeShadow  TrialSetMode = "shadow"
@@ -3938,6 +3942,8 @@ const (
 func (e TrialSetMode) Valid() bool {
 	switch e {
 	case TrialSetModeCanary:
+		return true
+	case TrialSetModeLive:
 		return true
 	case TrialSetModeObserve:
 		return true
@@ -9374,6 +9380,9 @@ type TrialJob struct {
 
 // TrialSet defines model for TrialSet.
 type TrialSet struct {
+	// Confirmed The person said yes to the change. Without it nothing changes and the answer is 409 needs_confirmation, which says what the change does.
+	Confirmed *bool `json:"confirmed,omitempty"`
+
 	// Jobs Canary only. Jobs that always use crsp.
 	Jobs *[]string    `json:"jobs,omitempty"`
 	Mode TrialSetMode `json:"mode"`
@@ -11997,7 +12006,7 @@ type ClientInterface interface {
 
 	// SetRepositoryTrialWithBody Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -12006,7 +12015,7 @@ type ClientInterface interface {
 
 	// SetRepositoryTrial Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -15992,7 +16001,7 @@ func (c *Client) GetRepositoryTrial(ctx context.Context, repositoryId Repository
 
 // SetRepositoryTrialWithBody Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes any type of body and a specified content type.
 //
@@ -16011,7 +16020,7 @@ func (c *Client) SetRepositoryTrialWithBody(ctx context.Context, repositoryId Re
 
 // SetRepositoryTrial Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -29632,7 +29641,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetRepositoryTrialWithBodyWithResponse Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -29641,7 +29650,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetRepositoryTrialWithResponse Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -43732,7 +43741,7 @@ func (c *ClientWithResponses) GetRepositoryTrialWithResponse(ctx context.Context
 
 // SetRepositoryTrialWithBodyWithResponse Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -43747,7 +43756,7 @@ func (c *ClientWithResponses) SetRepositoryTrialWithBodyWithResponse(ctx context
 
 // SetRepositoryTrialWithResponse Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //

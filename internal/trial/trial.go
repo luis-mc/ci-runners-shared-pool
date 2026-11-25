@@ -8,7 +8,12 @@
 //	         a shadow workflow; results are recorded; the real job stays hosted
 //	canary   a percentage of the jobs, or named jobs, read crsp labels from
 //	         CRSP_RUNS_ON_CANARY_<JOB> variables; the rest stay hosted
+//	live     the repository is fully on the pool: the canary variables are put
+//	         back and the owner's own CRSP_RUNS_ON variables rule every job
 //	off      no trial; a canary is undone and the earlier variables come back
+//
+// A repository never moves two steps forward at once (off, observe, shadow,
+// canary, live); going back to any earlier step is always allowed (operations R5.42).
 //
 // The package keeps its state in a small key-value store and reaches GitHub
 // only through the Variables and Dispatcher interfaces; the CRSP_RUNS_ON variable
@@ -35,15 +40,31 @@ const (
 	Observe Mode = "observe"
 	Shadow  Mode = "shadow"
 	Canary  Mode = "canary"
+	Live    Mode = "live"
 )
+
+// Order is the position of a mode on the way to live.
+func (m Mode) Order() int {
+	switch m {
+	case Observe:
+		return 1
+	case Shadow:
+		return 2
+	case Canary:
+		return 3
+	case Live:
+		return 4
+	}
+	return 0
+}
 
 // ParseMode reads a mode word.
 func ParseMode(s string) (Mode, error) {
 	switch m := Mode(strings.ToLower(strings.TrimSpace(s))); m {
-	case Off, Observe, Shadow, Canary:
+	case Off, Observe, Shadow, Canary, Live:
 		return m, nil
 	}
-	return "", fmt.Errorf("unknown trial mode %q: use observe, shadow, canary or off", s)
+	return "", fmt.Errorf("unknown trial mode %q: use observe, shadow, canary, live or off", s)
 }
 
 // Errors.
@@ -51,6 +72,7 @@ var (
 	ErrPublic     = errors.New("public repositories are refused: crsp serves private repositories only")
 	ErrNoJobs     = errors.New("no jobs known for canary: run observe first, or name the jobs")
 	ErrBadPercent = errors.New("canary percent must be from 1 to 100")
+	ErrTwoSteps   = errors.New("a repository moves one step at a time: off, observe, shadow, canary, live")
 )
 
 // Repo is what the trial needs to know about a repository.
@@ -200,6 +222,9 @@ func (m *Manager) Set(ctx context.Context, repo string, mode Mode, o Options) (S
 	if mode == Canary && (o.Percent < 0 || o.Percent > 100 || (o.Percent == 0 && len(o.Jobs) == 0)) {
 		return State{}, ErrBadPercent
 	}
+	if mode.Order() > cur.Mode.Order()+1 {
+		return State{}, fmt.Errorf("%s is %s, so it cannot go to %s: %w", repo, cur.Mode, mode, ErrTwoSteps)
+	}
 	// Leaving or changing a canary first puts the variables back.
 	if cur.Mode == Canary {
 		if err := m.restore(ctx, &cur); err != nil {
@@ -211,7 +236,7 @@ func (m *Manager) Set(ctx context.Context, repo string, mode Mode, o Options) (S
 	case Off:
 		next.Seen, next.Dispatched = nil, nil
 		// The outcomes stay: the report is read after a trial too.
-	case Observe:
+	case Observe, Live:
 	case Shadow:
 		next.ShadowWorkflow = o.ShadowWorkflow
 		if next.ShadowWorkflow == "" {

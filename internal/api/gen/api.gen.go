@@ -3904,6 +3904,7 @@ func (e TimerSettingsProblemField) Valid() bool {
 // Defines values for TrialMode.
 const (
 	TrialModeCanary  TrialMode = "canary"
+	TrialModeLive    TrialMode = "live"
 	TrialModeObserve TrialMode = "observe"
 	TrialModeOff     TrialMode = "off"
 	TrialModeShadow  TrialMode = "shadow"
@@ -3913,6 +3914,8 @@ const (
 func (e TrialMode) Valid() bool {
 	switch e {
 	case TrialModeCanary:
+		return true
+	case TrialModeLive:
 		return true
 	case TrialModeObserve:
 		return true
@@ -3928,6 +3931,7 @@ func (e TrialMode) Valid() bool {
 // Defines values for TrialSetMode.
 const (
 	TrialSetModeCanary  TrialSetMode = "canary"
+	TrialSetModeLive    TrialSetMode = "live"
 	TrialSetModeObserve TrialSetMode = "observe"
 	TrialSetModeOff     TrialSetMode = "off"
 	TrialSetModeShadow  TrialSetMode = "shadow"
@@ -3937,6 +3941,8 @@ const (
 func (e TrialSetMode) Valid() bool {
 	switch e {
 	case TrialSetModeCanary:
+		return true
+	case TrialSetModeLive:
 		return true
 	case TrialSetModeObserve:
 		return true
@@ -9373,6 +9379,9 @@ type TrialJob struct {
 
 // TrialSet defines model for TrialSet.
 type TrialSet struct {
+	// Confirmed The person said yes to the change. Without it nothing changes and the answer is 409 needs_confirmation, which says what the change does.
+	Confirmed *bool `json:"confirmed,omitempty"`
+
 	// Jobs Canary only. Jobs that always use crsp.
 	Jobs *[]string    `json:"jobs,omitempty"`
 	Mode TrialSetMode `json:"mode"`
