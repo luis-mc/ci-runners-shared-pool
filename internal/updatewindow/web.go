@@ -204,7 +204,8 @@ func (w *Web) Run(ctx context.Context) int {
 			return 0 // one window per name: the first one shows
 		}
 	}
-	ln, err := net.Listen("tcp", net.JoinHostPort(loopback, "0"))
+	var lc net.ListenConfig
+	ln, err := lc.Listen(ctx, "tcp", net.JoinHostPort(loopback, "0"))
 	if err != nil {
 		say(w.Stderr, "error: "+err.Error())
 		return 1
