@@ -22,7 +22,7 @@ generator: luismc-docs 2.6.1
 ---
 # Machines
 
-PARTLY BUILT (CRSP20). The M1 agent link, join codes, machine keys, detection, load measurement, settings, drain and the controller's own agent are built; see the change note. Not built: R5.14, R5.27 to R5.29, R5.49, R6.9, R6.10. Every requirement not built is NOT YET IMPLEMENTED. Each one names its milestone: **M1** (one machine, the controller's own) or **M3** (more machines, placement and removal), or a later one where it says so. CRSP75 built the machine mode, the battery pause, the `Accepting` status and the CPU cap (R5.61 to R5.64); quiet hours (R5.28) were dropped (OPS51).
+PARTLY BUILT (CRSP20). The M1 agent link, join codes, machine keys, detection, load measurement, settings, drain and the controller's own agent are built; see the change note. Not built: R5.14, R5.27 to R5.29, R5.49, R6.9, R6.10. Removal (R5.40 to R5.42) is built, with the console button, by CRSP267. Every requirement not built is NOT YET IMPLEMENTED. Each one names its milestone: **M1** (one machine, the controller's own) or **M3** (more machines, placement and removal), or a later one where it says so. CRSP75 built the machine mode, the battery pause, the `Accepting` status and the CPU cap (R5.61 to R5.64); quiet hours (R5.28) were dropped (OPS51).
 
 Sources: the product brief ([product.md](../../overview/product.md)), decisions [0003](../../architecture/decisions/0003-isolation-backends.md), [0004](../../architecture/decisions/0004-agent-link.md) and [0005](../../architecture/decisions/0005-product-boundary.md). Requirements ported from dev-standards cite their origin there: `docs/features/runner-pool/spec.md` (runner-pool R5.x) and `docs/architecture/DELIVERYSPEC.md` (DL-x).
 
@@ -234,11 +234,11 @@ Ported from runner-pool R5.10 (no rebuild under a running job) and learning 1 of
 
 ### 5.8 Remove a machine
 
-**R5.40** (M3) — **Remove machine** drains it first (R5.30). Then a question card names every item that goes: the machine, each runner on it (deregistered from GitHub with a remove token), its images and caches, its settings and its key. The user answers yes before anything goes.
+**R5.40** (M3, built, CRSP267) — **Remove machine** drains it first (R5.30). Then a question card names every item that goes: the machine, each runner on it (deregistered from GitHub with a remove token), its images and caches, its settings and its key. The user answers yes before anything goes. Built: the machine page has the pane Remove from the pool (`MachineLeavePool.tsx`): the first press reads the list from `DELETE /api/v1/machines/{id}` without `confirm` (409 `needs_confirmation`), the yes sends `confirm=true`. The controller's own machine has no such pane.
 
-**R5.41** (M3) — On yes, the controller revokes the machine's key at once and closes its link. If the agent is online it removes its runners, images and caches and reports each result. Items it could not remove are listed with the reason.
+**R5.41** (M3, built, CRSP267) — On yes, the controller revokes the machine's key at once and closes its link. If the agent is online it removes its runners, images and caches and reports each result. Items it could not remove are listed with the reason. Built: before the key is revoked the controller deregisters each runner of the machine at GitHub (`runners.Service.RemoveMachineRunners`); an online agent also stops the service and cleans up its folder. A runner GitHub refuses to delete keeps its record and is listed with the reason in the change and the audit log (`machine.remove.runner_failed`). Images and caches of the machine are not removed by the controller yet: NOT YET IMPLEMENTED.
 
-**R5.42** (M3) — If the machine is offline, removal still revokes the key and deregisters its runners from GitHub. The console says the agent will learn this on its next connect (R5.39) and that its local files stay until it is uninstalled.
+**R5.42** (M3, built, CRSP267) — If the machine is offline, removal still revokes the key and deregisters its runners from GitHub. The console says the agent will learn this on its next connect (R5.39) and that its local files stay until it is uninstalled. Built: the runners are deregistered from GitHub without waiting for the agent; the change reason lists what was and was not removed.
 
 **R5.43** (M1) — A removed machine joins again only with a new join code. It gets a new key.
 
@@ -509,9 +509,9 @@ Every test below is planned and NOT YET IMPLEMENTED. Paths are where the tests w
 | R5.37 | internal/agent/link_loss_test.go | planned |
 | R5.38 | internal/machines/reconcile_test.go | planned |
 | R5.39 | internal/agent/revoked_test.go | planned |
-| R5.40 | internal/machines/remove_test.go | planned |
-| R5.41 | internal/machines/remove_test.go | planned |
-| R5.42 | internal/machines/remove_offline_test.go | planned |
+| R5.40 | internal/machines/remove_test.go TestRemoveNamesWhatGoesDrainsThenRevokes; apps/web/src/screens/machines/MachineLeavePool.test.tsx; internal/runners/machine_remove_test.go TestRemoveMachineRunnersOnline | built |
+| R5.41 | internal/machines/remove_test.go TestRemoveNamesWhatGoesDrainsThenRevokes; internal/runners/machine_remove_test.go TestRemoveMachineRunnersKeepsWhatItCouldNotRemove | built |
+| R5.42 | internal/machines/remove_offline_test.go TestRemoveOfflineMachineRevokesAtOnce, TestRemoveOfflineMachineDeregistersItsRunners; internal/runners/machine_remove_test.go TestRemoveMachineRunnersOffline | built |
 | R5.43 | internal/machines/join_test.go | planned |
 | R5.44 | internal/agent/plan_test.go TestServiceAccounts (built, CRSP42) |
 | R5.45 | internal/agent/plan_test.go TestInstallWithoutAdminRightsStopsFirst, TestFailedStepNamesWhatWasLeftBehind, TestCLIXMLErrorIsDecodedToOneLine; cmd/crsp/agent_install_test.go (built, CRSP119) |

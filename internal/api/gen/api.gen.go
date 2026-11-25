@@ -3904,6 +3904,7 @@ func (e TimerSettingsProblemField) Valid() bool {
 // Defines values for TrialMode.
 const (
 	TrialModeCanary  TrialMode = "canary"
+	TrialModeLive    TrialMode = "live"
 	TrialModeObserve TrialMode = "observe"
 	TrialModeOff     TrialMode = "off"
 	TrialModeShadow  TrialMode = "shadow"
@@ -3913,6 +3914,8 @@ const (
 func (e TrialMode) Valid() bool {
 	switch e {
 	case TrialModeCanary:
+		return true
+	case TrialModeLive:
 		return true
 	case TrialModeObserve:
 		return true
@@ -3928,6 +3931,7 @@ func (e TrialMode) Valid() bool {
 // Defines values for TrialSetMode.
 const (
 	TrialSetModeCanary  TrialSetMode = "canary"
+	TrialSetModeLive    TrialSetMode = "live"
 	TrialSetModeObserve TrialSetMode = "observe"
 	TrialSetModeOff     TrialSetMode = "off"
 	TrialSetModeShadow  TrialSetMode = "shadow"
@@ -3937,6 +3941,8 @@ const (
 func (e TrialSetMode) Valid() bool {
 	switch e {
 	case TrialSetModeCanary:
+		return true
+	case TrialSetModeLive:
 		return true
 	case TrialSetModeObserve:
 		return true
@@ -7158,6 +7164,63 @@ type MachineUptime struct {
 	Windows []UptimeWindow `json:"windows"`
 }
 
+// MetricsSettings defines model for MetricsSettings.
+type MetricsSettings struct {
+	// Address Where the page listens now. Absent when it is off.
+	Address *string `json:"address,omitempty"`
+
+	// Enabled Serve the Prometheus page at /metrics.
+	Enabled bool `json:"enabled"`
+
+	// Expose False listens on 127.0.0.1 only; true listens on every address of this PC.
+	Expose  bool `json:"expose"`
+	KeyMade bool `json:"key_made"`
+
+	// LastPushAt Absent when nothing was pushed yet.
+	LastPushAt *time.Time `json:"last_push_at,omitempty"`
+
+	// LastPushError Absent when the last push worked.
+	LastPushError *string `json:"last_push_error,omitempty"`
+	NeedsKey      bool    `json:"needs_key"`
+	Port          int     `json:"port"`
+
+	// PushEnabled Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
+	PushEnabled bool `json:"push_enabled"`
+
+	// PushEndpoint Collector address, for example http://collector:4318.
+	PushEndpoint string `json:"push_endpoint"`
+	PushSeconds  int    `json:"push_seconds"`
+	Pushing      bool   `json:"pushing"`
+	Running      bool   `json:"running"`
+
+	// ScrapeConfig Text to paste into prometheus.yml.
+	ScrapeConfig string `json:"scrape_config"`
+}
+
+// MetricsSettingsSet defines model for MetricsSettingsSet.
+type MetricsSettingsSet struct {
+	// Enabled Serve the Prometheus page at /metrics.
+	Enabled bool `json:"enabled"`
+
+	// Expose False listens on 127.0.0.1 only; true listens on every address of this PC.
+	Expose   bool `json:"expose"`
+	NeedsKey bool `json:"needs_key"`
+	Port     int  `json:"port"`
+
+	// PushEnabled Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
+	PushEnabled bool `json:"push_enabled"`
+
+	// PushEndpoint Collector address, for example http://collector:4318.
+	PushEndpoint string `json:"push_endpoint"`
+	PushSeconds  int    `json:"push_seconds"`
+}
+
+// MetricsToken defines model for MetricsToken.
+type MetricsToken struct {
+	// Key The bearer key, shown this once. The console cannot read it again.
+	Key string `json:"key"`
+}
+
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
 	// Address Email address (kind email).
@@ -9316,6 +9379,9 @@ type TrialJob struct {
 
 // TrialSet defines model for TrialSet.
 type TrialSet struct {
+	// Confirmed The person said yes to the change. Without it nothing changes and the answer is 409 needs_confirmation, which says what the change does.
+	Confirmed *bool `json:"confirmed,omitempty"`
+
 	// Jobs Canary only. Jobs that always use crsp.
 	Jobs *[]string    `json:"jobs,omitempty"`
 	Mode TrialSetMode `json:"mode"`
@@ -10421,6 +10487,9 @@ type UpdateSettingsJSONRequestBody = Settings
 // PutListenAddressJSONRequestBody defines body for PutListenAddress for application/json ContentType.
 type PutListenAddressJSONRequestBody = ListenAddressChoice
 
+// PutMetricsSettingsJSONRequestBody defines body for PutMetricsSettings for application/json ContentType.
+type PutMetricsSettingsJSONRequestBody = MetricsSettingsSet
+
 // UpdatePoolSettingsJSONRequestBody defines body for UpdatePoolSettings for application/json ContentType.
 type UpdatePoolSettingsJSONRequestBody = PoolSettings
 
@@ -11014,6 +11083,15 @@ type ServerInterface interface {
 	// PutListenAddress Choose the controller address
 	// (PUT /api/v1/settings/listen-address)
 	PutListenAddress(w http.ResponseWriter, r *http.Request)
+	// GetMetricsSettings The metrics export settings and what is running
+	// (GET /api/v1/settings/metrics)
+	GetMetricsSettings(w http.ResponseWriter, r *http.Request)
+	// PutMetricsSettings Change the metrics export settings
+	// (PUT /api/v1/settings/metrics)
+	PutMetricsSettings(w http.ResponseWriter, r *http.Request)
+	// MakeMetricsToken Make a new metrics token
+	// (POST /api/v1/settings/metrics/token)
+	MakeMetricsToken(w http.ResponseWriter, r *http.Request)
 	// GetPoolSettings Defaults for new machines
 	// (GET /api/v1/settings/pool)
 	GetPoolSettings(w http.ResponseWriter, r *http.Request)
@@ -17026,6 +17104,48 @@ func (siw *ServerInterfaceWrapper) PutListenAddress(w http.ResponseWriter, r *ht
 	handler.ServeHTTP(w, r)
 }
 
+// GetMetricsSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetMetricsSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMetricsSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutMetricsSettings operation middleware
+func (siw *ServerInterfaceWrapper) PutMetricsSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutMetricsSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// MakeMetricsToken operation middleware
+func (siw *ServerInterfaceWrapper) MakeMetricsToken(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.MakeMetricsToken(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetPoolSettings operation middleware
 func (siw *ServerInterfaceWrapper) GetPoolSettings(w http.ResponseWriter, r *http.Request) {
 
@@ -18014,6 +18134,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/settings/pool", wrapper.UpdatePoolSettings)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/settings/listen-address", wrapper.GetListenAddress)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/settings/listen-address", wrapper.PutListenAddress)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/settings/metrics", wrapper.GetMetricsSettings)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/settings/metrics", wrapper.PutMetricsSettings)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/settings/metrics/token", wrapper.MakeMetricsToken)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/settings/signin-address", wrapper.CheckSignInAddress)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/settings/public-repositories", wrapper.GetPublicRepositories)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/settings/public-repositories", wrapper.SetPublicRepositories)
@@ -25517,6 +25640,121 @@ func (response PutListenAddressdefaultJSONResponse) VisitPutListenAddressRespons
 	return err
 }
 
+type GetMetricsSettingsRequestObject struct {
+}
+
+type GetMetricsSettingsResponseObject interface {
+	VisitGetMetricsSettingsResponse(w http.ResponseWriter) error
+}
+
+type GetMetricsSettings200JSONResponse MetricsSettings
+
+func (response GetMetricsSettings200JSONResponse) VisitGetMetricsSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMetricsSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMetricsSettingsdefaultJSONResponse) VisitGetMetricsSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutMetricsSettingsRequestObject struct {
+	Body *PutMetricsSettingsJSONRequestBody
+}
+
+type PutMetricsSettingsResponseObject interface {
+	VisitPutMetricsSettingsResponse(w http.ResponseWriter) error
+}
+
+type PutMetricsSettings200JSONResponse MetricsSettings
+
+func (response PutMetricsSettings200JSONResponse) VisitPutMetricsSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutMetricsSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutMetricsSettingsdefaultJSONResponse) VisitPutMetricsSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MakeMetricsTokenRequestObject struct {
+}
+
+type MakeMetricsTokenResponseObject interface {
+	VisitMakeMetricsTokenResponse(w http.ResponseWriter) error
+}
+
+type MakeMetricsToken200JSONResponse MetricsToken
+
+func (response MakeMetricsToken200JSONResponse) VisitMakeMetricsTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type MakeMetricsTokendefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response MakeMetricsTokendefaultJSONResponse) VisitMakeMetricsTokenResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetPoolSettingsRequestObject struct {
 }
 
@@ -27328,6 +27566,15 @@ type StrictServerInterface interface {
 	// PutListenAddress Choose the controller address
 	// (PUT /api/v1/settings/listen-address)
 	PutListenAddress(ctx context.Context, request PutListenAddressRequestObject) (PutListenAddressResponseObject, error)
+	// GetMetricsSettings The metrics export settings and what is running
+	// (GET /api/v1/settings/metrics)
+	GetMetricsSettings(ctx context.Context, request GetMetricsSettingsRequestObject) (GetMetricsSettingsResponseObject, error)
+	// PutMetricsSettings Change the metrics export settings
+	// (PUT /api/v1/settings/metrics)
+	PutMetricsSettings(ctx context.Context, request PutMetricsSettingsRequestObject) (PutMetricsSettingsResponseObject, error)
+	// MakeMetricsToken Make a new metrics token
+	// (POST /api/v1/settings/metrics/token)
+	MakeMetricsToken(ctx context.Context, request MakeMetricsTokenRequestObject) (MakeMetricsTokenResponseObject, error)
 	// GetPoolSettings Defaults for new machines
 	// (GET /api/v1/settings/pool)
 	GetPoolSettings(ctx context.Context, request GetPoolSettingsRequestObject) (GetPoolSettingsResponseObject, error)
@@ -32486,6 +32733,85 @@ func (sh *strictHandler) PutListenAddress(w http.ResponseWriter, r *http.Request
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PutListenAddressResponseObject); ok {
 		if err := validResponse.VisitPutListenAddressResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMetricsSettings operation middleware
+func (sh *strictHandler) GetMetricsSettings(w http.ResponseWriter, r *http.Request) {
+	var request GetMetricsSettingsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMetricsSettings(ctx, request.(GetMetricsSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMetricsSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMetricsSettingsResponseObject); ok {
+		if err := validResponse.VisitGetMetricsSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutMetricsSettings operation middleware
+func (sh *strictHandler) PutMetricsSettings(w http.ResponseWriter, r *http.Request) {
+	var request PutMetricsSettingsRequestObject
+
+	var body PutMetricsSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutMetricsSettings(ctx, request.(PutMetricsSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutMetricsSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutMetricsSettingsResponseObject); ok {
+		if err := validResponse.VisitPutMetricsSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// MakeMetricsToken operation middleware
+func (sh *strictHandler) MakeMetricsToken(w http.ResponseWriter, r *http.Request) {
+	var request MakeMetricsTokenRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.MakeMetricsToken(ctx, request.(MakeMetricsTokenRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "MakeMetricsToken")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(MakeMetricsTokenResponseObject); ok {
+		if err := validResponse.VisitMakeMetricsTokenResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

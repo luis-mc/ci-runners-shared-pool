@@ -153,6 +153,16 @@ Ported from dev-standards `claude/plugins/delivery/templates/shared/scripts/deli
 
 **R5.19** — On Windows the agent makes the shared root with an access list that gives runner accounts the right to create files and folders and gives only the creator the right to change or delete them.
 
+**R5.61** (M2, Built CRSP255: `internal/caches/toolcache/store.go`) — **An entry is whole or not there.** An entry is the folder `<tool>/<version>` under the shared root (R5.14). A job or the agent builds it in a stage folder inside the same root (`.stage/<token>`), then renames it into place in one step. Nobody sees the stage folder as an entry. A rename onto an entry that is already there fails on every system, so the process that loses the race uses the winner's entry and its stage folder is removed. A failed build leaves nothing. A tool or version name is one plain folder name that does not start with a dot.
+
+**R5.62** (M2, Built CRSP255: `internal/caches/toolcache/evict.go`) — **A size cap with eviction.** The cache has a size cap (default 20 GiB). Over the cap, the least recently used entries go first until it fits. A job that finds an entry marks it used now (`Lookup`), because volumes do not track reads. An entry used within the last 30 minutes is never evicted, so the cache may stay over its cap while jobs run. An entry is renamed into `.trash` and then deleted, so a reader never sees half an entry. Stage folders older than 24 hours (a crashed job) and everything in `.trash` are removed in the same pass. A tool folder with no version left is removed. The owner can wipe the whole cache of one machine (R5.30). The cap value is a code default and an option of the store; the machine setting that carries it (`tool_cache_cap_gib`) is **NOT YET IMPLEMENTED**.
+
+**R5.63** (M2, Built CRSP255: `internal/backend/container/toolcache.go`; `PoolSpec.ToolCacheHost`, `Config.ToolCacheRoot`) — **Every pool container mounts the cache.** When the machine has a shared tool cache folder, each pool container gets it as a read-write bind mount at `/crsp-tool-cache`, with `CRSP_TOOL_CACHE` set to it. `CI_TOOLS_DIR` points at it too when no repository lane gives that variable (R5.43); a lane's own `CI_TOOLS_DIR` is left alone. The mount path is refused when it is an engine socket or holds a character a mount cannot carry (runners R6.1). The default host folder per system is `/var/lib/crsp/tool-cache` (Linux), `/Users/Shared/crsp/tool-cache` (macOS) and `C:\ProgramData\crsp\tool-cache` (Windows). **NOT YET IMPLEMENTED:** the agent start that fills `Config.ToolCacheRoot` and calls `Prepare`, and the sweep timer that calls `Evict`; today the store and the mount are library code with tests.
+
+**R5.64** (M2, Built CRSP255: `internal/caches/toolcache/check.go`) — **The doctor reads the cache through one interface.** `toolcache.Checker` has one method, `CheckToolCache(ctx) Result`. The result has a state (`ok`, `warn`, `fail`), one plain sentence, the size, the cap, the entry count and the number of leftover stage or trash folders. It fails when the root is missing, cannot be written, or on Linux and macOS is not mode 1777. It warns at 90% of the cap and when leftovers wait for a sweep. The check changes nothing. The doctor package owns the finding and its wording; it takes a `Checker` and shows the result. **NOT YET IMPLEMENTED:** the doctor check that calls it (doctor feature).
+
+**Systems.** The logic is the same on Windows, Linux and macOS. What differs sits behind `Platform` (mode 1777 on Linux and macOS, `icacls` access list on Windows, R5.18, R5.19) and `FS`, with fakes in the tests. Verified here: Linux, by running the tests, and the Windows and macOS builds and vet by cross-compiling; the Windows `icacls` call is checked as a plan through a fake runner and is **not run on a real Windows machine in this change**. **macOS is compiled and unit-tested in CI only and has not been run on a real Mac.**
+
 **R5.20** — If a folder in the shared cache cannot be written, the tool fetch prints one warning and uses a private per-user cache instead.
 
 **R5.21** — A fetch makes up to 5 attempts, waits 10 seconds and then longer between them, uses a 20 second connect timeout, and retries on any error including HTTP 5xx.
@@ -376,7 +386,11 @@ Rows for R5.36 to R5.40, R5.42, R5.43, R5.44, R5.45, R5.48, R5.49 and R5.51 to R
 | R5.11 | internal/mirror/git_refresh_test.go (all refs incl. refs/pull/*, webhook and timer) |
 | R5.12 | internal/mirror/git_rewrite_test.go (fetch from mirror, push to GitHub) |
 | R5.13 | internal/mirror/git_miss_test.go (missing commit refreshes; failed refresh falls back) |
-| R5.14 | internal/tools/dir_test.go (port of test_dl115_ci_tool.py test_ci_tools_dir_is_honoured; planned, M2) |
+| R5.14 | internal/tools/dir_test.go (port of test_dl115_ci_tool.py test_ci_tools_dir_is_honoured; planned, M2); mount in part (CRSP255): internal/backend/container/toolcache_test.go |
+| R5.61 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestInstallPutsAWholeEntryInPlaceAndLeavesNoStage, TestFailedBuildLeavesNothing, TestSecondInstallUsesTheExistingEntry, TestRaceNeverShowsAHalfEntryAndHasOneWinner, TestBadNamesAreRefused |
+| R5.62 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestEvictRemovesLeastRecentlyUsedAndKeepsRecentOnes, TestEvictDropsEmptyToolFolderAndOrphans, TestLookupKeepsAnEntryOutOfEviction, TestWipe |
+| R5.63 | Built (CRSP255): internal/backend/container/toolcache_test.go TestToolCacheMountArgsMountReadWriteAndNameIt, TestToolCacheMountArgsRefuseBadPaths, TestRunArgsMountsToolCacheAndStaysSafe |
+| R5.64 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestCheckStates, TestUnixModeIsStickyAndVerifyCatchesAWideOpenRoot, TestPlatformsBehindInterfaces |
 | R5.15 | internal/tools/pins_test.go (port of test_ds199_tool_fetch.py test_every_pin_has_url_and_sha, test_missing_pin_and_platform) |
 | R5.16 | internal/tools/fetch_test.go (port of test_dl115_ci_tool.py test_first_fetch_downloads_and_verifies, test_second_fetch_makes_no_request, test_corrupted_cache_is_replaced, test_wrong_pin_exits_1_and_leaves_no_file) |
 | R5.17 | internal/tools/fetch_test.go (no temporary file after success, failure or kill) |
@@ -482,6 +496,7 @@ Built (milestone 1):
 - internal/runnercache/ (quota, scan and oldest-first eviction, disk guard, the runner's cache environment, the real disk read per OS)
 - internal/runnercache/ also holds the Rust cap (`rustcap.go`), the pool-wide budget (`budget.go`) and the size alert (`alert.go`); internal/agent/cachebudget.go runs them on a timer
 - internal/vmcheck/ (port of `vm_check.py` logic and `vm-images.json` data); `cache.go` (shared cache, base disk, leases, prune), `memory.go` (memory warning), `lock_unix.go` and `lock_other.go` (the lock)
+- internal/caches/toolcache/ (CRSP255: the shared per-machine tool cache: store with atomic install, cap and eviction, platforms behind interfaces, the `Checker` for the doctor) and internal/backend/container/toolcache.go (the mount)
 - internal/jobcmd/vmprune.go (`crsp vm prune`, the cache trim and the warning print)
 - internal/hooks/gate.go `diskHold` and internal/hooks/jobdone.go `sweepCaches` call them; internal/config/config.go has the keys; internal/backend/{windows,linux,macos} write the `.env`.
 

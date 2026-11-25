@@ -154,7 +154,12 @@ type Options struct {
 	Fetch     func(ctx context.Context, url, dst string) error
 	Extract   func(archive, dst string) error
 	SelfCheck func(ctx context.Context, bin, version string) error
-	Spawn     func(ctx context.Context, exe string, p Plan, planPath string) (int, error)
+	// DBSchema is the schema version of the controller's database; nil on an agent.
+	// BinarySchema is what the new binary says it carries. A build whose schema is
+	// older than the database is refused: migrations go forward only (R5.13).
+	DBSchema     func(ctx context.Context) (int64, error)
+	BinarySchema func(ctx context.Context, bin string) (int64, bool, error)
+	Spawn        func(ctx context.Context, exe string, p Plan, planPath string) (int, error)
 	// StartMSI starts msiexec detached (Windows update); MSILog is its log path (default %ProgramData%\crsp\logs).
 	StartMSI func(ctx context.Context, msi, log string) (int, error)
 	MSILog   string
@@ -236,6 +241,9 @@ func New(o Options) *Manager {
 	}
 	if o.Extract == nil {
 		o.Extract = ExtractBinary
+	}
+	if o.BinarySchema == nil {
+		o.BinarySchema = binarySchema
 	}
 	if o.SelfCheck == nil {
 		o.SelfCheck = selfCheck
@@ -692,6 +700,10 @@ func (m *Manager) prepare(ctx context.Context, rel Release) (string, error) {
 		_ = os.Remove(bin)
 		return "", fmt.Errorf("the new build failed its self-check: %w", err)
 	}
+	if err := m.checkSchema(ctx, bin, rel.Version); err != nil {
+		_ = os.Remove(bin)
+		return "", err
+	}
 	return bin, nil
 }
 
@@ -873,3 +885,27 @@ func (m *Manager) attemptID() string {
 	defer m.mu.Unlock()
 	return m.attempt
 }
+
+// checkSchema refuses a build whose database schema is older than the
+// controller's database (operations R5.13: no downgrade, migrations go forward only).
+func (m *Manager) checkSchema(ctx context.Context, bin, version string) error {
+	if m.o.DBSchema == nil {
+		return nil
+	}
+	have, err := m.o.DBSchema(ctx)
+	if err != nil {
+		return fmt.Errorf("the database schema could not be read: %w", err)
+	}
+	got, ok, err := m.o.BinarySchema(ctx, bin)
+	if err != nil {
+		return fmt.Errorf("the new build failed its self-check: %w", err)
+	}
+	if ok && got < have {
+		return fmt.Errorf("%s carries database schema %d and the database is at %d; a build with an older schema is refused (no downgrade)", version, got, have)
+	}
+	return nil
+}
+
+// SetDBSchema tells the manager the schema version of the controller's database,
+// so a build with an older schema is refused (R5.13). An agent never sets it.
+func (m *Manager) SetDBSchema(f func(ctx context.Context) (int64, error)) { m.o.DBSchema = f }

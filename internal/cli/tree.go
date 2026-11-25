@@ -3,6 +3,7 @@ package cli
 import (
 	"flag"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/cli/output"
@@ -48,9 +49,16 @@ func cmdVersion(env *Env) *command {
 	return &command{name: "version", summary: "print the version",
 		run: func(c *call, _ []string) error {
 			if c.g.json {
-				return output.JSON(c.env.Stdout, map[string]string{"version": env.Version, "go": env.GoVersion})
+				m := map[string]string{"version": env.Version, "go": env.GoVersion}
+				if env.SchemaVersion > 0 {
+					m["schema"] = strconv.FormatInt(env.SchemaVersion, 10)
+				}
+				return output.JSON(c.env.Stdout, m)
 			}
 			_, _ = fmt.Fprintf(c.env.Stdout, "crsp %s (%s)\n", env.Version, env.GoVersion)
+			if env.SchemaVersion > 0 {
+				_, _ = fmt.Fprintf(c.env.Stdout, "schema %d\n", env.SchemaVersion)
+			}
 			return nil
 		}}
 }
