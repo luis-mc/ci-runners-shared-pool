@@ -72,7 +72,9 @@ export default function MachineLeavePool({
         onCancel={q.cancel}
         onConfirm={() => void q.confirm()}
       />
-      {look.error ? <Message tone="problem">Could not read what goes. {look.error}</Message> : null}
+      {look.error ? (
+        <Message tone="problem">Could not read what goes. {look.error}</Message>
+      ) : null}
     </>
   );
 }

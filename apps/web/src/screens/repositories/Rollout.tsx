@@ -1,7 +1,17 @@
 // Rollout of one repository (operations R5.42, github-integration R5.66): the step the repository is on,
 // one forward button and the way back. Every move asks first and names what it does. One pane, shared parts only.
 // Design system CORE-1 to CORE-7, UX-4, UX-13, UX-38; words: content.md, Rollout words.
-import { Button, Cluster, Facts, Message, NumberField, Pane, Stack, Text, TextField } from '@crsp/ui';
+import {
+  Button,
+  Cluster,
+  Facts,
+  Message,
+  NumberField,
+  Pane,
+  Stack,
+  Text,
+  TextField,
+} from '@crsp/ui';
 import { useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad, useQuestion } from '../../api/hooks';
@@ -23,7 +33,8 @@ export const STEP_WORDS: Record<Mode, string> = {
 
 export const STEP_HELP: Record<Mode, string> = {
   off: 'No trial. Jobs go where the repository sends them.',
-  observe: 'Only watches. crsp writes down what it would do for each queued job and starts nothing.',
+  observe:
+    'Only watches. crsp writes down what it would do for each queued job and starts nothing.',
   shadow: 'crsp copies the marked workflow while the real jobs stay on GitHub.',
   canary: 'The chosen jobs run on the pool. The other jobs stay on GitHub.',
   live: 'Every job of this repository runs on the pool.',
@@ -44,7 +55,15 @@ export function moveItems(from: Mode, to: Mode): string[] {
   return [`From ${STEP_WORDS[from]} to ${STEP_WORDS[to]}.`, STEP_HELP[to]];
 }
 
-export function RolloutPane({ repositoryId, fullName, poolOn }: { repositoryId: number; fullName: string; poolOn: boolean }) {
+export function RolloutPane({
+  repositoryId,
+  fullName,
+  poolOn,
+}: {
+  repositoryId: number;
+  fullName: string;
+  poolOn: boolean;
+}) {
   const client = useClient();
   const session = useSession();
   const { result, reload } = useLoad(
@@ -64,7 +83,10 @@ export function RolloutPane({ repositoryId, fullName, poolOn }: { repositoryId: 
       if (!target) return;
       const body: Schemas['TrialSet'] = { mode: target, confirmed: true };
       if (target === 'canary') {
-        const names = jobs.split(',').map((j) => j.trim()).filter(Boolean);
+        const names = jobs
+          .split(',')
+          .map((j) => j.trim())
+          .filter(Boolean);
         if (names.length > 0) body.jobs = names;
         if (percent > 0) body.percent = percent;
       }
@@ -104,7 +126,9 @@ export function RolloutPane({ repositoryId, fullName, poolOn }: { repositoryId: 
                 ]}
               />
               {!poolOn && t.mode === 'off' ? (
-                <Message tone="note">The pool is off for this repository. Turn it on first.</Message>
+                <Message tone="note">
+                  The pool is off for this repository. Turn it on first.
+                </Message>
               ) : null}
               {forward === 'canary' ? (
                 <Cluster>
@@ -134,7 +158,12 @@ export function RolloutPane({ repositoryId, fullName, poolOn }: { repositoryId: 
                   </Button>
                 ) : null}
                 {back.map((b) => (
-                  <Button key={b} onPress={() => ask(b)} disabled={why !== undefined} reason={why}>
+                  <Button
+                    key={b}
+                    onPress={() => ask(b)}
+                    disabled={why !== undefined}
+                    reason={why}
+                  >
                     {`Back to ${STEP_WORDS[b]}`}
                   </Button>
                 ))}
