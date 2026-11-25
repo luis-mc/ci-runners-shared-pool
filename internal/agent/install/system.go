@@ -212,13 +212,17 @@ func (s *OSSystem) Run(ctx context.Context, argv []string, onLine func(stream, l
 	}
 	cmd := exec.CommandContext(ctx, argv[0], argv[1:]...) //nolint:gosec // argv is built by the installer from the pinned list
 	var wg sync.WaitGroup
+	// stdout and stderr are read by two goroutines; the callback is never called by both at once.
+	var lineMu sync.Mutex
 	pipe := func(stream string, r io.Reader) {
 		defer wg.Done()
 		sc := bufio.NewScanner(r)
 		sc.Buffer(make([]byte, 64<<10), 1<<20)
 		sc.Split(splitLines)
 		for sc.Scan() {
+			lineMu.Lock()
 			onLine(stream, sc.Text())
+			lineMu.Unlock()
 		}
 	}
 	so, err := cmd.StdoutPipe()
