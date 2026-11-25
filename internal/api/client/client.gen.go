@@ -8514,6 +8514,35 @@ type SignInAddress struct {
 	Registered bool `json:"registered"`
 }
 
+// SizeLabelList defines model for SizeLabelList.
+type SizeLabelList struct {
+	Example  string             `json:"example"`
+	Labels   []SizeLabelRow     `json:"labels"`
+	Machines []SizeLabelMachine `json:"machines"`
+}
+
+// SizeLabelMachine defines model for SizeLabelMachine.
+type SizeLabelMachine struct {
+	// Cpus Most CPUs a job may ask for on this machine
+	Cpus float32 `json:"cpus"`
+
+	// MemoryGib Most memory in GiB a job may ask for on this machine
+	MemoryGib float32 `json:"memory_gib"`
+	Name      string  `json:"name"`
+
+	// Os linux, windows or macos
+	Os string `json:"os"`
+}
+
+// SizeLabelRow defines model for SizeLabelRow.
+type SizeLabelRow struct {
+	Example string `json:"example"`
+	Key     string `json:"key"`
+	Max     string `json:"max"`
+	Meaning string `json:"meaning"`
+	Min     string `json:"min"`
+}
+
 // Slot defines model for Slot.
 type Slot struct {
 	Job         string    `json:"job"`
@@ -11904,6 +11933,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListSizeLabels The size labels the pool understands, with a copy-paste example and the room of each machine
+	//
+	// scheduling R5.67a. A job may put cpu=N and ram=N in its runs-on. The labels become the CPU and memory limits of the job container and decide which machine can take the job. Each machine lists the most a job may ask of it.
+	//
+	// Corresponds with GET /api/v1/size-labels (the `ListSizeLabels` operationId).
+	ListSizeLabels(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
 	//
@@ -16304,6 +16340,23 @@ func (c *Client) RedeemSetupLinkWithBody(ctx context.Context, contentType string
 // Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 func (c *Client) RedeemSetupLink(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewRedeemSetupLinkRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListSizeLabels The size labels the pool understands, with a copy-paste example and the room of each machine
+//
+// scheduling R5.67a. A job may put cpu=N and ram=N in its runs-on. The labels become the CPU and memory limits of the job container and decide which machine can take the job. Each machine lists the most a job may ask of it.
+//
+// Corresponds with GET /api/v1/size-labels (the `ListSizeLabels` operationId).
+func (c *Client) ListSizeLabels(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListSizeLabelsRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -25636,6 +25689,33 @@ func NewRedeemSetupLinkRequestWithBody(server string, contentType string, body i
 	return req, nil
 }
 
+// NewListSizeLabelsRequest constructs an http.Request for the ListSizeLabels method
+func NewListSizeLabelsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/size-labels")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetTimelineRequest constructs an http.Request for the GetTimeline method
 func NewGetTimelineRequest(server string, params *GetTimelineParams) (*http.Request, error) {
 	var err error
@@ -28757,6 +28837,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/setup/redeem (the `RedeemSetupLink` operationId).
 	RedeemSetupLinkWithResponse(ctx context.Context, body RedeemSetupLinkJSONRequestBody, reqEditors ...RequestEditorFn) (*RedeemSetupLinkResponse, error)
+
+	// ListSizeLabelsWithResponse The size labels the pool understands, with a copy-paste example and the room of each machine
+	//
+	// scheduling R5.67a. A job may put cpu=N and ram=N in its runs-on. The labels become the CPU and memory limits of the job container and decide which machine can take the job. Each machine lists the most a job may ask of it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/size-labels (the `ListSizeLabels` operationId).
+	ListSizeLabelsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSizeLabelsResponse, error)
 
 	// GetTimelineWithResponse Jobs on machine runner slots over time, past, running and forecast
 	//
@@ -37921,6 +38010,54 @@ func (r RedeemSetupLinkResponse) ContentType() string {
 	return ""
 }
 
+type ListSizeLabelsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SizeLabelList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListSizeLabelsResponse) GetJSON200() *SizeLabelList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListSizeLabelsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListSizeLabelsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListSizeLabelsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListSizeLabelsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListSizeLabelsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetTimelineResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -42518,6 +42655,21 @@ func (c *ClientWithResponses) RedeemSetupLinkWithResponse(ctx context.Context, b
 		return nil, err
 	}
 	return ParseRedeemSetupLinkResponse(rsp)
+}
+
+// ListSizeLabelsWithResponse The size labels the pool understands, with a copy-paste example and the room of each machine
+//
+// scheduling R5.67a. A job may put cpu=N and ram=N in its runs-on. The labels become the CPU and memory limits of the job container and decide which machine can take the job. Each machine lists the most a job may ask of it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/size-labels (the `ListSizeLabels` operationId).
+func (c *ClientWithResponses) ListSizeLabelsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListSizeLabelsResponse, error) {
+	rsp, err := c.ListSizeLabels(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListSizeLabelsResponse(rsp)
 }
 
 // GetTimelineWithResponse Jobs on machine runner slots over time, past, running and forecast
@@ -49155,6 +49307,39 @@ func ParseRedeemSetupLinkResponse(rsp *http.Response) (*RedeemSetupLinkResponse,
 			headers.SetCookie = &value
 		}
 		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParseListSizeLabelsResponse parses an HTTP response from a ListSizeLabelsWithResponse call
+func ParseListSizeLabelsResponse(rsp *http.Response) (*ListSizeLabelsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListSizeLabelsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SizeLabelList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
 	}
 
 	return response, nil

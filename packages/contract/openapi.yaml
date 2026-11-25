@@ -2561,6 +2561,29 @@ paths:
           description: Deleted.
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/size-labels:
+    get:
+      operationId: listSizeLabels
+      x-cli: none
+      x-cli-reason: 'The console owns this screen first; a command follows in its own task.'
+      tags: [jobs]
+      summary: The size labels the pool understands, with a copy-paste example and the room of each machine
+      description: >-
+        scheduling R5.67a. A job may put cpu=N and ram=N in its runs-on. The
+        labels become the CPU and memory limits of the job container and
+        decide which machine can take the job. Each machine lists the most a
+        job may ask of it.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The labels, the example and the machines.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SizeLabelList'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/job-sizes:
     get:
       operationId: listJobSizes
@@ -5786,6 +5809,34 @@ components:
             description: Set when the test count moved by more than 2x and the size went back to the scan guess,
           }
         copy_line: { type: string, description: The YAML line for .crsp.yml }
+    SizeLabelRow:
+      type: object
+      required: [key, meaning, example, min, max]
+      properties:
+        key: { type: string }
+        meaning: { type: string }
+        example: { type: string }
+        min: { type: string }
+        max: { type: string }
+    SizeLabelMachine:
+      type: object
+      required: [name, os, cpus, memory_gib]
+      properties:
+        name: { type: string }
+        os: { type: string, description: 'linux, windows or macos' }
+        cpus: { type: number, description: 'Most CPUs a job may ask for on this machine' }
+        memory_gib: { type: number, description: 'Most memory in GiB a job may ask for on this machine' }
+    SizeLabelList:
+      type: object
+      required: [labels, example, machines]
+      properties:
+        labels:
+          type: array
+          items: { $ref: '#/components/schemas/SizeLabelRow' }
+        example: { type: string }
+        machines:
+          type: array
+          items: { $ref: '#/components/schemas/SizeLabelMachine' }
     JobSizeCostRow:
       type: object
       required: [kind, key, class, cpu, gib, assumption]
