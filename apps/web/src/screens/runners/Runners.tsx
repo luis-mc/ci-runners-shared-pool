@@ -2,8 +2,8 @@
 // not managed.
 import {
   Button,
-  CappedList,
   Chips,
+  Cluster,
   Empty,
   LinkButton,
   Message,
@@ -14,9 +14,9 @@ import {
   Stack,
   Status,
   Table,
+  Tag,
   Text,
   TextLink,
-  formatAgo,
   formatDuration,
   Facts,
   useNow,
@@ -32,10 +32,16 @@ import { useSession } from '../../auth/session';
 import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import { needsYes } from '../repositories/plans';
-import { KIND_NAMES, oneStop } from './kinds';
+import { KIND_NAMES, OS_WORD, oneStop } from './kinds';
 import { keepsText, uncleanText } from './RunnerPage';
 
 type Runner = Schemas['Runner'];
+type SizeClass = NonNullable<Runner['size_class']>;
+
+/** LOOK71: the type tag is the isolation word alone; the long UX-61 text is the hover text. */
+export function typeTag(r: Pick<Runner, 'isolation'>): string {
+  return r.isolation;
+}
 
 /** UX-61: every runner names its isolation; a persistent runner also says its state is kept between jobs. */
 export function isolationText(r: Pick<Runner, 'isolation' | 'keeps_state'>): string {
@@ -138,7 +144,9 @@ export function RunnersList() {
   }, [leaving, reload]);
   const [q, setQ] = useState('');
   const [os, setOs] = useState<'' | 'linux' | 'windows' | 'macos'>('');
-  const [iso, setIso] = useState<'' | Schemas['Isolation']>('');
+  const [iso, setIso] = useState<'' | Exclude<Schemas['Isolation'], 'persistent'>>('');
+  const [kind, setKind] = useState<'' | Schemas['RunnerKind']>('');
+  const [size, setSize] = useState<'' | SizeClass>('');
   const [picked, setPicked] = useState<Set<string>>(new Set());
   const admin = session.can('admin');
   const why = session.whyNot('admin');
@@ -210,15 +218,15 @@ export function RunnersList() {
       header: 'Name',
       cell: (r) => <TextLink to={`/setup/runners/${r.id}`}>{r.name}</TextLink>,
       title: (r) => r.name,
-      grow: 1,
+      grow: 2,
       sort: (r) => r.name,
     },
     {
       id: 'iso',
-      header: 'Isolation',
-      cell: (r) => isolationText(r),
-      grow: 1,
-      // The whole words of UX-61, wrapped at a word, never cut; the system, the backend and the kind are in the hover text and on the runner's page (UX-72).
+      header: 'Type',
+      cell: (r) => <Tag>{typeTag(r)}</Tag>,
+      kind: 'fit',
+      // The whole words of UX-61 are the hover text; the backend and the kind are on the runner's page (UX-72).
       title: (r) =>
         [
           isolationText(r),
@@ -227,7 +235,22 @@ export function RunnersList() {
         ].join('. '),
       sort: (r) => r.isolation,
     },
-    { id: 'labels', header: 'Labels', cell: (r) => <CappedList items={r.labels} /> },
+    {
+      id: 'size',
+      header: 'Size',
+      cell: (r) => (r.size_class ? <Tag>{r.size_class}</Tag> : 'not set'),
+      kind: 'fit',
+      title: (r) => r.size_class ?? 'No size class is set for this runner.',
+      sort: (r) => r.size_class ?? '',
+    },
+    {
+      id: 'system',
+      header: 'System',
+      cell: (r) => <Tag>{OS_WORD[r.os]}</Tag>,
+      kind: 'fit',
+      title: (r) => `${OS_WORD[r.os]} ${r.arch}`,
+      sort: (r) => r.os,
+    },
     {
       id: 'state',
       header: 'State',
@@ -248,16 +271,14 @@ export function RunnersList() {
       id: 'job',
       header: 'Current job',
       cell: (r) => currentJobText(r, now),
-    },
-    {
-      id: 'age',
-      header: 'Age',
-      cell: (r) => (r.created_at ? formatAgo(r.created_at, now) : 'not known'),
-      sort: (r) => r.created_at ?? '',
+      kind: 'grow',
+      title: (r) => currentJobText(r, now),
+      secondary: true,
     },
     {
       id: 'managed',
       header: 'Managed',
+      kind: 'fit',
       cell: (r) =>
         r.managed ? (
           r.state === 'offline' ? (
@@ -321,6 +342,8 @@ export function RunnersList() {
             (r) =>
               (!os || r.os === os) &&
               (!iso || r.isolation === iso) &&
+              (!kind || r.kind === kind) &&
+              (!size || r.size_class === size) &&
               `${r.name} ${r.machine_name} ${r.labels.join(' ')}`
                 .toLowerCase()
                 .includes(q.trim().toLowerCase()),
@@ -364,29 +387,60 @@ export function RunnersList() {
                       <SearchBar value={q} onChange={setQ} label="Search runners" />
                     }
                     filters={
-                      <>
-                        <Chips
-                          label="System"
-                          options={[
-                            { value: 'linux', label: 'Linux' },
-                            { value: 'windows', label: 'Windows' },
-                            { value: 'macos', label: 'macOS' },
-                          ]}
-                          value={os}
-                          onChange={setOs}
-                        />
-                        <Chips
-                          label="Isolation"
-                          options={[
-                            { value: 'microVM', label: 'microVM' },
-                            { value: 'VM', label: 'VM' },
-                            { value: 'container', label: 'container' },
-                            { value: 'persistent', label: 'persistent' },
-                          ]}
-                          value={iso}
-                          onChange={setIso}
-                        />
-                      </>
+                      <Stack>
+                        <Cluster>
+                          <Text tone="muted">System</Text>
+                          <Chips
+                            label="System"
+                            options={[
+                              { value: 'linux', label: 'Linux' },
+                              { value: 'windows', label: 'Windows' },
+                              { value: 'macos', label: 'macOS' },
+                            ]}
+                            value={os}
+                            onChange={setOs}
+                          />
+                        </Cluster>
+                        <Cluster>
+                          <Text tone="muted">Isolation</Text>
+                          <Chips
+                            label="Isolation"
+                            options={[
+                              { value: 'container', label: 'container' },
+                              { value: 'VM', label: 'VM' },
+                              { value: 'microVM', label: 'microVM' },
+                            ]}
+                            value={iso}
+                            onChange={setIso}
+                          />
+                        </Cluster>
+                        <Cluster>
+                          <Text tone="muted">Kind</Text>
+                          <Chips
+                            label="Kind"
+                            options={[
+                              { value: 'persistent', label: 'persistent' },
+                              { value: 'ephemeral', label: 'ephemeral' },
+                            ]}
+                            value={kind}
+                            onChange={setKind}
+                          />
+                        </Cluster>
+                        <Cluster>
+                          <Text tone="muted">Size</Text>
+                          <Chips
+                            label="Size"
+                            options={[
+                              { value: 'small', label: 'small' },
+                              { value: 'medium', label: 'medium' },
+                              { value: 'large', label: 'large' },
+                              { value: 'xl', label: 'xl' },
+                            ]}
+                            value={size}
+                            onChange={setSize}
+                          />
+                        </Cluster>
+                      </Stack>
                     }
                     selection={
                       <>
@@ -436,6 +490,8 @@ export function RunnersList() {
                             setQ('');
                             setOs('');
                             setIso('');
+                            setKind('');
+                            setSize('');
                           }}
                         >
                           Clear search and filters

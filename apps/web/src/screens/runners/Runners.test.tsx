@@ -57,8 +57,11 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
-    expect(within(table).getByText('persistent, state kept between jobs')).toBeTruthy();
-    expect(within(table).getByText('container')).toBeTruthy();
+    expect(within(table).getByText('persistent').className).toContain('ds-tag');
+    expect(
+      table.querySelector('[title*="persistent, state kept between jobs"]'),
+    ).toBeTruthy();
+    expect(within(table).getByText('container').className).toContain('ds-tag');
     expect(within(table).getByText('busy')).toBeTruthy();
     expect(within(table).getByText('octo/app e2e')).toBeTruthy();
     expect(within(table).getByText('idle')).toBeTruthy();
@@ -103,27 +106,74 @@ describe('Runners list', () => {
     );
   });
 
-  it('puts system and backend in the isolation cell and caps the labels at two', async () => {
+  it('shows type, size and system as tags, with the long words as hover text (LOOK71)', async () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
       items: [
         runner({
           os: 'windows',
           arch: 'x64',
           backend: 'persistent',
+          size_class: 'medium',
           labels: ['self-hosted', 'windows', 'x64', 'docker'],
         }),
       ],
     });
     renderApp(api, '/setup/runners');
     const table = await screen.findByRole('table', { name: /^Runners on/ });
-    // The system and the backend are in the hover text, so the one-line table fits its pane at 1300 px (UX-72).
-    expect(within(table).queryByRole('columnheader', { name: 'System' })).toBeNull();
-    expect(within(table).queryByRole('columnheader', { name: 'Backend' })).toBeNull();
+    for (const h of ['Type', 'Size', 'System'])
+      expect(within(table).getByRole('columnheader', { name: h })).toBeTruthy();
+    expect(within(table).queryByRole('columnheader', { name: 'Isolation' })).toBeNull();
+    expect(within(table).getByText('medium').className).toContain('ds-tag');
+    expect(within(table).getByText('Windows').className).toContain('ds-tag');
     expect(table.querySelector('[title*="windows x64, persistent"]')).toBeTruthy();
-    expect(within(table).getByText('self-hosted, windows +2')).toBeTruthy();
+  });
+
+  it('groups the filters by attribute and combines the groups (LOOK71)', async () => {
+    const api = signedIn().on('GET', '/api/v1/runners', {
+      items: [
+        runner({ id: 'a', name: 'lx-persist', os: 'linux' }),
+        runner({
+          id: 'b',
+          name: 'lx-ephem',
+          os: 'linux',
+          kind: 'ephemeral',
+          isolation: 'container',
+          keeps_state: false,
+        }),
+        runner({
+          id: 'c',
+          name: 'win-ephem',
+          os: 'windows',
+          kind: 'ephemeral',
+          isolation: 'container',
+          keeps_state: false,
+        }),
+      ],
+    });
+    renderApp(api, '/setup/runners');
+    await screen.findByRole('table', { name: /^Runners on/ });
+    const system = screen.getByRole('group', { name: 'System' });
     expect(
-      within(table).getByText('self-hosted, windows, x64, docker').className,
-    ).toContain('ds-visually-hidden');
+      within(system)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['Linux', 'Windows', 'macOS']);
+    const iso = screen.getByRole('group', { name: 'Isolation' });
+    expect(
+      within(iso)
+        .getAllByRole('button')
+        .map((b) => b.textContent),
+    ).toEqual(['container', 'VM', 'microVM']);
+    expect(screen.getByRole('group', { name: 'Kind' })).toBeTruthy();
+    fireEvent.click(within(system).getByRole('button', { name: 'Linux' }));
+    expect(screen.queryByText('win-ephem')).toBeNull();
+    fireEvent.click(
+      within(screen.getByRole('group', { name: 'Kind' })).getByRole('button', {
+        name: 'ephemeral',
+      }),
+    );
+    expect(screen.getByText('lx-ephem')).toBeTruthy();
+    expect(screen.queryByText('lx-persist')).toBeNull();
   });
 
   it('reloads when a runner event arrives (live)', async () => {
