@@ -26,6 +26,10 @@ type Store interface {
 	AddDiskSamples(ctx context.Context, machineID string, samples []store.DiskSample) error
 	DiskSamples(ctx context.Context, machineID string, since time.Time) ([]store.DiskSample, error)
 	PruneDiskSamples(ctx context.Context, before time.Time) (int64, error)
+	AddPresence(ctx context.Context, r store.PresenceRow) error
+	LastPresence(ctx context.Context, machineID string) (store.PresenceRow, bool, error)
+	PresenceSince(ctx context.Context, machineID string, since time.Time) ([]store.PresenceRow, error)
+	PrunePresence(ctx context.Context, before time.Time) (int64, error)
 	JobStats(ctx context.Context, sc store.JobStatsScope, from, to time.Time) (store.JobStats, error)
 	MachineRunnersWithJobs(ctx context.Context, machineID string, from, to time.Time) ([]store.RunnerRef, error)
 	RawSetting(ctx context.Context, key string) (string, bool, error)
@@ -56,6 +60,7 @@ type Service struct {
 
 	mu        sync.Mutex
 	lastPrune time.Time
+	pres      presenceMem
 }
 
 func (s *Service) now() time.Time {

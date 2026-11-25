@@ -62,6 +62,8 @@ type Options struct {
 	GitHub *GitHubArea
 	// Machines serves the machines routes; nil answers 501 (machines area).
 	Machines MachinesService
+	// Deps serves the dependency setup routes (handlers_dependencies.go, CRSP248). Nil answers 501.
+	Deps DepsService
 	// CA serves GET /api/v1/ca.pem.
 	CA CAProvider
 	// Packages serves GET /api/v1/packages/{name} (machines R5.65). Nil answers 501.

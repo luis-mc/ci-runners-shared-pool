@@ -20,9 +20,52 @@ func (s *Service) MarkSeen(ctx context.Context, machineID string) error {
 		return err
 	}
 	if changed {
+		s.observePresence(ctx, machineID, "")
 		s.notifyMachine(machineID)
 	}
 	return nil
+}
+
+// OfflineHeartbeatLost and OfflineClockSkew are the reasons a machine went offline (R5.83).
+const (
+	OfflineHeartbeatLost = "heartbeat_lost"
+	OfflineClockSkew     = "clock_skew"
+)
+
+// SetPresenceObserver sets who keeps the periods of each machine; nil keeps none.
+func (s *Service) SetPresenceObserver(o PresenceObserver) {
+	s.mu.Lock()
+	s.presence = o
+	s.mu.Unlock()
+}
+
+// observePresence tells the observer what the machine is now: offline for offlineReason, else the
+// answer of ComputeAvailability (R5.62).
+func (s *Service) observePresence(ctx context.Context, machineID, offlineReason string) {
+	s.mu.Lock()
+	o := s.presence
+	s.mu.Unlock()
+	if o == nil {
+		return
+	}
+	m, err := s.o.Repo.GetMachine(ctx, machineID)
+	if err != nil {
+		return
+	}
+	now := s.now()
+	if !m.Online {
+		if offlineReason == "" {
+			offlineReason = OfflineHeartbeatLost
+		}
+		o.Observe(ctx, machineID, false, offlineReason, m.LastSeen, now)
+		return
+	}
+	set, err := s.o.Repo.GetSettings(ctx, machineID)
+	if err != nil {
+		return
+	}
+	a := ComputeAvailability(true, m.State, set, s.Policy(machineID), now)
+	o.Observe(ctx, machineID, true, a.Reason, m.LastSeen, now)
 }
 
 // Tick does the periodic work: it marks a machine that sent nothing for 30
@@ -60,6 +103,11 @@ func (s *Service) Tick(ctx context.Context) error {
 			_ = s.o.Repo.Audit(ctx, "system", "machine.heartbeat.skew", m.ID,
 				fmt.Sprintf("last heartbeat dated %s ahead of the controller clock; counted as not fresh", skew.Round(time.Second)))
 		}
+		reason := OfflineHeartbeatLost
+		if skew > 0 {
+			reason = OfflineClockSkew
+		}
+		s.observePresence(ctx, m.ID, reason)
 		if went {
 			s.notifyMachine(m.ID)
 		}

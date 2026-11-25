@@ -28,6 +28,7 @@ import { safeAppUrl } from '../../auth/CallbackGuide';
 import { signInUrl, useSession } from '../../auth/session';
 import { withFirstRepository } from '../../shell/Shell';
 import { AddMachineWizard } from '../machines/AddMachine';
+import { ReadyDoor, needsEngine } from '../dependencies/ReadyDoor';
 import { TurnOnPoolWizard } from '../repositories/TurnOnPool';
 
 type SetupState = Schemas['SetupState'];
@@ -500,6 +501,15 @@ export function FirstMachineDone({ onDone }: { onDone: () => void }) {
       <Message tone="done">
         {host ? `This PC, ${host}, is in the pool.` : 'Add the first machine is done.'}
       </Message>
+      {own && needsEngine(own, 'linux') && !own.backends.some((b) => b.usable) ? (
+        <ReadyDoor
+          machine={own}
+          os="linux"
+          kind="ephemeral"
+          back="/setup/summary"
+          words={`No container engine answers on ${own.name}. Linux runners need one.`}
+        />
+      ) : null}
       {adding ? (
         <AddMachineWizard onDone={onDone} />
       ) : (

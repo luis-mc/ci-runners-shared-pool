@@ -371,3 +371,26 @@ func (b *Backend) ApplyHygiene(ctx context.Context, name string, keep, clear boo
 	}
 	return b.step(ctx, "hygiene", args, "")
 }
+
+// PreparePool makes what a runner choice needs before the first runner starts
+// (dependency setup DEP9): the base image of the machine through the same
+// local, registry, build path as a job pool, and, when persistent is set, the
+// persistent pool container with its two volumes. It registers no runner and
+// is safe to run again: an image that is there is not built again and a pool
+// container that exists is only started, never re-created.
+func (b *Backend) PreparePool(ctx context.Context, arch string, persistent bool) (backend.ImageRef, error) {
+	r, err := b.withImage(ctx, backend.RunnerSpec{OS: "linux", Arch: arch})
+	if err != nil {
+		return backend.ImageRef{}, err
+	}
+	if !persistent {
+		return r.Image, nil
+	}
+	b.mu.Lock()
+	defer b.mu.Unlock()
+	if err := b.ensurePersistentPool(ctx, r); err != nil {
+		return r.Image, err
+	}
+	b.log("prepare pool", PersistentPool+" is ready")
+	return r.Image, nil
+}

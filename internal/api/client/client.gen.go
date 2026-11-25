@@ -446,6 +446,195 @@ func (e CreateJoinFileRequestOs) Valid() bool {
 	}
 }
 
+// Defines values for DependencyCheckRequestRunnerKind.
+const (
+	DependencyCheckRequestRunnerKindEphemeral  DependencyCheckRequestRunnerKind = "ephemeral"
+	DependencyCheckRequestRunnerKindPersistent DependencyCheckRequestRunnerKind = "persistent"
+)
+
+// Valid indicates whether the value is a known member of the DependencyCheckRequestRunnerKind enum.
+func (e DependencyCheckRequestRunnerKind) Valid() bool {
+	switch e {
+	case DependencyCheckRequestRunnerKindEphemeral:
+		return true
+	case DependencyCheckRequestRunnerKindPersistent:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyCheckRequestRunnerOs.
+const (
+	DependencyCheckRequestRunnerOsLinux   DependencyCheckRequestRunnerOs = "linux"
+	DependencyCheckRequestRunnerOsMacos   DependencyCheckRequestRunnerOs = "macos"
+	DependencyCheckRequestRunnerOsWindows DependencyCheckRequestRunnerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the DependencyCheckRequestRunnerOs enum.
+func (e DependencyCheckRequestRunnerOs) Valid() bool {
+	switch e {
+	case DependencyCheckRequestRunnerOsLinux:
+		return true
+	case DependencyCheckRequestRunnerOsMacos:
+		return true
+	case DependencyCheckRequestRunnerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyEventStream.
+const (
+	Status DependencyEventStream = "status"
+	Stderr DependencyEventStream = "stderr"
+	Stdout DependencyEventStream = "stdout"
+)
+
+// Valid indicates whether the value is a known member of the DependencyEventStream enum.
+func (e DependencyEventStream) Valid() bool {
+	switch e {
+	case Status:
+		return true
+	case Stderr:
+		return true
+	case Stdout:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyItemId.
+const (
+	DependencyItemIdDockerDesktop DependencyItemId = "docker-desktop"
+	DependencyItemIdDockerEngine  DependencyItemId = "docker-engine"
+	DependencyItemIdDockerInWsl2  DependencyItemId = "docker-in-wsl2"
+	DependencyItemIdWsl2          DependencyItemId = "wsl2"
+)
+
+// Valid indicates whether the value is a known member of the DependencyItemId enum.
+func (e DependencyItemId) Valid() bool {
+	switch e {
+	case DependencyItemIdDockerDesktop:
+		return true
+	case DependencyItemIdDockerEngine:
+		return true
+	case DependencyItemIdDockerInWsl2:
+		return true
+	case DependencyItemIdWsl2:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyItemState.
+const (
+	DependencyItemStateMissing   DependencyItemState = "missing"
+	DependencyItemStateOk        DependencyItemState = "ok"
+	DependencyItemStateStopped   DependencyItemState = "stopped"
+	DependencyItemStateWrongKind DependencyItemState = "wrong_kind"
+)
+
+// Valid indicates whether the value is a known member of the DependencyItemState enum.
+func (e DependencyItemState) Valid() bool {
+	switch e {
+	case DependencyItemStateMissing:
+		return true
+	case DependencyItemStateOk:
+		return true
+	case DependencyItemStateStopped:
+		return true
+	case DependencyItemStateWrongKind:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyJobState.
+const (
+	DependencyJobStateConsented     DependencyJobState = "consented"
+	DependencyJobStateDone          DependencyJobState = "done"
+	DependencyJobStateFailed        DependencyJobState = "failed"
+	DependencyJobStateInstalling    DependencyJobState = "installing"
+	DependencyJobStatePausedRestart DependencyJobState = "paused_restart"
+	DependencyJobStatePreparing     DependencyJobState = "preparing"
+	DependencyJobStateStopped       DependencyJobState = "stopped"
+	DependencyJobStateUndoing       DependencyJobState = "undoing"
+	DependencyJobStateUndone        DependencyJobState = "undone"
+	DependencyJobStateVerifying     DependencyJobState = "verifying"
+)
+
+// Valid indicates whether the value is a known member of the DependencyJobState enum.
+func (e DependencyJobState) Valid() bool {
+	switch e {
+	case DependencyJobStateConsented:
+		return true
+	case DependencyJobStateDone:
+		return true
+	case DependencyJobStateFailed:
+		return true
+	case DependencyJobStateInstalling:
+		return true
+	case DependencyJobStatePausedRestart:
+		return true
+	case DependencyJobStatePreparing:
+		return true
+	case DependencyJobStateStopped:
+		return true
+	case DependencyJobStateUndoing:
+		return true
+	case DependencyJobStateUndone:
+		return true
+	case DependencyJobStateVerifying:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyJobRequestRunnerKind.
+const (
+	DependencyJobRequestRunnerKindEphemeral  DependencyJobRequestRunnerKind = "ephemeral"
+	DependencyJobRequestRunnerKindPersistent DependencyJobRequestRunnerKind = "persistent"
+)
+
+// Valid indicates whether the value is a known member of the DependencyJobRequestRunnerKind enum.
+func (e DependencyJobRequestRunnerKind) Valid() bool {
+	switch e {
+	case DependencyJobRequestRunnerKindEphemeral:
+		return true
+	case DependencyJobRequestRunnerKindPersistent:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyJobRequestRunnerOs.
+const (
+	DependencyJobRequestRunnerOsLinux   DependencyJobRequestRunnerOs = "linux"
+	DependencyJobRequestRunnerOsMacos   DependencyJobRequestRunnerOs = "macos"
+	DependencyJobRequestRunnerOsWindows DependencyJobRequestRunnerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the DependencyJobRequestRunnerOs enum.
+func (e DependencyJobRequestRunnerOs) Valid() bool {
+	switch e {
+	case DependencyJobRequestRunnerOsLinux:
+		return true
+	case DependencyJobRequestRunnerOsMacos:
+		return true
+	case DependencyJobRequestRunnerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DockerCompactMode.
 const (
 	DockerCompactModeAuto DockerCompactMode = "auto"
@@ -3935,6 +4124,27 @@ func (e UpdateStatusState) Valid() bool {
 	}
 }
 
+// Defines values for UptimeWindowWindow.
+const (
+	UptimeWindowWindowN24h UptimeWindowWindow = "24h"
+	UptimeWindowWindowN30d UptimeWindowWindow = "30d"
+	UptimeWindowWindowN7d  UptimeWindowWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the UptimeWindowWindow enum.
+func (e UptimeWindowWindow) Valid() bool {
+	switch e {
+	case UptimeWindowWindowN24h:
+		return true
+	case UptimeWindowWindowN30d:
+		return true
+	case UptimeWindowWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for VariableStatus.
 const (
 	VariableStatusMissing    VariableStatus = "missing"
@@ -4899,6 +5109,173 @@ type DayValue struct {
 	Day   openapi_types.Date `json:"day"`
 	Value float32            `json:"value"`
 }
+
+// DependencyAdded defines model for DependencyAdded.
+type DependencyAdded struct {
+	ItemId  string `json:"item_id"`
+	Kind    string `json:"kind"`
+	Ref     string `json:"ref"`
+	Version string `json:"version"`
+}
+
+// DependencyCheck defines model for DependencyCheck.
+type DependencyCheck struct {
+	Admin bool    `json:"admin"`
+	Arch  *string `json:"arch,omitempty"`
+
+	// BlockedReason Why no install is offered (no admin rights, disk too small, virtualization off).
+	BlockedReason *string            `json:"blocked_reason,omitempty"`
+	Choices       []DependencyChoice `json:"choices"`
+	DiskFreeBytes int64              `json:"disk_free_bytes"`
+	Items         []DependencyItem   `json:"items"`
+	MachineId     string             `json:"machine_id"`
+	Os            *string            `json:"os,omitempty"`
+
+	// Ready True when nothing is missing for this runner choice.
+	Ready bool `json:"ready"`
+
+	// StartOnly The engine is installed but stopped; the fix is to start it, not to install.
+	StartOnly         *bool `json:"start_only,omitempty"`
+	VirtualizationOff bool  `json:"virtualization_off"`
+}
+
+// DependencyCheckRequest defines model for DependencyCheckRequest.
+type DependencyCheckRequest struct {
+	RunnerKind DependencyCheckRequestRunnerKind `json:"runner_kind"`
+	RunnerOs   DependencyCheckRequestRunnerOs   `json:"runner_os"`
+}
+
+// DependencyCheckRequestRunnerKind defines model for DependencyCheckRequest.RunnerKind.
+type DependencyCheckRequestRunnerKind string
+
+// DependencyCheckRequestRunnerOs defines model for DependencyCheckRequest.RunnerOs.
+type DependencyCheckRequestRunnerOs string
+
+// DependencyChoice One way to fix what is missing; one is recommended, the others stay visible (DEP3, CORE-4).
+type DependencyChoice struct {
+	// Facts One facts card per item the choice installs.
+	Facts   []DependencyFacts `json:"facts"`
+	Id      string            `json:"id"`
+	ItemIds []string          `json:"item_ids"`
+
+	// ManualSteps The exact commands for "Do it myself", one per line, copyable.
+	ManualSteps         []string `json:"manual_steps"`
+	Recommended         bool     `json:"recommended"`
+	RequiresLicenceTick bool     `json:"requires_licence_tick"`
+	Title               string   `json:"title"`
+}
+
+// DependencyEvent One progress event. Same shape as the shared progress contract (CRSP247) in snake_case: job_id, phase, phase_index, phase_count, phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec, machine, command, stream, line, ts.
+type DependencyEvent struct {
+	Bytes   *int64  `json:"bytes,omitempty"`
+	Command *string `json:"command,omitempty"`
+	EtaSec  *int64  `json:"eta_sec,omitempty"`
+	JobId   string  `json:"job_id"`
+	Line    *string `json:"line,omitempty"`
+	Machine struct {
+		Name string `json:"name"`
+		Os   string `json:"os"`
+		Role string `json:"role"`
+	} `json:"machine"`
+	Pct         float32               `json:"pct"`
+	Phase       string                `json:"phase"`
+	PhaseCount  int                   `json:"phase_count"`
+	PhaseIndex  int                   `json:"phase_index"`
+	PhaseWeight float32               `json:"phase_weight"`
+	Rate        *int64                `json:"rate,omitempty"`
+	Reason      *string               `json:"reason,omitempty"`
+	Stream      DependencyEventStream `json:"stream"`
+	Total       *int64                `json:"total,omitempty"`
+
+	// Ts Unix milliseconds.
+	Ts int64 `json:"ts"`
+}
+
+// DependencyEventStream defines model for DependencyEvent.Stream.
+type DependencyEventStream string
+
+// DependencyFacts The facts of one offered choice (DEP3).
+type DependencyFacts struct {
+	DiskBytes     int64   `json:"disk_bytes"`
+	DownloadBytes int64   `json:"download_bytes"`
+	LicenceNote   *string `json:"licence_note,omitempty"`
+	Name          string  `json:"name"`
+	NeedsAdmin    bool    `json:"needs_admin"`
+	RestartLikely bool    `json:"restart_likely"`
+
+	// Source Where it comes from (a host name, not a secret URL).
+	Source         string `json:"source"`
+	TypicalMinutes int    `json:"typical_minutes"`
+
+	// Undo How to undo it, in words.
+	Undo    string `json:"undo"`
+	Version string `json:"version"`
+}
+
+// DependencyItem defines model for DependencyItem.
+type DependencyItem struct {
+	Detail  *string             `json:"detail,omitempty"`
+	Id      DependencyItemId    `json:"id"`
+	Name    string              `json:"name"`
+	State   DependencyItemState `json:"state"`
+	Version *string             `json:"version,omitempty"`
+
+	// Why One sentence of why the plan needs it (DEP2).
+	Why string `json:"why"`
+}
+
+// DependencyItemId defines model for DependencyItem.Id.
+type DependencyItemId string
+
+// DependencyItemState defines model for DependencyItem.State.
+type DependencyItemState string
+
+// DependencyJob defines model for DependencyJob.
+type DependencyJob struct {
+	Actor *string `json:"actor,omitempty"`
+
+	// Added What this job added; the undo list.
+	Added         []DependencyAdded `json:"added"`
+	ChoiceId      string            `json:"choice_id"`
+	CreatedAt     time.Time         `json:"created_at"`
+	EngineVersion *string           `json:"engine_version,omitempty"`
+	Error         *string           `json:"error,omitempty"`
+	Id            string            `json:"id"`
+	ItemIds       []string          `json:"item_ids"`
+
+	// Last One progress event. Same shape as the shared progress contract (CRSP247) in snake_case: job_id, phase, phase_index, phase_count, phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec, machine, command, stream, line, ts.
+	Last *DependencyEvent `json:"last,omitempty"`
+
+	// Log The last 300 events, oldest first.
+	Log         []DependencyEvent  `json:"log"`
+	MachineId   string             `json:"machine_id"`
+	ManualSteps *[]string          `json:"manual_steps,omitempty"`
+	RunnerKind  string             `json:"runner_kind"`
+	RunnerOs    string             `json:"runner_os"`
+	State       DependencyJobState `json:"state"`
+	UpdatedAt   time.Time          `json:"updated_at"`
+}
+
+// DependencyJobState defines model for DependencyJob.State.
+type DependencyJobState string
+
+// DependencyJobRequest defines model for DependencyJobRequest.
+type DependencyJobRequest struct {
+	// AcceptLicence The "I have the right to use it" tick for Docker Desktop.
+	AcceptLicence *bool  `json:"accept_licence,omitempty"`
+	ChoiceId      string `json:"choice_id"`
+
+	// Confirmed Must be true; the Review step is the consent.
+	Confirmed  bool                           `json:"confirmed"`
+	RunnerKind DependencyJobRequestRunnerKind `json:"runner_kind"`
+	RunnerOs   DependencyJobRequestRunnerOs   `json:"runner_os"`
+}
+
+// DependencyJobRequestRunnerKind defines model for DependencyJobRequest.RunnerKind.
+type DependencyJobRequestRunnerKind string
+
+// DependencyJobRequestRunnerOs defines model for DependencyJobRequest.RunnerOs.
+type DependencyJobRequestRunnerOs string
 
 // DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
 type DiskFloorGib = int
@@ -6835,6 +7212,23 @@ type MachineTaking struct {
 
 // MachineTakingReason Why not, absent while taking. offline; stopped (Stop new jobs from the console); mode_paused (mode Paused); tray_paused (a pause from the tray); on_battery (Automatic with the battery pause on); busy (load over the budget); base_image_missing; disk_low.
 type MachineTakingReason string
+
+// MachineUptime The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC.
+type MachineUptime struct {
+	MachineId string `json:"machine_id"`
+
+	// Periods Periods of the last 30 days in which the machine took no new job, newest first, at most 50.
+	Periods []UptimePeriod `json:"periods"`
+
+	// Since When the controller first saw the machine.
+	Since *time.Time `json:"since,omitempty"`
+
+	// Watched False until the controller has seen the machine; then the rest is empty.
+	Watched bool `json:"watched"`
+
+	// Windows The windows 24h, 7d and 30d, in this order.
+	Windows []UptimeWindow `json:"windows"`
+}
 
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
@@ -9158,6 +9552,39 @@ type UpdateWindow struct {
 	Start string `json:"start"`
 }
 
+// UptimePeriod defines model for UptimePeriod.
+type UptimePeriod struct {
+	// EndedAt Absent while the period goes on.
+	EndedAt *time.Time `json:"ended_at,omitempty"`
+
+	// Offline True when no heartbeat arrived; false when the machine was online but took no job.
+	Offline bool `json:"offline"`
+
+	// Reason Offline: heartbeat_lost, clock_skew or controller_stopped. Online: stopped, mode_paused, tray_paused, on_battery, busy, base_image_missing or disk_low (machines R5.62).
+	Reason    string    `json:"reason"`
+	StartedAt time.Time `json:"started_at"`
+}
+
+// UptimeWindow defines model for UptimeWindow.
+type UptimeWindow struct {
+	// CoveredSeconds The part of the window the controller watched.
+	CoveredSeconds int64 `json:"covered_seconds"`
+	OnlineSeconds  int64 `json:"online_seconds"`
+
+	// TakingPct Online and taking share of the watched time; absent when nothing was watched.
+	TakingPct *float32 `json:"taking_pct,omitempty"`
+
+	// TakingSeconds Online and taking new jobs.
+	TakingSeconds int64 `json:"taking_seconds"`
+
+	// UptimePct Online share of the watched time; absent when nothing was watched.
+	UptimePct *float32           `json:"uptime_pct,omitempty"`
+	Window    UptimeWindowWindow `json:"window"`
+}
+
+// UptimeWindowWindow defines model for UptimeWindow.Window.
+type UptimeWindowWindow string
+
 // User defines model for User.
 type User struct {
 	AddedAt time.Time `json:"added_at"`
@@ -9300,6 +9727,9 @@ type Confirmed = bool
 
 // Cursor defines model for Cursor.
 type Cursor = string
+
+// DependencyJobId defines model for DependencyJobId.
+type DependencyJobId = string
 
 // FindingId defines model for FindingId.
 type FindingId = int64
@@ -9697,6 +10127,16 @@ type RemoveMachineParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// RestartMachineForDependencyJobParams defines parameters for RestartMachineForDependencyJob.
+type RestartMachineForDependencyJobParams struct {
+	Confirmed *bool `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
+// UndoMachineDependencyJobParams defines parameters for UndoMachineDependencyJob.
+type UndoMachineDependencyJobParams struct {
+	Confirmed *bool `form:"confirmed,omitempty" json:"confirmed,omitempty"`
+}
+
 // StartDockerCompactParams defines parameters for StartDockerCompact.
 type StartDockerCompactParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -9971,6 +10411,12 @@ type DecideMachineChangeJSONRequestBody = MachineChangeDecision
 
 // RunMachineCommandJSONRequestBody defines body for RunMachineCommand for application/json ContentType.
 type RunMachineCommandJSONRequestBody = HostCommandRequest
+
+// CheckMachineDependenciesJSONRequestBody defines body for CheckMachineDependencies for application/json ContentType.
+type CheckMachineDependenciesJSONRequestBody = DependencyCheckRequest
+
+// StartMachineDependencyJobJSONRequestBody defines body for StartMachineDependencyJob for application/json ContentType.
+type StartMachineDependencyJobJSONRequestBody = DependencyJobRequest
 
 // DrainMachineJSONRequestBody defines body for DrainMachine for application/json ContentType.
 type DrainMachineJSONRequestBody = DrainRequest
@@ -10982,6 +11428,73 @@ type ClientInterface interface {
 	// Corresponds with POST /api/v1/machines/{machineId}/command (the `RunMachineCommand` operationId).
 	RunMachineCommand(ctx context.Context, machineId MachineId, body RunMachineCommandJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// CheckMachineDependenciesWithBody What a runner choice needs on a machine, what it has, and the offer
+	//
+	// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+	CheckMachineDependenciesWithBody(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// CheckMachineDependencies What a runner choice needs on a machine, what it has, and the offer
+	//
+	// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+	CheckMachineDependencies(ctx context.Context, machineId MachineId, body CheckMachineDependenciesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListMachineDependencyJobs The dependency setup jobs of a machine, newest first
+	//
+	// dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs (the `ListMachineDependencyJobs` operationId).
+	ListMachineDependencyJobs(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StartMachineDependencyJobWithBody Install the chosen items after the Review step
+	//
+	// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+	StartMachineDependencyJobWithBody(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StartMachineDependencyJob Install the chosen items after the Review step
+	//
+	// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+	StartMachineDependencyJob(ctx context.Context, machineId MachineId, body StartMachineDependencyJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineDependencyJob One dependency setup job with its live progress and log tail
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs/{jobId} (the `GetMachineDependencyJob` operationId).
+	GetMachineDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// RestartMachineForDependencyJob Restart the machine now, after the user chose it
+	//
+	// dependency-setup DEP7, D-DEP-2. Never automatic. Only while the job is paused for a restart; the machine must hold no running job (the agent checks it too). Without `confirmed=true` it answers 409. After the agent reconnects the controller resumes the job at Verify.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host (the `RestartMachineForDependencyJob` operationId).
+	RestartMachineForDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *RestartMachineForDependencyJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StopMachineDependencyJob Stop a dependency job where it is safe
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop (the `StopMachineDependencyJob` operationId).
+	StopMachineDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UndoMachineDependencyJob Remove only what this job added
+	//
+	// dependency-setup DEP10, D-DEP-7. Uses the job's recorded list; never removes software that was there before. Without `confirmed=true` it answers 409 naming each item.
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo (the `UndoMachineDependencyJob` operationId).
+	UndoMachineDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *UndoMachineDependencyJobParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// StartDockerCompact Make Docker's disk file smaller now
 	//
 	// caches R5.58. The owner starts the compact the policy would start later: the machine is drained (new jobs wait, running jobs finish), Docker's disk file is made smaller, and the machine takes jobs again. Without `confirm=true` it answers 409 needs_confirmation naming the size that can be reclaimed and what happens to jobs. With it the compact starts in the background and answers 202; the machine's `docker_compact_status` shows it running and then its result. Refused with 400 when the agent reports no disk file or has no administrator rights, 409 when the machine is offline or a compact or a change already holds it.
@@ -11116,6 +11629,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/slots/free-stale (the `FreeStaleSlots` operationId).
 	FreeStaleSlots(ctx context.Context, machineId MachineId, body FreeStaleSlotsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineUptime The uptime of one machine and why it took no jobs
+	//
+	// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+	GetMachineUptime(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSession The signed-in user, role and CSRF token
 	//
@@ -14154,6 +14674,163 @@ func (c *Client) RunMachineCommand(ctx context.Context, machineId MachineId, bod
 	return c.Client.Do(req)
 }
 
+// CheckMachineDependenciesWithBody What a runner choice needs on a machine, what it has, and the offer
+//
+// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+func (c *Client) CheckMachineDependenciesWithBody(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCheckMachineDependenciesRequestWithBody(c.Server, machineId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// CheckMachineDependencies What a runner choice needs on a machine, what it has, and the offer
+//
+// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+func (c *Client) CheckMachineDependencies(ctx context.Context, machineId MachineId, body CheckMachineDependenciesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewCheckMachineDependenciesRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListMachineDependencyJobs The dependency setup jobs of a machine, newest first
+//
+// dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs (the `ListMachineDependencyJobs` operationId).
+func (c *Client) ListMachineDependencyJobs(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListMachineDependencyJobsRequest(c.Server, machineId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StartMachineDependencyJobWithBody Install the chosen items after the Review step
+//
+// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+func (c *Client) StartMachineDependencyJobWithBody(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartMachineDependencyJobRequestWithBody(c.Server, machineId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StartMachineDependencyJob Install the chosen items after the Review step
+//
+// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+func (c *Client) StartMachineDependencyJob(ctx context.Context, machineId MachineId, body StartMachineDependencyJobJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartMachineDependencyJobRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineDependencyJob One dependency setup job with its live progress and log tail
+//
+// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs/{jobId} (the `GetMachineDependencyJob` operationId).
+func (c *Client) GetMachineDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineDependencyJobRequest(c.Server, machineId, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// RestartMachineForDependencyJob Restart the machine now, after the user chose it
+//
+// dependency-setup DEP7, D-DEP-2. Never automatic. Only while the job is paused for a restart; the machine must hold no running job (the agent checks it too). Without `confirmed=true` it answers 409. After the agent reconnects the controller resumes the job at Verify.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host (the `RestartMachineForDependencyJob` operationId).
+func (c *Client) RestartMachineForDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *RestartMachineForDependencyJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewRestartMachineForDependencyJobRequest(c.Server, machineId, jobId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StopMachineDependencyJob Stop a dependency job where it is safe
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop (the `StopMachineDependencyJob` operationId).
+func (c *Client) StopMachineDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStopMachineDependencyJobRequest(c.Server, machineId, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UndoMachineDependencyJob Remove only what this job added
+//
+// dependency-setup DEP10, D-DEP-7. Uses the job's recorded list; never removes software that was there before. Without `confirmed=true` it answers 409 naming each item.
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo (the `UndoMachineDependencyJob` operationId).
+func (c *Client) UndoMachineDependencyJob(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *UndoMachineDependencyJobParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUndoMachineDependencyJobRequest(c.Server, machineId, jobId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // StartDockerCompact Make Docker's disk file smaller now
 //
 // caches R5.58. The owner starts the compact the policy would start later: the machine is drained (new jobs wait, running jobs finish), Docker's disk file is made smaller, and the machine takes jobs again. Without `confirm=true` it answers 409 needs_confirmation naming the size that can be reclaimed and what happens to jobs. With it the compact starts in the background and answers 202; the machine's `docker_compact_status` shows it running and then its result. Refused with 400 when the agent reports no disk file or has no administrator rights, 409 when the machine is offline or a compact or a change already holds it.
@@ -14449,6 +15126,23 @@ func (c *Client) FreeStaleSlotsWithBody(ctx context.Context, machineId MachineId
 // Corresponds with POST /api/v1/machines/{machineId}/slots/free-stale (the `FreeStaleSlots` operationId).
 func (c *Client) FreeStaleSlots(ctx context.Context, machineId MachineId, body FreeStaleSlotsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFreeStaleSlotsRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineUptime The uptime of one machine and why it took no jobs
+//
+// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+func (c *Client) GetMachineUptime(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineUptimeRequest(c.Server, machineId)
 	if err != nil {
 		return nil, err
 	}
@@ -21648,6 +22342,352 @@ func NewRunMachineCommandRequestWithBody(server string, machineId MachineId, con
 	return req, nil
 }
 
+// NewCheckMachineDependenciesRequest calls the generic CheckMachineDependencies builder with application/json body
+func NewCheckMachineDependenciesRequest(server string, machineId MachineId, body CheckMachineDependenciesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewCheckMachineDependenciesRequestWithBody(server, machineId, "application/json", bodyReader)
+}
+
+// NewCheckMachineDependenciesRequestWithBody constructs an http.Request for the CheckMachineDependencies method, with any body, and a specified content type
+func NewCheckMachineDependenciesRequestWithBody(server string, machineId MachineId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/check", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListMachineDependencyJobsRequest constructs an http.Request for the ListMachineDependencyJobs method
+func NewListMachineDependencyJobsRequest(server string, machineId MachineId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/jobs", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStartMachineDependencyJobRequest calls the generic StartMachineDependencyJob builder with application/json body
+func NewStartMachineDependencyJobRequest(server string, machineId MachineId, body StartMachineDependencyJobJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewStartMachineDependencyJobRequestWithBody(server, machineId, "application/json", bodyReader)
+}
+
+// NewStartMachineDependencyJobRequestWithBody constructs an http.Request for the StartMachineDependencyJob method, with any body, and a specified content type
+func NewStartMachineDependencyJobRequestWithBody(server string, machineId MachineId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/jobs", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMachineDependencyJobRequest constructs an http.Request for the GetMachineDependencyJob method
+func NewGetMachineDependencyJobRequest(server string, machineId MachineId, jobId DependencyJobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/jobs/%s", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewRestartMachineForDependencyJobRequest constructs an http.Request for the RestartMachineForDependencyJob method
+func NewRestartMachineForDependencyJobRequest(server string, machineId MachineId, jobId DependencyJobId, params *RestartMachineForDependencyJobParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/jobs/%s/restart-host", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Confirmed != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "confirmed", *params.Confirmed, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStopMachineDependencyJobRequest constructs an http.Request for the StopMachineDependencyJob method
+func NewStopMachineDependencyJobRequest(server string, machineId MachineId, jobId DependencyJobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/jobs/%s/stop", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUndoMachineDependencyJobRequest constructs an http.Request for the UndoMachineDependencyJob method
+func NewUndoMachineDependencyJobRequest(server string, machineId MachineId, jobId DependencyJobId, params *UndoMachineDependencyJobParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	var pathParam1 string
+
+	pathParam1, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/dependencies/jobs/%s/undo", pathParam0, pathParam1)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Confirmed != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "confirmed", *params.Confirmed, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "boolean", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewStartDockerCompactRequest constructs an http.Request for the StartDockerCompact method
 func NewStartDockerCompactRequest(server string, machineId MachineId, params *StartDockerCompactParams) (*http.Request, error) {
 	var err error
@@ -22285,6 +23325,40 @@ func NewFreeStaleSlotsRequestWithBody(server string, machineId MachineId, conten
 	}
 
 	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetMachineUptimeRequest constructs an http.Request for the GetMachineUptime method
+func NewGetMachineUptimeRequest(server string, machineId MachineId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/uptime", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
 
 	return req, nil
 }
@@ -27953,6 +29027,83 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/v1/machines/{machineId}/command (the `RunMachineCommand` operationId).
 	RunMachineCommandWithResponse(ctx context.Context, machineId MachineId, body RunMachineCommandJSONRequestBody, reqEditors ...RequestEditorFn) (*RunMachineCommandResponse, error)
 
+	// CheckMachineDependenciesWithBodyWithResponse What a runner choice needs on a machine, what it has, and the offer
+	//
+	// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+	CheckMachineDependenciesWithBodyWithResponse(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CheckMachineDependenciesResponse, error)
+
+	// CheckMachineDependenciesWithResponse What a runner choice needs on a machine, what it has, and the offer
+	//
+	// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+	CheckMachineDependenciesWithResponse(ctx context.Context, machineId MachineId, body CheckMachineDependenciesJSONRequestBody, reqEditors ...RequestEditorFn) (*CheckMachineDependenciesResponse, error)
+
+	// ListMachineDependencyJobsWithResponse The dependency setup jobs of a machine, newest first
+	//
+	// dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs (the `ListMachineDependencyJobs` operationId).
+	ListMachineDependencyJobsWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*ListMachineDependencyJobsResponse, error)
+
+	// StartMachineDependencyJobWithBodyWithResponse Install the chosen items after the Review step
+	//
+	// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+	StartMachineDependencyJobWithBodyWithResponse(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartMachineDependencyJobResponse, error)
+
+	// StartMachineDependencyJobWithResponse Install the chosen items after the Review step
+	//
+	// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+	StartMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, body StartMachineDependencyJobJSONRequestBody, reqEditors ...RequestEditorFn) (*StartMachineDependencyJobResponse, error)
+
+	// GetMachineDependencyJobWithResponse One dependency setup job with its live progress and log tail
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs/{jobId} (the `GetMachineDependencyJob` operationId).
+	GetMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*GetMachineDependencyJobResponse, error)
+
+	// RestartMachineForDependencyJobWithResponse Restart the machine now, after the user chose it
+	//
+	// dependency-setup DEP7, D-DEP-2. Never automatic. Only while the job is paused for a restart; the machine must hold no running job (the agent checks it too). Without `confirmed=true` it answers 409. After the agent reconnects the controller resumes the job at Verify.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host (the `RestartMachineForDependencyJob` operationId).
+	RestartMachineForDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *RestartMachineForDependencyJobParams, reqEditors ...RequestEditorFn) (*RestartMachineForDependencyJobResponse, error)
+
+	// StopMachineDependencyJobWithResponse Stop a dependency job where it is safe
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop (the `StopMachineDependencyJob` operationId).
+	StopMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*StopMachineDependencyJobResponse, error)
+
+	// UndoMachineDependencyJobWithResponse Remove only what this job added
+	//
+	// dependency-setup DEP10, D-DEP-7. Uses the job's recorded list; never removes software that was there before. Without `confirmed=true` it answers 409 naming each item.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo (the `UndoMachineDependencyJob` operationId).
+	UndoMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *UndoMachineDependencyJobParams, reqEditors ...RequestEditorFn) (*UndoMachineDependencyJobResponse, error)
+
 	// StartDockerCompactWithResponse Make Docker's disk file smaller now
 	//
 	// caches R5.58. The owner starts the compact the policy would start later: the machine is drained (new jobs wait, running jobs finish), Docker's disk file is made smaller, and the machine takes jobs again. Without `confirm=true` it answers 409 needs_confirmation naming the size that can be reclaimed and what happens to jobs. With it the compact starts in the background and answers 202; the machine's `docker_compact_status` shows it running and then its result. Refused with 400 when the agent reports no disk file or has no administrator rights, 409 when the machine is offline or a compact or a change already holds it.
@@ -28105,6 +29256,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/slots/free-stale (the `FreeStaleSlots` operationId).
 	FreeStaleSlotsWithResponse(ctx context.Context, machineId MachineId, body FreeStaleSlotsJSONRequestBody, reqEditors ...RequestEditorFn) (*FreeStaleSlotsResponse, error)
+
+	// GetMachineUptimeWithResponse The uptime of one machine and why it took no jobs
+	//
+	// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+	GetMachineUptimeWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineUptimeResponse, error)
 
 	// GetSessionWithResponse The signed-in user, role and CSRF token
 	//
@@ -33689,6 +34849,342 @@ func (r RunMachineCommandResponse) ContentType() string {
 	return ""
 }
 
+type CheckMachineDependenciesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyCheck
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r CheckMachineDependenciesResponse) GetJSON200() *DependencyCheck {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r CheckMachineDependenciesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r CheckMachineDependenciesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r CheckMachineDependenciesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r CheckMachineDependenciesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r CheckMachineDependenciesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListMachineDependencyJobsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *[]DependencyJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListMachineDependencyJobsResponse) GetJSON200() *[]DependencyJob {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListMachineDependencyJobsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListMachineDependencyJobsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListMachineDependencyJobsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListMachineDependencyJobsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListMachineDependencyJobsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StartMachineDependencyJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *DependencyJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r StartMachineDependencyJobResponse) GetJSON202() *DependencyJob {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StartMachineDependencyJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StartMachineDependencyJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StartMachineDependencyJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartMachineDependencyJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StartMachineDependencyJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineDependencyJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineDependencyJobResponse) GetJSON200() *DependencyJob {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineDependencyJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineDependencyJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineDependencyJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineDependencyJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineDependencyJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type RestartMachineForDependencyJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *DependencyJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r RestartMachineForDependencyJobResponse) GetJSON202() *DependencyJob {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r RestartMachineForDependencyJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r RestartMachineForDependencyJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r RestartMachineForDependencyJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r RestartMachineForDependencyJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r RestartMachineForDependencyJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StopMachineDependencyJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r StopMachineDependencyJobResponse) GetJSON200() *DependencyJob {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StopMachineDependencyJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StopMachineDependencyJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StopMachineDependencyJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StopMachineDependencyJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StopMachineDependencyJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UndoMachineDependencyJobResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *DependencyJob
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r UndoMachineDependencyJobResponse) GetJSON202() *DependencyJob {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UndoMachineDependencyJobResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UndoMachineDependencyJobResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UndoMachineDependencyJobResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UndoMachineDependencyJobResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UndoMachineDependencyJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type StartDockerCompactResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -34297,6 +35793,54 @@ func (r FreeStaleSlotsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r FreeStaleSlotsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineUptimeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MachineUptime
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineUptimeResponse) GetJSON200() *MachineUptime {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineUptimeResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineUptimeResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineUptimeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineUptimeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineUptimeResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -41150,6 +42694,137 @@ func (c *ClientWithResponses) RunMachineCommandWithResponse(ctx context.Context,
 	return ParseRunMachineCommandResponse(rsp)
 }
 
+// CheckMachineDependenciesWithBodyWithResponse What a runner choice needs on a machine, what it has, and the offer
+//
+// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+func (c *ClientWithResponses) CheckMachineDependenciesWithBodyWithResponse(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*CheckMachineDependenciesResponse, error) {
+	rsp, err := c.CheckMachineDependenciesWithBody(ctx, machineId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCheckMachineDependenciesResponse(rsp)
+}
+
+// CheckMachineDependenciesWithResponse What a runner choice needs on a machine, what it has, and the offer
+//
+// dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/check (the `CheckMachineDependencies` operationId).
+func (c *ClientWithResponses) CheckMachineDependenciesWithResponse(ctx context.Context, machineId MachineId, body CheckMachineDependenciesJSONRequestBody, reqEditors ...RequestEditorFn) (*CheckMachineDependenciesResponse, error) {
+	rsp, err := c.CheckMachineDependencies(ctx, machineId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseCheckMachineDependenciesResponse(rsp)
+}
+
+// ListMachineDependencyJobsWithResponse The dependency setup jobs of a machine, newest first
+//
+// dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs (the `ListMachineDependencyJobs` operationId).
+func (c *ClientWithResponses) ListMachineDependencyJobsWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*ListMachineDependencyJobsResponse, error) {
+	rsp, err := c.ListMachineDependencyJobs(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListMachineDependencyJobsResponse(rsp)
+}
+
+// StartMachineDependencyJobWithBodyWithResponse Install the chosen items after the Review step
+//
+// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+func (c *ClientWithResponses) StartMachineDependencyJobWithBodyWithResponse(ctx context.Context, machineId MachineId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*StartMachineDependencyJobResponse, error) {
+	rsp, err := c.StartMachineDependencyJobWithBody(ctx, machineId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartMachineDependencyJobResponse(rsp)
+}
+
+// StartMachineDependencyJobWithResponse Install the chosen items after the Review step
+//
+// dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs (the `StartMachineDependencyJob` operationId).
+func (c *ClientWithResponses) StartMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, body StartMachineDependencyJobJSONRequestBody, reqEditors ...RequestEditorFn) (*StartMachineDependencyJobResponse, error) {
+	rsp, err := c.StartMachineDependencyJob(ctx, machineId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartMachineDependencyJobResponse(rsp)
+}
+
+// GetMachineDependencyJobWithResponse One dependency setup job with its live progress and log tail
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/dependencies/jobs/{jobId} (the `GetMachineDependencyJob` operationId).
+func (c *ClientWithResponses) GetMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*GetMachineDependencyJobResponse, error) {
+	rsp, err := c.GetMachineDependencyJob(ctx, machineId, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineDependencyJobResponse(rsp)
+}
+
+// RestartMachineForDependencyJobWithResponse Restart the machine now, after the user chose it
+//
+// dependency-setup DEP7, D-DEP-2. Never automatic. Only while the job is paused for a restart; the machine must hold no running job (the agent checks it too). Without `confirmed=true` it answers 409. After the agent reconnects the controller resumes the job at Verify.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host (the `RestartMachineForDependencyJob` operationId).
+func (c *ClientWithResponses) RestartMachineForDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *RestartMachineForDependencyJobParams, reqEditors ...RequestEditorFn) (*RestartMachineForDependencyJobResponse, error) {
+	rsp, err := c.RestartMachineForDependencyJob(ctx, machineId, jobId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseRestartMachineForDependencyJobResponse(rsp)
+}
+
+// StopMachineDependencyJobWithResponse Stop a dependency job where it is safe
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop (the `StopMachineDependencyJob` operationId).
+func (c *ClientWithResponses) StopMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, reqEditors ...RequestEditorFn) (*StopMachineDependencyJobResponse, error) {
+	rsp, err := c.StopMachineDependencyJob(ctx, machineId, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStopMachineDependencyJobResponse(rsp)
+}
+
+// UndoMachineDependencyJobWithResponse Remove only what this job added
+//
+// dependency-setup DEP10, D-DEP-7. Uses the job's recorded list; never removes software that was there before. Without `confirmed=true` it answers 409 naming each item.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo (the `UndoMachineDependencyJob` operationId).
+func (c *ClientWithResponses) UndoMachineDependencyJobWithResponse(ctx context.Context, machineId MachineId, jobId DependencyJobId, params *UndoMachineDependencyJobParams, reqEditors ...RequestEditorFn) (*UndoMachineDependencyJobResponse, error) {
+	rsp, err := c.UndoMachineDependencyJob(ctx, machineId, jobId, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUndoMachineDependencyJobResponse(rsp)
+}
+
 // StartDockerCompactWithResponse Make Docker's disk file smaller now
 //
 // caches R5.58. The owner starts the compact the policy would start later: the machine is drained (new jobs wait, running jobs finish), Docker's disk file is made smaller, and the machine takes jobs again. Without `confirm=true` it answers 409 needs_confirmation naming the size that can be reclaimed and what happens to jobs. With it the compact starts in the background and answers 202; the machine's `docker_compact_status` shows it running and then its result. Refused with 400 when the agent reports no disk file or has no administrator rights, 409 when the machine is offline or a compact or a change already holds it.
@@ -41403,6 +43078,21 @@ func (c *ClientWithResponses) FreeStaleSlotsWithResponse(ctx context.Context, ma
 		return nil, err
 	}
 	return ParseFreeStaleSlotsResponse(rsp)
+}
+
+// GetMachineUptimeWithResponse The uptime of one machine and why it took no jobs
+//
+// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+func (c *ClientWithResponses) GetMachineUptimeWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineUptimeResponse, error) {
+	rsp, err := c.GetMachineUptime(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineUptimeResponse(rsp)
 }
 
 // GetSessionWithResponse The signed-in user, role and CSRF token
@@ -46603,6 +48293,237 @@ func ParseRunMachineCommandResponse(rsp *http.Response) (*RunMachineCommandRespo
 	return response, nil
 }
 
+// ParseCheckMachineDependenciesResponse parses an HTTP response from a CheckMachineDependenciesWithResponse call
+func ParseCheckMachineDependenciesResponse(rsp *http.Response) (*CheckMachineDependenciesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &CheckMachineDependenciesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyCheck
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListMachineDependencyJobsResponse parses an HTTP response from a ListMachineDependencyJobsWithResponse call
+func ParseListMachineDependencyJobsResponse(rsp *http.Response) (*ListMachineDependencyJobsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListMachineDependencyJobsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest []DependencyJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartMachineDependencyJobResponse parses an HTTP response from a StartMachineDependencyJobWithResponse call
+func ParseStartMachineDependencyJobResponse(rsp *http.Response) (*StartMachineDependencyJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartMachineDependencyJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DependencyJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineDependencyJobResponse parses an HTTP response from a GetMachineDependencyJobWithResponse call
+func ParseGetMachineDependencyJobResponse(rsp *http.Response) (*GetMachineDependencyJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineDependencyJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseRestartMachineForDependencyJobResponse parses an HTTP response from a RestartMachineForDependencyJobWithResponse call
+func ParseRestartMachineForDependencyJobResponse(rsp *http.Response) (*RestartMachineForDependencyJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &RestartMachineForDependencyJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DependencyJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStopMachineDependencyJobResponse parses an HTTP response from a StopMachineDependencyJobWithResponse call
+func ParseStopMachineDependencyJobResponse(rsp *http.Response) (*StopMachineDependencyJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StopMachineDependencyJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUndoMachineDependencyJobResponse parses an HTTP response from a UndoMachineDependencyJobWithResponse call
+func ParseUndoMachineDependencyJobResponse(rsp *http.Response) (*UndoMachineDependencyJobResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UndoMachineDependencyJobResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest DependencyJob
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseStartDockerCompactResponse parses an HTTP response from a StartDockerCompactWithResponse call
 func ParseStartDockerCompactResponse(rsp *http.Response) (*StartDockerCompactResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -47009,6 +48930,39 @@ func ParseFreeStaleSlotsResponse(rsp *http.Response) (*FreeStaleSlotsResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest FreedSlotList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineUptimeResponse parses an HTTP response from a GetMachineUptimeWithResponse call
+func ParseGetMachineUptimeResponse(rsp *http.Response) (*GetMachineUptimeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineUptimeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MachineUptime
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

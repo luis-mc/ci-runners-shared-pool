@@ -899,6 +899,124 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/machines/{machineId}/dependencies/check": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * What a runner choice needs on a machine, what it has, and the offer
+         * @description dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and changes nothing; the controller builds the offer with its facts from the pinned list shipped with the release. An offline machine answers 409.
+         */
+        post: operations["checkMachineDependencies"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/dependencies/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The dependency setup jobs of a machine, newest first
+         * @description dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
+         */
+        get: operations["listMachineDependencyJobs"];
+        put?: never;
+        /**
+         * Install the chosen items after the Review step
+         * @description dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers 409 and nothing changes. The consent (actor, machine, items, versions, sources) is written to the audit log. Only items the machine's check found missing or stopped, and the runner choice needs, are accepted. A second job on the same machine while one runs answers 409.
+         */
+        post: operations["startMachineDependencyJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/dependencies/jobs/{jobId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One dependency setup job with its live progress and log tail */
+        get: operations["getMachineDependencyJob"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop a dependency job where it is safe */
+        post: operations["stopMachineDependencyJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Remove only what this job added
+         * @description dependency-setup DEP10, D-DEP-7. Uses the job's recorded list; never removes software that was there before. Without `confirmed=true` it answers 409 naming each item.
+         */
+        post: operations["undoMachineDependencyJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Restart the machine now, after the user chose it
+         * @description dependency-setup DEP7, D-DEP-2. Never automatic. Only while the job is paused for a restart; the machine must hold no running job (the agent checks it too). Without `confirmed=true` it answers 409. After the agent reconnects the controller resumes the job at Verify.
+         */
+        post: operations["restartMachineForDependencyJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/doctor/registration-fixes": {
         parameters: {
             query?: never;
@@ -1111,6 +1229,26 @@ export interface paths {
          * @description machines R5.72 to R5.77. What the agent last reported, with the days until each disk is full, what is out of date and whether a pending restart may hit running jobs. A value an OS cannot give is left out and its `unknown_reason` says why; it is never 0. `reported` is false until the first report arrives.
          */
         get: operations["getMachineHealth"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/machines/{machineId}/uptime": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The uptime of one machine and why it took no jobs
+         * @description machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+         */
+        get: operations["getMachineUptime"];
         put?: never;
         post?: never;
         delete?: never;
@@ -5359,6 +5497,141 @@ export interface components {
         DrainRequest: {
             reason?: string;
         };
+        DependencyCheckRequest: {
+            /** @enum {string} */
+            runner_os: "linux" | "windows" | "macos";
+            /** @enum {string} */
+            runner_kind: "ephemeral" | "persistent";
+        };
+        /** @description The facts of one offered choice (DEP3). */
+        DependencyFacts: {
+            name: string;
+            version: string;
+            /** @description Where it comes from (a host name, not a secret URL). */
+            source: string;
+            /** Format: int64 */
+            download_bytes: number;
+            /** Format: int64 */
+            disk_bytes: number;
+            typical_minutes: number;
+            needs_admin: boolean;
+            restart_likely: boolean;
+            licence_note?: string;
+            /** @description How to undo it, in words. */
+            undo: string;
+        };
+        DependencyItem: {
+            /** @enum {string} */
+            id: "wsl2" | "docker-in-wsl2" | "docker-desktop" | "docker-engine";
+            name: string;
+            /** @enum {string} */
+            state: "ok" | "missing" | "stopped" | "wrong_kind";
+            version?: string;
+            /** @description One sentence of why the plan needs it (DEP2). */
+            why: string;
+            detail?: string;
+        };
+        /** @description One way to fix what is missing; one is recommended, the others stay visible (DEP3, CORE-4). */
+        DependencyChoice: {
+            id: string;
+            title: string;
+            item_ids: string[];
+            recommended: boolean;
+            /** @description One facts card per item the choice installs. */
+            facts: components["schemas"]["DependencyFacts"][];
+            requires_licence_tick: boolean;
+            /** @description The exact commands for "Do it myself", one per line, copyable. */
+            manual_steps: string[];
+        };
+        DependencyCheck: {
+            machine_id: string;
+            /** @description True when nothing is missing for this runner choice. */
+            ready: boolean;
+            os?: string;
+            arch?: string;
+            admin: boolean;
+            /** Format: int64 */
+            disk_free_bytes: number;
+            virtualization_off: boolean;
+            items: components["schemas"]["DependencyItem"][];
+            choices: components["schemas"]["DependencyChoice"][];
+            /** @description Why no install is offered (no admin rights, disk too small, virtualization off). */
+            blocked_reason?: string;
+            /** @description The engine is installed but stopped; the fix is to start it, not to install. */
+            start_only?: boolean;
+        };
+        DependencyJobRequest: {
+            /** @enum {string} */
+            runner_os: "linux" | "windows" | "macos";
+            /** @enum {string} */
+            runner_kind: "ephemeral" | "persistent";
+            choice_id: string;
+            /** @description Must be true; the Review step is the consent. */
+            confirmed: boolean;
+            /** @description The "I have the right to use it" tick for Docker Desktop. */
+            accept_licence?: boolean;
+        };
+        DependencyAdded: {
+            item_id: string;
+            kind: string;
+            ref: string;
+            version: string;
+        };
+        /** @description One progress event. Same shape as the shared progress contract (CRSP247) in snake_case: job_id, phase, phase_index, phase_count, phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec, machine, command, stream, line, ts. */
+        DependencyEvent: {
+            job_id: string;
+            phase: string;
+            phase_index: number;
+            phase_count: number;
+            phase_weight: number;
+            pct: number | null;
+            reason?: string;
+            /** Format: int64 */
+            bytes?: number;
+            /** Format: int64 */
+            total?: number;
+            /** Format: int64 */
+            rate?: number;
+            /** Format: int64 */
+            eta_sec?: number;
+            machine: {
+                name: string;
+                role: string;
+                os: string;
+            };
+            command?: string;
+            /** @enum {string} */
+            stream: "stdout" | "stderr" | "status";
+            line?: string;
+            /**
+             * Format: int64
+             * @description Unix milliseconds.
+             */
+            ts: number;
+        };
+        DependencyJob: {
+            id: string;
+            machine_id: string;
+            /** @enum {string} */
+            state: "consented" | "installing" | "paused_restart" | "verifying" | "preparing" | "done" | "failed" | "stopped" | "undoing" | "undone";
+            choice_id: string;
+            item_ids: string[];
+            runner_os: string;
+            runner_kind: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
+            actor?: string;
+            last?: components["schemas"]["DependencyEvent"];
+            error?: string;
+            engine_version?: string;
+            /** @description What this job added; the undo list. */
+            added: components["schemas"]["DependencyAdded"][];
+            /** @description The last 300 events, oldest first. */
+            log: components["schemas"]["DependencyEvent"][];
+            manual_steps?: string[];
+        };
         HostCommandRequest: {
             /** @description The program and its arguments; run without a shell. */
             command: string[];
@@ -7729,6 +8002,60 @@ export interface components {
             /** @description An OOM kill this recent is a finding (default 60). */
             oom_window_minutes: number;
         };
+        /** @description The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC. */
+        MachineUptime: {
+            machine_id: string;
+            /** @description False until the controller has seen the machine; then the rest is empty. */
+            watched: boolean;
+            /**
+             * Format: date-time
+             * @description When the controller first saw the machine.
+             */
+            since?: string;
+            /** @description The windows 24h, 7d and 30d, in this order. */
+            windows: components["schemas"]["UptimeWindow"][];
+            /** @description Periods of the last 30 days in which the machine took no new job, newest first, at most 50. */
+            periods: components["schemas"]["UptimePeriod"][];
+        };
+        UptimeWindow: {
+            /** @enum {string} */
+            window: "24h" | "7d" | "30d";
+            /**
+             * Format: int64
+             * @description The part of the window the controller watched.
+             */
+            covered_seconds: number;
+            /** Format: int64 */
+            online_seconds: number;
+            /**
+             * Format: int64
+             * @description Online and taking new jobs.
+             */
+            taking_seconds: number;
+            /**
+             * Format: float
+             * @description Online share of the watched time; absent when nothing was watched.
+             */
+            uptime_pct?: number;
+            /**
+             * Format: float
+             * @description Online and taking share of the watched time; absent when nothing was watched.
+             */
+            taking_pct?: number;
+        };
+        UptimePeriod: {
+            /** Format: date-time */
+            started_at: string;
+            /**
+             * Format: date-time
+             * @description Absent while the period goes on.
+             */
+            ended_at?: string;
+            /** @description True when no heartbeat arrived; false when the machine was online but took no job. */
+            offline: boolean;
+            /** @description Offline: heartbeat_lost, clock_skew or controller_stopped. Online: stopped, mode_paused, tray_paused, on_battery, busy, base_image_missing or disk_low (machines R5.62). */
+            reason: string;
+        };
         /** @description A field that is absent is unknown; the `unknown_reason` next to it says why. Timestamps are UTC. */
         MachineHealth: {
             machine_id: string;
@@ -8048,6 +8375,7 @@ export interface components {
         /** @description The window of the stats, 24h (default) or 7d. */
         StatsWindow: "24h" | "7d";
         MachineId: string;
+        DependencyJobId: string;
         ChangeId: string;
         JoinCodeId: string;
         SetName: string;
@@ -9338,6 +9666,183 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    checkMachineDependencies: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DependencyCheckRequest"];
+            };
+        };
+        responses: {
+            /** @description The check result and the offer. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyCheck"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listMachineDependencyJobs: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Up to 20 jobs, newest first. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyJob"][];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    startMachineDependencyJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DependencyJobRequest"];
+            };
+        };
+        responses: {
+            /** @description The job was accepted; read it with the GET route. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyJob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineDependencyJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+                jobId: components["parameters"]["DependencyJobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The job. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyJob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    stopMachineDependencyJob: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+                jobId: components["parameters"]["DependencyJobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stop was sent; the job ends as stopped. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyJob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    undoMachineDependencyJob: {
+        parameters: {
+            query?: {
+                confirmed?: boolean;
+            };
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+                jobId: components["parameters"]["DependencyJobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The undo runs; read the job. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyJob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    restartMachineForDependencyJob: {
+        parameters: {
+            query?: {
+                confirmed?: boolean;
+            };
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+                jobId: components["parameters"]["DependencyJobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The restart was sent. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyJob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     removeRegistration: {
         parameters: {
             query?: {
@@ -9610,6 +10115,29 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["MachineHealth"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMachineUptime: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                machineId: components["parameters"]["MachineId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The uptime. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MachineUptime"];
                 };
             };
             default: components["responses"]["Error"];
