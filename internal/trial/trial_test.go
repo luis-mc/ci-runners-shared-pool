@@ -113,6 +113,9 @@ func TestShadowDispatchesOnceAndRecordsCopy(t *testing.T) {
 	ctx := context.Background()
 	m, fv, fd := setup(false)
 	before := fmt.Sprint(fv.vars)
+	if _, err := m.Set(ctx, "o/r", Observe, Options{}); err != nil {
+		t.Fatal(err)
+	}
 	if _, err := m.Set(ctx, "o/r", Shadow, Options{ShadowJobs: []string{"build"}}); err != nil {
 		t.Fatal(err)
 	}
@@ -165,6 +168,7 @@ func TestCanaryWritesAndOffRestoresExactly(t *testing.T) {
 	_, _ = m.Set(ctx, "o/r", Observe, Options{})
 	_ = m.OnJob(ctx, ev("build", 1, "ubuntu-latest"))
 	_ = m.OnJob(ctx, ev("test", 1, "ubuntu-latest"))
+	_, _ = m.Set(ctx, "o/r", Shadow, Options{})
 	st, err := m.Set(ctx, "o/r", Canary, Options{Jobs: []string{"build"}, Percent: 0})
 	if err != nil {
 		t.Fatal(err)
@@ -197,6 +201,8 @@ func TestCanaryNeedsJobs(t *testing.T) {
 	ctx := context.Background()
 	m, fv, _ := setup(false)
 	before := fmt.Sprint(fv.vars)
+	_, _ = m.Set(ctx, "o/r", Observe, Options{})
+	_, _ = m.Set(ctx, "o/r", Shadow, Options{})
 	if _, err := m.Set(ctx, "o/r", Canary, Options{Percent: 50}); !errors.Is(err, ErrNoJobs) {
 		t.Fatalf("err %v", err)
 	}
@@ -206,7 +212,7 @@ func TestCanaryNeedsJobs(t *testing.T) {
 	if fmt.Sprint(fv.vars) != before {
 		t.Fatal("failed canary left variables")
 	}
-	if g, _ := m.Get(ctx, "o/r"); g.Mode != Off {
+	if g, _ := m.Get(ctx, "o/r"); g.Mode != Shadow {
 		t.Fatalf("mode %s", g.Mode)
 	}
 }
@@ -284,5 +290,35 @@ func TestParseMode(t *testing.T) {
 	}
 	if _, err := ParseMode("on"); err == nil {
 		t.Error("on accepted")
+	}
+}
+
+func TestNeverTwoStepsForwardAndBackAtAnyTime(t *testing.T) {
+	ctx := context.Background()
+	m, fv, _ := setup(false)
+	before := fmt.Sprint(fv.vars)
+	if _, err := m.Set(ctx, "o/r", Live, Options{}); !errors.Is(err, ErrTwoSteps) {
+		t.Fatalf("off to live: %v", err)
+	}
+	for _, mode := range []Mode{Observe, Shadow} {
+		if _, err := m.Set(ctx, "o/r", mode, Options{}); err != nil {
+			t.Fatal(mode, err)
+		}
+	}
+	if _, err := m.Set(ctx, "o/r", Live, Options{}); !errors.Is(err, ErrTwoSteps) {
+		t.Fatalf("shadow to live: %v", err)
+	}
+	if _, err := m.Set(ctx, "o/r", Canary, Options{Jobs: []string{"build"}}); err != nil {
+		t.Fatal(err)
+	}
+	st, err := m.Set(ctx, "o/r", Live, Options{})
+	if err != nil || st.Mode != Live {
+		t.Fatalf("canary to live: %v %v", st.Mode, err)
+	}
+	if fmt.Sprint(fv.vars) != before {
+		t.Fatalf("live left canary variables behind: %v", fv.vars)
+	}
+	if st, err = m.Set(ctx, "o/r", Observe, Options{}); err != nil || st.Mode != Observe {
+		t.Fatalf("live back to observe: %v %v", st.Mode, err)
 	}
 }

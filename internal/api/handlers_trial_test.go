@@ -37,16 +37,29 @@ func TestRepositoryTrialOverHTTP(t *testing.T) {
 	if res.StatusCode != 200 || !strings.Contains(string(b), `"mode":"off"`) {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
-	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "observe"}, owner, hdr)
+	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "observe", "confirmed": true}, owner, hdr)
 	if res.StatusCode != 200 || !strings.Contains(string(b), `"mode":"observe"`) {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
 	// A canary with no known job is refused, and changes nothing.
-	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "canary", "percent": 50}, owner, hdr)
+	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "canary", "percent": 50, "confirmed": true}, owner, hdr)
 	if res.StatusCode != 400 && res.StatusCode != 422 {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
-	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "canary", "jobs": []string{"build"}}, owner, hdr)
+	// Without a yes nothing changes: the answer says what the change does.
+	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "shadow"}, owner, hdr)
+	if res.StatusCode != 409 || !strings.Contains(string(b), "needs_confirmation") || !strings.Contains(string(b), "from observe to shadow") {
+		t.Fatalf("%d %s", res.StatusCode, b)
+	}
+	// Two steps at once are refused.
+	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "live", "confirmed": true}, owner, hdr)
+	if res.StatusCode != 400 || !strings.Contains(string(b), "one step at a time") {
+		t.Fatalf("%d %s", res.StatusCode, b)
+	}
+	if res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "shadow", "confirmed": true}, owner, hdr); res.StatusCode != 200 {
+		t.Fatalf("%d %s", res.StatusCode, b)
+	}
+	res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "canary", "jobs": []string{"build"}, "confirmed": true}, owner, hdr)
 	var got struct {
 		Mode      string
 		Variables []string
@@ -58,14 +71,14 @@ func TestRepositoryTrialOverHTTP(t *testing.T) {
 	if _, ok := h.fake.Variable("alice/app", "CRSP_RUNS_ON_CANARY_BUILD"); !ok {
 		t.Fatal("canary variable written")
 	}
-	if res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "off"}, owner, hdr); res.StatusCode != 200 {
+	if res, b = h.do("PUT", "/api/v1/repositories/100/trial", map[string]any{"mode": "off", "confirmed": true}, owner, hdr); res.StatusCode != 200 {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
 	if _, ok := h.fake.Variable("alice/app", "CRSP_RUNS_ON_CANARY_BUILD"); ok {
 		t.Fatal("off removes the canary variable")
 	}
 	// Public: refused.
-	res, b = h.do("PUT", "/api/v1/repositories/101/trial", map[string]any{"mode": "observe"}, owner, hdr)
+	res, b = h.do("PUT", "/api/v1/repositories/101/trial", map[string]any{"mode": "observe", "confirmed": true}, owner, hdr)
 	if res.StatusCode != 400 && res.StatusCode != 422 || !strings.Contains(string(b), "public") {
 		t.Fatalf("%d %s", res.StatusCode, b)
 	}
