@@ -21,6 +21,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/registry/builds"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/runners"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/secrets"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/sizelabel"
 )
 
 // Errors of the pool lifecycle.
@@ -579,6 +580,11 @@ func (b *Backend) limitsFor(r backend.RunnerSpec) Limits {
 	}
 	if r.PoolCPUs > 0 {
 		l.CPUs = r.PoolCPUs
+	}
+	// A size label of the job (cpu=4, ram=8) can only lower the caps (scheduling R5.67a).
+	if sz, err := sizelabel.Parse(r.Labels); err == nil && !sz.Empty() {
+		c := sz.Clamp(sizelabel.Limits{MemoryMB: l.MemoryMB, CPUs: l.CPUs})
+		l.MemoryMB, l.CPUs = c.MemoryMB, c.CPUs
 	}
 	return l
 }
