@@ -3,6 +3,7 @@ package agentlink
 import (
 	"context"
 	"errors"
+	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestDepsCheckRoutesTheReport(t *testing.T) {
 	l, fs, _ := depsLink(t, true)
 	go func() {
 		for i := 0; i < 200; i++ {
-			time.Sleep(5 * time.Millisecond)
+			runtime.Gosched()
 			fs.mu.Lock()
 			var id string
 			for _, m := range fs.sent {

@@ -684,5 +684,5 @@ describe('the wizard harness', () => {
       },
     ]);
     expect(problems.join('\n')).toBe('');
-  }, 30_000);
+  });
 });
