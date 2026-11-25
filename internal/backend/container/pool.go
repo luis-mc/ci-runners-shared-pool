@@ -77,6 +77,9 @@ type PoolSpec struct {
 	// folders once the backend took it (caches R5.43, R5.44).
 	LaneRepoID string
 	Lane       *runnercache.LaneDirs
+	// ToolCacheHost is the host folder of the machine's shared tool cache; it
+	// is mounted into the container when set (caches R5.63).
+	ToolCacheHost string
 	// Env is the pool-wide job environment (runners R5.53): the browsers path
 	// and the Wine prefix.
 	Env map[string]string
@@ -139,6 +142,13 @@ func RunArgs(p PoolSpec) ([]string, error) {
 	}
 	if p.Lane != nil {
 		m, err := LaneMountArgs(*p.Lane)
+		if err != nil {
+			return nil, err
+		}
+		a = append(a, m...)
+	}
+	if p.ToolCacheHost != "" {
+		m, err := ToolCacheMountArgs(p.ToolCacheHost, p.Lane == nil)
 		if err != nil {
 			return nil, err
 		}
