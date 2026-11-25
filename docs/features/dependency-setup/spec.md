@@ -270,4 +270,9 @@ Everything in sections 3.2 to 8. Today's built parts: detection (DEP1 in part), 
 
 ## Design-system proof
 
-Checked: CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, CORE-7 (one card shape for the offer facts). Design system v4. Sections used: `ux-rules`, `components`, `content`. Rule IDs named in front matter and section 4. The one wizard, its states and the shared wizard part are by UX-5, UX-30, UX-54. New words go to `content` before build.
+Checked: CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, CORE-7 (one card shape for the offer facts). Design system v4. Sections used: `ux-rules`, `components`, `content`. Nothing is built, so the proof is the existing general guards for each rule; the tests of section 9 (the wizard harness for every state of section 4) are planned and will be added to these lines when written. New words go to `content` before build.
+
+Proof: CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, CORE-7, UX-5, UX-6, UX-26, UX-29, UX-30, UX-38, UX-42, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13, UX-54 `scripts/design/wizard-behaviour.test.ts`
