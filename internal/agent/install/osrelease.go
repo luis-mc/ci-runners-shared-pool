@@ -60,6 +60,23 @@ func (o OSRelease) DockerRepo() (family, codename string, ok bool) {
 	return fam, cn, true
 }
 
+// DockerRPMRepo returns the Docker rpm repository family ("fedora", "rhel" or
+// "centos") for a dnf distribution, or ok=false for any other family. Rocky
+// Linux, AlmaLinux and other RHEL rebuilds use Docker's centos repository.
+func (o OSRelease) DockerRPMRepo() (family string, ok bool) {
+	switch {
+	case o.ID == "fedora":
+		return "fedora", true
+	case o.ID == "rhel":
+		return "rhel", true
+	case o.ID == "centos", o.ID == "rocky", o.ID == "almalinux", o.ID == "ol":
+		return "centos", true
+	case hasWord(o.IDLike, "fedora"), hasWord(o.IDLike, "rhel"), hasWord(o.IDLike, "centos"):
+		return "centos", true
+	}
+	return "", false
+}
+
 func hasWord(s, w string) bool {
 	for _, f := range strings.Fields(s) {
 		if f == w {
@@ -82,12 +99,26 @@ func safeWord(s string) bool {
 const (
 	KeyPath  = "/etc/apt/keyrings/docker.asc"
 	RepoPath = "/etc/apt/sources.list.d/docker.list"
+	// RPMRepoPath is the dnf source crsp adds on the rpm families.
+	RPMRepoPath = "/etc/yum.repos.d/docker-ce.repo"
 	// DistroName is the WSL distro crsp owns; no other distro is ever touched.
 	DistroName = "crsp-docker"
 )
 
 // DockerPackages are the packages of Docker Engine from Docker's repository.
 var DockerPackages = []string{"docker-ce", "docker-ce-cli", "containerd.io", "docker-buildx-plugin", "docker-compose-plugin"}
+
+// RPMRepoURL is Docker's repository file for a rpm family.
+func RPMRepoURL(family string) string {
+	return addresses.DockerAptURL + "/" + family + "/docker-ce.repo"
+}
+
+// RPMConflictPackages are the unofficial packages Docker's install guide for
+// the rpm families removes first.
+var RPMConflictPackages = []string{"docker", "docker-client", "docker-client-latest", "docker-common", "docker-latest", "docker-latest-logrotate", "docker-logrotate", "docker-engine", "podman-docker"}
+
+// BrewCask is the Homebrew cask of Docker Desktop on a Mac.
+const BrewCask = "docker-desktop"
 
 // ConflictPackages are the unofficial packages Docker's install guide removes first.
 var ConflictPackages = []string{"docker.io", "docker-compose", "docker-compose-v2", "docker-doc", "podman-docker", "containerd", "runc"}
@@ -103,7 +134,7 @@ func KeyURL(family string) string { return addresses.DockerAptURL + "/" + family
 // ManualDockerEngine is the "Do it myself" text for a family this release does not install.
 func ManualDockerEngine() []string {
 	return []string{
-		"Follow Docker's install guide for your distribution: https://docs.docker.com/engine/install/",
+		"Follow Docker's install guide for your distribution: https://docs.docker.com/engine/install/ (crsp installs it for Ubuntu, Debian, Fedora and the Red Hat family; other families are done by hand)",
 		"Then start the service: sudo systemctl enable --now docker",
 	}
 }

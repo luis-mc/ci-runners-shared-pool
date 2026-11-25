@@ -43,8 +43,9 @@ func TestMachineEngineSaysWhichEngineAndWhetherItAnswers(t *testing.T) {
 		{Machine: named(win(), "none"), Kind: "none", Reason: "no docker engine"},
 		{Machine: named(linux(), "lin"), Kind: "docker-native", Usable: true, Version: "27.3.1"},
 		{Machine: named(linux(), "lin-none"), Kind: "none", Reason: "the docker command is not installed"},
+		{Machine: named(doctor.Machine{ID: "m1", OS: "darwin"}, "mac-none"), Kind: "none", Reason: "the docker command is not installed"},
 	}})
-	if len(fs) != 7 {
+	if len(fs) != 8 {
 		t.Fatalf("%d findings", len(fs))
 	}
 	for name, want := range map[string]struct {
@@ -58,6 +59,7 @@ func TestMachineEngineSaysWhichEngineAndWhetherItAnswers(t *testing.T) {
 		"none":     {doctor.Warn, "not usable"},
 		"lin":      {doctor.OK, "uses Docker 27.3.1"},
 		"lin-none": {doctor.Warn, "not usable"},
+		"mac-none": {doctor.Warn, "not usable"},
 	} {
 		f := find(t, fs, name)
 		if f.Severity != want.sev || !strings.Contains(f.Title, want.in) {
@@ -73,8 +75,11 @@ func TestMachineEngineSaysWhichEngineAndWhetherItAnswers(t *testing.T) {
 	if f := find(t, fs, "lin-none"); !strings.Contains(f.Fix.Text, "systemctl") {
 		t.Errorf("none on Linux: %+v", f)
 	}
+	if f := find(t, fs, "mac-none"); !strings.Contains(f.Fix.Text, "Docker Desktop") || strings.Contains(f.Fix.Text, "systemctl") {
+		t.Errorf("none on macOS: %+v", f)
+	}
 	// DEP14: every unusable engine links to the wizard on the machine page; a usable one has no fix.
-	for _, name := range []string{"down", "none", "lin-none"} {
+	for _, name := range []string{"down", "none", "lin-none", "mac-none"} {
 		f := find(t, fs, name)
 		if f.Fix.Link != "/machines/"+name+"?setup=deps" || !strings.Contains(f.Fix.Text, "Get this machine ready") {
 			t.Errorf("%s: fix %+v", name, f.Fix)

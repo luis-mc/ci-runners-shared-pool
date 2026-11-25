@@ -72,9 +72,8 @@ func (l *link) depsRunner(runnerOS, runnerKind string) *install.Runner {
 			s, _ := sys.ReadFile("/etc/os-release")
 			return s
 		},
-		// Prepare is nil: the image and the pool container are made by the
-		// first runner start (ensure-image, StartPersistent); the job says so.
-		Redact: l.cfg.redactor().Redact,
+		Prepare: l.preparePool(runnerOS, runnerKind),
+		Redact:  l.cfg.redactor().Redact,
 	})
 }
 
@@ -131,4 +130,21 @@ func (l *link) depsUndo(ctx context.Context, m *agentv1.DepsUndo) {
 // depsRestartHost restarts the machine unless a job runs.
 func (l *link) depsRestartHost(m *agentv1.DepsRestartHost) {
 	go l.depsRunner("linux", "").RestartHost(m.GetJobId(), "", "")
+}
+
+// preparePool is DEP9: after Verify, make the image `crsp-pool:<key>` and, for
+// a persistent Linux runner on a machine that runs containers in a VM (Windows,
+// macOS), the persistent pool container and its two volumes. A persistent
+// runner on a Linux machine runs on the host or in a job pool: only the image is
+// made. Nil when nothing is to prepare or the agent has no container backend; the
+// job then says the image is made when the first runner starts.
+func (l *link) preparePool(runnerOS, runnerKind string) func(context.Context) error {
+	if runnerOS != "linux" || l.cfg.PreparePool == nil {
+		return nil
+	}
+	sys := l.cfg.sys()
+	persistent := runnerKind == "persistent" && sys.GOOS() != "linux"
+	return func(ctx context.Context) error {
+		return l.cfg.PreparePool(ctx, sys.Arch(), persistent)
+	}
 }

@@ -62,6 +62,10 @@ type Config struct {
 	// Runners carries out the runner commands of the controller (runners R5.1);
 	// nil answers each with a failure that says the agent has no backend.
 	Runners runners.Agent
+	// PreparePool makes the runner image and, when persistent is set, the
+	// persistent pool container, for dependency setup (DEP9). Nil: they are
+	// made when the first runner starts.
+	PreparePool func(ctx context.Context, arch string, persistent bool) error
 	// RunnerFiles replaces runner files on UpdateRunnerFiles (runners R5.38);
 	// nil means this agent cannot, and its machine report says so.
 	RunnerFiles *RunnerFiles
