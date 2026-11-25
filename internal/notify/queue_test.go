@@ -488,3 +488,57 @@ func TestQueueCeiling(t *testing.T) { // R6.9
 	}
 }
 
+
+func TestThresholdsNeedAdminAndAreValidated(t *testing.T) { // R5.8, R6.6
+	e := newEnv(t, nil)
+	ctx := context.Background()
+	if got := e.svc.Thresholds(ctx); got != DefaultThresholds() {
+		t.Fatalf("%+v", got)
+	}
+	th := DefaultThresholds()
+	th.DiskPercent = 20
+	if _, err := e.svc.SetThresholds(ctx, alice, th); !errors.Is(err, ErrForbidden) {
+		t.Fatalf("a viewer must not change thresholds: %v", err)
+	}
+	for _, bad := range []func(*Thresholds){
+		func(t *Thresholds) { t.OfflineGraceMinutes = 0 }, func(t *Thresholds) { t.OfflineGraceMinutes = 61 },
+		func(t *Thresholds) { t.JobWaitingMinutes = 1441 }, func(t *Thresholds) { t.DiskPercent = 51 },
+		func(t *Thresholds) { t.HourlyCap = 201 }, func(t *Thresholds) { t.HourlyCap = 0 },
+	} {
+		x := DefaultThresholds()
+		bad(&x)
+		var inv *InvalidError
+		if _, err := e.svc.SetThresholds(ctx, owner, x); !errors.As(err, &inv) {
+			t.Fatalf("%+v: %v", x, err)
+		}
+	}
+	if _, err := e.svc.SetThresholds(ctx, owner, th); err != nil {
+		t.Fatal(err)
+	}
+	if got := e.svc.Thresholds(ctx); got.DiskPercent != 20 {
+		t.Fatalf("%+v", got)
+	}
+	rows, _ := e.db.ListAudit(ctx, store.AuditFilter{Action: "notification.thresholds.update"})
+	if len(rows) != 1 || rows[0].Actor != "octo" {
+		t.Fatalf("%+v", rows)
+	}
+}
+
+func TestSourcesAreReadAndAFailingSourceChangesNothing(t *testing.T) { // R5.1, section 8
+	e := newEnv(t, nil)
+	ctx := context.Background()
+	e.desktop(t, owner)
+	var fail atomic.Bool
+	e.svc.AddSource(Source{Scope: scopeOf("machine.offline"), Poll: func(context.Context) ([]Fact, error) {
+		if fail.Load() {
+			return nil, errors.New("the machines service is down")
+		}
+		return []Fact{machineFact("m1")}, nil
+	}})
+	e.svc.PollSources(ctx)
+	fail.Store(true)
+	e.svc.PollSources(ctx)
+	if rows := e.notices(t); len(rows) != 1 || rows[0].State != StateFiring {
+		t.Fatalf("silence from a failing source is not an all-clear: %+v", rows)
+	}
+}

@@ -2,11 +2,13 @@ package notify
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
@@ -103,16 +105,46 @@ func (s Scope) has(kind string) bool {
 	return false
 }
 
-// Thresholds returns the pool thresholds: the stored ones, or the defaults.
+// KeyThresholds is the settings row of the pool thresholds.
+const KeyThresholds = "notify_thresholds"
+
+// Thresholds returns the pool thresholds: the stored ones, or the defaults (R5.8).
 func (s *Service) Thresholds(ctx context.Context) Thresholds {
 	t := DefaultThresholds()
 	if s.cfg.Thresholds != nil {
 		t = s.cfg.Thresholds(ctx)
+	} else if raw, ok, err := s.cfg.DB.RawSetting(ctx, KeyThresholds); err == nil && ok {
+		var got Thresholds
+		if json.Unmarshal([]byte(raw), &got) == nil {
+			t = got
+		}
 	}
 	if t.Validate() != nil {
 		return DefaultThresholds()
 	}
 	return t
+}
+
+// SetThresholds changes the pool thresholds. Only an owner or admin may; a viewer may not (R5.8). The change is
+// written to the audit log with the old and new values (R6.6).
+func (s *Service) SetThresholds(ctx context.Context, who Caller, t Thresholds) (Thresholds, error) {
+	if !who.Admin {
+		return Thresholds{}, ErrForbidden
+	}
+	if err := t.Validate(); err != nil {
+		return Thresholds{}, err
+	}
+	old := s.Thresholds(ctx)
+	raw, _ := json.Marshal(t)
+	if err := s.cfg.DB.PutRawSetting(ctx, KeyThresholds, string(raw), who.Login); err != nil {
+		return Thresholds{}, err
+	}
+	err := s.audit.Record(ctx, who.Actor, "notification.thresholds.update", audit.Target{Type: "notification_thresholds", ID: "pool"},
+		map[string]any{"summary": "changed the notice thresholds", "old": old, "new": t})
+	if err != nil {
+		s.cfg.Logger.Error("notify: audit thresholds", "err", err)
+	}
+	return t, nil
 }
 
 // Observe tells the engine the complete set of facts of one scope. A fact whose key is new or resolved

@@ -211,7 +211,8 @@ type Service struct {
 	lastTest  map[string]time.Time // channel id + user
 	lastMaint time.Time
 
-	engMu sync.Mutex // one state change at a time
+	engMu   sync.Mutex // one state change at a time
+	sources []Source
 }
 
 // New returns the service. DB and Secrets are required.
