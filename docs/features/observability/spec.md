@@ -15,7 +15,7 @@ code:
   - internal/logs/**
   - internal/compare/**
 design_system: [UX-6, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
-last_verified: 2026-11-24
+last_verified: 2026-11-25
 artifact:
 generator: luismc-docs 2.6.1
 ---
