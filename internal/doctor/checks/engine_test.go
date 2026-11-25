@@ -73,6 +73,16 @@ func TestMachineEngineSaysWhichEngineAndWhetherItAnswers(t *testing.T) {
 	if f := find(t, fs, "lin-none"); !strings.Contains(f.Fix.Text, "systemctl") {
 		t.Errorf("none on Linux: %+v", f)
 	}
+	// DEP14: every unusable engine links to the wizard on the machine page; a usable one has no fix.
+	for _, name := range []string{"down", "none", "lin-none"} {
+		f := find(t, fs, name)
+		if f.Fix.Link != "/machines/"+name+"?setup=deps" || !strings.Contains(f.Fix.Text, "Get this machine ready") {
+			t.Errorf("%s: fix %+v", name, f.Fix)
+		}
+	}
+	if f := find(t, fs, "lin"); f.Fix.Link != "" {
+		t.Errorf("a usable engine has no fix link: %+v", f.Fix)
+	}
 }
 
 func TestMachineEngineSkipsWithoutAReport(t *testing.T) {

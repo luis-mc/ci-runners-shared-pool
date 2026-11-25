@@ -13,7 +13,7 @@
       "source": "download.docker.com", "download_bytes": 200000000, "disk_bytes": 1500000000, "typical_minutes": 8,
       "needs_admin": false, "restart_likely": false, "min_version": "24.0",
       "undo": "Unregister the crsp-docker WSL distro: wsl --unregister crsp-docker. Your own distros are not touched.",
-      "manual_steps": ["wsl --install -d Ubuntu-24.04 --name crsp-docker", "wsl -d crsp-docker -u root -- sh -c \"curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc\""]
+      "manual_steps": ["wsl --install -d Ubuntu-24.04 --name crsp-docker --no-launch", "wsl -d crsp-docker -u root -- apt-get update", "wsl -d crsp-docker -u root -- apt-get install -y ca-certificates curl", "wsl -d crsp-docker -u root -- install -m 0755 -d /etc/apt/keyrings", "wsl -d crsp-docker -u root -- curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc", "Add Docker's apt source for Ubuntu noble as in https://docs.docker.com/engine/install/ubuntu/", "wsl -d crsp-docker -u root -- apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin", "wsl -d crsp-docker -u root -- systemctl enable --now docker"]
     },
     {
       "id": "docker-desktop", "name": "Docker Desktop", "version": "pinned-per-release", "os": "windows", "method": "download",
