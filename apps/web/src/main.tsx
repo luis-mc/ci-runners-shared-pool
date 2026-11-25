@@ -9,7 +9,9 @@ const container = document.getElementById('root');
 if (!container) throw new Error('#root is missing from index.html');
 
 // A data router, so a screen with unsaved changes can hold a move out of it (LOOK21, `LeaveGuard`).
-const router = createBrowserRouter([{ path: '*', element: <App />, errorElement: <RouteError /> }]);
+const router = createBrowserRouter([
+  { path: '*', element: <App />, errorElement: <RouteError /> },
+]);
 
 createRoot(container).render(
   <StrictMode>

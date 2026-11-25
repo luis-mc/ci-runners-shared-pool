@@ -4,7 +4,13 @@ import { createMemoryRouter, RouterProvider } from 'react-router-dom';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError } from '../api/api';
 import type { Loaded } from '../api/hooks';
-import { Load, RouteError, isStaleBuildError, reloadOnceForNewBuild, RESTART_RETRY_MS } from './common';
+import {
+  Load,
+  RouteError,
+  isStaleBuildError,
+  reloadOnceForNewBuild,
+  RESTART_RETRY_MS,
+} from './common';
 
 afterEach(() => {
   cleanup();
@@ -19,8 +25,17 @@ describe('service restarting', () => {
   it('shows a calm note, not a Problem, over the last copy and asks again quietly', () => {
     vi.useFakeTimers();
     const reload = vi.fn();
-    const failed = { state: 'failed', error: down, data: 'last copy', loadedAt: 1 } as unknown as Loaded<string>;
-    render(<Load result={failed} what="the update status" reload={reload}>{(d) => <p>{d}</p>}</Load>);
+    const failed = {
+      state: 'failed',
+      error: down,
+      data: 'last copy',
+      loadedAt: 1,
+    } as unknown as Loaded<string>;
+    render(
+      <Load result={failed} what="the update status" reload={reload}>
+        {(d) => <p>{d}</p>}
+      </Load>,
+    );
     expect(screen.getByText(/restarting, back in a moment/)).toBeTruthy();
     expect(screen.queryByText(/Problem/)).toBeNull();
     expect(screen.queryByText(/Failed to fetch/)).toBeNull();
@@ -29,8 +44,17 @@ describe('service restarting', () => {
   });
 
   it('keeps the last copy under a note while it restarts', () => {
-    const failed = { state: 'failed', error: down, data: 'last copy', loadedAt: 1 } as unknown as Loaded<string>;
-    render(<Load result={failed} what="history" reload={() => undefined}>{(d) => <p>{d}</p>}</Load>);
+    const failed = {
+      state: 'failed',
+      error: down,
+      data: 'last copy',
+      loadedAt: 1,
+    } as unknown as Loaded<string>;
+    render(
+      <Load result={failed} what="history" reload={() => undefined}>
+        {(d) => <p>{d}</p>}
+      </Load>,
+    );
     expect(screen.getByText('last copy')).toBeTruthy();
     expect(screen.getByText(/restarting, back in a moment/)).toBeTruthy();
     expect(screen.queryByText('Problem')).toBeNull();
@@ -39,7 +63,13 @@ describe('service restarting', () => {
 
 describe('new build', () => {
   it('knows a stale chunk error', () => {
-    expect(isStaleBuildError(new TypeError('Failed to fetch dynamically imported module https://x/assets/Setup-1.js'))).toBe(true);
+    expect(
+      isStaleBuildError(
+        new TypeError(
+          'Failed to fetch dynamically imported module https://x/assets/Setup-1.js',
+        ),
+      ),
+    ).toBe(true);
     expect(isStaleBuildError(new Error('boom'))).toBe(false);
   });
 
@@ -53,9 +83,9 @@ describe('new build', () => {
 });
 
 function boundary(error: Error) {
-  const router = createMemoryRouter(
-    [{ path: '/', element: <Throws error={error} />, errorElement: <RouteError /> }],
-  );
+  const router = createMemoryRouter([
+    { path: '/', element: <Throws error={error} />, errorElement: <RouteError /> },
+  ]);
   return render(<RouterProvider router={router} />);
 }
 function Throws({ error }: { error: Error }): never {
@@ -75,7 +105,9 @@ describe('route error page', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     const reload = vi.fn();
     vi.stubGlobal('location', { reload });
-    const err = new TypeError('Failed to fetch dynamically imported module /assets/Setup-DY_8ykM8.js');
+    const err = new TypeError(
+      'Failed to fetch dynamically imported module /assets/Setup-DY_8ykM8.js',
+    );
     boundary(err);
     expect(reload).toHaveBeenCalledTimes(1);
     cleanup();

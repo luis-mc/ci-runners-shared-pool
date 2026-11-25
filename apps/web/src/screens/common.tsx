@@ -135,7 +135,9 @@ const RELOAD_GAP_MS = 60_000;
 /** A page opened on an older build asks for a hashed file the new build no longer has. */
 export function isStaleBuildError(e: unknown): boolean {
   const m = e instanceof Error ? e.message : typeof e === 'string' ? e : '';
-  return /dynamically imported module|importing a module script failed|ChunkLoadError/i.test(m);
+  return /dynamically imported module|importing a module script failed|ChunkLoadError/i.test(
+    m,
+  );
 }
 
 /** Reloads once for a stale build. False when it already did a moment ago (no reload loop). */
