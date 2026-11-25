@@ -209,3 +209,32 @@ func TestServicePolicyIsKept(t *testing.T) {
 		t.Fatalf("%+v", st)
 	}
 }
+
+// CRSP244: a manual check only looks. It never installs, under Automatic or Ask first.
+func TestServiceManualCheckNeverInstalls(t *testing.T) {
+	for _, policy := range []string{lifecycle.PolicyAutomatic, lifecycle.PolicyAskFirst} {
+		f := newSvc(t, true, true)
+		if _, err := f.svc.SetPolicy(context.Background(), policy, nil); err != nil {
+			t.Fatal(err)
+		}
+		st, err := f.svc.Check(context.Background(), "luis")
+		if err != nil {
+			t.Fatal(err)
+		}
+		if st.State != "review" || st.Available != "1.1.0" || len(f.eng.applied) != 0 {
+			t.Fatalf("%s: %+v applied %v", policy, st, f.eng.applied)
+		}
+		if _, err := f.svc.Install(context.Background(), "luis", false, "1.1.0"); err != nil || len(f.eng.applied) != 1 {
+			t.Fatalf("%s: click install: %v applied %v", policy, err, f.eng.applied)
+		}
+	}
+}
+
+// The idle timer still installs under Automatic after a manual look was not taken.
+func TestServiceTimerStillInstallsAutomaticAfterLook(t *testing.T) {
+	f := newSvc(t, true, true)
+	f.advance(11 * time.Minute)
+	if len(f.eng.applied) != 1 || f.eng.applied[0] != "auto-update" {
+		t.Fatalf("applied %v", f.eng.applied)
+	}
+}

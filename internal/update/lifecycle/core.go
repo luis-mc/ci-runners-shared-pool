@@ -102,6 +102,9 @@ type Updater struct {
 	actor         string
 	pendingActor  string
 	pendingRemote bool
+	// lookOnly makes the check in progress record the offer and stop at review: a manual check
+	// never installs, whatever the policy (CRSP244).
+	lookOnly bool
 }
 
 func ptr(f float64) *float64 { return &f }
@@ -168,14 +171,16 @@ func (u *Updater) SetPaired(p bool) {
 // Check runs one check now. It reports false when unpaired (LC-28).
 func (u *Updater) Check() bool { return u.CheckAs("updater") }
 
-// CheckAs is Check by a named actor (the console, the tray, the CLI); the audit row names it.
+// CheckAs is a manual check by a named actor (the console, the tray, the CLI); the audit row
+// names it. It looks and records the offer; it never installs. The offer waits at review for a
+// click, and the timer's own check decides under the policy.
 func (u *Updater) CheckAs(actor string) bool {
 	if !u.Paired {
 		return false
 	}
-	u.actor = actor
+	u.actor, u.lookOnly = actor, true
 	u.doCheck()
-	u.actor = ""
+	u.actor, u.lookOnly = "", false
 	return true
 }
 
@@ -317,6 +322,8 @@ func (u *Updater) refuse(reason string) {
 // decide applies the policy to the offered version (LC-6).
 func (u *Updater) decide() {
 	switch {
+	case u.lookOnly:
+		u.go_("review")
 	case u.Offered.Required:
 		u.download("updater", false)
 	case u.Policy == PolicyAskFirst:
