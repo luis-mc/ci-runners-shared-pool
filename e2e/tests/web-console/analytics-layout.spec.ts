@@ -70,7 +70,7 @@ for (const width of [360, 393, 1300]) {
       await noSideways(page);
     });
 
-    test('Queue Analysis has the Reserved chip and the slot timeline draws a reserved bar', async ({
+    test('Queue Analysis has the Reserved chip and the Reservation pane', async ({
       page,
     }) => {
       const queued = {
@@ -138,12 +138,7 @@ for (const width of [360, 393, 1300]) {
       await expect(
         page.getByRole('button', { name: 'Reserved', exact: true }),
       ).toBeVisible();
-      await expect(
-        page.locator('.ds-timeline__item[data-state="reserved"]').first(),
-      ).toBeVisible();
-      await expect(
-        page.locator('.ds-timeline__item[data-state="timer_ran_out"]').first(),
-      ).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Reservation' })).toBeVisible();
       await noSideways(page);
     });
   });

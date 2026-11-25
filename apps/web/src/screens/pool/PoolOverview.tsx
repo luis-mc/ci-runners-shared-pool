@@ -1,4 +1,4 @@
-// Pool > Overview (LOOK56, option B): the queue plan, the running jobs and the routing labels in use. It only shows
+// Pool > Overview (LOOK56, option B; LOOK70: no timeline, as the approved prototype): the queue plan, the running jobs and the routing labels in use. It only shows
 // and links (UX-52).
 import {
   Empty,
@@ -15,7 +15,6 @@ import { useNow } from '@crsp/ui';
 import { Load } from '../common';
 import { jobStatus, ranSeconds, type Job } from '../jobs/words';
 import { WithOverview } from './OverviewState';
-import { SlotTimeline } from './SlotTimeline';
 import { needsYou, placeWords, startsAbout, waitWords } from './poolWords';
 
 type Runner = Schemas['Runner'];
@@ -25,12 +24,6 @@ export function PoolOverview() {
     <WithOverview>
       {(o, readAt) => (
         <>
-          <Section
-            title="Jobs over time"
-            hint="Each row is a slot of a machine. Scroll left for the past, right for the forecast."
-          >
-            <SlotTimeline compact />
-          </Section>
           <QueuePlanTable queued={o.queued ?? []} readAt={readAt} />
           <RunningTable running={o.running} />
           <RoutingLabels jobs={[...o.running, ...(o.queued ?? [])]} />
@@ -72,6 +65,7 @@ function QueuePlanTable({ queued, readAt }: { queued: readonly Job[]; readAt: nu
   return (
     <Section
       title="Queue plan"
+      count={rows.length}
       hint="In the order crsp will start them."
       actions={<TextLink to="/pool/queue">Open Queue Analysis</TextLink>}
     >
@@ -91,7 +85,7 @@ function QueuePlanTable({ queued, readAt }: { queued: readonly Job[]; readAt: nu
 
 export function RunningTable({
   running,
-  title = 'Running jobs',
+  title = 'Running',
 }: {
   running: readonly Job[];
   title?: string;
