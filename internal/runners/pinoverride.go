@@ -25,7 +25,7 @@ type storedPin struct {
 func EncodePins(ps []Pin) (string, error) {
 	out := make([]storedPin, 0, len(ps))
 	for _, p := range ps {
-		out = append(out, storedPin{OS: p.OS, Arch: p.Arch, Version: p.Version, SHA256: p.SHA256})
+		out = append(out, storedPin(p))
 	}
 	b, err := json.Marshal(out)
 	return string(b), err

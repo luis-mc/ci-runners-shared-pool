@@ -25,7 +25,7 @@ func (p pinStatus) RunnerPin() doctor.RunnerPinStatus {
 type pinKV struct{ db *store.Store }
 
 func (k pinKV) Get(ctx context.Context, key string) (string, bool, error) {
-	return settingsKV{db: k.db}.Get(ctx, key)
+	return settingsKV(k).Get(ctx, key)
 }
 
 func (k pinKV) Set(ctx context.Context, key, value string) error {
