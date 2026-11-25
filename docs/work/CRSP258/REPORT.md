@@ -14,3 +14,4 @@ Branch CRSP258-notifications. Started 2026-11-25.
 - Local gates run: go test notify/store/api/cmd; golangci-lint (own build with go1.27.4); gitleaks; web typecheck on Node 24.
 - Tools I had to install to let the pre-push hook run: gitleaks, golangci-lint, Node 24 (user-space, not committed).
 - Not unit-tested: cmd/crsp/notify_wiring.go sources against real services (typechecked, linted).
+- Squashed history (gitleaks full-history flagged an early column name); pushed as CRSP258-integration. CI run 1161 on the old head: Go race test TestQueueCeiling timed out (10k inserts), fixed with a configurable ceiling.
