@@ -412,6 +412,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.JobsData = d.DB.Jobs()
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
+	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}
 	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
 	nsvc := notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger, Now: d.Now, ConsoleURL: console})
 	c.Options.Notify = nsvc

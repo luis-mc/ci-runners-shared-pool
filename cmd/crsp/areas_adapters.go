@@ -17,6 +17,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/runners"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/sizelabel"
 )
 
 // machineCapacity says which OSes some active machine serves, with the labels
@@ -571,4 +572,33 @@ func factsReported(d controllerDeps, started time.Time) func(context.Context) (b
 		}
 		return true, nil
 	}
+}
+
+// SizeLabelMachines gives the room of each active machine for the size labels
+// screen (scheduling R5.67a): what one job may ask of it with cpu= and ram=.
+func (c machineCapacity) SizeLabelMachines(ctx context.Context) ([]sizelabel.Machine, error) {
+	views, err := c.svc.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	var out []sizelabel.Machine
+	for _, v := range views {
+		m := v.Machine
+		if !m.RemovedAt.IsZero() || m.State == "removed" {
+			continue
+		}
+		os := runners.OSName(m.OS)
+		if os == "" {
+			continue
+		}
+		cpus, mem := v.Settings.PoolCPUs, v.Settings.PoolMemoryGiB
+		if cpus <= 0 {
+			cpus = m.Facts.Threads
+		}
+		if mem <= 0 {
+			mem = float64(m.Facts.MemoryBytes) / (1 << 30)
+		}
+		out = append(out, sizelabel.Machine{Name: m.Name, OS: os, CPUs: float64(cpus), MemoryGiB: mem})
+	}
+	return out, nil
 }

@@ -209,7 +209,7 @@ No mocks yet. The Runners screen and the Create runner wizard follow design syst
 
 ### 5.8 Labels
 
-**R5.36** (M1) — **Generic labels only.** A runner carries only `self-hosted`, its OS, its architecture, `docker`, `kvm`, `gpu` and the pool name. Each capability label is added only when the agent has checked it works (for example `kvm` only when `/dev/kvm` is usable by the runner). The controller refuses any other label with the reason (port DS R5.36, R5.37; learning 7).
+**R5.36** (M1) — **Generic labels only.** A runner carries only `self-hosted`, its OS, its architecture, `docker`, `kvm`, `gpu` and the pool name. Each capability label is added only when the agent has checked it works (for example `kvm` only when `/dev/kvm` is usable by the runner). The controller refuses any other label with the reason (port DS R5.36, R5.37; learning 7). A size label `cpu=N` or `ram=N` (scheduling R5.67a, CRSP264) is also a generic label; a bad value is refused with the reason, and the job container's CPU and memory caps are lowered to it, never raised.
 
 ### 5.9 Runner version
 

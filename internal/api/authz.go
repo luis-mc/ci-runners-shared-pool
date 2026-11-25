@@ -49,7 +49,7 @@ var otherAreaAuth = map[string]string{
 	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser, "getSavingsReport": authUser, "getSavingsRates": authUser, "updateSavingsRates": authOwner, "resetSavingsRates": authOwner,
 	"getUpdateStatus": authUser, "getLifecycleStatus": authUser, "listUpdateHistory": authUser, "listUpdateFleet": authUser, "listCaches": authUser, "listImages": authUser, "getDoctorRun": authUser, "getJob": authUser, "getMachine": authUser,
 	"getMachineChange": authUser, "getMachineLoad": authUser, "getOverview": authUser, "getPoolSettings": authUser,
-	"getQueueSettings": authUser, "getRunner": authUser, "getRunnerEnv": authUser, "listEnvSets": authUser, "listJobSizes": authUser, "getRunnerClasses": authUser, "getRunnerPlan": authUser, "getSettings": authUser,
+	"getQueueSettings": authUser, "getRunner": authUser, "getRunnerEnv": authUser, "listEnvSets": authUser, "listJobSizes": authUser, "listSizeLabels": authUser, "getRunnerClasses": authUser, "getRunnerPlan": authUser, "getSettings": authUser,
 	"listAuditEvents": authUser, "listDoctorFindings": authUser, "listJobs": authUser, "listMachines": authUser,
 	"listRunners": authUser, "listSlots": authUser, "listAssignLeases": authUser, "streamEvents": authUser,
 	"listRuns": authUser, "getRun": authUser, "listJobGroups": authUser, "getJobStats": authUser, "listJobSummaries": authUser, "getForecast": authUser,
