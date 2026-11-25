@@ -122,7 +122,7 @@ Assumptions (stated so you can change them):
 | Compute | $60 | $9 | $0 |
 | Licence | $0 | about $25 | $0 |
 | **Total** | **$60** | **about $34** | **$0** |
-| With the unconfirmed $0.002 fee | $80 | about $54 | $20 |
+| With the unconfirmed $0.002 fee | $60 | about $54 | $20 |
 
 Reading: runs-on cuts the hosted bill by about 40% at this size, because the licence is a fixed part. CRSP cuts it to zero but only while the PCs are on and large enough.
 
