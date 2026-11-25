@@ -47,6 +47,8 @@ type DoctorDeps struct {
 	Timers doctor.TimerSource
 	// ListenerGate tells whether the listener gate enforces; nil makes listener.gate skip.
 	ListenerGate doctor.GateSource
+	// RunnerPin tells how far the runner pin is behind; nil makes runner.pin_age skip.
+	RunnerPin doctor.RunnerPinSource
 }
 
 // NewDoctor makes the engine with the M1 core checks and every extra check,
@@ -60,7 +62,7 @@ func NewDoctor(d DoctorDeps) (*doctor.Engine, *doctor.Service) {
 	eng := &doctor.Engine{
 		Registry: reg, Store: d.Store, Events: d.Events, Logger: d.Logger,
 		Env: func(ctx context.Context) (doctor.Env, error) {
-			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate}
+			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate, RunnerPin: d.RunnerPin}
 			if d.GitHub != nil {
 				g, err := d.GitHub(ctx)
 				if err != nil {

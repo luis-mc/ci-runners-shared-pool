@@ -70,6 +70,9 @@ type Config struct {
 	// CacheRoot is the machine's cache folder; the lanes of every repository
 	// live under it (caches R5.43). Empty means no pool takes a lane.
 	CacheRoot string
+	// ToolCacheRoot is the machine's shared tool cache folder (caches R5.63);
+	// every pool container mounts it. Empty means none is mounted.
+	ToolCacheRoot string
 	// KVMProbe reads /dev/kvm; nil means the machine has none to give. The
 	// device is passed only when the pool has the kvm layer (runners R5.41).
 	KVMProbe func() KVMFacts
@@ -375,6 +378,9 @@ func (b *Backend) ensurePool(ctx context.Context, p PoolSpec) error {
 		if err := b.ownLane(ctx, uid, lane); err != nil {
 			return err
 		}
+	}
+	if p.ToolCacheHost == "" {
+		p.ToolCacheHost = b.cfg.ToolCacheRoot
 	}
 	if err := b.pin(&p); err != nil {
 		return err

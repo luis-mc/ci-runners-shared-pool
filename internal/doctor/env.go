@@ -36,6 +36,9 @@ type Env struct {
 	// Timers says whether crsp's job and run timers enforce; nil makes
 	// timers.mode skip.
 	Timers TimerSource
+	// RunnerPin is the pinned runner version against the newest release; nil
+	// makes runner.pin_age skip.
+	RunnerPin RunnerPinSource
 	// ListenerGate says whether the listener gate enforces; nil makes
 	// listener.gate skip.
 	ListenerGate GateSource
@@ -608,4 +611,18 @@ type PostgresLogin struct {
 // (doctor R5.59). Read only; removing one is a separate action.
 type PostgresSource interface {
 	PostgresLogins(ctx context.Context) ([]PostgresLogin, error)
+}
+
+// RunnerPinStatus is what the daily runner-pin check last found.
+type RunnerPinStatus struct {
+	Known      bool
+	Pinned     string
+	Latest     string
+	BehindDays int
+}
+
+// RunnerPinSource tells how far the pinned runner version is behind the newest
+// release (operations R5.20). A check only reads it.
+type RunnerPinSource interface {
+	RunnerPin() RunnerPinStatus
 }

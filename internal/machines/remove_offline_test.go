@@ -38,3 +38,27 @@ func TestRemoveOfflineMachineRevokesAtOnce(t *testing.T) {
 		t.Fatalf("remove twice: %v", err)
 	}
 }
+
+// R5.42: an offline machine's runners are deregistered from GitHub, and the change says which ones
+// could not be.
+func TestRemoveOfflineMachineDeregistersItsRunners(t *testing.T) {
+	e, id, _ := setup(t)
+	var gotUp = true
+	e.Svc.SetRunnerRemover(func(_ context.Context, machineID, _ string, agentUp bool) []machines.RunnerRemoval {
+		gotUp = agentUp
+		if machineID != id {
+			t.Errorf("machine %s", machineID)
+		}
+		return []machines.RunnerRemoval{{Name: "crsp-a", Done: true}, {Name: "crsp-b", Reason: "GitHub refused"}}
+	})
+	ch, err := e.Svc.Remove(context.Background(), "owner", id, true)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if gotUp {
+		t.Fatal("an offline machine has no agent to clean up")
+	}
+	if !strings.Contains(ch.Detail.Reason, "1 runners deregistered from GitHub") || !strings.Contains(ch.Detail.Reason, "crsp-b (GitHub refused)") {
+		t.Fatalf("reason = %q", ch.Detail.Reason)
+	}
+}

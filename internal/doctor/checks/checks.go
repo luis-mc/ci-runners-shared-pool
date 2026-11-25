@@ -58,6 +58,7 @@ func Register(reg *doctor.Registry) {
 		doctor.NewCheck("github.app.installation", doctor.GroupGitHub, M1, false, appInstallation),
 		doctor.NewCheck("github.app.permissions", doctor.GroupGitHub, M1, false, appPermissions),
 		doctor.NewCheck("github.webhook", doctor.GroupGitHub, M1, false, githubWebhook),
+		doctor.NewCheck("runner.pin_age", doctor.GroupRunner, M1, false, runnerPinAge),
 		doctor.NewCheck("timers.mode", doctor.GroupMachine, M1, false, timersMode),
 		doctor.NewCheck("listener.gate", doctor.GroupMachine, M1, false, listenerGate),
 		doctor.NewCheck("demand.quiet", doctor.GroupRepository, M1, false, demandQuiet),
