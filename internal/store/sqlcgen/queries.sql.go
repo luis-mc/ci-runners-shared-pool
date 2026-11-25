@@ -51,30 +51,6 @@ func (q *Queries) GetMeta(ctx context.Context, key string) (string, error) {
 	return value, err
 }
 
-const insertAuditEntry = `-- name: InsertAuditEntry :one
-INSERT INTO audit_log (actor, action, subject, detail) VALUES (?, ?, ?, ?)
-RETURNING id
-`
-
-type InsertAuditEntryParams struct {
-	Actor   string
-	Action  string
-	Subject string
-	Detail  string
-}
-
-func (q *Queries) InsertAuditEntry(ctx context.Context, arg InsertAuditEntryParams) (int64, error) {
-	row := q.queryRow(ctx, q.insertAuditEntryStmt, insertAuditEntry,
-		arg.Actor,
-		arg.Action,
-		arg.Subject,
-		arg.Detail,
-	)
-	var id int64
-	err := row.Scan(&id)
-	return id, err
-}
-
 const setMeta = `-- name: SetMeta :exec
 INSERT INTO schema_meta (key, value) VALUES (?, ?)
 ON CONFLICT (key) DO UPDATE SET value = excluded.value,

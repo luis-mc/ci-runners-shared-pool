@@ -74,6 +74,8 @@ type AuditLog struct {
 	Source     string
 	TargetType string
 	Result     string
+	PrevHash   string
+	Hash       string
 }
 
 type Backup struct {
