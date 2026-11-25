@@ -1839,3 +1839,36 @@ The words of the wizard "Get this machine ready" and of its doors. Built from th
 | Continue, Continue where you were, Open the machine | Primary of Done (back to the task, or the machine page). |
 | No container engine answers on {machine}. Linux runners need one. | Door note on Add machine and Setup. |
 | {machine} cannot run Linux containers yet. | Door note on Add runners. |
+
+## Rollout words
+
+The pane *Rollout* on a repository's page (operations R5.42, github-integration R5.66).
+
+| Where | Word |
+|---|---|
+| Pane title | Rollout |
+| Lead | How much of {repository} the pool takes. Each move asks first. You go one step forward at a time and back whenever you like. |
+| Facts | Step; What it means |
+| Steps | Off, Observe, Shadow, Canary, Live |
+| Off | No trial. Jobs go where the repository sends them. |
+| Observe | Only watches. crsp writes down what it would do for each queued job and starts nothing. |
+| Shadow | crsp copies the marked workflow while the real jobs stay on GitHub. |
+| Canary | The chosen jobs run on the pool. The other jobs stay on GitHub. |
+| Live | Every job of this repository runs on the pool. |
+| Forward button | Go to {step} (disabled with the reason when the pool is off or the person is not an admin) |
+| Back buttons | Back to {step}, one for each earlier step |
+| Canary fields | Jobs that use the pool (help: Job names, separated by commas.); Share of the other jobs (%) |
+| Pool off | The pool is off for this repository. Turn it on first. |
+| Question | Move {repository} to {step}? Lines: From {step} to {step}. / what the new step does. Buttons: Move (busy: Moving), Cancel |
+
+## Remove from the pool words
+
+The pane on the page of a machine that is not the controller's own (machines R5.40 to R5.42).
+
+| Where | Word |
+|---|---|
+| Pane title and button | Remove from the pool (busy: Reading what goes) |
+| Lead, online | {machine} stops taking jobs, waits for the running jobs, then its runners, images, caches, settings and key go. A running job is never cut. |
+| Lead, offline | {machine} is offline. Its key is revoked at once and its runners are deregistered from GitHub. Its own files stay until crsp is removed from it. |
+| Question | Remove {machine} from the pool? Lines come from the controller: the machine, each runner (deregistered from GitHub), its images and caches, its settings, its key, and the running jobs. Buttons: Remove (busy: Removing), Cancel |
+| Failure | Could not read what goes. {reason} |

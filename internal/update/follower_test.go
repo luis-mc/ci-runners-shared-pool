@@ -20,33 +20,45 @@ func (f *fakeFleet) AskUpdate(id, v string) error {
 	return nil
 }
 
-func TestFollowerAsksOnlyOlderStableAgents(t *testing.T) {
+func TestFollowerAsksOnlyOlderStableAgentsOneAtATime(t *testing.T) {
 	now := time.Now()
 	fl := &fakeFleet{agents: []Agent{
-		{ID: "old", Version: "1.4.0"},
+		{ID: "b-old", Version: "1.4.0"},
+		{ID: "a-old", Version: "1.4.0"},
 		{ID: "same", Version: "1.5.0"},
 		{ID: "newer", Version: "1.6.0"},
 		{ID: "dev", Version: "dev"},
-		{ID: "busy", Version: "1.4.0", Updating: true, UpdatingSince: now.Add(-10 * time.Minute)},
-		{ID: "stale", Version: "1.4.0", Updating: true, UpdatingSince: now.Add(-3 * time.Hour)},
 	}}
 	f := &Follower{Fleet: fl, Current: "1.5.0", Now: func() time.Time { return now }}
 	got := f.Tick(context.Background())
-	if len(got) != 2 || got[0] != "old" || got[1] != "stale" {
-		t.Fatalf("asked %v", got)
+	if len(got) != 1 || got[0] != "a-old" || fl.asked["a-old"][0] != "1.5.0" {
+		t.Fatalf("the first tick asks one agent: %v", got)
 	}
-	if fl.asked["old"][0] != "1.5.0" {
-		t.Fatalf("the ask carries the controller's version: %v", fl.asked)
+	// The next tick asks the one asked least recently, so a postponing agent never starves the rest.
+	if got = f.Tick(context.Background()); len(got) != 1 || got[0] != "b-old" {
+		t.Fatalf("the second tick asks the other: %v", got)
 	}
-	for _, id := range []string{"same", "newer", "dev", "busy"} {
+	for _, id := range []string{"same", "newer", "dev"} {
 		if len(fl.asked[id]) != 0 {
 			t.Errorf("%s must not be asked", id)
 		}
 	}
-	// The next tick asks the postponed one again.
-	f.Tick(context.Background())
-	if len(fl.asked["old"]) != 2 {
-		t.Fatalf("asked again at the next tick: %v", fl.asked["old"])
+}
+
+func TestFollowerWaitsWhileAnotherAgentUpdates(t *testing.T) {
+	now := time.Now()
+	fl := &fakeFleet{agents: []Agent{
+		{ID: "busy", Version: "1.4.0", Updating: true, UpdatingSince: now.Add(-10 * time.Minute)},
+		{ID: "next", Version: "1.4.0"},
+	}}
+	f := &Follower{Fleet: fl, Current: "1.5.0", Now: func() time.Time { return now }}
+	if got := f.Tick(context.Background()); len(got) != 0 {
+		t.Fatalf("asked %v while one agent updates", got)
+	}
+	// An update report older than the active window no longer counts: the agent is asked again.
+	fl.agents[0].UpdatingSince = now.Add(-3 * time.Hour)
+	if got := f.Tick(context.Background()); len(got) != 1 {
+		t.Fatalf("asked %v after a stale report", got)
 	}
 }
 

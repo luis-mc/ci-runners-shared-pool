@@ -129,7 +129,7 @@ func PinFor(os, arch string) (Pin, error) {
 	if pinsLoadEr != nil {
 		return Pin{}, pinsLoadEr
 	}
-	for _, p := range pins {
+	for _, p := range AllPins() {
 		if p.OS == os && p.Arch == arch {
 			if !ValidSHA256(p.SHA256) {
 				return Pin{}, fmt.Errorf("%s/%s: %w", os, arch, ErrBadHash)

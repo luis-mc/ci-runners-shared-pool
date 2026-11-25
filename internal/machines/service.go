@@ -113,8 +113,10 @@ type Service struct {
 	recoveryHandler http.Handler
 	host            HostRunner
 	compact         compactBook
-	queue           QueueSource
-	disks           map[string]DockerDisk
+	// removeRunners deregisters the runners of a machine that is removed (R5.40 to R5.42).
+	removeRunners func(ctx context.Context, machineID, actor string, agentUp bool) []RunnerRemoval
+	queue         QueueSource
+	disks         map[string]DockerDisk
 
 	// rec serialises the read-modify-write of a machine record, so a report of the
 	// agent (heartbeat, facts) never writes back a stale copy over a change of

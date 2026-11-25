@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
@@ -52,7 +53,7 @@ func toTrial(st trial.State, rep trial.Report) gen.Trial {
 
 // trialErr maps a refusal of the trial to the error envelope.
 func trialErr(err error) error {
-	if errors.Is(err, trial.ErrPublic) || errors.Is(err, trial.ErrNoJobs) || errors.Is(err, trial.ErrBadPercent) {
+	if errors.Is(err, trial.ErrPublic) || errors.Is(err, trial.ErrNoJobs) || errors.Is(err, trial.ErrBadPercent) || errors.Is(err, trial.ErrTwoSteps) {
 		return auth.Invalid("%s", err.Error())
 	}
 	return err
@@ -112,6 +113,15 @@ func (s *server) SetRepositoryTrial(ctx context.Context, req gen.SetRepositoryTr
 	if err != nil {
 		return fail(err)
 	}
+	if req.Body.Confirmed == nil || !*req.Body.Confirmed {
+		// Ask first (operations R5.42): nothing changes without a yes.
+		cur, err := s.opts.Trial.Get(ctx, repo)
+		if err != nil {
+			return fail(err)
+		}
+		return gen.SetRepositoryTrialdefaultJSONResponse{StatusCode: http.StatusConflict, Body: gen.ErrorEnvelope{Error: gen.ErrorBody{
+			Code: CodeNeedsConfirmation, Message: trialAsk(repo, cur.Mode, mode)}}}, nil
+	}
 	o := trial.Options{By: s.principal(ctx).Login}
 	b := req.Body
 	if b.Percent != nil {
@@ -135,4 +145,16 @@ func (s *server) SetRepositoryTrial(ctx context.Context, req gen.SetRepositoryTr
 		return fail(err)
 	}
 	return gen.SetRepositoryTrial200JSONResponse(toTrial(st, rep)), nil
+}
+
+// trialAsk says in plain words what a mode change does, for the question.
+func trialAsk(repo string, from, to trial.Mode) string {
+	what := map[trial.Mode]string{
+		trial.Off:     "stops the trial and puts every earlier variable back",
+		trial.Observe: "only watches: it logs what crsp would do for each queued job and starts nothing",
+		trial.Shadow:  "copies the marked workflow to crsp while the real jobs stay on GitHub",
+		trial.Canary:  "runs the chosen jobs on crsp and writes the canary variables; the other jobs stay on GitHub",
+		trial.Live:    "puts every job of this repository on the pool and removes the canary variables",
+	}[to]
+	return fmt.Sprintf("%s goes from %s to %s, which %s. Send confirmed to do it.", repo, from, to, what)
 }

@@ -3905,6 +3905,7 @@ func (e TimerSettingsProblemField) Valid() bool {
 // Defines values for TrialMode.
 const (
 	TrialModeCanary  TrialMode = "canary"
+	TrialModeLive    TrialMode = "live"
 	TrialModeObserve TrialMode = "observe"
 	TrialModeOff     TrialMode = "off"
 	TrialModeShadow  TrialMode = "shadow"
@@ -3914,6 +3915,8 @@ const (
 func (e TrialMode) Valid() bool {
 	switch e {
 	case TrialModeCanary:
+		return true
+	case TrialModeLive:
 		return true
 	case TrialModeObserve:
 		return true
@@ -3929,6 +3932,7 @@ func (e TrialMode) Valid() bool {
 // Defines values for TrialSetMode.
 const (
 	TrialSetModeCanary  TrialSetMode = "canary"
+	TrialSetModeLive    TrialSetMode = "live"
 	TrialSetModeObserve TrialSetMode = "observe"
 	TrialSetModeOff     TrialSetMode = "off"
 	TrialSetModeShadow  TrialSetMode = "shadow"
@@ -3938,6 +3942,8 @@ const (
 func (e TrialSetMode) Valid() bool {
 	switch e {
 	case TrialSetModeCanary:
+		return true
+	case TrialSetModeLive:
 		return true
 	case TrialSetModeObserve:
 		return true
@@ -7159,6 +7165,63 @@ type MachineUptime struct {
 	Windows []UptimeWindow `json:"windows"`
 }
 
+// MetricsSettings defines model for MetricsSettings.
+type MetricsSettings struct {
+	// Address Where the page listens now. Absent when it is off.
+	Address *string `json:"address,omitempty"`
+
+	// Enabled Serve the Prometheus page at /metrics.
+	Enabled bool `json:"enabled"`
+
+	// Expose False listens on 127.0.0.1 only; true listens on every address of this PC.
+	Expose  bool `json:"expose"`
+	KeyMade bool `json:"key_made"`
+
+	// LastPushAt Absent when nothing was pushed yet.
+	LastPushAt *time.Time `json:"last_push_at,omitempty"`
+
+	// LastPushError Absent when the last push worked.
+	LastPushError *string `json:"last_push_error,omitempty"`
+	NeedsKey      bool    `json:"needs_key"`
+	Port          int     `json:"port"`
+
+	// PushEnabled Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
+	PushEnabled bool `json:"push_enabled"`
+
+	// PushEndpoint Collector address, for example http://collector:4318.
+	PushEndpoint string `json:"push_endpoint"`
+	PushSeconds  int    `json:"push_seconds"`
+	Pushing      bool   `json:"pushing"`
+	Running      bool   `json:"running"`
+
+	// ScrapeConfig Text to paste into prometheus.yml.
+	ScrapeConfig string `json:"scrape_config"`
+}
+
+// MetricsSettingsSet defines model for MetricsSettingsSet.
+type MetricsSettingsSet struct {
+	// Enabled Serve the Prometheus page at /metrics.
+	Enabled bool `json:"enabled"`
+
+	// Expose False listens on 127.0.0.1 only; true listens on every address of this PC.
+	Expose   bool `json:"expose"`
+	NeedsKey bool `json:"needs_key"`
+	Port     int  `json:"port"`
+
+	// PushEnabled Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
+	PushEnabled bool `json:"push_enabled"`
+
+	// PushEndpoint Collector address, for example http://collector:4318.
+	PushEndpoint string `json:"push_endpoint"`
+	PushSeconds  int    `json:"push_seconds"`
+}
+
+// MetricsToken defines model for MetricsToken.
+type MetricsToken struct {
+	// Key The bearer key, shown this once. The console cannot read it again.
+	Key string `json:"key"`
+}
+
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
 	// Address Email address (kind email).
@@ -9317,6 +9380,9 @@ type TrialJob struct {
 
 // TrialSet defines model for TrialSet.
 type TrialSet struct {
+	// Confirmed The person said yes to the change. Without it nothing changes and the answer is 409 needs_confirmation, which says what the change does.
+	Confirmed *bool `json:"confirmed,omitempty"`
+
 	// Jobs Canary only. Jobs that always use crsp.
 	Jobs *[]string    `json:"jobs,omitempty"`
 	Mode TrialSetMode `json:"mode"`
@@ -10421,6 +10487,9 @@ type UpdateSettingsJSONRequestBody = Settings
 
 // PutListenAddressJSONRequestBody defines body for PutListenAddress for application/json ContentType.
 type PutListenAddressJSONRequestBody = ListenAddressChoice
+
+// PutMetricsSettingsJSONRequestBody defines body for PutMetricsSettings for application/json ContentType.
+type PutMetricsSettingsJSONRequestBody = MetricsSettingsSet
 
 // UpdatePoolSettingsJSONRequestBody defines body for UpdatePoolSettings for application/json ContentType.
 type UpdatePoolSettingsJSONRequestBody = PoolSettings
@@ -11937,7 +12006,7 @@ type ClientInterface interface {
 
 	// SetRepositoryTrialWithBody Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -11946,7 +12015,7 @@ type ClientInterface interface {
 
 	// SetRepositoryTrial Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -12296,6 +12365,38 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /api/v1/settings/listen-address (the `PutListenAddress` operationId).
 	PutListenAddress(ctx context.Context, body PutListenAddressJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMetricsSettings The metrics export settings and what is running
+	//
+	// observability R5.40 to R5.47. Off by default. `running` and `address` say whether the Prometheus page is up and where; `pushing` and `last_push_at` say the same for the OpenTelemetry push. `scrape_config` is text to paste into prometheus.yml. The key (the bearer token) is never returned; `key_made` says only whether one was made.
+	//
+	// Corresponds with GET /api/v1/settings/metrics (the `GetMetricsSettings` operationId).
+	GetMetricsSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutMetricsSettingsWithBody Change the metrics export settings
+	//
+	// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+	PutMetricsSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutMetricsSettings Change the metrics export settings
+	//
+	// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+	PutMetricsSettings(ctx context.Context, body PutMetricsSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// MakeMetricsToken Make a new metrics token
+	//
+	// observability R5.44. Makes a random token, keeps it in the secret store and returns it once. An older token stops working at once.
+	//
+	// Corresponds with POST /api/v1/settings/metrics/token (the `MakeMetricsToken` operationId).
+	MakeMetricsToken(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetPoolSettings Defaults for new machines
 	//
@@ -15900,7 +16001,7 @@ func (c *Client) GetRepositoryTrial(ctx context.Context, repositoryId Repository
 
 // SetRepositoryTrialWithBody Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes any type of body and a specified content type.
 //
@@ -15919,7 +16020,7 @@ func (c *Client) SetRepositoryTrialWithBody(ctx context.Context, repositoryId Re
 
 // SetRepositoryTrial Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -16710,6 +16811,78 @@ func (c *Client) PutListenAddressWithBody(ctx context.Context, contentType strin
 // Corresponds with PUT /api/v1/settings/listen-address (the `PutListenAddress` operationId).
 func (c *Client) PutListenAddress(ctx context.Context, body PutListenAddressJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutListenAddressRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMetricsSettings The metrics export settings and what is running
+//
+// observability R5.40 to R5.47. Off by default. `running` and `address` say whether the Prometheus page is up and where; `pushing` and `last_push_at` say the same for the OpenTelemetry push. `scrape_config` is text to paste into prometheus.yml. The key (the bearer token) is never returned; `key_made` says only whether one was made.
+//
+// Corresponds with GET /api/v1/settings/metrics (the `GetMetricsSettings` operationId).
+func (c *Client) GetMetricsSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMetricsSettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutMetricsSettingsWithBody Change the metrics export settings
+//
+// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+func (c *Client) PutMetricsSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutMetricsSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutMetricsSettings Change the metrics export settings
+//
+// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+func (c *Client) PutMetricsSettings(ctx context.Context, body PutMetricsSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutMetricsSettingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// MakeMetricsToken Make a new metrics token
+//
+// observability R5.44. Makes a random token, keeps it in the secret store and returns it once. An older token stops working at once.
+//
+// Corresponds with POST /api/v1/settings/metrics/token (the `MakeMetricsToken` operationId).
+func (c *Client) MakeMetricsToken(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewMakeMetricsTokenRequest(c.Server)
 	if err != nil {
 		return nil, err
 	}
@@ -26362,6 +26535,100 @@ func NewPutListenAddressRequestWithBody(server string, contentType string, body 
 	return req, nil
 }
 
+// NewGetMetricsSettingsRequest constructs an http.Request for the GetMetricsSettings method
+func NewGetMetricsSettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/settings/metrics")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutMetricsSettingsRequest calls the generic PutMetricsSettings builder with application/json body
+func NewPutMetricsSettingsRequest(server string, body PutMetricsSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutMetricsSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutMetricsSettingsRequestWithBody constructs an http.Request for the PutMetricsSettings method, with any body, and a specified content type
+func NewPutMetricsSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/settings/metrics")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewMakeMetricsTokenRequest constructs an http.Request for the MakeMetricsToken method
+func NewMakeMetricsTokenRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/settings/metrics/token")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetPoolSettingsRequest constructs an http.Request for the GetPoolSettings method
 func NewGetPoolSettingsRequest(server string) (*http.Request, error) {
 	var err error
@@ -29374,7 +29641,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetRepositoryTrialWithBodyWithResponse Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -29383,7 +29650,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetRepositoryTrialWithResponse Set a repository's trial mode
 	//
-	// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+	// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -29781,6 +30048,42 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PUT /api/v1/settings/listen-address (the `PutListenAddress` operationId).
 	PutListenAddressWithResponse(ctx context.Context, body PutListenAddressJSONRequestBody, reqEditors ...RequestEditorFn) (*PutListenAddressResponse, error)
+
+	// GetMetricsSettingsWithResponse The metrics export settings and what is running
+	//
+	// observability R5.40 to R5.47. Off by default. `running` and `address` say whether the Prometheus page is up and where; `pushing` and `last_push_at` say the same for the OpenTelemetry push. `scrape_config` is text to paste into prometheus.yml. The key (the bearer token) is never returned; `key_made` says only whether one was made.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/settings/metrics (the `GetMetricsSettings` operationId).
+	GetMetricsSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMetricsSettingsResponse, error)
+
+	// PutMetricsSettingsWithBodyWithResponse Change the metrics export settings
+	//
+	// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+	PutMetricsSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutMetricsSettingsResponse, error)
+
+	// PutMetricsSettingsWithResponse Change the metrics export settings
+	//
+	// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+	PutMetricsSettingsWithResponse(ctx context.Context, body PutMetricsSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutMetricsSettingsResponse, error)
+
+	// MakeMetricsTokenWithResponse Make a new metrics token
+	//
+	// observability R5.44. Makes a random token, keeps it in the secret store and returns it once. An older token stops working at once.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/settings/metrics/token (the `MakeMetricsToken` operationId).
+	MakeMetricsTokenWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MakeMetricsTokenResponse, error)
 
 	// GetPoolSettingsWithResponse Defaults for new machines
 	//
@@ -38978,6 +39281,150 @@ func (r PutListenAddressResponse) ContentType() string {
 	return ""
 }
 
+type GetMetricsSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MetricsSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMetricsSettingsResponse) GetJSON200() *MetricsSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMetricsSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMetricsSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMetricsSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMetricsSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMetricsSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutMetricsSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MetricsSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutMetricsSettingsResponse) GetJSON200() *MetricsSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutMetricsSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutMetricsSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutMetricsSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutMetricsSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutMetricsSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type MakeMetricsTokenResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MetricsToken
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r MakeMetricsTokenResponse) GetJSON200() *MetricsToken {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r MakeMetricsTokenResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r MakeMetricsTokenResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r MakeMetricsTokenResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r MakeMetricsTokenResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r MakeMetricsTokenResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetPoolSettingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -43294,7 +43741,7 @@ func (c *ClientWithResponses) GetRepositoryTrialWithResponse(ctx context.Context
 
 // SetRepositoryTrialWithBodyWithResponse Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -43309,7 +43756,7 @@ func (c *ClientWithResponses) SetRepositoryTrialWithBodyWithResponse(ctx context
 
 // SetRepositoryTrialWithResponse Set a repository's trial mode
 //
-// github-integration R5.66. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables.
+// github-integration R5.66, operations R5.42. Public repositories are refused for every mode but `off`. `off` undoes a canary and restores the earlier variables. A repository moves one step forward at a time (off, observe, shadow, canary, live) and back to any earlier step. Without `confirmed` the call changes nothing and answers 409 needs_confirmation.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -43976,6 +44423,66 @@ func (c *ClientWithResponses) PutListenAddressWithResponse(ctx context.Context, 
 		return nil, err
 	}
 	return ParsePutListenAddressResponse(rsp)
+}
+
+// GetMetricsSettingsWithResponse The metrics export settings and what is running
+//
+// observability R5.40 to R5.47. Off by default. `running` and `address` say whether the Prometheus page is up and where; `pushing` and `last_push_at` say the same for the OpenTelemetry push. `scrape_config` is text to paste into prometheus.yml. The key (the bearer token) is never returned; `key_made` says only whether one was made.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/settings/metrics (the `GetMetricsSettings` operationId).
+func (c *ClientWithResponses) GetMetricsSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetMetricsSettingsResponse, error) {
+	rsp, err := c.GetMetricsSettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMetricsSettingsResponse(rsp)
+}
+
+// PutMetricsSettingsWithBodyWithResponse Change the metrics export settings
+//
+// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+func (c *ClientWithResponses) PutMetricsSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutMetricsSettingsResponse, error) {
+	rsp, err := c.PutMetricsSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutMetricsSettingsResponse(rsp)
+}
+
+// PutMetricsSettingsWithResponse Change the metrics export settings
+//
+// observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/settings/metrics (the `PutMetricsSettings` operationId).
+func (c *ClientWithResponses) PutMetricsSettingsWithResponse(ctx context.Context, body PutMetricsSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutMetricsSettingsResponse, error) {
+	rsp, err := c.PutMetricsSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutMetricsSettingsResponse(rsp)
+}
+
+// MakeMetricsTokenWithResponse Make a new metrics token
+//
+// observability R5.44. Makes a random token, keeps it in the secret store and returns it once. An older token stops working at once.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/settings/metrics/token (the `MakeMetricsToken` operationId).
+func (c *ClientWithResponses) MakeMetricsTokenWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*MakeMetricsTokenResponse, error) {
+	rsp, err := c.MakeMetricsToken(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseMakeMetricsTokenResponse(rsp)
 }
 
 // GetPoolSettingsWithResponse Defaults for new machines
@@ -50758,6 +51265,105 @@ func ParsePutListenAddressResponse(rsp *http.Response) (*PutListenAddressRespons
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMetricsSettingsResponse parses an HTTP response from a GetMetricsSettingsWithResponse call
+func ParseGetMetricsSettingsResponse(rsp *http.Response) (*GetMetricsSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMetricsSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MetricsSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutMetricsSettingsResponse parses an HTTP response from a PutMetricsSettingsWithResponse call
+func ParsePutMetricsSettingsResponse(rsp *http.Response) (*PutMetricsSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutMetricsSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MetricsSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseMakeMetricsTokenResponse parses an HTTP response from a MakeMetricsTokenWithResponse call
+func ParseMakeMetricsTokenResponse(rsp *http.Response) (*MakeMetricsTokenResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &MakeMetricsTokenResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MetricsToken
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error

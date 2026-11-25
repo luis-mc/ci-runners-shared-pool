@@ -84,14 +84,15 @@ func run(args []string, stdout, stderr io.Writer) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	return cli.Run(&cli.Env{
-		Stdin:       os.Stdin,
-		Stdout:      stdout,
-		Stderr:      stderr,
-		IsTerminal:  stdinIsTerminal,
-		OpenBrowser: openBrowser,
-		Version:     version,
-		GoVersion:   goVersion(),
-		Context:     ctx,
+		Stdin:         os.Stdin,
+		Stdout:        stdout,
+		Stderr:        stderr,
+		IsTerminal:    stdinIsTerminal,
+		OpenBrowser:   openBrowser,
+		Version:       version,
+		GoVersion:     goVersion(),
+		SchemaVersion: schemaOfThisBuild(),
+		Context:       ctx,
 		Modes: map[string]cli.ModeFunc{
 			"controller": func(context.Context, []string) error { return runController() },
 			"agent": func(_ context.Context, a []string) error {
@@ -187,6 +188,7 @@ func runController() error {
 	go mr.Service.RunCompactLoop(ctx, compactEvery, func(err error) { logger.Warn("docker disk compact pass", "err", err) })
 
 	um, lc := startUpdates(ctx, cfg, logger, mr, ops.Settings, idle, audit.New(db))
+	um.SetDBSchema(db.SchemaVersion)
 	// A machine that is paused or on battery holds new jobs with
 	// that reason (scheduling R5.68, machines R5.62).
 	queue := scheduler.NewEngine(db, scheduler.WithLogger(logger), scheduler.WithAccepting(func(id string) (bool, string) {
@@ -324,4 +326,11 @@ func runController() error {
 func isWildcard(h string) bool {
 	ip := net.ParseIP(strings.Trim(h, "[]"))
 	return h == "" || ip != nil && ip.IsUnspecified()
+}
+
+// schemaOfThisBuild is the highest database migration this build carries; `crsp version`
+// prints it so an update can refuse a build with an older schema (operations R5.13).
+func schemaOfThisBuild() int64 {
+	v, _ := store.MaxSchemaVersion()
+	return v
 }

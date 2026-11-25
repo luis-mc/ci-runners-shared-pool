@@ -8,6 +8,7 @@ export const SECTIONS: Record<string, { tab: string; section?: string }> = {
   appearance: { tab: 'console', section: 'appearance' },
   notifications: { tab: 'console', section: 'notifications' },
   network: { tab: 'console', section: 'network' },
+  metrics: { tab: 'console', section: 'metrics' },
   updates: { tab: 'updates' },
   retention: { tab: 'data', section: 'retention' },
   backups: { tab: 'data', section: 'backups' },

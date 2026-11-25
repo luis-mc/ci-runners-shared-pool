@@ -46,6 +46,7 @@ import { useGroups } from '../jobs/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { RunsOnPrPane } from './RunsOnPr';
+import { RolloutPane } from './Rollout';
 import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import {
@@ -1008,6 +1009,9 @@ function RepositoryBody({ r, onChanged }: { r: Repository; onChanged: () => void
       <CiChecksPane repositoryId={r.id} />
       <GuardrailsPane fullName={r.full_name} />
       <JobSlotsPane repositoryId={r.id} />
+      {r.pool_on ? (
+        <RolloutPane repositoryId={r.id} fullName={r.full_name} poolOn={r.pool_on} />
+      ) : null}
       {r.pool_on ? <RunsOnPrPane repositoryId={r.id} /> : null}
       <Suspense fallback={<Loading what="Loading job sizes" />}>
         <JobSizesPane fullName={r.full_name} />
