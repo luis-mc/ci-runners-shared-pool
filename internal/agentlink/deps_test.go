@@ -3,7 +3,6 @@ package agentlink
 import (
 	"context"
 	"errors"
-	"runtime"
 	"sync"
 	"testing"
 	"time"
@@ -49,8 +48,10 @@ func depsLink(t *testing.T, flag bool) (*Link, *depsSender, *depsSink) {
 func TestDepsCheckRoutesTheReport(t *testing.T) {
 	l, fs, _ := depsLink(t, true)
 	go func() {
-		for i := 0; i < 200; i++ {
-			runtime.Gosched()
+		// Poll by the clock, not by a count of yields: on a slow runner the
+		// yields end before SendCheck has sent, and nothing would answer.
+		for deadline := time.Now().Add(5 * time.Second); time.Now().Before(deadline); {
+			time.Sleep(time.Millisecond)
 			fs.mu.Lock()
 			var id string
 			for _, m := range fs.sent {
@@ -65,7 +66,9 @@ func TestDepsCheckRoutesTheReport(t *testing.T) {
 			}
 		}
 	}()
-	rep, err := l.SendCheck(context.Background(), "m1", "linux", "persistent")
+	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	defer cancel()
+	rep, err := l.SendCheck(ctx, "m1", "linux", "persistent")
 	if err != nil || rep.GetOs() != "windows" || !rep.GetAdmin() {
 		t.Fatalf("%v %v", rep, err)
 	}
