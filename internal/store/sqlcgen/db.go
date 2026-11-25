@@ -414,9 +414,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.hasWorkflowChecksForCommitStmt, err = db.PrepareContext(ctx, hasWorkflowChecksForCommit); err != nil {
 		return nil, fmt.Errorf("error preparing query HasWorkflowChecksForCommit: %w", err)
 	}
-	if q.insertAuditEntryStmt, err = db.PrepareContext(ctx, insertAuditEntry); err != nil {
-		return nil, fmt.Errorf("error preparing query InsertAuditEntry: %w", err)
-	}
 	if q.insertAuditEventStmt, err = db.PrepareContext(ctx, insertAuditEvent); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertAuditEvent: %w", err)
 	}
@@ -537,6 +534,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.insertWebhookDeliveryStmt, err = db.PrepareContext(ctx, insertWebhookDelivery); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertWebhookDelivery: %w", err)
 	}
+	if q.lastAuditHashStmt, err = db.PrepareContext(ctx, lastAuditHash); err != nil {
+		return nil, fmt.Errorf("error preparing query LastAuditHash: %w", err)
+	}
 	if q.lastDoctorRunStmt, err = db.PrepareContext(ctx, lastDoctorRun); err != nil {
 		return nil, fmt.Errorf("error preparing query LastDoctorRun: %w", err)
 	}
@@ -548,6 +548,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.latestDefaultBranchCheckedCommitStmt, err = db.PrepareContext(ctx, latestDefaultBranchCheckedCommit); err != nil {
 		return nil, fmt.Errorf("error preparing query LatestDefaultBranchCheckedCommit: %w", err)
+	}
+	if q.listAuditChainStmt, err = db.PrepareContext(ctx, listAuditChain); err != nil {
+		return nil, fmt.Errorf("error preparing query ListAuditChain: %w", err)
 	}
 	if q.listAuditEventsStmt, err = db.PrepareContext(ctx, listAuditEvents); err != nil {
 		return nil, fmt.Errorf("error preparing query ListAuditEvents: %w", err)
@@ -1819,11 +1822,6 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing hasWorkflowChecksForCommitStmt: %w", cerr)
 		}
 	}
-	if q.insertAuditEntryStmt != nil {
-		if cerr := q.insertAuditEntryStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing insertAuditEntryStmt: %w", cerr)
-		}
-	}
 	if q.insertAuditEventStmt != nil {
 		if cerr := q.insertAuditEventStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertAuditEventStmt: %w", cerr)
@@ -2024,6 +2022,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing insertWebhookDeliveryStmt: %w", cerr)
 		}
 	}
+	if q.lastAuditHashStmt != nil {
+		if cerr := q.lastAuditHashStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing lastAuditHashStmt: %w", cerr)
+		}
+	}
 	if q.lastDoctorRunStmt != nil {
 		if cerr := q.lastDoctorRunStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing lastDoctorRunStmt: %w", cerr)
@@ -2042,6 +2045,11 @@ func (q *Queries) Close() error {
 	if q.latestDefaultBranchCheckedCommitStmt != nil {
 		if cerr := q.latestDefaultBranchCheckedCommitStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing latestDefaultBranchCheckedCommitStmt: %w", cerr)
+		}
+	}
+	if q.listAuditChainStmt != nil {
+		if cerr := q.listAuditChainStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listAuditChainStmt: %w", cerr)
 		}
 	}
 	if q.listAuditEventsStmt != nil {
@@ -3238,7 +3246,6 @@ type Queries struct {
 	getUserStmt                                 *sql.Stmt
 	getWorkflowGraphStmt                        *sql.Stmt
 	hasWorkflowChecksForCommitStmt              *sql.Stmt
-	insertAuditEntryStmt                        *sql.Stmt
 	insertAuditEventStmt                        *sql.Stmt
 	insertBackupStmt                            *sql.Stmt
 	insertCIReportFileStmt                      *sql.Stmt
@@ -3279,10 +3286,12 @@ type Queries struct {
 	insertTicketStmt                            *sql.Stmt
 	insertUserStmt                              *sql.Stmt
 	insertWebhookDeliveryStmt                   *sql.Stmt
+	lastAuditHashStmt                           *sql.Stmt
 	lastDoctorRunStmt                           *sql.Stmt
 	lastRegistryCleanupStmt                     *sql.Stmt
 	lastRestoreDrillStmt                        *sql.Stmt
 	latestDefaultBranchCheckedCommitStmt        *sql.Stmt
+	listAuditChainStmt                          *sql.Stmt
 	listAuditEventsStmt                         *sql.Stmt
 	listBackupsStmt                             *sql.Stmt
 	listCIJobLogsOldestFirstStmt                *sql.Stmt
@@ -3624,7 +3633,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getUserStmt:                                 q.getUserStmt,
 		getWorkflowGraphStmt:                        q.getWorkflowGraphStmt,
 		hasWorkflowChecksForCommitStmt:              q.hasWorkflowChecksForCommitStmt,
-		insertAuditEntryStmt:                        q.insertAuditEntryStmt,
 		insertAuditEventStmt:                        q.insertAuditEventStmt,
 		insertBackupStmt:                            q.insertBackupStmt,
 		insertCIReportFileStmt:                      q.insertCIReportFileStmt,
@@ -3665,10 +3673,12 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		insertTicketStmt:                            q.insertTicketStmt,
 		insertUserStmt:                              q.insertUserStmt,
 		insertWebhookDeliveryStmt:                   q.insertWebhookDeliveryStmt,
+		lastAuditHashStmt:                           q.lastAuditHashStmt,
 		lastDoctorRunStmt:                           q.lastDoctorRunStmt,
 		lastRegistryCleanupStmt:                     q.lastRegistryCleanupStmt,
 		lastRestoreDrillStmt:                        q.lastRestoreDrillStmt,
 		latestDefaultBranchCheckedCommitStmt:        q.latestDefaultBranchCheckedCommitStmt,
+		listAuditChainStmt:                          q.listAuditChainStmt,
 		listAuditEventsStmt:                         q.listAuditEventsStmt,
 		listBackupsStmt:                             q.listBackupsStmt,
 		listCIJobLogsOldestFirstStmt:                q.listCIJobLogsOldestFirstStmt,

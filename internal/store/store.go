@@ -169,9 +169,7 @@ func (t *Tx) Enqueue(kind, payload, dedupeKey string) (int64, error) {
 
 // Audit appends an audit entry inside the transaction.
 func (t *Tx) Audit(actor, action, subject, detail string) (int64, error) {
-	return t.q.InsertAuditEntry(t.ctx, sqlcgen.InsertAuditEntryParams{
-		Actor: actor, Action: action, Subject: subject, Detail: detail,
-	})
+	return t.InsertAudit(AuditEntry{Actor: actor, Action: action, TargetID: subject, Detail: detail})
 }
 
 // CountJobs returns how many jobs are in the given state.
