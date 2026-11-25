@@ -40,7 +40,9 @@ const (
 // Store is the database handle plus its generated queries.
 type Store struct {
 	db *sql.DB
-	q  *sqlcgen.Queries
+	// rdb is the read pool: query_only connections, so list pages never queue behind the writers (audit P-4).
+	rdb *sql.DB
+	q   *sqlcgen.Queries
 }
 
 // Open opens (creating if needed) the database in dataDir and applies pending
@@ -64,32 +66,47 @@ func OpenForTests(ctx context.Context, dataDir string) (*Store, error) {
 }
 
 func openPath(ctx context.Context, path string, extraPragmas ...string) (*Store, error) {
-	q := url.Values{}
-	for _, p := range extraPragmas {
-		q.Add("_pragma", p)
+	dsnFor := func(readOnly bool, pragmas ...string) string {
+		q := url.Values{}
+		for _, p := range pragmas {
+			q.Add("_pragma", p)
+		}
+		q.Add("_pragma", fmt.Sprintf("busy_timeout(%d)", busyTimeout.Milliseconds()))
+		q.Add("_pragma", "journal_mode(WAL)")
+		q.Add("_pragma", "foreign_keys(1)")
+		if readOnly {
+			q.Add("_pragma", "query_only(1)")
+		} else {
+			q.Add("_txlock", "immediate")
+		}
+		return (&url.URL{Scheme: "file", Opaque: filepath.ToSlash(path), RawQuery: q.Encode()}).String()
 	}
-	q.Add("_pragma", fmt.Sprintf("busy_timeout(%d)", busyTimeout.Milliseconds()))
-	q.Add("_pragma", "journal_mode(WAL)")
-	q.Add("_pragma", "foreign_keys(1)")
-	q.Add("_txlock", "immediate")
-	dsn := (&url.URL{Scheme: "file", Opaque: filepath.ToSlash(path), RawQuery: q.Encode()}).String()
+	dsn := dsnFor(false, extraPragmas...)
 
 	db, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
-	// One writer at a time is what SQLite gives; a small pool keeps readers going.
+	// One writer at a time is what SQLite gives; this small pool is for writes and the reads that sit with them.
 	db.SetMaxOpenConns(4)
 
-	s := &Store{db: db, q: sqlcgen.New(db)}
+	// WAL lets readers run beside the writer: the list queries use their own, larger, query_only pool.
+	rdb, err := sql.Open("sqlite", dsnFor(true))
+	if err != nil {
+		_ = db.Close()
+		return nil, fmt.Errorf("open read pool: %w", err)
+	}
+	rdb.SetMaxOpenConns(8)
+
+	s := &Store{db: db, rdb: rdb, q: sqlcgen.New(db)}
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
 	if err := s.Ping(ctx); err != nil {
-		_ = db.Close()
+		_ = s.Close()
 		return nil, err
 	}
 	if err := migrate(ctx, db); err != nil {
-		_ = db.Close()
+		_ = s.Close()
 		return nil, err
 	}
 	return s, nil
@@ -111,7 +128,13 @@ func migrate(ctx context.Context, db *sql.DB) error {
 }
 
 // Close closes the database.
-func (s *Store) Close() error { return s.db.Close() }
+func (s *Store) Close() error {
+	rerr := s.rdb.Close()
+	if err := s.db.Close(); err != nil {
+		return err
+	}
+	return rerr
+}
 
 // Ping checks that the database answers.
 func (s *Store) Ping(ctx context.Context) error {

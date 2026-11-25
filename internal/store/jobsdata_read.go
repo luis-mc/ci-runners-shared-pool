@@ -101,52 +101,121 @@ func (s *JobsStore) ListRuns(ctx context.Context, f jobsdata.RunFilter) ([]jobsd
 	if !f.To.IsZero() {
 		add("r.created_at <= ?", fmtTime(f.To))
 	}
+	// The state of a run is its conclusion, else running when a job runs or is done, else queued. The state filter
+	// asks the jobs index for existence instead of counting every run's jobs.
+	const started = `EXISTS (SELECT 1 FROM jobs j WHERE j.repository_id = r.repository_id AND j.run_id = r.run_id AND j.run_attempt = r.run_attempt AND j.state IN ('running', 'done'))`
+	switch f.State {
+	case jobsdata.Done:
+		add("r.conclusion <> ''")
+	case jobsdata.Running:
+		add("r.conclusion = '' AND " + started)
+	case jobsdata.Queued:
+		add("r.conclusion = '' AND NOT " + started)
+	}
+
 	where := ""
 	if len(conds) > 0 {
 		where = " WHERE " + strings.Join(conds, " AND ")
 	}
-	cte := `WITH f AS (SELECT r.*, ` + runSortKey + ` AS sort_key,
-			(SELECT count(*) FROM jobs j WHERE j.repository_id = r.repository_id AND j.run_id = r.run_id AND j.run_attempt = r.run_attempt) AS n_total,
-			(SELECT count(*) FROM jobs j WHERE j.repository_id = r.repository_id AND j.run_id = r.run_id AND j.run_attempt = r.run_attempt AND j.state = 'done') AS n_done,
-			(SELECT count(*) FROM jobs j WHERE j.repository_id = r.repository_id AND j.run_id = r.run_id AND j.run_attempt = r.run_attempt AND j.state = 'done' AND j.result IN ('failure', 'timed_out', 'lost')) AS n_failed,
-			(SELECT count(*) FROM jobs j WHERE j.repository_id = r.repository_id AND j.run_id = r.run_id AND j.run_attempt = r.run_attempt AND j.state = 'running') AS n_running
-			FROM runs r` + where + `),
-		g AS (SELECT f.*, CASE WHEN conclusion <> '' THEN 'done' WHEN n_running > 0 OR n_done > 0 THEN 'running' ELSE 'queued' END AS state FROM f),
-		h AS (SELECT * FROM g WHERE (? = '' OR state = ?))`
-	args = append(args, string(f.State), string(f.State))
 
 	var total int
-	if err := s.db.QueryRowContext(ctx, cte+` SELECT count(*) FROM h`, args...).Scan(&total); err != nil {
+	if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM runs r`+where, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count runs: %w", err)
 	}
-	args = append(args, f.After, f.After, pageSize(f.Limit)+1)
-	rows, err := s.db.QueryContext(ctx, cte+` SELECT `+runCols+`, sort_key, n_total, n_done, n_failed, n_running, state
-		FROM h WHERE (? = 0 OR sort_key < ?) ORDER BY sort_key DESC LIMIT ?`, args...)
+	pageWhere := where
+	if f.After != 0 {
+		if pageWhere == "" {
+			pageWhere = " WHERE "
+		} else {
+			pageWhere += " AND "
+		}
+		pageWhere += runSortKey + " < ?"
+		args = append(args, f.After)
+	}
+	rows, err := s.rdb.QueryContext(ctx, `SELECT `+runCols+`, `+runSortKey+` AS sort_key FROM runs r`+pageWhere+
+		` ORDER BY `+runSortKey+` DESC LIMIT ?`, append(args, pageSize(f.Limit)+1)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list runs: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
 	var out []jobsdata.RunRow
 	for rows.Next() {
-		var key, nTotal, nDone, nFailed, nRunning int64
-		var state string
-		r, err := scanRunRow(rows, &key, &nTotal, &nDone, &nFailed, &nRunning, &state)
+		var key int64
+		r, err := scanRunRow(rows, &key)
 		if err != nil {
 			return nil, 0, fmt.Errorf("scan run: %w", err)
 		}
 		run := runFromRow(r)
-		out = append(out, jobsdata.RunRow{
-			Run: run, State: jobsdata.State(state), JobsTotal: int(nTotal), JobsDone: int(nDone), JobsFailed: int(nFailed),
-			TotalMS: totalMS(run), SortKey: key,
-		})
+		out = append(out, jobsdata.RunRow{Run: run, TotalMS: totalMS(run), SortKey: key})
 	}
 	if err := rows.Err(); err != nil {
 		return nil, 0, fmt.Errorf("list runs: %w", err)
+	}
+	_ = rows.Close()
+	if err := s.fillRunCounts(ctx, out); err != nil {
+		return nil, 0, err
 	}
 	if err := s.fillFollowUps(ctx, out); err != nil {
 		return nil, 0, err
 	}
 	return out, total, nil
+}
+
+type runKey struct {
+	repo, run int64
+	attempt   int
+}
+
+type runCounts struct{ total, done, failed, running int }
+
+// fillRunCounts sets the job counts and the state of the page rows with one grouped query per 200 runs.
+func (s *JobsStore) fillRunCounts(ctx context.Context, rows []jobsdata.RunRow) error {
+	got := make(map[runKey]runCounts, len(rows))
+	const chunk = 200
+	for start := 0; start < len(rows); start += chunk {
+		if err := s.countRunJobs(ctx, rows[start:min(start+chunk, len(rows))], got); err != nil {
+			return err
+		}
+	}
+	for i := range rows {
+		r := &rows[i]
+		c := got[runKey{r.RepositoryID, r.RunID, r.Attempt}]
+		r.JobsTotal, r.JobsDone, r.JobsFailed = c.total, c.done, c.failed
+		r.State = runState(string(r.Conclusion), c.running, c.done)
+	}
+	return nil
+}
+
+func (s *JobsStore) countRunJobs(ctx context.Context, part []jobsdata.RunRow, got map[runKey]runCounts) error {
+	args := make([]any, 0, len(part)*3)
+	marks := make([]string, len(part))
+	for i, r := range part {
+		marks[i] = "(?, ?, ?)"
+		args = append(args, r.RepositoryID, r.RunID, r.Attempt)
+	}
+	q, err := s.rdb.QueryContext(ctx, `SELECT j.repository_id, j.run_id, j.run_attempt, count(*),
+		COALESCE(sum(j.state = 'done'), 0),
+		COALESCE(sum(j.state = 'done' AND j.result IN ('failure', 'timed_out', 'lost')), 0),
+		COALESCE(sum(j.state = 'running'), 0)
+		FROM (VALUES `+strings.Join(marks, ", ")+`) v
+		JOIN jobs j ON j.repository_id = v.column1 AND j.run_id = v.column2 AND j.run_attempt = v.column3
+		GROUP BY j.repository_id, j.run_id, j.run_attempt`, args...)
+	if err != nil {
+		return fmt.Errorf("count run jobs: %w", err)
+	}
+	defer func() { _ = q.Close() }()
+	for q.Next() {
+		var k runKey
+		var c runCounts
+		if err := q.Scan(&k.repo, &k.run, &k.attempt, &c.total, &c.done, &c.failed, &c.running); err != nil {
+			return fmt.Errorf("scan run jobs: %w", err)
+		}
+		got[k] = c
+	}
+	if err := q.Err(); err != nil {
+		return fmt.Errorf("count run jobs: %w", err)
+	}
+	return nil
 }
 
 func totalMS(r jobsdata.Run) int64 {
@@ -271,7 +340,7 @@ func (s *JobsStore) ListJobs(ctx context.Context, f jobsdata.JobFilter) ([]jobsd
 	defer cancel()
 	where, args := jobWhere(f)
 	var total int
-	if err := s.db.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
+	if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
 		return nil, 0, fmt.Errorf("count jobs: %w", err)
 	}
 	if f.After != 0 {
@@ -282,19 +351,35 @@ func (s *JobsStore) ListJobs(ctx context.Context, f jobsdata.JobFilter) ([]jobsd
 		}
 		args = append(args, f.After)
 	}
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM jobs`+where+` ORDER BY id DESC LIMIT ?`, append(args, pageSize(f.Limit)+1)...)
+	rows, err := s.rdb.QueryContext(ctx, `SELECT `+jobListCols+` FROM jobs`+where+` ORDER BY id DESC LIMIT ?`, append(args, pageSize(f.Limit)+1)...)
 	if err != nil {
 		return nil, 0, fmt.Errorf("list jobs: %w", err)
 	}
-	out, err := collectJobs(rows)
+	out, err := collectJobs(rows, scanJobListRow)
 	return out, total, err
 }
 
-func collectJobs(rows *sql.Rows) ([]jobsdata.Job, error) {
+// jobListCols are the columns of a job as the list shows it; the columns jobFromRow does not read are left out.
+const jobListCols = `id, repository_id, repository, run_id, run_attempt, workflow, name, job_type, matrix, job_ident, branch,
+	head_sha, event, labels, state, result, html_url, created_at, queued_at, slot_at, started_at, completed_at, cleanup_ms,
+	machine_id, machine_name, runner_id, runner_name, runner_kind, backend, isolation, cache, wait_reason, wait_text,
+	worktree, light, fc_lo_ms, fc_mid_ms, fc_hi_ms, fc_basis, fc_samples`
+
+func scanJobListRow(sc scanner) (sqlcgen.Job, error) {
+	var r sqlcgen.Job
+	err := sc.Scan(&r.ID, &r.RepositoryID, &r.Repository, &r.RunID, &r.RunAttempt, &r.Workflow, &r.Name, &r.JobType,
+		&r.Matrix, &r.JobIdent, &r.Branch, &r.HeadSha, &r.Event, &r.Labels, &r.State, &r.Result, &r.HtmlUrl, &r.CreatedAt,
+		&r.QueuedAt, &r.SlotAt, &r.StartedAt, &r.CompletedAt, &r.CleanupMs, &r.MachineID, &r.MachineName, &r.RunnerID,
+		&r.RunnerName, &r.RunnerKind, &r.Backend, &r.Isolation, &r.Cache, &r.WaitReason, &r.WaitText, &r.Worktree,
+		&r.Light, &r.FcLoMs, &r.FcMidMs, &r.FcHiMs, &r.FcBasis, &r.FcSamples)
+	return r, err
+}
+
+func collectJobs(rows *sql.Rows, scan func(scanner) (sqlcgen.Job, error)) ([]jobsdata.Job, error) {
 	defer func() { _ = rows.Close() }()
 	var out []jobsdata.Job
 	for rows.Next() {
-		r, err := scanJobRow(rows)
+		r, err := scan(rows)
 		if err != nil {
 			return nil, fmt.Errorf("scan job: %w", err)
 		}
@@ -440,7 +525,7 @@ func (s *JobsStore) OpenJobs(ctx context.Context) ([]jobsdata.Job, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open jobs: %w", err)
 	}
-	return collectJobs(rows)
+	return collectJobs(rows, scanJobRow)
 }
 
 type groupAcc struct {
