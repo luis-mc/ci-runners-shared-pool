@@ -9,16 +9,21 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machinehealth"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
 )
 
 func (f *healthFake) Uptime(_ context.Context, id string) (machinehealth.Uptime, error) {
-	now := time.Date(2026, 11, 22, 12, 0, 0, 0, time.UTC)
-	return machinehealth.ComputeUptime(id, []store.PresenceRow{
-		{At: now.Add(-4 * time.Hour), State: store.PresenceTaking},
-		{At: now.Add(-2 * time.Hour), State: store.PresenceOffline, Reason: machinehealth.OfflineHeartbeatLost},
-		{At: now.Add(-1 * time.Hour), State: store.PresenceNotTaking, Reason: "on_battery"},
-	}, now), nil
+	at := time.Date(2026, 11, 22, 11, 0, 0, 0, time.UTC)
+	u75, t50 := 75.0, 50.0
+	return machinehealth.Uptime{MachineID: id, Watched: true, Since: at.Add(-3 * time.Hour),
+		Windows: []machinehealth.UptimeWindow{
+			{Name: "24h", Covered: 4 * time.Hour, Online: 3 * time.Hour, Taking: 2 * time.Hour, UptimePct: &u75, TakingPct: &t50},
+			{Name: "7d", Covered: 4 * time.Hour},
+			{Name: "30d", Covered: 4 * time.Hour},
+		},
+		Periods: []machinehealth.Period{
+			{Start: at, Reason: "on_battery"},
+			{Start: at.Add(-2 * time.Hour), End: at.Add(-time.Hour), Offline: true, Reason: machinehealth.OfflineHeartbeatLost},
+		}}, nil
 }
 
 func TestMachineUptimeRoute(t *testing.T) {
