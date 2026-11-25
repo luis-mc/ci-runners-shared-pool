@@ -55,8 +55,13 @@ type Link struct {
 	Builds   builds.Sink
 	buildIDs map[string]string // machine id + agent build id -> record id
 
+	// Deps takes the dependency setup events and the returning agents (CRSP248, deps.go). Nil ignores them.
+	Deps DepsSink
+
 	mu      sync.Mutex
 	pending map[string]chan *agentv1.RunnerResult
+	// pendingDeps waits for DepsReport answers (deps.go).
+	pendingDeps map[string]chan *agentv1.DepsReport
 	// pendingLO waits for RunnerLeftoversReport answers (OPS33).
 	pendingLO map[string]chan *agentv1.RunnerLeftoversReport
 	reports   map[string]Report
@@ -103,6 +108,9 @@ func (l *Link) OnMessage(machineID string, msg *agentv1.SessionRequest) bool {
 	if l.onRegistry(machineID, msg) {
 		return true
 	}
+	if l.onDeps(machineID, msg) {
+		return true
+	}
 	switch m := msg.GetMessage().(type) {
 	case *agentv1.SessionRequest_RunnerResult:
 		l.mu.Lock()
@@ -133,6 +141,7 @@ func (l *Link) OnMessage(machineID string, msg *agentv1.SessionRequest) bool {
 		l.mu.Lock()
 		l.reports[machineID] = Report{At: l.now(), MachineReport: m.MachineReport}
 		l.mu.Unlock()
+		l.afterReport(machineID, m.MachineReport)
 		return true
 	}
 	return false
