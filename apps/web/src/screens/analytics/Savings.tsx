@@ -112,12 +112,10 @@ export function Savings() {
             </StatGrid>
             <Text tone="muted">{r.note}</Text>
             {r.total.public_minutes > 0 ? (
-              <Message tone="note">
-                {`${formatNumber(r.total.public_minutes)} of these minutes are from public repositories. ${W.publicNote}`}
-              </Message>
+              <Text tone="muted">{`${formatNumber(r.total.public_minutes)} of these minutes are from public repositories. ${W.publicNote}`}</Text>
             ) : null}
             {r.not_priced > 0 ? (
-              <Message tone="note">{W.notPriced(r.not_priced)}</Message>
+              <Text tone="muted">{W.notPriced(r.not_priced)}</Text>
             ) : null}
             {r.total.jobs === 0 ? (
               <Empty title={W.empty} />

@@ -89,6 +89,7 @@ export function Compare() {
           onChange={setDays}
         />
         <Button
+          kind="primary"
           busy={run.busy}
           busyLabel={W.compareRunning}
           disabled={!valid}
