@@ -49,7 +49,9 @@ const only = process.env.E2E_QUARANTINE === 'only';
 
 const port = 18080;
 const exe = process.platform === 'win32' ? '.exe' : '';
-const binary = process.env.E2E_BINARY ?? `bin/crsp${exe}`;
+// CRSP242: cmd.exe reads `bin/crsp.exe` as the switch `/crsp.exe`, so the command uses an
+// absolute path, quoted. Linux runs the same absolute path.
+const binary = resolve(process.env.E2E_BINARY ?? `bin/crsp${exe}`);
 
 export default defineConfig({
   testDir: './e2e/tests',
@@ -75,7 +77,7 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   use: { baseURL: `http://127.0.0.1:${port}` },
   webServer: {
-    command: `${binary} controller`,
+    command: `"${binary}" controller`,
     url: `http://127.0.0.1:${port}/healthz`,
     reuseExistingServer: false,
     timeout: 30_000,
