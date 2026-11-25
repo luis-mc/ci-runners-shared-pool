@@ -5374,6 +5374,84 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /api/v1/notices:
+    get:
+      operationId: listNotices
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [notifications]
+      summary: The notices of the last 30 days
+      description: >-
+        notifications R5.32. Every notice of the last 30 days, newest first,
+        with the deliveries the caller may see: an admin or the owner sees all,
+        another user sees the deliveries of their own channels. A delivery names
+        its channel and a host or address, never a path, a token or a secret.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+      responses:
+        '200':
+          description: The notices.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NoticeList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/notification-thresholds:
+    get:
+      operationId: getNotificationThresholds
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [notifications]
+      summary: The pool thresholds of notices
+      description: notifications R5.8. Readable by any signed-in user.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The thresholds.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationThresholds'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: setNotificationThresholds
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [notifications]
+      summary: Change the pool thresholds of notices
+      description: >-
+        notifications R5.8. Owner and admins only. Every value is checked
+        against its range; the change goes to the audit log.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NotificationThresholds'
+      responses:
+        '200':
+          description: The thresholds now in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationThresholds'
+        default:
+          $ref: '#/components/responses/Error'
+
   # ---------------------------------------------------------------- updates (CRSP32)
   /webhooks/github:
     post:
@@ -11883,6 +11961,113 @@ components:
         min_severity: warning
         url: https://hooks.example.com/crsp
         secret_set: true
+    NotificationThresholds:
+      type: object
+      description: The pool thresholds of notices (notifications R5.1, R5.8, R5.11, R5.12).
+      required: [offline_grace_minutes, job_waiting_minutes, disk_percent, flap_window_minutes, hourly_cap]
+      properties:
+        offline_grace_minutes:
+          type: integer
+          minimum: 1
+          maximum: 60
+          description: How long an agent link may be down before machine.offline fires.
+        job_waiting_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        disk_percent:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: Free space below this percent fires disk.low.
+        flap_window_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        hourly_cap:
+          type: integer
+          minimum: 1
+          maximum: 200
+          description: The most notices one user gets per channel per hour.
+    NoticeTone:
+      type: string
+      description: The four tones of the design system (UX-26).
+      enum: [done, note, needs_you, problem]
+    NoticeDelivery:
+      type: object
+      required: [id, channel, kind, target, status, attempt]
+      properties:
+        id:
+          type: string
+        channel:
+          type: string
+          description: The channel's name.
+        kind:
+          $ref: '#/components/schemas/NotificationKind'
+        target:
+          type: string
+          description: A host, an email address or a login; never a path or a token.
+        status:
+          type: string
+          enum: [queued, waiting_tray, delivered, failed, held, grouped, dropped]
+        attempt:
+          type: integer
+        next_try_at:
+          type: string
+          format: date-time
+          description: Present while the delivery is queued.
+        last_error:
+          type: string
+        count:
+          type: integer
+          description: More than 0 when this delivery stands for a burst of notices (R5.13).
+    Notice:
+      type: object
+      required: [id, type, subject, state, tone, summary, at, flaps, deliveries]
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          description: An event type of R5.1, or notice.summary.
+        subject_kind:
+          type: string
+        subject_id:
+          type: string
+        subject:
+          type: string
+          description: The subject in words, for example a machine name.
+        state:
+          type: string
+          enum: [firing, resolved]
+        tone:
+          $ref: '#/components/schemas/NoticeTone'
+        severity:
+          type: string
+          description: Set for doctor findings.
+        summary:
+          type: string
+        link:
+          type: string
+          description: A console path of the subject.
+        flaps:
+          type: integer
+          description: How many times the key fired again inside the flap window (R5.11).
+        at:
+          type: string
+          format: date-time
+        deliveries:
+          type: array
+          items:
+            $ref: '#/components/schemas/NoticeDelivery'
+    NoticeList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notice'
     NotificationChannelList:
       type: object
       required: [items]
