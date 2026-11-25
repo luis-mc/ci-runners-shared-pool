@@ -1,5 +1,13 @@
 [
   {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
     "date": "21 Nov 13:18",
     "change": "owner: fix in R51; add stuck-attempt recovery"
   },

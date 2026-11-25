@@ -1,5 +1,37 @@
 [
   {
+    "date": "25 Nov 06:35",
+    "change": "CI on head 3df86a7a"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:29",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
     "date": "24 Nov 09:17",
     "change": "09:13 0.1.26 installed; Windows add passed the account steps, failed at register (OPS93); row removed"
   },
