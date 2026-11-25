@@ -102,7 +102,7 @@ func TestRealDeliveryIsSignedAndComplete(t *testing.T) { // R5.20, R5.21, R5.19
 			t.Errorf("missing %s: %s", k, h.body)
 		}
 	}
-	if b["type"] != "machine.offline" || b["state"] != "firing" || b["tone"] != "problem" || b["link"] != "https://crsp.lan/machines/build-02" ||
+	if b["type"] != "machine.offline" || b["state"] != "firing" || b["tone"] != "problem" || b["link"] != "https://crsp.lan/setup/machines/build-02" ||
 		b["delivery_id"] != h.header.Get(HeaderDelivery) || b["test"] != nil {
 		t.Fatalf("%v", b)
 	}
@@ -249,7 +249,9 @@ func TestFailingEndpointRaisesFinding(t *testing.T) { // R5.24
 // brokenSecrets is a secret store that cannot be reached.
 type brokenSecrets struct{ secrets.Store }
 
-func (brokenSecrets) Get(context.Context, secrets.Key) ([]byte, error) { return nil, errors.New("down") }
+func (brokenSecrets) Get(context.Context, secrets.Key) ([]byte, error) {
+	return nil, errors.New("down")
+}
 
 func TestNoSecretNoSend(t *testing.T) { // R6.3
 	r := newRecorder(t, 200)
@@ -487,7 +489,6 @@ func TestQueueCeiling(t *testing.T) { // R6.9
 		t.Fatal("a finding says how many were dropped")
 	}
 }
-
 
 func TestThresholdsNeedAdminAndAreValidated(t *testing.T) { // R5.8, R6.6
 	e := newEnv(t, nil)
