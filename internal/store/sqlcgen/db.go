@@ -30,6 +30,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.beatTicketStmt, err = db.PrepareContext(ctx, beatTicket); err != nil {
 		return nil, fmt.Errorf("error preparing query BeatTicket: %w", err)
 	}
+	if q.bumpGroupStmt, err = db.PrepareContext(ctx, bumpGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query BumpGroup: %w", err)
+	}
 	if q.cIDataBytesByRepositoryStmt, err = db.PrepareContext(ctx, cIDataBytesByRepository); err != nil {
 		return nil, fmt.Errorf("error preparing query CIDataBytesByRepository: %w", err)
 	}
@@ -42,8 +45,17 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.closeRegistryRecommendationStmt, err = db.PrepareContext(ctx, closeRegistryRecommendation); err != nil {
 		return nil, fmt.Errorf("error preparing query CloseRegistryRecommendation: %w", err)
 	}
+	if q.countBurstGroupSinceStmt, err = db.PrepareContext(ctx, countBurstGroupSince); err != nil {
+		return nil, fmt.Errorf("error preparing query CountBurstGroupSince: %w", err)
+	}
+	if q.countChannelDeliveriesSinceStmt, err = db.PrepareContext(ctx, countChannelDeliveriesSince); err != nil {
+		return nil, fmt.Errorf("error preparing query CountChannelDeliveriesSince: %w", err)
+	}
 	if q.countCtlMachinesStmt, err = db.PrepareContext(ctx, countCtlMachines); err != nil {
 		return nil, fmt.Errorf("error preparing query CountCtlMachines: %w", err)
+	}
+	if q.countDeliveredSinceStmt, err = db.PrepareContext(ctx, countDeliveredSince); err != nil {
+		return nil, fmt.Errorf("error preparing query CountDeliveredSince: %w", err)
 	}
 	if q.countJobStepsStmt, err = db.PrepareContext(ctx, countJobSteps); err != nil {
 		return nil, fmt.Errorf("error preparing query CountJobSteps: %w", err)
@@ -62,6 +74,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.countOpenInsightFindingsFilteredStmt, err = db.PrepareContext(ctx, countOpenInsightFindingsFiltered); err != nil {
 		return nil, fmt.Errorf("error preparing query CountOpenInsightFindingsFiltered: %w", err)
+	}
+	if q.countQueuedDeliveriesStmt, err = db.PrepareContext(ctx, countQueuedDeliveries); err != nil {
+		return nil, fmt.Errorf("error preparing query CountQueuedDeliveries: %w", err)
 	}
 	if q.countRepositoryRunningStmt, err = db.PrepareContext(ctx, countRepositoryRunning); err != nil {
 		return nil, fmt.Errorf("error preparing query CountRepositoryRunning: %w", err)
@@ -171,6 +186,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.dismissInsightFindingStmt, err = db.PrepareContext(ctx, dismissInsightFinding); err != nil {
 		return nil, fmt.Errorf("error preparing query DismissInsightFinding: %w", err)
 	}
+	if q.dropOldestNoteDeliveriesStmt, err = db.PrepareContext(ctx, dropOldestNoteDeliveries); err != nil {
+		return nil, fmt.Errorf("error preparing query DropOldestNoteDeliveries: %w", err)
+	}
+	if q.dueDeliveriesStmt, err = db.PrepareContext(ctx, dueDeliveries); err != nil {
+		return nil, fmt.Errorf("error preparing query DueDeliveries: %w", err)
+	}
 	if q.endSessionStmt, err = db.PrepareContext(ctx, endSession); err != nil {
 		return nil, fmt.Errorf("error preparing query EndSession: %w", err)
 	}
@@ -185,6 +206,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.findJoinCodeByHashStmt, err = db.PrepareContext(ctx, findJoinCodeByHash); err != nil {
 		return nil, fmt.Errorf("error preparing query FindJoinCodeByHash: %w", err)
+	}
+	if q.findOpenGroupStmt, err = db.PrepareContext(ctx, findOpenGroup); err != nil {
+		return nil, fmt.Errorf("error preparing query FindOpenGroup: %w", err)
 	}
 	if q.finishBackupStmt, err = db.PrepareContext(ctx, finishBackup); err != nil {
 		return nil, fmt.Errorf("error preparing query FinishBackup: %w", err)
@@ -252,6 +276,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getCtlRunnerPlanStmt, err = db.PrepareContext(ctx, getCtlRunnerPlan); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCtlRunnerPlan: %w", err)
 	}
+	if q.getDeliveryStmt, err = db.PrepareContext(ctx, getDelivery); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDelivery: %w", err)
+	}
 	if q.getDoctorRunStmt, err = db.PrepareContext(ctx, getDoctorRun); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDoctorRun: %w", err)
 	}
@@ -309,8 +336,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getMetaStmt, err = db.PrepareContext(ctx, getMeta); err != nil {
 		return nil, fmt.Errorf("error preparing query GetMeta: %w", err)
 	}
+	if q.getNoticeStmt, err = db.PrepareContext(ctx, getNotice); err != nil {
+		return nil, fmt.Errorf("error preparing query GetNotice: %w", err)
+	}
 	if q.getNotificationChannelStmt, err = db.PrepareContext(ctx, getNotificationChannel); err != nil {
 		return nil, fmt.Errorf("error preparing query GetNotificationChannel: %w", err)
+	}
+	if q.getNotifyEventStmt, err = db.PrepareContext(ctx, getNotifyEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query GetNotifyEvent: %w", err)
 	}
 	if q.getOpenInsightFindingStmt, err = db.PrepareContext(ctx, getOpenInsightFinding); err != nil {
 		return nil, fmt.Errorf("error preparing query GetOpenInsightFinding: %w", err)
@@ -429,6 +462,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.insertCliTokenStmt, err = db.PrepareContext(ctx, insertCliToken); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertCliToken: %w", err)
 	}
+	if q.insertDeliveryStmt, err = db.PrepareContext(ctx, insertDelivery); err != nil {
+		return nil, fmt.Errorf("error preparing query InsertDelivery: %w", err)
+	}
 	if q.insertDoctorFindingStmt, err = db.PrepareContext(ctx, insertDoctorFinding); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertDoctorFinding: %w", err)
 	}
@@ -476,6 +512,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.insertMachineSettingsStmt, err = db.PrepareContext(ctx, insertMachineSettings); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertMachineSettings: %w", err)
+	}
+	if q.insertNoticeStmt, err = db.PrepareContext(ctx, insertNotice); err != nil {
+		return nil, fmt.Errorf("error preparing query InsertNotice: %w", err)
 	}
 	if q.insertNotificationChannelStmt, err = db.PrepareContext(ctx, insertNotificationChannel); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertNotificationChannel: %w", err)
@@ -591,6 +630,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listDanglingRegistryLayersStmt, err = db.PrepareContext(ctx, listDanglingRegistryLayers); err != nil {
 		return nil, fmt.Errorf("error preparing query ListDanglingRegistryLayers: %w", err)
 	}
+	if q.listDeliveriesForNoticesStmt, err = db.PrepareContext(ctx, listDeliveriesForNotices); err != nil {
+		return nil, fmt.Errorf("error preparing query ListDeliveriesForNotices: %w", err)
+	}
 	if q.listExpiredCIJobLogsStmt, err = db.PrepareContext(ctx, listExpiredCIJobLogs); err != nil {
 		return nil, fmt.Errorf("error preparing query ListExpiredCIJobLogs: %w", err)
 	}
@@ -611,6 +653,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.listGuardrailStatusRowsStmt, err = db.PrepareContext(ctx, listGuardrailStatusRows); err != nil {
 		return nil, fmt.Errorf("error preparing query ListGuardrailStatusRows: %w", err)
+	}
+	if q.listHeldChannelsStmt, err = db.PrepareContext(ctx, listHeldChannels); err != nil {
+		return nil, fmt.Errorf("error preparing query ListHeldChannels: %w", err)
 	}
 	if q.listImageBuildsStmt, err = db.PrepareContext(ctx, listImageBuilds); err != nil {
 		return nil, fmt.Errorf("error preparing query ListImageBuilds: %w", err)
@@ -678,8 +723,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listManagedVariablesStmt, err = db.PrepareContext(ctx, listManagedVariables); err != nil {
 		return nil, fmt.Errorf("error preparing query ListManagedVariables: %w", err)
 	}
+	if q.listNoticesStmt, err = db.PrepareContext(ctx, listNotices); err != nil {
+		return nil, fmt.Errorf("error preparing query ListNotices: %w", err)
+	}
 	if q.listNotificationChannelsStmt, err = db.PrepareContext(ctx, listNotificationChannels); err != nil {
 		return nil, fmt.Errorf("error preparing query ListNotificationChannels: %w", err)
+	}
+	if q.listNotifyEventsByTypeStmt, err = db.PrepareContext(ctx, listNotifyEventsByType); err != nil {
+		return nil, fmt.Errorf("error preparing query ListNotifyEventsByType: %w", err)
 	}
 	if q.listOldStagedRegistryImagesStmt, err = db.PrepareContext(ctx, listOldStagedRegistryImages); err != nil {
 		return nil, fmt.Errorf("error preparing query ListOldStagedRegistryImages: %w", err)
@@ -789,6 +840,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listUsersStmt, err = db.PrepareContext(ctx, listUsers); err != nil {
 		return nil, fmt.Errorf("error preparing query ListUsers: %w", err)
 	}
+	if q.listWaitingTrayStmt, err = db.PrepareContext(ctx, listWaitingTray); err != nil {
+		return nil, fmt.Errorf("error preparing query ListWaitingTray: %w", err)
+	}
 	if q.listWorkflowChecksForCommitStmt, err = db.PrepareContext(ctx, listWorkflowChecksForCommit); err != nil {
 		return nil, fmt.Errorf("error preparing query ListWorkflowChecksForCommit: %w", err)
 	}
@@ -803,6 +857,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.markCIReportFileExpiredStmt, err = db.PrepareContext(ctx, markCIReportFileExpired); err != nil {
 		return nil, fmt.Errorf("error preparing query MarkCIReportFileExpired: %w", err)
+	}
+	if q.markHeldGroupedStmt, err = db.PrepareContext(ctx, markHeldGrouped); err != nil {
+		return nil, fmt.Errorf("error preparing query MarkHeldGrouped: %w", err)
 	}
 	if q.markInstallationRemovedStmt, err = db.PrepareContext(ctx, markInstallationRemoved); err != nil {
 		return nil, fmt.Errorf("error preparing query MarkInstallationRemoved: %w", err)
@@ -837,6 +894,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.pruneJobsStmt, err = db.PrepareContext(ctx, pruneJobs); err != nil {
 		return nil, fmt.Errorf("error preparing query PruneJobs: %w", err)
 	}
+	if q.pruneNoticeDeliveriesStmt, err = db.PrepareContext(ctx, pruneNoticeDeliveries); err != nil {
+		return nil, fmt.Errorf("error preparing query PruneNoticeDeliveries: %w", err)
+	}
+	if q.pruneNoticesStmt, err = db.PrepareContext(ctx, pruneNotices); err != nil {
+		return nil, fmt.Errorf("error preparing query PruneNotices: %w", err)
+	}
+	if q.pruneResolvedEventsStmt, err = db.PrepareContext(ctx, pruneResolvedEvents); err != nil {
+		return nil, fmt.Errorf("error preparing query PruneResolvedEvents: %w", err)
+	}
 	if q.pruneRunFollowUpsStmt, err = db.PrepareContext(ctx, pruneRunFollowUps); err != nil {
 		return nil, fmt.Errorf("error preparing query PruneRunFollowUps: %w", err)
 	}
@@ -854,6 +920,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.queueRegistryScanStmt, err = db.PrepareContext(ctx, queueRegistryScan); err != nil {
 		return nil, fmt.Errorf("error preparing query QueueRegistryScan: %w", err)
+	}
+	if q.recentChannelOutcomesStmt, err = db.PrepareContext(ctx, recentChannelOutcomes); err != nil {
+		return nil, fmt.Errorf("error preparing query RecentChannelOutcomes: %w", err)
 	}
 	if q.recordSignInStmt, err = db.PrepareContext(ctx, recordSignIn); err != nil {
 		return nil, fmt.Errorf("error preparing query RecordSignIn: %w", err)
@@ -890,6 +959,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.revokeUserCliTokensStmt, err = db.PrepareContext(ctx, revokeUserCliTokens); err != nil {
 		return nil, fmt.Errorf("error preparing query RevokeUserCliTokens: %w", err)
+	}
+	if q.setDeliveryResultStmt, err = db.PrepareContext(ctx, setDeliveryResult); err != nil {
+		return nil, fmt.Errorf("error preparing query SetDeliveryResult: %w", err)
 	}
 	if q.setGitHubJobWaitStmt, err = db.PrepareContext(ctx, setGitHubJobWait); err != nil {
 		return nil, fmt.Errorf("error preparing query SetGitHubJobWait: %w", err)
@@ -932,6 +1004,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.setMetaStmt, err = db.PrepareContext(ctx, setMeta); err != nil {
 		return nil, fmt.Errorf("error preparing query SetMeta: %w", err)
+	}
+	if q.setNoticeFlapsStmt, err = db.PrepareContext(ctx, setNoticeFlaps); err != nil {
+		return nil, fmt.Errorf("error preparing query SetNoticeFlaps: %w", err)
 	}
 	if q.setNotificationChannelTestStmt, err = db.PrepareContext(ctx, setNotificationChannelTest); err != nil {
 		return nil, fmt.Errorf("error preparing query SetNotificationChannelTest: %w", err)
@@ -1122,6 +1197,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.upsertManagedVariableStmt, err = db.PrepareContext(ctx, upsertManagedVariable); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertManagedVariable: %w", err)
 	}
+	if q.upsertNotifyEventStmt, err = db.PrepareContext(ctx, upsertNotifyEvent); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertNotifyEvent: %w", err)
+	}
 	if q.upsertRegistryLayerStmt, err = db.PrepareContext(ctx, upsertRegistryLayer); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertRegistryLayer: %w", err)
 	}
@@ -1179,6 +1257,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing beatTicketStmt: %w", cerr)
 		}
 	}
+	if q.bumpGroupStmt != nil {
+		if cerr := q.bumpGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing bumpGroupStmt: %w", cerr)
+		}
+	}
 	if q.cIDataBytesByRepositoryStmt != nil {
 		if cerr := q.cIDataBytesByRepositoryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing cIDataBytesByRepositoryStmt: %w", cerr)
@@ -1199,9 +1282,24 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing closeRegistryRecommendationStmt: %w", cerr)
 		}
 	}
+	if q.countBurstGroupSinceStmt != nil {
+		if cerr := q.countBurstGroupSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countBurstGroupSinceStmt: %w", cerr)
+		}
+	}
+	if q.countChannelDeliveriesSinceStmt != nil {
+		if cerr := q.countChannelDeliveriesSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countChannelDeliveriesSinceStmt: %w", cerr)
+		}
+	}
 	if q.countCtlMachinesStmt != nil {
 		if cerr := q.countCtlMachinesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countCtlMachinesStmt: %w", cerr)
+		}
+	}
+	if q.countDeliveredSinceStmt != nil {
+		if cerr := q.countDeliveredSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countDeliveredSinceStmt: %w", cerr)
 		}
 	}
 	if q.countJobStepsStmt != nil {
@@ -1232,6 +1330,11 @@ func (q *Queries) Close() error {
 	if q.countOpenInsightFindingsFilteredStmt != nil {
 		if cerr := q.countOpenInsightFindingsFilteredStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countOpenInsightFindingsFilteredStmt: %w", cerr)
+		}
+	}
+	if q.countQueuedDeliveriesStmt != nil {
+		if cerr := q.countQueuedDeliveriesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countQueuedDeliveriesStmt: %w", cerr)
 		}
 	}
 	if q.countRepositoryRunningStmt != nil {
@@ -1414,6 +1517,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing dismissInsightFindingStmt: %w", cerr)
 		}
 	}
+	if q.dropOldestNoteDeliveriesStmt != nil {
+		if cerr := q.dropOldestNoteDeliveriesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing dropOldestNoteDeliveriesStmt: %w", cerr)
+		}
+	}
+	if q.dueDeliveriesStmt != nil {
+		if cerr := q.dueDeliveriesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing dueDeliveriesStmt: %w", cerr)
+		}
+	}
 	if q.endSessionStmt != nil {
 		if cerr := q.endSessionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing endSessionStmt: %w", cerr)
@@ -1437,6 +1550,11 @@ func (q *Queries) Close() error {
 	if q.findJoinCodeByHashStmt != nil {
 		if cerr := q.findJoinCodeByHashStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing findJoinCodeByHashStmt: %w", cerr)
+		}
+	}
+	if q.findOpenGroupStmt != nil {
+		if cerr := q.findOpenGroupStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing findOpenGroupStmt: %w", cerr)
 		}
 	}
 	if q.finishBackupStmt != nil {
@@ -1549,6 +1667,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getCtlRunnerPlanStmt: %w", cerr)
 		}
 	}
+	if q.getDeliveryStmt != nil {
+		if cerr := q.getDeliveryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDeliveryStmt: %w", cerr)
+		}
+	}
 	if q.getDoctorRunStmt != nil {
 		if cerr := q.getDoctorRunStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getDoctorRunStmt: %w", cerr)
@@ -1644,9 +1767,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getMetaStmt: %w", cerr)
 		}
 	}
+	if q.getNoticeStmt != nil {
+		if cerr := q.getNoticeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getNoticeStmt: %w", cerr)
+		}
+	}
 	if q.getNotificationChannelStmt != nil {
 		if cerr := q.getNotificationChannelStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getNotificationChannelStmt: %w", cerr)
+		}
+	}
+	if q.getNotifyEventStmt != nil {
+		if cerr := q.getNotifyEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getNotifyEventStmt: %w", cerr)
 		}
 	}
 	if q.getOpenInsightFindingStmt != nil {
@@ -1844,6 +1977,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing insertCliTokenStmt: %w", cerr)
 		}
 	}
+	if q.insertDeliveryStmt != nil {
+		if cerr := q.insertDeliveryStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insertDeliveryStmt: %w", cerr)
+		}
+	}
 	if q.insertDoctorFindingStmt != nil {
 		if cerr := q.insertDoctorFindingStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertDoctorFindingStmt: %w", cerr)
@@ -1922,6 +2060,11 @@ func (q *Queries) Close() error {
 	if q.insertMachineSettingsStmt != nil {
 		if cerr := q.insertMachineSettingsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertMachineSettingsStmt: %w", cerr)
+		}
+	}
+	if q.insertNoticeStmt != nil {
+		if cerr := q.insertNoticeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insertNoticeStmt: %w", cerr)
 		}
 	}
 	if q.insertNotificationChannelStmt != nil {
@@ -2114,6 +2257,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listDanglingRegistryLayersStmt: %w", cerr)
 		}
 	}
+	if q.listDeliveriesForNoticesStmt != nil {
+		if cerr := q.listDeliveriesForNoticesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listDeliveriesForNoticesStmt: %w", cerr)
+		}
+	}
 	if q.listExpiredCIJobLogsStmt != nil {
 		if cerr := q.listExpiredCIJobLogsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listExpiredCIJobLogsStmt: %w", cerr)
@@ -2147,6 +2295,11 @@ func (q *Queries) Close() error {
 	if q.listGuardrailStatusRowsStmt != nil {
 		if cerr := q.listGuardrailStatusRowsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listGuardrailStatusRowsStmt: %w", cerr)
+		}
+	}
+	if q.listHeldChannelsStmt != nil {
+		if cerr := q.listHeldChannelsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listHeldChannelsStmt: %w", cerr)
 		}
 	}
 	if q.listImageBuildsStmt != nil {
@@ -2259,9 +2412,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listManagedVariablesStmt: %w", cerr)
 		}
 	}
+	if q.listNoticesStmt != nil {
+		if cerr := q.listNoticesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listNoticesStmt: %w", cerr)
+		}
+	}
 	if q.listNotificationChannelsStmt != nil {
 		if cerr := q.listNotificationChannelsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listNotificationChannelsStmt: %w", cerr)
+		}
+	}
+	if q.listNotifyEventsByTypeStmt != nil {
+		if cerr := q.listNotifyEventsByTypeStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listNotifyEventsByTypeStmt: %w", cerr)
 		}
 	}
 	if q.listOldStagedRegistryImagesStmt != nil {
@@ -2444,6 +2607,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listUsersStmt: %w", cerr)
 		}
 	}
+	if q.listWaitingTrayStmt != nil {
+		if cerr := q.listWaitingTrayStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listWaitingTrayStmt: %w", cerr)
+		}
+	}
 	if q.listWorkflowChecksForCommitStmt != nil {
 		if cerr := q.listWorkflowChecksForCommitStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listWorkflowChecksForCommitStmt: %w", cerr)
@@ -2467,6 +2635,11 @@ func (q *Queries) Close() error {
 	if q.markCIReportFileExpiredStmt != nil {
 		if cerr := q.markCIReportFileExpiredStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing markCIReportFileExpiredStmt: %w", cerr)
+		}
+	}
+	if q.markHeldGroupedStmt != nil {
+		if cerr := q.markHeldGroupedStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing markHeldGroupedStmt: %w", cerr)
 		}
 	}
 	if q.markInstallationRemovedStmt != nil {
@@ -2524,6 +2697,21 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing pruneJobsStmt: %w", cerr)
 		}
 	}
+	if q.pruneNoticeDeliveriesStmt != nil {
+		if cerr := q.pruneNoticeDeliveriesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing pruneNoticeDeliveriesStmt: %w", cerr)
+		}
+	}
+	if q.pruneNoticesStmt != nil {
+		if cerr := q.pruneNoticesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing pruneNoticesStmt: %w", cerr)
+		}
+	}
+	if q.pruneResolvedEventsStmt != nil {
+		if cerr := q.pruneResolvedEventsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing pruneResolvedEventsStmt: %w", cerr)
+		}
+	}
 	if q.pruneRunFollowUpsStmt != nil {
 		if cerr := q.pruneRunFollowUpsStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing pruneRunFollowUpsStmt: %w", cerr)
@@ -2552,6 +2740,11 @@ func (q *Queries) Close() error {
 	if q.queueRegistryScanStmt != nil {
 		if cerr := q.queueRegistryScanStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing queueRegistryScanStmt: %w", cerr)
+		}
+	}
+	if q.recentChannelOutcomesStmt != nil {
+		if cerr := q.recentChannelOutcomesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing recentChannelOutcomesStmt: %w", cerr)
 		}
 	}
 	if q.recordSignInStmt != nil {
@@ -2612,6 +2805,11 @@ func (q *Queries) Close() error {
 	if q.revokeUserCliTokensStmt != nil {
 		if cerr := q.revokeUserCliTokensStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing revokeUserCliTokensStmt: %w", cerr)
+		}
+	}
+	if q.setDeliveryResultStmt != nil {
+		if cerr := q.setDeliveryResultStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setDeliveryResultStmt: %w", cerr)
 		}
 	}
 	if q.setGitHubJobWaitStmt != nil {
@@ -2682,6 +2880,11 @@ func (q *Queries) Close() error {
 	if q.setMetaStmt != nil {
 		if cerr := q.setMetaStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing setMetaStmt: %w", cerr)
+		}
+	}
+	if q.setNoticeFlapsStmt != nil {
+		if cerr := q.setNoticeFlapsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setNoticeFlapsStmt: %w", cerr)
 		}
 	}
 	if q.setNotificationChannelTestStmt != nil {
@@ -2999,6 +3202,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing upsertManagedVariableStmt: %w", cerr)
 		}
 	}
+	if q.upsertNotifyEventStmt != nil {
+		if cerr := q.upsertNotifyEventStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertNotifyEventStmt: %w", cerr)
+		}
+	}
 	if q.upsertRegistryLayerStmt != nil {
 		if cerr := q.upsertRegistryLayerStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertRegistryLayerStmt: %w", cerr)
@@ -3110,17 +3318,22 @@ type Queries struct {
 	tx                                          *sql.Tx
 	addRegistryPullDailyStmt                    *sql.Stmt
 	beatTicketStmt                              *sql.Stmt
+	bumpGroupStmt                               *sql.Stmt
 	cIDataBytesByRepositoryStmt                 *sql.Stmt
 	claimRegistryScanStmt                       *sql.Stmt
 	clearRepositoryProfileStmt                  *sql.Stmt
 	closeRegistryRecommendationStmt             *sql.Stmt
+	countBurstGroupSinceStmt                    *sql.Stmt
+	countChannelDeliveriesSinceStmt             *sql.Stmt
 	countCtlMachinesStmt                        *sql.Stmt
+	countDeliveredSinceStmt                     *sql.Stmt
 	countJobStepsStmt                           *sql.Stmt
 	countJobsByStateStmt                        *sql.Stmt
 	countLiveRegistryTokenLeasesNamingStmt      *sql.Stmt
 	countMachineSlotsStmt                       *sql.Stmt
 	countOpenInsightFindingsStmt                *sql.Stmt
 	countOpenInsightFindingsFilteredStmt        *sql.Stmt
+	countQueuedDeliveriesStmt                   *sql.Stmt
 	countRepositoryRunningStmt                  *sql.Stmt
 	countResolvedInsightFindingsFilteredStmt    *sql.Stmt
 	countUsersStmt                              *sql.Stmt
@@ -3157,11 +3370,14 @@ type Queries struct {
 	deleteWebhookDeliveriesBeforeStmt           *sql.Stmt
 	deleteWorkflowChecksBeforeStmt              *sql.Stmt
 	dismissInsightFindingStmt                   *sql.Stmt
+	dropOldestNoteDeliveriesStmt                *sql.Stmt
+	dueDeliveriesStmt                           *sql.Stmt
 	endSessionStmt                              *sql.Stmt
 	endUserSessionsStmt                         *sql.Stmt
 	enqueueJobStmt                              *sql.Stmt
 	findCtlJoinCodeByHashStmt                   *sql.Stmt
 	findJoinCodeByHashStmt                      *sql.Stmt
+	findOpenGroupStmt                           *sql.Stmt
 	finishBackupStmt                            *sql.Stmt
 	finishDoctorRunStmt                         *sql.Stmt
 	finishImageBuildStmt                        *sql.Stmt
@@ -3184,6 +3400,7 @@ type Queries struct {
 	getCtlMachineSettingsStmt                   *sql.Stmt
 	getCtlRunnerStmt                            *sql.Stmt
 	getCtlRunnerPlanStmt                        *sql.Stmt
+	getDeliveryStmt                             *sql.Stmt
 	getDoctorRunStmt                            *sql.Stmt
 	getGitHubAppStmt                            *sql.Stmt
 	getGitHubJobStmt                            *sql.Stmt
@@ -3203,7 +3420,9 @@ type Queries struct {
 	getMachineChangeStmt                        *sql.Stmt
 	getMachineSettingsStmt                      *sql.Stmt
 	getMetaStmt                                 *sql.Stmt
+	getNoticeStmt                               *sql.Stmt
 	getNotificationChannelStmt                  *sql.Stmt
+	getNotifyEventStmt                          *sql.Stmt
 	getOpenInsightFindingStmt                   *sql.Stmt
 	getOpenMachineChangeStmt                    *sql.Stmt
 	getOwnerStmt                                *sql.Stmt
@@ -3243,6 +3462,7 @@ type Queries struct {
 	insertBackupStmt                            *sql.Stmt
 	insertCIReportFileStmt                      *sql.Stmt
 	insertCliTokenStmt                          *sql.Stmt
+	insertDeliveryStmt                          *sql.Stmt
 	insertDoctorFindingStmt                     *sql.Stmt
 	insertDoctorRunStmt                         *sql.Stmt
 	insertImageBuildStmt                        *sql.Stmt
@@ -3259,6 +3479,7 @@ type Queries struct {
 	insertMachineKeyStmt                        *sql.Stmt
 	insertMachineLoadStmt                       *sql.Stmt
 	insertMachineSettingsStmt                   *sql.Stmt
+	insertNoticeStmt                            *sql.Stmt
 	insertNotificationChannelStmt               *sql.Stmt
 	insertPlanStmt                              *sql.Stmt
 	insertRegistryCleanupStmt                   *sql.Stmt
@@ -3297,6 +3518,7 @@ type Queries struct {
 	listCtlRunnersStmt                          *sql.Stmt
 	listDailySummariesStmt                      *sql.Stmt
 	listDanglingRegistryLayersStmt              *sql.Stmt
+	listDeliveriesForNoticesStmt                *sql.Stmt
 	listExpiredCIJobLogsStmt                    *sql.Stmt
 	listExpiredCIReportFilesStmt                *sql.Stmt
 	listExpiredSlotsStmt                        *sql.Stmt
@@ -3304,6 +3526,7 @@ type Queries struct {
 	listGoodJobRunPeaksForKeyStmt               *sql.Stmt
 	listGuardrailReportsSinceStmt               *sql.Stmt
 	listGuardrailStatusRowsStmt                 *sql.Stmt
+	listHeldChannelsStmt                        *sql.Stmt
 	listImageBuildsStmt                         *sql.Stmt
 	listImageBuildsInFlightStmt                 *sql.Stmt
 	listImageBuildsOfMachineStmt                *sql.Stmt
@@ -3326,7 +3549,9 @@ type Queries struct {
 	listMachineTicketsStmt                      *sql.Stmt
 	listMachinesStmt                            *sql.Stmt
 	listManagedVariablesStmt                    *sql.Stmt
+	listNoticesStmt                             *sql.Stmt
 	listNotificationChannelsStmt                *sql.Stmt
+	listNotifyEventsByTypeStmt                  *sql.Stmt
 	listOldStagedRegistryImagesStmt             *sql.Stmt
 	listOpenGitHubJobsStmt                      *sql.Stmt
 	listOpenInsightFindingsStmt                 *sql.Stmt
@@ -3363,11 +3588,13 @@ type Queries struct {
 	listTestResultsBetweenStmt                  *sql.Stmt
 	listTestResultsForRunStmt                   *sql.Stmt
 	listUsersStmt                               *sql.Stmt
+	listWaitingTrayStmt                         *sql.Stmt
 	listWorkflowChecksForCommitStmt             *sql.Stmt
 	machinePullSpeedStmt                        *sql.Stmt
 	markBackupDeletedStmt                       *sql.Stmt
 	markCIJobLogExpiredStmt                     *sql.Stmt
 	markCIReportFileExpiredStmt                 *sql.Stmt
+	markHeldGroupedStmt                         *sql.Stmt
 	markInstallationRemovedStmt                 *sql.Stmt
 	markMachineRemovedStmt                      *sql.Stmt
 	markMachineSeenStmt                         *sql.Stmt
@@ -3379,12 +3606,16 @@ type Queries struct {
 	pruneJobStepsStmt                           *sql.Stmt
 	pruneJobStepsOfJobsStmt                     *sql.Stmt
 	pruneJobsStmt                               *sql.Stmt
+	pruneNoticeDeliveriesStmt                   *sql.Stmt
+	pruneNoticesStmt                            *sql.Stmt
+	pruneResolvedEventsStmt                     *sql.Stmt
 	pruneRunFollowUpsStmt                       *sql.Stmt
 	pruneRunsStmt                               *sql.Stmt
 	pruneWorkflowGraphsStmt                     *sql.Stmt
 	putPendingFactsStmt                         *sql.Stmt
 	putWorkflowGraphStmt                        *sql.Stmt
 	queueRegistryScanStmt                       *sql.Stmt
+	recentChannelOutcomesStmt                   *sql.Stmt
 	recordSignInStmt                            *sql.Stmt
 	refuseRegistryImageStmt                     *sql.Stmt
 	registryLayerKnownStmt                      *sql.Stmt
@@ -3397,6 +3628,7 @@ type Queries struct {
 	revokeMachineKeysStmt                       *sql.Stmt
 	revokeOpenJoinCodesStmt                     *sql.Stmt
 	revokeUserCliTokensStmt                     *sql.Stmt
+	setDeliveryResultStmt                       *sql.Stmt
 	setGitHubJobWaitStmt                        *sql.Stmt
 	setImageBuildProgressStmt                   *sql.Stmt
 	setImageBuildPushStateStmt                  *sql.Stmt
@@ -3411,6 +3643,7 @@ type Queries struct {
 	setMachineStateStmt                         *sql.Stmt
 	setManagedVariableStatusStmt                *sql.Stmt
 	setMetaStmt                                 *sql.Stmt
+	setNoticeFlapsStmt                          *sql.Stmt
 	setNotificationChannelTestStmt              *sql.Stmt
 	setPreferencesStmt                          *sql.Stmt
 	setRegistryBranchGoneStmt                   *sql.Stmt
@@ -3474,6 +3707,7 @@ type Queries struct {
 	upsertJobRunPeakStmt                        *sql.Stmt
 	upsertJobsRowStmt                           *sql.Stmt
 	upsertManagedVariableStmt                   *sql.Stmt
+	upsertNotifyEventStmt                       *sql.Stmt
 	upsertRegistryLayerStmt                     *sql.Stmt
 	upsertRegistryPointerStmt                   *sql.Stmt
 	upsertRegistryPullStmt                      *sql.Stmt
@@ -3496,17 +3730,22 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                                          tx,
 		addRegistryPullDailyStmt:                    q.addRegistryPullDailyStmt,
 		beatTicketStmt:                              q.beatTicketStmt,
+		bumpGroupStmt:                               q.bumpGroupStmt,
 		cIDataBytesByRepositoryStmt:                 q.cIDataBytesByRepositoryStmt,
 		claimRegistryScanStmt:                       q.claimRegistryScanStmt,
 		clearRepositoryProfileStmt:                  q.clearRepositoryProfileStmt,
 		closeRegistryRecommendationStmt:             q.closeRegistryRecommendationStmt,
+		countBurstGroupSinceStmt:                    q.countBurstGroupSinceStmt,
+		countChannelDeliveriesSinceStmt:             q.countChannelDeliveriesSinceStmt,
 		countCtlMachinesStmt:                        q.countCtlMachinesStmt,
+		countDeliveredSinceStmt:                     q.countDeliveredSinceStmt,
 		countJobStepsStmt:                           q.countJobStepsStmt,
 		countJobsByStateStmt:                        q.countJobsByStateStmt,
 		countLiveRegistryTokenLeasesNamingStmt:      q.countLiveRegistryTokenLeasesNamingStmt,
 		countMachineSlotsStmt:                       q.countMachineSlotsStmt,
 		countOpenInsightFindingsStmt:                q.countOpenInsightFindingsStmt,
 		countOpenInsightFindingsFilteredStmt:        q.countOpenInsightFindingsFilteredStmt,
+		countQueuedDeliveriesStmt:                   q.countQueuedDeliveriesStmt,
 		countRepositoryRunningStmt:                  q.countRepositoryRunningStmt,
 		countResolvedInsightFindingsFilteredStmt:    q.countResolvedInsightFindingsFilteredStmt,
 		countUsersStmt:                              q.countUsersStmt,
@@ -3543,11 +3782,14 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		deleteWebhookDeliveriesBeforeStmt:           q.deleteWebhookDeliveriesBeforeStmt,
 		deleteWorkflowChecksBeforeStmt:              q.deleteWorkflowChecksBeforeStmt,
 		dismissInsightFindingStmt:                   q.dismissInsightFindingStmt,
+		dropOldestNoteDeliveriesStmt:                q.dropOldestNoteDeliveriesStmt,
+		dueDeliveriesStmt:                           q.dueDeliveriesStmt,
 		endSessionStmt:                              q.endSessionStmt,
 		endUserSessionsStmt:                         q.endUserSessionsStmt,
 		enqueueJobStmt:                              q.enqueueJobStmt,
 		findCtlJoinCodeByHashStmt:                   q.findCtlJoinCodeByHashStmt,
 		findJoinCodeByHashStmt:                      q.findJoinCodeByHashStmt,
+		findOpenGroupStmt:                           q.findOpenGroupStmt,
 		finishBackupStmt:                            q.finishBackupStmt,
 		finishDoctorRunStmt:                         q.finishDoctorRunStmt,
 		finishImageBuildStmt:                        q.finishImageBuildStmt,
@@ -3570,6 +3812,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getCtlMachineSettingsStmt:                   q.getCtlMachineSettingsStmt,
 		getCtlRunnerStmt:                            q.getCtlRunnerStmt,
 		getCtlRunnerPlanStmt:                        q.getCtlRunnerPlanStmt,
+		getDeliveryStmt:                             q.getDeliveryStmt,
 		getDoctorRunStmt:                            q.getDoctorRunStmt,
 		getGitHubAppStmt:                            q.getGitHubAppStmt,
 		getGitHubJobStmt:                            q.getGitHubJobStmt,
@@ -3589,7 +3832,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getMachineChangeStmt:                        q.getMachineChangeStmt,
 		getMachineSettingsStmt:                      q.getMachineSettingsStmt,
 		getMetaStmt:                                 q.getMetaStmt,
+		getNoticeStmt:                               q.getNoticeStmt,
 		getNotificationChannelStmt:                  q.getNotificationChannelStmt,
+		getNotifyEventStmt:                          q.getNotifyEventStmt,
 		getOpenInsightFindingStmt:                   q.getOpenInsightFindingStmt,
 		getOpenMachineChangeStmt:                    q.getOpenMachineChangeStmt,
 		getOwnerStmt:                                q.getOwnerStmt,
@@ -3629,6 +3874,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		insertBackupStmt:                            q.insertBackupStmt,
 		insertCIReportFileStmt:                      q.insertCIReportFileStmt,
 		insertCliTokenStmt:                          q.insertCliTokenStmt,
+		insertDeliveryStmt:                          q.insertDeliveryStmt,
 		insertDoctorFindingStmt:                     q.insertDoctorFindingStmt,
 		insertDoctorRunStmt:                         q.insertDoctorRunStmt,
 		insertImageBuildStmt:                        q.insertImageBuildStmt,
@@ -3645,6 +3891,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		insertMachineKeyStmt:                        q.insertMachineKeyStmt,
 		insertMachineLoadStmt:                       q.insertMachineLoadStmt,
 		insertMachineSettingsStmt:                   q.insertMachineSettingsStmt,
+		insertNoticeStmt:                            q.insertNoticeStmt,
 		insertNotificationChannelStmt:               q.insertNotificationChannelStmt,
 		insertPlanStmt:                              q.insertPlanStmt,
 		insertRegistryCleanupStmt:                   q.insertRegistryCleanupStmt,
@@ -3683,6 +3930,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listCtlRunnersStmt:                          q.listCtlRunnersStmt,
 		listDailySummariesStmt:                      q.listDailySummariesStmt,
 		listDanglingRegistryLayersStmt:              q.listDanglingRegistryLayersStmt,
+		listDeliveriesForNoticesStmt:                q.listDeliveriesForNoticesStmt,
 		listExpiredCIJobLogsStmt:                    q.listExpiredCIJobLogsStmt,
 		listExpiredCIReportFilesStmt:                q.listExpiredCIReportFilesStmt,
 		listExpiredSlotsStmt:                        q.listExpiredSlotsStmt,
@@ -3690,6 +3938,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listGoodJobRunPeaksForKeyStmt:               q.listGoodJobRunPeaksForKeyStmt,
 		listGuardrailReportsSinceStmt:               q.listGuardrailReportsSinceStmt,
 		listGuardrailStatusRowsStmt:                 q.listGuardrailStatusRowsStmt,
+		listHeldChannelsStmt:                        q.listHeldChannelsStmt,
 		listImageBuildsStmt:                         q.listImageBuildsStmt,
 		listImageBuildsInFlightStmt:                 q.listImageBuildsInFlightStmt,
 		listImageBuildsOfMachineStmt:                q.listImageBuildsOfMachineStmt,
@@ -3712,7 +3961,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listMachineTicketsStmt:                      q.listMachineTicketsStmt,
 		listMachinesStmt:                            q.listMachinesStmt,
 		listManagedVariablesStmt:                    q.listManagedVariablesStmt,
+		listNoticesStmt:                             q.listNoticesStmt,
 		listNotificationChannelsStmt:                q.listNotificationChannelsStmt,
+		listNotifyEventsByTypeStmt:                  q.listNotifyEventsByTypeStmt,
 		listOldStagedRegistryImagesStmt:             q.listOldStagedRegistryImagesStmt,
 		listOpenGitHubJobsStmt:                      q.listOpenGitHubJobsStmt,
 		listOpenInsightFindingsStmt:                 q.listOpenInsightFindingsStmt,
@@ -3749,11 +4000,13 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listTestResultsBetweenStmt:                  q.listTestResultsBetweenStmt,
 		listTestResultsForRunStmt:                   q.listTestResultsForRunStmt,
 		listUsersStmt:                               q.listUsersStmt,
+		listWaitingTrayStmt:                         q.listWaitingTrayStmt,
 		listWorkflowChecksForCommitStmt:             q.listWorkflowChecksForCommitStmt,
 		machinePullSpeedStmt:                        q.machinePullSpeedStmt,
 		markBackupDeletedStmt:                       q.markBackupDeletedStmt,
 		markCIJobLogExpiredStmt:                     q.markCIJobLogExpiredStmt,
 		markCIReportFileExpiredStmt:                 q.markCIReportFileExpiredStmt,
+		markHeldGroupedStmt:                         q.markHeldGroupedStmt,
 		markInstallationRemovedStmt:                 q.markInstallationRemovedStmt,
 		markMachineRemovedStmt:                      q.markMachineRemovedStmt,
 		markMachineSeenStmt:                         q.markMachineSeenStmt,
@@ -3765,12 +4018,16 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		pruneJobStepsStmt:                           q.pruneJobStepsStmt,
 		pruneJobStepsOfJobsStmt:                     q.pruneJobStepsOfJobsStmt,
 		pruneJobsStmt:                               q.pruneJobsStmt,
+		pruneNoticeDeliveriesStmt:                   q.pruneNoticeDeliveriesStmt,
+		pruneNoticesStmt:                            q.pruneNoticesStmt,
+		pruneResolvedEventsStmt:                     q.pruneResolvedEventsStmt,
 		pruneRunFollowUpsStmt:                       q.pruneRunFollowUpsStmt,
 		pruneRunsStmt:                               q.pruneRunsStmt,
 		pruneWorkflowGraphsStmt:                     q.pruneWorkflowGraphsStmt,
 		putPendingFactsStmt:                         q.putPendingFactsStmt,
 		putWorkflowGraphStmt:                        q.putWorkflowGraphStmt,
 		queueRegistryScanStmt:                       q.queueRegistryScanStmt,
+		recentChannelOutcomesStmt:                   q.recentChannelOutcomesStmt,
 		recordSignInStmt:                            q.recordSignInStmt,
 		refuseRegistryImageStmt:                     q.refuseRegistryImageStmt,
 		registryLayerKnownStmt:                      q.registryLayerKnownStmt,
@@ -3783,6 +4040,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		revokeMachineKeysStmt:                       q.revokeMachineKeysStmt,
 		revokeOpenJoinCodesStmt:                     q.revokeOpenJoinCodesStmt,
 		revokeUserCliTokensStmt:                     q.revokeUserCliTokensStmt,
+		setDeliveryResultStmt:                       q.setDeliveryResultStmt,
 		setGitHubJobWaitStmt:                        q.setGitHubJobWaitStmt,
 		setImageBuildProgressStmt:                   q.setImageBuildProgressStmt,
 		setImageBuildPushStateStmt:                  q.setImageBuildPushStateStmt,
@@ -3797,6 +4055,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		setMachineStateStmt:                         q.setMachineStateStmt,
 		setManagedVariableStatusStmt:                q.setManagedVariableStatusStmt,
 		setMetaStmt:                                 q.setMetaStmt,
+		setNoticeFlapsStmt:                          q.setNoticeFlapsStmt,
 		setNotificationChannelTestStmt:              q.setNotificationChannelTestStmt,
 		setPreferencesStmt:                          q.setPreferencesStmt,
 		setRegistryBranchGoneStmt:                   q.setRegistryBranchGoneStmt,
@@ -3860,6 +4119,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		upsertJobRunPeakStmt:                        q.upsertJobRunPeakStmt,
 		upsertJobsRowStmt:                           q.upsertJobsRowStmt,
 		upsertManagedVariableStmt:                   q.upsertManagedVariableStmt,
+		upsertNotifyEventStmt:                       q.upsertNotifyEventStmt,
 		upsertRegistryLayerStmt:                     q.upsertRegistryLayerStmt,
 		upsertRegistryPointerStmt:                   q.upsertRegistryPointerStmt,
 		upsertRegistryPullStmt:                      q.upsertRegistryPullStmt,

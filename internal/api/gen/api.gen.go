@@ -1804,6 +1804,81 @@ func (e MachineTakingReason) Valid() bool {
 	}
 }
 
+// Defines values for NoticeState.
+const (
+	NoticeStateFiring   NoticeState = "firing"
+	NoticeStateResolved NoticeState = "resolved"
+)
+
+// Valid indicates whether the value is a known member of the NoticeState enum.
+func (e NoticeState) Valid() bool {
+	switch e {
+	case NoticeStateFiring:
+		return true
+	case NoticeStateResolved:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NoticeDeliveryStatus.
+const (
+	NoticeDeliveryStatusDelivered   NoticeDeliveryStatus = "delivered"
+	NoticeDeliveryStatusDropped     NoticeDeliveryStatus = "dropped"
+	NoticeDeliveryStatusFailed      NoticeDeliveryStatus = "failed"
+	NoticeDeliveryStatusGrouped     NoticeDeliveryStatus = "grouped"
+	NoticeDeliveryStatusHeld        NoticeDeliveryStatus = "held"
+	NoticeDeliveryStatusQueued      NoticeDeliveryStatus = "queued"
+	NoticeDeliveryStatusWaitingTray NoticeDeliveryStatus = "waiting_tray"
+)
+
+// Valid indicates whether the value is a known member of the NoticeDeliveryStatus enum.
+func (e NoticeDeliveryStatus) Valid() bool {
+	switch e {
+	case NoticeDeliveryStatusDelivered:
+		return true
+	case NoticeDeliveryStatusDropped:
+		return true
+	case NoticeDeliveryStatusFailed:
+		return true
+	case NoticeDeliveryStatusGrouped:
+		return true
+	case NoticeDeliveryStatusHeld:
+		return true
+	case NoticeDeliveryStatusQueued:
+		return true
+	case NoticeDeliveryStatusWaitingTray:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NoticeTone.
+const (
+	NoticeToneDone     NoticeTone = "done"
+	NoticeToneNeedsYou NoticeTone = "needs_you"
+	NoticeToneNote     NoticeTone = "note"
+	NoticeToneProblem  NoticeTone = "problem"
+)
+
+// Valid indicates whether the value is a known member of the NoticeTone enum.
+func (e NoticeTone) Valid() bool {
+	switch e {
+	case NoticeToneDone:
+		return true
+	case NoticeToneNeedsYou:
+		return true
+	case NoticeToneNote:
+		return true
+	case NoticeToneProblem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for NotificationChannelScope.
 const (
 	NotificationChannelScopePersonal NotificationChannelScope = "personal"
@@ -4206,16 +4281,16 @@ func (e ListRepositoriesParamsPool) Valid() bool {
 
 // Defines values for ListInsightFindingsParamsState.
 const (
-	Open     ListInsightFindingsParamsState = "open"
-	Resolved ListInsightFindingsParamsState = "resolved"
+	ListInsightFindingsParamsStateOpen     ListInsightFindingsParamsState = "open"
+	ListInsightFindingsParamsStateResolved ListInsightFindingsParamsState = "resolved"
 )
 
 // Valid indicates whether the value is a known member of the ListInsightFindingsParamsState enum.
 func (e ListInsightFindingsParamsState) Valid() bool {
 	switch e {
-	case Open:
+	case ListInsightFindingsParamsStateOpen:
 		return true
-	case Resolved:
+	case ListInsightFindingsParamsStateResolved:
 		return true
 	default:
 		return false
@@ -6764,6 +6839,70 @@ type MachineTaking struct {
 // MachineTakingReason Why not, absent while taking. offline; stopped (Stop new jobs from the console); mode_paused (mode Paused); tray_paused (a pause from the tray); on_battery (Automatic with the battery pause on); busy (load over the budget); base_image_missing; disk_low.
 type MachineTakingReason string
 
+// Notice defines model for Notice.
+type Notice struct {
+	At         time.Time        `json:"at"`
+	Deliveries []NoticeDelivery `json:"deliveries"`
+
+	// Flaps How many times the key fired again inside the flap window (R5.11).
+	Flaps int    `json:"flaps"`
+	Id    string `json:"id"`
+
+	// Link A console path of the subject.
+	Link *string `json:"link,omitempty"`
+
+	// Severity Set for doctor findings.
+	Severity *string     `json:"severity,omitempty"`
+	State    NoticeState `json:"state"`
+
+	// Subject The subject in words, for example a machine name.
+	Subject     string  `json:"subject"`
+	SubjectId   *string `json:"subject_id,omitempty"`
+	SubjectKind *string `json:"subject_kind,omitempty"`
+	Summary     string  `json:"summary"`
+
+	// Tone The four tones of the design system (UX-26).
+	Tone NoticeTone `json:"tone"`
+
+	// Type An event type of R5.1, or notice.summary.
+	Type string `json:"type"`
+}
+
+// NoticeState defines model for Notice.State.
+type NoticeState string
+
+// NoticeDelivery defines model for NoticeDelivery.
+type NoticeDelivery struct {
+	Attempt int `json:"attempt"`
+
+	// Channel The channel's name.
+	Channel string `json:"channel"`
+
+	// Count More than 0 when this delivery stands for a burst of notices (R5.13).
+	Count     *int             `json:"count,omitempty"`
+	Id        string           `json:"id"`
+	Kind      NotificationKind `json:"kind"`
+	LastError *string          `json:"last_error,omitempty"`
+
+	// NextTryAt Present while the delivery is queued.
+	NextTryAt *time.Time           `json:"next_try_at,omitempty"`
+	Status    NoticeDeliveryStatus `json:"status"`
+
+	// Target A host, an email address or a login; never a path or a token.
+	Target string `json:"target"`
+}
+
+// NoticeDeliveryStatus defines model for NoticeDelivery.Status.
+type NoticeDeliveryStatus string
+
+// NoticeList defines model for NoticeList.
+type NoticeList struct {
+	Items []Notice `json:"items"`
+}
+
+// NoticeTone The four tones of the design system (UX-26).
+type NoticeTone string
+
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
 	// Address Email address (kind email).
@@ -6864,6 +7003,20 @@ type NotificationTestResult struct {
 	Message *string   `json:"message,omitempty"`
 	Ok      bool      `json:"ok"`
 	SentAt  time.Time `json:"sent_at"`
+}
+
+// NotificationThresholds The pool thresholds of notices (notifications R5.1, R5.8, R5.11, R5.12).
+type NotificationThresholds struct {
+	// DiskPercent Free space below this percent fires disk.low.
+	DiskPercent       int `json:"disk_percent"`
+	FlapWindowMinutes int `json:"flap_window_minutes"`
+
+	// HourlyCap The most notices one user gets per channel per hour.
+	HourlyCap         int `json:"hourly_cap"`
+	JobWaitingMinutes int `json:"job_waiting_minutes"`
+
+	// OfflineGraceMinutes How long an agent link may be down before machine.offline fires.
+	OfflineGraceMinutes int `json:"offline_grace_minutes"`
 }
 
 // OS defines model for OS.
@@ -9658,6 +9811,11 @@ type ResumeMachineParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// ListNoticesParams defines parameters for ListNotices.
+type ListNoticesParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // DeleteNotificationChannelParams defines parameters for DeleteNotificationChannel.
 type DeleteNotificationChannelParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -9914,6 +10072,9 @@ type CreateNotificationChannelJSONRequestBody = NotificationChannelInput
 
 // UpdateNotificationChannelJSONRequestBody defines body for UpdateNotificationChannel for application/json ContentType.
 type UpdateNotificationChannelJSONRequestBody = NotificationChannelUpdate
+
+// SetNotificationThresholdsJSONRequestBody defines body for SetNotificationThresholds for application/json ContentType.
+type SetNotificationThresholdsJSONRequestBody = NotificationThresholds
 
 // PutRegistryBudgetsJSONRequestBody defines body for PutRegistryBudgets for application/json ContentType.
 type PutRegistryBudgetsJSONRequestBody = RegistryBudgetsInput
@@ -10322,6 +10483,9 @@ type ServerInterface interface {
 	// UpdatePreferences Save the user's own view preferences
 	// (PUT /api/v1/me/preferences)
 	UpdatePreferences(w http.ResponseWriter, r *http.Request)
+	// ListNotices The notices of the last 30 days
+	// (GET /api/v1/notices)
+	ListNotices(w http.ResponseWriter, r *http.Request, params ListNoticesParams)
 	// ListNotificationChannels Notification channels the caller may see
 	// (GET /api/v1/notification-channels)
 	ListNotificationChannels(w http.ResponseWriter, r *http.Request)
@@ -10337,6 +10501,12 @@ type ServerInterface interface {
 	// TestNotificationChannel Send a test notice through a channel
 	// (POST /api/v1/notification-channels/{channelId}/test)
 	TestNotificationChannel(w http.ResponseWriter, r *http.Request, channelId ChannelId)
+	// GetNotificationThresholds The pool thresholds of notices
+	// (GET /api/v1/notification-thresholds)
+	GetNotificationThresholds(w http.ResponseWriter, r *http.Request)
+	// SetNotificationThresholds Change the pool thresholds of notices
+	// (PUT /api/v1/notification-thresholds)
+	SetNotificationThresholds(w http.ResponseWriter, r *http.Request)
 	// GetOverview The overview snapshot
 	// (GET /api/v1/overview)
 	GetOverview(w http.ResponseWriter, r *http.Request)
@@ -14252,6 +14422,39 @@ func (siw *ServerInterfaceWrapper) UpdatePreferences(w http.ResponseWriter, r *h
 	handler.ServeHTTP(w, r)
 }
 
+// ListNotices operation middleware
+func (siw *ServerInterfaceWrapper) ListNotices(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params ListNoticesParams
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListNotices(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListNotificationChannels operation middleware
 func (siw *ServerInterfaceWrapper) ListNotificationChannels(w http.ResponseWriter, r *http.Request) {
 
@@ -14365,6 +14568,34 @@ func (siw *ServerInterfaceWrapper) TestNotificationChannel(w http.ResponseWriter
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.TestNotificationChannel(w, r, channelId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetNotificationThresholds operation middleware
+func (siw *ServerInterfaceWrapper) GetNotificationThresholds(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetNotificationThresholds(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetNotificationThresholds operation middleware
+func (siw *ServerInterfaceWrapper) SetNotificationThresholds(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetNotificationThresholds(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -17366,6 +17597,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/notification-channels/{channelId}", wrapper.DeleteNotificationChannel)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/api/v1/notification-channels/{channelId}", wrapper.UpdateNotificationChannel)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/notification-channels/{channelId}/test", wrapper.TestNotificationChannel)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/notices", wrapper.ListNotices)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/notification-thresholds", wrapper.GetNotificationThresholds)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/notification-thresholds", wrapper.SetNotificationThresholds)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/webhooks/github", wrapper.ReceiveGithubWebhook)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/insights/findings", wrapper.ListInsightFindings)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/insights/findings/{findingId}", wrapper.GetInsightFinding)
@@ -21567,6 +21801,45 @@ func (response UpdatePreferencesdefaultJSONResponse) VisitUpdatePreferencesRespo
 	return err
 }
 
+type ListNoticesRequestObject struct {
+	Params ListNoticesParams
+}
+
+type ListNoticesResponseObject interface {
+	VisitListNoticesResponse(w http.ResponseWriter) error
+}
+
+type ListNotices200JSONResponse NoticeList
+
+func (response ListNotices200JSONResponse) VisitListNoticesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListNoticesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListNoticesdefaultJSONResponse) VisitListNoticesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListNotificationChannelsRequestObject struct {
 }
 
@@ -21746,6 +22019,83 @@ type TestNotificationChanneldefaultJSONResponse struct {
 }
 
 func (response TestNotificationChanneldefaultJSONResponse) VisitTestNotificationChannelResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetNotificationThresholdsRequestObject struct {
+}
+
+type GetNotificationThresholdsResponseObject interface {
+	VisitGetNotificationThresholdsResponse(w http.ResponseWriter) error
+}
+
+type GetNotificationThresholds200JSONResponse NotificationThresholds
+
+func (response GetNotificationThresholds200JSONResponse) VisitGetNotificationThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetNotificationThresholdsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetNotificationThresholdsdefaultJSONResponse) VisitGetNotificationThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetNotificationThresholdsRequestObject struct {
+	Body *SetNotificationThresholdsJSONRequestBody
+}
+
+type SetNotificationThresholdsResponseObject interface {
+	VisitSetNotificationThresholdsResponse(w http.ResponseWriter) error
+}
+
+type SetNotificationThresholds200JSONResponse NotificationThresholds
+
+func (response SetNotificationThresholds200JSONResponse) VisitSetNotificationThresholdsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetNotificationThresholdsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response SetNotificationThresholdsdefaultJSONResponse) VisitSetNotificationThresholdsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -26008,6 +26358,9 @@ type StrictServerInterface interface {
 	// UpdatePreferences Save the user's own view preferences
 	// (PUT /api/v1/me/preferences)
 	UpdatePreferences(ctx context.Context, request UpdatePreferencesRequestObject) (UpdatePreferencesResponseObject, error)
+	// ListNotices The notices of the last 30 days
+	// (GET /api/v1/notices)
+	ListNotices(ctx context.Context, request ListNoticesRequestObject) (ListNoticesResponseObject, error)
 	// ListNotificationChannels Notification channels the caller may see
 	// (GET /api/v1/notification-channels)
 	ListNotificationChannels(ctx context.Context, request ListNotificationChannelsRequestObject) (ListNotificationChannelsResponseObject, error)
@@ -26023,6 +26376,12 @@ type StrictServerInterface interface {
 	// TestNotificationChannel Send a test notice through a channel
 	// (POST /api/v1/notification-channels/{channelId}/test)
 	TestNotificationChannel(ctx context.Context, request TestNotificationChannelRequestObject) (TestNotificationChannelResponseObject, error)
+	// GetNotificationThresholds The pool thresholds of notices
+	// (GET /api/v1/notification-thresholds)
+	GetNotificationThresholds(ctx context.Context, request GetNotificationThresholdsRequestObject) (GetNotificationThresholdsResponseObject, error)
+	// SetNotificationThresholds Change the pool thresholds of notices
+	// (PUT /api/v1/notification-thresholds)
+	SetNotificationThresholds(ctx context.Context, request SetNotificationThresholdsRequestObject) (SetNotificationThresholdsResponseObject, error)
 	// GetOverview The overview snapshot
 	// (GET /api/v1/overview)
 	GetOverview(ctx context.Context, request GetOverviewRequestObject) (GetOverviewResponseObject, error)
@@ -29129,6 +29488,32 @@ func (sh *strictHandler) UpdatePreferences(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// ListNotices operation middleware
+func (sh *strictHandler) ListNotices(w http.ResponseWriter, r *http.Request, params ListNoticesParams) {
+	var request ListNoticesRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListNotices(ctx, request.(ListNoticesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListNotices")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListNoticesResponseObject); ok {
+		if err := validResponse.VisitListNoticesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // ListNotificationChannels operation middleware
 func (sh *strictHandler) ListNotificationChannels(w http.ResponseWriter, r *http.Request) {
 	var request ListNotificationChannelsRequestObject
@@ -29263,6 +29648,61 @@ func (sh *strictHandler) TestNotificationChannel(w http.ResponseWriter, r *http.
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(TestNotificationChannelResponseObject); ok {
 		if err := validResponse.VisitTestNotificationChannelResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetNotificationThresholds operation middleware
+func (sh *strictHandler) GetNotificationThresholds(w http.ResponseWriter, r *http.Request) {
+	var request GetNotificationThresholdsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetNotificationThresholds(ctx, request.(GetNotificationThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetNotificationThresholds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetNotificationThresholdsResponseObject); ok {
+		if err := validResponse.VisitGetNotificationThresholdsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetNotificationThresholds operation middleware
+func (sh *strictHandler) SetNotificationThresholds(w http.ResponseWriter, r *http.Request) {
+	var request SetNotificationThresholdsRequestObject
+
+	var body SetNotificationThresholdsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetNotificationThresholds(ctx, request.(SetNotificationThresholdsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetNotificationThresholds")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetNotificationThresholdsResponseObject); ok {
+		if err := validResponse.VisitSetNotificationThresholdsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

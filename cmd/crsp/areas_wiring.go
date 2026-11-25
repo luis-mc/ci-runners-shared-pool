@@ -392,7 +392,19 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
 	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
-	c.Options.Notify = notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger})
+	nsvc := notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger, Now: d.Now, ConsoleURL: console})
+	c.Options.Notify = nsvc
+	// Real notices (notifications R5.1): the sources read the machines, the queue, the health reports, the
+	// doctor and the update check through their public interfaces; the worker sends what they make.
+	nsrc := notifySources{db: d.DB, machines: d.Machines, health: d.Health, doctor: docSvc, now: d.Now, th: nsvc.Thresholds}
+	if d.Updates != nil {
+		nsrc.updates = d.Updates
+	}
+	nsrc.register(nsvc)
+	notifyCtx, stopNotify := context.WithCancel(ctx)
+	notifyDone := make(chan struct{})
+	go func() { defer close(notifyDone); nsvc.Run(notifyCtx) }()
+	c.closers = append(c.closers, func() { stopNotify(); <-notifyDone })
 	c.Options.Config = configexport.Source{
 		Version: version, Config: d.Cfg, Settings: d.Ops.Settings, Secrets: d.MachineSecrets,
 		Named: []configexport.NamedSecret{
