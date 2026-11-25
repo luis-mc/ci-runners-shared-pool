@@ -1,2 +1,6 @@
 # CRSP47: the first version of the redactor test named a runner token variable in a string; a false positive in history, fixed in the next commit.
 ac3ed37373ed913098ce2fca9ae2ad21287c3add:internal/redact/redact_test.go:project-named-secret:39
+# DOC2 (#406): the project record text names a runner token variable; false positives in history (owner decision 2026-11-24).
+5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/full-progress-ci-runners-shared-pool.html:project-named-secret:898
+5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/registry.json:project-named-secret:3275
+5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/full-progress-ci-runners-shared-pool.html:project-named-secret:1215
