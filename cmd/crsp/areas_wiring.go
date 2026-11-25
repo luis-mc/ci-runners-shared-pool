@@ -420,7 +420,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	c.closers = append(c.closers, msvc.Close)
 	c.Options.Metrics = msvc
-	c.Options.Notify = notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger})
+	notifier := notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger})
+	c.Options.Notify = notifier
+	c.Options.ConfigAsCode = newConfigAsCode(d, version, rsvc, c.Options.RunnerClasses, notifier)
 	c.Options.Config = configexport.Source{
 		Version: version, Config: d.Cfg, Settings: d.Ops.Settings, Secrets: d.MachineSecrets,
 		Named: []configexport.NamedSecret{

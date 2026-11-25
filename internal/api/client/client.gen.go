@@ -356,6 +356,27 @@ func (e CacheKind) Valid() bool {
 	}
 }
 
+// Defines values for ConfigChangeKind.
+const (
+	ConfigChangeKindAdded   ConfigChangeKind = "added"
+	ConfigChangeKindChanged ConfigChangeKind = "changed"
+	ConfigChangeKindRemoved ConfigChangeKind = "removed"
+)
+
+// Valid indicates whether the value is a known member of the ConfigChangeKind enum.
+func (e ConfigChangeKind) Valid() bool {
+	switch e {
+	case ConfigChangeKindAdded:
+		return true
+	case ConfigChangeKindChanged:
+		return true
+	case ConfigChangeKindRemoved:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CpuCapPct.
 const (
 	N100 CpuCapPct = 100
@@ -5063,6 +5084,56 @@ type CliTokenCreated struct {
 // CliTokenList defines model for CliTokenList.
 type CliTokenList struct {
 	Items []CliToken `json:"items"`
+}
+
+// ConfigApplyRequest defines model for ConfigApplyRequest.
+type ConfigApplyRequest struct {
+	ConfirmRemovals *[]string `json:"confirm_removals,omitempty"`
+}
+
+// ConfigApplyResult defines model for ConfigApplyResult.
+type ConfigApplyResult struct {
+	Applied []ConfigChange `json:"applied"`
+	PlanId  string         `json:"plan_id"`
+}
+
+// ConfigChange defines model for ConfigChange.
+type ConfigChange struct {
+	Fields *[]ConfigFieldChange `json:"fields,omitempty"`
+	Kind   ConfigChangeKind     `json:"kind"`
+
+	// Name Empty for a section that is one set of fields.
+	Name    string `json:"name"`
+	Section string `json:"section"`
+}
+
+// ConfigChangeKind defines model for ConfigChange.Kind.
+type ConfigChangeKind string
+
+// ConfigFieldChange defines model for ConfigFieldChange.
+type ConfigFieldChange struct {
+	Field string      `json:"field"`
+	New   interface{} `json:"new,omitempty"`
+	Old   interface{} `json:"old,omitempty"`
+}
+
+// ConfigPlan defines model for ConfigPlan.
+type ConfigPlan struct {
+	Changes   []ConfigChange `json:"changes"`
+	CreatedAt time.Time      `json:"created_at"`
+
+	// Id Tied to the file and the state it was planned against. Absent while `problems` is not empty.
+	Id       *string   `json:"id,omitempty"`
+	Problems *[]string `json:"problems,omitempty"`
+
+	// Removals The `section/name` of each removal; the apply needs a yes that names each one.
+	Removals *[]string `json:"removals,omitempty"`
+}
+
+// ConfigPlanRequest defines model for ConfigPlanRequest.
+type ConfigPlanRequest struct {
+	// File The text of the config file.
+	File string `json:"file"`
 }
 
 // ConsoleLink defines model for ConsoleLink.
@@ -10502,6 +10573,12 @@ type SetAppWebhookJSONRequestBody = AppWebhookUpdate
 // ExchangeCliTokenJSONRequestBody defines body for ExchangeCliToken for application/json ContentType.
 type ExchangeCliTokenJSONRequestBody = ExchangeCliTokenRequest
 
+// PlanConfigJSONRequestBody defines body for PlanConfig for application/json ContentType.
+type PlanConfigJSONRequestBody = ConfigPlanRequest
+
+// ApplyConfigPlanJSONRequestBody defines body for ApplyConfigPlan for application/json ContentType.
+type ApplyConfigPlanJSONRequestBody = ConfigApplyRequest
+
 // RemoveRegistrationJSONRequestBody defines body for RemoveRegistration for application/json ContentType.
 type RemoveRegistrationJSONRequestBody = RemoveRegistrationRequest
 
@@ -10922,6 +10999,49 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/compare (the `GetSpeedComparison` operationId).
 	GetSpeedComparison(ctx context.Context, params *GetSpeedComparisonParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExportConfigFile Export the setup as one config file
+	//
+	// operations R5.28. One versioned YAML file: settings, pool defaults, queue order, machine settings, runner size classes, image layers, repository policies and notification channels. It holds no secret, no job history, no audit log and no machine key; each secret is named by reference. Named `crsp-setup-<stamp>.yaml`.
+	//
+	// Corresponds with GET /api/v1/config/export (the `ExportConfigFile` operationId).
+	ExportConfigFile(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PlanConfigWithBody Plan a config file
+	//
+	// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+	PlanConfigWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PlanConfig Plan a config file
+	//
+	// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+	PlanConfig(ctx context.Context, body PlanConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyConfigPlanWithBody Apply a config plan
+	//
+	// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+	ApplyConfigPlanWithBody(ctx context.Context, configPlanId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyConfigPlan Apply a config plan
+	//
+	// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+	ApplyConfigPlan(ctx context.Context, configPlanId string, body ApplyConfigPlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListDoctorFindings The latest finding per check and subject
 	//
@@ -13337,6 +13457,99 @@ func (c *Client) WipeCache(ctx context.Context, cacheId CacheId, params *WipeCac
 // Corresponds with GET /api/v1/compare (the `GetSpeedComparison` operationId).
 func (c *Client) GetSpeedComparison(ctx context.Context, params *GetSpeedComparisonParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetSpeedComparisonRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExportConfigFile Export the setup as one config file
+//
+// operations R5.28. One versioned YAML file: settings, pool defaults, queue order, machine settings, runner size classes, image layers, repository policies and notification channels. It holds no secret, no job history, no audit log and no machine key; each secret is named by reference. Named `crsp-setup-<stamp>.yaml`.
+//
+// Corresponds with GET /api/v1/config/export (the `ExportConfigFile` operationId).
+func (c *Client) ExportConfigFile(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExportConfigFileRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PlanConfigWithBody Plan a config file
+//
+// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+func (c *Client) PlanConfigWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPlanConfigRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PlanConfig Plan a config file
+//
+// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+func (c *Client) PlanConfig(ctx context.Context, body PlanConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPlanConfigRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ApplyConfigPlanWithBody Apply a config plan
+//
+// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+func (c *Client) ApplyConfigPlanWithBody(ctx context.Context, configPlanId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyConfigPlanRequestWithBody(c.Server, configPlanId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ApplyConfigPlan Apply a config plan
+//
+// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+func (c *Client) ApplyConfigPlan(ctx context.Context, configPlanId string, body ApplyConfigPlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyConfigPlanRequest(c.Server, configPlanId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -18853,6 +19066,120 @@ func NewGetSpeedComparisonRequest(server string, params *GetSpeedComparisonParam
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewExportConfigFileRequest constructs an http.Request for the ExportConfigFile method
+func NewExportConfigFileRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/config/export")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPlanConfigRequest calls the generic PlanConfig builder with application/json body
+func NewPlanConfigRequest(server string, body PlanConfigJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPlanConfigRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPlanConfigRequestWithBody constructs an http.Request for the PlanConfig method, with any body, and a specified content type
+func NewPlanConfigRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/config/plans")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewApplyConfigPlanRequest calls the generic ApplyConfigPlan builder with application/json body
+func NewApplyConfigPlanRequest(server string, configPlanId string, body ApplyConfigPlanJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewApplyConfigPlanRequestWithBody(server, configPlanId, "application/json", bodyReader)
+}
+
+// NewApplyConfigPlanRequestWithBody constructs an http.Request for the ApplyConfigPlan method, with any body, and a specified content type
+func NewApplyConfigPlanRequestWithBody(server string, configPlanId string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "configPlanId", configPlanId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/config/plans/%s/apply", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -28664,6 +28991,51 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/compare (the `GetSpeedComparison` operationId).
 	GetSpeedComparisonWithResponse(ctx context.Context, params *GetSpeedComparisonParams, reqEditors ...RequestEditorFn) (*GetSpeedComparisonResponse, error)
 
+	// ExportConfigFileWithResponse Export the setup as one config file
+	//
+	// operations R5.28. One versioned YAML file: settings, pool defaults, queue order, machine settings, runner size classes, image layers, repository policies and notification channels. It holds no secret, no job history, no audit log and no machine key; each secret is named by reference. Named `crsp-setup-<stamp>.yaml`.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/config/export (the `ExportConfigFile` operationId).
+	ExportConfigFileWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportConfigFileResponse, error)
+
+	// PlanConfigWithBodyWithResponse Plan a config file
+	//
+	// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+	PlanConfigWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PlanConfigResponse, error)
+
+	// PlanConfigWithResponse Plan a config file
+	//
+	// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+	PlanConfigWithResponse(ctx context.Context, body PlanConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*PlanConfigResponse, error)
+
+	// ApplyConfigPlanWithBodyWithResponse Apply a config plan
+	//
+	// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+	ApplyConfigPlanWithBodyWithResponse(ctx context.Context, configPlanId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyConfigPlanResponse, error)
+
+	// ApplyConfigPlanWithResponse Apply a config plan
+	//
+	// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+	ApplyConfigPlanWithResponse(ctx context.Context, configPlanId string, body ApplyConfigPlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyConfigPlanResponse, error)
+
 	// ListDoctorFindingsWithResponse The latest finding per check and subject
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -31903,6 +32275,164 @@ func (r GetSpeedComparisonResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetSpeedComparisonResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+// ExportConfigFileResponse200Headers the declared response headers of an HTTP 200 response for ExportConfigFile
+type ExportConfigFileResponse200Headers struct {
+	ContentDisposition string
+}
+
+type ExportConfigFileResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ExportFile
+	// YAML200 the response for an HTTP 200 `application/yaml` response
+	YAML200 *string
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+	// Headers200 the parsed response headers for an HTTP 200 response
+	Headers200 *ExportConfigFileResponse200Headers
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExportConfigFileResponse) GetJSON200() *ExportFile {
+	return r.JSON200
+}
+
+// GetYAML200 returns the response for an HTTP 200 `application/yaml` response
+func (r ExportConfigFileResponse) GetYAML200() *string {
+	return r.YAML200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ExportConfigFileResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ExportConfigFileResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExportConfigFileResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExportConfigFileResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExportConfigFileResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PlanConfigResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *ConfigPlan
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PlanConfigResponse) GetJSON201() *ConfigPlan {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PlanConfigResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PlanConfigResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PlanConfigResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PlanConfigResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PlanConfigResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ApplyConfigPlanResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *ConfigApplyResult
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ApplyConfigPlanResponse) GetJSON200() *ConfigApplyResult {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ApplyConfigPlanResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ApplyConfigPlanResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ApplyConfigPlanResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ApplyConfigPlanResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ApplyConfigPlanResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -42035,6 +42565,81 @@ func (c *ClientWithResponses) GetSpeedComparisonWithResponse(ctx context.Context
 	return ParseGetSpeedComparisonResponse(rsp)
 }
 
+// ExportConfigFileWithResponse Export the setup as one config file
+//
+// operations R5.28. One versioned YAML file: settings, pool defaults, queue order, machine settings, runner size classes, image layers, repository policies and notification channels. It holds no secret, no job history, no audit log and no machine key; each secret is named by reference. Named `crsp-setup-<stamp>.yaml`.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/config/export (the `ExportConfigFile` operationId).
+func (c *ClientWithResponses) ExportConfigFileWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ExportConfigFileResponse, error) {
+	rsp, err := c.ExportConfigFile(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExportConfigFileResponse(rsp)
+}
+
+// PlanConfigWithBodyWithResponse Plan a config file
+//
+// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+func (c *ClientWithResponses) PlanConfigWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PlanConfigResponse, error) {
+	rsp, err := c.PlanConfigWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePlanConfigResponse(rsp)
+}
+
+// PlanConfigWithResponse Plan a config file
+//
+// operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/config/plans (the `PlanConfig` operationId).
+func (c *ClientWithResponses) PlanConfigWithResponse(ctx context.Context, body PlanConfigJSONRequestBody, reqEditors ...RequestEditorFn) (*PlanConfigResponse, error) {
+	rsp, err := c.PlanConfig(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePlanConfigResponse(rsp)
+}
+
+// ApplyConfigPlanWithBodyWithResponse Apply a config plan
+//
+// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+func (c *ClientWithResponses) ApplyConfigPlanWithBodyWithResponse(ctx context.Context, configPlanId string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ApplyConfigPlanResponse, error) {
+	rsp, err := c.ApplyConfigPlanWithBody(ctx, configPlanId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyConfigPlanResponse(rsp)
+}
+
+// ApplyConfigPlanWithResponse Apply a config plan
+//
+// operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
+func (c *ClientWithResponses) ApplyConfigPlanWithResponse(ctx context.Context, configPlanId string, body ApplyConfigPlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyConfigPlanResponse, error) {
+	rsp, err := c.ApplyConfigPlan(ctx, configPlanId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyConfigPlanResponse(rsp)
+}
+
 // ListDoctorFindingsWithResponse The latest finding per check and subject
 //
 // Returns a wrapper object for the known response body format(s).
@@ -46543,6 +47148,128 @@ func ParseGetSpeedComparisonResponse(rsp *http.Response) (*GetSpeedComparisonRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest SpeedComparison
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExportConfigFileResponse parses an HTTP response from a ExportConfigFileWithResponse call
+func ParseExportConfigFileResponse(rsp *http.Response) (*ExportConfigFileResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExportConfigFileResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ExportFile
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "yaml") && rsp.StatusCode == 200:
+		var dest string
+		if err := yaml.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.YAML200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	case rsp.StatusCode == 200:
+		// Content-type (text/csv) unsupported
+
+	}
+
+	switch {
+	case rsp.StatusCode == 200:
+		var headers ExportConfigFileResponse200Headers
+		if values := rsp.Header.Values("Content-Disposition"); len(values) > 0 {
+			var value string
+			if err := runtime.BindStyledParameterWithOptions("simple", "Content-Disposition", values[0], &value, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationHeader, Explode: false, Required: true, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			}
+			headers.ContentDisposition = value
+		}
+		response.Headers200 = &headers
+	}
+
+	return response, nil
+}
+
+// ParsePlanConfigResponse parses an HTTP response from a PlanConfigWithResponse call
+func ParsePlanConfigResponse(rsp *http.Response) (*PlanConfigResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PlanConfigResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest ConfigPlan
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseApplyConfigPlanResponse parses an HTTP response from a ApplyConfigPlanWithResponse call
+func ParseApplyConfigPlanResponse(rsp *http.Response) (*ApplyConfigPlanResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ApplyConfigPlanResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest ConfigApplyResult
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

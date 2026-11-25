@@ -43,6 +43,7 @@ import { Ask, Load } from '../common';
 import { TabForm, useTabPart } from './TabForm';
 import { SECTIONS, settingsPath } from './sections';
 import { AuditLogSettings, ConfigExportSettings } from './AuditLog';
+import { ConfigAsCodeSettings } from './ConfigAsCode';
 import { InsightsUpdateSettings } from './InsightsUpdate';
 import { BudgetsSettings } from './Budgets';
 import { SavingsRatesSettings } from '../savings/SavingsRates';
@@ -184,6 +185,9 @@ export function DataTab() {
       </At>
       <At id="config-export">
         <ConfigExportSettings />
+      </At>
+      <At id="config-as-code">
+        <ConfigAsCodeSettings />
       </At>
     </TabForm>
   );

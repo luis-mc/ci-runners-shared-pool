@@ -2931,6 +2931,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/config/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export the setup as one config file
+         * @description operations R5.28. One versioned YAML file: settings, pool defaults, queue order, machine settings, runner size classes, image layers, repository policies and notification channels. It holds no secret, no job history, no audit log and no machine key; each secret is named by reference. Named `crsp-setup-<stamp>.yaml`.
+         */
+        get: operations["exportConfigFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan a config file
+         * @description operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+         */
+        post: operations["planConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/plans/{configPlanId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply a config plan
+         * @description operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+         */
+        post: operations["applyConfigPlan"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/repository-plans/{planId}/stop": {
         parameters: {
             query?: never;
@@ -4994,6 +5054,40 @@ export interface components {
             items: components["schemas"]["Repository"][];
             next_cursor?: string;
             stale: components["schemas"]["Staleness"];
+        };
+        ConfigPlanRequest: {
+            /** @description The text of the config file. */
+            file: string;
+        };
+        ConfigFieldChange: {
+            field: string;
+            old?: unknown;
+            new?: unknown;
+        };
+        ConfigChange: {
+            section: string;
+            /** @description Empty for a section that is one set of fields. */
+            name: string;
+            /** @enum {string} */
+            kind: "added" | "changed" | "removed";
+            fields?: components["schemas"]["ConfigFieldChange"][];
+        };
+        ConfigPlan: {
+            /** @description Tied to the file and the state it was planned against. Absent while `problems` is not empty. */
+            id?: string;
+            problems?: string[];
+            changes: components["schemas"]["ConfigChange"][];
+            /** @description The `section/name` of each removal; the apply needs a yes that names each one. */
+            removals?: string[];
+            /** Format: date-time */
+            created_at: string;
+        };
+        ConfigApplyRequest: {
+            confirm_removals?: string[];
+        };
+        ConfigApplyResult: {
+            plan_id: string;
+            applied: components["schemas"]["ConfigChange"][];
         };
         /**
          * @example {
@@ -12642,6 +12736,71 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ExportFile"];
+            default: components["responses"]["Error"];
+        };
+    };
+    exportConfigFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ExportFile"];
+            default: components["responses"]["Error"];
+        };
+    };
+    planConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigPlanRequest"];
+            };
+        };
+        responses: {
+            /** @description The plan. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigPlan"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    applyConfigPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                configPlanId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfigApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description What was applied. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigApplyResult"];
+                };
+            };
             default: components["responses"]["Error"];
         };
     };

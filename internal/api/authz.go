@@ -65,6 +65,7 @@ var otherAreaAuth = map[string]string{
 	"updateQueueSettings": authAdmin, "putEnvSet": authAdmin, "putJobSizeOverride": authAdmin, "putRunnerClasses": authAdmin, "deleteJobSizeOverride": authAdmin, "deleteEnvSet": authAdmin, "getRegistrySettings": authAdmin,
 	"putRegistryLogin": authAdmin, "deleteRegistryLogin": authAdmin, "putRegistryCaBundle": authAdmin, "deleteRegistryCaBundle": authAdmin,
 
+	"exportConfigFile": authAdmin, "planConfig": authAdmin, "applyConfigPlan": authOwner,
 	"checkMachineDependencies": authAdmin, "startMachineDependencyJob": authAdmin, "stopMachineDependencyJob": authAdmin, "undoMachineDependencyJob": authAdmin, "restartMachineForDependencyJob": authAdmin,
 	"listMachineDependencyJobs": authUser, "getMachineDependencyJob": authUser,
 

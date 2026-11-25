@@ -44,6 +44,8 @@ type Options struct {
 	Backup   *backup.Service
 	// Config writes the configuration export (exportConfig); nil answers 501.
 	Config ConfigExporter
+	// ConfigAsCode is the setup file, its plan and its apply (operations R5.28 to R5.30); nil answers 501.
+	ConfigAsCode ConfigAsCode
 	// Now stamps export file names; nil uses the clock.
 	Now func() time.Time
 	// Events receives plan.progress after a stop request; nil publishes nothing.

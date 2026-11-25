@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**Partly built (CRSP18, OPS1).** Built: the installers for Windows (MSI, R5.35 to R5.41), macOS (pkg) and Linux (deb and rpm) (R5.7), the config file and schema (R5.8, R5.9), the per-OS folders (R5.10), the daily backup, restore and drill (R5.21 to R5.25, R5.27, the secret list of R5.26 as `backup.MissingSecrets`). Built by CRSP267 (M3): the check of the database schema before a swap (R5.13), the update of agents one machine at a time (R5.18), the daily move of the runner pin with the doctor warning (R5.20) and the `live` step with the console action of the rollout modes (R5.42); the update itself (R5.11 to R5.17, R5.126, R5.127) was built earlier and its proof rows now name their tests. Everything else below that is not marked built is **NOT YET IMPLEMENTED**: planned, with its milestone.
+**Partly built (CRSP18, OPS1).** Built: the installers for Windows (MSI, R5.35 to R5.41), macOS (pkg) and Linux (deb and rpm) (R5.7), the config file and schema (R5.8, R5.9), the per-OS folders (R5.10), the daily backup, restore and drill (R5.21 to R5.25, R5.27, the secret list of R5.26 as `backup.MissingSecrets`). Built by CRSP267 (M3): the check of the database schema before a swap (R5.13), the update of agents one machine at a time (R5.18), the daily move of the runner pin with the doctor warning (R5.20) and the `live` step with the console action of the rollout modes (R5.42); the update itself (R5.11 to R5.17, R5.126, R5.127) was built earlier and its proof rows now name their tests. Config as code (R5.28 to R5.31, R6.10) is built by CRSP259 for the API and the console; its `crsp config` commands are not built yet. Everything else below that is not marked built is **NOT YET IMPLEMENTED**: planned, with its milestone.
 
 ## 1. In one paragraph
 
@@ -115,7 +115,8 @@ No mocks yet. They are made with the screens in milestone 8. The web console par
 - **Settings > Updates.** Channel (stable or edge), policy per machine (ask or auto in a maintenance window), drain timeout, current and offered version per part. An offered update shows what it waits for and asks in the page (UX-9, UX-62). A running update shows in the activity strip (UX-34) with a progress bar (components 16, UX-29). A refused update shows a Problem message that says why (UX-26, components 18). A blocked update says why beside the disabled action (UX-38).
 - **Settings > Console > Network.** The address the controller listens on, with Choose an address (admin). The dialog shows loading, the three choices as a radio group (each with its address and who can reach it), the wait while the controller restarts (running jobs finish first), Done and a failure with its reason. Set by the environment, it is shown read-only (R5.90; UX-44, UX-38).
 - **Settings > Backups.** The list of backups with date, size and check result; Back up now (busy while it runs, UX-13); the last drill and its result. No backup yet is an empty state with the next step (UX-6, components 19).
-- **Settings > Config.** Export downloads the file. Import is a wizard (components 4, UX-5) that ends with Review, then the work, then Done (UX-30). Review uses the change review list (components 34). A removal lists what goes and asks for a yes (UX-62).
+- **Settings > Data > Config as code (built, CRSP259).** Export setup file downloads the file (admin); Apply a config file opens its own page, `/config/apply`, with the wizard, which has the steps File, Review, Applying and Done (components 4, UX-5, UX-30). File takes one `.yaml` file and its primary is Plan the file. Review reads "N changes will be made" with one line per change in words ("Change Pool defaults: budget_memory_pct from 85 to 70"), shows the problems of a file that cannot be applied, and asks one yes per removal ("Yes, remove notifications/pager"); Apply N changes stays disabled and says why until each removal has its yes, and for a viewer or an admin (apply is owner only). Done says what was applied or why it stopped. The apply is one request that ends before the page can close, so it has no Stop and no stored outcome to read after a reload: after a reload the wizard starts again at File. The older Settings > Data > Config export (the controller file) is kept as it was.
+- **Settings > Config (planned shape).** Export downloads the file. Import is a wizard (components 4, UX-5) that ends with Review, then the work, then Done (UX-30). Review uses the change review list (components 34). A removal lists what goes and asks for a yes (UX-62).
 - **Tray.** "Update to <version>?" with the jobs it waits for, as a dialog (components 9). Restart and update ask first (decision 0005).
 - **Terminal.** `install`, `uninstall`, `restore` and `config apply` print what they will do and ask `yes/no` unless `--yes` is given.
 
@@ -244,13 +245,19 @@ Tests: `internal/update/update_test.go` (decisions, verify, lock, backoff, helpe
 
 ### Config as code
 
-**R5.28** (M8) — `crsp config export` writes one file with the whole setup: repositories and their policies, machines and their settings (budget, slots, backends allowed, drain timeout, maintenance windows, update policy), runner definitions, image layers, notifications, users and roles, and update settings. It holds no secret, no job history, no audit log and no machine key.
+**R5.28** (M8, built for the API and the console; CLI open) — `crsp config export` writes one file with the whole setup: repositories and their policies, machines and their settings (budget, slots, backends allowed, drain timeout, maintenance windows, update policy), runner definitions, image layers, notifications, users and roles, and update settings. It holds no secret, no job history, no audit log and no machine key.
+
+Built (CRSP259, `internal/configio`): `GET /api/v1/config/export` (admin) writes `crsp-setup-<stamp>.yaml`, one file headed `format: crsp-config` and `version: 1`. Sections: `settings` (retention, backup, update, event limits), `pool` (defaults for a new machine), `queue` (order of service), `runner_classes` (the size preset and the reserve rule), `machines` (budget, slots, light and heavy jobs, gate, backends allowed, cache cap, drain timeout, mode, CPU cap, disk floor), `image_layers`, `repositories` (the policy: priority, parallel jobs, fork pull requests, labels, runner groups, budgets, extra packages, hosted fallback and its cap, hosted labels, runner kinds) and `notifications` (the switches of each channel: kind, enabled, events, minimum severity, address, URL). A `secrets` block names each secret by `name`, `ref` (its key in the secret store) and `state`; a plan refuses a file that holds a secret value in any field named like one (token, secret, password, private key, API key, signing key, credential) and never repeats the value. A file never adds or removes a machine (it joins by its join file) or a repository (it arrives with the GitHub App), and a channel is never added from a file because it needs a secret; those sections only change what is there, and an item left out of the file is left alone. Users and roles, update channel choice and the pool switch of a repository are not in the file yet: they stay in the console. A hand-made runner size table (preset `custom`) is set in the console, not from a file. Turning on fork pull requests or the hosted fallback still needs the console's own yes, so a file that asks for either is refused with the service's words.
 
 **R5.29** (M8) — `crsp config plan <file>` checks the file against the schema and lists each change: added, changed (field, old value, new value) or removed, by name. It changes nothing and ends with "Nothing has changed." It gives the plan an ID tied to the current state.
 
+Built (CRSP259): `POST /api/v1/config/plans` (admin) takes `{file}` and answers the changes (`added`, `changed` with each field's old and new value, `removed`), the removals and, for a file that cannot be applied, `problems` and no `id`. The ID is a hash of the file and the state it was planned against. A file with the wrong header or a newer version answers 400. Plans are kept in the controller's memory and last until it restarts.
+
 **R5.30** (M8) — `crsp config apply <plan-id>` applies exactly that plan. It refuses if the pool changed since the plan. Removals need an explicit yes that names each one. Changes that restart runners drain first (R5.14). Each change is written to the audit log.
 
-**R5.31** (M8) — The console offers export and import under Settings; import is a wizard that ends with Review, the work, and Done.
+Built (CRSP259): `POST /api/v1/config/plans/{id}/apply` (owner) re-reads the state; when it differs from the state of the plan it answers 409 `conflict` and writes nothing. Removals answer 409 `needs_confirmation` naming each one until `confirm_removals` names them all. Every change goes through the service that owns it (settings, machines, repositories, notifications, runner classes), so that service's ranges, audit and drain apply: a machine setting that restarts runners drains first (R5.14) because the machine service does it. Each applied change writes one `config.apply` audit row with the plan ID and the old and new value of each field; a failed change writes one refused row, and the apply stops there and says what was applied.
+
+**R5.31** (M8, built by CRSP259; the Playwright spec is open) — The console offers export and import under Settings; import is a wizard that ends with Review, the work, and Done.
 
 ### Windows installer (MSI)
 
@@ -498,10 +505,10 @@ All tests are planned; none exists yet. Paths are where each test will live.
 | R5.25 | internal/backup/backup_test.go TestRestoreChecksManifestAndBacksUpFirst, TestRestoreRefusesNewerSchemaAndTamperedArchive |
 | R5.26 | internal/backup/backup_test.go TestDoctorListsMissingSecrets (the doctor check itself is the doctor's) |
 | R5.27 | internal/backup/backup_test.go TestDrillRecordsResult, TestDoctorWarnsAfter90Days |
-| R5.28 | planned: internal/configio/export_test.go TestExportHasNoSecretsOrHistory |
-| R5.29 | planned: internal/configio/plan_test.go TestPlanListsEachChangeAndChangesNothing |
-| R5.30 | planned: internal/configio/apply_test.go TestRefusesStalePlan, TestRemovalNeedsYes, TestAuditPerChange |
-| R5.31 | planned: e2e/config-import.spec.ts (Playwright) |
+| R5.28 | internal/configio/export_test.go TestExportHasNoSecretsOrHistory |
+| R5.29 | internal/configio/plan_test.go TestPlanListsEachChangeAndChangesNothing, TestPlanLeavesOutMachinesAlone, TestPlanNamesAnUnknownField; internal/api/handlers_config_test.go TestConfigExportPlanApply, TestConfigPlanRefusesASecretAndAnythingThatIsNotAConfigFile |
+| R5.30 | internal/configio/apply_test.go TestRefusesStalePlan, TestRemovalNeedsYes, TestAuditPerChange, TestFailedChangeIsAuditedRefusedAndStops; internal/api/handlers_config_test.go TestConfigApplyRefusesAStalePlan |
+| R5.31 | apps/web/src/screens/settings/ConfigAsCode.test.tsx (the wizard File, Review, Applying, Done); the Playwright spec e2e/config-import.spec.ts is not written yet |
 | R5.32 | internal/uninstall/uninstall_test.go TestKeepUnregistersRunnersAndKeepsData, TestAuditFailsClosed; internal/cli/cmd_uninstall_test.go TestUninstallSilentKeepsDataAndUnregistersRunners |
 | R5.33 | internal/uninstall/uninstall_test.go TestDeleteRemovesEverythingAndAuditsBeforeTheDataGoes, TestAsk, TestHostDockerAndWSL; internal/cli/cmd_uninstall_test.go TestUninstallDeleteDataFlagAndPurge, TestUninstallWindowAnswers |
 | R5.34 | planned: internal/install/uninstall_test.go TestAgentKeyRevoked, TestControllerWithMachinesAsksAgain |
@@ -518,7 +525,7 @@ All tests are planned; none exists yet. Paths are where each test will live.
 | R6.7 | planned: internal/backup/doctor_test.go TestWarnsAbove20PercentFreeDisk |
 | R6.8 | planned: internal/backup/secrets_scan_test.go TestNoSecretInBackupExportConfigLogs |
 | R6.9 | planned: internal/install/rerun_test.go, internal/update/swap_test.go TestInterruptedStepsRerun |
-| R6.10 | planned: internal/configio/roundtrip_test.go TestExportImportExportSame |
+| R6.10 | internal/configio/roundtrip_test.go TestExportImportExportSame |
 | R5.85 | removed (CRSP227) |
 | R5.86 | internal/tray/quit_test.go TestQuitAllLeavesPoliteTraysAlone, TestQuitAllEndsATrayThatIgnoresTheRequest, TestQuitAllWithNoTrayIsQuick, TestIsTrayCmdline, TestWatchQuitStopsWhenContextEnds; internal/tray/quit_unix_test.go TestWatchQuitCallsQuitOnSIGTERM; installer/wxs_test.go TestEveryShellActionRunsQuiet, TestStepBeforeInstallValidateStopsTheAgentAndSetsTheFlag; installer/upgrade-test.ps1 (job `Upgrade with the tray running` in `.github/workflows/installer.yml`: previous release MSI, tray started, quiet upgrade with a log, fails over 60 s or on a Files in Use entry) |
 | R5.87 | internal/update/update_test.go TestCheckNeverInstallsEvenWithAutoOn, TestInstallNowInstallsAndLaterDoesNot, TestAutoOnDownloadsVerifiesThenDrainsThenInstallsOnIdle; internal/trayserver/server_unix_test.go TestChannelInstallIsItsOwnCall |
@@ -557,7 +564,7 @@ Proposed by the spec writer. The owner confirms or changes each one (see the que
 
 ## 11. Not built yet
 
-Built in CRSP18: see the status line at the top. The seams:
+Built in CRSP18: see the status line at the top. Not built in CRSP259: the `crsp config export|plan|apply` commands (the API and console are), the Playwright spec of R5.31, users and roles and the update settings in the file, a stored plan (plans last until the controller restarts), and a Stop for the apply. **Platforms.** The engine and the sections are plain Go with no OS code, so they are built for every system. They are tested on Linux and Windows. macOS is compiled and unit-tested in CI only: it was not run on a real Mac. The seams:
 
 - `internal/config/config.go` reads `config.toml` and the `CRSP_*` variables (R5.8 to R5.10). `crsp config check` (the command) is the CLI's.
 - `.github/workflows/release.yml` publishes archives, `SHA256SUMS` and provenance today. The updater reads exactly these. It will also need `install.sh` and `install.ps1` as release assets (R5.1), and the `edge` release keeps its tag name so the checker can find it.
@@ -586,6 +593,11 @@ Source: internal/api/handlers_listen.go
 Source: apps/web/src/screens/settings/ListenAddress.tsx
 Source: installer/crsp.wxs
 Source: cmd/crsp/service_windows.go
+Source: internal/configio/configio.go
+Source: internal/configio/sections.go
+Source: internal/api/handlers_config.go
+Source: cmd/crsp/config_wiring.go
+Source: apps/web/src/screens/settings/ConfigAsCode.tsx
 Source: internal/backup/service.go
 Source: internal/backup/archive.go
 Source: internal/backup/start.go
@@ -598,5 +610,6 @@ Source: cmd/crsp/main.go
 A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
 
 Proof: CORE-3, UX-5, UX-6, UX-26, UX-29, UX-30, UX-34, UX-44, UX-62 `scripts/design/design-system-follow.test.ts`
+Proof: UX-5, UX-30, UX-62 `apps/web/src/screens/settings/ConfigAsCode.test.tsx`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
