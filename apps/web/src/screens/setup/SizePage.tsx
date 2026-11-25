@@ -124,7 +124,9 @@ export function SizePage() {
   ];
   return (
     <Page>
-      <Text tone="muted">How many jobs each machine runs at once, and how it isolates them.</Text>
+      <Text tone="muted">
+        How many jobs each machine runs at once, and how it isolates them.
+      </Text>
       <SizeClasses />
       <Load result={result} what="the machines" reload={reload}>
         {(data) =>

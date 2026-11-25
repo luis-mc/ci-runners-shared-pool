@@ -21,7 +21,10 @@ export function SetupLayout() {
   return (
     <>
       <Page>
-        <PageHeader title="Setup" lead="Machines, runners and sizes. Change things here." />
+        <PageHeader
+          title="Setup"
+          lead="Machines, runners and sizes. Change things here."
+        />
         <Tabs
           label="Setup sections"
           tabs={SETUP_TABS}

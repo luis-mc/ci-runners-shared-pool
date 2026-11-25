@@ -312,7 +312,8 @@ export function RunnersList() {
   return (
     <Page>
       <Text tone="muted">
-        The runners of the pool, by machine. They serve every repository that uses the pool.
+        The runners of the pool, by machine. They serve every repository that uses the
+        pool.
       </Text>
       <Load result={result} what="runners" reload={reload}>
         {(data) => {
