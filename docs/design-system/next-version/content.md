@@ -1766,3 +1766,22 @@ The words of the four Analytics tabs as the approved LOOK54 prototype shows them
 | Reserved: {text}. / Reserved. The machine keeps room free for this job. | The overview line of a reserved job. |
 | is reserved: {machine} keeps room free for it since {time} UTC | The detail of a reserved bar on the slot timeline. |
 | {job} ran out of time after {span}; crsp stops it {now or in a span} | The detail of a timer ran out bar of a running job. |
+
+## Live progress words (CRSP247, UX-86 to UX-88)
+
+| Where | Words |
+|---|---|
+| Terminal pane title | Command log |
+| Terminal toggle | Show log / Hide log |
+| Terminal jump | Jump to latest |
+| Terminal empty | No commands yet. |
+| Machine header | {name}, {controller or agent}, {system} |
+| Role tags | controller, agent |
+| Error line mark | error |
+| Download line | {done} of {total}, {speed}/s, about {time} left |
+| Download, no rate yet | {done} of {total}, measuring speed |
+| Download, no total | {done} so far, {speed}/s |
+| Bar, whole job | {n}% of the whole job |
+| Bar, phase | Step {i} of {n}: {phase} |
+| Bar, no percent | {phase}. {reason} No % is reported. {elapsed} |
+| Elapsed | {time} elapsed |

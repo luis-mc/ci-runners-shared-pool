@@ -192,11 +192,11 @@ The body scrolls when the content is taller than the space. The overlay never gr
 
 ## 16. Progress bar
 
-- **Used for:** a wait. Filled when the total is known, animated when it is not. It always names what is happening.
+- **Used for:** a wait. Filled when the total is known, animated when it is not. It always names what is happening. With `phases` (weighted) it shows the real percent of the whole job; a phase with no percent shows an indeterminate bar, the reason and the time elapsed (UX-87).
 - **Looks:** a thin bar that fills from the start, with a line of text that names the work.
 - **Source:** `src/ui/progress`
-- **Rules:** UX-29, UX-17, UX-19.
-- **Guard:** none yet.
+- **Rules:** UX-29, UX-87, UX-17, UX-19.
+- **Guard:** `packages/ui/src/components/Terminal.test.tsx` (weighted phases, indeterminate with reason).
 
 ## 17. Badges and counts
 
@@ -828,6 +828,22 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `packages/ui/src/components/Timeline.tsx` (`Timeline`), `packages/ui/src/components/Timeline.types.ts`, `packages/ui/src/components/VizAlt.tsx`, `packages/ui/src/components.css` (`ds-timeline`). A page passes data only.
 - **Rules:** UX-41, UX-17, UX-18, UX-49, UX-57, UX-58, UX-16, UX-77, CORE-1, CORE-2, CORE-3.
 - **Guard:** `packages/ui/src/components/Timeline.test.tsx`; the DOM layout checks at 360, 393 and 1300 px (and no sideways scroll of the page at 1920 px) on the screens that use it.
+
+## 78. Terminal
+
+- **Used for:** the command lines a step runs, and the machine that runs them (UX-86).
+- **Looks:** a dark, monospaced box in a pane frame with a fixed height and its own scroll, the newest line at the bottom (follow on; scrolling up stops it, _Jump to latest_ turns it on). A block starts with a header line: the machine name, a role tag (controller or agent), the system, and the time. Under it the command after a `$`, then its output lines; error lines carry the word _error_ and the problem colour, never colour alone (UX-58). Closed it is one line with the last command and _Show log_; open it shows the lines.
+- **Source:** `packages/ui/src/components/Terminal.tsx` (`Terminal`), `packages/ui/src/components.css` (`ds-terminal`). A page passes `ProgressEvent` rows only (`@crsp/contract`).
+- **Rules:** UX-86, UX-17, UX-49, UX-58, UX-16, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/Terminal.test.tsx`; DOM layout at 360, 393 and 1300 px.
+
+## 79. Download progress
+
+- **Used for:** a download inside a step (UX-88).
+- **Looks:** one line of words: bytes done of the total, the measured speed and the time left, above the progress bar. Without a total: bytes and speed only.
+- **Source:** `packages/ui/src/components/DownloadProgress.tsx` (`DownloadProgress`). A page passes bytes, total, rate and etaSec.
+- **Rules:** UX-88, UX-29, CORE-5.
+- **Guard:** `packages/ui/src/components/Terminal.test.tsx`.
 
 ## How to add a component
 
