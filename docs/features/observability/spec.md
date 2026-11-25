@@ -14,14 +14,15 @@ code:
   - internal/audit/**
   - internal/logs/**
   - internal/compare/**
-design_system: [UX-6, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
+  - internal/metrics/**
+design_system: [UX-6, UX-13, UX-22, UX-24, UX-38, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
 last_verified: 2026-11-24
 artifact:
 generator: luismc-docs 2.6.1
 ---
 # Observability
 
-Partly built (CRSP18, CRSP23): the audit log (R5.24 to R5.27, without the hash chain), retention (R5.32, R6.8 for audit, job history, raw load samples and log files), the live stream (R5.1 to R5.3, R6.2 load throttle, R6.3) and minutes saved today (R5.15). Everything else is NOT YET IMPLEMENTED. Every requirement names the milestone that builds it.
+Partly built (CRSP18, CRSP23): the audit log (R5.24 to R5.27, without the hash chain), retention (R5.32, R6.8 for audit, job history, raw load samples and log files), the live stream (R5.1 to R5.3, R6.2 load throttle, R6.3) and minutes saved today (R5.15) and the metrics export (CRSP262, R5.70 to R5.77). Everything else is NOT YET IMPLEMENTED. Every requirement names the milestone that builds it.
 
 ## 1. In one paragraph
 
@@ -50,7 +51,7 @@ The owner and the admins of a pool see what the pool is doing right now, what it
 
 - No telemetry, analytics or hosted error tracker (stack profile, section 14, `STACKSPEC 10.1`). Errors go to local logs, crash files and the doctor.
 - No copy of the job's own step logs in the job history; the history links to GitHub. CI run insights may keep a redacted copy on the owner's machines (R5.38, owner decision D4 of 20 Nov 2026).
-- No metrics export (Prometheus, OpenTelemetry) in these milestones.
+- No metrics export beyond the one set of R5.70 to R5.77: no tracing, no log export, no custom metrics, no Prometheus remote write (CRSP262).
 - Notifications (email, webhook, desktop) are a separate feature (milestone 8).
 - The doctor's checks are a separate feature. This spec only feeds it crash files and log health.
 
@@ -109,6 +110,8 @@ The screens are the Overview (screen 2), Jobs (screen 6), the Runners and Machin
 **Logs.** One search bar with filter chips (design system UX-31): machine, runner, level, time.
 
 **Audit log.** Read-only rows: when, who, what, target, result.
+
+**Metrics (Settings, Console, Metrics).** Off until the owner turns it on (CRSP262, R5.70 to R5.77). Two check boxes that wait for the tab's Save (UX-22): *Prometheus page* and *Push to OpenTelemetry*. With the page on: the port, *Let other computers read the page* (off by default), *Ask for a key* and a *Make a key* button that shows the key once in a copy block. With the push on: the collector address and the interval. While the page is on, a copy block holds the Prometheus scrape text. A viewer sees every control off with the reason (UX-38). The tab ends with the shared Cancel and Save bar (UX-24). Nothing here is drawn by the page: it uses the shared parts `Section`, `CheckRow`, `NumberField`, `TextField`, `FieldGrid`, `Button`, `CodeBlock`, `Message` and `ErrorSummary`.
 
 **States.**
 
@@ -239,6 +242,24 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 **R5.30** — (M1) A panic in any long-lived goroutine is caught at the top of that goroutine and written to a crash file (`crash-<UTC time>-<mode>.txt`) with version, OS, architecture, mode, the redacted panic message and the stack. A fatal runtime error goes to the same folder through `runtime/debug.SetCrashOutput`.
 
 **R5.31** — (M1) At the next start, the controller finds crash files it has not reported, shows one Problem notice in the console and hands them to the doctor. An agent's crash files go to the controller when it reconnects.
+
+### Metrics export (CRSP262, gap G2 of the runs-on study)
+
+**R5.70** — **Off by default, local by default.** Nothing is served and nothing is sent until the owner turns it on in Settings. The Prometheus page listens on `127.0.0.1` unless the owner chooses *Let other computers read the page*, and then on every address of this PC. The port is 9464 unless changed (1024 to 65535). A change applies at once, with no restart, and writes one audit row (`metrics.changed`) that names what switched and never the key.
+
+**R5.71** — **One metric set.** Both outputs carry the same names and values: `crsp_runners{state}` (runners by state), `crsp_queue_wait_seconds` and `crsp_job_duration_seconds` (histograms with buckets 1, 5, 15, 30, 60, 120, 300, 600, 1800, 3600 s), `crsp_fallback_jobs_total`, `crsp_cache_lookups_total{result}`, `crsp_cache_hit_ratio`, `crsp_machine_uptime_seconds{machine,os}` and `crsp_machine_up{machine,os}`. A test keeps the two outputs on one list of names.
+
+**R5.72** — **Prometheus page.** `GET /metrics` answers the Prometheus text format 0.0.4. It answers `401` with `WWW-Authenticate: Bearer` when a key is asked for and the request has none or a wrong one (constant-time comparison). It serves only `/metrics`, never the console or the API.
+
+**R5.73** — **OpenTelemetry push.** The controller posts OTLP over HTTP with JSON encoding to `<collector>/v1/metrics` (a bare address gets that path) every 10 to 3600 seconds (default 60). Durations are delta histograms, counts are cumulative sums, the rest are gauges. The resource carries `service.name=crsp` and `service.version`. A failed push is logged, shown in the console, and the loop goes on. No library is added: the body is built by `internal/metrics`. A collector address with a user name or password is refused.
+
+**R5.74** — **How the numbers are made.** Runners by state come from the runner records. Job numbers count the jobs that finished since the controller started, so every series only grows. Queue wait is the time from the queue ticket (else GitHub's creation time) to the start; job duration is start to end. A job that ran with no crsp machine and a GitHub-hosted label (`ubuntu-latest`, `windows-latest`, `macos-latest`) counts as a fallback. The cache hit ratio is warm jobs over warm and cold jobs. A machine's uptime is the time since this controller saw it come online, 0 while offline; it is not the machine's boot time. A feed that fails leaves its numbers empty and the others still come out.
+
+**R5.75** — **The key.** *Make a key* makes 32 random hex characters, keeps them in the OS secret store (`crsp/metrics/token`) and returns them once; a new key replaces the old one and the page uses it at once. The key is never in a settings answer, a log, an audit row or the settings database. Turning the key on with none made is refused (`409`). A page that asks for a key never starts without one.
+
+**R5.76** — **Scrape text.** The console gives a ready `prometheus.yml` block for the saved settings: the job name, `localhost` (or this PC's name when exposed), the port, and `YOUR-TOKEN` as a placeholder when a key is asked for. Copy changes nothing.
+
+**R5.77** — **Who and where.** The three routes (`getMetricsSettings`, `putMetricsSettings`, `makeMetricsToken`) are admin role; the owner is above admin. The settings live in the settings table under `metrics_export`. The package `internal/metrics` is pure Go and reads other areas only through the `Feeds` functions the controller gives it (`cmd/crsp/metrics_wiring.go`). **Platforms:** built for Windows, Linux and macOS. Tested on Windows and Linux. macOS is compiled and unit-tested in CI and has not been run on a real Mac.
 
 ### Retention
 
@@ -425,6 +446,19 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
 | R6.14 | planned: internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory |
 
+**Metrics export (CRSP262).**
+
+| Requirement | Test |
+|---|---|
+| R5.70 | internal/metrics/metrics_test.go TestConfig, TestServiceLifecycle; internal/metrics/persist_test.go TestDBStoreRoundTripAndAudit; internal/api/handlers_metrics_test.go TestMetricsSettingsOffByDefault |
+| R5.71 | internal/metrics/metrics_test.go TestPrometheusText, TestOTLPSameMetricSet |
+| R5.72 | internal/metrics/metrics_test.go TestHandlerToken |
+| R5.73 | internal/metrics/metrics_test.go TestPushOnce, TestConfig |
+| R5.74 | internal/metrics/metrics_test.go TestPoolSource, TestCacheHitRateZeroLookups |
+| R5.75 | internal/metrics/persist_test.go TestSecretToken; internal/api/handlers_metrics_test.go TestMetricsSettingsPutChecksAndKeeps |
+| R5.76 | internal/metrics/metrics_test.go TestScrapeConfig; apps/web/src/screens/settings/MetricsSettings.test.tsx |
+| R5.77 | internal/api/handlers_metrics_test.go TestMetricsSettingsAdminOnly; internal/api route and role tables |
+
 ## 10. Decisions
 
 | ID | Question | Chosen | Date |
@@ -469,6 +503,8 @@ Source: internal/events/sse.go
 Source: internal/overview/overview.go
 Source: internal/api/handlers_live.go
 
+Built (CRSP262): `internal/metrics/` (snapshot and pool source, Prometheus text, OTLP push, handler, config, scrape text, service, settings and key stores), `internal/api/handlers_metrics.go`, `cmd/crsp/metrics_wiring.go`, `apps/web/src/screens/settings/MetricsSettings.tsx`.
+
 Planned files, in the globs of the front matter:
 
 - internal/events/ (wait reasons)
@@ -486,3 +522,4 @@ A rule this spec cites is proven by a test that exists. A rule whose guard is st
 
 Proof: UX-6, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58 `scripts/design/design-system-follow.test.ts`
 Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
