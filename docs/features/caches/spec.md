@@ -393,7 +393,7 @@ Rows for R5.36 to R5.40, R5.42, R5.43, R5.44, R5.45, R5.48, R5.49 and R5.51 to R
 | R5.62 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestEvictRemovesLeastRecentlyUsedAndKeepsRecentOnes, TestEvictDropsEmptyToolFolderAndOrphans, TestLookupKeepsAnEntryOutOfEviction, TestWipe |
 | R5.63 | Built (CRSP255): internal/backend/container/toolcache_test.go TestToolCacheMountArgsMountReadWriteAndNameIt, TestToolCacheMountArgsRefuseBadPaths, TestRunArgsMountsToolCacheAndStaysSafe |
 | R5.64 | Built (CRSP255): internal/caches/toolcache/toolcache_test.go TestCheckStates, TestUnixModeIsStickyAndVerifyCatchesAWideOpenRoot, TestPlatformsBehindInterfaces |
-| R5.65 | Built (CRSP268): `.github/workflows/ci.yml` four `runs-on` lines; evidence in `docs/work/CRSP268/REPORT.md` (branch only) |
+| R5.65 | Built (CRSP268): `.github/workflows/ci.yml` four `runs-on` lines; the CI run of the pull request |
 | R5.15 | internal/tools/pins_test.go (port of test_ds199_tool_fetch.py test_every_pin_has_url_and_sha, test_missing_pin_and_platform) |
 | R5.16 | internal/tools/fetch_test.go (port of test_dl115_ci_tool.py test_first_fetch_downloads_and_verifies, test_second_fetch_makes_no_request, test_corrupted_cache_is_replaced, test_wrong_pin_exits_1_and_leaves_no_file) |
 | R5.17 | internal/tools/fetch_test.go (no temporary file after success, failure or kill) |
