@@ -32,6 +32,12 @@ func TestTrialCanaryThroughOwnerCode(t *testing.T) {
 	if before["CRSP_RUNS_ON_LINUX"] == "" {
 		t.Fatalf("pool on writes the variable: %v", before)
 	}
+	// A repository moves one step at a time (operations R5.42): off, observe, shadow, canary.
+	for _, step := range []trial.Mode{trial.Observe, trial.Shadow} {
+		if _, err := m.Set(ctx, "alice/secret", step, trial.Options{}); err != nil {
+			t.Fatal(err)
+		}
+	}
 	st, err := m.Set(ctx, "alice/secret", trial.Canary, trial.Options{Jobs: []string{"build"}})
 	if err != nil {
 		t.Fatal(err)
