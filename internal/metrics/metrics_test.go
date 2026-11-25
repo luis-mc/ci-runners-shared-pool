@@ -11,6 +11,8 @@ import (
 	"sync"
 	"testing"
 	"time"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 )
 
 func sample() Snapshot {
@@ -192,8 +194,8 @@ func TestScrapeConfig(t *testing.T) {
 
 type memStore struct{ c Config }
 
-func (m *memStore) Load(context.Context) (Config, error)             { return m.c, nil }
-func (m *memStore) Save(_ context.Context, _ string, c Config) error { m.c = c; return nil }
+func (m *memStore) Load(context.Context) (Config, error)                  { return m.c, nil }
+func (m *memStore) Save(_ context.Context, _ audit.Actor, c Config) error { m.c = c; return nil }
 
 type memToken struct{ t string }
 
@@ -213,7 +215,7 @@ func TestServiceLifecycle(t *testing.T) {
 	}
 	c := Default()
 	c.Enabled, c.RequireToken, c.Port = true, true, 19464
-	if _, err := svc.Update(ctx, "owner", c); err != ErrNoToken {
+	if _, err := svc.Update(ctx, audit.Actor{Login: "owner"}, c); err != ErrNoToken {
 		t.Fatalf("want ErrNoToken, got %v", err)
 	}
 	tok, err := svc.MakeToken(ctx)
@@ -221,11 +223,11 @@ func TestServiceLifecycle(t *testing.T) {
 		t.Fatalf("token %q %v", tok, err)
 	}
 	c.Port = 0 // free port is not allowed: validate refuses
-	if _, err := svc.Update(ctx, "owner", c); err == nil {
+	if _, err := svc.Update(ctx, audit.Actor{Login: "owner"}, c); err == nil {
 		t.Fatal("port 0 must be refused")
 	}
 	c.Port = 19464
-	st, err := svc.Update(ctx, "owner", c)
+	st, err := svc.Update(ctx, audit.Actor{Login: "owner"}, c)
 	if err != nil {
 		t.Skipf("port busy on this machine: %v", err)
 	}
@@ -243,7 +245,46 @@ func TestServiceLifecycle(t *testing.T) {
 	}
 	resp.Body.Close()
 	c.Enabled = false
-	if st, _ := svc.Update(ctx, "owner", c); st.Running {
+	if st, _ := svc.Update(ctx, audit.Actor{Login: "owner"}, c); st.Running {
 		t.Fatal("must stop")
+	}
+}
+
+func TestPoolSource(t *testing.T) {
+	t0 := time.Unix(10000, 0)
+	now := t0
+	online := true
+	p := &PoolSource{Started: t0, Now: func() time.Time { return now }, Feeds: Feeds{
+		RunnerStates: func(context.Context) (map[string]int, error) { return map[string]int{"idle": 1}, nil },
+		FinishedJobs: func(_ context.Context, since time.Time) ([]JobFact, error) {
+			if !since.Equal(t0) {
+				t.Errorf("since %v", since)
+			}
+			return []JobFact{
+				{ID: 1, Queued: t0, Started: t0.Add(5 * time.Second), Completed: t0.Add(65 * time.Second), Cache: "warm"},
+				{ID: 2, Hosted: true, Cache: "cold"},
+			}, nil
+		},
+		Machines: func(context.Context) ([]MachineFact, error) {
+			return []MachineFact{{Name: "m", OS: "linux", Online: online}}, nil
+		},
+	}}
+	s, _ := p.Snapshot(context.Background())
+	if len(s.QueueWaitSeconds) != 1 || s.QueueWaitSeconds[0] != 5 || s.JobDurationSeconds[0] != 60 {
+		t.Fatalf("%+v", s)
+	}
+	if s.FallbackTotal != 1 || s.CacheHitRate() != 0.5 || s.Machines[0].UptimeSeconds != 0 {
+		t.Fatalf("%+v", s)
+	}
+	now = t0.Add(30 * time.Second)
+	if s, _ = p.Snapshot(context.Background()); s.Machines[0].UptimeSeconds != 30 {
+		t.Fatalf("uptime %v", s.Machines[0].UptimeSeconds)
+	}
+	online = false
+	if s, _ = p.Snapshot(context.Background()); s.Machines[0].UptimeSeconds != 0 || s.Machines[0].Online {
+		t.Fatal("offline machine has no uptime")
+	}
+	if _, err := (&PoolSource{}).Snapshot(context.Background()); err != nil {
+		t.Fatal("nil feeds must not fail")
 	}
 }

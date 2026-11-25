@@ -7,13 +7,15 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 )
 
 // Store keeps the Config. The controller wires one on its settings, and writes
 // the audit row of a change there.
 type Store interface {
 	Load(ctx context.Context) (Config, error)
-	Save(ctx context.Context, actor string, c Config) error
+	Save(ctx context.Context, actor audit.Actor, c Config) error
 }
 
 // TokenStore keeps the bearer token in the secret store. Get returns "" when no
@@ -170,7 +172,7 @@ func (s *Service) State(ctx context.Context) (State, error) {
 }
 
 // Update checks c, keeps it and applies it. A bad Config changes nothing.
-func (s *Service) Update(ctx context.Context, actor string, c Config) (State, error) {
+func (s *Service) Update(ctx context.Context, actor audit.Actor, c Config) (State, error) {
 	if p := c.Validate(); len(p) > 0 {
 		return State{}, &InvalidError{Problems: p}
 	}
