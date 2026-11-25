@@ -16,10 +16,10 @@ afterEach(() => {
 const down = new ApiError('unavailable', 'Failed to fetch', 0);
 
 describe('service restarting', () => {
-  it('shows a calm state, not a Problem, and asks again quietly', () => {
+  it('shows a calm note, not a Problem, over the last copy and asks again quietly', () => {
     vi.useFakeTimers();
     const reload = vi.fn();
-    const failed = { state: 'failed', error: down, data: undefined } as unknown as Loaded<string>;
+    const failed = { state: 'failed', error: down, data: 'last copy', loadedAt: 1 } as unknown as Loaded<string>;
     render(<Load result={failed} what="the update status" reload={reload}>{(d) => <p>{d}</p>}</Load>);
     expect(screen.getByText(/restarting, back in a moment/)).toBeTruthy();
     expect(screen.queryByText(/Problem/)).toBeNull();

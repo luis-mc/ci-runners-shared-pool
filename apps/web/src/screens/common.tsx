@@ -33,9 +33,6 @@ export function Load<T>({
     return () => clearTimeout(t);
   }, [restarting, reload, result]);
   if (result.state === 'loading') return <Loading what={`Loading ${what}`} />;
-  if (restarting && result.state === 'failed' && result.data === undefined) {
-    return <Loading what={RESTARTING} />;
-  }
   if (result.state === 'failed' && result.data === undefined) {
     const why =
       result.error instanceof ApiError && result.error.code === 'github_unavailable'
