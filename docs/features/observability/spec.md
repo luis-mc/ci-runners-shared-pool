@@ -523,3 +523,4 @@ A rule this spec cites is proven by a test that exists. A rule whose guard is st
 Proof: UX-6, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58 `scripts/design/design-system-follow.test.ts`
 Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-22, UX-24 `scripts/design/design-system-follow.test.ts`
