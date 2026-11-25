@@ -14,6 +14,8 @@ import (
 	"strconv"
 	"time"
 
+	"golang.org/x/sync/errgroup"
+
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler"
 )
@@ -37,6 +39,16 @@ type Source interface {
 	// after since, each rounded up to the next whole minute (R5.15).
 	MinutesSavedSince(ctx context.Context, since time.Time) ([]OSMinutes, error)
 }
+
+// QueuePager is an optional Source extension: it returns at most limit queued jobs, in queue order, and the
+// exact number of queued jobs, both from SQL (LIMIT plus a count query), so the snapshot never loads the
+// whole queue. A Source without it is read through QueuedJobs and capped here.
+type QueuePager interface {
+	QueuedJobsPage(ctx context.Context, limit int) (jobs []gen.Job, total int, err error)
+}
+
+// readConcurrency bounds the parallel reads of one snapshot (one per Source method).
+const readConcurrency = 4
 
 // LastIDer gives the id of the newest event, so a client opens the stream
 // with it as Last-Event-ID. The events hub implements it.
@@ -85,21 +97,50 @@ func (s *Service) Get(ctx context.Context) (gen.Overview, error) {
 	if s.Events != nil {
 		last = s.Events.LastID()
 	}
-	machines, err := s.Source.Machines(ctx)
-	if err != nil {
-		return gen.Overview{}, fmt.Errorf("overview machines: %w", err)
-	}
-	queued, err := s.Source.QueuedJobs(ctx)
-	if err != nil {
-		return gen.Overview{}, fmt.Errorf("overview queue: %w", err)
-	}
-	running, err := s.Source.RunningJobs(ctx)
-	if err != nil {
-		return gen.Overview{}, fmt.Errorf("overview running: %w", err)
-	}
-	saved, err := s.Source.MinutesSavedSince(ctx, StartOfDay(now(), s.Loc))
-	if err != nil {
-		return gen.Overview{}, fmt.Errorf("overview minutes saved: %w", err)
+	// The four reads are independent: run them together, at most readConcurrency at once.
+	var (
+		machines []gen.Machine
+		queued   []gen.Job
+		count    int
+		running  []gen.Job
+		saved    []OSMinutes
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(readConcurrency)
+	g.Go(func() (err error) {
+		if machines, err = s.Source.Machines(gctx); err != nil {
+			return fmt.Errorf("overview machines: %w", err)
+		}
+		return nil
+	})
+	g.Go(func() (err error) {
+		if p, ok := s.Source.(QueuePager); ok {
+			// The source caps the rows and counts the rest in SQL.
+			if queued, count, err = p.QueuedJobsPage(gctx, MaxQueuedListed); err != nil {
+				return fmt.Errorf("overview queue: %w", err)
+			}
+			return nil
+		}
+		if queued, err = s.Source.QueuedJobs(gctx); err != nil {
+			return fmt.Errorf("overview queue: %w", err)
+		}
+		count = len(queued)
+		return nil
+	})
+	g.Go(func() (err error) {
+		if running, err = s.Source.RunningJobs(gctx); err != nil {
+			return fmt.Errorf("overview running: %w", err)
+		}
+		return nil
+	})
+	g.Go(func() (err error) {
+		if saved, err = s.Source.MinutesSavedSince(gctx, StartOfDay(now(), s.Loc)); err != nil {
+			return fmt.Errorf("overview minutes saved: %w", err)
+		}
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		return gen.Overview{}, err
 	}
 
 	sort.SliceStable(machines, func(i, j int) bool {
@@ -108,7 +149,6 @@ func (s *Service) Get(ctx context.Context) (gen.Overview, error) {
 		}
 		return machines[i].Name < machines[j].Name
 	})
-	count := len(queued)
 	if len(queued) > MaxQueuedListed {
 		queued = queued[:MaxQueuedListed]
 	}
@@ -185,6 +225,9 @@ type EmptySource struct{}
 
 // Machines implements Source.
 func (EmptySource) Machines(context.Context) ([]gen.Machine, error) { return nil, nil }
+
+// QueuedJobsPage implements QueuePager.
+func (EmptySource) QueuedJobsPage(context.Context, int) ([]gen.Job, int, error) { return nil, 0, nil }
 
 // QueuedJobs implements Source.
 func (EmptySource) QueuedJobs(context.Context) ([]gen.Job, error) { return nil, nil }

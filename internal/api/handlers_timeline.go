@@ -1,7 +1,10 @@
 package api
 
 import (
+	"golang.org/x/sync/errgroup"
+
 	"context"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"net/http"
 	"time"
 
@@ -33,8 +36,17 @@ func (s *server) GetTimeline(ctx context.Context, req gen.GetTimelineRequestObje
 	if req.Params.MachineId != nil {
 		in.MachineID = *req.Params.MachineId
 	}
-	views, err := s.opts.Machines.List(ctx)
-	if err != nil {
+	// Machines, finished jobs and open jobs are independent reads: run them together.
+	var (
+		views []machines.View
+		err   error
+	)
+	g, gctx := errgroup.WithContext(ctx)
+	g.SetLimit(3)
+	g.Go(func() (e error) { views, e = s.opts.Machines.List(gctx); return e })
+	g.Go(func() (e error) { in.Finished, e = s.finishedJobs(gctx, now); return e })
+	g.Go(func() (e error) { in.Open, e = s.opts.JobsData.OpenJobs(gctx); return e })
+	if err = g.Wait(); err != nil {
 		return fail(err)
 	}
 	for _, v := range views {
@@ -43,12 +55,6 @@ func (s *server) GetTimeline(ctx context.Context, req gen.GetTimelineRequestObje
 			name = v.Machine.ID
 		}
 		in.Machines = append(in.Machines, timelineMachine{ID: v.Machine.ID, Name: name, Slots: v.Settings.JobSlots})
-	}
-	if in.Finished, err = s.finishedJobs(ctx, now); err != nil {
-		return fail(err)
-	}
-	if in.Open, err = s.opts.JobsData.OpenJobs(ctx); err != nil {
-		return fail(err)
 	}
 	in.Flags = s.flagsFor(ctx, in.Open)
 	if in.Forecasts, err = newForecaster(s.opts.JobsData, now).forJobs(ctx, in.Open); err != nil {
