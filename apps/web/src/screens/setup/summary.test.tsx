@@ -4,11 +4,15 @@ import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-libra
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { renderApp, repository, runner, signedIn } from '../../testing/mock';
-import { groupByMachine, runnerTotals } from '../runners/Runners';
+import { groupByMachine, runnerSummary } from '../runners/Runners';
 import { showStrip, STRIP_STORE_NAME } from '../overview/HowCrspWorks';
-import { poolGives, poolTotals, runnerKinds } from './SetupSummary';
+import { poolGives, runnerKinds } from './SetupSummary';
 
 afterEach(cleanup);
+
+/** The summary line of a page: its whole text, since the dots and the dash are their own nodes. */
+const summary = (text: string) =>
+  screen.findByText((_, el) => el?.className === 'ds-summary' && el.textContent === text);
 beforeEach(() => {
   try {
     window.localStorage.clear();
@@ -131,21 +135,18 @@ describe('Shared Pool summary and first-run guide (D33)', () => {
       screen.getByRole('link', { name: 'Open Pool setup' }).getAttribute('href'),
     ).toBe('/setup/pool');
     expect(screen.getByText('1 repository uses the pool.')).toBeTruthy();
-    expect(screen.getByText('1 runner: 1 persistent, 0 ephemeral.')).toBeTruthy();
+    expect(await summary('1 runner — 1 persistent · 0 ephemeral')).toBeTruthy();
   });
 
   it('words the cards', () => {
-    expect(runnerKinds([])).toBe('0 runners: 0 persistent, 0 ephemeral.');
+    expect(runnerKinds([])).toEqual({
+      total: [{ count: 0, word: 'runner', plural: 'runners' }],
+      states: [
+        { count: 0, word: 'persistent' },
+        { count: 0, word: 'ephemeral' },
+      ],
+    });
     expect(poolGives([])).toBe('0 machines, pool size not set.');
-  });
-
-  it('words the totals', () => {
-    expect(poolTotals({ machines: 2, runners: 6, busy: 2 })).toBe(
-      '2 machines, 6 runners, 2 busy',
-    );
-    expect(poolTotals({ machines: 1, runners: 1, busy: 0 })).toBe(
-      '1 machine, 1 runner, 0 busy',
-    );
   });
 });
 
@@ -169,7 +170,7 @@ describe('Runners grouped by machine (D32)', () => {
   ];
 
   it('counts the pool and groups by machine in name order', () => {
-    expect(runnerTotals(items)).toBe('2 machines, 3 runners, 1 busy');
+    expect(runnerSummary(items).total.map((t) => t.count)).toEqual([2, 3]);
     const g = groupByMachine(items);
     expect(g.map((x) => [x.name, x.rows.length])).toEqual([
       ['build-1', 2],
@@ -194,7 +195,10 @@ describe('Runners grouped by machine (D32)', () => {
       items: [items[0]!, busy, items[2]!],
     });
     renderApp(api, '/setup/runners');
-    expect(await screen.findByText('2 machines, 3 runners, 1 busy')).toBeTruthy();
+    expect(
+      await summary('2 machines · 3 runners — 2 idle · 1 busy · 0 not ready'),
+    ).toBeTruthy();
+    expect(screen.queryByText('Not ready')).toBeNull();
     const t1 = await screen.findByRole('table', { name: 'Runners on build-1' });
     expect(screen.getByRole('table', { name: 'Runners on win-1' })).toBeTruthy();
     expect(within(t1).getByText(/octo\/app test/)).toBeTruthy();

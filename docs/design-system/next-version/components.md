@@ -856,6 +856,15 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `packages/ui/src/components/Spark.tsx` (`Spark`: `label`, `values`, `tone`, `unit`; `sparkChars`), `packages/ui/src/components.css` (`ds-spark`).
 - **Rules:** UX-17, UX-58, CORE-5.
 - **Guard:** `packages/ui/src/components/terminal.test.tsx`.
+## 81. Summary line
+
+- **Used for:** a set of counts of one thing, said once: the pool on Setup > Runners, the Runners and Machines cards of Setup > Summary, the minutes saved by system on the Overview. It replaces a list of labels on the left and values on the right for counts (UX-86).
+- **Looks:** one line of text, number first: `1 machine · 5 runners — 4 idle · 0 busy · 1 not ready`. Totals come first, a dash, then the states, joined by a middle dot. A zero is dim (muted text). A count above zero that needs a person is bold in the warning colour (not ready) or the danger colour (failed). Everything else keeps the text colour. It wraps on a phone and never scrolls sideways.
+- **Anatomy:** `total` (what there is: items with a count, a word and a plural) and optional `states` (how it is: items with a count, a word and an optional tone `warning` or `danger`). The dots and the dash are hidden from a screen reader; the numbers and words read in order.
+- **Tokens:** `--ds-color-text-muted`, `--ds-color-needs-you`, `--ds-color-problem`, `--ds-weight-bold`. No new token.
+- **Source:** `packages/ui/src/components/SummaryLine.tsx` (`SummaryLine`), `packages/ui/src/components.css` (`ds-summary`). A page passes numbers only.
+- **Rules:** UX-86, UX-17, UX-58, CORE-1, CORE-3, CORE-7.
+- **Guard:** `packages/ui/src/components/SummaryLine.test.tsx`; `apps/web/src/screens/runners/Runners.test.tsx`; the no-app-CSS scan and the DOM layout checks at 360, 393 and 1300 px.
 
 ## How to add a component
 
