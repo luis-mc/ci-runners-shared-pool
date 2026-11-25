@@ -59,6 +59,8 @@ type Env struct {
 	PollEvery time.Duration
 	// Version and GoVersion for `version`.
 	Version, GoVersion string
+	// SchemaVersion is the database schema this build carries; `version` prints it (operations R5.13). Zero prints nothing.
+	SchemaVersion int64
 	// Modes are the built-in long-running modes, registered by cmd/crsp.
 	Modes map[string]ModeFunc
 	// Context is cancelled on Ctrl+C.

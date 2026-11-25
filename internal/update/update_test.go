@@ -1017,3 +1017,42 @@ func waitCancelled(t *testing.T, h *harness) {
 		}
 	}
 }
+
+// Operations R5.13: a build whose database schema is older than the database is refused; a newer or an
+// unknown one is not.
+func TestSelfCheckRefusesAnOlderSchema(t *testing.T) {
+	cases := []struct {
+		name    string
+		db, bin int64
+		known   bool
+		refused bool
+	}{
+		{"older", 44, 40, true, true},
+		{"same", 44, 44, true, false},
+		{"newer", 44, 45, true, false},
+		{"unknown", 44, 0, false, false},
+	}
+	for _, c := range cases {
+		m := New(Options{Current: "1.0.0", Dir: t.TempDir(), GOOS: "linux", GOARCH: "amd64",
+			DBSchema:     func(context.Context) (int64, error) { return c.db, nil },
+			BinarySchema: func(context.Context, string) (int64, bool, error) { return c.bin, c.known, nil }})
+		err := m.checkSchema(context.Background(), "x", "1.1.0")
+		if (err != nil) != c.refused {
+			t.Fatalf("%s: %v", c.name, err)
+		}
+	}
+	// An agent has no database: nothing is checked.
+	if err := New(Options{Current: "1.0.0", Dir: t.TempDir(), GOOS: "linux", GOARCH: "amd64"}).checkSchema(context.Background(), "x", "1.1.0"); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestBinarySchemaReadsTheSecondLineOfVersion(t *testing.T) {
+	m := schemaLine.FindStringSubmatch("crsp 1.2.3 (go1.27)\nschema 44\n")
+	if m == nil || m[1] != "44" {
+		t.Fatalf("%v", m)
+	}
+	if schemaLine.FindStringSubmatch("crsp 1.2.3 (go1.27)\n") != nil {
+		t.Fatal("an old build prints no schema")
+	}
+}
