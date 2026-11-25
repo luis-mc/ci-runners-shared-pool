@@ -26,3 +26,4 @@ The changes of this version that the apps still have to build. One line per chan
 - C148: change the table text of every list to the new UX-72: wrap, break, ellipsis plus tooltip and tap to expand (cell full-text, component 62); retire the `rowHeights` guard (LOOK40).
 - C150: build the runner timeline, cell full-text and the stacked trend chart (components 61 to 63); the stat tile, ranked findings strip and bar list are built (LOOK41).
 - C19: use the shared slot timeline (component 77) for every jobs-over-time chart; the apps pass rows, bars and `nowMs` only (LOOK58).
+- C49: build the Terminal, Download progress and weighted progress bar (components 82, 83, 16) into the shared wizard; every long-running step (install, update, runner add) passes `ProgressEvent` data (UX-87 to UX-89).
