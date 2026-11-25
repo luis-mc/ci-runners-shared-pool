@@ -412,6 +412,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.JobsData = d.DB.Jobs()
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
+	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}
 	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
 	// Metrics export: off until the owner turns it on in Settings (observability R5.40).
 	msvc := newMetrics(d.DB, d.Secrets, runnerSvc, d.Machines, logger)
