@@ -115,7 +115,7 @@ func TestFailedAddCleansUp(t *testing.T) {
 	if !strings.Contains(r.cmd.Calls[last].Stdin, "Remove-LocalUser") {
 		t.Errorf("last call = %s", r.cmd.Calls[last].Stdin)
 	}
-	if r.cmd.Calls[last-1].SecretEnv["ACTIONS_RUNNER_INPUT_TOKEN"] != "RMTOKEN" || !strings.Contains(r.cmd.Calls[last-1].Env["CRSP_ARGS"], "remove") {
+	if r.cmd.Calls[last-1].SecretEnv["ACTIONS_RUNNER_INPUT_TOKEN"] != "RMTOKEN" || strings.Join(r.cmd.Calls[last-1].Args, " ") != "remove" {
 		t.Errorf("registration not removed with the remove token: %+v", r.cmd.Calls[last-1])
 	}
 	if !strings.Contains(r.cmd.Calls[last-2].Stdin, "Win32_Service") {

@@ -16,7 +16,6 @@ package windows
 import (
 	"context"
 	"crypto/rand"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"maps"
@@ -50,6 +49,9 @@ type Config struct {
 	// LookupSID reads the SID of a local account in this process, without
 	// PowerShell. Nil means the PowerShell script (tests, non-Windows).
 	LookupSID func(account string) (string, error)
+	// RunnerTimeout bounds one Runner.Listener configure or remove; zero means
+	// RunnerStepTimeout (OPS96).
+	RunnerTimeout time.Duration
 }
 
 // DefaultConfig is the production layout.
@@ -463,16 +465,52 @@ func ConfigureArgs(githubURL, name, group string, labels []string) []string {
 	return append([]string{"configure"}, persistent.ConfigArgs(githubURL, name, group, labels)...)
 }
 
-// runner runs Runner.Listener (configure or remove). The arguments are one
-// JSON array, each argument on its own. The exit code is checked.
-func (b *Backend) runner(ctx context.Context, step, folder string, args []string, token string) error {
-	raw, err := json.Marshal(args)
-	if err != nil {
-		return err
+// RunnerStepTimeout bounds one Runner.Listener configure or remove. Both are a
+// few calls to GitHub and end in well under a minute; a run that is still going
+// after this is stuck, and the add fails with that reason instead of hanging
+// (OPS96).
+const RunnerStepTimeout = 5 * time.Minute
+
+// RunnerTimeoutError is a Runner.Listener step that did not end in time. It
+// was stopped, and its last output says where it stood (OPS96).
+type RunnerTimeoutError struct {
+	Step    string
+	Verb    string
+	Limit   time.Duration
+	LastOut string
+}
+
+func (e *RunnerTimeoutError) Error() string {
+	out := e.LastOut
+	if out == "" {
+		out = "(no output)"
 	}
-	res, err := b.ps(ctx, scriptRunner,
-		map[string]string{"CRSP_FOLDER": folder, "CRSP_ARGS": string(raw)},
-		map[string]string{"ACTIONS_RUNNER_INPUT_TOKEN": token})
+	return fmt.Sprintf("%s: Runner.Listener %s did not finish within %s and was stopped; its last output: %s", e.Step, e.Verb, e.Limit, out)
+}
+
+// runner runs Runner.Listener (configure or remove) directly, never through
+// PowerShell or config.cmd (OPS96). Each argument is passed on its own; the
+// token is in the environment of this one process. Its stdin is empty (the
+// null device), so a prompt the listener could still show reads end of input
+// and fails at once instead of waiting; its output is drained by the command
+// runner. The run is bounded by RunnerStepTimeout. The exit code is checked.
+func (b *Backend) runner(ctx context.Context, step, folder string, args []string, token string) error {
+	limit := b.cfg.RunnerTimeout
+	if limit <= 0 {
+		limit = RunnerStepTimeout
+	}
+	rctx, cancel := context.WithTimeout(ctx, limit)
+	defer cancel()
+	res, err := b.d.Cmd.Run(rctx, ListenerCommand(folder, args, token))
+	if ctx.Err() == nil && errors.Is(rctx.Err(), context.DeadlineExceeded) {
+		verb := ""
+		if len(args) > 0 {
+			verb = args[0]
+		}
+		e := &RunnerTimeoutError{Step: step, Verb: verb, Limit: limit, LastOut: b.redact(lastLines(res.Stdout+"\n"+res.Stderr, 5))}
+		b.log(step, e.Error())
+		return e
+	}
 	if err != nil {
 		return fmt.Errorf("%s: %w", step, err)
 	}
@@ -480,6 +518,32 @@ func (b *Backend) runner(ctx context.Context, step, folder string, args []string
 		return fmt.Errorf("%s: runner exited %d: %s", step, res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 	}
 	return nil
+}
+
+// ListenerCommand is the call of the runner folder's Runner.Listener.exe:
+// the arguments one by one, the folder as working directory, no stdin, and
+// the token only in SecretEnv (OPS96, runners R5.18).
+func ListenerCommand(folder string, args []string, token string) sys.Command {
+	return sys.Command{
+		Name:      Join(folder, "bin", "Runner.Listener.exe"),
+		Args:      append([]string(nil), args...),
+		Dir:       folder,
+		SecretEnv: map[string]string{"ACTIONS_RUNNER_INPUT_TOKEN": token},
+	}
+}
+
+// lastLines keeps the last n non-empty lines of s, joined by " | ".
+func lastLines(s string, n int) string {
+	var kept []string
+	for _, l := range strings.FieldsFunc(s, func(r rune) bool { return r == '\n' || r == '\r' }) {
+		if t := strings.TrimSpace(l); t != "" {
+			kept = append(kept, t)
+		}
+	}
+	if len(kept) > n {
+		kept = kept[len(kept)-n:]
+	}
+	return strings.Join(kept, " | ")
 }
 
 func (b *Backend) writeHooksAndEnv(folder, env string, keep bool) error {
