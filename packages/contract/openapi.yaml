@@ -1388,6 +1388,7 @@ paths:
       summary: The dependency setup jobs of a machine, newest first
       description: dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
       x-auth: user
+      x-rate-limit: 120/minute/user
       parameters:
         - $ref: '#/components/parameters/MachineId'
       responses:
@@ -1440,6 +1441,7 @@ paths:
       tags: [machines]
       summary: One dependency setup job with its live progress and log tail
       x-auth: user
+      x-rate-limit: 240/minute/user
       parameters:
         - $ref: '#/components/parameters/MachineId'
         - $ref: '#/components/parameters/DependencyJobId'
