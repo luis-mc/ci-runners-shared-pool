@@ -173,9 +173,10 @@ IDs `DEP1` and up. Milestone is a proposal.
 | Windows 10 or 11 | WSL2 | `wsl --install --no-distribution` (Microsoft documents the command; a restart is usually needed) | yes | likely | Needs virtualization on in firmware: Verify reads it and says so when off (the user changes it in firmware; crsp cannot) |
 | Windows | Docker in WSL2 | in the crsp WSL distro: Docker's apt repository install, then `systemctl`/service start; reached through `wsl docker` (an engine kind crsp already supports) | no more than WSL | no | Preferred: no Docker Desktop licence (D-DEP-4); matches `engineFix` text today |
 | Windows | Docker Desktop (alternative) | Docker's installer, silent; WSL2 backend; the Docker MSI **reboots by default** unless told not to | yes (all users) or per-user | likely | Licence note; verify flag names against the current Docker page at build |
-| macOS | engine | a Docker Desktop install (disk image or a package manager) or another allowed engine; the first start asks the user for a system permission that crsp cannot click | yes (the privileged helper prompt) | no | Needs a person at the screen once: the wizard says so and waits (D-DEP-9) |
+| macOS | engine | Docker Desktop through the Homebrew cask `docker-desktop` (Homebrew checks the file); crsp then opens the app and waits for the engine. The first start asks the user for a system permission that crsp cannot click. Without Homebrew: "Do it myself" | yes (the privileged helper prompt) | no | Needs a person at the screen once: the wizard says so and waits (D-DEP-9) |
 | Linux (Debian, Ubuntu) | engine | Docker's signed apt repository, then the packages, then enable the service; remove conflicting unofficial packages first, with a yes | yes (sudo, no password prompt possible: see D-DEP-1) | no | The `get.docker.com` convenience script is for development and is not recommended for production; crsp uses the repository method |
-| Linux (other families) | engine | the same through the distro's package manager, from a list; else "Do it myself" with exact steps | yes | no | Snap Docker is not supported by tools such as Coolify; crsp treats it as "installed, wrong kind" and says so |
+| Linux (Fedora, Red Hat family) | engine | Docker's rpm repository: crsp fetches `docker-ce.repo` for `fedora`, `rhel` or `centos` (Rocky and Alma use `centos`) from download.docker.com over https, then `dnf -y install` the Docker packages and enables the service | yes | no | Conflicting unofficial packages are named, never removed without a yes (same rule as apt) |
+| Linux (other families) | engine | "Do it myself" with exact steps | yes | no | Snap Docker is not supported by tools such as Coolify; crsp treats it as "installed, wrong kind" and says so |
 | any | stopped engine | start the service or app; no install | per system | no | |
 
 ### 7.2 Per runner type and target machine
@@ -257,10 +258,20 @@ Open. Each has a recommended default; the owner answers.
 - Web: wizard "Get this machine ready" (`apps/web/src/screens/dependencies/`), doors in Add runners, Add machine and Setup.
 - Events: `DepsEvent` on the agent link has the shape of the CRSP247 progress contract; the API sends it snake_case (`DependencyEvent`) and the page maps it with `toProgressEvent`.
 
+**Built in CRSP265 (step one, all systems).** On top of CRSP248, for Windows, Linux and macOS.
+
+- DEP9 prepare is real: after Verify, `container.Backend.PreparePool` makes the base image `crsp-pool:<key>` through the existing local, registry, build path and, for a persistent Linux runner on a Windows or macOS machine, the persistent pool container `crsp-persistent-pool` with its two volumes. It registers no runner, builds nothing that is there and never re-creates a pool container. A machine without the container backend says the image is made at the first runner, as before. Wired by `Config.PreparePool` (agent) and `agentPreparePool` (`cmd/crsp`).
+- DEP1, DEP2, DEP3 on Linux: Fedora and the Red Hat family are installed through Docker's rpm repository (undo kinds `rpm-repo-file`, `rpm-package`); the offer for every Linux family shows the same facts and, for families crsp does not install, the manual steps.
+- DEP1, DEP2, DEP3 on macOS: Docker Desktop through the Homebrew cask, with the licence tick; a stopped Docker Desktop is opened (no install, no tick); Verify waits up to 4 minutes for the engine and then says the person may need to approve one system prompt (undo kind `brew-cask`). A stopped Docker in the crsp WSL distro on Windows is started the same way (no install).
+- DEP14 on every system: the doctor text of `machine.engine` names Docker Desktop on a Mac (it showed a Linux `systemctl` line before) and links `?setup=deps` for all three systems.
+- DEP16: tests that a machine that meets the need, an unknown item, a stopped engine and a missing licence tick install nothing.
+
+**Verified where.** Windows and Linux paths: unit tests with fakes on Linux; CI runs the suites on Windows, Linux and macOS (macos-latest). **macOS was built and CI-tested only; it was not run on a real Mac.** The Windows paths were not run on a real Windows machine in this task. The Homebrew cask name `docker-desktop` and the `docker-ce.repo` paths were not fetched at build; confirm them on a real Mac and a real Fedora before relying on them.
+
 **Known gaps of M1.**
 
-- Docker Desktop installer URL and SHA-256 are not pinned (the vendor host was not readable at build). The agent refuses it with "not pinned in this release"; the wizard offers "Do it myself". Docker in WSL2 (Windows) and Docker Engine (Ubuntu, Debian) are the installable paths. Other Linux families and macOS give "Do it myself" steps.
-- DEP9: the agent's prepare hook is empty. The image `crsp-pool:<key>` and the pool container are still made at the first runner start by the existing path; the wizard says so.
+- Docker Desktop on Windows: installer URL and SHA-256 are not pinned (the vendor host was not readable at build). The agent refuses it with "not pinned in this release"; the wizard offers "Do it myself". Installable paths: Docker in WSL2 (Windows), Docker Engine (Ubuntu, Debian, Fedora and the Red Hat family), Docker Desktop through Homebrew (macOS). Other Linux families, and a Mac without Homebrew, give "Do it myself" steps.
+- DEP9 (closed in CRSP265): the prepare step uses the base image of the machine. Layer images of a runner with extra layers are still made at its first start.
 - Removing conflicting unofficial Docker packages needs a yes that the protocol does not yet carry; the install is refused and names them.
 - The engine inside the crsp-owned WSL distro `crsp-docker` is found by the setup code; the container backend elsewhere still looks only at `wsl docker`.
 - Resume after a restart is sent when a capable agent reports again, not only after "Restart now".

@@ -22,3 +22,6 @@ CRSP248 already built DEP1/2/3/14/16 for Windows and Ubuntu/Debian. What was mis
 
 ## Log
 - 2026-11-25 branch pushed, code read.
+- 2026-11-25 built: DEP9 PreparePool (+tests), dnf path (Fedora, Rocky/Alma), Homebrew cask path (macOS) + wait for the app, start of stopped Docker (macOS, WSL distro), undo kinds rpm-*/brew-cask, doctor mac text (DEP14), DEP16 tests. Local: go test of agent, install, depsetup, backend, doctor, cmd green on Linux. Windows paths: fakes only. macOS: not run on a real Mac.
+- Spec section 7.1 and 11 updated; change notes dependency-setup and doctor written by hand in the docs_fold format: luismc-docs scripts (docs_fold.py, docs_check.py) are not installed in this cloud sandbox, so docs_check was NOT run. CI/owner should run it.
+- Next: CI on branch, rename to CRSP265-integration, PR.
