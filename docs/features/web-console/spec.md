@@ -155,7 +155,7 @@ The states named for every list follow the design system: loading (component 16,
 - **Actions:** none. The overview only shows and links (UX-52).
 - **States:** loading; empty (no machine yet: "No machines yet. Add a machine to start." links to Machines, content.md); could not load; live; live updates paused. Every section, and the loading and could-not-load states, sit in a pane titled in its top border (UX-10, UX-51); the h1 stays in every state (UX-17).
 - **Components:** 1, 8, 15, 17, 19, 27, 31.
-- **Milestone:** M1. Minutes saved: later (milestone 8).
+- **Milestone:** M1. Minutes saved: built (CRSP256, observability R5.15 to R5.19, R5.34): two tiles on the Overview (*Minutes saved today*, *Money saved today*), the Analytics tabs *Savings* and *Compare*, and the section *Savings rates* in Settings > Repositories (owner edits, tab Save).
 
 ### 4.3 Repositories (Setup > Pool setup)
 

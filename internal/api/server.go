@@ -114,6 +114,9 @@ type Options struct {
 	RegistryRead RegistryReadService
 	// Compare serves the speed comparison route (handlers_compare.go). Nil answers 501.
 	Compare CompareService
+	// Savings and SavingsRates serve the minutes saved report and its rate table (handlers_savings.go). Nil answers 501.
+	Savings      SavingsService
+	SavingsRates SavingsRates
 	// Trial serves the trial mode routes (handlers_trial.go). Nil answers 501.
 	Trial TrialService
 	// Insights serves the CI run insights routes (handlers_insights.go). Nil answers 501.

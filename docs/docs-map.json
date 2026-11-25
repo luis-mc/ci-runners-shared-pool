@@ -16,6 +16,12 @@
     "apps/web/src/features/users/**": [
       "docs/features/github-integration/spec.md"
     ],
+    "apps/web/src/screens/analytics/Compare.tsx": [
+      "docs/features/observability/spec.md"
+    ],
+    "apps/web/src/screens/analytics/Savings.tsx": [
+      "docs/features/observability/spec.md"
+    ],
     "apps/web/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
@@ -24,6 +30,9 @@
     ],
     "apps/web/src/screens/runners/**": [
       "docs/features/dependency-setup/spec.md"
+    ],
+    "apps/web/src/screens/savings/**": [
+      "docs/features/observability/spec.md"
     ],
     "apps/web/src/screens/settings/InsightsUpdate*": [
       "docs/features/ci-run-insights/spec.md"

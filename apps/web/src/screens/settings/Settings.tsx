@@ -45,6 +45,7 @@ import { SECTIONS, settingsPath } from './sections';
 import { AuditLogSettings, ConfigExportSettings } from './AuditLog';
 import { InsightsUpdateSettings } from './InsightsUpdate';
 import { BudgetsSettings } from './Budgets';
+import { SavingsRatesSettings } from '../savings/SavingsRates';
 import { NotificationsSettings } from './Notifications';
 import { PublicRepositoriesSettings } from './PublicRepositoriesSettings';
 import { NetworkSettings } from './ListenAddress';
@@ -128,6 +129,9 @@ export function RepositoriesTab() {
       </At>
       <At id="budgets">
         <BudgetsSettings />
+      </At>
+      <At id="savings-rates">
+        <SavingsRatesSettings />
       </At>
     </TabForm>
   );

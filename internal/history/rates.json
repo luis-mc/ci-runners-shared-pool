@@ -1,0 +1,11 @@
+{
+  "_comment": "The shipped rates of GitHub-hosted runners, private repositories only, in US dollars per billed minute. source_url is the page they come from and copied_on the day they were copied. Re-read the page and move the date together with any rate change. Same values as internal/compare/prices.json.",
+  "source_url": "https://docs.github.com/en/billing/reference/actions-runner-pricing",
+  "copied_on": "2026-11-15",
+  "rates": [
+    { "os": "linux", "size": "arm", "per_minute": 0.005 },
+    { "os": "linux", "size": "standard", "per_minute": 0.008 },
+    { "os": "macos", "size": "standard", "per_minute": 0.08 },
+    { "os": "windows", "size": "standard", "per_minute": 0.016 }
+  ]
+}
