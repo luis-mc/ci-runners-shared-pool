@@ -305,7 +305,7 @@ func (r *Runner) download(ctx context.Context, j *job, p depsetup.Pinned) (strin
 	got, err := sys.SHA256(path)
 	if err != nil || !strings.EqualFold(got, p.SHA256) {
 		_ = sys.Remove(path)
-		return "", errors.New(MsgHashMismatch)
+		return "", errors.New(MsgHashMismatch) //nolint:staticcheck // ST1005: a sentence shown to the user
 	}
 	j.status("download", "The file matches the checksum in this release.")
 	return path, nil
@@ -521,7 +521,7 @@ func (r *Runner) installDockerEngine(ctx context.Context, j *job, p depsetup.Pin
 	}
 	keyWas, repoWas := sys.Exists(KeyPath), sys.Exists(RepoPath)
 	if !allowedURL(KeyURL(family)) {
-		return errors.New(MsgNotPinned)
+		return errors.New(MsgNotPinned) //nolint:staticcheck // ST1005: a sentence shown to the user
 	}
 	j.status("install", "Fetching Docker's signing key from download.docker.com")
 	if err := sys.Download(ctx, KeyURL(family), KeyPath, j.progress("install", "Fetching Docker's signing key")); err != nil {
@@ -583,7 +583,7 @@ func (r *Runner) installedPackages(ctx context.Context, j *job, names []string) 
 
 func (r *Runner) installDesktop(ctx context.Context, j *job, p depsetup.Pinned, file string) (bool, error) {
 	if file == "" {
-		return false, errors.New(MsgNotPinned)
+		return false, errors.New(MsgNotPinned) //nolint:staticcheck // ST1005: a sentence shown to the user
 	}
 	defer func() { _ = r.cfg.Sys.Remove(file) }()
 	argv := append([]string{file}, p.SilentArgs...)

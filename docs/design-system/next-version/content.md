@@ -1766,3 +1766,41 @@ The words of the four Analytics tabs as the approved LOOK54 prototype shows them
 | Reserved: {text}. / Reserved. The machine keeps room free for this job. | The overview line of a reserved job. |
 | is reserved: {machine} keeps room free for it since {time} UTC | The detail of a reserved bar on the slot timeline. |
 | {job} ran out of time after {span}; crsp stops it {now or in a span} | The detail of a timer ran out bar of a running job. |
+
+## Dependency setup words (CRSP248, dependency-setup spec 4)
+
+The words of the wizard "Get this machine ready" and of its doors. Built from the shared Wizard, Message, Card, Facts, CheckRow, ChoiceField, CodeBlock, Disclosure and Ask parts; no rule, token or component changes. `{machine}` is the machine's name, `{items}` the names of what is installed ("WSL2 and Docker"), `{n}` a number.
+
+| Word | Where |
+|---|---|
+| Get this machine ready | Name of the wizard, its page title and the link of every door (Add runners, Add machine, Setup, the doctor finding machine.engine). |
+| Look, Choose, Review, Installing, Verify, Done | The six steps (Check is a retired word, so the first step is Look). |
+| Reading the machine | The one wait line of the first step. |
+| This PC cannot run Linux containers yet / This machine cannot run Linux containers yet | Headline of the first run (the first on Windows). |
+| Docker is installed but not running. | Headline when only the engine is stopped. Primary Start Docker (busy: Starting Docker). |
+| Missing / Installed but not running / Installed, but the wrong kind / Ready | The state of each item in the facts list, then its reason. |
+| Install {items} (about {n} minutes, one restart) | The primary of the first run, computed from the facts. |
+| Way to get it, (recommended) | The choice field when more than one way is offered; the recommended way is marked, the others stay. |
+| Do it myself, Try again, Use another machine | Beside the primary of the first run. |
+| Run these steps on {machine}, then press Try again. | Above the copyable steps. |
+| crsp cannot reach {machine}. | Offline machine. No install is offered. Primary Try again. |
+| crsp will install {items} on {machine}. | First line of Review. |
+| Install {n} items / Install 1 item (busy: Installing) | The primary of Review. Cancel is on its left. |
+| Version, Comes from, Download, Disk space, Time, Administrator, Restart, Licence, To undo | The facts of each item on Review. Needed / Not needed, Likely / Not expected. |
+| Download {size}, disk space {size} of {size} free, about {n} minutes, needs an administrator, one restart. | The summary line of Review. |
+| I have the right to use Docker Desktop | Licence tick; the primary stays off until it is ticked. |
+| Tick the licence box first. | Reason beside the off primary. |
+| Show the log | Folded live log of the work step. |
+| On {machine}. You can leave this page; the work goes on. | Line of the work step. |
+| Restart needed to finish. | Paused. Primary Restart this PC now (asks first), other Later. |
+| Restart {machine} now? / The machine restarts at once. crsp goes on when it is connected again. | The question before the restart. |
+| Stopped. {n} items were installed. The rest was not started. | Stopped. Primary Continue, other Undo what was installed. |
+| Undo what was installed on {machine}? / Only what crsp added in this run goes. Software that was there before stays. | The question before the undo; it names each item. |
+| Undone. What this run added was removed. Software that was there before was not touched. | After the undo. |
+| Installing {items} did not finish. {why} {what next} | Failed. Primary Try again; others Show the steps for myself, Undo what was installed. |
+| {machine} is ready. Docker answers and a test container ran. | Done. |
+| Installed by crsp: Nothing, Engine version | Rows of Done. |
+| To undo, remove only what is listed above. crsp can do it for you: Undo what was installed. | Done, how to undo. |
+| Continue, Continue where you were, Open the machine | Primary of Done (back to the task, or the machine page). |
+| No container engine answers on {machine}. Linux runners need one. | Door note on Add machine and Setup. |
+| {machine} cannot run Linux containers yet. | Door note on Add runners. |

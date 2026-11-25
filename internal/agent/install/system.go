@@ -55,7 +55,6 @@ type OSOptions struct {
 // OSSystem is the real System (os/exec and net/http).
 type OSSystem struct {
 	opt OSOptions
-	mu  sync.Mutex
 }
 
 var _ System = (*OSSystem)(nil)
