@@ -50,6 +50,7 @@ import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import { machineStatus } from '../overview/Overview';
 import { MachineDockerDiskSection } from './MachineDockerDisk';
+import { MachineUptimeSection } from './MachineUptime';
 import { MachinePolicySection, PolicyStatus, takingState } from './MachinePolicy';
 import { usePoolSize } from './PoolSize';
 import { RecoverySection } from './Recovery';
@@ -481,6 +482,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           ]}
         />
       </Section>
+      <MachineUptimeSection machineId={m.id} />
       <RecoverySection m={m} onChanged={onChanged} />
       <Section title="Service">
         <Stack gap="tight">

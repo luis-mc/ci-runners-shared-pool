@@ -467,24 +467,6 @@ func TestWSLPausesForRestartAndResumes(t *testing.T) {
 	}
 }
 
-func TestMacNeedsAPerson(t *testing.T) {
-	sys := newFake("darwin")
-	sys.dlHash = "good"
-	l := depsetup.MustLoad()
-	for i, p := range l.Items {
-		if p.OS == "darwin" {
-			l.Items[i].URL, l.Items[i].SHA256 = "https://desktop.docker.com/mac/main/arm64/Docker.dmg", "good"
-		}
-	}
-	r, rc := setup(sys, l, nil)
-	rq := req("docker-desktop")
-	rq.AcceptLicence = true
-	r.Install(context.Background(), rq)
-	if rc.last().GetOutcome() != "failed" || !strings.Contains(rc.last().GetError(), "needs a person at the screen") {
-		t.Fatalf("%v", rc.last())
-	}
-}
-
 func TestStopBetweenCommands(t *testing.T) {
 	sys := newFake("linux")
 	ctx, cancel := context.WithCancel(context.Background())

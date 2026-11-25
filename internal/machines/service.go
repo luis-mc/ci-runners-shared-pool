@@ -53,6 +53,14 @@ type DrainOverdueNotifier interface {
 	DrainOverdue(machineID, kind string, waited time.Duration, jobs []JobRef)
 }
 
+// PresenceObserver is told what the controller sees of each machine, so the uptime and the reasons
+// a machine took no job are kept (R5.83). *machinehealth.Service implements it.
+type PresenceObserver interface {
+	// Observe: online says whether heartbeats arrive; reason is empty while the machine takes jobs, why
+	// it takes none while online, or why it went offline; lastSeen is the last heartbeat.
+	Observe(ctx context.Context, machineID string, online bool, reason string, lastSeen, at time.Time)
+}
+
 // Options configure a Service.
 type Options struct {
 	Repo Repository
@@ -116,6 +124,7 @@ type Service struct {
 	rec sync.Mutex
 
 	mu       sync.Mutex
+	presence PresenceObserver
 	loads    map[string]Load
 	policies map[string]Policy
 	engines  map[string]Engine
