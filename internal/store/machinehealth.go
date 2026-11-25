@@ -82,7 +82,7 @@ func scanHealth(sc scanner) (MachineHealthRow, error) {
 // DeleteMachineHealth drops a machine's health rows (the machine was removed).
 func (s *Store) DeleteMachineHealth(ctx context.Context, machineID string) error {
 	return s.inTx(ctx, func(ctx context.Context, tx *sql.Tx, _ *sqlcgen.Queries) error {
-		for _, q := range []string{`DELETE FROM machine_health WHERE machine_id = ?`, `DELETE FROM machine_disk_samples WHERE machine_id = ?`} {
+		for _, q := range []string{`DELETE FROM machine_health WHERE machine_id = ?`, `DELETE FROM machine_disk_samples WHERE machine_id = ?`, `DELETE FROM machine_presence WHERE machine_id = ?`} {
 			if _, err := tx.ExecContext(ctx, q, machineID); err != nil {
 				return err
 			}
