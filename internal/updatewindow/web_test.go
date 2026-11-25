@@ -16,6 +16,18 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/tray"
 )
 
+func newReq(method, url string, body io.Reader) (*http.Request, error) {
+	return http.NewRequestWithContext(context.Background(), method, url, body)
+}
+
+func getURL(url string) (*http.Response, error) {
+	req, err := newReq(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	return http.DefaultClient.Do(req)
+}
+
 type fakeSvc struct {
 	mu       sync.Mutex
 	st       tray.Status
@@ -163,7 +175,7 @@ func TestPageIsServedOnlyOnItsSecretAddressAndHost(t *testing.T) {
 	s, _ := reviewScreen(t)
 	_, srv, base := serve(t, s)
 	get := func(url, host string) int {
-		req, _ := http.NewRequest(http.MethodGet, url, nil)
+		req, _ := newReq(http.MethodGet, url, nil)
 		if host != "" {
 			req.Host = host
 		}
@@ -188,12 +200,16 @@ func TestPageIsServedOnlyOnItsSecretAddressAndHost(t *testing.T) {
 func TestPressNeedsThePostAndTheHeader(t *testing.T) {
 	s, _ := reviewScreen(t)
 	w, _, base := serve(t, s)
-	r, _ := http.Post(base+"press", "application/json", strings.NewReader(`{"id":"not_now"}`))
+	pr, _ := newReq(http.MethodPost, base+"press", strings.NewReader(`{"id":"not_now"}`))
+	r, err := http.DefaultClient.Do(pr)
+	if err != nil {
+		t.Fatal(err)
+	}
 	_ = r.Body.Close()
 	if r.StatusCode != http.StatusBadRequest {
 		t.Fatalf("a press without the header answered %d", r.StatusCode)
 	}
-	req, _ := http.NewRequest(http.MethodPost, base+"press", strings.NewReader(`{"id":"not_now"}`))
+	req, _ := newReq(http.MethodPost, base+"press", strings.NewReader(`{"id":"not_now"}`))
 	req.Header.Set("X-Crsp-Window", "1")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -216,7 +232,7 @@ func TestPressNeedsThePostAndTheHeader(t *testing.T) {
 func TestViewIsTheScreensJSON(t *testing.T) {
 	s, _ := reviewScreen(t)
 	_, _, base := serve(t, s)
-	r, err := http.Get(base + "view")
+	r, err := getURL(base + "view")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -258,11 +274,11 @@ func TestRunStopsWhenAPressClosesAndNoWindowOpensIsAnError(t *testing.T) {
 	w := &Web{Screen: s, Dir: t.TempDir(), Open: func(u string, _, _ int) error {
 		url = u
 		go func() {
-			req, _ := http.NewRequest(http.MethodGet, u+"view", nil)
+			req, _ := newReq(http.MethodGet, u+"view", nil)
 			if r, err := http.DefaultClient.Do(req); err == nil {
 				_ = r.Body.Close()
 			}
-			p, _ := http.NewRequest(http.MethodPost, u+"press", strings.NewReader(`{"id":"not_now"}`))
+			p, _ := newReq(http.MethodPost, u+"press", strings.NewReader(`{"id":"not_now"}`))
 			p.Header.Set("X-Crsp-Window", "1")
 			if r, err := http.DefaultClient.Do(p); err == nil {
 				_ = r.Body.Close()
@@ -295,7 +311,7 @@ func TestSilenceFromThePageIsAClosedWindow(t *testing.T) {
 	defer func() { webGoneAfter = old }()
 	s, _ := reviewScreen(t)
 	w := &Web{Screen: s, Open: func(u string, _, _ int) error {
-		r, err := http.Get(u + "view") // the page shows once, then goes quiet
+		r, err := getURL(u + "view") // the page shows once, then goes quiet
 		if err == nil {
 			_ = r.Body.Close()
 		}

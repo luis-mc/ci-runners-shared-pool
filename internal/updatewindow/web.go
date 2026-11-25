@@ -290,7 +290,11 @@ func (w *Web) focusRunning() bool {
 	}
 	url := strings.TrimSpace(string(b))
 	cl := http.Client{Timeout: time.Second}
-	resp, err := cl.Get(url + webAlivePath) //nolint:noctx // a one-second loopback ask
+	req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, url+webAlivePath, nil)
+	if err != nil {
+		return false
+	}
+	resp, err := cl.Do(req)
 	if err != nil {
 		return false
 	}
