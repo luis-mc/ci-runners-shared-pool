@@ -763,7 +763,7 @@ type NoticeDelivery struct {
 	NextTryAt   string
 	LastError   string
 	GroupCount  int64
-	GroupKey    string
+	BurstGroup  string
 	CreatedAt   string
 	UpdatedAt   string
 	DeliveredAt sql.NullString

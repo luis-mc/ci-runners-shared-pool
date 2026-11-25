@@ -84,7 +84,7 @@ func (t *Tx) InsertDelivery(d NoticeDelivery) error {
 	err := t.q.InsertDelivery(t.ctx, sqlcgen.InsertDeliveryParams{
 		ID: d.ID, NoticeID: d.NoticeID, ChannelID: d.ChannelID, ChannelKind: d.ChannelKind, ChannelName: d.ChannelName,
 		OwnerLogin: d.OwnerLogin, Target: d.Target, Status: d.Status, NextTryAt: d.NextTryAt, GroupCount: d.GroupCount,
-		GroupKey: d.GroupKey, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt,
+		BurstGroup: d.BurstGroup, CreatedAt: d.CreatedAt, UpdatedAt: d.UpdatedAt,
 	})
 	if err != nil {
 		return fmt.Errorf("insert delivery: %w", err)
@@ -98,15 +98,15 @@ func (t *Tx) CountChannelDeliveriesSince(channelID string, since time.Time) (int
 	return int(n), err
 }
 
-// CountGroupKeySince counts the deliveries of one group key (channel, type, state) since a time (R5.13).
-func (t *Tx) CountGroupKeySince(channelID, groupKey string, since time.Time) (int, error) {
-	n, err := t.q.CountGroupKeySince(t.ctx, sqlcgen.CountGroupKeySinceParams{ChannelID: channelID, GroupKey: groupKey, CreatedAt: FormatTime(since)})
+// CountBurstGroupSince counts the deliveries of one group key (channel, type, state) since a time (R5.13).
+func (t *Tx) CountBurstGroupSince(channelID, burstGroup string, since time.Time) (int, error) {
+	n, err := t.q.CountBurstGroupSince(t.ctx, sqlcgen.CountBurstGroupSinceParams{ChannelID: channelID, BurstGroup: burstGroup, CreatedAt: FormatTime(since)})
 	return int(n), err
 }
 
 // FindOpenGroup returns the queued group delivery of a key made since a time; ok is false when there is none.
-func (t *Tx) FindOpenGroup(channelID, groupKey string, since time.Time) (NoticeDelivery, bool, error) {
-	d, err := t.q.FindOpenGroup(t.ctx, sqlcgen.FindOpenGroupParams{ChannelID: channelID, GroupKey: groupKey, CreatedAt: FormatTime(since)})
+func (t *Tx) FindOpenGroup(channelID, burstGroup string, since time.Time) (NoticeDelivery, bool, error) {
+	d, err := t.q.FindOpenGroup(t.ctx, sqlcgen.FindOpenGroupParams{ChannelID: channelID, BurstGroup: burstGroup, CreatedAt: FormatTime(since)})
 	if errors.Is(err, sql.ErrNoRows) {
 		return NoticeDelivery{}, false, nil
 	}

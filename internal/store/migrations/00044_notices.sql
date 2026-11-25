@@ -54,7 +54,7 @@ CREATE TABLE notice_deliveries (
     last_error    TEXT NOT NULL DEFAULT '',
     -- A grouped delivery says how many notices it stands for (R5.13); a summary delivery too (R5.12).
     group_count   INTEGER NOT NULL DEFAULT 0,
-    group_key     TEXT NOT NULL DEFAULT '',
+    burst_group     TEXT NOT NULL DEFAULT '',
     created_at    TEXT NOT NULL,
     updated_at    TEXT NOT NULL,
     delivered_at  TEXT
