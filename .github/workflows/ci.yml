@@ -102,7 +102,8 @@ jobs:
     name: lint
     needs: decide
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ubuntu-latest
+    # CRSP268: pool first. CRSP_LINT, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
+    runs-on: ${{ fromJSON(vars.CRSP_LINT || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -189,7 +190,8 @@ jobs:
     name: codegen and types
     needs: decide
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ubuntu-latest
+    # CRSP268: pool first. CRSP_TYPES, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
+    runs-on: ${{ fromJSON(vars.CRSP_TYPES || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 20
     permissions:
       contents: read
@@ -236,7 +238,8 @@ jobs:
     name: tests
     needs: decide
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ubuntu-latest
+    # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
+    runs-on: ${{ fromJSON(vars.CRSP_TESTS || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
     permissions:
       contents: read
@@ -558,7 +561,8 @@ jobs:
     # A release pull request never waits for lint and types and is never skipped; any
     # other run waits for them to pass (CRSP209, DL-97/DL-98).
     if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
-    runs-on: ubuntu-latest
+    # CRSP268: pool first. CRSP_E2E, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
+    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
     strategy:
       fail-fast: false
