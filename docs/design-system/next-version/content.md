@@ -431,6 +431,12 @@ The words of Settings, Appearance (UX-60).
 
 | Place | Word |
 |---|---|
+| Look label | Look |
+| Look help | Colour themes keep the console's own look. Terminal is the dark, flat look of a system monitor. The choice is saved at once. |
+| Look choices | Colour themes, Terminal |
+| Palette label | Palette |
+| Palette help | The colours of the Terminal theme. The choice is saved at once. |
+| Palette choices | Green, Amber, Ice |
 | Choice label | Theme |
 | Choice help | The colours of the console. The choice is saved at once. |
 | Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord |

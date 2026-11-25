@@ -3622,3 +3622,213 @@ a.ds-stat:focus-visible {
     align-items: start;
   }
 }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Terminal theme (CRSP300, component 78 to 80). Only token values and shared-part rules: 1 px borders, no radius, no
+   shadow, no glow. Every rule is scoped to the theme, so the other six themes look as before.
+   --------------------------------------------------------------------------------------------------------------- */
+[data-theme-name='terminal'] {
+  --ds-font-body:
+    'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --ds-font-mono:
+    'JetBrains Mono', ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, monospace;
+  --ds-font-prose: Inter, system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+/* A pane and a panel: the title sits over the border as plain text. No cut-in marks, no coloured letter. */
+[data-theme-name='terminal'] .ds-pane__title,
+.ds-panel__title {
+  color: var(--ds-color-text);
+  font-weight: 600;
+}
+[data-theme-name='terminal'] .ds-pane__title::before,
+[data-theme-name='terminal'] .ds-pane__title::after {
+  content: none;
+}
+[data-theme-name='terminal'] .ds-pane__title .ds-link {
+  color: inherit;
+}
+[data-theme-name='terminal'] .ds-pane,
+[data-theme-name='terminal'] .ds-card,
+[data-theme-name='terminal'] .ds-panel {
+  border-radius: 0;
+  box-shadow: none;
+}
+/* The panel: the same box as a pane with a coloured border by tone, and the right-hand text on the border. */
+.ds-panel {
+  position: relative;
+  display: grid;
+  align-content: start;
+  gap: var(--ds-space-3);
+  min-inline-size: 0;
+  padding: var(--ds-pane-inner);
+  background: var(--ds-color-surface);
+  border: var(--ds-border-thin) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-2);
+}
+.ds-panel__title {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: var(--ds-space-3);
+  max-inline-size: calc(100% - var(--ds-space-5));
+  margin: 0;
+  padding-inline: var(--ds-space-1);
+  transform: translateY(-50%);
+  font-size: var(--ds-size-3);
+  line-height: var(--ds-line-height-tight);
+  color: var(--ds-color-primary);
+  background: var(--ds-color-page);
+  overflow-wrap: anywhere;
+}
+.ds-panel__count {
+  color: var(--ds-color-text-muted);
+  font-weight: 400;
+}
+.ds-panel__meta {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: var(--ds-space-3);
+  padding-inline: var(--ds-space-1);
+  transform: translateY(-50%);
+  color: var(--ds-color-text-muted);
+  background: var(--ds-color-page);
+  font-size: var(--ds-size-2);
+}
+.ds-panel__footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--ds-space-3);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='ok'] {
+  border-color: var(--ds-color-done);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='note'] {
+  border-color: var(--ds-color-note);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='needs'] {
+  border-color: var(--ds-color-needs-you);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='problem'] {
+  border-color: var(--ds-color-problem);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='accent'] {
+  border-color: var(--ds-color-accent);
+}
+/* A machine name is the one coloured title: bold, in the tone colour. */
+[data-theme-name='terminal'] .ds-panel__title[data-machine] {
+  font-weight: 700;
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='ok'] .ds-panel__title[data-machine] {
+  color: var(--ds-color-done);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='note'] .ds-panel__title[data-machine] {
+  color: var(--ds-color-note);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='needs'] .ds-panel__title[data-machine] {
+  color: var(--ds-color-needs-you);
+}
+[data-theme-name='terminal']
+  .ds-panel[data-tone='problem']
+  .ds-panel__title[data-machine] {
+  color: var(--ds-color-problem);
+}
+[data-theme-name='terminal']
+  .ds-panel[data-tone='accent']
+  .ds-panel__title[data-machine] {
+  color: var(--ds-color-accent);
+}
+[data-theme-name='terminal'] .ds-panel[data-tone='quiet'] .ds-panel__title[data-machine] {
+  color: var(--ds-color-text-muted);
+}
+.ds-panel:focus-within {
+  border-color: var(--ds-color-focus);
+}
+[data-theme-name='terminal'] .ds-pane__title[data-machine] {
+  color: var(--ds-color-done);
+  font-weight: 700;
+}
+/* Meter: block characters, the level in words beside them. */
+.ds-meter {
+  display: inline-flex;
+  align-items: baseline;
+  gap: var(--ds-space-2);
+  white-space: nowrap;
+}
+.ds-meter__blocks {
+  letter-spacing: -1px;
+}
+.ds-meter__on {
+  color: var(--ds-color-done);
+}
+.ds-meter[data-level='warn'] .ds-meter__on {
+  color: var(--ds-color-needs-you);
+}
+.ds-meter[data-level='bad'] .ds-meter__on {
+  color: var(--ds-color-problem);
+}
+.ds-meter__off {
+  color: var(--ds-color-divider);
+}
+.ds-meter__text {
+  color: var(--ds-color-text-muted);
+}
+/* Spark: eight-level block characters in one row. */
+.ds-spark {
+  white-space: pre;
+  letter-spacing: 0;
+  color: var(--ds-color-done);
+}
+.ds-spark[data-tone='note'] {
+  color: var(--ds-color-note);
+}
+.ds-spark[data-tone='needs'] {
+  color: var(--ds-color-needs-you);
+}
+.ds-spark[data-tone='problem'] {
+  color: var(--ds-color-problem);
+}
+.ds-spark[data-tone='quiet'] {
+  color: var(--ds-color-text-muted);
+}
+/* Selected row: the selection tint and a 2 px primary inset on the left edge (instead of the reverse-video fill). */
+[data-theme-name='terminal'] .ds-table tr[data-selected],
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus,
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus-within,
+[data-theme-name='terminal'] .ds-table tr[data-active] {
+  background: var(--ds-color-selection);
+  color: var(--ds-color-text);
+}
+[data-theme-name='terminal'] .ds-table tr[data-selected] > :first-child,
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus > :first-child,
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus-within > :first-child,
+[data-theme-name='terminal'] .ds-table tr[data-active] > :first-child {
+  box-shadow: inset 2px 0 var(--ds-color-primary);
+}
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus a,
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus-within a,
+[data-theme-name='terminal'] .ds-table tr[data-active] a,
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus td,
+[data-theme-name='terminal'] .ds-table tr[data-list-row]:focus-within td,
+[data-theme-name='terminal'] .ds-table tr[data-active] td {
+  color: var(--ds-color-text);
+}
+/* Button, tag and chip: flat, one pixel, the border carries the tone. */
+[data-theme-name='terminal'] .ds-button,
+[data-theme-name='terminal'] .ds-tag {
+  border-radius: 0;
+  box-shadow: none;
+}
+/* The key-hint bar: dim text, the key itself in the main text colour. */
+[data-theme-name='terminal'] .ds-keyhints {
+  color: var(--ds-color-text-muted);
+}
+[data-theme-name='terminal'] .ds-keyhints .ds-kbd {
+  color: var(--ds-color-text);
+  font-weight: 600;
+  background: none;
+  border: none;
+}
+/* Prose (help, long messages) stays in the sans font for reading. */
+[data-theme-name='terminal'] .ds-message__body,
+[data-theme-name='terminal'] .ds-field__help {
+  font-family: var(--ds-font-prose);
+}
