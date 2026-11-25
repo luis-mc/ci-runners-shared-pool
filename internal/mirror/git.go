@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backend/sys"
 )
 
@@ -23,7 +24,7 @@ const (
 )
 
 // ErrBadRepo is a repository name that is not owner/repo.
-var ErrBadRepo = errors.New("a repository is named owner/repo with letters, digits, - _ and .")
+var ErrBadRepo = errors.New("a repository is named owner/repo with letters, digits, - _ and dots")
 
 var repoRe = regexp.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_.-]*/[A-Za-z0-9_.-]+$`)
 
@@ -53,7 +54,7 @@ type Git struct {
 	Run     sys.Commands
 	Now     func() time.Time
 	Timeout time.Duration
-	// GitHub is the base address of the upstream, "https://github.com" by default.
+	// GitHub is the base address of the upstream; addresses.DefaultGitHubURL by default.
 	GitHub string
 
 	mu    sync.Mutex
@@ -72,7 +73,7 @@ func (g *Git) github() string {
 	if g.GitHub != "" {
 		return strings.TrimRight(g.GitHub, "/")
 	}
-	return "https://github.com"
+	return addresses.DefaultGitHubURL
 }
 
 func (g *Git) timeout() time.Duration {

@@ -10,6 +10,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backend/sys"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/caches/toolcache"
@@ -25,7 +26,7 @@ func needGit(t *testing.T) {
 
 func git(t *testing.T, dir string, args ...string) string {
 	t.Helper()
-	cmd := exec.Command("git", append([]string{"-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false"}, args...)...)
+	cmd := exec.CommandContext(context.Background(), "git", append([]string{"-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false"}, args...)...)
 	cmd.Dir = dir
 	b, err := cmd.CombinedOutput()
 	if err != nil {
@@ -101,14 +102,14 @@ func TestMissRefreshesThenFallsBack(t *testing.T) {
 }
 
 func TestRewriteSendsFetchToMirrorAndPushToGitHub(t *testing.T) {
-	g := &Git{GitHub: "https://github.com"}
+	g := &Git{GitHub: addresses.DefaultGitHubURL}
 	pairs, err := g.Rewrite("owner/repo", "https://10.0.0.5:8443/git/")
 	if err != nil {
 		t.Fatal(err)
 	}
 	want := [][2]string{
-		{"url.https://10.0.0.5:8443/git/owner__repo.git.insteadOf", "https://github.com/owner/repo"},
-		{"url.https://github.com/owner/repo.pushInsteadOf", "https://github.com/owner/repo"},
+		{"url.https://10.0.0.5:8443/git/owner__repo.git.insteadOf", addresses.DefaultGitHubURL + "/owner/repo"},
+		{"url." + addresses.DefaultGitHubURL + "/owner/repo.pushInsteadOf", addresses.DefaultGitHubURL + "/owner/repo"},
 	}
 	if len(pairs) != 2 || pairs[0] != want[0] || pairs[1] != want[1] {
 		t.Fatalf("got %v", pairs)
@@ -322,7 +323,7 @@ func TestRowsFollowSwitchesAndToolCache(t *testing.T) {
 
 func TestLayoutIsSiblingOfToolCache(t *testing.T) {
 	for goos, want := range map[string]string{"linux": "/var/lib/crsp", "darwin": "/Users/Shared/crsp"} {
-		if got := LayoutFor(toolcache.DefaultRoot(goos)).Base; got != want {
+		if got := filepath.ToSlash(LayoutFor(toolcache.DefaultRoot(goos)).Base); got != want {
 			t.Errorf("%s: %s", goos, got)
 		}
 	}

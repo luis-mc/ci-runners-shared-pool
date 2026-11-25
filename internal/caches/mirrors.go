@@ -27,7 +27,6 @@ const DefaultHolderID = "controller"
 
 type mirrorWipe struct {
 	jobs []string
-	err  string
 	at   time.Time
 }
 
