@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/agent"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/agentlink"
@@ -25,6 +26,27 @@ func remoteAgent(l *agentlink.Link) runners.Agent {
 func agentRunners() runners.Agent {
 	reg := registry.Platform(realDeps(func(string, string) {}, secretRedactor.Redact, secretRedactor.Add))
 	return runners.NewLocalAgent(reg)
+}
+
+// agentPreparePool lets dependency setup make the runner image and the
+// persistent pool container (DEP9) through the container backend; a machine
+// without that backend returns nil and the image is made at the first runner.
+func agentPreparePool() func(context.Context, string, bool) error {
+	reg := registry.Platform(realDeps(func(string, string) {}, secretRedactor.Redact, secretRedactor.Add))
+	return func(ctx context.Context, arch string, persistent bool) error {
+		b, ok := reg.Get(backend.Docker)
+		if !ok {
+			return errors.New("this machine has no container backend to prepare")
+		}
+		p, ok := b.(interface {
+			PreparePool(context.Context, string, bool) (backend.ImageRef, error)
+		})
+		if !ok {
+			return errors.New("this machine has no container backend to prepare")
+		}
+		_, err := p.PreparePool(ctx, arch, persistent)
+		return err
+	}
 }
 
 // agentImageSource lists the job images of the container backend for the

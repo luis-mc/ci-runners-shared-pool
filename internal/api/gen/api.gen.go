@@ -4102,6 +4102,27 @@ func (e UpdateStatusState) Valid() bool {
 	}
 }
 
+// Defines values for UptimeWindowWindow.
+const (
+	UptimeWindowWindowN24h UptimeWindowWindow = "24h"
+	UptimeWindowWindowN30d UptimeWindowWindow = "30d"
+	UptimeWindowWindowN7d  UptimeWindowWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the UptimeWindowWindow enum.
+func (e UptimeWindowWindow) Valid() bool {
+	switch e {
+	case UptimeWindowWindowN24h:
+		return true
+	case UptimeWindowWindowN30d:
+		return true
+	case UptimeWindowWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for VariableStatus.
 const (
 	VariableStatusMissing    VariableStatus = "missing"
@@ -7120,6 +7141,23 @@ type MachineTaking struct {
 // MachineTakingReason Why not, absent while taking. offline; stopped (Stop new jobs from the console); mode_paused (mode Paused); tray_paused (a pause from the tray); on_battery (Automatic with the battery pause on); busy (load over the budget); base_image_missing; disk_low.
 type MachineTakingReason string
 
+// MachineUptime The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC.
+type MachineUptime struct {
+	MachineId string `json:"machine_id"`
+
+	// Periods Periods of the last 30 days in which the machine took no new job, newest first, at most 50.
+	Periods []UptimePeriod `json:"periods"`
+
+	// Since When the controller first saw the machine.
+	Since *time.Time `json:"since,omitempty"`
+
+	// Watched False until the controller has seen the machine; then the rest is empty.
+	Watched bool `json:"watched"`
+
+	// Windows The windows 24h, 7d and 30d, in this order.
+	Windows []UptimeWindow `json:"windows"`
+}
+
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
 	// Address Email address (kind email).
@@ -9442,6 +9480,39 @@ type UpdateWindow struct {
 	Start string `json:"start"`
 }
 
+// UptimePeriod defines model for UptimePeriod.
+type UptimePeriod struct {
+	// EndedAt Absent while the period goes on.
+	EndedAt *time.Time `json:"ended_at,omitempty"`
+
+	// Offline True when no heartbeat arrived; false when the machine was online but took no job.
+	Offline bool `json:"offline"`
+
+	// Reason Offline: heartbeat_lost, clock_skew or controller_stopped. Online: stopped, mode_paused, tray_paused, on_battery, busy, base_image_missing or disk_low (machines R5.62).
+	Reason    string    `json:"reason"`
+	StartedAt time.Time `json:"started_at"`
+}
+
+// UptimeWindow defines model for UptimeWindow.
+type UptimeWindow struct {
+	// CoveredSeconds The part of the window the controller watched.
+	CoveredSeconds int64 `json:"covered_seconds"`
+	OnlineSeconds  int64 `json:"online_seconds"`
+
+	// TakingPct Online and taking share of the watched time; absent when nothing was watched.
+	TakingPct *float32 `json:"taking_pct,omitempty"`
+
+	// TakingSeconds Online and taking new jobs.
+	TakingSeconds int64 `json:"taking_seconds"`
+
+	// UptimePct Online share of the watched time; absent when nothing was watched.
+	UptimePct *float32           `json:"uptime_pct,omitempty"`
+	Window    UptimeWindowWindow `json:"window"`
+}
+
+// UptimeWindowWindow defines model for UptimeWindow.Window.
+type UptimeWindowWindow string
+
 // User defines model for User.
 type User struct {
 	AddedAt time.Time `json:"added_at"`
@@ -10709,6 +10780,9 @@ type ServerInterface interface {
 	// FreeStaleSlots Free stale slots now
 	// (POST /api/v1/machines/{machineId}/slots/free-stale)
 	FreeStaleSlots(w http.ResponseWriter, r *http.Request, machineId MachineId)
+	// GetMachineUptime The uptime of one machine and why it took no jobs
+	// (GET /api/v1/machines/{machineId}/uptime)
+	GetMachineUptime(w http.ResponseWriter, r *http.Request, machineId MachineId)
 	// GetSession The signed-in user, role and CSRF token
 	// (GET /api/v1/me)
 	GetSession(w http.ResponseWriter, r *http.Request)
@@ -14856,6 +14930,32 @@ func (siw *ServerInterfaceWrapper) FreeStaleSlots(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// GetMachineUptime operation middleware
+func (siw *ServerInterfaceWrapper) GetMachineUptime(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "machineId" -------------
+	var machineId MachineId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "machineId", r.PathValue("machineId"), &machineId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machineId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetMachineUptime(w, r, machineId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetSession operation middleware
 func (siw *ServerInterfaceWrapper) GetSession(w http.ResponseWriter, r *http.Request) {
 
@@ -17892,6 +17992,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/load", wrapper.GetMachineLoad)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/assign/leases", wrapper.ListAssignLeases)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/health", wrapper.GetMachineHealth)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/uptime", wrapper.GetMachineUptime)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/machines/{machineId}/job-stats", wrapper.GetMachineJobStats)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/job-stats", wrapper.GetRunnerJobStats)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timeline", wrapper.GetTimeline)
@@ -22375,6 +22476,45 @@ type FreeStaleSlotsdefaultJSONResponse struct {
 }
 
 func (response FreeStaleSlotsdefaultJSONResponse) VisitFreeStaleSlotsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineUptimeRequestObject struct {
+	MachineId MachineId `json:"machineId"`
+}
+
+type GetMachineUptimeResponseObject interface {
+	VisitGetMachineUptimeResponse(w http.ResponseWriter) error
+}
+
+type GetMachineUptime200JSONResponse MachineUptime
+
+func (response GetMachineUptime200JSONResponse) VisitGetMachineUptimeResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetMachineUptimedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetMachineUptimedefaultJSONResponse) VisitGetMachineUptimeResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -26954,6 +27094,9 @@ type StrictServerInterface interface {
 	// FreeStaleSlots Free stale slots now
 	// (POST /api/v1/machines/{machineId}/slots/free-stale)
 	FreeStaleSlots(ctx context.Context, request FreeStaleSlotsRequestObject) (FreeStaleSlotsResponseObject, error)
+	// GetMachineUptime The uptime of one machine and why it took no jobs
+	// (GET /api/v1/machines/{machineId}/uptime)
+	GetMachineUptime(ctx context.Context, request GetMachineUptimeRequestObject) (GetMachineUptimeResponseObject, error)
 	// GetSession The signed-in user, role and CSRF token
 	// (GET /api/v1/me)
 	GetSession(ctx context.Context, request GetSessionRequestObject) (GetSessionResponseObject, error)
@@ -30200,6 +30343,32 @@ func (sh *strictHandler) FreeStaleSlots(w http.ResponseWriter, r *http.Request, 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(FreeStaleSlotsResponseObject); ok {
 		if err := validResponse.VisitFreeStaleSlotsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetMachineUptime operation middleware
+func (sh *strictHandler) GetMachineUptime(w http.ResponseWriter, r *http.Request, machineId MachineId) {
+	var request GetMachineUptimeRequestObject
+
+	request.MachineId = machineId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetMachineUptime(ctx, request.(GetMachineUptimeRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetMachineUptime")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetMachineUptimeResponseObject); ok {
+		if err := validResponse.VisitGetMachineUptimeResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
