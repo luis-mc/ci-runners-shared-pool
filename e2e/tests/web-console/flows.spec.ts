@@ -251,7 +251,9 @@ test('Runners show their isolation in words', async ({ page }) => {
   await signedIn().install(page);
   await page.goto('/setup/runners');
   await expect(page.getByText('persistent', { exact: true }).first()).toBeVisible();
-  await expect(page.locator('[title*="persistent, state kept between jobs"]').first()).toBeAttached();
+  await expect(
+    page.locator('[title*="persistent, state kept between jobs"]').first(),
+  ).toBeAttached();
 });
 
 test('The owner adds a user', async ({ page }) => {
