@@ -1805,6 +1805,81 @@ func (e MachineTakingReason) Valid() bool {
 	}
 }
 
+// Defines values for NoticeState.
+const (
+	NoticeStateFiring   NoticeState = "firing"
+	NoticeStateResolved NoticeState = "resolved"
+)
+
+// Valid indicates whether the value is a known member of the NoticeState enum.
+func (e NoticeState) Valid() bool {
+	switch e {
+	case NoticeStateFiring:
+		return true
+	case NoticeStateResolved:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NoticeDeliveryStatus.
+const (
+	NoticeDeliveryStatusDelivered   NoticeDeliveryStatus = "delivered"
+	NoticeDeliveryStatusDropped     NoticeDeliveryStatus = "dropped"
+	NoticeDeliveryStatusFailed      NoticeDeliveryStatus = "failed"
+	NoticeDeliveryStatusGrouped     NoticeDeliveryStatus = "grouped"
+	NoticeDeliveryStatusHeld        NoticeDeliveryStatus = "held"
+	NoticeDeliveryStatusQueued      NoticeDeliveryStatus = "queued"
+	NoticeDeliveryStatusWaitingTray NoticeDeliveryStatus = "waiting_tray"
+)
+
+// Valid indicates whether the value is a known member of the NoticeDeliveryStatus enum.
+func (e NoticeDeliveryStatus) Valid() bool {
+	switch e {
+	case NoticeDeliveryStatusDelivered:
+		return true
+	case NoticeDeliveryStatusDropped:
+		return true
+	case NoticeDeliveryStatusFailed:
+		return true
+	case NoticeDeliveryStatusGrouped:
+		return true
+	case NoticeDeliveryStatusHeld:
+		return true
+	case NoticeDeliveryStatusQueued:
+		return true
+	case NoticeDeliveryStatusWaitingTray:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for NoticeTone.
+const (
+	NoticeToneDone     NoticeTone = "done"
+	NoticeToneNeedsYou NoticeTone = "needs_you"
+	NoticeToneNote     NoticeTone = "note"
+	NoticeToneProblem  NoticeTone = "problem"
+)
+
+// Valid indicates whether the value is a known member of the NoticeTone enum.
+func (e NoticeTone) Valid() bool {
+	switch e {
+	case NoticeToneDone:
+		return true
+	case NoticeToneNeedsYou:
+		return true
+	case NoticeToneNote:
+		return true
+	case NoticeToneProblem:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for NotificationChannelScope.
 const (
 	NotificationChannelScopePersonal NotificationChannelScope = "personal"
@@ -4207,16 +4282,16 @@ func (e ListRepositoriesParamsPool) Valid() bool {
 
 // Defines values for ListInsightFindingsParamsState.
 const (
-	Open     ListInsightFindingsParamsState = "open"
-	Resolved ListInsightFindingsParamsState = "resolved"
+	ListInsightFindingsParamsStateOpen     ListInsightFindingsParamsState = "open"
+	ListInsightFindingsParamsStateResolved ListInsightFindingsParamsState = "resolved"
 )
 
 // Valid indicates whether the value is a known member of the ListInsightFindingsParamsState enum.
 func (e ListInsightFindingsParamsState) Valid() bool {
 	switch e {
-	case Open:
+	case ListInsightFindingsParamsStateOpen:
 		return true
-	case Resolved:
+	case ListInsightFindingsParamsStateResolved:
 		return true
 	default:
 		return false
@@ -6765,6 +6840,70 @@ type MachineTaking struct {
 // MachineTakingReason Why not, absent while taking. offline; stopped (Stop new jobs from the console); mode_paused (mode Paused); tray_paused (a pause from the tray); on_battery (Automatic with the battery pause on); busy (load over the budget); base_image_missing; disk_low.
 type MachineTakingReason string
 
+// Notice defines model for Notice.
+type Notice struct {
+	At         time.Time        `json:"at"`
+	Deliveries []NoticeDelivery `json:"deliveries"`
+
+	// Flaps How many times the key fired again inside the flap window (R5.11).
+	Flaps int    `json:"flaps"`
+	Id    string `json:"id"`
+
+	// Link A console path of the subject.
+	Link *string `json:"link,omitempty"`
+
+	// Severity Set for doctor findings.
+	Severity *string     `json:"severity,omitempty"`
+	State    NoticeState `json:"state"`
+
+	// Subject The subject in words, for example a machine name.
+	Subject     string  `json:"subject"`
+	SubjectId   *string `json:"subject_id,omitempty"`
+	SubjectKind *string `json:"subject_kind,omitempty"`
+	Summary     string  `json:"summary"`
+
+	// Tone The four tones of the design system (UX-26).
+	Tone NoticeTone `json:"tone"`
+
+	// Type An event type of R5.1, or notice.summary.
+	Type string `json:"type"`
+}
+
+// NoticeState defines model for Notice.State.
+type NoticeState string
+
+// NoticeDelivery defines model for NoticeDelivery.
+type NoticeDelivery struct {
+	Attempt int `json:"attempt"`
+
+	// Channel The channel's name.
+	Channel string `json:"channel"`
+
+	// Count More than 0 when this delivery stands for a burst of notices (R5.13).
+	Count     *int             `json:"count,omitempty"`
+	Id        string           `json:"id"`
+	Kind      NotificationKind `json:"kind"`
+	LastError *string          `json:"last_error,omitempty"`
+
+	// NextTryAt Present while the delivery is queued.
+	NextTryAt *time.Time           `json:"next_try_at,omitempty"`
+	Status    NoticeDeliveryStatus `json:"status"`
+
+	// Target A host, an email address or a login; never a path or a token.
+	Target string `json:"target"`
+}
+
+// NoticeDeliveryStatus defines model for NoticeDelivery.Status.
+type NoticeDeliveryStatus string
+
+// NoticeList defines model for NoticeList.
+type NoticeList struct {
+	Items []Notice `json:"items"`
+}
+
+// NoticeTone The four tones of the design system (UX-26).
+type NoticeTone string
+
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
 	// Address Email address (kind email).
@@ -6865,6 +7004,20 @@ type NotificationTestResult struct {
 	Message *string   `json:"message,omitempty"`
 	Ok      bool      `json:"ok"`
 	SentAt  time.Time `json:"sent_at"`
+}
+
+// NotificationThresholds The pool thresholds of notices (notifications R5.1, R5.8, R5.11, R5.12).
+type NotificationThresholds struct {
+	// DiskPercent Free space below this percent fires disk.low.
+	DiskPercent       int `json:"disk_percent"`
+	FlapWindowMinutes int `json:"flap_window_minutes"`
+
+	// HourlyCap The most notices one user gets per channel per hour.
+	HourlyCap         int `json:"hourly_cap"`
+	JobWaitingMinutes int `json:"job_waiting_minutes"`
+
+	// OfflineGraceMinutes How long an agent link may be down before machine.offline fires.
+	OfflineGraceMinutes int `json:"offline_grace_minutes"`
 }
 
 // OS defines model for OS.
@@ -9659,6 +9812,11 @@ type ResumeMachineParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// ListNoticesParams defines parameters for ListNotices.
+type ListNoticesParams struct {
+	Limit *int `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
 // DeleteNotificationChannelParams defines parameters for DeleteNotificationChannel.
 type DeleteNotificationChannelParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -9915,6 +10073,9 @@ type CreateNotificationChannelJSONRequestBody = NotificationChannelInput
 
 // UpdateNotificationChannelJSONRequestBody defines body for UpdateNotificationChannel for application/json ContentType.
 type UpdateNotificationChannelJSONRequestBody = NotificationChannelUpdate
+
+// SetNotificationThresholdsJSONRequestBody defines body for SetNotificationThresholds for application/json ContentType.
+type SetNotificationThresholdsJSONRequestBody = NotificationThresholds
 
 // PutRegistryBudgetsJSONRequestBody defines body for PutRegistryBudgets for application/json ContentType.
 type PutRegistryBudgetsJSONRequestBody = RegistryBudgetsInput
@@ -11025,6 +11186,13 @@ type ClientInterface interface {
 	// Corresponds with PUT /api/v1/me/preferences (the `UpdatePreferences` operationId).
 	UpdatePreferences(ctx context.Context, body UpdatePreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// ListNotices The notices of the last 30 days
+	//
+	// notifications R5.32. Every notice of the last 30 days, newest first, with the deliveries the caller may see: an admin or the owner sees all, another user sees the deliveries of their own channels. A delivery names its channel and a host or address, never a path, a token or a secret.
+	//
+	// Corresponds with GET /api/v1/notices (the `ListNotices` operationId).
+	ListNotices(ctx context.Context, params *ListNoticesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListNotificationChannels Notification channels the caller may see
 	//
 	// web-console 4.9, notifications R5.6 to R5.9. Personal channels (email, desktop) are the caller's own; webhooks are pool-wide. A secret is never returned, only whether one is set.
@@ -11081,6 +11249,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/notification-channels/{channelId}/test (the `TestNotificationChannel` operationId).
 	TestNotificationChannel(ctx context.Context, channelId ChannelId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetNotificationThresholds The pool thresholds of notices
+	//
+	// notifications R5.8. Readable by any signed-in user.
+	//
+	// Corresponds with GET /api/v1/notification-thresholds (the `GetNotificationThresholds` operationId).
+	GetNotificationThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetNotificationThresholdsWithBody Change the pool thresholds of notices
+	//
+	// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+	SetNotificationThresholdsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetNotificationThresholds Change the pool thresholds of notices
+	//
+	// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+	SetNotificationThresholds(ctx context.Context, body SetNotificationThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetOverview The overview snapshot
 	//
@@ -14314,6 +14507,23 @@ func (c *Client) UpdatePreferences(ctx context.Context, body UpdatePreferencesJS
 	return c.Client.Do(req)
 }
 
+// ListNotices The notices of the last 30 days
+//
+// notifications R5.32. Every notice of the last 30 days, newest first, with the deliveries the caller may see: an admin or the owner sees all, another user sees the deliveries of their own channels. A delivery names its channel and a host or address, never a path, a token or a secret.
+//
+// Corresponds with GET /api/v1/notices (the `ListNotices` operationId).
+func (c *Client) ListNotices(ctx context.Context, params *ListNoticesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListNoticesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListNotificationChannels Notification channels the caller may see
 //
 // web-console 4.9, notifications R5.6 to R5.9. Personal channels (email, desktop) are the caller's own; webhooks are pool-wide. A secret is never returned, only whether one is set.
@@ -14431,6 +14641,61 @@ func (c *Client) UpdateNotificationChannel(ctx context.Context, channelId Channe
 // Corresponds with POST /api/v1/notification-channels/{channelId}/test (the `TestNotificationChannel` operationId).
 func (c *Client) TestNotificationChannel(ctx context.Context, channelId ChannelId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewTestNotificationChannelRequest(c.Server, channelId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetNotificationThresholds The pool thresholds of notices
+//
+// notifications R5.8. Readable by any signed-in user.
+//
+// Corresponds with GET /api/v1/notification-thresholds (the `GetNotificationThresholds` operationId).
+func (c *Client) GetNotificationThresholds(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetNotificationThresholdsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetNotificationThresholdsWithBody Change the pool thresholds of notices
+//
+// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+func (c *Client) SetNotificationThresholdsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetNotificationThresholdsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetNotificationThresholds Change the pool thresholds of notices
+//
+// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+func (c *Client) SetNotificationThresholds(ctx context.Context, body SetNotificationThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetNotificationThresholdsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -22056,6 +22321,60 @@ func NewUpdatePreferencesRequestWithBody(server string, contentType string, body
 	return req, nil
 }
 
+// NewListNoticesRequest constructs an http.Request for the ListNotices method
+func NewListNoticesRequest(server string, params *ListNoticesParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/notices")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListNotificationChannelsRequest constructs an http.Request for the ListNotificationChannels method
 func NewListNotificationChannelsRequest(server string) (*http.Request, error) {
 	var err error
@@ -22261,6 +22580,73 @@ func NewTestNotificationChannelRequest(server string, channelId ChannelId) (*htt
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewGetNotificationThresholdsRequest constructs an http.Request for the GetNotificationThresholds method
+func NewGetNotificationThresholdsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/notification-thresholds")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSetNotificationThresholdsRequest calls the generic SetNotificationThresholds builder with application/json body
+func NewSetNotificationThresholdsRequest(server string, body SetNotificationThresholdsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetNotificationThresholdsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSetNotificationThresholdsRequestWithBody constructs an http.Request for the SetNotificationThresholds method, with any body, and a specified content type
+func NewSetNotificationThresholdsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/notification-thresholds")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -27766,6 +28152,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /api/v1/me/preferences (the `UpdatePreferences` operationId).
 	UpdatePreferencesWithResponse(ctx context.Context, body UpdatePreferencesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdatePreferencesResponse, error)
 
+	// ListNoticesWithResponse The notices of the last 30 days
+	//
+	// notifications R5.32. Every notice of the last 30 days, newest first, with the deliveries the caller may see: an admin or the owner sees all, another user sees the deliveries of their own channels. A delivery names its channel and a host or address, never a path, a token or a secret.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/notices (the `ListNotices` operationId).
+	ListNoticesWithResponse(ctx context.Context, params *ListNoticesParams, reqEditors ...RequestEditorFn) (*ListNoticesResponse, error)
+
 	// ListNotificationChannelsWithResponse Notification channels the caller may see
 	//
 	// web-console 4.9, notifications R5.6 to R5.9. Personal channels (email, desktop) are the caller's own; webhooks are pool-wide. A secret is never returned, only whether one is set.
@@ -27828,6 +28223,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/notification-channels/{channelId}/test (the `TestNotificationChannel` operationId).
 	TestNotificationChannelWithResponse(ctx context.Context, channelId ChannelId, reqEditors ...RequestEditorFn) (*TestNotificationChannelResponse, error)
+
+	// GetNotificationThresholdsWithResponse The pool thresholds of notices
+	//
+	// notifications R5.8. Readable by any signed-in user.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/notification-thresholds (the `GetNotificationThresholds` operationId).
+	GetNotificationThresholdsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNotificationThresholdsResponse, error)
+
+	// SetNotificationThresholdsWithBodyWithResponse Change the pool thresholds of notices
+	//
+	// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+	SetNotificationThresholdsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetNotificationThresholdsResponse, error)
+
+	// SetNotificationThresholdsWithResponse Change the pool thresholds of notices
+	//
+	// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+	SetNotificationThresholdsWithResponse(ctx context.Context, body SetNotificationThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*SetNotificationThresholdsResponse, error)
 
 	// GetOverviewWithResponse The overview snapshot
 	//
@@ -33917,6 +34339,54 @@ func (r UpdatePreferencesResponse) ContentType() string {
 	return ""
 }
 
+type ListNoticesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *NoticeList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListNoticesResponse) GetJSON200() *NoticeList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListNoticesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListNoticesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListNoticesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListNoticesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListNoticesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListNotificationChannelsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -34144,6 +34614,102 @@ func (r TestNotificationChannelResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r TestNotificationChannelResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetNotificationThresholdsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *NotificationThresholds
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetNotificationThresholdsResponse) GetJSON200() *NotificationThresholds {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetNotificationThresholdsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetNotificationThresholdsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetNotificationThresholdsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetNotificationThresholdsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetNotificationThresholdsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SetNotificationThresholdsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *NotificationThresholds
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SetNotificationThresholdsResponse) GetJSON200() *NotificationThresholds {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SetNotificationThresholdsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SetNotificationThresholdsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SetNotificationThresholdsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetNotificationThresholdsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SetNotificationThresholdsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -40856,6 +41422,21 @@ func (c *ClientWithResponses) UpdatePreferencesWithResponse(ctx context.Context,
 	return ParseUpdatePreferencesResponse(rsp)
 }
 
+// ListNoticesWithResponse The notices of the last 30 days
+//
+// notifications R5.32. Every notice of the last 30 days, newest first, with the deliveries the caller may see: an admin or the owner sees all, another user sees the deliveries of their own channels. A delivery names its channel and a host or address, never a path, a token or a secret.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/notices (the `ListNotices` operationId).
+func (c *ClientWithResponses) ListNoticesWithResponse(ctx context.Context, params *ListNoticesParams, reqEditors ...RequestEditorFn) (*ListNoticesResponse, error) {
+	rsp, err := c.ListNotices(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListNoticesResponse(rsp)
+}
+
 // ListNotificationChannelsWithResponse Notification channels the caller may see
 //
 // web-console 4.9, notifications R5.6 to R5.9. Personal channels (email, desktop) are the caller's own; webhooks are pool-wide. A secret is never returned, only whether one is set.
@@ -40959,6 +41540,51 @@ func (c *ClientWithResponses) TestNotificationChannelWithResponse(ctx context.Co
 		return nil, err
 	}
 	return ParseTestNotificationChannelResponse(rsp)
+}
+
+// GetNotificationThresholdsWithResponse The pool thresholds of notices
+//
+// notifications R5.8. Readable by any signed-in user.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/notification-thresholds (the `GetNotificationThresholds` operationId).
+func (c *ClientWithResponses) GetNotificationThresholdsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetNotificationThresholdsResponse, error) {
+	rsp, err := c.GetNotificationThresholds(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetNotificationThresholdsResponse(rsp)
+}
+
+// SetNotificationThresholdsWithBodyWithResponse Change the pool thresholds of notices
+//
+// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+func (c *ClientWithResponses) SetNotificationThresholdsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetNotificationThresholdsResponse, error) {
+	rsp, err := c.SetNotificationThresholdsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetNotificationThresholdsResponse(rsp)
+}
+
+// SetNotificationThresholdsWithResponse Change the pool thresholds of notices
+//
+// notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/notification-thresholds (the `SetNotificationThresholds` operationId).
+func (c *ClientWithResponses) SetNotificationThresholdsWithResponse(ctx context.Context, body SetNotificationThresholdsJSONRequestBody, reqEditors ...RequestEditorFn) (*SetNotificationThresholdsResponse, error) {
+	rsp, err := c.SetNotificationThresholds(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetNotificationThresholdsResponse(rsp)
 }
 
 // GetOverviewWithResponse The overview snapshot
@@ -46398,6 +47024,39 @@ func ParseUpdatePreferencesResponse(rsp *http.Response) (*UpdatePreferencesRespo
 	return response, nil
 }
 
+// ParseListNoticesResponse parses an HTTP response from a ListNoticesWithResponse call
+func ParseListNoticesResponse(rsp *http.Response) (*ListNoticesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListNoticesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NoticeList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListNotificationChannelsResponse parses an HTTP response from a ListNotificationChannelsWithResponse call
 func ParseListNotificationChannelsResponse(rsp *http.Response) (*ListNotificationChannelsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -46542,6 +47201,72 @@ func ParseTestNotificationChannelResponse(rsp *http.Response) (*TestNotification
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest NotificationTestResult
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetNotificationThresholdsResponse parses an HTTP response from a GetNotificationThresholdsWithResponse call
+func ParseGetNotificationThresholdsResponse(rsp *http.Response) (*GetNotificationThresholdsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetNotificationThresholdsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NotificationThresholds
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetNotificationThresholdsResponse parses an HTTP response from a SetNotificationThresholdsWithResponse call
+func ParseSetNotificationThresholdsResponse(rsp *http.Response) (*SetNotificationThresholdsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetNotificationThresholdsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest NotificationThresholds
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

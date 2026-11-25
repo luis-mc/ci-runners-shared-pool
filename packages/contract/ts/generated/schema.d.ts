@@ -3262,6 +3262,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/notices": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The notices of the last 30 days
+         * @description notifications R5.32. Every notice of the last 30 days, newest first, with the deliveries the caller may see: an admin or the owner sees all, another user sees the deliveries of their own channels. A delivery names its channel and a host or address, never a path, a token or a secret.
+         */
+        get: operations["listNotices"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/notification-thresholds": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The pool thresholds of notices
+         * @description notifications R5.8. Readable by any signed-in user.
+         */
+        get: operations["getNotificationThresholds"];
+        /**
+         * Change the pool thresholds of notices
+         * @description notifications R5.8. Owner and admins only. Every value is checked against its range; the change goes to the audit log.
+         */
+        put: operations["setNotificationThresholds"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/webhooks/github": {
         parameters: {
             query?: never;
@@ -6782,6 +6826,66 @@ export interface components {
             /** Format: date-time */
             last_test_at?: string;
             last_test_ok?: boolean;
+        };
+        /** @description The pool thresholds of notices (notifications R5.1, R5.8, R5.11, R5.12). */
+        NotificationThresholds: {
+            /** @description How long an agent link may be down before machine.offline fires. */
+            offline_grace_minutes: number;
+            job_waiting_minutes: number;
+            /** @description Free space below this percent fires disk.low. */
+            disk_percent: number;
+            flap_window_minutes: number;
+            /** @description The most notices one user gets per channel per hour. */
+            hourly_cap: number;
+        };
+        /**
+         * @description The four tones of the design system (UX-26).
+         * @enum {string}
+         */
+        NoticeTone: "done" | "note" | "needs_you" | "problem";
+        NoticeDelivery: {
+            id: string;
+            /** @description The channel's name. */
+            channel: string;
+            kind: components["schemas"]["NotificationKind"];
+            /** @description A host, an email address or a login; never a path or a token. */
+            target: string;
+            /** @enum {string} */
+            status: "queued" | "waiting_tray" | "delivered" | "failed" | "held" | "grouped" | "dropped";
+            attempt: number;
+            /**
+             * Format: date-time
+             * @description Present while the delivery is queued.
+             */
+            next_try_at?: string;
+            last_error?: string;
+            /** @description More than 0 when this delivery stands for a burst of notices (R5.13). */
+            count?: number;
+        };
+        Notice: {
+            id: string;
+            /** @description An event type of R5.1, or notice.summary. */
+            type: string;
+            subject_kind?: string;
+            subject_id?: string;
+            /** @description The subject in words, for example a machine name. */
+            subject: string;
+            /** @enum {string} */
+            state: "firing" | "resolved";
+            tone: components["schemas"]["NoticeTone"];
+            /** @description Set for doctor findings. */
+            severity?: string;
+            summary: string;
+            /** @description A console path of the subject. */
+            link?: string;
+            /** @description How many times the key fired again inside the flap window (R5.11). */
+            flaps: number;
+            /** Format: date-time */
+            at: string;
+            deliveries: components["schemas"]["NoticeDelivery"][];
+        };
+        NoticeList: {
+            items: components["schemas"]["Notice"][];
         };
         NotificationChannelList: {
             items: components["schemas"]["NotificationChannel"][];
@@ -12557,6 +12661,75 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["NotificationTestResult"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listNotices: {
+        parameters: {
+            query?: {
+                limit?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The notices. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NoticeList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getNotificationThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The thresholds. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationThresholds"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setNotificationThresholds: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["NotificationThresholds"];
+            };
+        };
+        responses: {
+            /** @description The thresholds now in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NotificationThresholds"];
                 };
             };
             default: components["responses"]["Error"];

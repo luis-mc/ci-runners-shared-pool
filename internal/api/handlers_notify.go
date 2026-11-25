@@ -23,6 +23,10 @@ type NotifyService interface {
 	Update(ctx context.Context, who notify.Caller, id string, p notify.Patch) (notify.Channel, error)
 	Delete(ctx context.Context, who notify.Caller, id string, confirm bool) error
 	Test(ctx context.Context, who notify.Caller, id string) (notify.TestResult, error)
+	// CRSP258: real notices and the pool thresholds.
+	Notices(ctx context.Context, who notify.Caller, limit int) ([]notify.NoticeRow, error)
+	Thresholds(ctx context.Context) notify.Thresholds
+	SetThresholds(ctx context.Context, who notify.Caller, t notify.Thresholds) (notify.Thresholds, error)
 }
 
 var _ NotifyService = (*notify.Service)(nil)
@@ -268,4 +272,106 @@ func (s *server) TestNotificationChannel(ctx context.Context, req gen.TestNotifi
 		out.Message = &m
 	}
 	return gen.TestNotificationChannel200JSONResponse(out), nil
+}
+
+func toGenThresholds(t notify.Thresholds) gen.NotificationThresholds {
+	return gen.NotificationThresholds{
+		OfflineGraceMinutes: t.OfflineGraceMinutes, JobWaitingMinutes: t.JobWaitingMinutes, DiskPercent: t.DiskPercent,
+		FlapWindowMinutes: t.FlapWindowMinutes, HourlyCap: t.HourlyCap,
+	}
+}
+
+// ListNotices implements GET /api/v1/notices (notifications R5.32).
+func (s *server) ListNotices(ctx context.Context, req gen.ListNoticesRequestObject) (gen.ListNoticesResponseObject, error) {
+	fail := func(f opsFailure) (gen.ListNoticesResponseObject, error) {
+		return gen.ListNoticesdefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
+	}
+	if s.opts.Notify == nil {
+		return fail(notifyUnwired())
+	}
+	who, ok := notifyCaller(ctx)
+	if !ok {
+		return fail(notifyUnsigned())
+	}
+	limit := 0
+	if req.Params.Limit != nil {
+		limit = *req.Params.Limit
+	}
+	rows, err := s.opts.Notify.Notices(ctx, who, limit)
+	if err != nil {
+		return fail(s.notifyFail(err))
+	}
+	out := gen.NoticeList{Items: make([]gen.Notice, 0, len(rows))}
+	for _, r := range rows {
+		n := gen.Notice{
+			Id: r.ID, Type: r.Type, Subject: r.Subject, State: gen.NoticeState(r.State), Tone: gen.NoticeTone(r.Tone),
+			Summary: r.Summary, At: r.At, Flaps: r.Flaps, Deliveries: make([]gen.NoticeDelivery, 0, len(r.Deliveries)),
+		}
+		if r.SubjectKind != "" {
+			k := r.SubjectKind
+			n.SubjectKind = &k
+		}
+		if r.SubjectID != "" {
+			id := r.SubjectID
+			n.SubjectId = &id
+		}
+		if r.Severity != "" {
+			sv := r.Severity
+			n.Severity = &sv
+		}
+		if r.Link != "" {
+			l := r.Link
+			n.Link = &l
+		}
+		for _, d := range r.Deliveries {
+			gd := gen.NoticeDelivery{Id: d.ID, Channel: d.Channel, Kind: gen.NotificationKind(d.Kind), Target: d.Target,
+				Status: gen.NoticeDeliveryStatus(d.Status), Attempt: d.Attempt, NextTryAt: d.NextTry}
+			if d.LastError != "" {
+				e := d.LastError
+				gd.LastError = &e
+			}
+			if d.Count > 0 {
+				c := d.Count
+				gd.Count = &c
+			}
+			n.Deliveries = append(n.Deliveries, gd)
+		}
+		out.Items = append(out.Items, n)
+	}
+	return gen.ListNotices200JSONResponse(out), nil
+}
+
+// GetNotificationThresholds implements GET /api/v1/notification-thresholds (R5.8).
+func (s *server) GetNotificationThresholds(ctx context.Context, _ gen.GetNotificationThresholdsRequestObject) (gen.GetNotificationThresholdsResponseObject, error) {
+	if s.opts.Notify == nil {
+		f := notifyUnwired()
+		return gen.GetNotificationThresholdsdefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
+	}
+	return gen.GetNotificationThresholds200JSONResponse(toGenThresholds(s.opts.Notify.Thresholds(ctx))), nil
+}
+
+// SetNotificationThresholds implements PUT /api/v1/notification-thresholds (R5.8, R6.6).
+func (s *server) SetNotificationThresholds(ctx context.Context, req gen.SetNotificationThresholdsRequestObject) (gen.SetNotificationThresholdsResponseObject, error) {
+	fail := func(f opsFailure) (gen.SetNotificationThresholdsResponseObject, error) {
+		return gen.SetNotificationThresholdsdefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
+	}
+	if s.opts.Notify == nil {
+		return fail(notifyUnwired())
+	}
+	who, ok := notifyCaller(ctx)
+	if !ok {
+		return fail(notifyUnsigned())
+	}
+	if req.Body == nil {
+		return fail(envelope(http.StatusBadRequest, CodeBadRequest, "the request is not valid"))
+	}
+	b := req.Body
+	got, err := s.opts.Notify.SetThresholds(ctx, who, notify.Thresholds{
+		OfflineGraceMinutes: b.OfflineGraceMinutes, JobWaitingMinutes: b.JobWaitingMinutes, DiskPercent: b.DiskPercent,
+		FlapWindowMinutes: b.FlapWindowMinutes, HourlyCap: b.HourlyCap,
+	})
+	if err != nil {
+		return fail(s.notifyFail(err))
+	}
+	return gen.SetNotificationThresholds200JSONResponse(toGenThresholds(got)), nil
 }

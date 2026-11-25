@@ -79,6 +79,8 @@ var githubAreaAuth = map[string]string{
 	// CRSP37 notification channels: any signed-in user; a webhook needs an admin (checked in the service).
 	"listNotificationChannels": authUser, "createNotificationChannel": authUser, "updateNotificationChannel": authUser,
 	"deleteNotificationChannel": authUser, "testNotificationChannel": authUser,
+	// CRSP258: the notices list for any signed-in user; the pool thresholds change only by an admin.
+	"listNotices": authUser, "getNotificationThresholds": authUser, "setNotificationThresholds": authAdmin,
 }
 
 // operationIDs maps the generated handler names to openapi operation ids.

@@ -122,6 +122,7 @@ func TestNotifyRequiresSignIn(t *testing.T) {
 		{"GET", "/api/v1/notification-channels"}, {"POST", "/api/v1/notification-channels"},
 		{"PATCH", "/api/v1/notification-channels/x"}, {"DELETE", "/api/v1/notification-channels/x"},
 		{"POST", "/api/v1/notification-channels/x/test"},
+		{"GET", "/api/v1/notices"}, {"GET", "/api/v1/notification-thresholds"}, {"PUT", "/api/v1/notification-thresholds"},
 	} {
 		if code, b := e.do("", c.m, c.p, map[string]any{}); code != 401 || errCode(b) != CodeUnauthenticated {
 			t.Errorf("%s %s: %d %s", c.m, c.p, code, b)
@@ -322,5 +323,27 @@ func TestNotifyUnwiredAnswers501(t *testing.T) {
 	_ = res.Body.Close()
 	if res.StatusCode != 501 {
 		t.Fatalf("%d", res.StatusCode)
+	}
+}
+
+func TestThresholdsNeedAdmin(t *testing.T) { // R5.8
+	e := newNotifyEnv(t, nil)
+	good := map[string]any{"offline_grace_minutes": 3, "job_waiting_minutes": 20, "disk_percent": 15, "flap_window_minutes": 10, "hourly_cap": 30}
+	if code, _ := e.do("viewer", "PUT", "/api/v1/notification-thresholds", good); code != 403 {
+		t.Fatalf("a viewer must not change thresholds: %d", code)
+	}
+	bad := map[string]any{"offline_grace_minutes": 0, "job_waiting_minutes": 20, "disk_percent": 15, "flap_window_minutes": 10, "hourly_cap": 30}
+	if code, b := e.do("admin", "PUT", "/api/v1/notification-thresholds", bad); code != 400 || errCode(b) != CodeBadRequest {
+		t.Fatalf("%d %s", code, b)
+	}
+	if code, b := e.do("admin", "PUT", "/api/v1/notification-thresholds", good); code != 200 || !strings.Contains(string(b), `"disk_percent":15`) {
+		t.Fatalf("%d %s", code, b)
+	}
+	// A viewer reads them.
+	if code, b := e.do("viewer", "GET", "/api/v1/notification-thresholds", nil); code != 200 || !strings.Contains(string(b), `"hourly_cap":30`) {
+		t.Fatalf("%d %s", code, b)
+	}
+	if code, b := e.do("viewer", "GET", "/api/v1/notices", nil); code != 200 || !strings.Contains(string(b), `"items"`) {
+		t.Fatalf("%d %s", code, b)
 	}
 }
