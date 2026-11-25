@@ -13,6 +13,7 @@ Open `index.html` in a browser (double-click, no server). If `_site/` is missing
 | `guides/` | How do I do task Y (set up, release, restore)? |
 | `reference/` | What exactly is the value (API, CLI, config keys)? Generated. |
 | `project/` | The artifacts record: progress and decisions in flight. |
+| `studies/` | What did we learn from a comparison or research study? One folder per study. |
 | `archive/` | Superseded docs. Never binding. |
 
 `work/` holds agent briefs and reports. It exists only on agent branches and never reaches the default branch.
