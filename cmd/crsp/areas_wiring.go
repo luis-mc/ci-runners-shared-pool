@@ -27,10 +27,10 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/doctor/wire"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/events"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/github"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/history"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/notify"
-	"github.com/luis-mc/ci-runners-shared-pool/internal/overview"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/runners"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/scheduler"
@@ -205,6 +205,10 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.GitHub = &api.GitHubArea{Auth: asvc, Repos: rsvc, Webhook: hook, WebBase: gh.WebBase(), Logger: logger, Health: health, AppHealth: appHealth,
 		HasMachine: func(ctx context.Context) bool { vs, err := d.Machines.List(ctx); return err == nil && len(vs) > 0 }}
 	c.Auth, c.Repos = asvc, rsvc
+	// Minutes and money saved (observability R5.15 to R5.19): the report over finished pool jobs and the rate table.
+	savingsRates := &history.Rates{DB: d.DB}
+	c.Options.SavingsRates = savingsRates
+	c.Options.Savings = &history.Service{Source: history.DBSource{DB: d.DB}, Rates: savingsRates, Now: d.Now}
 	if cmp, err := newCompareService(gh, repoStore); err == nil {
 		c.Options.Compare = cmp
 	} else {
@@ -230,7 +234,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.closers = append(c.closers, func() { stopHealth(); <-healthDone })
 
 	// Live view over an empty source until the store adapter is wired (CRSP23).
-	hub, live := wire.NewLive(overview.EmptySource{}, events.Options{})
+	hub, live := wire.NewLive(poolOverviewSource{DB: d.DB}, events.Options{})
 	c.Hub = hub
 	c.closers = append(c.closers, hub.Stop)
 

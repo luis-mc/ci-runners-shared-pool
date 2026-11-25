@@ -3187,6 +3187,111 @@ paths:
                 $ref: '#/components/schemas/SpeedComparison'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/savings:
+    get:
+      operationId: getSavingsReport
+      x-cli: none
+      x-cli-reason: 'Later: the console shows it first (observability R5.19); a command follows in its own task.'
+      tags: [jobs]
+      summary: Minutes and money the pool saved, per repository, system and machine
+      description: >-
+        observability R5.15, R5.16, R5.18, R5.19. Counts every finished job that ran on the pool, each rounded up to
+        a whole minute. Money is minutes times the rate of the matching GitHub-hosted runner; a public repository
+        counts its minutes and saves no money. Read only.
+      x-auth: user
+      x-rate-limit: 60/minute/user
+      parameters:
+        - name: range
+          in: query
+          required: false
+          description: today (default), 7d, 30d or custom.
+          schema:
+            type: string
+            enum: [today, 7d, 30d, custom]
+        - name: from
+          in: query
+          required: false
+          description: First day of a custom range (YYYY-MM-DD).
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          required: false
+          description: Last day of a custom range (YYYY-MM-DD), included.
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: The report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsReport'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/savings/rates:
+    get:
+      operationId: getSavingsRates
+      x-cli: none
+      x-cli-reason: 'Later: the console shows it first (observability R5.17).'
+      tags: [settings]
+      summary: The per-minute rates of GitHub-hosted runners
+      description: observability R5.16. The shipped rates carry the source address and the date they were copied.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The table.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsRates'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: updateSavingsRates
+      x-cli: none
+      x-cli-reason: 'Later: the console shows it first (observability R5.17).'
+      tags: [settings]
+      summary: Change the rates and the size each machine is priced at
+      description: observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+      x-auth: owner
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SavingsRates'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsRates'
+        default:
+          $ref: '#/components/responses/Error'
+    delete:
+      operationId: resetSavingsRates
+      x-cli: none
+      x-cli-reason: 'Later: the console shows it first (observability R5.17).'
+      tags: [settings]
+      summary: Reset to the shipped rates
+      description: observability R5.17. Writes an audit row.
+      x-auth: owner
+      x-rate-limit: 60/minute/user
+      responses:
+        '200':
+          description: The shipped table.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SavingsRates'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/jobs/groups:
     get:
       operationId: listJobGroups
@@ -5667,6 +5772,50 @@ components:
         hosted: { $ref: '#/components/schemas/SpeedSide' }
         minutes_saved: { type: number }
         cost_avoided_usd: { type: number }
+    SavingsRow:
+      type: object
+      required: [key, jobs, minutes, money, public_minutes]
+      properties:
+        key: { type: string }
+        jobs: { type: integer }
+        minutes: { type: integer }
+        money: { type: number, format: double, description: US dollars, an estimate }
+        public_minutes: { type: integer, description: Minutes of public repositories, which save no money. }
+    SavingsReport:
+      type: object
+      required: [range, from, to, total, by_repository, by_os, by_machine, not_priced, note, source_url, copied_on, rates_changed]
+      properties:
+        range: { type: string, enum: [today, 7d, 30d, custom] }
+        from: { type: string, format: date-time }
+        to: { type: string, format: date-time }
+        total: { $ref: '#/components/schemas/SavingsRow' }
+        by_repository: { type: array, items: { $ref: '#/components/schemas/SavingsRow' } }
+        by_os: { type: array, items: { $ref: '#/components/schemas/SavingsRow' } }
+        by_machine: { type: array, items: { $ref: '#/components/schemas/SavingsRow' } }
+        not_priced: { type: integer, description: Jobs with no rate for their system. }
+        note: { type: string }
+        source_url: { type: string }
+        copied_on: { type: string, description: The date the shipped rates were copied, YYYY-MM-DD. }
+        rates_changed: { type: boolean }
+    SavingsRate:
+      type: object
+      required: [os, size, per_minute]
+      properties:
+        os: { type: string, enum: [linux, windows, macos] }
+        size: { type: string }
+        per_minute: { type: number, format: double, description: US dollars per billed minute. }
+    SavingsRates:
+      type: object
+      required: [source_url, copied_on, changed, rates, machine_sizes]
+      properties:
+        source_url: { type: string }
+        copied_on: { type: string }
+        changed: { type: boolean }
+        rates: { type: array, items: { $ref: '#/components/schemas/SavingsRate' } }
+        machine_sizes:
+          type: object
+          description: Machine name to the size its jobs are priced at.
+          additionalProperties: { type: string }
     SpeedComparison:
       type: object
       required:

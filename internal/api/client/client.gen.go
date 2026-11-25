@@ -3308,6 +3308,51 @@ func (e RunsOnPullRequestResultState) Valid() bool {
 	}
 }
 
+// Defines values for SavingsRateOs.
+const (
+	SavingsRateOsLinux   SavingsRateOs = "linux"
+	SavingsRateOsMacos   SavingsRateOs = "macos"
+	SavingsRateOsWindows SavingsRateOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the SavingsRateOs enum.
+func (e SavingsRateOs) Valid() bool {
+	switch e {
+	case SavingsRateOsLinux:
+		return true
+	case SavingsRateOsMacos:
+		return true
+	case SavingsRateOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SavingsReportRange.
+const (
+	SavingsReportRangeCustom SavingsReportRange = "custom"
+	SavingsReportRangeN30d   SavingsReportRange = "30d"
+	SavingsReportRangeN7d    SavingsReportRange = "7d"
+	SavingsReportRangeToday  SavingsReportRange = "today"
+)
+
+// Valid indicates whether the value is a known member of the SavingsReportRange enum.
+func (e SavingsReportRange) Valid() bool {
+	switch e {
+	case SavingsReportRangeCustom:
+		return true
+	case SavingsReportRangeN30d:
+		return true
+	case SavingsReportRangeN7d:
+		return true
+	case SavingsReportRangeToday:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SettingsInsightsUpdatePeriod.
 const (
 	EveryNthRun SettingsInsightsUpdatePeriod = "every_nth_run"
@@ -4496,6 +4541,30 @@ func (e ListRunsParamsState) Valid() bool {
 	case ListRunsParamsStateQueued:
 		return true
 	case ListRunsParamsStateRunning:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for GetSavingsReportParamsRange.
+const (
+	GetSavingsReportParamsRangeCustom GetSavingsReportParamsRange = "custom"
+	GetSavingsReportParamsRangeN30d   GetSavingsReportParamsRange = "30d"
+	GetSavingsReportParamsRangeN7d    GetSavingsReportParamsRange = "7d"
+	GetSavingsReportParamsRangeToday  GetSavingsReportParamsRange = "today"
+)
+
+// Valid indicates whether the value is a known member of the GetSavingsReportParamsRange enum.
+func (e GetSavingsReportParamsRange) Valid() bool {
+	switch e {
+	case GetSavingsReportParamsRangeCustom:
+		return true
+	case GetSavingsReportParamsRangeN30d:
+		return true
+	case GetSavingsReportParamsRangeN7d:
+		return true
+	case GetSavingsReportParamsRangeToday:
 		return true
 	default:
 		return false
@@ -8413,6 +8482,65 @@ type RunsOnPullRequestResultList struct {
 	Items []RunsOnPullRequestResult `json:"items"`
 }
 
+// SavingsRate defines model for SavingsRate.
+type SavingsRate struct {
+	Os SavingsRateOs `json:"os"`
+
+	// PerMinute US dollars per billed minute.
+	PerMinute float64 `json:"per_minute"`
+	Size      string  `json:"size"`
+}
+
+// SavingsRateOs defines model for SavingsRate.Os.
+type SavingsRateOs string
+
+// SavingsRates defines model for SavingsRates.
+type SavingsRates struct {
+	Changed  bool   `json:"changed"`
+	CopiedOn string `json:"copied_on"`
+
+	// MachineSizes Machine name to the size its jobs are priced at.
+	MachineSizes map[string]string `json:"machine_sizes"`
+	Rates        []SavingsRate     `json:"rates"`
+	SourceUrl    string            `json:"source_url"`
+}
+
+// SavingsReport defines model for SavingsReport.
+type SavingsReport struct {
+	ByMachine    []SavingsRow `json:"by_machine"`
+	ByOs         []SavingsRow `json:"by_os"`
+	ByRepository []SavingsRow `json:"by_repository"`
+
+	// CopiedOn The date the shipped rates were copied
+	CopiedOn string    `json:"copied_on"`
+	From     time.Time `json:"from"`
+
+	// NotPriced Jobs with no rate for their system.
+	NotPriced    int                `json:"not_priced"`
+	Note         string             `json:"note"`
+	Range        SavingsReportRange `json:"range"`
+	RatesChanged bool               `json:"rates_changed"`
+	SourceUrl    string             `json:"source_url"`
+	To           time.Time          `json:"to"`
+	Total        SavingsRow         `json:"total"`
+}
+
+// SavingsReportRange defines model for SavingsReport.Range.
+type SavingsReportRange string
+
+// SavingsRow defines model for SavingsRow.
+type SavingsRow struct {
+	Jobs    int    `json:"jobs"`
+	Key     string `json:"key"`
+	Minutes int    `json:"minutes"`
+
+	// Money US dollars
+	Money float64 `json:"money"`
+
+	// PublicMinutes Minutes of public repositories
+	PublicMinutes int `json:"public_minutes"`
+}
+
 // Session defines model for Session.
 type Session struct {
 	// Csrf Send as X-CSRF-Token on every change.
@@ -9783,6 +9911,21 @@ type ExtendRunTimerParams struct {
 	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
 }
 
+// GetSavingsReportParams defines parameters for GetSavingsReport.
+type GetSavingsReportParams struct {
+	// Range today (default), 7d, 30d or custom.
+	Range *GetSavingsReportParamsRange `form:"range,omitempty" json:"range,omitempty"`
+
+	// From First day of a custom range (YYYY-MM-DD).
+	From *openapi_types.Date `form:"from,omitempty" json:"from,omitempty"`
+
+	// To Last day of a custom range (YYYY-MM-DD), included.
+	To *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
+}
+
+// GetSavingsReportParamsRange defines parameters for GetSavingsReport.
+type GetSavingsReportParamsRange string
+
 // RestartServiceParams defines parameters for RestartService.
 type RestartServiceParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
@@ -9969,6 +10112,9 @@ type UpdateRunnerSettingsJSONRequestBody = RunnerSettingsUpdate
 
 // OpenRunsOnPullRequestsJSONRequestBody defines body for OpenRunsOnPullRequests for application/json ContentType.
 type OpenRunsOnPullRequestsJSONRequestBody = OpenRunsOnPullRequestsRequest
+
+// UpdateSavingsRatesJSONRequestBody defines body for UpdateSavingsRates for application/json ContentType.
+type UpdateSavingsRatesJSONRequestBody = SavingsRates
 
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody = Settings
@@ -11719,6 +11865,45 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
 	ExtendRunTimer(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSavingsReport Minutes and money the pool saved, per repository, system and machine
+	//
+	// observability R5.15, R5.16, R5.18, R5.19. Counts every finished job that ran on the pool, each rounded up to a whole minute. Money is minutes times the rate of the matching GitHub-hosted runner; a public repository counts its minutes and saves no money. Read only.
+	//
+	// Corresponds with GET /api/v1/savings (the `GetSavingsReport` operationId).
+	GetSavingsReport(ctx context.Context, params *GetSavingsReportParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ResetSavingsRates Reset to the shipped rates
+	//
+	// observability R5.17. Writes an audit row.
+	//
+	// Corresponds with DELETE /api/v1/savings/rates (the `ResetSavingsRates` operationId).
+	ResetSavingsRates(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetSavingsRates The per-minute rates of GitHub-hosted runners
+	//
+	// observability R5.16. The shipped rates carry the source address and the date they were copied.
+	//
+	// Corresponds with GET /api/v1/savings/rates (the `GetSavingsRates` operationId).
+	GetSavingsRates(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSavingsRatesWithBody Change the rates and the size each machine is priced at
+	//
+	// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+	UpdateSavingsRatesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// UpdateSavingsRates Change the rates and the size each machine is priced at
+	//
+	// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+	UpdateSavingsRates(ctx context.Context, body UpdateSavingsRatesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// RestartService Restart the service after a drain
 	//
@@ -15889,6 +16074,95 @@ func (c *Client) CancelRunNow(ctx context.Context, runId TimerRunId, params *Can
 // Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
 func (c *Client) ExtendRunTimer(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewExtendRunTimerRequest(c.Server, runId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSavingsReport Minutes and money the pool saved, per repository, system and machine
+//
+// observability R5.15, R5.16, R5.18, R5.19. Counts every finished job that ran on the pool, each rounded up to a whole minute. Money is minutes times the rate of the matching GitHub-hosted runner; a public repository counts its minutes and saves no money. Read only.
+//
+// Corresponds with GET /api/v1/savings (the `GetSavingsReport` operationId).
+func (c *Client) GetSavingsReport(ctx context.Context, params *GetSavingsReportParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSavingsReportRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ResetSavingsRates Reset to the shipped rates
+//
+// observability R5.17. Writes an audit row.
+//
+// Corresponds with DELETE /api/v1/savings/rates (the `ResetSavingsRates` operationId).
+func (c *Client) ResetSavingsRates(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewResetSavingsRatesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetSavingsRates The per-minute rates of GitHub-hosted runners
+//
+// observability R5.16. The shipped rates carry the source address and the date they were copied.
+//
+// Corresponds with GET /api/v1/savings/rates (the `GetSavingsRates` operationId).
+func (c *Client) GetSavingsRates(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetSavingsRatesRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSavingsRatesWithBody Change the rates and the size each machine is priced at
+//
+// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+func (c *Client) UpdateSavingsRatesWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSavingsRatesRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// UpdateSavingsRates Change the rates and the size each machine is priced at
+//
+// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+func (c *Client) UpdateSavingsRates(ctx context.Context, body UpdateSavingsRatesJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewUpdateSavingsRatesRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -25100,6 +25374,178 @@ func NewExtendRunTimerRequest(server string, runId TimerRunId, params *ExtendRun
 	return req, nil
 }
 
+// NewGetSavingsReportRequest constructs an http.Request for the GetSavingsReport method
+func NewGetSavingsReportRequest(server string, params *GetSavingsReportParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/savings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Range != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "range", *params.Range, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewResetSavingsRatesRequest constructs an http.Request for the ResetSavingsRates method
+func NewResetSavingsRatesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/savings/rates")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodDelete, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetSavingsRatesRequest constructs an http.Request for the GetSavingsRates method
+func NewGetSavingsRatesRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/savings/rates")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewUpdateSavingsRatesRequest calls the generic UpdateSavingsRates builder with application/json body
+func NewUpdateSavingsRatesRequest(server string, body UpdateSavingsRatesJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewUpdateSavingsRatesRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewUpdateSavingsRatesRequestWithBody constructs an http.Request for the UpdateSavingsRates method, with any body, and a specified content type
+func NewUpdateSavingsRatesRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/savings/rates")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
 // NewRestartServiceRequest constructs an http.Request for the RestartService method
 func NewRestartServiceRequest(server string, params *RestartServiceParams) (*http.Request, error) {
 	var err error
@@ -28558,6 +29004,51 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/runs/{runId}/timer/extend (the `ExtendRunTimer` operationId).
 	ExtendRunTimerWithResponse(ctx context.Context, runId TimerRunId, params *ExtendRunTimerParams, reqEditors ...RequestEditorFn) (*ExtendRunTimerResponse, error)
+
+	// GetSavingsReportWithResponse Minutes and money the pool saved, per repository, system and machine
+	//
+	// observability R5.15, R5.16, R5.18, R5.19. Counts every finished job that ran on the pool, each rounded up to a whole minute. Money is minutes times the rate of the matching GitHub-hosted runner; a public repository counts its minutes and saves no money. Read only.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/savings (the `GetSavingsReport` operationId).
+	GetSavingsReportWithResponse(ctx context.Context, params *GetSavingsReportParams, reqEditors ...RequestEditorFn) (*GetSavingsReportResponse, error)
+
+	// ResetSavingsRatesWithResponse Reset to the shipped rates
+	//
+	// observability R5.17. Writes an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with DELETE /api/v1/savings/rates (the `ResetSavingsRates` operationId).
+	ResetSavingsRatesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ResetSavingsRatesResponse, error)
+
+	// GetSavingsRatesWithResponse The per-minute rates of GitHub-hosted runners
+	//
+	// observability R5.16. The shipped rates carry the source address and the date they were copied.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/savings/rates (the `GetSavingsRates` operationId).
+	GetSavingsRatesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSavingsRatesResponse, error)
+
+	// UpdateSavingsRatesWithBodyWithResponse Change the rates and the size each machine is priced at
+	//
+	// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+	UpdateSavingsRatesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSavingsRatesResponse, error)
+
+	// UpdateSavingsRatesWithResponse Change the rates and the size each machine is priced at
+	//
+	// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+	UpdateSavingsRatesWithResponse(ctx context.Context, body UpdateSavingsRatesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSavingsRatesResponse, error)
 
 	// RestartServiceWithResponse Restart the service after a drain
 	//
@@ -37194,6 +37685,198 @@ func (r ExtendRunTimerResponse) ContentType() string {
 	return ""
 }
 
+type GetSavingsReportResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SavingsReport
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSavingsReportResponse) GetJSON200() *SavingsReport {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetSavingsReportResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSavingsReportResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSavingsReportResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSavingsReportResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSavingsReportResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ResetSavingsRatesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SavingsRates
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ResetSavingsRatesResponse) GetJSON200() *SavingsRates {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ResetSavingsRatesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ResetSavingsRatesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ResetSavingsRatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ResetSavingsRatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ResetSavingsRatesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetSavingsRatesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SavingsRates
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetSavingsRatesResponse) GetJSON200() *SavingsRates {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetSavingsRatesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetSavingsRatesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetSavingsRatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetSavingsRatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetSavingsRatesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type UpdateSavingsRatesResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *SavingsRates
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r UpdateSavingsRatesResponse) GetJSON200() *SavingsRates {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r UpdateSavingsRatesResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r UpdateSavingsRatesResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r UpdateSavingsRatesResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r UpdateSavingsRatesResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r UpdateSavingsRatesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type RestartServiceResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -42181,6 +42864,81 @@ func (c *ClientWithResponses) ExtendRunTimerWithResponse(ctx context.Context, ru
 		return nil, err
 	}
 	return ParseExtendRunTimerResponse(rsp)
+}
+
+// GetSavingsReportWithResponse Minutes and money the pool saved, per repository, system and machine
+//
+// observability R5.15, R5.16, R5.18, R5.19. Counts every finished job that ran on the pool, each rounded up to a whole minute. Money is minutes times the rate of the matching GitHub-hosted runner; a public repository counts its minutes and saves no money. Read only.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/savings (the `GetSavingsReport` operationId).
+func (c *ClientWithResponses) GetSavingsReportWithResponse(ctx context.Context, params *GetSavingsReportParams, reqEditors ...RequestEditorFn) (*GetSavingsReportResponse, error) {
+	rsp, err := c.GetSavingsReport(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSavingsReportResponse(rsp)
+}
+
+// ResetSavingsRatesWithResponse Reset to the shipped rates
+//
+// observability R5.17. Writes an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with DELETE /api/v1/savings/rates (the `ResetSavingsRates` operationId).
+func (c *ClientWithResponses) ResetSavingsRatesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ResetSavingsRatesResponse, error) {
+	rsp, err := c.ResetSavingsRates(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseResetSavingsRatesResponse(rsp)
+}
+
+// GetSavingsRatesWithResponse The per-minute rates of GitHub-hosted runners
+//
+// observability R5.16. The shipped rates carry the source address and the date they were copied.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/savings/rates (the `GetSavingsRates` operationId).
+func (c *ClientWithResponses) GetSavingsRatesWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetSavingsRatesResponse, error) {
+	rsp, err := c.GetSavingsRates(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetSavingsRatesResponse(rsp)
+}
+
+// UpdateSavingsRatesWithBodyWithResponse Change the rates and the size each machine is priced at
+//
+// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+func (c *ClientWithResponses) UpdateSavingsRatesWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*UpdateSavingsRatesResponse, error) {
+	rsp, err := c.UpdateSavingsRatesWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSavingsRatesResponse(rsp)
+}
+
+// UpdateSavingsRatesWithResponse Change the rates and the size each machine is priced at
+//
+// observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/savings/rates (the `UpdateSavingsRates` operationId).
+func (c *ClientWithResponses) UpdateSavingsRatesWithResponse(ctx context.Context, body UpdateSavingsRatesJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateSavingsRatesResponse, error) {
+	rsp, err := c.UpdateSavingsRates(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseUpdateSavingsRatesResponse(rsp)
 }
 
 // RestartServiceWithResponse Restart the service after a drain
@@ -48635,6 +49393,138 @@ func ParseExtendRunTimerResponse(rsp *http.Response) (*ExtendRunTimerResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest RunTimer
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSavingsReportResponse parses an HTTP response from a GetSavingsReportWithResponse call
+func ParseGetSavingsReportResponse(rsp *http.Response) (*GetSavingsReportResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSavingsReportResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SavingsReport
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseResetSavingsRatesResponse parses an HTTP response from a ResetSavingsRatesWithResponse call
+func ParseResetSavingsRatesResponse(rsp *http.Response) (*ResetSavingsRatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ResetSavingsRatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SavingsRates
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetSavingsRatesResponse parses an HTTP response from a GetSavingsRatesWithResponse call
+func ParseGetSavingsRatesResponse(rsp *http.Response) (*GetSavingsRatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetSavingsRatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SavingsRates
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseUpdateSavingsRatesResponse parses an HTTP response from a UpdateSavingsRatesWithResponse call
+func ParseUpdateSavingsRatesResponse(rsp *http.Response) (*UpdateSavingsRatesResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &UpdateSavingsRatesResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest SavingsRates
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
