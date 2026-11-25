@@ -171,6 +171,24 @@ Ported from dev-standards `claude/plugins/delivery/templates/shared/scripts/deli
 
 **R5.23** — The binary has the commands `crsp tool <name> [--platform P] [--exe NAME] [--dir]` and `crsp tool fetch <url> --sha256 <hex> --name <tool>/<version>/<file>`. Each prints one absolute path and nothing else on standard output. Exit codes: 0 done, 1 a download, checksum or unpack failure (one line on standard error with the URL, the attempt count and the last error), 2 a usage error.
 
+### Mirrors, warmth and wipe on the per-machine base (milestone 7, CRSP272)
+
+**R5.65** (M7, CRSP272, planned build `internal/mirror`) — **One base folder per machine.** The cache holder machine keeps the receiver blobs, the git mirrors and the registry mirror data in sibling folders of the tool cache root (R5.14): `<base>/actions`, `<base>/git`, `<base>/registry`, where `<base>` is the parent of the tool cache root (`/var/lib/crsp`, `/Users/Shared/crsp`, `C:\ProgramData\crsp`). The folders are made with the same platform part as the tool cache (`toolcache.Platform`: mode 1777 on Linux and macOS, the `crsp-runners` access list on Windows), so the safety checks of R5.64 read one root. Paths are built with `filepath` only; no shell string holds a path.
+
+**R5.66** (M7, CRSP272) — **Settings, each off until turned on.** Four settings per pool: `actions_cache` (the receiver, R5.1, R5.50 step 3), `git_mirror` (R5.11), `registry_mirror` (R5.24), and the numbers `git_refresh_minutes` (default 15, 1 to 1440) and `warmth_hours` (default 24, 1 to 720). A change is written to the audit log (R5.34) and reaches only runners started after it (R5.35). The web app and `crsp caches settings` read and write them; nothing needs a file edit.
+
+**R5.67** (M7, CRSP272) — **Git mirror, built in the same way on three systems.** `mirror.Git` runs the `git` program through one command interface (no shell, a time limit, `GIT_TERMINAL_PROMPT=0`). `Ensure` makes `<base>/git/<owner>__<repo>.git` with `git init --bare` and a fetch refspec of `+refs/*:refs/*` plus `+refs/pull/*:refs/pull/*`; `Refresh` runs `git fetch --prune --tags` and records the time, size and status (`ok`, `waiting`, `failed`); a refresh of one repository never runs twice at once. `Rewrite(repo)` returns the two config pairs a job's git gets: `url.<mirror address>.insteadOf = <GitHub address>` and `url.<GitHub address>.pushInsteadOf = <GitHub address>`, so a fetch goes to the mirror and a push goes to GitHub (R5.12). `Resolve(repo, rev)` answers from the mirror when it has the commit; when it has not, it refreshes first (R5.13); when the refresh fails it answers `fall back to GitHub`, never an error that stops the job (R6.7). Repository names are checked (`owner/repo`, letters, digits, `-`, `_`, `.`); a name that would leave the git folder is refused.
+
+**R5.68** (M7, CRSP272) — **Warmth.** `mirror.Warmth` keeps one value 0 to 100 per machine and repository (R5.27). A job report names what the machine holds (`image`, `tools`, `workspace`, `git`, `actions`); each kind adds 25 (workspace 20), up to 100. The value falls in a straight line to 0 at `warmth_hours` after the last report (R5.28) and goes to 0 at once for the kinds that a wipe removed on that machine. The scheduler reads `Value(machine, repo)`; this part never places a job.
+
+**R5.69** (M7, CRSP272) — **Wipe with a plan.** `mirror.Wiper` builds a plan for a scope (`actions_entry`, `actions_repo`, `actions_all`, `git_mirror`, `tool_cache`, `registry_mirror`): the items with sizes and the total (R5.31). The plan carries the running jobs that use the scope. A wipe with a yes waits while jobs run, checks again right before the delete (R5.32), deletes, resets the warmth of what went, and writes one audit entry with items and bytes freed (R5.34). A restore of a wiped Actions entry is a miss (R5.33). A viewer is refused (R5.30).
+
+**R5.70** (M7, CRSP272) — **Actions receiver numbers.** The LAN receiver counts a hit or a miss for every restore, per repository, and the bytes served (R5.10), and lists its entries per repository with size and last hit. A wipe by repository or for the whole store removes the blobs and the names; a blob that another name still holds stays.
+
+**R5.71** (M7, CRSP272) — **Controls in the web app.** The Caches tab of Images and caches shows, per cache holder, one row each for the Actions cache, the git mirrors, the registry mirror and the tool cache (the `Cache` rows of R5.29 with the kinds `actions_cache`, `git_mirror`, `registry_mirror`, `tool_cache`), a settings card with the switches and numbers of R5.66, and **Wipe** on each row with the question card of R5.31. The same rows and settings are in `crsp caches list`, `crsp caches settings` and `crsp caches wipe`.
+
+**R5.72** (M7, CRSP272) — **macOS.** The code compiles and its unit tests run for `darwin` in CI. It has not been run on a real Mac; the status says so.
+
 ### Runner cache quotas and disk guard (milestone 1)
 
 Owner decision of 2026-11-14 (CRSP21, CRSP26; dev-standards D302): on 14 Nov an old-pool runner's Rust build cache reached 320 GB, filled the system drive and stopped every runner. Persistent runners keep their caches between jobs, so the cap is built with them and not with the milestone 7 caches. Sizes are declared in configuration and checked, never measured live to decide a size.
@@ -351,6 +369,14 @@ flowchart TB
 - **Identity.** Each request is mapped to a running job by the runner's network address, which the agent assigns, and the job's runtime token claims are checked against it (owner question Q3).
 - **Contract.** New OpenAPI paths under `/api/caches` and the CLI command group `caches`; the agent link gains a warmth report message.
 - **Tool cache.** A Go port of `ci_tool.py` in `internal/tools`. Its tests are ported test by test (section 9).
+
+### 7.4 Design of CRSP272 (mirrors, warmth, wipe)
+
+- **Where it lives.** `internal/mirror` (git mirror, warmth, wipe plan, settings, status rows). The Actions receiver stays in `internal/lancache` and gains counters and a wipe by scope. The registry mirror stays in `internal/registry/mirror`; this task only reads its size and wipes its folder through the same `Wiper`. The API serves the rows through the existing `Cache` list and `wipeCache` route, so the screen and the CLI need one new settings route (`/api/v1/caches/settings`).
+- **Rows, not new screens.** The controller keeps the mirror rows in `mirror.Status`; `caches.Service.List` merges them with the agent reports, so the console shows them without a new list. Wipe goes through the same 409 `needs_confirmation` answer that the per-runner caches use (R5.31).
+- **Per-system parts.** Everything that differs by system sits behind `toolcache.Platform` (folders, access) and the command interface (`git`). Tests use a fake command interface and the real `git` on the CI runners for the three systems; the macOS job compiles and tests only.
+- **Fail open.** Each call has a time limit; a failure makes the row `failed` and the job goes to GitHub (R6.7).
+- **Not in this task.** Put Block and protobuf bodies for the receiver, the real `@actions/cache` contract test, and the agent start that points a runner at the receiver (R5.7) stay open; section 11 lists them.
 
 ## 8. Failure modes
 
