@@ -183,7 +183,7 @@ function MetricsForm({ saved, onSaved }: { saved: Metrics; onSaved: () => void }
         <FieldGrid>
           <TextField
             label="Collector address"
-            help="For example http://collector:4318"
+            help="Start with http:// or https://, then the host and port."
             value={s.push_endpoint}
             mono
             onChange={(v) => setS({ ...s, push_endpoint: v })}
