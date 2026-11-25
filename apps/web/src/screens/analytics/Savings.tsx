@@ -30,7 +30,12 @@ const today = () => formatDate(new Date());
 function columns(first: string): Column<Row>[] {
   return [
     { id: 'key', header: first, cell: (r) => r.key, sort: (r) => r.key, kind: 'grow' },
-    { id: 'jobs', header: W.jobs, cell: (r) => formatNumber(r.jobs), sort: (r) => r.jobs },
+    {
+      id: 'jobs',
+      header: W.jobs,
+      cell: (r) => formatNumber(r.jobs),
+      sort: (r) => r.jobs,
+    },
     {
       id: 'minutes',
       header: W.minutes,
@@ -78,7 +83,7 @@ export function Savings() {
         options={W.ranges}
         value={range}
         allLabel={null}
-        onChange={(v) => setRange(v === '' ? 'today' : (v as RangeName))}
+        onChange={(v) => setRange(v === '' ? 'today' : v)}
       />
       {custom ? (
         <Section title={W.customHint}>
@@ -118,12 +123,18 @@ export function Savings() {
               <Empty title={W.empty} />
             ) : (
               <>
-                <Split title={W.byRepository} first={W.repository} rows={r.by_repository} />
+                <Split
+                  title={W.byRepository}
+                  first={W.repository}
+                  rows={r.by_repository}
+                />
                 <Split title={W.byOs} first={W.system} rows={r.by_os} />
                 <Split title={W.byMachine} first={W.machine} rows={r.by_machine} />
               </>
             )}
-            <Text tone="muted">{W.source(r.source_url, r.copied_on, r.rates_changed)}</Text>
+            <Text tone="muted">
+              {W.source(r.source_url, r.copied_on, r.rates_changed)}
+            </Text>
           </Stack>
         )}
       </Load>

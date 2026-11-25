@@ -83,7 +83,9 @@ function RatesForm({ t, onSaved }: { t: Table; onSaved: () => void }) {
       setErrors([]);
       save.clear();
     },
-    blocked: canEdit ? undefined : (session.whyNot('owner') ?? 'Only the owner can change this.'),
+    blocked: canEdit
+      ? undefined
+      : (session.whyNot('owner') ?? 'Only the owner can change this.'),
   });
   const list = machines.result.state === 'ready' ? machines.result.data.items : [];
   return (
@@ -100,7 +102,9 @@ function RatesForm({ t, onSaved }: { t: Table; onSaved: () => void }) {
             min={0}
             max={10}
             changed={r.per_minute !== t.rates[i]?.per_minute}
-            onChange={(v) => setRates(rates.map((x, j) => (j === i ? { ...x, per_minute: v } : x)))}
+            onChange={(v) =>
+              setRates(rates.map((x, j) => (j === i ? { ...x, per_minute: v } : x)))
+            }
           />
         ))}
       </FieldGrid>
@@ -130,7 +134,9 @@ function RatesForm({ t, onSaved }: { t: Table; onSaved: () => void }) {
       ) : null}
       {note ? <Message tone="done">{note}</Message> : null}
       {save.error ? <Message tone="problem">Could not save. {save.error}</Message> : null}
-      {reset.error ? <Message tone="problem">Could not reset. {reset.error}</Message> : null}
+      {reset.error ? (
+        <Message tone="problem">Could not reset. {reset.error}</Message>
+      ) : null}
     </Stack>
   );
 }

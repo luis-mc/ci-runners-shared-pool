@@ -57,8 +57,7 @@ export const SAVINGS_WORDS = {
   compareDays: 'Days',
   compareRun: 'Compare',
   compareRunning: 'Comparing',
-  compareEmpty:
-    'No job of this repository ran on both kinds of runner in this window.',
+  compareEmpty: 'No job of this repository ran on both kinds of runner in this window.',
   compareExcluded:
     'Hosted minutes are free for a public repository, so there is nothing to compare.',
   compareJob: 'Job',

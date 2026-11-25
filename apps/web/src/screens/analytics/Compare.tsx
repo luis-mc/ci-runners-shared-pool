@@ -25,7 +25,13 @@ const secs = (n: number | undefined, count: number): string =>
   count === 0 || n === undefined ? 'not known' : formatDuration(n);
 
 const columns: Column<Row>[] = [
-  { id: 'job', header: W.compareJob, cell: (r) => r.job, sort: (r) => r.job, kind: 'grow' },
+  {
+    id: 'job',
+    header: W.compareJob,
+    cell: (r) => r.job,
+    sort: (r) => r.job,
+    kind: 'grow',
+  },
   {
     id: 'crsp',
     header: W.compareCrsp,
@@ -58,7 +64,9 @@ export function Compare() {
   const run = useCommand(async () => {
     setOut(
       await unwrap(
-        client.GET('/api/v1/compare', { params: { query: { repository: repo.trim(), days } } }),
+        client.GET('/api/v1/compare', {
+          params: { query: { repository: repo.trim(), days } },
+        }),
       ),
     );
     return true;
@@ -73,7 +81,13 @@ export function Compare() {
           onChange={setRepo}
           help={W.compareHelp}
         />
-        <NumberField label={W.compareDays} value={days} min={1} max={90} onChange={setDays} />
+        <NumberField
+          label={W.compareDays}
+          value={days}
+          min={1}
+          max={90}
+          onChange={setDays}
+        />
         <Button
           busy={run.busy}
           busyLabel={W.compareRunning}
@@ -83,7 +97,9 @@ export function Compare() {
         >
           {W.compareRun}
         </Button>
-        {run.error ? <Message tone="problem">Could not compare. {run.error}</Message> : null}
+        {run.error ? (
+          <Message tone="problem">Could not compare. {run.error}</Message>
+        ) : null}
       </Section>
       {out ? (
         out.excluded ? (
