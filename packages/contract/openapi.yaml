@@ -1349,6 +1349,193 @@ paths:
                 $ref: '#/components/schemas/HostCommandResult'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/dependencies/check:
+    post:
+      operationId: checkMachineDependencies
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard "Get this machine ready"; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: What a runner choice needs on a machine, what it has, and the offer
+      description: >-
+        dependency-setup DEP1 to DEP3, DEP16. The agent reads the machine and
+        changes nothing; the controller builds the offer with its facts from the
+        pinned list shipped with the release. An offline machine answers 409.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependencyCheckRequest'
+      responses:
+        '200':
+          description: The check result and the offer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyCheck'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/dependencies/jobs:
+    get:
+      operationId: listMachineDependencyJobs
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: The dependency setup jobs of a machine, newest first
+      description: dependency-setup DEP10, DEP11. The record the Done screen reads after a reload.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+      responses:
+        '200':
+          description: Up to 20 jobs, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DependencyJob'
+        default:
+          $ref: '#/components/responses/Error'
+    post:
+      operationId: startMachineDependencyJob
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: Install the chosen items after the Review step
+      description: >-
+        dependency-setup DEP4, DEP5, DEP16. Without `confirmed: true` it answers
+        409 and nothing changes. The consent (actor, machine, items, versions,
+        sources) is written to the audit log. Only items the machine's check
+        found missing or stopped, and the runner choice needs, are accepted. A
+        second job on the same machine while one runs answers 409.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DependencyJobRequest'
+      responses:
+        '202':
+          description: The job was accepted; read it with the GET route.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyJob'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/dependencies/jobs/{jobId}:
+    get:
+      operationId: getMachineDependencyJob
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: One dependency setup job with its live progress and log tail
+      x-auth: user
+      x-rate-limit: 240/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/DependencyJobId'
+      responses:
+        '200':
+          description: The job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyJob'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop:
+    post:
+      operationId: stopMachineDependencyJob
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: Stop a dependency job where it is safe
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/DependencyJobId'
+      responses:
+        '200':
+          description: Stop was sent; the job ends as stopped.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyJob'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo:
+    post:
+      operationId: undoMachineDependencyJob
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: Remove only what this job added
+      description: >-
+        dependency-setup DEP10, D-DEP-7. Uses the job's recorded list; never
+        removes software that was there before. Without `confirmed=true` it
+        answers 409 naming each item.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/DependencyJobId'
+        - name: confirmed
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '202':
+          description: The undo runs; read the job.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyJob'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host:
+    post:
+      operationId: restartMachineForDependencyJob
+      x-cli: none
+      x-cli-reason: 'The guided setup lives in the web console wizard; the CLI has no command for it yet.'
+      tags: [machines]
+      summary: Restart the machine now, after the user chose it
+      description: >-
+        dependency-setup DEP7, D-DEP-2. Never automatic. Only while the job is
+        paused for a restart; the machine must hold no running job (the agent
+        checks it too). Without `confirmed=true` it answers 409. After the agent
+        reconnects the controller resumes the job at Verify.
+      x-auth: admin
+      x-rate-limit: 5/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+        - $ref: '#/components/parameters/DependencyJobId'
+        - name: confirmed
+          in: query
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '202':
+          description: The restart was sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyJob'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/doctor/registration-fixes:
     post:
       operationId: removeRegistration
@@ -5614,6 +5801,12 @@ components:
       required: true
       schema:
         type: string
+    DependencyJobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
     ChangeId:
       name: changeId
       in: path
@@ -8420,6 +8613,300 @@ components:
       properties:
         reason:
           type: string
+    DependencyCheckRequest:
+      type: object
+      required: [runner_os, runner_kind]
+      properties:
+        runner_os:
+          type: string
+          enum: [linux, windows, macos]
+        runner_kind:
+          type: string
+          enum: [ephemeral, persistent]
+    DependencyFacts:
+      type: object
+      description: The facts of one offered choice (DEP3).
+      required:
+        [
+          name,
+          version,
+          source,
+          download_bytes,
+          disk_bytes,
+          typical_minutes,
+          needs_admin,
+          restart_likely,
+          undo,
+        ]
+      properties:
+        name:
+          type: string
+        version:
+          type: string
+        source:
+          type: string
+          description: Where it comes from (a host name, not a secret URL).
+        download_bytes:
+          type: integer
+          format: int64
+        disk_bytes:
+          type: integer
+          format: int64
+        typical_minutes:
+          type: integer
+        needs_admin:
+          type: boolean
+        restart_likely:
+          type: boolean
+        licence_note:
+          type: string
+        undo:
+          type: string
+          description: How to undo it, in words.
+    DependencyItem:
+      type: object
+      required: [id, name, state, why]
+      properties:
+        id:
+          type: string
+          enum: [wsl2, docker-in-wsl2, docker-desktop, docker-engine]
+        name:
+          type: string
+        state:
+          type: string
+          enum: [ok, missing, stopped, wrong_kind]
+        version:
+          type: string
+        why:
+          type: string
+          description: One sentence of why the plan needs it (DEP2).
+        detail:
+          type: string
+    DependencyChoice:
+      type: object
+      description: One way to fix what is missing; one is recommended, the others stay visible (DEP3, CORE-4).
+      required:
+        [id, title, item_ids, recommended, facts, requires_licence_tick, manual_steps]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        item_ids:
+          type: array
+          items:
+            type: string
+        recommended:
+          type: boolean
+        facts:
+          type: array
+          description: One facts card per item the choice installs.
+          items:
+            $ref: '#/components/schemas/DependencyFacts'
+        requires_licence_tick:
+          type: boolean
+        manual_steps:
+          type: array
+          description: The exact commands for "Do it myself", one per line, copyable.
+          items:
+            type: string
+    DependencyCheck:
+      type: object
+      required:
+        [machine_id, ready, items, choices, admin, disk_free_bytes, virtualization_off]
+      properties:
+        machine_id:
+          type: string
+        ready:
+          type: boolean
+          description: True when nothing is missing for this runner choice.
+        os:
+          type: string
+        arch:
+          type: string
+        admin:
+          type: boolean
+        disk_free_bytes:
+          type: integer
+          format: int64
+        virtualization_off:
+          type: boolean
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyItem'
+        choices:
+          type: array
+          items:
+            $ref: '#/components/schemas/DependencyChoice'
+        blocked_reason:
+          type: string
+          description: Why no install is offered (no admin rights, disk too small, virtualization off).
+        start_only:
+          type: boolean
+          description: The engine is installed but stopped; the fix is to start it, not to install.
+    DependencyJobRequest:
+      type: object
+      required: [runner_os, runner_kind, choice_id, confirmed]
+      properties:
+        runner_os:
+          type: string
+          enum: [linux, windows, macos]
+        runner_kind:
+          type: string
+          enum: [ephemeral, persistent]
+        choice_id:
+          type: string
+        confirmed:
+          type: boolean
+          description: Must be true; the Review step is the consent.
+        accept_licence:
+          type: boolean
+          description: The "I have the right to use it" tick for Docker Desktop.
+    DependencyAdded:
+      type: object
+      required: [item_id, kind, ref, version]
+      properties:
+        item_id:
+          type: string
+        kind:
+          type: string
+        ref:
+          type: string
+        version:
+          type: string
+    DependencyEvent:
+      type: object
+      description: >-
+        One progress event. Same shape as the shared progress contract
+        (CRSP247) in snake_case: job_id, phase, phase_index, phase_count,
+        phase_weight, pct (null = unknown), reason, bytes, total, rate, eta_sec,
+        machine, command, stream, line, ts.
+      required:
+        [job_id, phase, phase_index, phase_count, phase_weight, pct, machine, stream, ts]
+      properties:
+        job_id:
+          type: string
+        phase:
+          type: string
+        phase_index:
+          type: integer
+        phase_count:
+          type: integer
+        phase_weight:
+          type: number
+        pct:
+          type: number
+          nullable: true
+        reason:
+          type: string
+        bytes:
+          type: integer
+          format: int64
+        total:
+          type: integer
+          format: int64
+        rate:
+          type: integer
+          format: int64
+        eta_sec:
+          type: integer
+          format: int64
+        machine:
+          type: object
+          required: [name, role, os]
+          properties:
+            name:
+              type: string
+            role:
+              type: string
+            os:
+              type: string
+        command:
+          type: string
+        stream:
+          type: string
+          enum: [stdout, stderr, status]
+        line:
+          type: string
+        ts:
+          type: integer
+          format: int64
+          description: Unix milliseconds.
+    DependencyJob:
+      type: object
+      required:
+        [
+          id,
+          machine_id,
+          state,
+          choice_id,
+          item_ids,
+          runner_os,
+          runner_kind,
+          created_at,
+          updated_at,
+          added,
+          log,
+        ]
+      properties:
+        id:
+          type: string
+        machine_id:
+          type: string
+        state:
+          type: string
+          enum:
+            [
+              consented,
+              installing,
+              paused_restart,
+              verifying,
+              preparing,
+              done,
+              failed,
+              stopped,
+              undoing,
+              undone,
+            ]
+        choice_id:
+          type: string
+        item_ids:
+          type: array
+          items:
+            type: string
+        runner_os:
+          type: string
+        runner_kind:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+        actor:
+          type: string
+        last:
+          $ref: '#/components/schemas/DependencyEvent'
+        error:
+          type: string
+        engine_version:
+          type: string
+        added:
+          type: array
+          description: What this job added; the undo list.
+          items:
+            $ref: '#/components/schemas/DependencyAdded'
+        log:
+          type: array
+          description: The last 300 events, oldest first.
+          items:
+            $ref: '#/components/schemas/DependencyEvent'
+        manual_steps:
+          type: array
+          items:
+            type: string
     HostCommandRequest:
       type: object
       required: [command]

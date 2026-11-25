@@ -1,0 +1,44 @@
+{
+  "release": "0.1.28",
+  "items": [
+    {
+      "id": "wsl2", "name": "WSL2", "version": "inbox", "os": "windows", "method": "commands",
+      "source": "learn.microsoft.com", "download_bytes": 120000000, "disk_bytes": 300000000, "typical_minutes": 5,
+      "needs_admin": true, "restart_likely": true,
+      "undo": "Turn the WSL and Virtual Machine Platform features off again in Windows Features, then restart.",
+      "manual_steps": ["wsl --install --no-distribution"]
+    },
+    {
+      "id": "docker-in-wsl2", "name": "Docker Engine in WSL2", "version": "apt", "os": "windows", "method": "commands",
+      "source": "download.docker.com", "download_bytes": 200000000, "disk_bytes": 1500000000, "typical_minutes": 8,
+      "needs_admin": false, "restart_likely": false, "min_version": "24.0",
+      "undo": "Unregister the crsp-docker WSL distro: wsl --unregister crsp-docker. Your own distros are not touched.",
+      "manual_steps": ["wsl --install -d Ubuntu-24.04 --name crsp-docker --no-launch", "wsl -d crsp-docker -u root -- apt-get update", "wsl -d crsp-docker -u root -- apt-get install -y ca-certificates curl", "wsl -d crsp-docker -u root -- install -m 0755 -d /etc/apt/keyrings", "wsl -d crsp-docker -u root -- curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc", "Add Docker's apt source for Ubuntu noble as in https://docs.docker.com/engine/install/ubuntu/", "wsl -d crsp-docker -u root -- apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin", "wsl -d crsp-docker -u root -- systemctl enable --now docker"]
+    },
+    {
+      "id": "docker-desktop", "name": "Docker Desktop", "version": "pinned-per-release", "os": "windows", "method": "download",
+      "source": "desktop.docker.com", "url": "", "sha256": "", "silent_args": ["install", "--quiet", "--accept-license", "--backend=wsl-2", "--always-run-service"],
+      "download_bytes": 600000000, "disk_bytes": 3000000000, "typical_minutes": 10,
+      "needs_admin": true, "restart_likely": true, "min_version": "24.0",
+      "licence_note": "Docker Desktop is free for small businesses, personal use, education and open source. Larger companies (over 250 employees or over 10 million US dollars revenue) need a paid subscription. crsp does not judge licences.",
+      "undo": "Uninstall Docker Desktop from Windows Settings, Apps.",
+      "manual_steps": ["Download Docker Desktop from https://www.docker.com/products/docker-desktop/ and run the installer."]
+    },
+    {
+      "id": "docker-engine", "name": "Docker Engine", "version": "apt", "os": "linux", "method": "commands",
+      "source": "download.docker.com", "download_bytes": 120000000, "disk_bytes": 900000000, "typical_minutes": 4,
+      "needs_admin": true, "restart_likely": false, "min_version": "24.0",
+      "undo": "Remove the docker-ce packages and the docker.list apt source that crsp added: apt-get remove docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin.",
+      "manual_steps": ["sudo apt-get update", "sudo apt-get install -y ca-certificates curl", "sudo install -m 0755 -d /etc/apt/keyrings", "sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc", "sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin"]
+    },
+    {
+      "id": "docker-desktop", "name": "Docker Desktop", "version": "pinned-per-release", "os": "darwin", "method": "download",
+      "source": "desktop.docker.com", "url": "", "sha256": "",
+      "download_bytes": 600000000, "disk_bytes": 3000000000, "typical_minutes": 10,
+      "needs_admin": true, "restart_likely": false,
+      "licence_note": "Docker Desktop is free for small businesses, personal use, education and open source. Larger companies need a paid subscription. crsp does not judge licences.",
+      "undo": "Quit Docker Desktop and move it to the Bin.",
+      "manual_steps": ["Download Docker Desktop from https://www.docker.com/products/docker-desktop/, open it and approve the system prompt once."]
+    }
+  ]
+}
