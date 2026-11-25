@@ -42,7 +42,10 @@ type Service struct {
 	Wiper    *Wiper
 	Warmth   *Warmth
 	Machine  string
-	Now      func() time.Time
+	// Listening says the receiver answers peers. Until the LAN listener is
+	// wired (caches section 11) the row says it is waiting.
+	Listening bool
+	Now       func() time.Time
 }
 
 // Get reads the settings with their defaults.
@@ -79,6 +82,9 @@ func (s *Service) Rows(ctx context.Context) ([]Row, error) {
 	var rows []Row
 	if set.ActionsCache && s.Actions != nil {
 		r := Row{ID: IDPrefix + ScopeActionsAll, Kind: "actions_cache", Size: s.Actions.ActionsSize(), Cap: s.ActCap, Status: StatusOK}
+		if !s.Listening {
+			r.Status, r.Error = StatusWaiting, "the receiver does not listen on the LAN yet"
+		}
 		for _, x := range s.Actions.RepoStats() {
 			r.Entries += x.Entries
 			r.Hits += x.Hits

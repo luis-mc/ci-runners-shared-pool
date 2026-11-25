@@ -1,0 +1,5 @@
+---
+change: minor
+task: CRSP272
+---
+The git mirror, warmth, wipe plan and cache switches are built as `internal/mirror` (R5.65 to R5.72): a bare mirror per repository that refreshes all refs including pull requests, refreshes before it answers a miss and falls back to GitHub, and sends a job's fetch to the mirror and its push to GitHub; one warmth value per machine and repository; a wipe with a plan, drain wait, a second check before delete, warmth reset and an audit entry. The Actions receiver counts hits, misses and bytes and wipes by repository or in full. The holder rows (Actions cache, git mirrors, tool cache, registry mirror) appear in the existing caches list and wipe through the existing route. Not built: the settings route, console switches and CLI command (they wait for open pull requests that own the contract files), the refresh timer and webhook, the runner git rewrite, the receiver's LAN listener, and the scheduler reading warmth. macOS compiled and unit-tested, not run on a real Mac.
