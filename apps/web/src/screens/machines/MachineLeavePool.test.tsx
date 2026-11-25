@@ -15,14 +15,14 @@ describe('Remove from the pool', () => {
       .on('GET', '/api/v1/machines/:id', machine({ is_controller: false }))
       .on('GET', '/api/v1/machines', { items: [machine({ is_controller: false })] })
       .on('DELETE', '/api/v1/machines/:id', (call) =>
-        (call.query as URLSearchParams).get('confirm') === 'true'
-          ? ({
+        call.query.get('confirm') === 'true'
+          ? {
               id: 'ch1',
               machine_id: 'm1',
               kind: 'remove',
               state: 'waiting',
               waiting_for: [],
-            } as never)
+            }
           : apiError(409, 'needs_confirmation', 'removing build-1 drains it first', [
               { kind: 'item', text: 'the machine build-1' },
               { kind: 'item', text: 'runner crsp-a (deregistered from GitHub)' },
