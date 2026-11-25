@@ -16,8 +16,8 @@ SECURITY.md section (runners R5.64) is not in this task; the link target is name
 Windows and Linux paths verified in CI. macOS code is compiled and unit-tested in CI with fakes; NOT run on a real Mac.
 
 ## Steps
-- [ ] container.warm
-- [ ] R5.37
-- [ ] R5.38
-- [ ] spec + change note + docs_check
+- [x] container.warm
+- [x] R5.37
+- [x] R5.38
+- [x] spec + change note (docs_fold.py and docs_check.py are NOT available in this sandbox: note written by hand in the same format, docs_check not run)
 - [ ] CI on branch, PR
