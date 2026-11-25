@@ -63,7 +63,7 @@ func (n notifySources) machineOffline(ctx context.Context) ([]notify.Fact, error
 		out = append(out, notify.Fact{
 			SubjectKind: "machine", SubjectID: m.ID, SubjectName: m.Name, Since: m.LastSeen, Grace: grace,
 			Summary: fmt.Sprintf("%s stopped answering at %s.", m.Name, m.LastSeen.UTC().Format("15:04 UTC")),
-			Link:    "/machines/" + m.ID,
+			Link:    "/setup/machines/" + m.ID,
 		})
 	}
 	return out, nil
@@ -82,7 +82,7 @@ func (n notifySources) jobWaiting(ctx context.Context) ([]notify.Fact, error) {
 		out = append(out, notify.Fact{
 			SubjectKind: "job", SubjectID: fmt.Sprint(j.ID), SubjectName: name, Since: j.QueuedAt, Grace: wait,
 			Summary: fmt.Sprintf("%s has waited %d minutes for a runner.", name, int(now.Sub(j.QueuedAt).Minutes())),
-			Link:    "/jobs",
+			Link:    "/pool/jobs",
 		})
 	}
 	return out, nil
@@ -119,7 +119,7 @@ func (d *diskSource) poll(ctx context.Context) ([]notify.Fact, error) {
 			out = append(out, notify.Fact{
 				SubjectKind: "machine", SubjectID: id, SubjectName: v.MachineID + " " + dk.Path,
 				Summary: fmt.Sprintf("%s %s has %.0f%% free space left.", v.MachineID, dk.Path, dk.FreePct),
-				Link:    "/machines/" + v.MachineID,
+				Link:    "/setup/machines/" + v.MachineID,
 			})
 		}
 	}
@@ -144,7 +144,7 @@ func (n notifySources) runnerOutdated(ctx context.Context) ([]notify.Fact, error
 		out = append(out, notify.Fact{
 			SubjectKind: "machine", SubjectID: v.MachineID, SubjectName: v.MachineID,
 			Summary: fmt.Sprintf("%s on %s is older than the version the pool pins.", what, v.MachineID),
-			Link:    "/machines/" + v.MachineID,
+			Link:    "/setup/machines/" + v.MachineID,
 		})
 	}
 	return out, nil
@@ -187,6 +187,6 @@ func (n notifySources) updateAvailable(ctx context.Context) ([]notify.Fact, erro
 	}
 	return []notify.Fact{{
 		SubjectKind: "pool", SubjectID: "crsp", SubjectName: "crsp " + st.Latest,
-		Summary: fmt.Sprintf("crsp %s is out. This pool runs %s.", st.Latest, st.Current), Link: "/settings",
+		Summary: fmt.Sprintf("crsp %s is out. This pool runs %s.", st.Latest, st.Current), Link: "/settings/updates",
 	}}, nil
 }

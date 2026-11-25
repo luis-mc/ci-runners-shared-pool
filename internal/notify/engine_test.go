@@ -13,7 +13,7 @@ var allEvents = []string{"machine.offline", "job.waiting", "disk.low", "runner.o
 
 func machineFact(id string) Fact {
 	return Fact{Type: "machine.offline", SubjectKind: "machine", SubjectID: id, SubjectName: id,
-		Summary: id + " stopped answering at 14:30 UTC.", Link: "/machines/" + id}
+		Summary: id + " stopped answering at 14:30 UTC.", Link: "/setup/machines/" + id}
 }
 
 func scopeOf(typ string) Scope { return Scope{Type: typ} }
