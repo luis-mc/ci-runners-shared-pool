@@ -11,7 +11,7 @@ import { registryApi } from './registry-fixtures';
 const WIDTHS = [360, 393, 1300] as const;
 
 const SCREENS: { name: string; path: string; h1: string }[] = [
-  { name: 'registry tab', path: '/setup/images?tab=registry', h1: 'Images and caches' },
+  { name: 'registry tab', path: '/setup/images?tab=registry', h1: 'Setup' },
   { name: 'image page', path: '/setup/images/registry/img_docsv4', h1: 'Node web' },
   { name: 'budgets', path: '/setup/images/registry/budgets', h1: 'Registry budgets' },
   {

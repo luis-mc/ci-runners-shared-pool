@@ -11,7 +11,6 @@ import {
   Message,
   OpenRow,
   Page,
-  PageHeader,
   Pane,
   Progress,
   Section,
@@ -69,10 +68,7 @@ export function ImagesAndCaches() {
 
   return (
     <Page>
-      <PageHeader
-        title="Images and caches"
-        lead="What each machine keeps, and what you can rebuild or wipe."
-      />
+      <Text tone="muted">What each machine keeps, and what you can rebuild or wipe.</Text>
       <Tabs
         label="Images and caches"
         tabs={TABS}

@@ -88,7 +88,7 @@ describe('Repositories list in a pane', () => {
       '/setup/pool',
     );
     expect(await screen.findByText(/Could not load repositories/)).toBeTruthy();
-    expect(screen.getByRole('heading', { level: 1, name: 'Repositories' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeTruthy();
   });
 });
 

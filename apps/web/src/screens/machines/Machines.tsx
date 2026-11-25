@@ -145,7 +145,6 @@ export function MachinesList() {
 
   return (
     <Page>
-      <PageHeader title="Machines" lead="What each machine gives the pool." />
       <Load result={result} what="machines" reload={reload}>
         {(data) => {
           const rows = data.items.filter(

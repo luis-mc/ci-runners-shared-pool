@@ -5,7 +5,6 @@ import {
   Empty,
   LinkButton,
   Page,
-  PageHeader,
   Section,
   Status,
   Table,
@@ -125,10 +124,9 @@ export function SizePage() {
   ];
   return (
     <Page>
-      <PageHeader
-        title="Size and backends"
-        lead="How many jobs each machine runs at once, and how it isolates them."
-      />
+      <Text tone="muted">
+        How many jobs each machine runs at once, and how it isolates them.
+      </Text>
       <SizeClasses />
       <Load result={result} what="the machines" reload={reload}>
         {(data) =>

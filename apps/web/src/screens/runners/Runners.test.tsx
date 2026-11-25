@@ -171,9 +171,9 @@ describe('Runners list', () => {
     expect(
       await screen.findByText('No runners yet. Use Add runners at the top to start.'),
     ).toBeTruthy();
-    // One Add runners action, in the header; the h1 stays; the empty state sits in a pane.
+    // One Add runners action, in the header; the Setup h1 stays; the empty state sits in a pane.
     expect(screen.getAllByRole('button', { name: 'Add runners' }).length).toBe(1);
-    expect(screen.getByRole('heading', { level: 1, name: 'Runners' })).toBeTruthy();
+    expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeTruthy();
     expect(screen.getByRole('region', { name: 'Runners' })).toBeTruthy();
   });
 

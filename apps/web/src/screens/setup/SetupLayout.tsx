@@ -1,6 +1,7 @@
-// Setup (LOOK56): where the pool is configured, as one row of tabs above each list page. Add and detail pages sit
+// Setup (LOOK56, LOOK69): where the pool is configured. One title and lead, then one row of tabs above each list
+// page, like Pool; the list pages carry no h1 of their own. Add and detail pages sit
 // under /setup too but show no tabs: they have a breadcrumb back. Nothing that runs is shown here (see Pool).
-import { Page, Tabs } from '@crsp/ui';
+import { Page, PageHeader, Tabs } from '@crsp/ui';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 
 export const SETUP_TABS = [
@@ -20,6 +21,10 @@ export function SetupLayout() {
   return (
     <>
       <Page>
+        <PageHeader
+          title="Setup"
+          lead="Machines, runners and sizes. Change things here."
+        />
         <Tabs
           label="Setup sections"
           tabs={SETUP_TABS}

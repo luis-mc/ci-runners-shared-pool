@@ -8,7 +8,6 @@ import {
   LinkButton,
   Message,
   Page,
-  PageHeader,
   Section,
   ListToolbar,
   SearchBar,
@@ -312,10 +311,10 @@ export function RunnersList() {
 
   return (
     <Page>
-      <PageHeader
-        title="Runners"
-        lead="The runners of the pool, by machine. They serve every repository that uses the pool."
-      />
+      <Text tone="muted">
+        The runners of the pool, by machine. They serve every repository that uses the
+        pool.
+      </Text>
       <Load result={result} what="runners" reload={reload}>
         {(data) => {
           const rows = data.items.filter(

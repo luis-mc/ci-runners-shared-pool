@@ -36,8 +36,10 @@ describe('the seven areas and the Setup tabs (LOOK56)', () => {
     ['/setup/size', 'Size and backends'],
   ])('%s opens its Setup page', async (from, title) => {
     renderApp(ready(), from);
-    expect(await screen.findByRole('heading', { level: 1, name: title })).toBeTruthy();
-    expect(screen.getByRole('tab', { name: title, selected: true })).toBeTruthy();
+    expect(await screen.findByRole('tab', { name: title, selected: true })).toBeTruthy();
+    expect(
+      screen.getAllByRole('heading', { level: 1 }).map((h) => h.textContent),
+    ).toEqual(['Setup']);
     const nav = screen.getByRole('navigation', { name: 'Areas' });
     expect(
       within(nav).getByRole('link', { name: 'Setup' }).getAttribute('aria-current'),
@@ -70,7 +72,7 @@ describe('the seven areas and the Setup tabs (LOOK56)', () => {
     first.focus();
     fireEvent.keyDown(first, { key: 'ArrowRight' });
     expect(
-      await screen.findByRole('heading', { level: 1, name: 'Machines' }),
+      await screen.findByRole('tab', { name: 'Machines', selected: true }),
     ).toBeTruthy();
     // Choosing a tab redraws the row; focus is back on the chosen tab a frame later (keepFocus), so wait for it.
     await waitFor(() =>

@@ -24,7 +24,7 @@ async function open(page: import('@playwright/test').Page, width: number) {
   await mock.install(page);
   await page.setViewportSize({ width, height: 900 });
   await page.goto('/setup/runners');
-  await expect(page.getByRole('heading', { level: 1, name: 'Runners' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Setup' })).toBeVisible();
 }
 
 for (const width of [1300, 1000, 393]) {

@@ -296,7 +296,7 @@ test('When the session ends the dialog shows over the page and the page stays', 
   await page.goto('/setup/machines');
   const dialog = page.getByRole('dialog', { name: 'Session ended' });
   await expect(dialog).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Machines' })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Setup' })).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Sign in with GitHub' }))
     .toBeFocused({ timeout: 2000 })
     .catch(() => undefined);
@@ -311,9 +311,7 @@ test('Images and caches opens from the menu and says that there are no images ye
   await page.goto('/');
   await page.getByRole('link', { name: 'Setup', exact: true }).click();
   await page.getByRole('tab', { name: 'Images and caches', exact: true }).click();
-  await expect(
-    page.getByRole('heading', { level: 1, name: 'Images and caches' }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1, name: 'Setup' })).toBeVisible();
   await expect(page.getByText(/Each machine has one Linux image\./)).toBeVisible();
   await page.getByRole('tab', { name: 'Caches', exact: true }).click();
   const card = page.getByRole('region', { name: 'Tool cache of crsp-linux-1' });

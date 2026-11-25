@@ -67,9 +67,8 @@ const ImageDetail = later(
   () => import('./screens/images/ImageDetail').then((m) => m.ImageDetail),
   { heading: 'Image' },
 );
-const RepositoriesList = later(
-  () => import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
-  { heading: 'Repositories' },
+const RepositoriesList = later(() =>
+  import('./screens/repositories/Repositories').then((m) => m.RepositoriesList),
 );
 const RepositoryDetail = later(
   () => import('./screens/repositories/Repositories').then((m) => m.RepositoryDetail),
