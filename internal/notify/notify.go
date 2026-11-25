@@ -194,6 +194,8 @@ type Config struct {
 	Thresholds func(ctx context.Context) Thresholds
 	// ConsoleURL is the console's address, for the link in a notice; empty gives a path only.
 	ConsoleURL string
+	// QueueCeiling is the most queued deliveries held (R6.9); 0 means QueueCeiling (10 000). Tests lower it.
+	QueueCeiling int
 
 	// The two fields below exist for tests only. AllowLoopback lets a channel
 	// point at 127.0.0.1 (normally refused, see guard.go); Trust adds the

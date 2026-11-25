@@ -248,8 +248,12 @@ func (s *Service) maintain(ctx context.Context, now time.Time) {
 	if !due {
 		return
 	}
-	if n, err := s.cfg.DB.CountQueuedDeliveries(ctx); err == nil && n > QueueCeiling {
-		dropped, err := s.cfg.DB.DropOldestNoteDeliveries(ctx, n-QueueCeiling, now)
+	ceiling := s.cfg.QueueCeiling
+	if ceiling <= 0 {
+		ceiling = QueueCeiling
+	}
+	if n, err := s.cfg.DB.CountQueuedDeliveries(ctx); err == nil && n > ceiling {
+		dropped, err := s.cfg.DB.DropOldestNoteDeliveries(ctx, n-ceiling, now)
 		if err != nil {
 			s.cfg.Logger.Error("notify: queue ceiling", "err", err)
 		}
