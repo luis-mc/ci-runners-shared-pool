@@ -25,3 +25,7 @@ Branch CRSP267-agent-update. Updated after every step.
 - docs_fold.py and docs_check.py (luismc-docs) are not on this machine: change notes are written by hand in the existing format.
 - Local pre-push needed newer tools: built gitleaks 8.21.2, golangci-lint 2.15 (Go 1.27.4) and Node 24 under the scratchpad.
 - macOS: built and CI-tested only, never run on a real Mac. Windows not run locally (Linux cloud session).
+
+## CI
+- `workflow_dispatch` of ci.yml on the branch answered HTTP 500 twice (GitHub API); the ready PR's CI is the full run.
+- docs_check.py not run (script not on this machine).
