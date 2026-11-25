@@ -15,7 +15,8 @@ Branch: `CRSP300-integration` (from origin/main). Concept: owner-approved artifa
 - [x] 3 settings: Look (Colour themes / Terminal) + Palette in Settings > Appearance; theme-init.js first paint
 - [x] 4 design system next-version: tokens.md, components.md 78-80, content.md, CHANGES.md
 - [x] feature spec R5.172 + change note `docs/features/web-console/changes/CRSP300.md`
-- [ ] 5 screenshots, CI, PR
+- [x] screenshots in docs/work/CRSP300/*.png (real app via vite dev + the e2e mocked API; green at 1300 and 393 px, amber and ice for overview and settings)
+- [ ] 5 CI, PR
 
 ## Notes
 - `luismc-docs` plugin scripts (docs_fold.py, docs_check.py, docs_index.py) not found in this sandbox; see Blockers.
@@ -31,3 +32,6 @@ Branch: `CRSP300-integration` (from origin/main). Concept: owner-approved artifa
 
 ## Blockers
 - `luismc-docs` plugin scripts (docs_fold.py, docs_check.py, docs_index.py) are not installed in this sandbox. The change note is written in the repo's own format (`docs/features/web-console/changes/CRSP300.md`, `change_notes.py check` passes); `docs_check.py` and `docs_index.py build` were NOT run, and generated files (`docs/index.html`, `llms.txt`, `docs-map.json`) are untouched.
+
+## Observations
+- At 393 px the header status text ("1 of 1 machine online") runs under the Commands button in the screenshot; layout code is unchanged by this task (C24 of next-version describes the intended wrap). Not touched here.
