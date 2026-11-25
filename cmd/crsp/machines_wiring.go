@@ -21,6 +21,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/caches"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/config"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/depsetup"
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/packages"
@@ -48,6 +49,8 @@ type machinesRuntime struct {
 	Caches  *caches.Service
 	// Link carries runner commands to remote agents and holds their machine reports.
 	Link *agentlink.Link
+	// Deps runs the dependency setup jobs (CRSP248).
+	Deps *depsetup.Service
 	// Health keeps the machine health reports and serves the job stats (OPS83).
 	Health *machinehealth.Service
 	CA     *tlsca.Authority
@@ -138,6 +141,13 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	})
 	cs := caches.New(caches.Options{Machines: svc, Audit: rec})
 	lk := agentlink.New(svc)
+	pinned, err := depsetup.Load()
+	if err != nil {
+		return nil, fmt.Errorf("the pinned installer list: %w", err)
+	}
+	deps := depsetup.NewService(depsetup.Options{Link: lk, Repo: db.DepsJobs(), Audit: depsAudit{rec: rec}, Machines: depsetup.MachinesFrom(svc), List: pinned,
+		Log: func(msg string, kv ...any) { logger.Warn(msg, kv...) }})
+	lk.Deps = deps
 	hs := newHealthService(db, svc, version)
 	svc.SetHostRunner(lk)
 	svc.SetHooks(machines.Hooks{ControllerVersion: version,
@@ -210,7 +220,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 			}
 		}()
 	}
-	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, stop: func() {
+	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, stop: func() {
 		cancel()
 		_ = link.Close()
 		<-done
@@ -337,4 +347,11 @@ func (a auditedRepo) Audit(ctx context.Context, actor, action, subject, detail s
 		src = audit.SourceAgent
 	}
 	return a.rec.Record(ctx, audit.Actor{Login: actor, Source: src}, action, audit.Target{Type: "machine", ID: subject}, map[string]any{"summary": detail})
+}
+
+// depsAudit writes the consent, undo and restart rows of dependency setup to the audit log (DEP4, DEP10).
+type depsAudit struct{ rec audit.Recorder }
+
+func (a depsAudit) Audit(ctx context.Context, actor, action, machineID string, details map[string]any) error {
+	return a.rec.Record(ctx, audit.Actor{Login: actor, Source: audit.SourceWeb}, action, audit.Target{Type: "machine", ID: machineID}, details)
 }

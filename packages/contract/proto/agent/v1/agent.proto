@@ -130,6 +130,10 @@ message SessionRequest {
     JobResourceSamples job_resource_samples = 31;
     // OPS83: machine health, sent every minute and with Hello (machines R5.72).
     HealthReport health_report = 32;
+    // CRSP248, dependency setup: the answer to DepsCheck, and the live events of
+    // DepsInstall, DepsUndo and DepsRestartHost.
+    DepsReport deps_report = 33;
+    DepsEvent deps_event = 34;
   }
 }
 
@@ -172,6 +176,12 @@ message SessionResponse {
     ListenerControl listener_control = 30;
     // CRSP235: restart the agent's service once no job runs (operations R5.15, machines R5.81).
     RestartAgent restart_agent = 31;
+    // CRSP248, dependency setup (dependency-setup spec). The controller sends
+    // them only when the machine's report says `dependency_setup`.
+    DepsCheck deps_check = 32;
+    DepsInstall deps_install = 33;
+    DepsUndo deps_undo = 34;
+    DepsRestartHost deps_restart_host = 35;
   }
 }
 
@@ -914,6 +924,8 @@ message MachineReport {
   bool runner_leftovers = 14;
   // True when this agent understands the registry calls (protocol version 3, REG10).
   bool registry = 15;
+  // True when this agent understands DepsCheck, DepsInstall, DepsUndo and DepsRestartHost (CRSP248).
+  bool dependency_setup = 16;
 }
 
 // ---------------------------------------------------------------- runner leftovers (OPS33)
@@ -1492,4 +1504,136 @@ message LoadAverageHealth {
   bool steal_known = 6;
   string steal_unknown_reason = 7;
   double steal_pct = 8;
+}
+
+// ---------------------------------------------------------------- Dependency setup (CRSP248)
+
+// DepsCheck asks what the plan needs and what the machine has (DEP1). The agent
+// reads only; it changes nothing. It answers with one DepsReport.
+message DepsCheck {
+  string command_id = 1;
+  // The runner choice that makes the need (spec 3.3): runner_os is linux,
+  // windows or macos; runner_kind is ephemeral or persistent.
+  string runner_os = 2;
+  string runner_kind = 3;
+}
+
+// DepsItem is one dependency and what the agent found. id is one of the pinned
+// item ids (internal/depsetup): wsl2, docker-in-wsl2, docker-desktop,
+// docker-engine.
+message DepsItem {
+  string id = 1;
+  // ok, missing, stopped or wrong_kind.
+  string state = 2;
+  string version = 3;
+  // Why the state is not ok, in words the agent read (never a raw path as the main text).
+  string detail = 4;
+}
+
+// DepsReport answers DepsCheck.
+message DepsReport {
+  string command_id = 1;
+  repeated DepsItem items = 2;
+  // windows, linux or darwin; x64 or arm64; the distro id on Linux ("ubuntu").
+  string os = 3;
+  string arch = 4;
+  string distro = 5;
+  // Whether the agent runs with the rights to install (root, LocalSystem).
+  bool admin = 6;
+  // Free bytes of the volume the install writes to.
+  int64 disk_free_bytes = 7;
+  // Windows: virtualization is off in firmware (Verify says so; crsp cannot change it).
+  bool virtualization_off = 8;
+  // Set when the agent could not read the state.
+  string error = 9;
+}
+
+// DepsInstall runs the consented plan (DEP5). The agent resolves each item id
+// in its own pinned list (it never takes a URL from this message), downloads,
+// checks the SHA-256 before running, installs, verifies and prepares. It sends
+// DepsEvent messages while it works and one final DepsEvent.
+message DepsInstall {
+  string command_id = 1;
+  string job_id = 2;
+  repeated string item_ids = 3;
+  // The user ticked "I have the right to use it" for Docker Desktop (D-DEP-4).
+  bool accept_licence = 4;
+  // Resume after a restart: skip the install phases already done. Empty on a first run.
+  // One of the phase ids; "verify" is the usual value.
+  string resume_from = 5;
+  // What an earlier part of this plan already added (kept for undo).
+  repeated DepsAdded added = 6;
+  // The runner choice, so Verify and Prepare know what to check and make.
+  string runner_os = 7;
+  string runner_kind = 8;
+  // The machine, for the events' machine field.
+  string machine_name = 9;
+  string machine_role = 10;
+}
+
+// DepsAdded is one thing this run added: the undo record (DEP10, D-DEP-7).
+message DepsAdded {
+  string item_id = 1;
+  // What was added: "wsl-feature", "wsl-distro", "apt-package", "apt-repo-file", "apt-key",
+  // "windows-installer", "systemd-enable".
+  string kind = 2;
+  // A name or path to remove; for a package the package name.
+  string ref = 3;
+  string version = 4;
+}
+
+// DepsUndo removes only what a run added, from its record (DEP10).
+message DepsUndo {
+  string command_id = 1;
+  string job_id = 2;
+  repeated DepsAdded added = 3;
+  string machine_name = 4;
+  string machine_role = 5;
+}
+
+// DepsRestartHost restarts the machine after the user chose Restart now (D-DEP-2).
+// The agent refuses while a job runs on the machine.
+message DepsRestartHost {
+  string command_id = 1;
+  string job_id = 2;
+}
+
+// DepsEvent is one live event of a dependency job, and its last message. The
+// fields match the progress event contract of the shared Terminal and
+// ProgressBar parts (CRSP247): {jobId, phase, phaseIndex, phaseCount,
+// phaseWeight, pct|null, reason?, bytes?, total?, rate?, etaSec?, machine,
+// command?, stream, line?, ts}. Real command lines and real byte counts only.
+message DepsEvent {
+  string job_id = 1;
+  // Phase id: check, download, install, restart, verify, prepare, undo.
+  string phase = 2;
+  int32 phase_index = 3;
+  int32 phase_count = 4;
+  double phase_weight = 5;
+  // Percent 0 to 100 of the phase. Unset = unknown (indeterminate), with reason.
+  optional double pct = 6;
+  string reason = 7;
+  int64 bytes = 8;
+  int64 total = 9;
+  // Bytes per second.
+  int64 rate = 10;
+  int64 eta_sec = 11;
+  string machine_name = 12;
+  string machine_role = 13;
+  string machine_os = 14;
+  // The command line that is run now (a real argv joined; redacted).
+  string command = 15;
+  // stdout, stderr or status.
+  string stream = 16;
+  string line = 17;
+  // Unix milliseconds.
+  int64 ts = 18;
+  // The last event of the job: outcome is done, paused_restart, failed or stopped.
+  bool final = 19;
+  string outcome = 20;
+  string error = 21;
+  // What the job added so far (the undo record). Sent on the final event.
+  repeated DepsAdded added = 22;
+  // The engine version Verify read, on done.
+  string engine_version = 23;
 }
