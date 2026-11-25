@@ -2,6 +2,7 @@ package install
 
 import (
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 	"strings"
 )
 
@@ -93,11 +94,11 @@ var ConflictPackages = []string{"docker.io", "docker-compose", "docker-compose-v
 
 // RepoLine is the one line of docker.list.
 func RepoLine(family, codename, arch string) string {
-	return fmt.Sprintf("deb [arch=%s signed-by=%s] https://download.docker.com/linux/%s %s stable\n", arch, KeyPath, family, codename)
+	return fmt.Sprintf("deb [arch=%s signed-by=%s] %s/%s %s stable\n", arch, KeyPath, addresses.DockerAptURL, family, codename)
 }
 
 // KeyURL is Docker's signing key for a family.
-func KeyURL(family string) string { return "https://download.docker.com/linux/" + family + "/gpg" }
+func KeyURL(family string) string { return addresses.DockerAptURL + "/" + family + "/gpg" }
 
 // ManualDockerEngine is the "Do it myself" text for a family this release does not install.
 func ManualDockerEngine() []string {
