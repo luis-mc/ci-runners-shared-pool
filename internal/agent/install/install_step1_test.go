@@ -27,7 +27,9 @@ func build(sys *fakeSys, osrel string, states map[string]string, mod func(*insta
 			}
 			return depsetup.StateMissing
 		},
-		Engine:    func(context.Context) install.EngineInfo { return install.EngineInfo{Usable: true, Version: "27.0.1", ContainerOS: "linux"} },
+		Engine: func(context.Context) install.EngineInfo {
+			return install.EngineInfo{Usable: true, Version: "27.0.1", ContainerOS: "linux"}
+		},
 		OSRelease: func() string { return osrel },
 		Now:       func() time.Time { tick = tick.Add(time.Second); return tick },
 		Wait:      func(context.Context, time.Duration) {},
