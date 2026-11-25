@@ -1,5 +1,69 @@
 [
   {
+    "date": "25 Nov 05:38",
+    "change": "merged, v0.1.27 tagged"
+  },
+  {
+    "date": "25 Nov 03:31",
+    "change": "#410 merged; ships in v0.1.27"
+  },
+  {
+    "date": "25 Nov 02:19",
+    "change": "#409 merged b0879a68"
+  },
+  {
+    "date": "25 Nov 02:17",
+    "change": "rebased, PR #410 opened"
+  },
+  {
+    "date": "25 Nov 01:42",
+    "change": "queued behind LOOK70"
+  },
+  {
+    "date": "25 Nov 01:42",
+    "change": "queued behind LOOK69"
+  },
+  {
+    "date": "25 Nov 01:42",
+    "change": "run 4 failed on palette e2e, fixed"
+  },
+  {
+    "date": "25 Nov 01:35",
+    "change": "queued behind LOOK70 CI"
+  },
+  {
+    "date": "25 Nov 01:35",
+    "change": "queued behind LOOK69 CI"
+  },
+  {
+    "date": "25 Nov 01:04",
+    "change": "CI red twice (prettier, h1 tests); fixed, third CI running"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:30",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:29",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:29",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:29",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
+    "date": "24 Nov 23:29",
+    "change": "Shipped in a merged release; status was stale"
+  },
+  {
     "date": "24 Nov 09:16",
     "change": "LOOK67 item changed from \"RELEASE-65: Pool > Machines runners per card, Insights waits and timeline\" to \"RELEASE-65: Windows runner register with the configure verb\""
   },
