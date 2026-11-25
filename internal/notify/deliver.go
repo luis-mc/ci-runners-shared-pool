@@ -37,7 +37,7 @@ func (s *Service) compose(d store.NoticeDelivery, n store.Notice) Message {
 		EventID: n.ID, DeliveryID: d.ID, Type: n.Type, Subject: nameOr(n.SubjectName, n.SubjectID), State: n.State, Tone: n.Tone,
 		Time: store.ParseTime(n.CreatedAt), Summary: n.Summary, Link: s.link(n.Link),
 	}
-	if d.GroupCount > 0 && d.GroupKey != "" {
+	if d.GroupCount > 0 && d.BurstGroup != "" {
 		m.Count = int(d.GroupCount)
 		m.Summary = groupedSummary(n.Type, n.State, m.Count)
 		m.Subject = fmt.Sprint(m.Count, " notices")

@@ -25,6 +25,23 @@ func (q *Queries) BumpGroup(ctx context.Context, arg BumpGroupParams) error {
 	return err
 }
 
+const countBurstGroupSince = `-- name: CountBurstGroupSince :one
+SELECT COUNT(*) FROM notice_deliveries WHERE channel_id = ? AND burst_group = ? AND created_at >= ?
+`
+
+type CountBurstGroupSinceParams struct {
+	ChannelID  string
+	BurstGroup string
+	CreatedAt  string
+}
+
+func (q *Queries) CountBurstGroupSince(ctx context.Context, arg CountBurstGroupSinceParams) (int64, error) {
+	row := q.queryRow(ctx, q.countBurstGroupSinceStmt, countBurstGroupSince, arg.ChannelID, arg.BurstGroup, arg.CreatedAt)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countChannelDeliveriesSince = `-- name: CountChannelDeliveriesSince :one
 SELECT COUNT(*) FROM notice_deliveries
 WHERE channel_id = ? AND created_at >= ? AND status NOT IN ('held', 'grouped', 'dropped')
@@ -53,23 +70,6 @@ type CountDeliveredSinceParams struct {
 
 func (q *Queries) CountDeliveredSince(ctx context.Context, arg CountDeliveredSinceParams) (int64, error) {
 	row := q.queryRow(ctx, q.countDeliveredSinceStmt, countDeliveredSince, arg.ChannelID, arg.DeliveredAt)
-	var count int64
-	err := row.Scan(&count)
-	return count, err
-}
-
-const countGroupKeySince = `-- name: CountGroupKeySince :one
-SELECT COUNT(*) FROM notice_deliveries WHERE channel_id = ? AND group_key = ? AND created_at >= ?
-`
-
-type CountGroupKeySinceParams struct {
-	ChannelID string
-	GroupKey  string
-	CreatedAt string
-}
-
-func (q *Queries) CountGroupKeySince(ctx context.Context, arg CountGroupKeySinceParams) (int64, error) {
-	row := q.queryRow(ctx, q.countGroupKeySinceStmt, countGroupKeySince, arg.ChannelID, arg.GroupKey, arg.CreatedAt)
 	var count int64
 	err := row.Scan(&count)
 	return count, err
@@ -108,7 +108,7 @@ func (q *Queries) DropOldestNoteDeliveries(ctx context.Context, arg DropOldestNo
 }
 
 const dueDeliveries = `-- name: DueDeliveries :many
-SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at, delivered_at FROM notice_deliveries WHERE status = 'queued' AND next_try_at <= ? ORDER BY next_try_at, id LIMIT ?
+SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at, delivered_at FROM notice_deliveries WHERE status = 'queued' AND next_try_at <= ? ORDER BY next_try_at, id LIMIT ?
 `
 
 type DueDeliveriesParams struct {
@@ -138,7 +138,7 @@ func (q *Queries) DueDeliveries(ctx context.Context, arg DueDeliveriesParams) ([
 			&i.NextTryAt,
 			&i.LastError,
 			&i.GroupCount,
-			&i.GroupKey,
+			&i.BurstGroup,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeliveredAt,
@@ -157,19 +157,19 @@ func (q *Queries) DueDeliveries(ctx context.Context, arg DueDeliveriesParams) ([
 }
 
 const findOpenGroup = `-- name: FindOpenGroup :one
-SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at, delivered_at FROM notice_deliveries
-WHERE channel_id = ? AND group_key = ? AND status = 'queued' AND group_count > 0 AND created_at >= ?
+SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at, delivered_at FROM notice_deliveries
+WHERE channel_id = ? AND burst_group = ? AND status = 'queued' AND group_count > 0 AND created_at >= ?
 ORDER BY created_at DESC LIMIT 1
 `
 
 type FindOpenGroupParams struct {
-	ChannelID string
-	GroupKey  string
-	CreatedAt string
+	ChannelID  string
+	BurstGroup string
+	CreatedAt  string
 }
 
 func (q *Queries) FindOpenGroup(ctx context.Context, arg FindOpenGroupParams) (NoticeDelivery, error) {
-	row := q.queryRow(ctx, q.findOpenGroupStmt, findOpenGroup, arg.ChannelID, arg.GroupKey, arg.CreatedAt)
+	row := q.queryRow(ctx, q.findOpenGroupStmt, findOpenGroup, arg.ChannelID, arg.BurstGroup, arg.CreatedAt)
 	var i NoticeDelivery
 	err := row.Scan(
 		&i.ID,
@@ -184,7 +184,7 @@ func (q *Queries) FindOpenGroup(ctx context.Context, arg FindOpenGroupParams) (N
 		&i.NextTryAt,
 		&i.LastError,
 		&i.GroupCount,
-		&i.GroupKey,
+		&i.BurstGroup,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeliveredAt,
@@ -193,7 +193,7 @@ func (q *Queries) FindOpenGroup(ctx context.Context, arg FindOpenGroupParams) (N
 }
 
 const getDelivery = `-- name: GetDelivery :one
-SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at, delivered_at FROM notice_deliveries WHERE id = ?
+SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at, delivered_at FROM notice_deliveries WHERE id = ?
 `
 
 func (q *Queries) GetDelivery(ctx context.Context, id string) (NoticeDelivery, error) {
@@ -212,7 +212,7 @@ func (q *Queries) GetDelivery(ctx context.Context, id string) (NoticeDelivery, e
 		&i.NextTryAt,
 		&i.LastError,
 		&i.GroupCount,
-		&i.GroupKey,
+		&i.BurstGroup,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.DeliveredAt,
@@ -275,7 +275,7 @@ func (q *Queries) GetNotifyEvent(ctx context.Context, key string) (NotifyEvent, 
 
 const insertDelivery = `-- name: InsertDelivery :exec
 INSERT INTO notice_deliveries (id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status,
-    attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at)
+    attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, '', ?, ?, ?, ?)
 `
 
@@ -290,7 +290,7 @@ type InsertDeliveryParams struct {
 	Status      string
 	NextTryAt   string
 	GroupCount  int64
-	GroupKey    string
+	BurstGroup  string
 	CreatedAt   string
 	UpdatedAt   string
 }
@@ -307,7 +307,7 @@ func (q *Queries) InsertDelivery(ctx context.Context, arg InsertDeliveryParams) 
 		arg.Status,
 		arg.NextTryAt,
 		arg.GroupCount,
-		arg.GroupKey,
+		arg.BurstGroup,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
@@ -355,7 +355,7 @@ func (q *Queries) InsertNotice(ctx context.Context, arg InsertNoticeParams) erro
 }
 
 const listDeliveriesForNotices = `-- name: ListDeliveriesForNotices :many
-SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at, delivered_at FROM notice_deliveries WHERE notice_id IN (/*SLICE:ids*/?) ORDER BY created_at, id
+SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at, delivered_at FROM notice_deliveries WHERE notice_id IN (/*SLICE:ids*/?) ORDER BY created_at, id
 `
 
 func (q *Queries) ListDeliveriesForNotices(ctx context.Context, ids []string) ([]NoticeDelivery, error) {
@@ -390,7 +390,7 @@ func (q *Queries) ListDeliveriesForNotices(ctx context.Context, ids []string) ([
 			&i.NextTryAt,
 			&i.LastError,
 			&i.GroupCount,
-			&i.GroupKey,
+			&i.BurstGroup,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeliveredAt,
@@ -541,7 +541,7 @@ func (q *Queries) ListNotifyEventsByType(ctx context.Context, type_ string) ([]N
 }
 
 const listWaitingTray = `-- name: ListWaitingTray :many
-SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at, delivered_at FROM notice_deliveries WHERE status = 'waiting_tray' AND owner_login = ? ORDER BY created_at, id LIMIT ?
+SELECT id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status, attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at, delivered_at FROM notice_deliveries WHERE status = 'waiting_tray' AND owner_login = ? ORDER BY created_at, id LIMIT ?
 `
 
 type ListWaitingTrayParams struct {
@@ -571,7 +571,7 @@ func (q *Queries) ListWaitingTray(ctx context.Context, arg ListWaitingTrayParams
 			&i.NextTryAt,
 			&i.LastError,
 			&i.GroupCount,
-			&i.GroupKey,
+			&i.BurstGroup,
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.DeliveredAt,

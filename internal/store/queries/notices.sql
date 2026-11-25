@@ -30,7 +30,7 @@ SELECT * FROM notice_deliveries WHERE notice_id IN (sqlc.slice('ids')) ORDER BY 
 
 -- name: InsertDelivery :exec
 INSERT INTO notice_deliveries (id, notice_id, channel_id, channel_kind, channel_name, owner_login, target, status,
-    attempt, next_try_at, last_error, group_count, group_key, created_at, updated_at)
+    attempt, next_try_at, last_error, group_count, burst_group, created_at, updated_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, '', ?, ?, ?, ?);
 
 -- name: CountChannelDeliveriesSince :one
@@ -39,11 +39,11 @@ WHERE channel_id = ? AND created_at >= ? AND status NOT IN ('held', 'grouped', '
 
 -- name: FindOpenGroup :one
 SELECT * FROM notice_deliveries
-WHERE channel_id = ? AND group_key = ? AND status = 'queued' AND group_count > 0 AND created_at >= ?
+WHERE channel_id = ? AND burst_group = ? AND status = 'queued' AND group_count > 0 AND created_at >= ?
 ORDER BY created_at DESC LIMIT 1;
 
--- name: CountGroupKeySince :one
-SELECT COUNT(*) FROM notice_deliveries WHERE channel_id = ? AND group_key = ? AND created_at >= ?;
+-- name: CountBurstGroupSince :one
+SELECT COUNT(*) FROM notice_deliveries WHERE channel_id = ? AND burst_group = ? AND created_at >= ?;
 
 -- name: BumpGroup :exec
 UPDATE notice_deliveries SET group_count = group_count + 1, updated_at = ? WHERE id = ?;

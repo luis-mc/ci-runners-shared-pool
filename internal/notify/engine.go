@@ -348,11 +348,11 @@ func (s *Service) fanOut(tx *store.Tx, n store.Notice, chans []store.Notificatio
 				continue
 			}
 			gk := n.Type + "|" + n.State
-			recent, err := tx.CountGroupKeySince(c.ID, gk, now.Add(-BurstWindow))
+			recent, err := tx.CountBurstGroupSince(c.ID, gk, now.Add(-BurstWindow))
 			if err != nil {
 				return err
 			}
-			d.GroupKey = gk
+			d.BurstGroup = gk
 			if recent >= BurstCount-1 {
 				g, ok, err := tx.FindOpenGroup(c.ID, gk, now.Add(-BurstWindow))
 				if err != nil {

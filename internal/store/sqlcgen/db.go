@@ -45,6 +45,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.closeRegistryRecommendationStmt, err = db.PrepareContext(ctx, closeRegistryRecommendation); err != nil {
 		return nil, fmt.Errorf("error preparing query CloseRegistryRecommendation: %w", err)
 	}
+	if q.countBurstGroupSinceStmt, err = db.PrepareContext(ctx, countBurstGroupSince); err != nil {
+		return nil, fmt.Errorf("error preparing query CountBurstGroupSince: %w", err)
+	}
 	if q.countChannelDeliveriesSinceStmt, err = db.PrepareContext(ctx, countChannelDeliveriesSince); err != nil {
 		return nil, fmt.Errorf("error preparing query CountChannelDeliveriesSince: %w", err)
 	}
@@ -53,9 +56,6 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.countDeliveredSinceStmt, err = db.PrepareContext(ctx, countDeliveredSince); err != nil {
 		return nil, fmt.Errorf("error preparing query CountDeliveredSince: %w", err)
-	}
-	if q.countGroupKeySinceStmt, err = db.PrepareContext(ctx, countGroupKeySince); err != nil {
-		return nil, fmt.Errorf("error preparing query CountGroupKeySince: %w", err)
 	}
 	if q.countJobStepsStmt, err = db.PrepareContext(ctx, countJobSteps); err != nil {
 		return nil, fmt.Errorf("error preparing query CountJobSteps: %w", err)
@@ -1282,6 +1282,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing closeRegistryRecommendationStmt: %w", cerr)
 		}
 	}
+	if q.countBurstGroupSinceStmt != nil {
+		if cerr := q.countBurstGroupSinceStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countBurstGroupSinceStmt: %w", cerr)
+		}
+	}
 	if q.countChannelDeliveriesSinceStmt != nil {
 		if cerr := q.countChannelDeliveriesSinceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countChannelDeliveriesSinceStmt: %w", cerr)
@@ -1295,11 +1300,6 @@ func (q *Queries) Close() error {
 	if q.countDeliveredSinceStmt != nil {
 		if cerr := q.countDeliveredSinceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countDeliveredSinceStmt: %w", cerr)
-		}
-	}
-	if q.countGroupKeySinceStmt != nil {
-		if cerr := q.countGroupKeySinceStmt.Close(); cerr != nil {
-			err = fmt.Errorf("error closing countGroupKeySinceStmt: %w", cerr)
 		}
 	}
 	if q.countJobStepsStmt != nil {
@@ -3323,10 +3323,10 @@ type Queries struct {
 	claimRegistryScanStmt                       *sql.Stmt
 	clearRepositoryProfileStmt                  *sql.Stmt
 	closeRegistryRecommendationStmt             *sql.Stmt
+	countBurstGroupSinceStmt                    *sql.Stmt
 	countChannelDeliveriesSinceStmt             *sql.Stmt
 	countCtlMachinesStmt                        *sql.Stmt
 	countDeliveredSinceStmt                     *sql.Stmt
-	countGroupKeySinceStmt                      *sql.Stmt
 	countJobStepsStmt                           *sql.Stmt
 	countJobsByStateStmt                        *sql.Stmt
 	countLiveRegistryTokenLeasesNamingStmt      *sql.Stmt
@@ -3735,10 +3735,10 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		claimRegistryScanStmt:                       q.claimRegistryScanStmt,
 		clearRepositoryProfileStmt:                  q.clearRepositoryProfileStmt,
 		closeRegistryRecommendationStmt:             q.closeRegistryRecommendationStmt,
+		countBurstGroupSinceStmt:                    q.countBurstGroupSinceStmt,
 		countChannelDeliveriesSinceStmt:             q.countChannelDeliveriesSinceStmt,
 		countCtlMachinesStmt:                        q.countCtlMachinesStmt,
 		countDeliveredSinceStmt:                     q.countDeliveredSinceStmt,
-		countGroupKeySinceStmt:                      q.countGroupKeySinceStmt,
 		countJobStepsStmt:                           q.countJobStepsStmt,
 		countJobsByStateStmt:                        q.countJobsByStateStmt,
 		countLiveRegistryTokenLeasesNamingStmt:      q.countLiveRegistryTokenLeasesNamingStmt,
