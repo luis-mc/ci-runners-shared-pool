@@ -4,7 +4,7 @@ Task: macOS and Linux update window and first-start window in the crsp look (TRA
 
 ## Status
 - Step 1 (code): update window as a web page, first-start window, tray wiring. Built; unit tests green on Linux.
-- Step 2: real-browser check on Linux, spec, content words, change note, docs_check, CI on all three OS. In progress.
+- Step 2: real-browser check done on Linux (screenshot ok, Update now fails cleanly without a service). Spec, content words, change note written. docs_check.py and docs_fold.py: the luismc-docs plugin is not in this sandbox, so the change note was written by hand in the same format and docs_check was NOT run. CI next.
 
 ## Decisions I took (nobody was there to ask; the owner can overrule)
 - D19 (own browser profile) was left to "decide when built": yes. Profile folder `<user cache>/crsp/crsp-window-profile`, flags `--user-data-dir --window-size --no-first-run --no-default-browser-check --disable-extensions`. No Chromium-family browser: the update falls back to the console page (R5.43) and the first-start window is skipped.
@@ -16,3 +16,6 @@ Task: macOS and Linux update window and first-start window in the crsp look (TRA
 ## Not verified
 - macOS: built and unit-tested in CI (macos-latest, cgo); never run on a real Mac.
 - Windows: web page tested only through Go unit tests; the native window is unchanged.
+
+## CI
+tray-smoke on branch head f4e77dc: green on ubuntu, windows and macos (build + `go test ./internal/updatewindow ./internal/tray` on all three). Full suite: the ready PR's CI.
