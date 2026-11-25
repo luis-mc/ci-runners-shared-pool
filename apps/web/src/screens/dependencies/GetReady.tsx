@@ -38,6 +38,7 @@ import {
   failedWords,
   headline,
   installLabel,
+  installNote,
   itemFacts,
   itemWords,
   jobActive,
@@ -419,6 +420,9 @@ export function GetReadyWizard(p: GetReadyProps) {
       <Stack>
         <Facts items={itemFacts(items)} />
         {blocked ? <Message tone="needs-you">{blocked}</Message> : null}
+        {choice && !startOnly && installNote(choice) ? (
+          <Text>{installNote(choice)}</Text>
+        ) : null}
         {check.choices.length > 1 && !startOnly ? (
           <ChoiceField
             label="Way to get it"

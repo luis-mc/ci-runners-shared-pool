@@ -124,14 +124,21 @@ export function itemWords(c: DepChoice, items: readonly DepItem[]): string {
     : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1] ?? ''}`;
 }
 
-/** The primary of the first run, computed from the facts: "Install WSL2 and Docker (about 10 minutes, one restart)". */
+/** The primary of the first run: "Install WSL2 and Docker". The time and the restart go in {@link installNote}, so the button stays one short line on a phone. */
 export function installLabel(c: DepChoice, items: readonly DepItem[]): string {
+  return `Install ${itemWords(c, items)}`;
+}
+
+/** The line above the primary: "About 10 minutes, one restart." */
+export function installNote(c: DepChoice): string {
   const m = minutesOf(c);
   const extra = [
     m > 0 ? `about ${m} ${m === 1 ? 'minute' : 'minutes'}` : '',
     restartOf(c) ? 'one restart' : '',
   ].filter(Boolean);
-  return `Install ${itemWords(c, items)}${extra.length ? ` (${extra.join(', ')})` : ''}`;
+  if (!extra.length) return '';
+  const text = extra.join(', ');
+  return `${text[0]!.toUpperCase()}${text.slice(1)}.`;
 }
 
 export const reviewLabel = (c: DepChoice): string =>
