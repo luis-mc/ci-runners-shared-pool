@@ -77,7 +77,7 @@ func agentConfig(f *agentFlags, logger *slog.Logger) (agent.Config, error) {
 		return agent.Config{}, err
 	}
 	return agent.Config{Controller: f.controller, Pin: f.fingerprint, JoinCode: f.joinCode, Secrets: store, DataDir: f.dataDir, Version: version, Logger: logger, Caches: agentCacheSource(), DiskFloorGiB: runnercache.FloorSetting(f.diskFloorGiB),
-		Runners: agentRunners(), RunnerFiles: agentRunnerFiles(), Images: agentImageSource(), MacVMs: agentMacVMs(), Redactor: secretRedactor}, nil
+		Runners: agentRunners(), PreparePool: agentPreparePool(), RunnerFiles: agentRunnerFiles(), Images: agentImageSource(), MacVMs: agentMacVMs(), Redactor: secretRedactor}, nil
 }
 
 func agentRun(args []string, stderr io.Writer) error {

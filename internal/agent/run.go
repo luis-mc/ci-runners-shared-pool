@@ -62,6 +62,10 @@ type Config struct {
 	// Runners carries out the runner commands of the controller (runners R5.1);
 	// nil answers each with a failure that says the agent has no backend.
 	Runners runners.Agent
+	// PreparePool makes the runner image and, when persistent is set, the
+	// persistent pool container, for dependency setup (DEP9). Nil: they are
+	// made when the first runner starts.
+	PreparePool func(ctx context.Context, arch string, persistent bool) error
 	// RunnerFiles replaces runner files on UpdateRunnerFiles (runners R5.38);
 	// nil means this agent cannot, and its machine report says so.
 	RunnerFiles *RunnerFiles
@@ -403,6 +407,7 @@ type link struct {
 	following bool
 
 	wipes  *wiper
+	deps   depsManager // dependency setup: one job at a time (CRSP248)
 	hyg    hygieneKeeper
 	budget *Budgeter
 
@@ -652,6 +657,14 @@ func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 		go l.updateFiles(ctx, m.UpdateRunnerFiles)
 	case *agentv1.SessionResponse_RunHostCommand:
 		go l.runHostCommand(ctx, m.RunHostCommand)
+	case *agentv1.SessionResponse_DepsCheck:
+		go l.depsCheck(m.DepsCheck)
+	case *agentv1.SessionResponse_DepsInstall:
+		l.depsInstall(ctx, m.DepsInstall)
+	case *agentv1.SessionResponse_DepsUndo:
+		l.depsUndo(ctx, m.DepsUndo)
+	case *agentv1.SessionResponse_DepsRestartHost:
+		l.depsRestartHost(m.DepsRestartHost)
 	case *agentv1.SessionResponse_ScanRunnerLeftovers:
 		go l.scanLeftovers(ctx, m.ScanRunnerLeftovers)
 	case *agentv1.SessionResponse_RemoveRunnerLeftovers:

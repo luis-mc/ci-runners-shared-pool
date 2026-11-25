@@ -87,6 +87,7 @@ func (l *link) reportMachine(ctx context.Context, commandID string) {
 	rep.CommandId = commandID
 	rep.RunnerSwap = l.cfg.RunnerFiles != nil
 	rep.HostCommand = true
+	rep.DependencySetup = true
 	rep.RunnerLeftovers = true
 	rep.DockerDisk = dockerDiskReport(ctx, l.cfg.dockerHost())
 	rep.RunnerServices = healServices(ctx, l.cfg.serviceHealer(), l.cfg.Logger, l.cfg.redactor())

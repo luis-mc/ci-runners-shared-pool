@@ -35,7 +35,13 @@ import {
   EditBar,
 } from '@crsp/ui';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
@@ -44,6 +50,7 @@ import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import { machineStatus } from '../overview/Overview';
 import { MachineDockerDiskSection } from './MachineDockerDisk';
+import { MachineUptimeSection } from './MachineUptime';
 import { MachinePolicySection, PolicyStatus, takingState } from './MachinePolicy';
 import { usePoolSize } from './PoolSize';
 import { RecoverySection } from './Recovery';
@@ -223,6 +230,7 @@ export function MachinesList() {
 
 export function MachineDetail() {
   const { id = '' } = useParams();
+  const [query] = useSearchParams();
   const client = useClient();
   const v = useVersion('machines');
   const { result, reload } = useLoad(
@@ -234,6 +242,9 @@ export function MachineDetail() {
       ),
     [id, v],
   );
+  // The doctor's link "Get this machine ready" (DEP14) opens the dependency wizard of this machine.
+  if (query.get('setup') === 'deps')
+    return <Navigate to={`/setup/machines/${id}/ready`} replace />;
   return (
     <Page>
       <Breadcrumbs
@@ -470,6 +481,7 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
           ]}
         />
       </Section>
+      <MachineUptimeSection machineId={m.id} />
       <RecoverySection m={m} onChanged={onChanged} />
       <Section title="Service">
         <Stack gap="tight">

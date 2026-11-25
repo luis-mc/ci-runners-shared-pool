@@ -464,6 +464,54 @@ export const image = () => ({
 });
 
 /** The routes every signed-in screen needs. */
+/** The guided dependency setup (dependency-setup spec): a Windows PC with no WSL2 and no Docker, one recommended choice. */
+function dependencyCheck(): unknown {
+  const facts = (name: string) => ({
+    name,
+    version: '2.0',
+    source: 'download.docker.com',
+    download_bytes: 120_000_000,
+    disk_bytes: 900_000_000,
+    typical_minutes: 5,
+    needs_admin: true,
+    restart_likely: name === 'WSL2',
+    undo: `Remove ${name} from Apps.`,
+  });
+  return {
+    machine_id: 'm1',
+    ready: false,
+    os: 'windows',
+    admin: true,
+    disk_free_bytes: 50_000_000_000,
+    virtualization_off: false,
+    items: [
+      {
+        id: 'wsl2',
+        name: 'WSL2',
+        state: 'missing',
+        why: 'Containers on Windows run in WSL2.',
+      },
+      {
+        id: 'docker-in-wsl2',
+        name: 'Docker',
+        state: 'missing',
+        why: 'Linux runners run in a container, and containers need Docker.',
+      },
+    ],
+    choices: [
+      {
+        id: 'wsl-docker',
+        title: 'Docker in WSL2',
+        item_ids: ['wsl2', 'docker-in-wsl2'],
+        recommended: true,
+        facts: [facts('WSL2'), facts('Docker')],
+        requires_licence_tick: false,
+        manual_steps: ['wsl --install --no-distribution'],
+      },
+    ],
+  };
+}
+
 export function signedIn(user: unknown = owner): Mock {
   return registryApi(signedInBase(user));
 }
@@ -511,6 +559,8 @@ function signedInBase(user: unknown): Mock {
     .on('GET', '/api/v1/app/webhook', { state: 'off' })
     .on('GET', '/api/v1/machines', { items: [machine()] })
     .on('GET', '/api/v1/machines/:id', machine())
+    .on('POST', '/api/v1/machines/:id/dependencies/check', dependencyCheck())
+    .on('GET', '/api/v1/machines/:id/dependencies/jobs', [])
     .on('GET', '/api/v1/timeline', timeline())
     .on('GET', '/api/v1/machines/:id/health', machineHealth())
     .on('GET', '/api/v1/machines/:id/job-stats', (c: { query: URLSearchParams }) =>

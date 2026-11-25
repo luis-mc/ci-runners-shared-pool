@@ -175,6 +175,25 @@ type CtlRunnerPlan struct {
 	Doc string
 }
 
+type DependencyJob struct {
+	ID            string
+	MachineID     string
+	State         string
+	ChoiceID      string
+	ItemIds       string
+	RunnerOs      string
+	RunnerKind    string
+	Actor         string
+	CreatedAt     string
+	UpdatedAt     string
+	Error         string
+	EngineVersion string
+	Added         string
+	LastEvent     string
+	Log           string
+	Extra         string
+}
+
 type DoctorFinding struct {
 	ID          int64
 	RunID       string
@@ -699,6 +718,13 @@ type MachineLoad struct {
 	MemoryPct sql.NullFloat64
 	CpuPct    sql.NullFloat64
 	SlotsUsed int64
+}
+
+type MachinePresence struct {
+	MachineID string
+	At        string
+	State     string
+	Reason    string
 }
 
 type MachineSetting struct {

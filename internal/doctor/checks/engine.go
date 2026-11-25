@@ -58,12 +58,17 @@ func machineEngine(ctx context.Context, env doctor.Env) []doctor.Finding {
 			}
 			f.Detail += " Container runners cannot start here."
 			f.Fix = engineFix(s)
-			f.Fix.Link = machineLink(s.Machine)
+			// DEP14: the wizard "Get this machine ready" opens from the machine page; the doctor still only reads.
+			f.Fix.Text += " Or use Get this machine ready on the machine page, and crsp installs it with your yes."
+			f.Fix.Link = machineLink(s.Machine) + EngineSetupQuery
 		}
 		out = append(out, f)
 	}
 	return out
 }
+
+// EngineSetupQuery opens the dependency setup wizard on the machine page (dependency-setup DEP14).
+const EngineSetupQuery = "?setup=deps"
 
 func engineFix(s doctor.EngineState) doctor.Fix {
 	switch {
@@ -71,6 +76,8 @@ func engineFix(s doctor.EngineState) doctor.Fix {
 		return doctor.Fix{Text: "Start Docker Desktop and wait until it says the engine is running."}
 	case s.Machine.OS == "windows":
 		return doctor.Fix{Text: "Start the engine: open Docker Desktop, or in a WSL2 distro run `sudo service docker start`. If neither is installed, install Docker in WSL2 (preferred) or Docker Desktop."}
+	case s.Machine.OS == "darwin":
+		return doctor.Fix{Text: "Start Docker Desktop and wait until it says the engine is running. If it is not installed, install Docker Desktop (check its licence first)."}
 	}
 	return doctor.Fix{Text: "Install Docker and start its service (for example `sudo systemctl enable --now docker`)."}
 }
