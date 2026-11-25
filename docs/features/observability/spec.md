@@ -9,6 +9,9 @@ owner: owner
 type: reference
 code:
   - internal/events/**
+  - apps/web/src/screens/savings/**
+  - apps/web/src/screens/analytics/Savings.tsx
+  - apps/web/src/screens/analytics/Compare.tsx
   - internal/overview/**
   - internal/history/**
   - internal/audit/**
@@ -21,7 +24,7 @@ generator: luismc-docs 2.6.1
 ---
 # Observability
 
-Partly built (CRSP18, CRSP23): the audit log (R5.24 to R5.27, without the hash chain), retention (R5.32, R6.8 for audit, job history, raw load samples and log files), the live stream (R5.1 to R5.3, R6.2 load throttle, R6.3) and minutes saved today (R5.15). Everything else is NOT YET IMPLEMENTED. Every requirement names the milestone that builds it.
+Partly built (CRSP18, CRSP23): the audit log (R5.24 to R5.27, without the hash chain), retention (R5.32, R6.8 for audit, job history, raw load samples and log files), the live stream (R5.1 to R5.3, R6.2 load throttle, R6.3) minutes and money saved with the rate table and the report (R5.15 to R5.19, CRSP256) and the speed comparison from history (R5.34). Everything else is NOT YET IMPLEMENTED. Every requirement names the milestone that builds it.
 
 ## 1. In one paragraph
 
@@ -91,7 +94,9 @@ flowchart LR
 
 The screens are the Overview (screen 2), Jobs (screen 6), the Runners and Machines details (screens 4 and 5) and Settings, Audit log (screen 9) from the product brief. No images yet; mocks come with milestone 1 work.
 
-**Overview.** Machines with load bars for memory and CPU, the budget line and slots in use ("3 of 4 slots"). The queue, then the running jobs. Today's minutes saved. The overview only shows and links (design system UX-52). Each status is a word, a glyph and a colour (design system UX-58): `▶ running`, `◷ waiting`, `✓ ok`, `✕ failed`.
+**Overview.** Machines with load bars for memory and CPU, the budget line and slots in use ("3 of 4 slots"). The queue, then the running jobs. Two tiles, *Minutes saved today* and *Money saved today* (an estimate, with the date the rates were copied). The overview only shows and links (design system UX-52). Each status is a word, a glyph and a colour (design system UX-58): `▶ running`, `◷ waiting`, `✓ ok`, `✕ failed`.
+
+**Savings (CRSP256).** Analytics > Savings: a range choice (*Today*, *7 days*, *30 days*, *A range* with two date pickers), three tiles (*Minutes saved*, *Money saved* with the word estimate, *Jobs*), a line that public repositories count minutes but save no money, and three tables (*By repository*, *By system*, *By machine*) with Jobs, Minutes and Money. Empty: "No job ran on the pool in this range." The last line names the page and date the rates were copied from. Analytics > Compare: *Repository* and *Days* fields, *Compare* (busy while it reads) and a table of jobs with the median run on crsp and on hosted runners. Settings > Repositories > *Savings rates*: the source line, a number field per rate, a size choice per machine, *Reset to shipped rates*. Built from the shared parts StatTile, StatGrid, Segmented, DatePicker, Table, Section, Message, NumberField, SelectField, Button; no stylesheet.
 
 **Waits.** A queued job names what it waits for and since when (design system UX-29):
 
@@ -200,15 +205,15 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 ### Minutes saved
 
-**R5.15** — (M1) Minutes saved counts every job that ran on the pool. Each job counts its run time rounded up to the next whole minute, the way GitHub bills hosted jobs. The Overview shows today's minutes saved, split by OS.
+**R5.15** — (M1, Built) Minutes saved counts every job that ran on the pool. Each job counts its run time rounded up to the next whole minute, the way GitHub bills hosted jobs. The Overview shows two tiles, *Minutes saved today* and *Money saved today*, each a link to Analytics > Savings. The live Overview feed counts the same finished pool jobs (`cmd/crsp/overview_source.go`); a finished job counts when it has a machine, a start and an end.
 
-**R5.16** — (M8) Money saved is minutes saved times the per-minute rate of the GitHub-hosted runner that matches the job's OS and size. The rates ship in a table copied from GitHub's published Actions runner pricing (docs.github.com, "Actions runner pricing" in the billing docs). The table stores the source URL and the date it was copied. The figure is labelled "estimate" and shows that date.
+**R5.16** — (M8, Built by CRSP256) Money saved is minutes saved times the per-minute rate of the GitHub-hosted runner that matches the job's OS and size. The rates ship in a table copied from GitHub's published Actions runner pricing (docs.github.com, "Actions runner pricing" in the billing docs). The table stores the source URL and the date it was copied. The figure is labelled "estimate" and shows that date. The rate is picked by the job's OS and the size its machine is mapped to (default `standard`); a job whose OS has no rate adds no money and is counted in `not_priced`. Source: `internal/history/rates.go`. **The shipped rates are those of `internal/compare/prices.json` (private repositories: linux 0.008, linux arm 0.005, windows 0.016, macos 0.08 dollars a minute), dated 2026-11-15; `docs.github.com` could not be reached from the session that built this, so they were not re-copied from the page. Re-read them there and move `ShippedCopiedOn` with them.**
 
-**R5.17** — (M8) The owner can change every rate, and the size each machine maps to, in Settings and in the config file. A change writes an audit row. "Reset to shipped rates" restores the table.
+**R5.17** — (M8, Built by CRSP256) The owner can change every rate, and the size each machine maps to, in Settings and in the config file. A change writes an audit row. "Reset to shipped rates" restores the table. On screen: Settings > Repositories, section *Savings rates* (one number field per rate and one size choice per machine, saved by the tab's one Save; the owner only). Routes `GET`, `PUT` and `DELETE /api/v1/savings/rates`; audit actions `savings.rates.change` and `savings.rates.reset`, written in the same transaction as the change. The config file route is not built: the table lives in the settings row `savings_rates`.
 
-**R5.18** — (M8) Jobs of public repositories count their minutes but save no money, because GitHub-hosted standard runners are free for public repositories. The report says so.
+**R5.18** — (M8, Built by CRSP256) Jobs of public repositories count their minutes but save no money, because GitHub-hosted standard runners are free for public repositories. The report says so in its note and counts those minutes in `public_minutes`. A repository counts as public when GitHub says `public`; `internal` repositories are billed and save money.
 
-**R5.19** — (M8) A minutes-saved report covers today, 7 days, 30 days and a chosen range, per repository, OS and machine.
+**R5.19** — (M8, Built by CRSP256) A minutes-saved report covers today, 7 days, 30 days and a chosen range, per repository, OS and machine. On screen: Analytics > Savings (range choice *Today*, *7 days*, *30 days*, *A range* with two date pickers; three tables by repository, system and machine). Route `GET /api/v1/savings?range=today|7d|30d|custom&from&to`; a custom range is at most 366 days and includes its last day. There is no CLI command yet (`x-cli: none`). Source: `internal/history/savings.go`.
 
 ### Runner setup and agent logs
 
@@ -246,7 +251,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.33** (M3, NOT YET IMPLEMENTED, CRSP92) — **Speed comparison.** The owner picks one workflow of one repository. crsp runs it on the pool and on GitHub-hosted runners, once each on the same commit, and shows the two times next to each other with the minutes saved (R5.15) and the machine it ran on. The comparison is started by hand, asks first because it uses hosted minutes, runs at most once at a time, and never runs without the owner starting it. The result is kept with the date and the commit, and the console shows a number only when both runs succeeded.
 
-**R5.34** (M3, CRSP92) — **Speed comparison from history.** `crsp compare <owner/repo> [--days N]` and the read-only route `GET /api/v1/compare?repository=owner/repo&days=N` read the finished workflow-run jobs of one repository from GitHub (the window is 14 days when absent, at most 90) and match jobs by name across the two runner kinds: a job whose runner labels hold `self-hosted` ran on crsp, any other ran on a GitHub-hosted runner. Queue wait is started minus created, run time is completed minus started; only successful and failed jobs with real timestamps count. For each job name seen on both kinds the answer holds the median and the 95th percentile of queue wait and run time per kind, the minutes saved (for every crsp run, the hosted median of queue plus run minus the crsp median, so a slower pool shows a negative number) and the hosted cost avoided (each crsp run rounded up to whole minutes, times the per-minute price). The price table is one file, `internal/compare/prices.json`, keyed by `runs-on` label with a default. A public repository is excluded, with the reason, because hosted minutes there are free (R5.18). It reads only and starts no job. An optional workflow template for a fair A/B run is in `docs/guides/speed-comparison-workflow.md`; the by-hand run of R5.33 stays separate.
+**R5.34** (M3, CRSP92; on screen CRSP256: Analytics > Compare) — **Speed comparison from history.** `crsp compare <owner/repo> [--days N]` and the read-only route `GET /api/v1/compare?repository=owner/repo&days=N` read the finished workflow-run jobs of one repository from GitHub (the window is 14 days when absent, at most 90) and match jobs by name across the two runner kinds: a job whose runner labels hold `self-hosted` ran on crsp, any other ran on a GitHub-hosted runner. Queue wait is started minus created, run time is completed minus started; only successful and failed jobs with real timestamps count. For each job name seen on both kinds the answer holds the median and the 95th percentile of queue wait and run time per kind, the minutes saved (for every crsp run, the hosted median of queue plus run minus the crsp median, so a slower pool shows a negative number) and the hosted cost avoided (each crsp run rounded up to whole minutes, times the per-minute price). The price table is one file, `internal/compare/prices.json`, keyed by `runs-on` label with a default. A public repository is excluded, with the reason, because hosted minutes there are free (R5.18). It reads only and starts no job. An optional workflow template for a fair A/B run is in `docs/guides/speed-comparison-workflow.md`; the by-hand run of R5.33 stays separate. The console shows it in Analytics > Compare: a repository field (owner/repo), a days field, the button *Compare* (busy while it reads), and a table of the jobs with the median run on each kind, minutes saved and cost avoided; a public repository shows the reason, no numbers.
 
 ## 6. Non-functional requirements
 
@@ -371,11 +376,11 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.12 | planned: internal/history/store_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRowsAndMarksStale |
 | R5.13 | planned: internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped |
 | R5.14 | planned: internal/history/export_test.go TestExportHasEveryRowInOrder |
-| R5.15 | internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview (the minutes sum itself is a store query, planned: internal/history/savings_test.go) |
-| R5.16 | planned: internal/history/savings_test.go TestMoneyUsesMatchingRate; internal/history/rates_test.go TestRateTableHasSourceAndDate |
-| R5.17 | planned: internal/history/rates_test.go TestOverrideAndResetWriteAudit |
-| R5.18 | planned: internal/history/savings_test.go TestPublicRepoSavesNoMoney |
-| R5.19 | planned: internal/history/savings_test.go TestReportRangesAndGroups |
+| R5.15 | internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview; internal/history/savings_test.go TestRoundUpMinutes; internal/store/savings_test.go TestFinishedPoolJobsOnlyPoolJobsInWindow; apps/web/src/screens/savings/savings.test.tsx (Overview tiles) |
+| R5.16 | internal/history/savings_test.go TestMoneyUsesMatchingRate, TestMachineSizeChangesTheRate; internal/history/rates_test.go TestRateTableHasSourceAndDate; savings.test.tsx (rates with source and date) |
+| R5.17 | internal/history/rates_test.go TestOverrideAndResetWriteAudit, TestValidateRefusesBadTables; internal/api/handlers_savings_test.go TestSavingsRatesAreOwnerOnlyAndValidated |
+| R5.18 | internal/history/savings_test.go TestPublicRepoSavesNoMoney; savings.test.tsx (public note) |
+| R5.19 | internal/history/savings_test.go TestReportRangesAndGroups; internal/api/handlers_savings_test.go TestSavingsReportJSON; savings.test.tsx (ranges, tables) |
 | R5.20 | planned: internal/logs/agentlog_test.go TestSetupStepsCaptured |
 | R5.21 | planned: internal/logs/search_test.go TestFullTextAndFilters |
 | R5.22 | planned: internal/events/sse_test.go TestRunnerSetupLogLive |
@@ -390,7 +395,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.31 | planned: internal/logs/crash_test.go TestUnreportedCrashShownOnce |
 | R5.32 | internal/settings/retention_test.go TestHourlyJobDeletesPastLimit, TestRetentionUsesSettings; internal/settings/settings_test.go TestOutOfRangeRefusedWithRange, TestEveryRangeMatchesFloorAndCeiling |
 | R5.33 | planned: internal/bench/compare_test.go TestRunsBothOnTheSameCommit, TestNothingShownWhenARunFails, TestNeverStartsByItself (CRSP92) |
-| R5.34 | internal/compare/compare_test.go TestMatchingByNameAcrossKinds, TestMedianAndP95, TestRowStatsAndMinutesSaved, TestCostMath, TestPublicRepositoryExcluded, TestAPISourceEndToEnd; internal/api/handlers_compare_test.go TestSpeedComparisonJSON, TestSpeedComparisonIsReadOnly; internal/cli/resources_test.go TestCompareTableAndJSON |
+| R5.34 | internal/compare/compare_test.go TestMatchingByNameAcrossKinds, TestMedianAndP95, TestRowStatsAndMinutesSaved, TestCostMath, TestPublicRepositoryExcluded, TestAPISourceEndToEnd; apps/web/src/screens/savings/savings.test.tsx (Compare view); internal/api/handlers_compare_test.go TestSpeedComparisonJSON, TestSpeedComparisonIsReadOnly; internal/cli/resources_test.go TestCompareTableAndJSON |
 | R5.35 | internal/store/jobsdata_test.go TestMigrationTables, TestWriteAndReadRunJobSteps; internal/jobsdata/ingest/recorder_test.go TestWorkflowJobWritesRows |
 | R5.36 | internal/jobsdata/types_test.go TestJobTypeStripsMatrix, TestTaskIDFromBranch; internal/jobsdata/ingest/recorder_test.go TestWorktreeOnlyWhenReported |
 | R5.37 | internal/store/jobsdata_test.go TestRetention90_30_400, TestSummaryWrittenBeforeRawRowsLeave, TestListPagesTo100 |
@@ -446,6 +451,13 @@ Open owner questions:
 
 ## 11. Not built yet
 
+CRSP256 gaps, said plainly:
+
+- **G6, the fallback reason next to each fallback run, is not built.** crsp knows why a repository routes to hosted runners now (`GET` repository routing: `why` = `fallback_on` and so on) but stores no reason per run, so a past fallback run has none to show. Showing today's reason beside an old run would be wrong. It needs the reason written on the job row when the fallback passes (`internal/repos/fallback.go` `EvaluateFallback`) and a column on the Jobs and Run elsewhere tables.
+- The rates are not re-copied from GitHub's page (it was unreachable from the build session), see R5.16.
+- No CLI command for the savings report or the rates yet, and the rates have no config-file route.
+- **Platforms.** Built for Windows, Linux and macOS: the report reads the controller's database, so it does not depend on the system. Tested by hand on Linux only here; Windows was not run in this session. macOS is compiled and unit-tested in CI and was not run on a real Mac.
+
 Everything. The seams that change when it is built:
 
 - `packages/contract/openapi.yaml` gains `/api/v1/events`, `/api/v1/history`, `/api/v1/logs`, `/api/v1/audit` and the event schemas.
@@ -468,6 +480,8 @@ Source: internal/events/hub.go
 Source: internal/events/sse.go
 Source: internal/overview/overview.go
 Source: internal/api/handlers_live.go
+
+Built (CRSP256): `internal/history/` (`rates.go` the rate table and its audited changes, `savings.go` the report and the store source), `internal/store/savings.go` (the finished pool jobs query), `internal/api/handlers_savings.go` (the three routes), `cmd/crsp/overview_source.go` (real minutes for the live Overview), `apps/web/src/screens/savings/`, `apps/web/src/screens/analytics/Savings.tsx` and `Compare.tsx`.
 
 Planned files, in the globs of the front matter:
 
