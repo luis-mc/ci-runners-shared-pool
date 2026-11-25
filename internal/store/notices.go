@@ -290,3 +290,37 @@ func (s *Store) PruneNotices(ctx context.Context, before time.Time) (int64, erro
 	}
 	return d + n, nil
 }
+
+// QueuedJob is a job that waits for a runner, for the job.waiting source (R5.1).
+type QueuedJob struct {
+	ID         int64
+	Repository string
+	Workflow   string
+	Name       string
+	QueuedAt   time.Time
+}
+
+// QueuedJobs returns the jobs GitHub has queued and crsp has not started.
+func (s *Store) QueuedJobs(ctx context.Context) ([]QueuedJob, error) {
+	ctx, cancel := withDeadline(ctx)
+	defer cancel()
+	rows, err := s.db.QueryContext(ctx, `
+SELECT j.id, r.full_name, j.workflow, j.job_name, COALESCE(j.created_at_github, j.updated_at)
+FROM gh_jobs j JOIN repositories r ON r.id = j.repository_id
+WHERE j.status = 'queued' ORDER BY j.id`)
+	if err != nil {
+		return nil, fmt.Errorf("list queued jobs: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var out []QueuedJob
+	for rows.Next() {
+		var q QueuedJob
+		var at string
+		if err := rows.Scan(&q.ID, &q.Repository, &q.Workflow, &q.Name, &at); err != nil {
+			return nil, fmt.Errorf("list queued jobs: %w", err)
+		}
+		q.QueuedAt = ParseTime(at)
+		out = append(out, q)
+	}
+	return out, rows.Err()
+}

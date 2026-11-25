@@ -65,15 +65,54 @@ func (s *Service) Tick(ctx context.Context) {
 	s.maintain(ctx, now)
 }
 
-// Run ticks every two seconds until ctx ends.
+// Source is one place that knows facts (section 3, step 1). Poll returns every fact of its scope that is true now.
+type Source struct {
+	Scope Scope
+	Poll  func(ctx context.Context) ([]Fact, error)
+}
+
+// AddSource registers a source before Run starts.
+func (s *Service) AddSource(src Source) {
+	s.engMu.Lock()
+	defer s.engMu.Unlock()
+	s.sources = append(s.sources, src)
+}
+
+// PollEvery is how often the sources are read; a firing notice reaches the queue within this time (R6.1).
+const PollEvery = 5 * time.Second
+
+// PollSources reads every source once. A source that fails changes nothing: silence from a source is never
+// taken as "all clear".
+func (s *Service) PollSources(ctx context.Context) {
+	s.engMu.Lock()
+	srcs := append([]Source(nil), s.sources...)
+	s.engMu.Unlock()
+	for _, src := range srcs {
+		facts, err := src.Poll(ctx)
+		if err != nil {
+			s.cfg.Logger.Warn("notify: source failed", "event", src.Scope.Type, "err", err)
+			continue
+		}
+		if err := s.Observe(ctx, src.Scope, facts); err != nil {
+			s.cfg.Logger.Error("notify: observe", "event", src.Scope.Type, "err", err)
+		}
+	}
+}
+
+// Run polls the sources every PollEvery and ticks the delivery worker every two seconds until ctx ends.
 func (s *Service) Run(ctx context.Context) {
-	t := time.NewTicker(2 * time.Second)
-	defer t.Stop()
+	tick := time.NewTicker(2 * time.Second)
+	poll := time.NewTicker(PollEvery)
+	defer tick.Stop()
+	defer poll.Stop()
+	s.PollSources(ctx)
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-t.C:
+		case <-poll.C:
+			s.PollSources(ctx)
+		case <-tick.C:
 			s.Tick(ctx)
 		}
 	}
@@ -215,12 +254,12 @@ func (s *Service) maintain(ctx context.Context, now time.Time) {
 			s.cfg.Logger.Error("notify: queue ceiling", "err", err)
 		}
 		if dropped > 0 {
-			f := Fact{Type: "doctor.finding", SubjectKind: "pool", SubjectID: "notify-queue", SubjectName: "The notice queue", Severity: "warning",
+			f := Fact{Type: "doctor.finding", SubjectKind: "notifier", SubjectID: "notify-queue", SubjectName: "The notice queue", Severity: "warning",
 				Summary: fmt.Sprintf("The notice queue was full. %d of the oldest Note notices were dropped.", dropped)}
 			_ = s.Report(ctx, f, true)
 		}
 	} else if err == nil {
-		_ = s.Report(ctx, Fact{Type: "doctor.finding", SubjectKind: "pool", SubjectID: "notify-queue", SubjectName: "The notice queue"}, false)
+		_ = s.Report(ctx, Fact{Type: "doctor.finding", SubjectKind: "notifier", SubjectID: "notify-queue", SubjectName: "The notice queue"}, false)
 	}
 	if _, err := s.cfg.DB.PruneNotices(ctx, now.Add(-Retention)); err != nil {
 		s.cfg.Logger.Error("notify: prune", "err", err)
