@@ -211,6 +211,9 @@
     "internal/memcap/**": [
       "docs/features/scheduling/spec.md"
     ],
+    "internal/metrics/**": [
+      "docs/features/observability/spec.md"
+    ],
     "internal/mirror/**": [
       "docs/features/caches/spec.md"
     ],

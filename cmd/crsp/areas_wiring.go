@@ -398,6 +398,13 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
 	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
+	// Metrics export: off until the owner turns it on in Settings (observability R5.40).
+	msvc := newMetrics(d.DB, d.Secrets, runnerSvc, d.Machines, logger)
+	if err := msvc.Apply(ctx); err != nil {
+		logger.Warn("metrics export did not start", "err", err)
+	}
+	c.closers = append(c.closers, msvc.Close)
+	c.Options.Metrics = msvc
 	c.Options.Notify = notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger})
 	c.Options.Config = configexport.Source{
 		Version: version, Config: d.Cfg, Settings: d.Ops.Settings, Secrets: d.MachineSecrets,

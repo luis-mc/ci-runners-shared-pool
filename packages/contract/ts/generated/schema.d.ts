@@ -1591,6 +1591,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/settings/metrics": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The metrics export settings and what is running
+         * @description observability R5.40 to R5.47. Off by default. `running` and `address` say whether the Prometheus page is up and where; `pushing` and `last_push_at` say the same for the OpenTelemetry push. `scrape_config` is text to paste into prometheus.yml. The key (the bearer token) is never returned; `key_made` says only whether one was made.
+         */
+        get: operations["getMetricsSettings"];
+        /**
+         * Change the metrics export settings
+         * @description observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes one audit row, and starts, restarts or stops the page and the push at once. Asking for a token with none made is refused with 409.
+         */
+        put: operations["putMetricsSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/settings/metrics/token": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Make a new metrics token
+         * @description observability R5.44. Makes a random token, keeps it in the secret store and returns it once. An older token stops working at once.
+         */
+        post: operations["makeMetricsToken"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/settings/signin-address": {
         parameters: {
             query?: never;
@@ -4603,6 +4647,39 @@ export interface components {
             ephemeral_capacity?: boolean;
             webhook?: components["schemas"]["WebhookHealth"];
             problem?: components["schemas"]["RepositoryProblem"];
+        };
+        MetricsSettingsSet: {
+            /** @description Serve the Prometheus page at /metrics. */
+            enabled: boolean;
+            port: number;
+            /** @description False listens on 127.0.0.1 only; true listens on every address of this PC. */
+            expose: boolean;
+            needs_key: boolean;
+            /** @description Push the same metrics to an OpenTelemetry collector (OTLP over HTTP). */
+            push_enabled: boolean;
+            /** @description Collector address, for example http://collector:4318. */
+            push_endpoint: string;
+            push_seconds: number;
+        };
+        MetricsSettings: components["schemas"]["MetricsSettingsSet"] & {
+            key_made: boolean;
+            running: boolean;
+            /** @description Where the page listens now. Absent when it is off. */
+            address?: string;
+            pushing: boolean;
+            /**
+             * Format: date-time
+             * @description Absent when nothing was pushed yet.
+             */
+            last_push_at?: string;
+            /** @description Absent when the last push worked. */
+            last_push_error?: string;
+            /** @description Text to paste into prometheus.yml. */
+            scrape_config: string;
+        };
+        MetricsToken: {
+            /** @description The bearer key, shown this once. The console cannot read it again. */
+            key: string;
         };
         /**
          * @example {
@@ -10549,6 +10626,73 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ListenAddressChosen"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getMetricsSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The settings and the live state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricsSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putMetricsSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["MetricsSettingsSet"];
+            };
+        };
+        responses: {
+            /** @description Saved and applied. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricsSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    makeMetricsToken: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The token, shown this once. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["MetricsToken"];
                 };
             };
             default: components["responses"]["Error"];

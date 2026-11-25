@@ -2386,6 +2386,80 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /api/v1/settings/metrics:
+    get:
+      operationId: getMetricsSettings
+      x-cli: none
+      x-cli-reason: 'A console setting: the owner sets up metrics export in the console (owner rule: everything from the web console).'
+      tags: [settings]
+      summary: The metrics export settings and what is running
+      description: >-
+        observability R5.40 to R5.47. Off by default. `running` and `address` say
+        whether the Prometheus page is up and where; `pushing` and `last_push_at`
+        say the same for the OpenTelemetry push. `scrape_config` is text to paste
+        into prometheus.yml. The key (the bearer token) is never returned; `key_made` says only
+        whether one was made.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      responses:
+        '200':
+          description: The settings and the live state.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsSettings'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putMetricsSettings
+      x-cli: none
+      x-cli-reason: 'A console setting: the owner sets up metrics export in the console (owner rule: everything from the web console).'
+      tags: [settings]
+      summary: Change the metrics export settings
+      description: >-
+        observability R5.41, R5.44 and R5.46. Checks the values, keeps them, writes
+        one audit row, and starts, restarts or stops the page and the push at once.
+        Asking for a token with none made is refused with 409.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MetricsSettingsSet'
+      responses:
+        '200':
+          description: Saved and applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsSettings'
+        default:
+          $ref: '#/components/responses/Error'
+
+  /api/v1/settings/metrics/token:
+    post:
+      operationId: makeMetricsToken
+      x-cli: none
+      x-cli-reason: 'A console step: the owner makes the metrics token in the console (owner rule: everything from the web console).'
+      tags: [settings]
+      summary: Make a new metrics token
+      description: >-
+        observability R5.44. Makes a random token, keeps it in the secret store
+        and returns it once. An older token stops working at once.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      responses:
+        '200':
+          description: The token, shown this once.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MetricsToken'
+        default:
+          $ref: '#/components/responses/Error'
+
   /api/v1/settings/signin-address:
     post:
       operationId: checkSignInAddress
@@ -7187,6 +7261,65 @@ components:
           allow_fork_pull_requests: false
           labels: [self-hosted, linux, x64]
           runner_groups: []
+    MetricsSettingsSet:
+      type: object
+      required:
+        [enabled, port, expose, needs_key, push_enabled, push_endpoint, push_seconds]
+      properties:
+        enabled:
+          type: boolean
+          description: Serve the Prometheus page at /metrics.
+        port:
+          type: integer
+          minimum: 1024
+          maximum: 65535
+        expose:
+          type: boolean
+          description: False listens on 127.0.0.1 only; true listens on every address of this PC.
+        needs_key:
+          type: boolean
+        push_enabled:
+          type: boolean
+          description: Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
+        push_endpoint:
+          type: string
+          description: Collector address, for example http://collector:4318.
+        push_seconds:
+          type: integer
+          minimum: 10
+          maximum: 3600
+    MetricsSettings:
+      allOf:
+        - $ref: '#/components/schemas/MetricsSettingsSet'
+        - type: object
+          required: [key_made, running, pushing, scrape_config]
+          properties:
+            key_made:
+              type: boolean
+            running:
+              type: boolean
+            address:
+              type: string
+              description: Where the page listens now. Absent when it is off.
+            pushing:
+              type: boolean
+            last_push_at:
+              type: string
+              format: date-time
+              description: Absent when nothing was pushed yet.
+            last_push_error:
+              type: string
+              description: Absent when the last push worked.
+            scrape_config:
+              type: string
+              description: Text to paste into prometheus.yml.
+    MetricsToken:
+      type: object
+      required: [key]
+      properties:
+        key:
+          type: string
+          description: The bearer key, shown this once. The console cannot read it again.
     PublicRepositories:
       type: object
       required: [enabled, public_on_pool]

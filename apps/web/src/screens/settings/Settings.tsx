@@ -48,6 +48,7 @@ import { BudgetsSettings } from './Budgets';
 import { NotificationsSettings } from './Notifications';
 import { PublicRepositoriesSettings } from './PublicRepositoriesSettings';
 import { NetworkSettings } from './ListenAddress';
+import { MetricsSettings } from './MetricsSettings';
 const UpdatesSettings = lazy(() =>
   import('./UpdatesLifecycle').then((m) => ({ default: m.UpdatesSettings })),
 );
@@ -146,6 +147,9 @@ export function ConsoleTab() {
       </At>
       <At id="network">
         <NetworkSettings />
+      </At>
+      <At id="metrics">
+        <MetricsSettings />
       </At>
     </TabForm>
   );
