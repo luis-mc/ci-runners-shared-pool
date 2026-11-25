@@ -5,6 +5,7 @@ package history
 
 import (
 	"context"
+	_ "embed"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -41,26 +42,24 @@ type Table struct {
 	MachineSizes map[string]string `json:"machine_sizes"`
 }
 
-// ShippedSourceURL is the page the shipped rates were copied from.
-const ShippedSourceURL = "https://docs.github.com/en/billing/reference/actions-runner-pricing"
+//go:embed rates.json
+var shippedJSON []byte
 
-// ShippedCopiedOn is the date the shipped rates were copied (UTC date). They are the rates of
-// internal/compare/prices.json; re-copy them from the page and move this date together.
-const ShippedCopiedOn = "2026-11-15"
+// ShippedSourceURL and ShippedCopiedOn say where the shipped rates came from and when they were copied
+// (R5.16). They are read from rates.json, the one file that holds them; the address is data, not code.
+var ShippedSourceURL, ShippedCopiedOn = func() (string, string) {
+	t := Shipped()
+	return t.SourceURL, t.CopiedOn
+}()
 
-// Shipped returns the table that comes with the product.
+// Shipped returns the table that comes with the product, read from rates.json.
 func Shipped() Table {
-	return Table{
-		SourceURL: ShippedSourceURL,
-		CopiedOn:  ShippedCopiedOn,
-		Rates: []Rate{
-			{OS: "linux", Size: "arm", PerMinute: 0.005},
-			{OS: "linux", Size: SizeStandard, PerMinute: 0.008},
-			{OS: "windows", Size: SizeStandard, PerMinute: 0.016},
-			{OS: "macos", Size: SizeStandard, PerMinute: 0.08},
-		},
-		MachineSizes: map[string]string{},
+	var t Table
+	if err := json.Unmarshal(shippedJSON, &t); err != nil {
+		panic("history: rates.json is not valid: " + err.Error())
 	}
+	t.MachineSizes = map[string]string{}
+	return t
 }
 
 // Validate refuses a table the report cannot use and returns it in a stable order.
