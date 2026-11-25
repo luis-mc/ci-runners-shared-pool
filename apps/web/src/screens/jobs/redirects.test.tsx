@@ -30,7 +30,7 @@ describe('new addresses', () => {
     ['/pool', 'Pool'],
     ['/pool/jobs', 'Pool'],
     ['/analytics', 'Analytics'],
-    ['/setup/pool', 'Repositories'],
+    ['/setup/pool', 'Setup'],
   ])('%s opens its screen', async (path, title) => {
     renderApp(jobsApi(), path);
     expect(await screen.findByRole('heading', { level: 1, name: title })).toBeTruthy();

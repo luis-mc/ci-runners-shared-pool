@@ -83,11 +83,11 @@ const SCREENS: {
       });
     },
   },
-  { name: 'repositories', path: '/setup/pool', ready: 'Repositories' },
+  { name: 'repositories', path: '/setup/pool', ready: 'Setup' },
   {
     name: 'repositories with a public row while the setting is off',
     path: '/setup/pool',
-    ready: 'Repositories',
+    ready: 'Setup',
     publicRows: true,
   },
   { name: 'repository detail', path: '/setup/pool/octo/app', ready: 'octo/app' },
