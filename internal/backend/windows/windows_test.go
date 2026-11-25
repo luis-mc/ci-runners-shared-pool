@@ -107,6 +107,21 @@ func idx(r *rig, marker string) int {
 	return -1
 }
 
+// isListener is a direct call of a runner folder's Runner.Listener.exe.
+func isListener(c sys.Command) bool {
+	return strings.HasSuffix(c.Name, `\bin\Runner.Listener.exe`)
+}
+
+// listenerIdx is the index of the first Runner.Listener call, or -1.
+func listenerIdx(r *rig) int {
+	for i, c := range r.cmd.Calls {
+		if isListener(c) {
+			return i
+		}
+	}
+	return -1
+}
+
 func start(t *testing.T, r *rig, spec backend.RunnerSpec, cfg backend.StartConfig) error {
 	t.Helper()
 	_, err := r.b.Start(context.Background(), spec, cfg)
@@ -313,7 +328,7 @@ func TestNoCmdQuotedCommandLine(t *testing.T) {
 		if c.Name == "takeown" || c.Name == "icacls" {
 			continue // the fixed ACL reset, tested in TestAccountSwitchResetsFolderACL
 		}
-		if c.Name != "powershell.exe" {
+		if c.Name != "powershell.exe" && !isListener(c) {
 			t.Errorf("unexpected program %s", c.Name)
 		}
 		for _, a := range c.Args {
@@ -330,14 +345,15 @@ func TestNoCmdQuotedCommandLine(t *testing.T) {
 	if idx(r, "New-Service") < 0 {
 		t.Error("the service is registered with New-Service")
 	}
-	// Configure gets each argument as its own JSON element.
-	c := r.cmd.Calls[idx(r, "Runner.Listener.exe")]
-	if !strings.HasPrefix(c.Env["CRSP_ARGS"], `["configure","--unattended"`) {
-		t.Errorf("the listener gets the configure verb first (OPS93), got %s", c.Env["CRSP_ARGS"])
+	// Configure gets each argument on its own (OPS96: no PowerShell layer).
+	c := r.cmd.Calls[listenerIdx(r)]
+	got := strings.Join(c.Args, " ")
+	if !strings.HasPrefix(got, "configure --unattended") {
+		t.Errorf("the listener gets the configure verb first (OPS93), got %s", got)
 	}
-	if !strings.Contains(c.Env["CRSP_ARGS"], `"--labels","self-hosted,windows,x64"`) ||
-		!strings.Contains(c.Env["CRSP_ARGS"], `"--disableupdate"`) {
-		t.Errorf("configure args = %s", c.Env["CRSP_ARGS"])
+	if !strings.Contains(got, "--labels self-hosted,windows,x64") || !strings.Contains(got, "--disableupdate") ||
+		!strings.Contains(got, "--replace") {
+		t.Errorf("configure args = %s", got)
 	}
 	if c.SecretEnv["ACTIONS_RUNNER_INPUT_TOKEN"] != "REGTOKEN" {
 		t.Error("the registration token goes in the environment of the one process")
@@ -367,8 +383,8 @@ func TestRemoveBeforeLock(t *testing.T) {
 	for i, c := range r.cmd.Calls {
 		if c.SecretEnv["ACTIONS_RUNNER_INPUT_TOKEN"] == "REMOVETOKEN" {
 			rm = i
-			if !strings.Contains(c.Env["CRSP_ARGS"], `["remove"]`) {
-				t.Errorf("the old registration is removed with `remove`, got %s", c.Env["CRSP_ARGS"])
+			if strings.Join(c.Args, " ") != "remove" {
+				t.Errorf("the old registration is removed with `remove`, got %q", c.Args)
 			}
 		}
 	}
@@ -486,7 +502,7 @@ func TestWrongHashRefused(t *testing.T) {
 	if len(r.fs.Names()) != 0 {
 		t.Errorf("the download must be deleted: %v", r.fs.Names())
 	}
-	if idx(r, "Runner.Listener.exe") >= 0 {
+	if listenerIdx(r) >= 0 {
 		t.Error("nothing is registered after a bad hash")
 	}
 	spec.RunnerSHA256 = strings.Repeat("a", 64)

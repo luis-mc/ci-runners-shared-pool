@@ -6,6 +6,7 @@ package sys
 
 import (
 	"context"
+	"errors"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/addresses"
 	"io/fs"
 	"os"
@@ -86,6 +87,10 @@ type Deps struct {
 	Sleep func(ctx context.Context, d time.Duration)
 }
 
+// PipeWaitDelay is how long Run still waits for the output pipes once the
+// program has ended or been killed (OPS96). A variable so tests can shorten it.
+var PipeWaitDelay = 10 * time.Second
+
 // ExecCommands is the real command runner.
 type ExecCommands struct{}
 
@@ -160,10 +165,20 @@ func (ExecCommands) RunStream(ctx context.Context, c Command, onLine func(string
 	ow := &lineWriter{sb: &out, onLine: guarded}
 	ew := &lineWriter{sb: &errb, onLine: guarded}
 	cmd.Stdout, cmd.Stderr = ow, ew
+	// A child the program started can inherit the output pipes and outlive
+	// it; Wait would then block until that child ends, also after ctx is done
+	// and the program was killed. WaitDelay bounds that wait (OPS96).
+	cmd.WaitDelay = PipeWaitDelay
 	err := cmd.Run()
 	ow.flush()
 	ew.flush()
 	res := Result{Stdout: out.String(), Stderr: errb.String()}
+	if errors.Is(err, exec.ErrWaitDelay) && cmd.ProcessState != nil {
+		// The program itself ended; only a leftover child still held its
+		// output. Its exit code is the result, with the output read so far.
+		res.ExitCode = cmd.ProcessState.ExitCode()
+		return res, nil
+	}
 	if ee, ok := err.(*exec.ExitError); ok {
 		res.ExitCode = ee.ExitCode()
 		return res, nil

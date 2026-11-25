@@ -101,21 +101,6 @@ Expand-Archive -LiteralPath $env:CRSP_ARCHIVE -DestinationPath $env:CRSP_FOLDER 
 Remove-Item -LiteralPath $env:CRSP_ARCHIVE -Force
 `
 
-	// scriptRunner runs the runner's own configure or remove step. The
-	// arguments come as one JSON array (CRSP_ARGS), each argument alone. The
-	// token is ACTIONS_RUNNER_INPUT_TOKEN. The exit code is the result.
-	scriptRunner = scriptHeader + `
-$listener = Join-Path $env:CRSP_FOLDER 'bin\Runner.Listener.exe'
-$runnerArgs = @(ConvertFrom-Json -InputObject $env:CRSP_ARGS)
-Push-Location -LiteralPath $env:CRSP_FOLDER
-try {
-    & $listener @runnerArgs
-    exit $LASTEXITCODE
-} finally {
-    Pop-Location
-}
-`
-
 	// scriptLock grants Full control to the account, Administrators and SYSTEM
 	// only, with inheritance off (runners R5.16). CRSP_FOLDER, CRSP_ACCOUNT.
 	scriptLock = scriptHeader + `
