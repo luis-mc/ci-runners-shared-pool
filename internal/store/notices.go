@@ -55,11 +55,7 @@ func (t *Tx) GetNotifyEvent(key string) (NotifyEvent, bool, error) {
 
 // PutNotifyEvent writes the state of one key.
 func (t *Tx) PutNotifyEvent(e NotifyEvent) error {
-	err := t.q.UpsertNotifyEvent(t.ctx, sqlcgen.UpsertNotifyEventParams{
-		Key: e.Key, Type: e.Type, SubjectKind: e.SubjectKind, SubjectID: e.SubjectID, SubjectName: e.SubjectName,
-		State: e.State, Tone: e.Tone, Severity: e.Severity, Summary: e.Summary, Link: e.Link,
-		FirstFiredAt: e.FirstFiredAt, LastChangeAt: e.LastChangeAt, Flaps: e.Flaps, OpenNoticeID: e.OpenNoticeID,
-	})
+	err := t.q.UpsertNotifyEvent(t.ctx, sqlcgen.UpsertNotifyEventParams(e))
 	if err != nil {
 		return fmt.Errorf("put notify event: %w", err)
 	}
@@ -68,11 +64,7 @@ func (t *Tx) PutNotifyEvent(e NotifyEvent) error {
 
 // InsertNotice adds a notice.
 func (t *Tx) InsertNotice(n Notice) error {
-	err := t.q.InsertNotice(t.ctx, sqlcgen.InsertNoticeParams{
-		ID: n.ID, EventKey: n.EventKey, Type: n.Type, SubjectKind: n.SubjectKind, SubjectID: n.SubjectID,
-		SubjectName: n.SubjectName, State: n.State, Tone: n.Tone, Severity: n.Severity, Summary: n.Summary,
-		Link: n.Link, Flaps: n.Flaps, CreatedAt: n.CreatedAt,
-	})
+	err := t.q.InsertNotice(t.ctx, sqlcgen.InsertNoticeParams(n))
 	if err != nil {
 		return fmt.Errorf("insert notice: %w", err)
 	}
