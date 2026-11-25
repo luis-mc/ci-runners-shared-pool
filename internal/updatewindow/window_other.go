@@ -2,10 +2,15 @@
 
 package updatewindow
 
-// The native window is Windows only (TRAY5); macOS and Linux keep the console page (TRAY7).
-func runWindow(_ Config, o Options) int {
-	say(o.Stderr, "The native update window is built for Windows. Use the update page of the console.")
-	return 1
+// On macOS and Linux the update window is a web page in the browser (TRAY7): the same model
+// and words as the Windows window. The remove question and the layout check draw with Windows
+// fonts and stay Windows only.
+func runWindow(c Config, o Options) int {
+	if c.Mode == ModeRemove {
+		say(o.Stderr, "The remove question is built for Windows.")
+		return 1
+	}
+	return RunWeb(NewUpdateScreen(c, o.Service), o)
 }
 
 func layoutCheck(_ Config, o Options) int {
