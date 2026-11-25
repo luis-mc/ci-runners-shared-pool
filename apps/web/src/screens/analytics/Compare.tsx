@@ -1,6 +1,7 @@
 // Analytics > Compare (observability R5.34): the same jobs on crsp and on GitHub-hosted runners, from the finished
 // workflow-run jobs GitHub holds. It reads only and starts nothing. A number appears only when the data has it.
 import {
+  ActionBar,
   Button,
   Empty,
   Message,
@@ -88,16 +89,6 @@ export function Compare() {
           max={90}
           onChange={setDays}
         />
-        <Button
-          kind="primary"
-          busy={run.busy}
-          busyLabel={W.compareRunning}
-          disabled={!valid}
-          reason={valid ? undefined : 'Write the repository as owner/repo.'}
-          onPress={() => void run.run()}
-        >
-          {W.compareRun}
-        </Button>
         {run.error ? (
           <Message tone="problem">Could not compare. {run.error}</Message>
         ) : null}
@@ -122,6 +113,20 @@ export function Compare() {
           </Section>
         )
       ) : null}
+      <ActionBar
+        primary={
+          <Button
+            kind="primary"
+            busy={run.busy}
+            busyLabel={W.compareRunning}
+            disabled={!valid}
+            reason={valid ? undefined : 'Write the repository as owner/repo.'}
+            onPress={() => void run.run()}
+          >
+            {W.compareRun}
+          </Button>
+        }
+      />
     </Stack>
   );
 }
