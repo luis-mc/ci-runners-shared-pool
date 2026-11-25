@@ -156,9 +156,9 @@ Used while the service restarts for an update and when an open page is older tha
 | Where | Words |
 |---|---|
 | Note over the last copy, or the loading line with no data | The service is restarting, back in a moment. |
-| Route error page, new build (reloads once first: *The service has a new version. Reloading*) | The service has a new version. Reload to get the new version. |
-| Route error page, any other fault | This page could not open. Reload the page. If it keeps happening, the details are in the service log. |
-| Button | Reload |
+| Route error page, new build (reloads once first: *The service has a new version. Refreshing*) | The service has a new version. Refresh to get the new version. |
+| Route error page, any other fault | This page could not open. Refresh the page. If it keeps happening, the details are in the service log. |
+| Button | Refresh |
 
 ## Empty, failed and waiting states
 

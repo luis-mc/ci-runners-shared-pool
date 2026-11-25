@@ -63,11 +63,11 @@ function Throws({ error }: { error: Error }): never {
 }
 
 describe('route error page', () => {
-  it('shows plain words and a Reload button for a fault', () => {
+  it('shows plain words and a Refresh button for a fault', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
     boundary(new Error('secret stack'));
     expect(screen.getByText(/could not open/)).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Reload' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeTruthy();
     expect(screen.queryByText(/Unexpected Application Error/)).toBeNull();
   });
 
@@ -81,6 +81,6 @@ describe('route error page', () => {
     cleanup();
     boundary(err);
     expect(reload).toHaveBeenCalledTimes(1);
-    expect(screen.getByRole('button', { name: 'Reload' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Refresh' })).toBeTruthy();
   });
 });

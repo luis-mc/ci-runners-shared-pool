@@ -156,17 +156,17 @@ export function RouteError() {
   const error = useRouteError();
   const stale = isStaleBuildError(error);
   const reloading = stale && reloadOnceForNewBuild();
-  if (reloading) return <Loading what="The service has a new version. Reloading" />;
+  if (reloading) return <Loading what="The service has a new version. Refreshing" />;
   return (
     <Failed
       pageTitle="Something went wrong"
       what={stale ? 'The service has a new version.' : 'This page could not open.'}
       why={
         stale
-          ? 'Reload to get the new version.'
-          : 'Reload the page. If it keeps happening, the details are in the service log.'
+          ? 'Refresh to get the new version.'
+          : 'Refresh the page. If it keeps happening, the details are in the service log.'
       }
-      action={<Button onPress={() => window.location.reload()}>Reload</Button>}
+      action={<Button onPress={() => window.location.reload()}>Refresh</Button>}
     />
   );
 }

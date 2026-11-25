@@ -169,16 +169,19 @@ func (u *Updater) SetPaired(p bool) {
 }
 
 // Check runs one check now. It reports false when unpaired (LC-28).
-func (u *Updater) Check() bool { return u.CheckAs("updater") }
+// It is the regular check: the policy decides whether the offer installs.
+func (u *Updater) Check() bool { return u.check("updater", false) }
 
 // CheckAs is a manual check by a named actor (the console, the tray, the CLI); the audit row
 // names it. It looks and records the offer; it never installs. The offer waits at review for a
 // click, and the timer's own check decides under the policy.
-func (u *Updater) CheckAs(actor string) bool {
+func (u *Updater) CheckAs(actor string) bool { return u.check(actor, true) }
+
+func (u *Updater) check(actor string, lookOnly bool) bool {
 	if !u.Paired {
 		return false
 	}
-	u.actor, u.lookOnly = actor, true
+	u.actor, u.lookOnly = actor, lookOnly
 	u.doCheck()
 	u.actor, u.lookOnly = "", false
 	return true
