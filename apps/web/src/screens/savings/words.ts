@@ -39,8 +39,9 @@ export const SAVINGS_WORDS = {
   publicNote: 'Public repositories count their minutes but save no money.',
   notPriced: (n: number) =>
     `${formatNumber(n)} ${n === 1 ? 'job has' : 'jobs have'} no rate for its system, so it adds no money.`,
+  // A zero-width space after each single slash lets a narrow screen break the address at a slash, never inside a word.
   source: (url: string, date: string, changed: boolean) =>
-    `Rates copied from ${url} on ${date}${changed ? '. You changed some rates.' : '.'}`,
+    `Rates copied from ${url.replace(/(?<!\/)\/(?!\/)/g, '/\u200b')} on ${date}${changed ? '. You changed some rates.' : '.'}`,
   ratesTitle: 'Savings rates',
   ratesLead:
     'The price of one minute of a GitHub-hosted runner, used to work out the money saved. The shipped rates are copied from the GitHub page named below; change a rate when your plan differs.',
