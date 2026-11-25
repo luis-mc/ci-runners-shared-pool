@@ -40,6 +40,7 @@ type Server struct {
 	now   func() time.Time
 	seed  []byte // signs the upload and download addresses of this run
 	base  string // public base of this server for the addresses it returns
+	stats Stats  // hits, misses and bytes served per repository (R5.10)
 }
 
 // NewServer makes the handler. base is the address peers reach it at, like
@@ -179,6 +180,9 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request, name string) {
 	}
 	defer func() { _ = f.Close() }()
 	w.Header().Set(HeaderDigest, e.Digest)
+	if parts := strings.SplitN(name, "/", 3); len(parts) == 3 && parts[0] == NSActions && r.Method == http.MethodGet {
+		s.stats.Served(parts[1], e.Size)
+	}
 	http.ServeContent(w, r, "", time.Time{}, f)
 }
 
@@ -270,6 +274,7 @@ func (s *Server) download(reply func(any), scope string, req twirpReq) {
 		return "", false
 	}
 	if k, ok := try(req.Key); ok {
+		s.stats.Hit(scope, s.now())
 		reply(map[string]any{"ok": true, "matched_key": k, "signed_download_url": s.signedURL(http.MethodGet, actionsPath(scope, k, req.Version))})
 		return
 	}
@@ -284,8 +289,10 @@ func (s *Server) download(reply func(any), scope string, req twirpReq) {
 		if err != nil {
 			continue
 		}
+		s.stats.Hit(scope, s.now())
 		reply(map[string]any{"ok": true, "matched_key": key, "signed_download_url": s.signedURL(http.MethodGet, actionsPath(scope, key, req.Version))})
 		return
 	}
+	s.stats.Miss(scope)
 	reply(miss)
 }
