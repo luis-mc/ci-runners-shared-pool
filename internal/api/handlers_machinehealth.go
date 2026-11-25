@@ -14,6 +14,7 @@ import (
 // doctor R5.66). *machinehealth.Service implements it.
 type HealthService interface {
 	View(ctx context.Context, machineID string) (machinehealth.View, error)
+	Uptime(ctx context.Context, machineID string) (machinehealth.Uptime, error)
 	MachineJobStats(ctx context.Context, machineID, window string) (machinehealth.MachineStats, error)
 	RunnerJobStats(ctx context.Context, runnerID, window string) (machinehealth.RunnerStats, time.Time, time.Time, error)
 	Thresholds(ctx context.Context) (machinehealth.Thresholds, error)

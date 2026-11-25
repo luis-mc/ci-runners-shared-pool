@@ -3914,6 +3914,27 @@ func (e UpdateStatusState) Valid() bool {
 	}
 }
 
+// Defines values for UptimeWindowWindow.
+const (
+	UptimeWindowWindowN24h UptimeWindowWindow = "24h"
+	UptimeWindowWindowN30d UptimeWindowWindow = "30d"
+	UptimeWindowWindowN7d  UptimeWindowWindow = "7d"
+)
+
+// Valid indicates whether the value is a known member of the UptimeWindowWindow enum.
+func (e UptimeWindowWindow) Valid() bool {
+	switch e {
+	case UptimeWindowWindowN24h:
+		return true
+	case UptimeWindowWindowN30d:
+		return true
+	case UptimeWindowWindowN7d:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for VariableStatus.
 const (
 	VariableStatusMissing    VariableStatus = "missing"
@@ -6765,6 +6786,23 @@ type MachineTaking struct {
 // MachineTakingReason Why not, absent while taking. offline; stopped (Stop new jobs from the console); mode_paused (mode Paused); tray_paused (a pause from the tray); on_battery (Automatic with the battery pause on); busy (load over the budget); base_image_missing; disk_low.
 type MachineTakingReason string
 
+// MachineUptime The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC.
+type MachineUptime struct {
+	MachineId string `json:"machine_id"`
+
+	// Periods Periods of the last 30 days in which the machine took no new job, newest first, at most 50.
+	Periods []UptimePeriod `json:"periods"`
+
+	// Since When the controller first saw the machine.
+	Since *time.Time `json:"since,omitempty"`
+
+	// Watched False until the controller has seen the machine; then the rest is empty.
+	Watched bool `json:"watched"`
+
+	// Windows The windows 24h, 7d and 30d, in this order.
+	Windows []UptimeWindow `json:"windows"`
+}
+
 // NotificationChannel One channel. No secret is returned: `secret_set` and `smtp.has_password` say only whether one is set.
 type NotificationChannel struct {
 	// Address Email address (kind email).
@@ -9087,6 +9125,39 @@ type UpdateWindow struct {
 	Start string `json:"start"`
 }
 
+// UptimePeriod defines model for UptimePeriod.
+type UptimePeriod struct {
+	// EndedAt Absent while the period goes on.
+	EndedAt *time.Time `json:"ended_at,omitempty"`
+
+	// Offline True when no heartbeat arrived; false when the machine was online but took no job.
+	Offline bool `json:"offline"`
+
+	// Reason Offline: heartbeat_lost, clock_skew or controller_stopped. Online: stopped, mode_paused, tray_paused, on_battery, busy, base_image_missing or disk_low (machines R5.62).
+	Reason    string    `json:"reason"`
+	StartedAt time.Time `json:"started_at"`
+}
+
+// UptimeWindow defines model for UptimeWindow.
+type UptimeWindow struct {
+	// CoveredSeconds The part of the window the controller watched.
+	CoveredSeconds int64 `json:"covered_seconds"`
+	OnlineSeconds  int64 `json:"online_seconds"`
+
+	// TakingPct Online and taking share of the watched time; absent when nothing was watched.
+	TakingPct *float32 `json:"taking_pct,omitempty"`
+
+	// TakingSeconds Online and taking new jobs.
+	TakingSeconds int64 `json:"taking_seconds"`
+
+	// UptimePct Online share of the watched time; absent when nothing was watched.
+	UptimePct *float32           `json:"uptime_pct,omitempty"`
+	Window    UptimeWindowWindow `json:"window"`
+}
+
+// UptimeWindowWindow defines model for UptimeWindow.Window.
+type UptimeWindowWindow string
+
 // User defines model for User.
 type User struct {
 	AddedAt time.Time `json:"added_at"`
@@ -10996,6 +11067,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/slots/free-stale (the `FreeStaleSlots` operationId).
 	FreeStaleSlots(ctx context.Context, machineId MachineId, body FreeStaleSlotsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetMachineUptime The uptime of one machine and why it took no jobs
+	//
+	// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+	GetMachineUptime(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSession The signed-in user, role and CSRF token
 	//
@@ -14236,6 +14314,23 @@ func (c *Client) FreeStaleSlotsWithBody(ctx context.Context, machineId MachineId
 // Corresponds with POST /api/v1/machines/{machineId}/slots/free-stale (the `FreeStaleSlots` operationId).
 func (c *Client) FreeStaleSlots(ctx context.Context, machineId MachineId, body FreeStaleSlotsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewFreeStaleSlotsRequest(c.Server, machineId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetMachineUptime The uptime of one machine and why it took no jobs
+//
+// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+//
+// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+func (c *Client) GetMachineUptime(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetMachineUptimeRequest(c.Server, machineId)
 	if err != nil {
 		return nil, err
 	}
@@ -21962,6 +22057,40 @@ func NewFreeStaleSlotsRequestWithBody(server string, machineId MachineId, conten
 	return req, nil
 }
 
+// NewGetMachineUptimeRequest constructs an http.Request for the GetMachineUptime method
+func NewGetMachineUptimeRequest(server string, machineId MachineId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "machineId", machineId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/machines/%s/uptime", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetSessionRequest constructs an http.Request for the GetSession method
 func NewGetSessionRequest(server string) (*http.Request, error) {
 	var err error
@@ -27733,6 +27862,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/machines/{machineId}/slots/free-stale (the `FreeStaleSlots` operationId).
 	FreeStaleSlotsWithResponse(ctx context.Context, machineId MachineId, body FreeStaleSlotsJSONRequestBody, reqEditors ...RequestEditorFn) (*FreeStaleSlotsResponse, error)
+
+	// GetMachineUptimeWithResponse The uptime of one machine and why it took no jobs
+	//
+	// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+	GetMachineUptimeWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineUptimeResponse, error)
 
 	// GetSessionWithResponse The signed-in user, role and CSRF token
 	//
@@ -33767,6 +33905,54 @@ func (r FreeStaleSlotsResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r FreeStaleSlotsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetMachineUptimeResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *MachineUptime
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetMachineUptimeResponse) GetJSON200() *MachineUptime {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetMachineUptimeResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetMachineUptimeResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetMachineUptimeResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetMachineUptimeResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetMachineUptimeResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -40800,6 +40986,21 @@ func (c *ClientWithResponses) FreeStaleSlotsWithResponse(ctx context.Context, ma
 	return ParseFreeStaleSlotsResponse(rsp)
 }
 
+// GetMachineUptimeWithResponse The uptime of one machine and why it took no jobs
+//
+// machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7 days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than the window, and the percents are absent when nothing was watched. Controller time is UTC.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/machines/{machineId}/uptime (the `GetMachineUptime` operationId).
+func (c *ClientWithResponses) GetMachineUptimeWithResponse(ctx context.Context, machineId MachineId, reqEditors ...RequestEditorFn) (*GetMachineUptimeResponse, error) {
+	rsp, err := c.GetMachineUptime(ctx, machineId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetMachineUptimeResponse(rsp)
+}
+
 // GetSessionWithResponse The signed-in user, role and CSRF token
 //
 // web-console 4.1, github-integration R5.9 and R5.12.
@@ -46282,6 +46483,39 @@ func ParseFreeStaleSlotsResponse(rsp *http.Response) (*FreeStaleSlotsResponse, e
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest FreedSlotList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetMachineUptimeResponse parses an HTTP response from a GetMachineUptimeWithResponse call
+func ParseGetMachineUptimeResponse(rsp *http.Response) (*GetMachineUptimeResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetMachineUptimeResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest MachineUptime
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

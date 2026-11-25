@@ -1639,6 +1639,31 @@ paths:
                 $ref: '#/components/schemas/MachineHealth'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/machines/{machineId}/uptime:
+    get:
+      operationId: getMachineUptime
+      x-cli: none
+      x-cli-reason: 'Later: machine detail commands (cli open question 7).'
+      tags: [machines]
+      summary: The uptime of one machine and why it took no jobs
+      description: >-
+        machines R5.83 to R5.86. The share of time the machine was online (heartbeats arrived) over 24 hours, 7
+        days and 30 days, and the periods of the last 30 days in which it took no new job, each with its reason. A
+        window counts only the time the controller has watched the machine: `covered_seconds` can be shorter than
+        the window, and the percents are absent when nothing was watched. Controller time is UTC.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/MachineId'
+      responses:
+        '200':
+          description: The uptime.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MachineUptime'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/machines/{machineId}/job-stats:
     get:
       operationId: getMachineJobStats
@@ -12189,6 +12214,44 @@ components:
             maximum: 1440,
             description: 'An OOM kill this recent is a finding (default 60).',
           }
+    MachineUptime:
+      type: object
+      required: [machine_id, watched, windows, periods]
+      description: The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC.
+      properties:
+        machine_id: { type: string }
+        watched: { type: boolean, description: False until the controller has seen the machine; then the rest is empty. }
+        since: { type: string, format: date-time, description: When the controller first saw the machine. }
+        windows:
+          type: array
+          description: The windows 24h, 7d and 30d, in this order.
+          items: { $ref: '#/components/schemas/UptimeWindow' }
+        periods:
+          type: array
+          description: Periods of the last 30 days in which the machine took no new job, newest first, at most 50.
+          items: { $ref: '#/components/schemas/UptimePeriod' }
+    UptimeWindow:
+      type: object
+      required: [window, covered_seconds, online_seconds, taking_seconds]
+      properties:
+        window: { type: string, enum: [24h, 7d, 30d] }
+        covered_seconds: { type: integer, format: int64, description: The part of the window the controller watched. }
+        online_seconds: { type: integer, format: int64 }
+        taking_seconds: { type: integer, format: int64, description: Online and taking new jobs. }
+        uptime_pct: { type: number, format: float, description: Online share of the watched time; absent when nothing was watched. }
+        taking_pct: { type: number, format: float, description: Online and taking share of the watched time; absent when nothing was watched. }
+    UptimePeriod:
+      type: object
+      required: [started_at, offline, reason]
+      properties:
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time, description: Absent while the period goes on. }
+        offline: { type: boolean, description: True when no heartbeat arrived; false when the machine was online but took no job. }
+        reason:
+          type: string
+          description: >-
+            Offline: heartbeat_lost, clock_skew or controller_stopped. Online: stopped, mode_paused, tray_paused,
+            on_battery, busy, base_image_missing or disk_low (machines R5.62).
     MachineHealth:
       type: object
       required: [machine_id, reported, stale, volumes]

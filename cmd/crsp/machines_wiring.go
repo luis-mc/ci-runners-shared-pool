@@ -139,6 +139,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	cs := caches.New(caches.Options{Machines: svc, Audit: rec})
 	lk := agentlink.New(svc)
 	hs := newHealthService(db, svc, version)
+	svc.SetPresenceObserver(hs)
 	svc.SetHostRunner(lk)
 	svc.SetHooks(machines.Hooks{ControllerVersion: version,
 		// Protocol version 3, the registry path, is offered only when a registry core can open (REG11).
