@@ -3,11 +3,15 @@
 // removal needs its own yes. The page passes data only; the step, lock and busy state are the wizard's.
 import {
   BulletList,
+  Breadcrumbs,
   CheckRow,
   ExportButton,
   FileField,
   Facts,
+  LinkButton,
   Message,
+  Page,
+  PageHeader,
   Section,
   Stack,
   Text,
@@ -57,7 +61,7 @@ export function changeWords(c: Change): string {
   return `${KIND_WORDS[c.kind]} ${what}${fields ? `: ${fields}` : ''}`;
 }
 
-export function ConfigAsCodeSettings() {
+function ConfigApplyWizard() {
   const client = useClient();
   const session = useSession();
   const [phase, setPhase] = useState<WizardPhase>('first-run');
@@ -74,12 +78,6 @@ export function ConfigAsCodeSettings() {
   const problems = plan?.problems ?? [];
   const changes = plan?.changes ?? [];
   const allYes = removals.every((r) => yes.has(r));
-
-  const exportFile = () =>
-    saveExport(
-      client.GET('/api/v1/config/export', { parseAs: 'blob' }),
-      'crsp-setup.yaml',
-    );
 
   const toReview = async () => {
     if (!file) return;
@@ -210,12 +208,81 @@ export function ConfigAsCodeSettings() {
 
   const canNext = file !== null && admin;
   return (
+    <>
+      <Wizard
+        name="Apply a config file"
+        steps={STEPS}
+        current={step - 1}
+        firstStep={0}
+        phase={phase}
+        reading="Planning the file"
+        onBack={() => {
+          setStep(1);
+          setPhase('first-run');
+        }}
+        primary={
+          step <= 1
+            ? {
+                label: 'Plan the file',
+                onPress: () => void toReview(),
+                disabled: !canNext,
+                reason: admin ? 'Choose a config file.' : session.whyNot('admin'),
+              }
+            : {
+                label: `Apply ${changes.length} ${changes.length === 1 ? 'change' : 'changes'}`,
+                busyLabel: 'Applying',
+                onPress: () => void apply(),
+                disabled: !plan?.id || changes.length === 0 || !allYes || !owner,
+                reason: !owner
+                  ? session.whyNot('owner')
+                  : !plan?.id
+                    ? 'The file has problems.'
+                    : changes.length === 0
+                      ? 'There is nothing to change.'
+                      : 'Tick each removal to say yes.',
+              }
+        }
+        review={step === 2}
+        onStartAgain={startAgain}
+        onTryAgain={startAgain}
+      >
+        {body}
+      </Wizard>
+    </>
+  );
+}
+
+export function ConfigApplyPage() {
+  return (
+    <Page>
+      <Breadcrumbs
+        trail={[
+          { to: '/settings/data', label: 'Settings' },
+          { label: 'Apply a config file' },
+        ]}
+      />
+      <PageHeader title="Apply a config file" />
+      <ConfigApplyWizard />
+    </Page>
+  );
+}
+
+export function ConfigAsCodeSettings() {
+  const client = useClient();
+  const session = useSession();
+  const exportFile = () =>
+    saveExport(
+      client.GET('/api/v1/config/export', { parseAs: 'blob' }),
+      'crsp-setup.yaml',
+    );
+  const admin = session.can('admin');
+  return (
     <Section title="Config as code">
       <Stack>
         <Text>
           The whole setup as one file: settings, pool defaults, queue order, machine
           settings, runner sizes, image layers, repository policies and notification
-          channels. It holds no secret; each secret is named by reference only.
+          channels. No secret is written in it: each one is named by reference only.
         </Text>
         <ExportButton
           label="Export setup file"
@@ -224,46 +291,7 @@ export function ConfigAsCodeSettings() {
           disabled={!admin}
           reason={session.whyNot('admin')}
         />
-        <Wizard
-          name="Apply a config file"
-          embedded
-          steps={STEPS}
-          current={step - 1}
-          firstStep={0}
-          phase={phase}
-          reading="Planning the file"
-          onBack={() => {
-            setStep(1);
-            setPhase('first-run');
-          }}
-          primary={
-            step <= 1
-              ? {
-                  label: 'Plan the file',
-                  onPress: () => void toReview(),
-                  disabled: !canNext,
-                  reason: admin ? 'Choose a config file.' : session.whyNot('admin'),
-                }
-              : {
-                  label: `Apply ${changes.length} ${changes.length === 1 ? 'change' : 'changes'}`,
-                  busyLabel: 'Applying',
-                  onPress: () => void apply(),
-                  disabled: !plan?.id || changes.length === 0 || !allYes || !owner,
-                  reason: !owner
-                    ? session.whyNot('owner')
-                    : !plan?.id
-                      ? 'The file has problems.'
-                      : changes.length === 0
-                        ? 'There is nothing to change.'
-                        : 'Tick each removal to say yes.',
-                }
-          }
-          review={step === 2}
-          onStartAgain={startAgain}
-          onTryAgain={startAgain}
-        >
-          {body}
-        </Wizard>
+        <LinkButton to="/config/apply">Apply a config file</LinkButton>
       </Stack>
     </Section>
   );

@@ -82,6 +82,9 @@ const MachineRestartPage = later(
   () => import('./screens/machines/MachineRestart').then((m) => m.MachineRestartPage),
   { heading: 'Restart the service' },
 );
+const ConfigApplyPage = later(() =>
+  import('./screens/settings/ConfigAsCode').then((m) => m.ConfigApplyPage),
+);
 const TurnOnPoolPage = later(
   () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
   { heading: 'Turn on the pool' },
@@ -252,6 +255,7 @@ export function App({
                   <Route path="size" element={<SizePage />} />
                   <Route path="pool" element={<RepositoriesList />} />
                 </Route>
+                <Route path="config/apply" element={<ConfigApplyPage />} />
                 <Route path="setup/pool/turn-on" element={<TurnOnPoolPage />} />
                 <Route path="setup/pool/:owner/:name" element={<RepositoryDetail />} />
                 <Route path="setup/machines/add" element={<AddMachinePage />} />

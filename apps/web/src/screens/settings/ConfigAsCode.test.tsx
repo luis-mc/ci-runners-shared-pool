@@ -33,7 +33,7 @@ function choose(text: string) {
 }
 
 async function openWizard(a: ReturnType<typeof signedIn>) {
-  renderApp(a, '/settings/data');
+  renderApp(a, '/config/apply');
   await screen.findByRole('button', { name: 'Plan the file' });
 }
 
@@ -108,7 +108,7 @@ describe('Config as code (R5.28 to R5.31)', () => {
     expect(await screen.findByText(/the setup changed since the plan/)).toBeTruthy();
   });
 
-  it('downloads the export and shows a viewer why it cannot', async () => {
+  it('shows a viewer why the export is off, and links to the wizard', async () => {
     renderApp(signedIn(viewer), '/settings/data');
     const s = await screen.findByRole('button', { name: 'Export setup file' });
     expect(s.hasAttribute('disabled')).toBe(true);
@@ -116,5 +116,10 @@ describe('Config as code (R5.28 to R5.31)', () => {
       section('config-as-code').getAllByText(/admin/i, { selector: '.ds-button-reason' })
         .length,
     ).toBeGreaterThan(0);
+    expect(
+      section('config-as-code')
+        .getByRole('button', { name: 'Apply a config file' })
+        .getAttribute('href'),
+    ).toBe('/config/apply');
   });
 });
