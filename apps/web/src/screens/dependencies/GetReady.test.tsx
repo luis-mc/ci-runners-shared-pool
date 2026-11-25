@@ -27,6 +27,7 @@ import { GetReadyWizard, type GetReadyProps } from './GetReady';
 import {
   factRows,
   installLabel,
+  installNote,
   progressLine,
   toProgressEvent,
   type DepCheck,
@@ -195,7 +196,8 @@ describe('words (plan.ts)', () => {
   it('computes the primary from the facts', () => {
     const c = check();
     const label = installLabel(c.choices[0]!, c.items);
-    expect(label).toBe('Install WSL2 and Docker (about 10 minutes, one restart)');
+    expect(label).toBe('Install WSL2 and Docker');
+    expect(installNote(c.choices[0]!)).toBe('About 10 minutes, one restart.');
   });
   it('lists the facts of an item for Review', () => {
     const names = factRows(facts('Docker', { licence_note: 'x' }) as never).map(
@@ -242,9 +244,8 @@ describe('Get this machine ready (spec 4)', () => {
     mount(a, { onUseAnother: another });
     await screen.findByText('This PC cannot run Linux containers yet');
     expect(screen.getByText(/containers need Docker/)).toBeTruthy();
-    await screen.findByRole('button', {
-      name: 'Install WSL2 and Docker (about 10 minutes, one restart)',
-    });
+    await screen.findByRole('button', { name: 'Install WSL2 and Docker' });
+    expect(screen.getByText('About 10 minutes, one restart.')).toBeTruthy();
     expect(jobPosts(a)).toBe(0);
     await press('Do it myself');
     expect(await screen.findByText(/wsl --install --no-distribution/)).toBeTruthy();

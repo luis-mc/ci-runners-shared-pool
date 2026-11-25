@@ -1779,7 +1779,8 @@ The words of the wizard "Get this machine ready" and of its doors. Built from th
 | This PC cannot run Linux containers yet / This machine cannot run Linux containers yet | Headline of the first run (the first on Windows). |
 | Docker is installed but not running. | Headline when only the engine is stopped. Primary Start Docker (busy: Starting Docker). |
 | Missing / Installed but not running / Installed, but the wrong kind / Ready | The state of each item in the facts list, then its reason. |
-| Install {items} (about {n} minutes, one restart) | The primary of the first run, computed from the facts. |
+| Install {items} | The primary of the first run, computed from the facts. |
+| About {n} minutes, one restart. | The line above the primary of the first run (not in the button, so the button is one short line on a phone). |
 | Way to get it, (recommended) | The choice field when more than one way is offered; the recommended way is marked, the others stay. |
 | Do it myself, Try again, Use another machine | Beside the primary of the first run. |
 | Run these steps on {machine}, then press Try again. | Above the copyable steps. |
