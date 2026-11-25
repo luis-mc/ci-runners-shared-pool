@@ -82,8 +82,9 @@ const MachineRestartPage = later(
   () => import('./screens/machines/MachineRestart').then((m) => m.MachineRestartPage),
   { heading: 'Restart the service' },
 );
-const ConfigApplyPage = later(() =>
-  import('./screens/settings/ConfigAsCode').then((m) => m.ConfigApplyPage),
+const ConfigApplyPage = later(
+  () => import('./screens/settings/ConfigAsCode').then((m) => m.ConfigApplyPage),
+  { heading: 'Apply a config file' },
 );
 const TurnOnPoolPage = later(
   () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
