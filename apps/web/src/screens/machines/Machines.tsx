@@ -50,13 +50,13 @@ import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
 import { machineStatus } from '../overview/Overview';
 import { MachineDockerDiskSection } from './MachineDockerDisk';
+import MachineLeavePool from './MachineLeavePool';
 import { MachineUptimeSection } from './MachineUptime';
 import { MachinePolicySection, PolicyStatus, takingState } from './MachinePolicy';
 import { usePoolSize } from './PoolSize';
 import { RecoverySection } from './Recovery';
 
 const MachineRemove = lazy(() => import('./MachineRemove'));
-const MachineLeavePool = lazy(() => import('./MachineLeavePool'));
 
 type Machine = Schemas['Machine'];
 
@@ -659,15 +659,13 @@ function MachineBody({ m, onChanged }: { m: Machine; onChanged: () => void }) {
         </Stack>
       </form>
       {m.is_controller ? null : (
-        <Suspense fallback={null}>
-          <MachineLeavePool
-            machineId={m.id}
-            name={m.name}
-            online={m.online}
-            disabled={!admin}
-            onRemoved={() => void navigate('/setup/machines')}
-          />
-        </Suspense>
+        <MachineLeavePool
+          machineId={m.id}
+          name={m.name}
+          online={m.online}
+          disabled={!admin}
+          onRemoved={() => void navigate('/setup/machines')}
+        />
       )}
       <Suspense fallback={null}>
         <MachineRemove

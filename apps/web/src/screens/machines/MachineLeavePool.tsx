@@ -1,3 +1,4 @@
+// Imported straight, not lazily: a pane that appears after the first paint grows the page under the fixed action bar.
 // Take a machine out of the pool (machines R5.40 to R5.42): the question names every item that goes, then the
 // machine drains and its key is revoked. An offline machine loses its key at once and its runners are deregistered
 // from GitHub; its files stay until crsp is removed there. Words: content.md, Remove from the pool words.

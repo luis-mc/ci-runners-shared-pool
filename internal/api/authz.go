@@ -46,7 +46,7 @@ var otherAreaAuth = map[string]string{
 
 	"getCaCertificate": authPublic, "getPackage": authPublic, "getHealth": authPublic,
 
-	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser,
+	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser, "getSavingsReport": authUser, "getSavingsRates": authUser, "updateSavingsRates": authOwner, "resetSavingsRates": authOwner,
 	"getUpdateStatus": authUser, "getLifecycleStatus": authUser, "listUpdateHistory": authUser, "listUpdateFleet": authUser, "listCaches": authUser, "listImages": authUser, "getDoctorRun": authUser, "getJob": authUser, "getMachine": authUser,
 	"getMachineChange": authUser, "getMachineLoad": authUser, "getOverview": authUser, "getPoolSettings": authUser,
 	"getQueueSettings": authUser, "getRunner": authUser, "getRunnerEnv": authUser, "listEnvSets": authUser, "listJobSizes": authUser, "getRunnerClasses": authUser, "getRunnerPlan": authUser, "getSettings": authUser,
@@ -65,6 +65,7 @@ var otherAreaAuth = map[string]string{
 	"updateQueueSettings": authAdmin, "putEnvSet": authAdmin, "putJobSizeOverride": authAdmin, "putRunnerClasses": authAdmin, "deleteJobSizeOverride": authAdmin, "deleteEnvSet": authAdmin, "getRegistrySettings": authAdmin,
 	"putRegistryLogin": authAdmin, "deleteRegistryLogin": authAdmin, "putRegistryCaBundle": authAdmin, "deleteRegistryCaBundle": authAdmin,
 
+	"exportConfigFile": authAdmin, "planConfig": authAdmin, "applyConfigPlan": authOwner,
 	"checkMachineDependencies": authAdmin, "startMachineDependencyJob": authAdmin, "stopMachineDependencyJob": authAdmin, "undoMachineDependencyJob": authAdmin, "restartMachineForDependencyJob": authAdmin,
 	"listMachineDependencyJobs": authUser, "getMachineDependencyJob": authUser,
 

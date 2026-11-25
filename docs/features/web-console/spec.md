@@ -155,7 +155,7 @@ The states named for every list follow the design system: loading (component 16,
 - **Actions:** none. The overview only shows and links (UX-52).
 - **States:** loading; empty (no machine yet: "No machines yet. Add a machine to start." links to Machines, content.md); could not load; live; live updates paused. Every section, and the loading and could-not-load states, sit in a pane titled in its top border (UX-10, UX-51); the h1 stays in every state (UX-17).
 - **Components:** 1, 8, 15, 17, 19, 27, 31.
-- **Milestone:** M1. Minutes saved: later (milestone 8).
+- **Milestone:** M1. Minutes saved: built (CRSP256, observability R5.15 to R5.19, R5.34): two tiles on the Overview (*Minutes saved today*, *Money saved today*), the Analytics tabs *Savings* and *Compare*, and the section *Savings rates* in Settings > Repositories (owner edits, tab Save).
 
 ### 4.3 Repositories (Setup > Pool setup)
 
@@ -335,6 +335,8 @@ Requirements marked (built, CRSP24) or (built, CRSP33) are built. The others are
 **R5.6** (built, CRSP24) — The console opens one live event stream (`streamEvents`) per tab. One store holds what it brings, and every screen reads that store for live state.
 
 **R5.7** (built, CRSP24) — When the live stream drops, the console keeps the last data on screen with its age, shows "Live updates paused" in the banner slot, and reconnects with backoff. On reconnect it loads the shown data again before it trusts new events.
+
+**R5.171** (built, CRSP244) — **A restarting service is calm, and an old page recovers.** When the service does not answer (a lost connection, as during an update restart), a screen's *Could not refresh* Problem banner is replaced by the note *The service is restarting, back in a moment.* (UX-26, UX-28); the screen asks again every 3 seconds by itself. A page opened on an older build that asks for a hashed file the new build no longer has (*Failed to fetch dynamically imported module*) reloads once (guarded for 60 seconds, so no loop); the route's error page (`errorElement`) shows *This page could not open.* and a *Refresh* button in place of the developer error screen. Words: design-system content.md, Restart and new build words. Tests: apps/web/src/screens/common.test.tsx.
 
 ### Signing in and sessions
 

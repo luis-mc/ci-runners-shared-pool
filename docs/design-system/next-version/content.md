@@ -149,6 +149,17 @@ A message is one or two short sentences in plain words. It names the thing, neve
 | Details | The note of the change as plain text, with no key name before it. |
 | Export | The word Export, at the end of the toolbar. |
 
+## Restart and new build words
+
+Used while the service restarts for an update and when an open page is older than the service (CRSP244; UX-6, UX-26, UX-28; CORE-1, CORE-7). Built from the shared Message, Loading, Failed and Button parts.
+
+| Where | Words |
+|---|---|
+| Note over the last copy, or the loading line with no data | The service is restarting, back in a moment. |
+| Route error page, new build (reloads once first: *The service has a new version. Refreshing*) | The service has a new version. Refresh to get the new version. |
+| Route error page, any other fault | This page could not open. Refresh the page. If it keeps happening, the details are in the service log. |
+| Button | Refresh |
+
 ## Empty, failed and waiting states
 
 - **Empty:** say what will appear here, and offer the action that fills it. "No reports yet. Add a report to start."
@@ -1890,3 +1901,43 @@ The pane on the page of a machine that is not the controller's own (machines R5.
 | Lead, offline | {machine} is offline. Its key is revoked at once and its runners are deregistered from GitHub. Its own files stay until crsp is removed from it. |
 | Question | Remove {machine} from the pool? Lines come from the controller: the machine, each runner (deregistered from GitHub), its images and caches, its settings, its key, and the running jobs. Buttons: Remove (busy: Removing), Cancel |
 | Failure | Could not read what goes. {reason} |
+
+## Minutes and money saved words (CRSP256, observability R5.15 to R5.19, R5.34)
+
+The words of the savings tiles, the Savings and Compare tabs and the Savings rates section. Built from the shared StatTile, StatGrid, Segmented, DatePicker, Table, Section, Message, NumberField, SelectField and Button parts; no rule, token or component changes.
+
+| Word | Where |
+|---|---|
+| Minutes saved today, Money saved today | Labels of the two Overview tiles. |
+| min, estimate | The unit of the minutes tile and of the money tile. |
+| Rates copied {date} | The change line of the money tile. |
+| Savings, Compare | Two tabs of Analytics. |
+| Minutes and money the pool saved against GitHub-hosted runners. | Lead of the Savings tab. |
+| The same jobs on crsp and on GitHub-hosted runners. | Lead of the Compare tab. |
+| Range; Today, 7 days, 30 days, A range | The range choice. |
+| From, To, Pick the first and the last day. | The two dates of a range and their hint. |
+| The last day is before the first day. | Problem note when the two days are the wrong way round. |
+| Minutes saved, Money saved, Jobs | Tiles of the report. |
+| By repository, By system, By machine | The three tables. |
+| Repository, System, Machine, Jobs, Minutes, Money | Their columns. |
+| Estimate. Jobs of public repositories count their minutes but save no money: GitHub-hosted standard runners are free there. | The note under the tiles (from the server). |
+| {n} of these minutes are from public repositories. Public repositories count their minutes but save no money. | Note when public minutes exist. |
+| {n} job has / jobs have no rate for its system, so it adds no money. | Note when a job has no rate. |
+| No job ran on the pool in this range. | Empty state of the report. |
+| Rates copied from {address} on {date}. / ... You changed some rates. | Last line of the report and first line of the rates. |
+| Savings rates | Title of the Settings section. |
+| The price of one minute of a GitHub-hosted runner, used to work out the money saved. The shipped rates are copied from the GitHub page named below; change a rate when your plan differs. | Its hint. |
+| {os} {size}, dollars per minute | Label of a rate field. |
+| Price {machine} as | Label of a machine's size choice. |
+| Reset to shipped rates, Resetting | The button and its busy word. |
+| The rates are the shipped rates already. | Reason the reset is off. |
+| Savings rates saved., The shipped rates are back. | Done notes. |
+| crsp against GitHub-hosted runners | Title of the Compare pane and caption of its table. |
+| Repository, Days | The Compare fields. |
+| Write it as owner/repo. The comparison reads finished jobs from GitHub and starts nothing. | Help of the repository field. |
+| Write the repository as owner/repo. | Reason Compare is off. |
+| Compare, Comparing | The button and its busy word. |
+| Job, crsp, median run, Hosted, median run, Minutes saved, Cost avoided | Columns of the Compare table. |
+| No job of this repository ran on both kinds of runner in this window. | Empty Compare. |
+| Hosted minutes are free for a public repository, so there is nothing to compare. | Public repository in Compare. |
+| In this window: {n} minutes saved, {amount} avoided (estimate). | Total line of Compare. |
