@@ -21,7 +21,7 @@ generator: luismc-docs 2.6.1
 ---
 # Observability
 
-Partly built (CRSP18, CRSP23): the audit log (R5.24 to R5.27, without the hash chain), retention (R5.32, R6.8 for audit, job history, raw load samples and log files), the live stream (R5.1 to R5.3, R6.2 load throttle, R6.3) and minutes saved today (R5.15). Everything else is NOT YET IMPLEMENTED. Every requirement names the milestone that builds it.
+Partly built (CRSP18, CRSP23): the audit log (R5.24 to R5.28, with the hash chain), the History CSV export (R5.14), retention (R5.32, R6.8 for audit, job history, raw load samples and log files), the live stream (R5.1 to R5.3, R6.2 load throttle, R6.3) and minutes saved today (R5.15). Everything else is NOT YET IMPLEMENTED. Every requirement names the milestone that builds it.
 
 ## 1. In one paragraph
 
@@ -152,7 +152,7 @@ Milestone numbers are those of the product brief.
 
 **R5.13** — (M2) A commit view lists every workflow run and job of one head commit. It says "all runs done" only when every run on that commit has finished, including runs started on demand (product brief, learning 8). It names the slowest job, its share of the wall time, and its two slowest steps (ported from `summary_lines` in `ci_watch.py`). Bookkeeping steps (set up job, complete job, post steps) are left out of "now running", as in `ci_runs.py`.
 
-**R5.14** — (M8) History exports to CSV with every row of the filter, in the order shown (design system UX-39). The daily summaries export is R5.45.
+**R5.14** — (M8, Built CRSP257 on the export of OPS34) History exports to CSV with every row of the filter, in the order shown (design system UX-39). The daily summaries export is R5.45. Built: the History page (the Done tab of the Jobs screen) has one Export CSV button, the shared `ExportButton` part, that exports the rows of the filter on screen, runs or jobs. The jobs file is the API route `GET /api/v1/exports/jobs` (viewer role), which walks every page of the filter newest first, never one page, and neutralises text that starts like a formula; the audit log has `GET /api/v1/exports/audit`. The page passes the filter and the file name only. No second button or route was added: the route and the button of OPS34 are the ones R5.14 asked for.
 
 ### The Jobs section data and forecast (OPS34)
 
@@ -230,7 +230,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.27** — (M1) Settings, Audit log lists rows newest first and filters by who, action, target and time. The CLI gives the same rows (`crsp audit --json`).
 
-**R5.28** — (M8) Each audit row stores the hash of the row before it. The doctor checks the chain and names the first broken row.
+**R5.28** — (M8, Built CRSP257; the doctor's own check is the doctor row's part) Each audit row stores the hash of the row before it. The doctor checks the chain and names the first broken row. Built: migration 00044 adds `prev_hash` and `hash` to `audit_log`. Every audit write, from `audit.Record`, `RecordTx`, the auth area and the old `Tx.Audit`, goes through one insert that reads the last hash and writes the row in the same transaction (the database serialises writers, so two rows never chain to the same row). The hash is SHA-256 over the previous hash and the time, actor, actor id, source, action, target, detail and result of the row, each written with its length (`store.AuditHash`). `audit.Log.Verify` (and `store.VerifyAuditChain`) walks the log oldest first and returns a `ChainReport`: how many rows were checked, how many older rows have no hash, and the id and reason of the first broken row ("was changed after it was written", "does not follow the row before it", "has no hash"). Rows written before the chain have no hash, are counted as "older rows with no hash" and are not an error. The retention job deletes the oldest rows, so the oldest row left starts the check: its own hash is checked, its link to a deleted row is not. The doctor hook is `audit.CheckChain(ctx, checker)`: it returns the report and one line of words, and returns a read error instead of hiding it. The doctor package calls it; this row adds no check to the doctor. Limits: a chain cannot show that rows were cut off the end of the log, and a person who can write the database file can rebuild every hash; the chain finds an edit by mistake or a careless one, it is not a signature.
 
 ### Structured logs and crash files
 
@@ -370,7 +370,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.11 | planned: internal/history/query_test.go TestNewestFirstAndFilters; internal/history/cli_test.go TestHistoryJSON |
 | R5.12 | planned: internal/history/store_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRowsAndMarksStale |
 | R5.13 | planned: internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped |
-| R5.14 | planned: internal/history/export_test.go TestExportHasEveryRowInOrder |
+| R5.14 | internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsNeutralisesFormulas; apps/web/src/screens/jobs/Jobs.test.tsx (Export CSV) |
 | R5.15 | internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview (the minutes sum itself is a store query, planned: internal/history/savings_test.go) |
 | R5.16 | planned: internal/history/savings_test.go TestMoneyUsesMatchingRate; internal/history/rates_test.go TestRateTableHasSourceAndDate |
 | R5.17 | planned: internal/history/rates_test.go TestOverrideAndResetWriteAudit |
@@ -384,7 +384,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.25 | internal/audit/audit_test.go TestAuditFailureRollsBackChange |
 | R5.26 | internal/audit/audit_test.go TestNoUpdateOrDeletePath, TestRetentionWritesOwnRow; internal/store/ops_test.go TestAuditIsAppendOnly |
 | R5.27 | internal/audit/query_test.go TestNewestFirstAndFilters; internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
-| R5.28 | planned: internal/audit/chain_test.go TestChainDetectsFirstBrokenRow |
+| R5.28 | internal/store/auditchain_test.go TestChainIntactAndLinked, TestChainDetectsFirstBrokenRow, TestChainOldRowsAndRetention; internal/audit/chain_test.go TestChainRecordsAreLinked, TestCheckChainReturnsReadError |
 | R5.29 | planned: internal/logs/slog_test.go TestJSONFieldsAndRotation |
 | R5.30 | planned: internal/logs/crash_test.go TestPanicWritesCrashFile, TestSetCrashOutputFolder |
 | R5.31 | planned: internal/logs/crash_test.go TestUnreportedCrashShownOnce |
@@ -442,7 +442,7 @@ Open owner questions:
 2. The default rates: confirm copying them from GitHub's pricing page at build time. If GitHub charges a per-minute fee for self-hosted runners, should the estimate subtract it (a setting, default 0)?
 3. Should viewers see logs and the audit log, or only admins and the owner (R6.4)?
 4. Public repositories: count minutes but no money (R5.18)?
-5. Is the audit hash chain (R5.28) needed before milestone 8?
+5. Is the audit hash chain (R5.28) needed before milestone 8? (Answered by CRSP257: built.)
 
 ## 11. Not built yet
 
@@ -453,6 +453,8 @@ Everything. The seams that change when it is built:
 - The main database gains `job_history`, `load_minute` and `audit_log` migrations; `logs.db` gets its own migrations.
 - The scheduling feature publishes to the event hub and records slot times.
 - OPS66 (measured job peaks): the lookup that tells the agent where a started job's processes live (the runner's process id, or the cgroup of a container or VM job: `JobSampling.Locate`) has no production implementation, and the machine-side job-started path does not call `Gate.Start` yet (the gate is the machine's own library, R5.23), so the readers are built and tested but a real job is "not measured" until that lookup lands. The retention of `job_run_peaks` (R6.8) is not wired into the hourly job. Windows reports an out-of-memory kill only through a Job Object limit, which crsp does not set, so `oom_killed` there stays false unless the system ended a process for a limit. The controller's HelloAck offers protocol version 4 only with the registry path (`machines.Hooks.Registry`), so a controller without a registry core gets no samples.
+
+**Platforms (CRSP257).** The chain and the export are built for every system, because the hash is pure Go over the stored text and the export is a controller route. They were tested on Linux, and the Windows run is the CI Windows job. macOS is compiled and unit-tested in CI and was not run on a real Mac.
 
 ## 12. Code map
 
