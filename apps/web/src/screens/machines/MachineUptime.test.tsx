@@ -6,18 +6,46 @@ import { apiError, machine, renderApp, signedIn } from '../../testing/mock';
 
 afterEach(cleanup);
 
-const uptime = (over: Partial<Schemas['MachineUptime']> = {}): Schemas['MachineUptime'] => ({
+const uptime = (
+  over: Partial<Schemas['MachineUptime']> = {},
+): Schemas['MachineUptime'] => ({
   machine_id: 'm1',
   watched: true,
   since: '2026-11-20T08:00:00Z',
   windows: [
-    { window: '24h', covered_seconds: 86400, online_seconds: 79000, taking_seconds: 70000, uptime_pct: 91.4, taking_pct: 81 },
-    { window: '7d', covered_seconds: 3 * 86400, online_seconds: 250000, taking_seconds: 240000, uptime_pct: 96.5, taking_pct: 92.6 },
-    { window: '30d', covered_seconds: 3 * 86400, online_seconds: 250000, taking_seconds: 240000, uptime_pct: 96.5, taking_pct: 92.6 },
+    {
+      window: '24h',
+      covered_seconds: 86400,
+      online_seconds: 79000,
+      taking_seconds: 70000,
+      uptime_pct: 91.4,
+      taking_pct: 81,
+    },
+    {
+      window: '7d',
+      covered_seconds: 3 * 86400,
+      online_seconds: 250000,
+      taking_seconds: 240000,
+      uptime_pct: 96.5,
+      taking_pct: 92.6,
+    },
+    {
+      window: '30d',
+      covered_seconds: 3 * 86400,
+      online_seconds: 250000,
+      taking_seconds: 240000,
+      uptime_pct: 96.5,
+      taking_pct: 92.6,
+    },
   ],
   periods: [
     { started_at: '2026-11-22T10:00:00Z', offline: false, reason: 'on_battery' },
-    { started_at: '2026-11-21T10:00:00Z', ended_at: '2026-11-21T12:30:00Z', offline: true, reason: 'heartbeat_lost' },
+    {
+      started_at: '2026-11-21T10:00:00Z',
+      ended_at: '2026-11-21T12:30:00Z',
+      offline: true,
+      reason: 'heartbeat_lost',
+    },
   ],
   ...over,
 });

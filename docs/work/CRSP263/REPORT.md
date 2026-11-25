@@ -6,3 +6,5 @@
 - [ ] Step 4 CI on branch, rename to CRSP263-integration, PR.
 
 Design: one row per state change (taking, not_taking + reason, offline + reason); uptime is the online share of the watched time; a gap while the controller was stopped is written offline (controller_stopped).
+
+CI: dispatched ci.yml on CRSP263-uptime 14:46 UTC, run 45637803249; watching with ci_watch.py.

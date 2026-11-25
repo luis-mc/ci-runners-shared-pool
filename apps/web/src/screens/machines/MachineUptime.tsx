@@ -72,7 +72,9 @@ function Tiles({ windows }: { windows: readonly Window[] }) {
           unit="% online"
           change="same"
           changeText={
-            w.taking_pct === undefined ? '' : `took jobs ${pct(w.taking_pct)}% of the time`
+            w.taking_pct === undefined
+              ? ''
+              : `took jobs ${pct(w.taking_pct)}% of the time`
           }
         />
       ))}
@@ -124,8 +126,8 @@ function Body({ up }: { up: Uptime }) {
   if (!up.watched) {
     return (
       <Text>
-        No uptime yet. The controller has not seen this machine. It counts from the
-        first time it does.
+        No uptime yet. The controller has not seen this machine. It counts from the first
+        time it does.
       </Text>
     );
   }
@@ -142,9 +144,7 @@ function Body({ up }: { up: Uptime }) {
       header: 'Lasted',
       cell: (p) =>
         p.ended_at
-          ? formatDuration(
-              (Date.parse(p.ended_at) - Date.parse(p.started_at)) / 1000,
-            )
+          ? formatDuration((Date.parse(p.ended_at) - Date.parse(p.started_at)) / 1000)
           : 'Now',
     },
     {

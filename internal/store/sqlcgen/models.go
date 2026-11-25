@@ -701,6 +701,13 @@ type MachineLoad struct {
 	SlotsUsed int64
 }
 
+type MachinePresence struct {
+	MachineID string
+	At        string
+	State     string
+	Reason    string
+}
+
 type MachineSetting struct {
 	MachineID           string
 	Version             int64

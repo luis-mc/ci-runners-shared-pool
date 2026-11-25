@@ -12220,8 +12220,17 @@ components:
       description: The uptime of a machine from its heartbeat history (machines R5.83 to R5.86). Timestamps are UTC.
       properties:
         machine_id: { type: string }
-        watched: { type: boolean, description: False until the controller has seen the machine; then the rest is empty. }
-        since: { type: string, format: date-time, description: When the controller first saw the machine. }
+        watched:
+          {
+            type: boolean,
+            description: False until the controller has seen the machine; then the rest is empty.,
+          }
+        since:
+          {
+            type: string,
+            format: date-time,
+            description: When the controller first saw the machine.,
+          }
         windows:
           type: array
           description: The windows 24h, 7d and 30d, in this order.
@@ -12235,18 +12244,43 @@ components:
       required: [window, covered_seconds, online_seconds, taking_seconds]
       properties:
         window: { type: string, enum: [24h, 7d, 30d] }
-        covered_seconds: { type: integer, format: int64, description: The part of the window the controller watched. }
+        covered_seconds:
+          {
+            type: integer,
+            format: int64,
+            description: The part of the window the controller watched.,
+          }
         online_seconds: { type: integer, format: int64 }
-        taking_seconds: { type: integer, format: int64, description: Online and taking new jobs. }
-        uptime_pct: { type: number, format: float, description: Online share of the watched time; absent when nothing was watched. }
-        taking_pct: { type: number, format: float, description: Online and taking share of the watched time; absent when nothing was watched. }
+        taking_seconds:
+          { type: integer, format: int64, description: Online and taking new jobs. }
+        uptime_pct:
+          {
+            type: number,
+            format: float,
+            description: Online share of the watched time; absent when nothing was watched.,
+          }
+        taking_pct:
+          {
+            type: number,
+            format: float,
+            description: Online and taking share of the watched time; absent when nothing was watched.,
+          }
     UptimePeriod:
       type: object
       required: [started_at, offline, reason]
       properties:
         started_at: { type: string, format: date-time }
-        ended_at: { type: string, format: date-time, description: Absent while the period goes on. }
-        offline: { type: boolean, description: True when no heartbeat arrived; false when the machine was online but took no job. }
+        ended_at:
+          {
+            type: string,
+            format: date-time,
+            description: Absent while the period goes on.,
+          }
+        offline:
+          {
+            type: boolean,
+            description: True when no heartbeat arrived; false when the machine was online but took no job.,
+          }
         reason:
           type: string
           description: >-
