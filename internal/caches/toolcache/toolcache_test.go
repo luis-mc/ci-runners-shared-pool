@@ -27,7 +27,8 @@ func newStore(t *testing.T, cap int64) (*Store, *time.Time) {
 	now := time.Date(2026, 11, 25, 12, 0, 0, 0, time.UTC)
 	n := 0
 	s := &Store{Root: filepath.Join(t.TempDir(), "tc"), CapBytes: cap, Now: func() time.Time { return now },
-		Token: func() string { n++; return "t" + strconv.Itoa(n) }}
+		Token: func() string { n++; return "t" + strconv.Itoa(n) },
+		Platform: PlatformFor(runtime.GOOS, &fakeRun{})}
 	if err := s.Prepare(context.Background()); err != nil {
 		t.Fatal(err)
 	}
