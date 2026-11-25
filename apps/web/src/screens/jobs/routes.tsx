@@ -8,6 +8,8 @@ import { ElsewhereTab } from './Elsewhere';
 import { JobPage } from './JobPage';
 import { RunPage } from './RunPage';
 import { AnalyticsLayout } from '../analytics/AnalyticsLayout';
+import { Compare } from '../analytics/Compare';
+import { Savings } from '../analytics/Savings';
 import { PoolSection } from '../pool/PoolSection';
 import { DoNext } from '../insights/DoNext';
 import { InsightsLayout } from '../insights/InsightsLayout';
@@ -69,6 +71,8 @@ export const jobsRoutes = (
         <Route path="guardrails" element={<Guardrails />} />
       </Route>
       <Route path="insights" element={<Insights />} />
+      <Route path="savings" element={<Savings />} />
+      <Route path="compare" element={<Compare />} />
       <Route path="charts" element={<ChartsTab />} />
       <Route path="elsewhere" element={<ElsewhereTab />} />
     </Route>

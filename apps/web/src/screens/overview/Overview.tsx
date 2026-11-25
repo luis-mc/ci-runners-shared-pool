@@ -4,7 +4,6 @@ import {
   Card,
   CardGrid,
   Empty,
-  Facts,
   LevelBar,
   Loading,
   Message,
@@ -13,7 +12,6 @@ import {
   Section,
   Status,
   TextLink,
-  formatNumber,
   formatPercent,
 } from '@crsp/ui';
 import { useEffect, useState } from 'react';
@@ -23,6 +21,7 @@ import { useLoad } from '../../api/hooks';
 import { useMachines } from '../../api/machines';
 import { Load } from '../common';
 import { BestNextChange } from '../insights/OverviewLine';
+import { SavingsTiles } from '../savings/Tiles';
 import { PoolCountTiles } from '../pool/PoolSection';
 import { poolCounts } from '../pool/poolWords';
 import { SlotTimeline } from '../pool/SlotTimeline';
@@ -179,6 +178,7 @@ export function Overview() {
       {o ? (
         <>
           <PoolCountTiles counts={poolCounts(o)} />
+          <SavingsTiles />
           <TimerAlert running={o.running} />
           <BestNextChange />
           <Load result={machines.result} what="machines" reload={machines.reload}>
@@ -215,16 +215,6 @@ export function Overview() {
           >
             <SlotTimeline compact />
           </Section>
-          {o.minutes_saved_today && o.minutes_saved_today.length > 0 ? (
-            <Section title="Minutes saved today">
-              <Facts
-                items={o.minutes_saved_today.map((m) => ({
-                  name: m.os,
-                  value: formatNumber(m.minutes),
-                }))}
-              />
-            </Section>
-          ) : null}
         </>
       ) : null}
     </Page>
