@@ -39,7 +39,7 @@ func (r *Runner) Undo(ctx context.Context, req *agentv1.DepsUndo) {
 		}
 		return out
 	}
-	known := map[string]bool{"systemd-enable": true, "apt-package": true, "apt-repo-file": true, "apt-key": true, "wsl-distro": true, "wsl-feature": true, "windows-installer": true}
+	known := map[string]bool{"systemd-enable": true, "apt-package": true, "rpm-package": true, "rpm-repo-file": true, "brew-cask": true, "apt-repo-file": true, "apt-key": true, "wsl-distro": true, "wsl-feature": true, "windows-installer": true}
 	for _, a := range req.GetAdded() {
 		if !known[a.GetKind()] {
 			fail(a, fmt.Sprintf("crsp does not know how to undo %q", a.GetKind()))
@@ -75,6 +75,36 @@ func (r *Runner) Undo(ctx context.Context, req *agentv1.DepsUndo) {
 		// step records only the first on failure; keep the rest left too.
 		if len(left) > 0 && left[len(left)-1] == pkgAdded[0] {
 			left = append(left, pkgAdded[1:]...)
+		}
+	}
+	var rpmAdded []*agentv1.DepsAdded
+	var rpms []string
+	for _, a := range by("rpm-package") {
+		if !pkgNameRe.MatchString(a.GetRef()) {
+			fail(a, fmt.Sprintf("%q is not a package name", a.GetRef()))
+			continue
+		}
+		rpms = append(rpms, a.GetRef())
+		rpmAdded = append(rpmAdded, a)
+	}
+	if len(rpms) > 0 {
+		step(rpmAdded[0], append([]string{"dnf", "-y", "remove"}, rpms...), "Removing "+strings.Join(rpms, ", "))
+		if len(left) > 0 && left[len(left)-1] == rpmAdded[0] {
+			left = append(left, rpmAdded[1:]...)
+		}
+	}
+	for _, a := range by("rpm-repo-file") {
+		r.removeFixed(j, a, RPMRepoPath, &left, &failed)
+	}
+	for _, a := range by("brew-cask") {
+		brew := r.brew()
+		switch {
+		case a.GetRef() != BrewCask:
+			fail(a, "crsp only removes the "+BrewCask+" cask it installed")
+		case brew == "":
+			fail(a, "Docker Desktop stays: Homebrew was not found. Quit Docker Desktop and move it to the Bin yourself")
+		default:
+			step(a, []string{brew, "uninstall", "--cask", BrewCask}, "Removing Docker Desktop")
 		}
 	}
 	for _, a := range by("apt-repo-file") {

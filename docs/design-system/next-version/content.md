@@ -1778,6 +1778,29 @@ The words of the four Analytics tabs as the approved LOOK54 prototype shows them
 | is reserved: {machine} keeps room free for it since {time} UTC | The detail of a reserved bar on the slot timeline. |
 | {job} ran out of time after {span}; crsp stops it {now or in a span} | The detail of a timer ran out bar of a running job. |
 
+## Machine uptime words (CRSP263, machines R5.83 to R5.86)
+
+The words of the Uptime section of the machine page. Built from the shared Section, Stack, StatGrid, StatTile, Facts, Table, Status, Text, Loading, Failed and Button parts.
+
+| Word | Where and meaning |
+|---|---|
+| Uptime | The section title. |
+| Last 24 hours, Last 7 days, Last 30 days | The labels of the three tiles. |
+| {n}% online | The value of a tile: the share of the watched time the machine sent heartbeats. |
+| took jobs {n}% of the time | The line of a tile: the share of the watched time it was online and took new jobs. |
+| {window}, watched for {time} | A line under the tiles for a window the controller has watched for less than its length. |
+| No uptime yet. The controller has not seen this machine. It counts from the first time it does. | A machine with no history. No percent is shown. |
+| This machine took jobs the whole time it was watched. | No period without jobs. |
+| While a machine takes no jobs, new jobs go to the fallback runner when one is set up. The newest 50 times of the last 30 days: | The line above the table. |
+| Times this machine took no jobs | The caption of the table. |
+| From, Lasted, State, Why | Its columns. Lasted reads Now while the period goes on. |
+| Offline, Online, took no jobs | The State words of a row. |
+| No sign of life for 30 seconds | Why, offline: no heartbeat (`heartbeat_lost`). |
+| Its clock was ahead of the controller's | Why, offline (`clock_skew`). |
+| The controller was not running | Why, offline (`controller_stopped`). |
+| Stopped from the console, The mode is Paused, Paused from the tray, On battery, Busy: the load was over the budget, The base image is missing, Free disk space is low | Why, online and not taking jobs (R5.62). |
+| Could not load the uptime. | Failed state, with Try again. |
+
 ## Dependency setup words (CRSP248, dependency-setup spec 4)
 
 The words of the wizard "Get this machine ready" and of its doors. Built from the shared Wizard, Message, Card, Facts, CheckRow, ChoiceField, CodeBlock, Disclosure and Ask parts; no rule, token or component changes. `{machine}` is the machine's name, `{items}` the names of what is installed ("WSL2 and Docker"), `{n}` a number.

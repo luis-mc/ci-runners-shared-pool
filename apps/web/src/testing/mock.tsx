@@ -257,6 +257,12 @@ export function signedIn(user: Schemas['User'] = owner): MockApi {
     })
     .on('GET', '/api/v1/overview', overview())
     .on('GET', '/api/v1/machines', { items: [machine()] })
+    .on('GET', '/api/v1/machines/:id/uptime', {
+      machine_id: 'm1',
+      watched: false,
+      windows: [],
+      periods: [],
+    })
     .on('GET', '/api/v1/github/installations', {
       items: [
         {
