@@ -133,3 +133,25 @@ func TestWaitingListHasWords(t *testing.T) {
 		}
 	}
 }
+
+type pagedSrc struct {
+	src
+	total, gotLimit int
+}
+
+func (p *pagedSrc) QueuedJobsPage(_ context.Context, limit int) ([]gen.Job, int, error) {
+	p.gotLimit = limit
+	return p.queued, p.total, nil
+}
+
+// The source caps and counts in SQL: the snapshot trusts its total and never loads the whole queue.
+func TestGetUsesQueuePagerTotal(t *testing.T) {
+	p := &pagedSrc{src: src{queued: make([]gen.Job, 3)}, total: 5000}
+	o, err := (&Service{Source: p, Events: last(1)}).Get(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if o.QueuedCount != 5000 || len(*o.Queued) != 3 || p.gotLimit != MaxQueuedListed {
+		t.Fatalf("count %d listed %d limit %d", o.QueuedCount, len(*o.Queued), p.gotLimit)
+	}
+}
