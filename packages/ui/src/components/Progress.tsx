@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { formatDuration } from './format';
 
-/** One phase of a weighted bar (UX-87). `pct` is 0 to 100 for this phase, or null when it reports none. */
+/** One phase of a weighted bar (UX-88). `pct` is 0 to 100 for this phase, or null when it reports none. */
 export interface ProgressPhaseData {
   name: string;
   weight: number;
@@ -31,7 +31,7 @@ export function weightedPct(
   return Math.round((done / total) * 1000) / 10;
 }
 
-/** Component 16 with weighted phases (UX-87): the bar of a whole job. The line under it says the phase; a phase with
+/** Component 16 with weighted phases (UX-88): the bar of a whole job. The line under it says the phase; a phase with
  * no percent says why and shows the time elapsed, and the bar is indeterminate. */
 export function PhaseProgress({
   phases,

@@ -1,4 +1,4 @@
-// CRSP247: Terminal (82), Download progress (83) and the weighted bar (16), and the wizard that draws them (UX-87 to UX-89).
+// CRSP247: Terminal (82), Download progress (83) and the weighted bar (16), and the wizard that draws them (UX-88 to UX-90).
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { downloadWords } from './DownloadProgress';
@@ -21,7 +21,7 @@ const ev = (over: Partial<LiveEvent> = {}): LiveEvent => ({
   ...over,
 });
 
-describe('weighted bar (UX-87)', () => {
+describe('weighted bar (UX-88)', () => {
   const phases = [
     { name: 'Download', weight: 6, pct: 50 },
     { name: 'Install', weight: 3, pct: 0 },
@@ -39,7 +39,7 @@ describe('weighted bar (UX-87)', () => {
   });
 });
 
-describe('download words (UX-89)', () => {
+describe('download words (UX-90)', () => {
   it('says measured bytes, speed and time left', () => {
     expect(downloadWords({ bytes: 230e6, total: 410e6, rate: 12e6, etaSec: 15 })).toBe(
       '230 MB of 410 MB, 12.0 MB/s, about 15 s left',
@@ -55,7 +55,7 @@ describe('download words (UX-89)', () => {
   });
 });
 
-describe('terminal (UX-87)', () => {
+describe('terminal (UX-88)', () => {
   const rows: TerminalRow[] = [
     { machine: pc, command: 'wsl --install', stream: 'stdout', ts: 1 },
     { machine: pc, stream: 'stdout', line: 'Installing', ts: 2 },

@@ -74,7 +74,7 @@ export interface WizardProps {
   /** The work step's live line: the item in hand, n of N, the time left (UX-29). */
   progress?:
     { text: string; value?: number | undefined; max?: number | undefined } | undefined;
-  /** The live events of the work step (UX-87 to UX-89): the wizard draws the terminal, the download line and the
+  /** The live events of the work step (UX-88 to UX-90): the wizard draws the terminal, the download line and the
    * weighted bar from them, and keeps the terminal after the work ends. `progress` is the fallback without events. */
   live?: readonly LiveEvent[] | undefined;
   canStop?: boolean | undefined;

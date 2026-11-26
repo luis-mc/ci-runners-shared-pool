@@ -1960,7 +1960,7 @@ One line of counts, number first, on Setup > Runners, Setup > Summary and the Ov
 | Setup > Summary, Runners card | {n} runner(s) — {n} persistent · {n} ephemeral |
 | Setup > Summary, Machines card | unchanged sentence: {n} machine(s), {cpu} CPU and {gib} GiB in the pool. |
 
-## Live progress words (CRSP247, UX-87 to UX-89)
+## Live progress words (CRSP247, UX-88 to UX-90)
 
 | Where | Words |
 |---|---|

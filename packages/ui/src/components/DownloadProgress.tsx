@@ -1,4 +1,4 @@
-// Component 83: a download inside a step (UX-89). One line of what was measured: bytes done of the total, the
+// Component 83: a download inside a step (UX-90). One line of what was measured: bytes done of the total, the
 // measured speed and the time left worked out from it. No rate yet: "measuring speed", never a guess.
 import { formatDuration, formatSize } from './format';
 

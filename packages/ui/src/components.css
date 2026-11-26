@@ -3849,7 +3849,7 @@ a.ds-stat:focus-visible {
   font-weight: var(--ds-weight-bold);
 }
 
-/* terminal (component 82): command lines with the machine per block; the body scrolls inside its own box (UX-87) */
+/* terminal (component 82): command lines with the machine per block; the body scrolls inside its own box (UX-88) */
 .ds-terminal {
   display: grid;
   gap: var(--ds-space-2);

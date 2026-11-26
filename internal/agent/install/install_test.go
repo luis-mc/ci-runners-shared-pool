@@ -587,7 +587,7 @@ func TestUndoRefusesWhatIsNotRecordedOrNotOurs(t *testing.T) {
 }
 
 // CRSP247: the progress event contract. Every event names a phase by a zero-based index below the count, carries
-// a weight, and an event with no percent says why, so the bar is never stuck without a reason (UX-87).
+// a weight, and an event with no percent says why, so the bar is never stuck without a reason (UX-88).
 func TestProgressEventsKeepTheContract(t *testing.T) {
 	sys := newFake("windows")
 	sys.dlHash, sys.dlTotal = "good", 1000

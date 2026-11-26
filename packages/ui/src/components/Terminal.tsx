@@ -1,4 +1,4 @@
-// Component 82: the terminal of a running step (UX-87). Command lines, their output as it arrives (standard output
+// Component 82: the terminal of a running step (UX-88). Command lines, their output as it arrives (standard output
 // and error told apart) and the machine that runs them, per block. A page passes `ProgressEvent` rows only.
 // The row type is structural: it is the one of `@crsp/contract` without importing it.
 import { useEffect, useId, useRef, useState } from 'react';
