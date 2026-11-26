@@ -1,0 +1,89 @@
+{
+  "caps": {
+    "cloud": 50,
+    "local": 3,
+    "total": 53
+  },
+  "work_root": "C:\\Work",
+  "tz": "Europe/Lisbon",
+  "train_label_re": "^release/\\d+[a-z]?$",
+  "release_branch_re": "^release/",
+  "brief_markers": [
+    "no push notifications",
+    "CRITICAL RUN RULE",
+    "BRIEF.md",
+    [
+      "one affected gate",
+      "CI is the gate"
+    ]
+  ],
+  "min_question_chars": 60,
+  "eta_table": {
+    "small fix": [
+      15,
+      25
+    ],
+    "ui change": [
+      25,
+      35
+    ],
+    "medium": [
+      35,
+      60
+    ],
+    "large": [
+      60,
+      120
+    ]
+  },
+  "heavy_commands": [],
+  "outbound_deny": [
+    "gh issue create",
+    "gh issue comment",
+    "gh pr comment"
+  ],
+  "no_attribution": true,
+  "long_pole_globs": [],
+  "measure_globs": [],
+  "update_state_files": [],
+  "watcher_interval_s": 600,
+  "runners": [],
+  "enforcement": {
+    "mode": "warn",
+    "block_ceiling": 3,
+    "log_every_block": false
+  },
+  "watcher": {
+    "push_trains": true,
+    "open_prs": true,
+    "merge_on_green": true,
+    "manage_runners": false,
+    "ci_workflows": [
+      "ci.yml"
+    ]
+  },
+  "runner_plan": {
+    "retry_seconds": 300,
+    "runner_max_retries": 0,
+    "report_command": "",
+    "cancel_replaced_runs": true,
+    "hold_dependabot_during_train": true,
+    "heavy_jobs_yield": true
+  },
+  "pending_protection": false,
+  "design_system": {
+    "app_paths": [
+      "apps/web/src"
+    ],
+    "shared_paths": [
+      "packages/ui/src"
+    ]
+  },
+  "ci": {
+    "options": {
+      "linux": "github-hosted",
+      "windows": "github-hosted",
+      "macos": "github-hosted"
+    }
+  }
+}
