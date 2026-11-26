@@ -11964,7 +11964,14 @@ components:
     NotificationThresholds:
       type: object
       description: The pool thresholds of notices (notifications R5.1, R5.8, R5.11, R5.12).
-      required: [offline_grace_minutes, job_waiting_minutes, disk_percent, flap_window_minutes, hourly_cap]
+      required:
+        [
+          offline_grace_minutes,
+          job_waiting_minutes,
+          disk_percent,
+          flap_window_minutes,
+          hourly_cap,
+        ]
       properties:
         offline_grace_minutes:
           type: integer
