@@ -17,14 +17,10 @@ func cmdJob() *command {
 	return &command{
 		name: "job", summary: "queue and history",
 		subs: []*command{
-			{name: "list", summary: "list the queue and history", args: "[--repo OWNER/NAME] [--machine M] [--result R] [--since 24h] [--state S] [--limit N]",
+			{name: "list", summary: "list the queue and history", args: "[--repo OWNER/NAME] [--machine M] [--backend B] [--result R] [--since 24h] [--state S] [--limit N]",
 				flags: func(c *call, fs *flag.FlagSet) {
-					fs.String("repo", "", "only this repository")
-					fs.String("machine", "", "only this machine")
-					fs.String("result", "", "success, failure, cancelled, timed_out or lost")
-					fs.Duration("since", 0, "only jobs newer than this, for example 24h")
+					jobFilterFlags(fs)
 					fs.String("state", "", "queued, running or done")
-					fs.Int("limit", 50, "most rows")
 				},
 				run: func(c *call, _ []string) error { return c.jobList() }},
 			{name: "watch", summary: "follow jobs live until Ctrl+C", args: "[--repo OWNER/NAME]",
@@ -34,12 +30,34 @@ func cmdJob() *command {
 	}
 }
 
-func (c *call) jobList() error {
+// jobFilterFlags registers the filters job list and history share (observability R5.11).
+func jobFilterFlags(fs *flag.FlagSet) {
+	fs.String("repo", "", "only this repository")
+	fs.String("machine", "", "only this machine")
+	fs.String("backend", "", "only this backend, for example docker")
+	fs.String("result", "", "success, failure, cancelled, timed_out or lost")
+	fs.Duration("since", 0, "only jobs newer than this, for example 24h")
+	fs.Int("limit", 50, "most rows")
+}
+
+func (c *call) jobList() error { return c.listJobs("") }
+
+// listJobs lists the rows of the listJobs route. A non-empty state is fixed (history passes done); otherwise the
+// --state flag decides.
+func (c *call) listJobs(state string) error {
 	s, err := c.open()
 	if err != nil {
 		return err
 	}
-	f := func(n string) string { return c.fs.Lookup(n).Value.String() }
+	f := func(n string) string {
+		if n == "state" && state != "" {
+			return state
+		}
+		if fl := c.fs.Lookup(n); fl != nil {
+			return fl.Value.String()
+		}
+		return ""
+	}
 	limit := mustInt(f("limit"))
 	if limit < 1 || limit > 500 {
 		return fail(ExitUsage, "--limit must be between 1 and 500.")
@@ -58,6 +76,9 @@ func (c *call) jobList() error {
 			return err
 		}
 		p.MachineId = &m.Id
+	}
+	if v := f("backend"); v != "" {
+		p.Backend = &v
 	}
 	if v := f("result"); v != "" {
 		r := client.JobResult(v)
