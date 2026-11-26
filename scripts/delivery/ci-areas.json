@@ -1,0 +1,56 @@
+{
+  "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build", "e2e"],
+  "always_jobs": [],
+  "run_everything": [
+    "package.json",
+    "pnpm-lock.yaml",
+    "pnpm-workspace.yaml",
+    "go.mod",
+    "go.sum",
+    ".github/**",
+    "scripts/ci/**",
+    "scripts/delivery/**"
+  ],
+  "docs": ["docs/**", "**/*.md", "LICENSE", ".claude/**", ".delivery/**"],
+  "areas": {
+    "go": {
+      "paths": ["**/*.go", "cmd/**", "internal/**"],
+      "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build", "e2e"]
+    },
+    "windows": {
+      "paths": ["**/*.syso", "cmd/crsp/winres/**", "**/*.ps1", "**/*.wxs"],
+      "jobs": ["test_os", "go_win_lint", "build"]
+    },
+    "web": {
+      "paths": ["apps/**", "packages/**", "scripts/design/**"],
+      "jobs": ["web_tests", "build", "e2e"]
+    },
+    "e2e": {
+      "paths": ["e2e/**", "playwright.config.ts"],
+      "jobs": ["build", "e2e"]
+    },
+    "image": {
+      "paths": ["images/**"],
+      "jobs": ["build"]
+    },
+    "installer": {
+      "paths": ["installer/**", "packaging/**"],
+      "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build"]
+    },
+    "config": {
+      "paths": [
+        ".golangci.yml",
+        ".gitleaks.toml",
+        ".gitleaksignore",
+        ".prettierrc",
+        ".prettierignore",
+        ".gitattributes",
+        ".env.example",
+        "Taskfile.yml",
+        "pytest.ini",
+        "eslint.config.mjs"
+      ],
+      "jobs": []
+    }
+  }
+}
