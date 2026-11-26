@@ -356,6 +356,27 @@ func (e CacheKind) Valid() bool {
 	}
 }
 
+// Defines values for CommitRunState.
+const (
+	CommitRunStateDone    CommitRunState = "done"
+	CommitRunStateQueued  CommitRunState = "queued"
+	CommitRunStateRunning CommitRunState = "running"
+)
+
+// Valid indicates whether the value is a known member of the CommitRunState enum.
+func (e CommitRunState) Valid() bool {
+	switch e {
+	case CommitRunStateDone:
+		return true
+	case CommitRunStateQueued:
+		return true
+	case CommitRunStateRunning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ConfigChangeKind.
 const (
 	ConfigChangeKindAdded   ConfigChangeKind = "added"
@@ -5207,6 +5228,63 @@ type CliTokenCreated struct {
 // CliTokenList defines model for CliTokenList.
 type CliTokenList struct {
 	Items []CliToken `json:"items"`
+}
+
+// CommitRun The latest attempt of one workflow run of a commit.
+type CommitRun struct {
+	Attempt     int            `json:"attempt"`
+	CompletedAt *time.Time     `json:"completed_at,omitempty"`
+	CreatedAt   time.Time      `json:"created_at"`
+	HtmlUrl     *string        `json:"html_url,omitempty"`
+	Id          int64          `json:"id"`
+	JobsDone    int            `json:"jobs_done"`
+	JobsTotal   int            `json:"jobs_total"`
+	Result      *JobResult     `json:"result,omitempty"`
+	State       CommitRunState `json:"state"`
+	Workflow    string         `json:"workflow"`
+}
+
+// CommitRunState defines model for CommitRun.State.
+type CommitRunState string
+
+// CommitSlowJob The job that ran longest in the commit.
+type CommitSlowJob struct {
+	JobId   int64   `json:"job_id"`
+	Name    string  `json:"name"`
+	RunId   int64   `json:"run_id"`
+	Seconds float64 `json:"seconds"`
+
+	// SharePercent The job's time over the wall time of the commit, 0 to 100. 0 when the wall time is not known.
+	SharePercent int `json:"share_percent"`
+
+	// SlowestSteps The two slowest steps, longest first. The set up, complete and post steps are left out.
+	SlowestSteps []CommitStep `json:"slowest_steps"`
+	Workflow     string       `json:"workflow"`
+}
+
+// CommitStep One step and how long it took.
+type CommitStep struct {
+	Name    string  `json:"name"`
+	Seconds float64 `json:"seconds"`
+}
+
+// CommitView Every run of one head commit (observability R5.13).
+type CommitView struct {
+	// AllRunsDone True only when there is at least one run and every run has finished.
+	AllRunsDone bool `json:"all_runs_done"`
+
+	// HeadSha The commit as asked for, or the full id when the stored runs have one.
+	HeadSha    string      `json:"head_sha"`
+	Repository *string     `json:"repository,omitempty"`
+	Runs       []CommitRun `json:"runs"`
+	RunsDone   int         `json:"runs_done"`
+	RunsTotal  int         `json:"runs_total"`
+
+	// SlowestJob The job that ran longest in the commit.
+	SlowestJob *CommitSlowJob `json:"slowest_job,omitempty"`
+
+	// WallSeconds From the first run created to the last run completed, or to now while a run is open.
+	WallSeconds float64 `json:"wall_seconds"`
 }
 
 // ConfigApplyRequest defines model for ConfigApplyRequest.
@@ -10312,6 +10390,11 @@ type WipeCacheParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetCommitViewParams defines parameters for GetCommitView.
+type GetCommitViewParams struct {
+	RepositoryId *int64 `form:"repository_id,omitempty" json:"repository_id,omitempty"`
+}
+
 // GetSpeedComparisonParams defines parameters for GetSpeedComparison.
 type GetSpeedComparisonParams struct {
 	// Repository The repository as owner/repo. The handler answers 400 when it is missing or not in that form.
@@ -11278,6 +11361,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/caches/{cacheId}/wipe (the `WipeCache` operationId).
 	WipeCache(ctx context.Context, cacheId CacheId, params *WipeCacheParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCommitView Every run of one head commit, and where its time went
+	//
+	// observability R5.13. Lists the latest attempt of every workflow run of the commit. `all_runs_done` is true only when there is at least one run and every run has finished, including a run started on demand later. `slowest_job` names the job that ran longest, its share of the wall time and its two slowest steps; the set up, complete and post steps are left out. Reads stored rows only, never GitHub.
+	//
+	// Corresponds with GET /api/v1/commits/{sha} (the `GetCommitView` operationId).
+	GetCommitView(ctx context.Context, sha string, params *GetCommitViewParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	//
@@ -13772,6 +13862,23 @@ func (c *Client) ListCaches(ctx context.Context, params *ListCachesParams, reqEd
 // Corresponds with POST /api/v1/caches/{cacheId}/wipe (the `WipeCache` operationId).
 func (c *Client) WipeCache(ctx context.Context, cacheId CacheId, params *WipeCacheParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewWipeCacheRequest(c.Server, cacheId, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetCommitView Every run of one head commit, and where its time went
+//
+// observability R5.13. Lists the latest attempt of every workflow run of the commit. `all_runs_done` is true only when there is at least one run and every run has finished, including a run started on demand later. `slowest_job` names the job that ran longest, its share of the wall time and its two slowest steps; the set up, complete and post steps are left out. Reads stored rows only, never GitHub.
+//
+// Corresponds with GET /api/v1/commits/{sha} (the `GetCommitView` operationId).
+func (c *Client) GetCommitView(ctx context.Context, sha string, params *GetCommitViewParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCommitViewRequest(c.Server, sha, params)
 	if err != nil {
 		return nil, err
 	}
@@ -19435,6 +19542,67 @@ func NewWipeCacheRequest(server string, cacheId CacheId, params *WipeCacheParams
 	}
 
 	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetCommitViewRequest constructs an http.Request for the GetCommitView method
+func NewGetCommitViewRequest(server string, sha string, params *GetCommitViewParams) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "sha", sha, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/commits/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.RepositoryId != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "repository_id", *params.RepositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: "int64"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -29718,6 +29886,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/v1/caches/{cacheId}/wipe (the `WipeCache` operationId).
 	WipeCacheWithResponse(ctx context.Context, cacheId CacheId, params *WipeCacheParams, reqEditors ...RequestEditorFn) (*WipeCacheResponse, error)
 
+	// GetCommitViewWithResponse Every run of one head commit, and where its time went
+	//
+	// observability R5.13. Lists the latest attempt of every workflow run of the commit. `all_runs_done` is true only when there is at least one run and every run has finished, including a run started on demand later. `slowest_job` names the job that ran longest, its share of the wall time and its two slowest steps; the set up, complete and post steps are left out. Reads stored rows only, never GitHub.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/commits/{sha} (the `GetCommitView` operationId).
+	GetCommitViewWithResponse(ctx context.Context, sha string, params *GetCommitViewParams, reqEditors ...RequestEditorFn) (*GetCommitViewResponse, error)
+
 	// GetSpeedComparisonWithResponse The same job on crsp and on GitHub-hosted runners
 	//
 	// observability R5.34. Reads finished workflow-run job timings of one repository from GitHub, matches jobs by name across the two runner kinds and returns median and p95 queue wait and run time, minutes saved and the hosted cost avoided. A public repository is excluded (hosted minutes there are free). Read only; it starts nothing.
@@ -33017,6 +33194,54 @@ func (r WipeCacheResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r WipeCacheResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetCommitViewResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CommitView
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetCommitViewResponse) GetJSON200() *CommitView {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetCommitViewResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetCommitViewResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCommitViewResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCommitViewResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetCommitViewResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -43580,6 +43805,21 @@ func (c *ClientWithResponses) WipeCacheWithResponse(ctx context.Context, cacheId
 	return ParseWipeCacheResponse(rsp)
 }
 
+// GetCommitViewWithResponse Every run of one head commit, and where its time went
+//
+// observability R5.13. Lists the latest attempt of every workflow run of the commit. `all_runs_done` is true only when there is at least one run and every run has finished, including a run started on demand later. `slowest_job` names the job that ran longest, its share of the wall time and its two slowest steps; the set up, complete and post steps are left out. Reads stored rows only, never GitHub.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/commits/{sha} (the `GetCommitView` operationId).
+func (c *ClientWithResponses) GetCommitViewWithResponse(ctx context.Context, sha string, params *GetCommitViewParams, reqEditors ...RequestEditorFn) (*GetCommitViewResponse, error) {
+	rsp, err := c.GetCommitView(ctx, sha, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCommitViewResponse(rsp)
+}
+
 // GetSpeedComparisonWithResponse The same job on crsp and on GitHub-hosted runners
 //
 // observability R5.34. Reads finished workflow-run job timings of one repository from GitHub, matches jobs by name across the two runner kinds and returns median and p95 queue wait and run time, minutes saved and the hosted cost avoided. A public repository is excluded (hosted minutes there are free). Read only; it starts nothing.
@@ -48239,6 +48479,39 @@ func ParseWipeCacheResponse(rsp *http.Response) (*WipeCacheResponse, error) {
 			return nil, err
 		}
 		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCommitViewResponse parses an HTTP response from a GetCommitViewWithResponse call
+func ParseGetCommitViewResponse(rsp *http.Response) (*GetCommitViewResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCommitViewResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CommitView
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error

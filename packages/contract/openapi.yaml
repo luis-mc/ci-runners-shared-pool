@@ -3801,6 +3801,45 @@ paths:
                 $ref: '#/components/schemas/RunItem'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/commits/{sha}:
+    get:
+      operationId: getCommitView
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [jobs]
+      summary: Every run of one head commit, and where its time went
+      description: >-
+        observability R5.13. Lists the latest attempt of every workflow run of
+        the commit. `all_runs_done` is true only when there is at least one run
+        and every run has finished, including a run started on demand later.
+        `slowest_job` names the job that ran longest, its share of the wall
+        time and its two slowest steps; the set up, complete and post steps
+        are left out. Reads stored rows only, never GitHub.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - name: sha
+          in: path
+          required: true
+          description: The head commit, 7 to 40 hex characters.
+          schema:
+            type: string
+            pattern: '^[0-9a-fA-F]{7,40}$'
+        - name: repository_id
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: The commit.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommitView'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/forecast:
     get:
       operationId: getForecast
@@ -10321,6 +10360,98 @@ components:
           description: node_id of the jobs a matrix or a reusable workflow expands at run time.
           items:
             type: string
+    CommitRun:
+      type: object
+      description: The latest attempt of one workflow run of a commit.
+      required: [id, attempt, workflow, state, created_at, jobs_total, jobs_done]
+      properties:
+        id:
+          type: integer
+          format: int64
+        attempt:
+          type: integer
+        workflow:
+          type: string
+        state:
+          type: string
+          enum: [queued, running, done]
+        result:
+          $ref: '#/components/schemas/JobResult'
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+        html_url:
+          type: string
+        jobs_total:
+          type: integer
+        jobs_done:
+          type: integer
+    CommitStep:
+      type: object
+      description: One step and how long it took.
+      required: [name, seconds]
+      properties:
+        name:
+          type: string
+        seconds:
+          type: number
+          format: double
+    CommitSlowJob:
+      type: object
+      description: The job that ran longest in the commit.
+      required: [job_id, run_id, name, workflow, seconds, share_percent, slowest_steps]
+      properties:
+        job_id:
+          type: integer
+          format: int64
+        run_id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        workflow:
+          type: string
+        seconds:
+          type: number
+          format: double
+        share_percent:
+          type: integer
+          description: The job's time over the wall time of the commit, 0 to 100. 0 when the wall time is not known.
+        slowest_steps:
+          type: array
+          description: The two slowest steps, longest first. The set up, complete and post steps are left out.
+          items:
+            $ref: '#/components/schemas/CommitStep'
+    CommitView:
+      type: object
+      description: Every run of one head commit (observability R5.13).
+      required: [head_sha, all_runs_done, runs_total, runs_done, wall_seconds, runs]
+      properties:
+        head_sha:
+          type: string
+          description: The commit as asked for, or the full id when the stored runs have one.
+        repository:
+          type: string
+        all_runs_done:
+          type: boolean
+          description: True only when there is at least one run and every run has finished.
+        runs_total:
+          type: integer
+        runs_done:
+          type: integer
+        wall_seconds:
+          type: number
+          format: double
+          description: From the first run created to the last run completed, or to now while a run is open.
+        runs:
+          type: array
+          items:
+            $ref: '#/components/schemas/CommitRun'
+        slowest_job:
+          $ref: '#/components/schemas/CommitSlowJob'
     RunItem:
       type: object
       description: A run attempt with its jobs and needs graph.
