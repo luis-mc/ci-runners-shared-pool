@@ -2807,6 +2807,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Search runner setup and agent logs, newest first
+         * @description observability R5.21. Full text over the message and filters on machine, runner, job, level and time range. `level` keeps that level and higher. Admins and the owner only: log lines can name repositories and jobs. Lines were redacted before they were stored (R6.5).
+         */
+        get: operations["searchLogs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/backups": {
         parameters: {
             query?: never;
@@ -7152,6 +7172,26 @@ export interface components {
         };
         AuditPage: {
             items: components["schemas"]["AuditEvent"][];
+            next_cursor?: string;
+        };
+        LogLine: {
+            /** Format: int64 */
+            id: number;
+            /** Format: date-time */
+            at: string;
+            /** @enum {string} */
+            level: "debug" | "info" | "warn" | "error";
+            machine?: string;
+            runner?: string;
+            job?: string;
+            component?: string;
+            message: string;
+            /** @description Extra attributes as JSON. */
+            attrs?: string;
+        };
+        LogPage: {
+            items: components["schemas"]["LogLine"][];
+            /** @description Pass as `cursor` to get the next page; absent on the last page. */
             next_cursor?: string;
         };
         Backup: {
@@ -12733,6 +12773,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AuditPage"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    searchLogs: {
+        parameters: {
+            query?: {
+                /** @description Words that must all appear in the message. */
+                q?: string;
+                machine?: string;
+                runner?: string;
+                job?: string;
+                level?: "debug" | "info" | "warn" | "error";
+                from?: components["parameters"]["From"];
+                to?: components["parameters"]["To"];
+                /** @description Opaque cursor from the previous page's `next_cursor`. */
+                cursor?: components["parameters"]["Cursor"];
+                limit?: components["parameters"]["Limit"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description One page of log lines. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["LogPage"];
                 };
             };
             default: components["responses"]["Error"];

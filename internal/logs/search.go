@@ -90,11 +90,3 @@ func LevelName(l slog.Level) string {
 	}
 	return "debug"
 }
-
-// Since is a helper for tests and callers: the zero time when d is zero.
-func Since(now time.Time, d time.Duration) time.Time {
-	if d == 0 {
-		return time.Time{}
-	}
-	return now.Add(-d)
-}
