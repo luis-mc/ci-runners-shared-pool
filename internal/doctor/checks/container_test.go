@@ -261,3 +261,22 @@ func TestMemoryCapCheck(t *testing.T) {
 		t.Fatalf("cannot probe: %+v", fs)
 	}
 }
+
+// CRSP253 (runners R5.131): the warm pool.
+func TestWarmPool(t *testing.T) {
+	a, b, c := pool(), pool(), pool()
+	a.Name, a.WarmWanted, a.WarmReady = "full", 1, 1
+	b.Name, b.WarmWanted, b.WarmReady = "cold", 2, 1
+	c.Name = "none"
+	fs := runContainer(t, &fakeSource{pools: []ContainerPool{a, b, c}, eng: &fakeEngine{status: usable()}}, "container.warm")
+	if len(fs) != 2 {
+		t.Fatalf("%d findings: %+v", len(fs), fs)
+	}
+	got := map[string]doctor.Severity{}
+	for _, f := range fs {
+		got[f.Subject.Name] = f.Severity
+	}
+	if got["full on box"] != doctor.OK || got["cold on box"] != doctor.Warn {
+		t.Fatalf("%v", got)
+	}
+}

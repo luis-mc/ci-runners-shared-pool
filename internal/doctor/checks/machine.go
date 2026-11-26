@@ -243,19 +243,37 @@ func machineDiskFloor(ctx context.Context, env doctor.Env) []doctor.Finding {
 			continue
 		}
 		f := doctor.Finding{Check: "machine.floor.disk", Subject: s}
-		if m.PauseReason != machines.PauseReasonDiskLow {
-			f.Severity, f.Title = doctor.OK, m.Name+" is not paused for disk space"
-			out = append(out, f)
-			continue
-		}
-		f.Severity, f.Title = doctor.Fail, "Jobs and VMs on "+m.Name+" are paused: free disk is under the floor"
 		floor := m.DiskFloorGiB
 		if floor <= 0 {
 			floor = runnercache.DefaultDiskFloorGiB
 		}
+		if m.PauseReason != machines.PauseReasonDiskLow {
+			// R5.37: warn before the floor holds work (floor plus 20% of it).
+			switch {
+			case m.DiskFreeBytes == nil && m.DiskFloorGiB > 0:
+				out = append(out, skip("machine.floor.disk", s, "The free disk of "+m.Name+" is unknown", "The agent sent no free-space figure, so the floor was not compared."))
+			case m.DiskFreeBytes != nil && float64(*m.DiskFreeBytes) < float64(floor)*1.2*float64(gib):
+				f.Severity, f.Title = doctor.Warn, m.Name+" is close to its free-disk floor"
+				f.Detail = fmt.Sprintf("%.1f GiB free; the floor is %d GiB, and jobs are held at the floor.", float64(*m.DiskFreeBytes)/float64(gib), floor)
+				if len(m.LargestFolders) > 0 {
+					f.Detail += " Largest crsp folders: " + strings.Join(m.LargestFolders, "; ") + "."
+				}
+				f.Fix = doctor.Fix{Text: "Free space before jobs are held: container images and build cache (`docker system df`), runner caches, job folders left by failed runs.",
+					Command: "crsp runners clean-work --machine " + m.Name, Link: machineLink(m)}
+				out = append(out, f)
+			default:
+				f.Severity, f.Title = doctor.OK, m.Name+" is not paused for disk space"
+				out = append(out, f)
+			}
+			continue
+		}
+		f.Severity, f.Title = doctor.Fail, "Jobs and VMs on "+m.Name+" are paused: free disk is under the floor"
 		f.Detail = fmt.Sprintf("The machine starts no job and no VM until it has the floor of %d GiB plus 1 GiB free (the floor is set per machine in the console).", floor)
 		if m.DiskFreeBytes != nil {
 			f.Detail = fmt.Sprintf("%.1f GiB free. %s", float64(*m.DiskFreeBytes)/float64(gib), f.Detail)
+		}
+		if len(m.LargestFolders) > 0 {
+			f.Detail += " Largest crsp folders: " + strings.Join(m.LargestFolders, "; ") + "."
 		}
 		f.Fix = doctor.Fix{
 			Text: "Free space on " + m.Name + ", biggest first: container images and build cache (`docker system df`, then `docker image prune -a` and `docker builder prune`); " +
