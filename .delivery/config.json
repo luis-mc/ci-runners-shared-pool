@@ -60,5 +60,8 @@
       "windows": "github-hosted",
       "macos": "github-hosted"
     }
+  },
+  "deploy": {
+    "serial": true
   }
 }
