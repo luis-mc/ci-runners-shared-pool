@@ -3,7 +3,7 @@
 // became of each delivery. The page only shows and links (UX-52); the settings for channels stay on Settings,
 // Notifications. A delivery names its channel and a host or address, never a path or a secret.
 import {
-  Cluster,
+  ActionBar,
   DateTime,
   Empty,
   LinkButton,
@@ -173,12 +173,14 @@ export function NoticesScreen() {
             }
           </Load>
         </Section>
-        <Cluster>
-          <Text>Channels and the events they carry are set on Settings.</Text>
-          <LinkButton to={settingsPath('notifications')} kind="primary">
-            Open notification settings
-          </LinkButton>
-        </Cluster>
+        <Text>Channels and the events they carry are set on Settings.</Text>
+        <ActionBar
+          primary={
+            <LinkButton to={settingsPath('notifications')} kind="primary">
+              Open notification settings
+            </LinkButton>
+          }
+        />
       </Stack>
     </Page>
   );
