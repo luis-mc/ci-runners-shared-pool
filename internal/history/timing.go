@@ -93,3 +93,50 @@ func Split(j jobsdata.Job) Timing {
 	}
 	return t
 }
+
+// MapResult maps a GitHub conclusion to one of the five results (R5.10). startup_failure is a failure;
+// timed_out stays its own result. An open job ("") or a conclusion with no result (skipped, neutral) gives
+// false.
+func MapResult(conclusion string) (jobsdata.Result, bool) {
+	switch conclusion {
+	case "success":
+		return jobsdata.Success, true
+	case "failure", "startup_failure":
+		return jobsdata.Failure, true
+	case "cancelled":
+		return jobsdata.Cancelled, true
+	case "timed_out":
+		return jobsdata.TimedOut, true
+	case "lost":
+		return jobsdata.Lost, true
+	}
+	return "", false
+}
+
+// CountsAsFailure reports a result that counts as a failure in totals: failure and timed out (R5.10).
+func CountsAsFailure(r jobsdata.Result) bool {
+	return r == jobsdata.Failure || r == jobsdata.TimedOut
+}
+
+// Totals are the counts of a list of results.
+type Totals struct {
+	Success, Failed, Cancelled, Lost int
+}
+
+// Count adds results into totals. Failed holds failure, startup_failure and timed out (R5.10).
+func Count(results []jobsdata.Result) Totals {
+	var t Totals
+	for _, r := range results {
+		switch {
+		case r == jobsdata.Success:
+			t.Success++
+		case CountsAsFailure(r):
+			t.Failed++
+		case r == jobsdata.Cancelled:
+			t.Cancelled++
+		case r == jobsdata.Lost:
+			t.Lost++
+		}
+	}
+	return t
+}

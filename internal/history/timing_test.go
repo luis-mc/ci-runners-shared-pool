@@ -94,3 +94,29 @@ func TestSlotGateCountedOnce(t *testing.T) {
 		t.Fatalf("run %+v", tm.Run)
 	}
 }
+
+// R5.10. Port of test_failed_step_and_conclusion: the five results and the failure count.
+func TestResultMapping(t *testing.T) {
+	cases := map[string]jobsdata.Result{
+		"success": jobsdata.Success, "failure": jobsdata.Failure, "startup_failure": jobsdata.Failure,
+		"cancelled": jobsdata.Cancelled, "timed_out": jobsdata.TimedOut, "lost": jobsdata.Lost,
+	}
+	for in, want := range cases {
+		if got, ok := MapResult(in); !ok || got != want {
+			t.Errorf("%q -> %q %v, want %q", in, got, ok, want)
+		}
+	}
+	for _, in := range []string{"", "skipped", "neutral", "bogus"} {
+		if _, ok := MapResult(in); ok {
+			t.Errorf("%q must have no result", in)
+		}
+	}
+	got := Count([]jobsdata.Result{jobsdata.Success, jobsdata.Failure, jobsdata.TimedOut, jobsdata.Cancelled, jobsdata.Lost})
+	if got != (Totals{Success: 1, Failed: 2, Cancelled: 1, Lost: 1}) {
+		t.Fatalf("totals %+v: timed out counts as failure", got)
+	}
+	r, _ := MapResult("startup_failure")
+	if !CountsAsFailure(r) {
+		t.Fatal("startup_failure must count as failure")
+	}
+}
