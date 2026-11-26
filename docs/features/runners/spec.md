@@ -22,7 +22,7 @@ generator: luismc-docs 2.6.1
 ---
 # Runners and isolation backends
 
-**PARTLY BUILT (CRSP22).** The M1 persistent runner backends for Windows, Linux and macOS, the runner rules, the plan and apply flow and the runner API operations are built. Requirements not listed under "Built" in section 5 are **NOT YET IMPLEMENTED**. Each requirement names the milestone that builds it (M1 to M6, from [the product brief](../../overview/product.md#milestones)).
+**PARTLY BUILT (CRSP22).** The M1 persistent runner backends for Windows, Linux and macOS, the runner rules, the plan and apply flow and the runner API operations are built. Later milestones are built in part: the container backend (R5.27), extra packages, the environment sets, the private CA bundle, job limits and the tool store. A requirement not marked built in its own text is **NOT YET IMPLEMENTED**. Each requirement names the milestone that builds it (M1 to M6, from [the product brief](../../overview/product.md#milestones)).
 
 Related: [product brief](../../overview/product.md), [decision 0003, isolation backends](../../architecture/decisions/0003-isolation-backends.md), [decision 0004, agent link](../../architecture/decisions/0004-agent-link.md), [decision 0005, product boundary](../../architecture/decisions/0005-product-boundary.md).
 
@@ -221,7 +221,7 @@ No mocks yet. The Runners screen and the Create runner wizard follow design syst
 
 ### 5.11 Parity with the old pool (after v0.1.0)
 
-The dev-standards runner pool covered these cases ([handover page](../../architecture/dev-standards-handover.md), section 4). Each requirement below targets a milestone after v0.1.0 and is **NOT YET IMPLEMENTED**. Until this is built, jobs that need it run on GitHub-hosted runners.
+The dev-standards runner pool covered these cases ([handover page](../../architecture/dev-standards-handover.md), section 4). Each requirement below targets a milestone after v0.1.0. A requirement marked built or built in part says so in its own text; the others are **NOT YET IMPLEMENTED**. Until a requirement is built, jobs that need it run on GitHub-hosted runners.
 
 **R5.41** (after v0.1.0, Built by CRSP56: `container.KVMArgs`, `CheckRunArgs`, `DecideKVM`, the `kvm` layer and `images/layers/compose.kvm.yaml`; Built by CRSP68: the pool start passes the device with the host group only when the pool has the `kvm` layer and the probe finds a device the agent can open, after a bounded wait, or when the machine config forces it; otherwise it starts without the device and logs why; open question 51) — **Linux containers with KVM.** A Linux runner in a container (R5.27) on a machine whose `/dev/kvm` the agent has checked as usable by the runner gets the `kvm` label (R5.36) and the device through the cgroup rule `--device-cgroup-rule 'c 10:232 rwm'` (compose: `device_cgroup_rules`), never `--privileged` and never a `--device /dev/kvm` or `devices:` mapping: at daemon boot Docker restarts the pool before the KVM loader, and a mapping to a missing file fails the container start (handover lesson 28; HND1). The pool's `kvm-wait.sh` creates `/dev/kvm` with `mknod` (10:232) once `/proc/misc` lists `kvm`, inside its bounded wait (machines R5.53). A test VM boot job (the `vm_check.py` case of the handover page) runs in it. When `/dev/kvm` is missing or not usable the runner has no `kvm` label and the doctor says why (machines R5.53).
 
@@ -445,7 +445,7 @@ Owner decision 21 Nov 2026 (job sizing wave 1, T9): a persistent Windows or macO
 
 ## 6. Non-functional requirements
 
-All **NOT YET IMPLEMENTED**.
+R6.1 to R6.4 and R6.8 are built (CRSP22). Each requirement below says if it is built; the others are **NOT YET IMPLEMENTED**.
 
 **R6.1** (M1) — **No privileged containers, KVM as a device.** No backend ever starts a container with `--privileged`, a host PID or network namespace, or the Docker or Podman socket mounted. KVM is passed only as `--device /dev/kvm`.
 

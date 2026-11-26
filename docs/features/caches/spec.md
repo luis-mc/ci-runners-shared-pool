@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/cache/**", "internal/mirror/**", "internal/tools/**", "internal/runnercache/**", "internal/caches/**", "internal/vmcheck/**", "internal/dockercompact/**"]
 design_system: [UX-4, UX-6, UX-9, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-34, UX-38, UX-41, UX-58, UX-62]
-last_verified: 2026-11-14
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---

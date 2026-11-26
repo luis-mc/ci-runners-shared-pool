@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/registry/**", "internal/agentlink/registry.go", "internal/agent/registry.go", "internal/backend/container/ensure.go", "cmd/crsp/registry*wiring.go", "internal/backend/container/buildstream.go", "internal/store/imagebuilds.go", "internal/store/registry_core.go", "internal/regcreds/engineca.go", "internal/backend/container/engineca.go", "internal/api/handlers_registry*.go", "internal/api/stubs_registry_*.go", "internal/store/queries/registry_*.sql", "internal/store/queries/image_builds.sql", "internal/store/migrations/00019_registry.sql", "apps/web/src/screens/registry/**"]
 design_system: [UX-4, UX-5, UX-13, UX-16, UX-19, UX-25, UX-28, UX-29, UX-30, UX-34, UX-38, UX-41, UX-49, UX-54, UX-58, UX-62, UX-71, UX-72, UX-73]
-last_verified: 2026-11-21
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---
