@@ -1,5 +1,8 @@
+import { act, cleanup, render, screen } from '@testing-library/react';
+import { Fragment, createElement } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { FakeEventSource, machine, overview } from '../testing/mock';
+import { LiveProvider, useLiveState } from './LiveProvider';
 import { LiveStore } from './store';
 
 beforeEach(() => {
@@ -148,5 +151,62 @@ describe('live store reconnect (R5.7)', () => {
     store.stop();
     vi.advanceTimersByTime(60000);
     expect(FakeEventSource.instances).toHaveLength(1);
+  });
+
+  // R5.4 (UX-19, UX-34): the Overview and the running-jobs strip read the one store, so they never disagree.
+  it('overview and strip read one store', () => {
+    const store = started();
+    function Overview() {
+      const s = useLiveState();
+      return createElement(
+        'span',
+        { 'data-testid': 'overview' },
+        s.overview?.machines.map((m) => m.name).join(','),
+      );
+    }
+    function Strip() {
+      const s = useLiveState();
+      return createElement(
+        'span',
+        { 'data-testid': 'strip' },
+        s.overview?.machines.map((m) => m.name).join(','),
+      );
+    }
+    render(
+      createElement(LiveProvider, {
+        store,
+        children: createElement(
+          Fragment,
+          null,
+          createElement(Overview),
+          createElement(Strip),
+        ),
+      }),
+    );
+    // The provider starts the same store the test holds: still one stream, none per screen.
+    expect(FakeEventSource.instances).toHaveLength(1);
+    act(() => {
+      FakeEventSource.latest().emit({
+        id: '1',
+        type: 'snapshot',
+        at: 'x',
+        snapshot: overview(),
+      });
+    });
+    expect(screen.getByTestId('overview').textContent).toBe('build-1');
+    expect(screen.getByTestId('strip').textContent).toBe('build-1');
+    act(() => {
+      FakeEventSource.latest().emit({
+        id: '2',
+        type: 'machine.state',
+        at: 'x',
+        machine: machine({ id: 'm2', name: 'build-2' }),
+      });
+    });
+    // One event moves both, and no second stream was opened for either.
+    expect(screen.getByTestId('overview').textContent).toBe('build-1,build-2');
+    expect(screen.getByTestId('strip').textContent).toBe('build-1,build-2');
+    expect(FakeEventSource.instances).toHaveLength(1);
+    cleanup();
   });
 });
