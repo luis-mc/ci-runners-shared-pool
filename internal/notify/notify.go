@@ -9,11 +9,11 @@
 // returned by the API, logged or put in the audit log; a channel only says
 // whether one is set (R6.2).
 //
-// NOT YET IMPLEMENTED here: the event sources, the per-key state, dedupe and
-// rate limits, the delivery queue with retries, and real event delivery to a
-// channel (notifications R5.1 to R5.5, R5.11 to R5.14, R5.23, R5.24). This
-// package stores the channels and sends one test notice through the real
-// path (signing, SMTP).
+// It also makes real notices (CRSP258): sources tell the engine what is true
+// (engine.go), a change of an event key's state makes one notice and its
+// deliveries in one transaction, a worker sends them with retries (queue.go,
+// deliver.go) and the notices list reads them back (list.go). The tray notice
+// stream and the mail provider adapter are not built (section 11 of the spec).
 package notify
 
 import (
@@ -190,6 +190,10 @@ type Config struct {
 	Logger  *slog.Logger
 	// Now is the clock; nil uses time.Now.
 	Now func() time.Time
+	// Thresholds returns the pool thresholds (R5.8); nil means the defaults.
+	Thresholds func(ctx context.Context) Thresholds
+	// ConsoleURL is the console's address, for the link in a notice; empty gives a path only.
+	ConsoleURL string
 
 	// The two fields below exist for tests only. AllowLoopback lets a channel
 	// point at 127.0.0.1 (normally refused, see guard.go); Trust adds the
@@ -203,8 +207,12 @@ type Service struct {
 	cfg   Config
 	audit *audit.Log
 
-	mu       sync.Mutex
-	lastTest map[string]time.Time // channel id + user
+	mu        sync.Mutex
+	lastTest  map[string]time.Time // channel id + user
+	lastMaint time.Time
+
+	engMu   sync.Mutex // one state change at a time
+	sources []Source
 }
 
 // New returns the service. DB and Secrets are required.

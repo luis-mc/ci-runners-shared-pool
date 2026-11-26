@@ -28,6 +28,9 @@
     "apps/web/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
+    "apps/web/src/screens/notices/**": [
+      "docs/features/notifications/spec.md"
+    ],
     "apps/web/src/screens/registry/**": [
       "docs/features/registry/spec.md"
     ],
@@ -48,6 +51,9 @@
     ],
     "cmd/crsp/insights*wiring.go": [
       "docs/features/ci-run-insights/spec.md"
+    ],
+    "cmd/crsp/notify_wiring.go": [
+      "docs/features/notifications/spec.md"
     ],
     "cmd/crsp/registry*wiring.go": [
       "docs/features/registry/spec.md"

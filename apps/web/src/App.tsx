@@ -41,6 +41,10 @@ import {
 } from './screens/settings/Settings';
 
 // Screens that are not the first page load on their own, so the first JavaScript stays within its budget (R6.12).
+const NoticesScreen = later(
+  () => import('./screens/notices/Notices').then((m) => m.NoticesScreen),
+  { heading: 'Notices' },
+);
 const DoctorScreen = later(
   () => import('./screens/doctor/Doctor').then((m) => m.DoctorScreen),
   { heading: 'Doctor' },
@@ -288,6 +292,7 @@ export function App({
                 />
                 {jobsRoutes}
                 <Route path="doctor" element={<DoctorScreen />} />
+                <Route path="notices" element={<NoticesScreen />} />
                 <Route
                   path="help/*"
                   element={
