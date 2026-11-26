@@ -6,6 +6,11 @@
 #
 # Every download below is pinned and SHA-256 checked; a wrong hash fails the build.
 
+# CRSP323: the last stage builds on this. The default is the stage below, so a
+# plain `docker build` is unchanged; CI passes a stored tools image when the
+# inputs match one that main built (scripts/ci/image_key.py).
+ARG BASE_IMAGE=tools
+
 # Ubuntu 24.04 LTS, pinned by digest (the multi-arch index).
 FROM ubuntu:24.04@sha256:2198e4c65076e9cb0b3d695219df667c0e3b0072da64ca3c2648aca17dcecaf5 AS tools
 
@@ -122,7 +127,7 @@ WORKDIR /home/runner
 # stage above holds every slow layer and does not depend on crsp, so CI builds
 # it with `--target tools`, caches it, and builds the tool layers on it (OPS41).
 # A plain `docker build` builds this last stage: the full base image.
-FROM tools
+FROM ${BASE_IMAGE}
 # The crsp binary, for `crsp vm` and `crsp db-env` (runners R5.48). A running
 # container job gets the agent's own binary mounted over it.
 COPY --chmod=0755 crsp /usr/local/bin/crsp

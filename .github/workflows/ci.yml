@@ -476,8 +476,52 @@ jobs:
         with:
           # host network: the builder reaches the registry service on localhost.
           driver-opts: network=host
+      # CRSP323: this repository's own CI only (public repo, free). The tools stage is
+      # stored as a public ghcr.io package tagged by a key over its inputs
+      # (scripts/ci/image_key.py). Only a run on main pushes it (base-image.yml, the job
+      # with packages: write); this job only reads, anonymously. Any error is a miss and
+      # the stage builds as before.
+      - name: Key of the stored tools stage
+        id: key
+        run: python3 scripts/ci/image_key.py key --arch "${{ matrix.arch }}" --extra "EXTRA_PACKAGES=zlib1g-dev libc++-dev"
+      - name: Look up the stored tools stage
+        id: stored
+        env:
+          KEY: ${{ steps.key.outputs.key }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY,,}/base-${ARCH}"
+          echo "repo=${repo}" >> "$GITHUB_OUTPUT"
+          start=$(date +%s)
+          python3 scripts/ci/image_key.py lookup --repo "$repo" --key "$KEY"
+          echo "lookup ${repo}:${KEY}: $(( $(date +%s) - start )) s"
+      # A hit: copy the image by digest into the job's local registry, the place the
+      # build below would have put it. The copy keeps the digest, so the layers that build
+      # on it keep their cache keys.
+      - name: Reuse the stored tools stage
+        id: copy
+        if: ${{ steps.stored.outputs.hit == 'true' }}
+        env:
+          REPO: ${{ steps.stored.outputs.repo }}
+          DIGEST: ${{ steps.stored.outputs.digest }}
+          RUN_ID: ${{ steps.stored.outputs.run_id }}
+        run: |
+          src="${REPO}@${DIGEST}"
+          dst="${REG}/crsp-linux-base-tools:ci"
+          start=$(date +%s)
+          if docker buildx imagetools create --tag "$dst" "$src" \
+            || { docker pull "$src" && docker tag "$src" "$dst" && docker push "$dst"; }; then
+            took=$(( $(date +%s) - start ))
+            echo "reused image ${DIGEST} built by main (run ${RUN_ID}), copied in ${took} s"
+            echo "- ${{ matrix.arch }}: reused image \`${DIGEST}\` built by main (run ${RUN_ID}), copied in ${took} s" >> "$GITHUB_STEP_SUMMARY"
+            echo "reused=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "copy failed: the tools stage builds"
+            echo "reused=false" >> "$GITHUB_OUTPUT"
+          fi
       # The slow part: the tools stage (apt, node, gh, the Actions runner).
       - name: docker build base tools stage (no publish)
+        if: ${{ steps.copy.outputs.reused != 'true' }}
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: images/linux-base
@@ -497,7 +541,10 @@ jobs:
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
           context: images/linux-base
-          build-args: TARGETARCH=${{ matrix.arch }}
+          # CRSP323: on a reuse the last stage builds on the stored tools stage, else on the stage.
+          build-args: |
+            TARGETARCH=${{ matrix.arch }}
+            BASE_IMAGE=${{ steps.copy.outputs.reused == 'true' && format('{0}/crsp-linux-base-tools:ci', env.REG) || 'tools' }}
           tags: crsp-linux-base:ci
           load: true
           cache-from: type=gha,scope=base-${{ matrix.arch }}

@@ -1,0 +1,112 @@
+name: Base image
+
+# CRSP323: this repository's own CI only (public repo, free). The slow `tools`
+# stage of images/linux-base/Dockerfile is stored as a public ghcr.io package,
+# one tag per architecture and per key over its inputs (scripts/ci/image_key.py):
+#   ghcr.io/<owner>/<repo>/base-<arch>:<key>
+# The CI `image` job reads it anonymously and skips the build on a hit.
+#
+# This workflow is the only writer, and only on refs/heads/main:
+#   - a push to main publishes the tag when it does not exist yet;
+#   - the weekly schedule (and a manual run with fresh) rebuilds with --no-cache and
+#     replaces the tag, so upstream package fixes arrive. Ubuntu packages come
+#     from archive.ubuntu.com in the browsers layer (CRSP325); apt retries in the base.
+# The image carries labels the reader checks (a reused image counts only when
+# main pushed it): org.crsp.built-by-ref, org.crsp.run-id, org.crsp.inputs-hash.
+# The first push creates a private package: set it public once (package settings).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'images/**'
+      - 'internal/runners/layers.go'
+      - '.github/workflows/base-image.yml'
+  schedule:
+    - cron: '17 3 * * 1'
+  workflow_dispatch:
+    inputs:
+      fresh:
+        description: Rebuild without cache and replace the tag
+        type: boolean
+        default: false
+
+concurrency:
+  group: base-image
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    name: publish base-${{ matrix.arch }}
+    # Never a pull request, never another branch.
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    # Write access on this job only, never workflow-wide.
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { arch: amd64, runner: ubuntu-latest }
+          - { arch: arm64, runner: ubuntu-24.04-arm }
+    env:
+      FRESH: ${{ github.event_name == 'schedule' || inputs.fresh == true }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Key
+        id: key
+        run: python3 scripts/ci/image_key.py key --arch "${{ matrix.arch }}" --extra "EXTRA_PACKAGES=zlib1g-dev libc++-dev"
+      - name: Already stored by main?
+        id: stored
+        env:
+          KEY: ${{ steps.key.outputs.key }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          repo="ghcr.io/${GITHUB_REPOSITORY,,}/base-${ARCH}"
+          echo "repo=${repo}" >> "$GITHUB_OUTPUT"
+          python3 scripts/ci/image_key.py lookup --repo "$repo" --key "$KEY"
+      - name: Nothing to publish
+        if: ${{ steps.stored.outputs.hit == 'true' && env.FRESH != 'true' }}
+        run: echo "base-${{ matrix.arch }}:${{ steps.key.outputs.key }} already built by main (run ${{ steps.stored.outputs.run_id }})"
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+        if: ${{ steps.stored.outputs.hit != 'true' || env.FRESH == 'true' }}
+      - uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        if: ${{ steps.stored.outputs.hit != 'true' || env.FRESH == 'true' }}
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push the tools stage
+        id: push
+        if: ${{ steps.stored.outputs.hit != 'true' || env.FRESH == 'true' }}
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: images/linux-base
+          target: tools
+          build-args: TARGETARCH=${{ matrix.arch }}
+          # A single image manifest (no attestation index): the reader inspects its labels.
+          provenance: false
+          sbom: false
+          push: true
+          # The weekly run is `--pull --no-cache`: fresh base layers, fresh packages.
+          pull: ${{ env.FRESH == 'true' }}
+          no-cache: ${{ env.FRESH == 'true' }}
+          cache-from: ${{ env.FRESH != 'true' && format('type=gha,scope=base-{0}', matrix.arch) || '' }}
+          tags: ${{ steps.stored.outputs.repo }}:${{ steps.key.outputs.key }}
+          labels: |
+            org.crsp.built-by-ref=${{ github.ref }}
+            org.crsp.run-id=${{ github.run_id }}
+            org.crsp.inputs-hash=${{ steps.key.outputs.key }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Published
+        if: ${{ steps.push.outcome == 'success' }}
+        run: |
+          echo "published base-${{ matrix.arch }}:${{ steps.key.outputs.key }} ${{ steps.push.outputs.digest }} (run ${{ github.run_id }}, fresh=${FRESH})"
+          echo "- ${{ matrix.arch }}: \`${{ steps.push.outputs.digest }}\` fresh=${FRESH}" >> "$GITHUB_STEP_SUMMARY"
