@@ -12,36 +12,17 @@
     "no push notifications",
     "CRITICAL RUN RULE",
     "BRIEF.md",
-    [
-      "one affected gate",
-      "CI is the gate"
-    ]
+    ["one affected gate", "CI is the gate"]
   ],
   "min_question_chars": 60,
   "eta_table": {
-    "small fix": [
-      15,
-      25
-    ],
-    "ui change": [
-      25,
-      35
-    ],
-    "medium": [
-      35,
-      60
-    ],
-    "large": [
-      60,
-      120
-    ]
+    "small fix": [15, 25],
+    "ui change": [25, 35],
+    "medium": [35, 60],
+    "large": [60, 120]
   },
   "heavy_commands": [],
-  "outbound_deny": [
-    "gh issue create",
-    "gh issue comment",
-    "gh pr comment"
-  ],
+  "outbound_deny": ["gh issue create", "gh issue comment", "gh pr comment"],
   "no_attribution": true,
   "long_pole_globs": [],
   "measure_globs": [],
@@ -58,9 +39,7 @@
     "open_prs": true,
     "merge_on_green": true,
     "manage_runners": false,
-    "ci_workflows": [
-      "ci.yml"
-    ]
+    "ci_workflows": ["ci.yml"]
   },
   "runner_plan": {
     "retry_seconds": 300,
@@ -72,12 +51,8 @@
   },
   "pending_protection": false,
   "design_system": {
-    "app_paths": [
-      "apps/web/src"
-    ],
-    "shared_paths": [
-      "packages/ui/src"
-    ]
+    "app_paths": ["apps/web/src"],
+    "shared_paths": ["packages/ui/src"]
   },
   "ci": {
     "options": {
