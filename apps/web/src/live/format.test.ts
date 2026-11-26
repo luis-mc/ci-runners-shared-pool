@@ -22,6 +22,8 @@ describe('one time format (R6.12, UX-18)', () => {
   });
 
   it('pads single digits', () => {
-    expect(formatDateTime(new Date(2026, 0, 3, 4, 5).toISOString())).toBe('2026-01-03 04:05');
+    expect(formatDateTime(new Date(2026, 0, 3, 4, 5).toISOString())).toBe(
+      '2026-01-03 04:05',
+    );
   });
 });

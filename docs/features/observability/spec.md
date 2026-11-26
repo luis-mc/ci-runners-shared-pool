@@ -388,7 +388,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.3 | internal/events/hub_test.go TestReplayByLastEventID, TestReplayGapSendsMarkedSnapshot, TestReplayAgeLimit; internal/api/handlers_live_test.go TestStreamEventsReplayByLastEventID |
 | R5.4 | apps/web/src/live/store.test.ts "overview and strip read one store" |
 | R5.5 | internal/scheduler/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
-| R5.6 | apps/web/src/live/clock.test.ts "ages tick and pause while hidden"; apps/web/src/live/status.test.ts |
+| R5.6 | apps/web/src/live/clock.test.tsx "ages tick and pause while hidden"; apps/web/src/live/status.test.tsx |
 | R5.7 | planned: internal/history/store_test.go TestOneRowPerJobAttempt |
 | R5.8 | internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
 | R5.9 | internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
@@ -527,7 +527,7 @@ Planned files, in the globs of the front matter:
 - internal/audit/ (chain)
 - internal/logs/ (slog setup, redactor, rotation, crash files, agent buffer, logs.db, search, retention)
 
-Built (CRSP271): `internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), `apps/web/src/live/format.ts` (the one time format), `apps/web/src/live/clock.ts` (the shared clock), `apps/web/src/live/status.ts` (word, glyph and colour set).
+Built (CRSP271): `internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), the web console reuses the shared UI parts that already hold the time format (`packages/ui/src/components/format.ts`), the shared clock (`packages/ui/src/components/Clock.tsx`) and the status word, glyph and colour set (`packages/ui/src/components/Status.tsx`), proven by `apps/web/src/live/format.test.ts`, `clock.test.tsx`, `status.test.tsx` and `store.test.ts`; `internal/store/jobsdata_utc_test.go` proves UTC storage.
 
 Built (OPS66): `internal/jobsize/` (the shared peak and summary logic), `internal/agent/jobsample/` (the readers and the collector), `internal/agent/jobsample_run.go` and `internal/agent/gate.go` (the attach points), `internal/store/insights_peaks.go` and migration 00034 (the stored runs and the job key summary), `internal/agentlink/insights.go` (the sink), `internal/api/handlers_insights.go` (the field).
 
