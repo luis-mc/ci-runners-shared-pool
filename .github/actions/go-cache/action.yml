@@ -1,0 +1,35 @@
+name: Go cache, saved on main only
+description: >-
+  Restores the Go module and build caches in every run; saves them only on
+  main (CRSP319). PR cache entries are readable by that PR alone and filled
+  the 10 GB Actions cache. Use after actions/setup-go with cache: false.
+runs:
+  using: composite
+  steps:
+    - id: go
+      shell: bash
+      run: |
+        {
+          echo "mod=$(go env GOMODCACHE)"
+          echo "build=$(go env GOCACHE)"
+          echo "version=$(go env GOVERSION)"
+        } >> "$GITHUB_OUTPUT"
+    - if: github.ref != 'refs/heads/main'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ steps.go.outputs.mod }}
+          ${{ steps.go.outputs.build }}
+        key: go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-
+    # On main actions/cache restores now and saves in its post step.
+    - if: github.ref == 'refs/heads/main'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ${{ steps.go.outputs.mod }}
+          ${{ steps.go.outputs.build }}
+        key: go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-

@@ -75,6 +75,8 @@ jobs:
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
+          cache: false
+      - uses: ./.github/actions/go-cache
       - name: Words lint (Go)
         run: go test -timeout 10s ./scripts/design/wordslint ./internal/lifecyclewords
       - name: Design guards B to E, layout roles and lifecycle guards (DS234)

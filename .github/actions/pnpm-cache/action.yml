@@ -1,0 +1,25 @@
+name: pnpm store cache, saved on main only
+description: >-
+  Restores the pnpm store in every run; saves it only on main (CRSP319).
+  Use after pnpm/action-setup and actions/setup-node (no cache option).
+runs:
+  using: composite
+  steps:
+    - id: pnpm
+      shell: bash
+      run: echo "store=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+    - if: github.ref != 'refs/heads/main'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.pnpm.outputs.store }}
+        key: pnpm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-${{ runner.arch }}-
+    # On main actions/cache restores now and saves in its post step.
+    - if: github.ref == 'refs/heads/main'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: ${{ steps.pnpm.outputs.store }}
+        key: pnpm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-${{ runner.os }}-${{ runner.arch }}-
