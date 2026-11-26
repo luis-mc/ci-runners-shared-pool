@@ -14,11 +14,21 @@ const budgets = JSON.parse(
 ) as { firstJavaScriptGzipBytes: number };
 
 test('the first JavaScript is within the gzip budget', async () => {
-  const out = (await build({
-    root: resolve(here, '..'),
-    logLevel: 'silent',
-    build: { write: false },
-  })) as Rollup.RollupOutput | Rollup.RollupOutput[];
+  // Vitest sets NODE_ENV=test, which makes vite bundle React's development build. Measure what ships.
+  const before = process.env.NODE_ENV;
+  process.env.NODE_ENV = 'production';
+  let out: Rollup.RollupOutput | Rollup.RollupOutput[];
+  try {
+    out = (await build({
+      root: resolve(here, '..'),
+      mode: 'production',
+      logLevel: 'silent',
+      build: { write: false },
+    })) as Rollup.RollupOutput | Rollup.RollupOutput[];
+  } finally {
+    if (before === undefined) delete process.env.NODE_ENV;
+    else process.env.NODE_ENV = before;
+  }
   const chunks = (Array.isArray(out) ? out.flatMap((o) => o.output) : out.output).filter(
     (o): o is Rollup.OutputChunk => o.type === 'chunk',
   );
@@ -39,4 +49,4 @@ test('the first JavaScript is within the gzip budget', async () => {
     `bundle: first JavaScript ${total} bytes gzipped (budget ${budgets.firstJavaScriptGzipBytes})`,
   );
   expect(total).toBeLessThanOrEqual(budgets.firstJavaScriptGzipBytes);
-}, 5_000); // measured 0.5 s
+}, 10_000); // measured 2.5 s: the one bundle is minified in one piece

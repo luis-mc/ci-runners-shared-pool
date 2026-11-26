@@ -546,6 +546,8 @@ Requirements marked (built, CRSP24) or (built, CRSP33) are built. The others are
 
 **R6.13** (built, CRSP34) — The console keeps working when the internet is down: local screens load, and screens that need GitHub say so (UX-28).
 
+**R6.14** (built, CRSP296, owner request 25 Nov, UX-87) — The console loads as one script and one stylesheet. The build (`apps/web/vite.config.ts`) writes a single JavaScript file and a single CSS file named by their content, with no per-screen chunk and no preload list, and writes a brotli (`.br`) and a gzip (`.gz`) copy of each. The controller's static handler (`internal/webui/webui.go`) sends the best copy the browser accepts (`Content-Encoding`, `Vary: Accept-Encoding`), never compresses at request time, and answers `.br` and `.gz` only as encodings, never by their own name. A content-named file under `assets/` carries `Cache-Control: public, max-age=31536000, immutable`; the page shell and other files carry `no-cache`; every answer has a strong ETag (one per encoding) and `If-None-Match` gets 304. The first-JavaScript budget of R6.12 now covers every screen, because there is no later chunk; `apps/web/src/bundle-size.test.ts` builds in production mode so it measures what ships, and `internal/webui/webui_test.go` proves the encodings, the ETag, the 304 and the immutable header. Measured at CRSP296 (first load of `/`, no cache): requests 38 → 5; bytes sent 856,415 (no compression) → 246,811 (brotli) or 294,907 (gzip); first JavaScript 275,448 bytes gzipped against a 307,200 budget.
+
 ## 7. Design
 
 ```mermaid
