@@ -234,8 +234,56 @@ jobs:
           go tool govulncheck ./...
           pnpm audit --prod
 
+  # CRSP313: the Go race tests took 11.7 min in one job. They run in 4 shards (GO_TEST_SHARD=K/N,
+  # scripts/ci/go-tiers.mjs): every package and every chunk of a slow package runs under -race
+  # in exactly one shard, balanced by recorded seconds (scripts/ci/go-tiers.json).
+  go-race:
+    name: Go tests (race) ${{ matrix.shard }}
+    needs: decide
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
+    runs-on: ${{ fromJSON(vars.CRSP_TESTS || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Go modules
+        run: |
+          go mod download
+          go mod verify
+      # The zero-test guard fails the step when no Go test ran (STACKSPEC 11.3).
+      # go-test.sh runs the packages in tiers, each with its own -timeout (G1).
+      # A failing test never stops the run: no -failfast.
+      - name: Go tests (race)
+        env:
+          CGO_ENABLED: '1'
+          GO_TEST_SHARD: ${{ matrix.shard }}/4
+        run: bash scripts/ci/go-test.sh -race
+      # CRSP201: go-test.sh logs only failures and a summary; the JSON keeps every
+      # test's time. The name is stable, so artifact-prune keeps the newest of each.
+      - name: Upload Go test times
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ci-go-test-times-linux-${{ matrix.shard }}
+          path: test-results/go-test.json
+          if-no-files-found: ignore
+          retention-days: 3
+
   tests:
-    name: tests
+    name: web tests and lifecycle conformance
     needs: decide
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
@@ -262,15 +310,7 @@ jobs:
           go mod verify
           pnpm install --frozen-lockfile
 
-      # 6 unit, 7 integration (real SQLite file), 8 contract, 9 route coverage.
-      # The zero-test guard fails the step when no Go test ran (STACKSPEC 11.3).
-      # go-test.sh runs the packages in tiers, each with its own -timeout (G1).
-      # A failing test never stops the run: no -failfast, and the web tests run
-      # even when the Go tests failed (CRSP209).
-      - name: Go tests (race)
-        env:
-          CGO_ENABLED: '1'
-        run: bash scripts/ci/go-test.sh -race
+      # CRSP313: the Go race tests run in the go-race shards; the `tests-result` job below reports them with this job.
       # OPS68: the updater passes the lifecycle conformance runner (LC-3 to LC-7, LC-25, LC-26, LC-28).
       # The test interface is its own command, built only here and never shipped.
       - name: Lifecycle conformance (updater)
@@ -280,26 +320,34 @@ jobs:
           pid=$!
           trap 'kill "$pid"' EXIT
           python3 scripts/delivery/lifecycle_conformance.py --url http://127.0.0.1:7391
-      # CRSP201: go-test.sh logs only failures and a summary; the JSON keeps every
-      # test's time. The name is stable, so artifact-prune keeps the newest of each.
-      - name: Upload Go test times
-        if: ${{ always() }}
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: ci-go-test-times-linux
-          path: test-results/go-test.json
-          if-no-files-found: ignore
-          retention-days: 3
       - name: Web tests and guards
         if: ${{ always() }}
         run: pnpm exec vitest run
+
+  # CRSP313: the name `tests` stays one check: green only when the Go race shards and the web
+  # tests are green. Skipped, like the single job it replaces, when decide skips the run or the
+  # pull request is a draft.
+  tests-result:
+    name: tests
+    needs: [decide, go-race, tests]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Go race shards and web tests succeeded
+        env:
+          GO: ${{ needs.go-race.result }}
+          WEB: ${{ needs.tests.result }}
+        run: |
+          echo "go-race=$GO web=$WEB"
+          [ "$GO" = "success" ] && [ "$WEB" = "success" ]
 
   # The name a required check matches: green only when lint, types and tests are.
   # Skipped, like the single job it replaces, when decide skips the run or the pull
   # request is a draft.
   verify:
     name: verify
-    needs: [decide, lint, types, tests]
+    needs: [decide, lint, types, tests-result]
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -308,7 +356,7 @@ jobs:
         env:
           LINT: ${{ needs.lint.result }}
           TYPES: ${{ needs.types.result }}
-          TESTS: ${{ needs.tests.result }}
+          TESTS: ${{ needs.tests-result.result }}
         run: |
           echo "lint=$LINT types=$TYPES tests=$TESTS"
           [ "$LINT" = "success" ] && [ "$TYPES" = "success" ] && [ "$TESTS" = "success" ]
@@ -606,28 +654,36 @@ jobs:
 
       # Required. No retries, no continue-on-error (STACKSPEC 11.2, 11.3).
       # CRSP209: Playwright's own --shard split by test count, so one shard ran 4.9 min
-      # and another 9.5. The spec files now go to shards by their recorded time
-      # (scripts/ci/e2e-weights.json, balanced by scripts/delivery/shard_balance.py);
-      # ux-routes.spec.ts has parallel cases of equal weight, so every shard takes a
-      # quarter of it with --shard. Both runs always happen; neither stops the other.
+      # and another 9.5. CRSP313: the split still left 13 and 6 min, because the 223 s a11y
+      # file ran alone while ux-routes.spec.ts (about 1,700 parallel cases) was cut in four
+      # equal quarters. scripts/ci/e2e_plan.py now gives each shard its spec files and its
+      # slices of ux-routes.spec.ts (`--shard=a/16`, one run each) by recorded time
+      # (scripts/ci/e2e-weights.json), so the shards end about together. Every file and
+      # every slice 1..16 belongs to exactly one shard. No run stops another.
       - name: Playwright (gating specs)
         env:
           E2E_BINARY: bin/crsp
           SHARD: ${{ matrix.shard }}
         run: |
           mkdir -p test-results
-          files=$(find e2e/tests -name '*.spec.ts' ! -name ux-routes.spec.ts | sort |
-            python3 scripts/delivery/shard_balance.py --shard "$SHARD/4" --timings scripts/ci/e2e-weights.json --files-from -)
-          if [ -z "$files" ]; then
-            echo "::error::no spec files for shard $SHARD: an empty list would run every spec"
+          all=$(find e2e/tests -name '*.spec.ts' ! -name ux-routes.spec.ts | sort)
+          files=$(echo "$all" | python3 scripts/ci/e2e_plan.py --shard "$SHARD/4" --what files)
+          slices=$(echo "$all" | python3 scripts/ci/e2e_plan.py --shard "$SHARD/4" --what slices)
+          if [ -z "$files" ] && [ -z "$slices" ]; then
+            echo "::error::nothing to run for shard $SHARD: an empty list would run every spec"
             exit 1
           fi
           echo "shard $SHARD files:"
           echo "$files"
+          echo "shard $SHARD ux-routes slices (of 16): $(echo $slices)"
           rc=0
-          # shellcheck disable=SC2086
-          PLAYWRIGHT_JSON_OUTPUT_NAME=test-results/playwright-times-files.json pnpm exec playwright test $files || rc=$?
-          PLAYWRIGHT_JSON_OUTPUT_NAME=test-results/playwright-times-routes.json pnpm exec playwright test --shard="$SHARD/4" e2e/tests/web-console/ux-routes.spec.ts || rc=$?
+          if [ -n "$files" ]; then
+            # shellcheck disable=SC2086
+            PLAYWRIGHT_JSON_OUTPUT_NAME=test-results/playwright-times-files.json pnpm exec playwright test $files || rc=$?
+          fi
+          for s in $slices; do
+            PLAYWRIGHT_JSON_OUTPUT_NAME="test-results/playwright-times-routes-$s.json" pnpm exec playwright test --shard="$s/16" e2e/tests/web-console/ux-routes.spec.ts || rc=$?
+          done
           exit "$rc"
 
       # Quarantined specs (e2e/quarantine.json) still run and report, but cannot
