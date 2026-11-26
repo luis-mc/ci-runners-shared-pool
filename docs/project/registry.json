@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T18:23+00:00",
+  "updated": "2026-11-26T18:28+00:00",
   "tasks": [
     {
       "id": "CIX1",
@@ -4316,10 +4316,10 @@
       "status": "Running",
       "item": "Live command terminal and real progress in action screens",
       "detail": "Wizard/action screens show a terminal (commands run, machine name, role), real download %, and an honest overall bar that never sits stuck",
-      "expected": "26 Nov ~18:15",
-      "changed": "2026-11-26T17:38+00:00",
-      "expected_basis": "branch pushed, no PR yet; PR and CI ~40 min",
-      "rides": "CRSP245",
+      "expected": "26 Nov ~20:00",
+      "changed": "2026-11-26T18:27+00:00",
+      "expected_basis": "relaunch 18:34; spec+code ~70 min, CI ~25 min",
+      "rides": "CRSP252",
       "started": "2026-11-25T12:59+00:00"
     },
     {
@@ -4378,9 +4378,9 @@
       "item": "Release: combined plan wave 1 (M2, M8, gaps)",
       "detail": "Join and CI for rows A,B,C,F,G,H,I,M,Q,R,T,U,N of the combined plan",
       "expected": "26 Nov ~22:35",
-      "changed": "2026-11-26T17:55+00:00",
+      "changed": "2026-11-26T18:28+00:00",
       "release": 69,
-      "expected_basis": "waits for CRSP271 to 21:50; join 15, CI 25, merge 5 min",
+      "expected_basis": "after CRSP271 21:50 and CRSP247 20:00; join 15, CI 25, merge 5",
       "release_waits_on": [
         "CRSP245"
       ],
@@ -4989,8 +4989,8 @@
       "item": "Runner filter bar: 3 design options",
       "detail": "Filter bar (search, System, Isolation, Kind, Size chips, Select all, Clear) looks bad; build 3 options as real screens for owner review.",
       "expected": "26 Nov ~19:00",
-      "changed": "2026-11-26T17:54+00:00",
-      "expected_basis": "agent starts 17:53, three options with screenshots ~60 min",
+      "changed": "2026-11-26T18:24+00:00",
+      "expected_basis": "agent 17:53; owner picks design at 22:00, then build task",
       "started": "2026-11-26T13:00+00:00",
       "rides": "CRSP252"
     },
@@ -5506,11 +5506,24 @@
       "status": "Running",
       "item": "Setup commit: CI pin, plugin versions, project record",
       "detail": "Commit the dev-standards CI pin bump, .claude/plugin-versions.json and the project record",
-      "expected": "26 Nov ~19:00",
-      "changed": "2026-11-26T18:23+00:00",
-      "expected_basis": "PR now; CI ~15 min",
+      "expected": "26 Nov ~18:50",
+      "changed": "2026-11-26T18:24+00:00",
+      "expected_basis": "PR 473 ready; CI ~20 min then merge",
       "no_release": "CI config only, nothing a user sees",
       "started": "2026-11-26T18:23+00:00"
+    },
+    {
+      "id": "CRSP335",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Remove stale DL-50/51 citations in runner_plan.py",
+      "detail": "docs_check R1: delete two citations of removed delivery rules",
+      "expected": "26 Nov ~19:15",
+      "changed": "2026-11-26T18:24+00:00",
+      "expected_basis": "agent starts 18:30, ~15 min, CI ~25 min",
+      "no_release": "CI config only, nothing a user sees",
+      "started": "2026-11-26T18:24+00:00"
     },
     {
       "id": "DOC1",
