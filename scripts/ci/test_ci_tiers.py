@@ -37,9 +37,14 @@ class GoShards(unittest.TestCase):
 
     N = 4
 
-    def _all_packages(self):
-        out = subprocess.run(["go", "list", "./..."], capture_output=True, text=True, check=True, cwd=ROOT).stdout
-        return out
+    _packages = None
+
+    @classmethod
+    def _all_packages(cls):
+        # `go list ./...` is slow on a loaded runner; run it once, not once per shard and tier.
+        if cls._packages is None:
+            cls._packages = subprocess.run(["go", "list", "./..."], capture_output=True, text=True, check=True, cwd=ROOT).stdout
+        return cls._packages
 
     def _tiers(self, tier, shard=None):
         args = ["node", str(ROOT / "scripts/ci/go-tiers.mjs"), tier] + ([shard] if shard else [])
