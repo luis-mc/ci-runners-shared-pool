@@ -1,6 +1,8 @@
 package runners
 
 import (
+	"context"
+	"errors"
 	"os"
 	"regexp"
 	"strings"
@@ -95,5 +97,46 @@ func TestBaseImageRunnerPinMatchesPins(t *testing.T) {
 		if !strings.Contains(d, want) {
 			t.Errorf("Dockerfile lacks %q", want)
 		}
+	}
+}
+
+func TestMirrorFallback(t *testing.T) {
+	var pulled, notices []string
+	m := &MirrorPull{
+		Mirror: "mirror.lan:5000",
+		Pull: func(_ context.Context, ref string) error {
+			pulled = append(pulled, ref)
+			if strings.HasPrefix(ref, "mirror.lan:5000/") {
+				return errors.New("no route to mirror")
+			}
+			return nil
+		},
+		Notice: func(s string) { notices = append(notices, s) },
+	}
+	for i := 0; i < 2; i++ {
+		if err := m.Do(context.Background(), "ghcr.io/x/img@sha256:1"); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want := []string{"mirror.lan:5000/ghcr.io/x/img@sha256:1", "ghcr.io/x/img@sha256:1", "mirror.lan:5000/ghcr.io/x/img@sha256:1", "ghcr.io/x/img@sha256:1"}
+	if strings.Join(pulled, ",") != strings.Join(want, ",") {
+		t.Fatalf("pulled %v", pulled)
+	}
+	if len(notices) != 1 {
+		t.Fatalf("notice must be said once, got %d", len(notices))
+	}
+}
+
+func TestMirrorUsedWhenUp(t *testing.T) {
+	var pulled []string
+	m := &MirrorPull{Mirror: "m:1", Pull: func(_ context.Context, r string) error { pulled = append(pulled, r); return nil },
+		Notice: func(string) { t.Fatal("no notice when the mirror works") }}
+	if err := m.Do(context.Background(), "a/b"); err != nil || len(pulled) != 1 || pulled[0] != "m:1/a/b" {
+		t.Fatal(pulled, err)
+	}
+	none := &MirrorPull{Pull: func(_ context.Context, r string) error { pulled = append(pulled, r); return nil }}
+	_ = none.Do(context.Background(), "a/b")
+	if pulled[1] != "a/b" {
+		t.Fatal(pulled)
 	}
 }
