@@ -585,3 +585,33 @@ func TestUndoRefusesWhatIsNotRecordedOrNotOurs(t *testing.T) {
 		t.Errorf("left = %v", rc2.last().GetAdded())
 	}
 }
+
+// CRSP247: the progress event contract. Every event names a phase by a zero-based index below the count, carries
+// a weight, and an event with no percent says why, so the bar is never stuck without a reason (UX-87).
+func TestProgressEventsKeepTheContract(t *testing.T) {
+	sys := newFake("windows")
+	sys.dlHash, sys.dlTotal = "good", 1000
+	r, rc := setup(sys, desktopList("good"), nil)
+	rq := req("docker-desktop")
+	rq.AcceptLicence = true
+	r.Install(context.Background(), rq)
+	if len(rc.ev) == 0 {
+		t.Fatal("no events")
+	}
+	seen := map[int32]bool{}
+	for _, e := range rc.ev {
+		seen[e.GetPhaseIndex()] = true
+		if e.GetPhaseIndex() < 0 || e.GetPhaseIndex() >= e.GetPhaseCount() {
+			t.Errorf("phase %q has index %d of %d: the index is zero-based", e.GetPhase(), e.GetPhaseIndex(), e.GetPhaseCount())
+		}
+		if e.GetPhaseWeight() <= 0 {
+			t.Errorf("phase %q has no weight", e.GetPhase())
+		}
+		if e.Pct == nil && e.GetReason() == "" {
+			t.Errorf("phase %q has no percent and no reason", e.GetPhase())
+		}
+	}
+	if !seen[0] {
+		t.Error("no event for the first phase (index 0)")
+	}
+}
