@@ -7,8 +7,9 @@ tree. Anything else (a pull request, an API error, no match) means skip=false:
 the suite runs. The script never fails the job.
 
 Env: GITHUB_EVENT_NAME, GITHUB_REPOSITORY, GITHUB_SHA, GITHUB_TOKEN,
-GITHUB_OUTPUT (optional), CI_WORKFLOW_FILE (default ci.yml).
+GITHUB_OUTPUT (optional), CI_WORKFLOW_FILE (default ci.yml), PR_NUMBER (pull requests).
 """
+import fnmatch
 import json
 import os
 import sys
@@ -16,6 +17,18 @@ import urllib.request
 
 API = "https://api.github.com"
 MAX_RUNS = 50
+
+# DS261 (S15): a pull request whose every changed file is repo config skips the
+# suite through this job, so ci.yml still starts and ends green (the delivery
+# watcher needs that run). Product code, workflows other than dev-standards,
+# images and lockfiles are never in this list.
+CONFIG_ONLY = (
+    ".delivery/config.json",
+    ".claude/*",
+    ".nvmrc",
+    ".gitignore",
+    ".github/workflows/dev-standards.yml",
+)
 
 
 def api_get(path, token):
@@ -35,8 +48,30 @@ def commit_tree(repo, sha, get):
     return get("/repos/%s/git/commits/%s" % (repo, sha))["tree"]["sha"]
 
 
-def should_skip(event, repo, sha, get, workflow="ci.yml"):
+def is_config_only(files):
+    return bool(files) and all(
+        any(fnmatch.fnmatchcase(f, pat) for pat in CONFIG_ONLY) for f in files
+    )
+
+
+def pr_files(repo, number, get):
+    files, page = [], 1
+    while page <= 10:
+        batch = get("/repos/%s/pulls/%s/files?per_page=100&page=%d" % (repo, number, page))
+        files += [f["filename"] for f in batch]
+        if len(batch) < 100:
+            return files
+        page += 1
+    return None  # too many files: run the suite
+
+
+def should_skip(event, repo, sha, get, workflow="ci.yml", pr=None):
     """Return (skip, reason). `get` maps an API path to parsed JSON."""
+    if event == "pull_request" and pr:
+        files = pr_files(repo, pr, get)
+        if files is not None and is_config_only(files):
+            return True, "config-only pull request (%d files)" % len(files)
+        return False, "pull request changes more than repo config"
     if event != "push":
         return False, "event %s is not a push" % event
     tree = commit_tree(repo, sha, get)
@@ -75,6 +110,7 @@ def main():
             env["GITHUB_SHA"],
             lambda p: api_get(p, token),
             env.get("CI_WORKFLOW_FILE", "ci.yml"),
+            env.get("PR_NUMBER") or None,
         )
     except Exception as exc:  # fail open: the suite runs
         skip, reason = False, "check failed, running the suite: %s" % exc
