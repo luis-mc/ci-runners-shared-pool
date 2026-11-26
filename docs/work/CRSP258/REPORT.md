@@ -1,16 +1,8 @@
-# CRSP258 report
+# CRSP258 rescue report (branch CRSP258-notifications-2)
 
-Branch CRSP258-notifications. Started 2026-11-25.
-
-## Plan
-1. Store: migration 00044 (notify_event, notices, notice_deliveries) + sqlc queries.
-2. internal/notify: engine (Observe, state, flap, cap, group), worker (retry, webhook, email, desktop), sources, retention.
-3. API: listNotices; web: Notices page (shared parts).
-4. Wiring in cmd/crsp; spec, change note, tests, CI.
-
-## Log
-- Branch pushed; migration written.
-- Store (migration 00044, sqlc queries), engine, queue, sources wiring, API, Notices page, spec: pushed.
-- Local gates run: go test notify/store/api/cmd; golangci-lint (own build with go1.27.4); gitleaks; web typecheck on Node 24.
-- Tools I had to install to let the pre-push hook run: gitleaks, golangci-lint, Node 24 (user-space, not committed).
-- Not unit-tested: cmd/crsp/notify_wiring.go sources against real services (typechecked, linted).
+Re-applied the 8 commits of origin/CRSP258-notifications onto origin/main f909588f.
+- Conflict cmd/crsp/areas_wiring.go: kept metrics wiring from main, notify service now built once and passed to config-as-code.
+- Migration 00044_notices clashed with main's 00044_dependency_jobs: renamed 00047_notices.sql; spec updated.
+- Generated Go (oapi-codegen api+client, sqlc) regenerated; schema.d.ts auto-merged, NOT regenerated (needs Node >=24; install denied).
+- go build ./..., go test notify/store/api/cmd: green.
+- Not run: web typecheck/tests (Node 22 only), docs_check.py/docs_fold.py (luismc-docs scripts not on this machine).
