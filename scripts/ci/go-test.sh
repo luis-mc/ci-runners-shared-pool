@@ -15,7 +15,9 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 json="${GO_TEST_JSON:-test-results/go-test.json}"
-tiers() { go list ./... | node scripts/ci/go-tiers.mjs "$1"; }
+# CRSP313: GO_TEST_SHARD=K/N runs one share of the packages and chunks (the tests job runs N
+# shards in parallel); unset, it runs everything (Windows, macOS, the local gate).
+tiers() { go list ./... | node scripts/ci/go-tiers.mjs "$1" ${GO_TEST_SHARD:+"$GO_TEST_SHARD"}; }
 unit_pkgs=$(tiers unit)
 integration_pkgs=$(tiers integration)
 chunked_pkgs=$(tiers chunks)
