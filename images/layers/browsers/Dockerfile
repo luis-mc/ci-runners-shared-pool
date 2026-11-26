@@ -24,8 +24,9 @@ RUN set -eu; \
     npm init -y >/dev/null; \
     npm install --no-audit --no-fund --save-exact "playwright-core@${PLAYWRIGHT_VERSION}"; \
     export DEBUG=pw:install; \
-    timeout 900 node node_modules/playwright-core/cli.js install-deps chromium firefox webkit; \
-    for b in chromium firefox webkit; do \
+    # CRSP325: security.ubuntu.com has served index entries whose .deb files answer 404 for hours
+    # (libasound2). archive.ubuntu.com carries the same security pocket, so use it, and try three times.
+    for f in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do \n      [ -f "$f" ] && sed -i 's#http://security.ubuntu.com/ubuntu#http://archive.ubuntu.com/ubuntu#g' "$f"; \n    done; \n    for i in 1 2 3; do \n      timeout 900 node node_modules/playwright-core/cli.js install-deps chromium firefox webkit && break; \n      [ "$i" = 3 ] && exit 1; \n      echo "install-deps failed (attempt $i), retrying in 30 s"; sleep 30; \n    done; \n    for b in chromium firefox webkit; do \
       timeout 600 node node_modules/playwright-core/cli.js install "$b" </dev/null; \
     done; \
     echo "${PLAYWRIGHT_VERSION}" > /opt/crsp/browsers/.crsp-playwright-version; \

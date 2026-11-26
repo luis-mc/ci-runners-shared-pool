@@ -673,9 +673,10 @@ jobs:
             echo "::error::nothing to run for shard $SHARD: an empty list would run every spec"
             exit 1
           fi
+          slices_one_line=$(printf '%s' "$slices" | paste -sd ' ' -)
           echo "shard $SHARD files:"
           echo "$files"
-          echo "shard $SHARD ux-routes slices (of 16): $(echo $slices)"
+          echo "shard $SHARD ux-routes slices (of 16): ${slices_one_line}"
           rc=0
           if [ -n "$files" ]; then
             # shellcheck disable=SC2086
