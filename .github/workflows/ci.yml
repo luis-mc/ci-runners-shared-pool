@@ -254,12 +254,18 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
+      actions: read
     strategy:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
     steps:
+      # CRSP318: a workflow_dispatch run (agent and dispatch branches) after a red dispatch run on the
+      # same branch re-runs only this shard's failed tests plus the changed Go packages. Pull request,
+      # main and release runs never come here: they keep the full suite. fetch-depth 0 for the diff.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: ${{ github.event_name == 'workflow_dispatch' && 0 || 1 }}
       - uses: ./.github/actions/go-cache
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
@@ -275,10 +281,19 @@ jobs:
       # The zero-test guard fails the step when no Go test ran (STACKSPEC 11.3).
       # go-test.sh runs the packages in tiers, each with its own -timeout (G1).
       # A failing test never stops the run: no -failfast.
+      - name: Plan narrowed rerun (dispatch runs only)
+        if: ${{ github.event_name == 'workflow_dispatch' && needs.decide.outputs.release != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >
+          python3 scripts/ci/rerun_plan.py --repo "$GITHUB_REPOSITORY" --branch "$GITHUB_REF_NAME"
+          --run-id "$GITHUB_RUN_ID" --shard "${{ matrix.shard }}/4" --job-name "Go tests (race) ${{ matrix.shard }}"
+          --artifact "ci-go-test-times-linux-${{ matrix.shard }}" --out "$RUNNER_TEMP/go-rerun.json"
       - name: Go tests (race)
         env:
           CGO_ENABLED: '1'
           GO_TEST_SHARD: ${{ matrix.shard }}/4
+          GO_TEST_RERUN: ${{ runner.temp }}/go-rerun.json
         run: bash scripts/ci/go-test.sh -race
       # CRSP201: go-test.sh logs only failures and a summary; the JSON keeps every
       # test's time. The name is stable, so artifact-prune keeps the newest of each.
