@@ -190,6 +190,21 @@ project_gates() {
   fi
 
   if [ -d node_modules ] && command -v pnpm >/dev/null 2>&1; then
+    # CI runs `prettier --check .`; here only the files this branch changed (CRSP311).
+    pbase=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo origin/main)
+    if git rev-parse --verify --quiet "$pbase" >/dev/null; then
+      pfiles=$(git diff --name-only --diff-filter=d "$pbase"...HEAD 2>/dev/null |
+        grep -E '\.(ts|tsx|js|jsx|mjs|cjs|json|css|scss|html|yml|yaml)$' || true)
+    else
+      pfiles=""
+    fi
+    if [ -n "$pfiles" ]; then
+      step "prettier --check (changed files)"
+      echo "$pfiles" | xargs pnpm exec prettier --check --ignore-unknown --no-error-on-unmatched-pattern || {
+        echo "pre-push: prettier would change the files above; run: pnpm exec prettier --write <file>" >&2
+        fail=1
+      }
+    fi
     step "web typecheck"
     pnpm -r typecheck || fail=1
   else
