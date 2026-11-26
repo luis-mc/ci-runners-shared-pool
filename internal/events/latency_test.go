@@ -44,7 +44,7 @@ func TestP95UnderTwoSeconds(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		defer resp.Body.Close()
+		defer func() { _ = resp.Body.Close() }()
 		go func() {
 			sc := bufio.NewScanner(resp.Body)
 			sc.Buffer(make([]byte, 64*1024), 1<<20)
