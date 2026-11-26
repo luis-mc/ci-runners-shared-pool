@@ -66,6 +66,31 @@ const sizes = [
   { w: 393, h: 1900 },
 ];
 
+// DOM layout check (the real checker needs the built binary): no sideways scroll, and nothing in a pane
+// reaches past the window edge, at 360, 393 and 1300 px, for every option.
+for (const s of shots)
+  for (const w of [360, 393, 1300])
+    test(`layout ${s.name} at ${w}`, async ({ page }) => {
+      await page.setViewportSize({ width: w, height: 1900 });
+      await signedIn()
+        .on('GET', '/api/v1/runners', { items: demo() })
+        .install(page);
+      await page.goto(`/setup/runners${s.q}`);
+      await page.getByRole('group', { name: 'Runners toolbar' }).waitFor();
+      const over = await page.evaluate(() => {
+        const bad: string[] = [];
+        if (document.documentElement.scrollWidth > window.innerWidth)
+          bad.push('page scrolls sideways');
+        for (const el of document.querySelectorAll('.ds-pane *')) {
+          const r = el.getBoundingClientRect();
+          if (r.width > 0 && (r.right > window.innerWidth + 1 || r.left < -1))
+            bad.push(`${el.className} ${Math.round(r.left)}..${Math.round(r.right)}`);
+        }
+        return bad;
+      });
+      if (over.length > 0) throw new Error(over.slice(0, 5).join('; '));
+    });
+
 for (const s of shots)
   for (const v of sizes)
     test(`${s.name} at ${v.w}`, async ({ page }) => {

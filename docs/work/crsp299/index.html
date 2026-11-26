@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CRSP299 Runners filter bar options</title>
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 0; padding: 16px; background: #111; color: #eee; }
+  h1 { font-size: 20px; }
+  h2 { font-size: 16px; margin: 0 0 4px; }
+  p { margin: 0 0 8px; color: #bbb; max-width: 60ch; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; align-items: start; }
+  figure { margin: 0; background: #1b1b1b; padding: 12px; border-radius: 6px; }
+  img { max-width: 100%; height: auto; display: block; border: 1px solid #333; margin-bottom: 8px; }
+  figcaption { font-size: 13px; color: #aaa; }
+  .row { margin-bottom: 32px; }
+</style>
+</head>
+<body>
+<h1>CRSP299 Runners filter bar: current and three options</h1>
+<p>Real screenshots of the real console with demo data (24 runners, 3 machines, all kinds, sizes and systems). Dark theme. Each shows the bar alone, then the whole page, at 1300 and 393 px.</p>
+
+<div class="row"><h2>Bars at 1300 px</h2>
+<div class="grid">
+<figure><h2>Current</h2><img src="current-bar-1300.png" alt="Current bar at 1300"><figcaption>Four chip rows, cut off by the pane; search and Select all sit off to the side.</figcaption></figure>
+<figure><h2>Option 1: Drop-downs</h2><img src="option1-bar-1300.png" alt="Option 1 at 1300"><figcaption>Search and selection on one line, four drop-downs in one row below (SelectField in FieldGrid; UX-22, UX-7, CORE-1, CORE-4).</figcaption></figure>
+<figure><h2>Option 2: Joined choices</h2><img src="option2-bar-1300.png" alt="Option 2 at 1300"><figcaption>Each filter as joined buttons with All first (Segmented, component 12; UX-8, CORE-2). Every answer visible, no chips.</figcaption></figure>
+<figure><h2>Option 3: Filter sheet</h2><img src="option3-bar-1300.png" alt="Option 3 at 1300"><figcaption>Search, one Filters button, Select all. Choices open in a sheet ending in Show N runners (component 11, UX-35).</figcaption></figure>
+<figure><h2>Option 3 sheet</h2><img src="option3-sheet-1300.png" alt="Option 3 sheet at 1300"><figcaption>The sheet; active filters then show as tags with Clear filters.</figcaption></figure>
+</div></div>
+
+<div class="row"><h2>Bars at 393 px</h2>
+<div class="grid">
+<figure><h2>Current</h2><img src="current-bar-393.png" alt="Current bar at 393"></figure>
+<figure><h2>Option 1</h2><img src="option1-bar-393.png" alt="Option 1 at 393"></figure>
+<figure><h2>Option 2</h2><img src="option2-bar-393.png" alt="Option 2 at 393"></figure>
+<figure><h2>Option 3</h2><img src="option3-bar-393.png" alt="Option 3 at 393"></figure>
+<figure><h2>Option 3 sheet</h2><img src="option3-sheet-393.png" alt="Option 3 sheet at 393"></figure>
+</div></div>
+
+<div class="row"><h2>Full pages at 1300 px</h2>
+<div class="grid">
+<figure><h2>Current</h2><img src="current-1300.png" alt=""></figure>
+<figure><h2>Option 1</h2><img src="option1-1300.png" alt=""></figure>
+<figure><h2>Option 2</h2><img src="option2-1300.png" alt=""></figure>
+<figure><h2>Option 3</h2><img src="option3-1300.png" alt=""></figure>
+</div></div>
+
+<div class="row"><h2>Full pages at 393 px</h2>
+<div class="grid">
+<figure><h2>Current</h2><img src="current-393.png" alt=""></figure>
+<figure><h2>Option 1</h2><img src="option1-393.png" alt=""></figure>
+<figure><h2>Option 2</h2><img src="option2-393.png" alt=""></figure>
+<figure><h2>Option 3</h2><img src="option3-393.png" alt=""></figure>
+</div></div>
+</body>
+</html>
