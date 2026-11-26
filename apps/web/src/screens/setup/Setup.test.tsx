@@ -322,7 +322,9 @@ describe('First run banner (R5.15)', () => {
         });
       renderApp(api, '/setup?wizard=1');
       expect(
-        await screen.findByText('No container engine answers on lab-pc. Linux runners need one.'),
+        await screen.findByText(
+          'No container engine answers on lab-pc. Linux runners need one.',
+        ),
       ).toBeTruthy();
       const link = screen.getByRole('link', { name: 'Get this machine ready' });
       expect(link.getAttribute('href')).toContain('/setup/machines/m2/ready');
