@@ -6849,6 +6849,8 @@ export interface components {
             max_event_streams?: number;
             /** @description github-integration R5.43. How long no crsp machine of an operating system must have been up before a repository that turned the hosted fallback on runs on GitHub-hosted runners. Default 3. */
             fallback_grace_minutes?: number;
+            /** @description github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest). */
+            overflow_label?: string;
             /** @description ci-run-insights R5.5. Keep CI logs and test reports on the owner's machines (owner decision D4). On by default. */
             insights_keep_ci_data?: boolean;
             /** @description ci-run-insights R5.5, R6.2. Default 30. */

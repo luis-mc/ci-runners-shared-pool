@@ -102,6 +102,7 @@ type settingsFields struct {
 	BackupKeepDays             int    `json:"backup_keep_days"`
 	MaxEventStreams            int    `json:"max_event_streams"`
 	FallbackGraceMinutes       int    `json:"fallback_grace_minutes"`
+	OverflowLabel              string `json:"overflow_label"`
 	AutoUpdate                 bool   `json:"auto_update"`
 	InsightsUpdatePeriod       string `json:"insights_update_period"`
 	InsightsUpdateEveryNthRuns int    `json:"insights_update_every_nth_runs"`
@@ -127,7 +128,7 @@ func (s *settingsSection) Read(ctx context.Context) (map[string]Fields, error) {
 	f, err := toFields(settingsFields{
 		st.RetentionJobHistoryDays, st.RetentionLogsDays, st.RetentionLogsMiBPerMachine, st.RetentionAuditDays,
 		st.RetentionLoadRawHours, st.BackupTimeLocal, st.BackupKeepDays, st.MaxEventStreams, st.FallbackGraceMinutes,
-		st.AutoUpdate, st.InsightsUpdatePeriod, st.InsightsUpdateEveryNthRuns,
+		st.OverflowLabel, st.AutoUpdate, st.InsightsUpdatePeriod, st.InsightsUpdateEveryNthRuns,
 	})
 	return map[string]Fields{"": f}, err
 }
@@ -143,6 +144,7 @@ func (s *settingsSection) Write(ctx context.Context, _ string, want, old Fields)
 		BackupKeepDays             *int    `json:"backup_keep_days"`
 		MaxEventStreams            *int    `json:"max_event_streams"`
 		FallbackGraceMinutes       *int    `json:"fallback_grace_minutes"`
+		OverflowLabel              *string `json:"overflow_label"`
 		AutoUpdate                 *bool   `json:"auto_update"`
 		InsightsUpdatePeriod       *string `json:"insights_update_period"`
 		InsightsUpdateEveryNthRuns *int    `json:"insights_update_every_nth_runs"`
@@ -159,7 +161,7 @@ func (s *settingsSection) Write(ctx context.Context, _ string, want, old Fields)
 		RetentionJobHistoryDays: p.RetentionJobHistoryDays, RetentionLogsDays: p.RetentionLogsDays,
 		RetentionLogsMiBPerMachine: p.RetentionLogsMiBPerMachine, RetentionAuditDays: p.RetentionAuditDays,
 		RetentionLoadRawHours: p.RetentionLoadRawHours, BackupTimeLocal: p.BackupTimeLocal, BackupKeepDays: p.BackupKeepDays,
-		MaxEventStreams: p.MaxEventStreams, FallbackGraceMinutes: p.FallbackGraceMinutes, AutoUpdate: p.AutoUpdate,
+		MaxEventStreams: p.MaxEventStreams, FallbackGraceMinutes: p.FallbackGraceMinutes, OverflowLabel: p.OverflowLabel, AutoUpdate: p.AutoUpdate,
 		InsightsUpdatePeriod: period, InsightsUpdateEveryNthRuns: p.InsightsUpdateEveryNthRuns,
 	})
 	return err

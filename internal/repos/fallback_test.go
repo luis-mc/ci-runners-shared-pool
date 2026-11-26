@@ -186,3 +186,44 @@ func TestFallbackCapStopsFallingBack(t *testing.T) { // R5.45
 		t.Fatalf("used %d", used)
 	}
 }
+
+// CRSP261: the overflow label is any cloud label, not only a GitHub-hosted one.
+func TestOverflowLabelReplacesHostedDefault(t *testing.T) { // R5.42
+	e, up := fallbackEnv(t)
+	ctx := context.Background()
+	e.svc.cfg.OverflowLabel = func() string { return " acme-cloud-4x " }
+	optIn(t, e, 101, 0)
+	up.m["Linux"] = false
+	for i := 0; i < 2; i++ {
+		if err := e.svc.EvaluateFallback(ctx); err != nil {
+			t.Fatal(err)
+		}
+		e.advance(4 * time.Minute)
+	}
+	if got := linuxVar(e); got != `["acme-cloud-4x"]` {
+		t.Fatalf("overflow label not used: %s", got)
+	}
+	up.m["Linux"] = true
+	if err := e.svc.EvaluateFallback(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if linuxVar(e) != crspLinux {
+		t.Fatalf("back: %s", linuxVar(e))
+	}
+}
+
+func TestOverflowLabelPolicyLabelWins(t *testing.T) { // R5.42
+	pol := Policy{HostedLabels: map[string]string{"linux": "repo-own"}}
+	s := &Service{}
+	s.cfg.OverflowLabel = func() string { return "global-cloud" }
+	if got := s.hostedLabelFor(pol, "linux"); got != "repo-own" {
+		t.Fatalf("policy first: %s", got)
+	}
+	if got := s.hostedLabelFor(pol, "windows"); got != "global-cloud" {
+		t.Fatalf("overflow second: %s", got)
+	}
+	s.cfg.OverflowLabel = nil
+	if got := s.hostedLabelFor(Policy{}, "macos"); got != "macos-latest" {
+		t.Fatalf("default last: %s", got)
+	}
+}

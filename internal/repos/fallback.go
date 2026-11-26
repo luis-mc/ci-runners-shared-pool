@@ -82,6 +82,21 @@ func hostedLabel(pol Policy, os string) string {
 	return DefaultHostedLabels[os]
 }
 
+// hostedLabelFor is the label a repository falls back to for an OS: its own
+// policy label, then the controller's overflow label (any cloud, CRSP261),
+// then the GitHub-hosted default.
+func (s *Service) hostedLabelFor(pol Policy, os string) string {
+	if l := strings.TrimSpace(pol.HostedLabels[os]); l != "" {
+		return l
+	}
+	if s.cfg.OverflowLabel != nil {
+		if l := strings.TrimSpace(s.cfg.OverflowLabel()); l != "" {
+			return l
+		}
+	}
+	return hostedLabel(pol, os)
+}
+
 // canFallBack says whether a repository may ever fall back: crsp serves
 // private repositories only, so a public one never does.
 func canFallBack(r Repository, pol Policy) bool {
@@ -101,7 +116,7 @@ func (s *Service) hostedNow(r Repository, pol Policy) map[string]string {
 		if out == nil {
 			out = map[string]string{}
 		}
-		out[os] = hostedLabel(pol, os)
+		out[os] = s.hostedLabelFor(pol, os)
 	}
 	return out
 }
@@ -301,7 +316,7 @@ func (s *Service) evaluateRepo(ctx context.Context, r Repository, pol Policy) er
 		s.fb.mu.Unlock()
 		verb, action := "switched back to crsp machines", "fallback.ended"
 		if want {
-			verb, action = "switched to "+hostedLabel(pol, os), "fallback.started"
+			verb, action = "switched to "+s.hostedLabelFor(pol, os), "fallback.started"
 		}
 		s.cfg.Audit.Audit(ctx, System, action, "repository", r.FullName, os+": "+verb+": "+reason)
 		changed = true
@@ -330,7 +345,7 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 	}
 	hosted := map[string]bool{}
 	for _, os := range []string{"linux", "windows", "macos"} {
-		hosted[strings.ToLower(hostedLabel(pol, os))] = true
+		hosted[strings.ToLower(s.hostedLabelFor(pol, os))] = true
 	}
 	now := s.cfg.Now()
 	var add int64

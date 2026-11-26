@@ -163,7 +163,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
 		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
-		FallbackGrace: fallbackGrace(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
+		FallbackGrace: fallbackGrace(d), OverflowLabel: overflowLabel(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
 	// The runs-on pull request (R5.113): built and opened only by the owner's
 	// explicit call; no loop or webhook of this wiring opens one.
 	rsvc.SetRunsOnPullRequests(&routing.Service{Store: d.DB.Routing(), Files: workflowFileReader{gh: gh}, PRs: gh, Now: d.Now})
@@ -555,6 +555,21 @@ func fallbackGrace(d controllerDeps) func() time.Duration {
 			return 0
 		}
 		return time.Duration(st.FallbackGraceMinutes) * time.Minute
+	}
+}
+
+// overflowLabel reads the overflow label from the settings; empty keeps the
+// GitHub-hosted defaults.
+func overflowLabel(d controllerDeps) func() string {
+	return func() string {
+		if d.Ops == nil || d.Ops.Settings == nil {
+			return ""
+		}
+		st, err := d.Ops.Settings.Get(context.Background())
+		if err != nil {
+			return ""
+		}
+		return st.OverflowLabel
 	}
 }
 
