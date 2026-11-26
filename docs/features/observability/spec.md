@@ -381,7 +381,7 @@ The live view flows one way: controller to browser. Commands go through the norm
 
 ## 9. How it is proven
 
-Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows are NOT YET IMPLEMENTED; their paths are where each test will live.
+Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Planned rows are NOT YET IMPLEMENTED; their paths are where each test will live.
 
 | Requirement | Test |
 |---|---|
@@ -391,13 +391,13 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.4 | apps/web/src/live/store.test.ts "overview and strip read one store" |
 | R5.5 | internal/scheduler/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
 | R5.6 | apps/web/src/live/clock.test.tsx "ages tick and pause while hidden"; apps/web/src/live/status.test.tsx |
-| R5.7 | planned: internal/history/store_test.go TestOneRowPerJobAttempt |
+| R5.7 | internal/store/jobsdata_test.go TestOneRowPerJobAttempt, TestIntegrationUpsertJobKeepsStateAndFacts |
 | R5.8 | internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
 | R5.9 | internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
 | R5.10 | internal/history/timing_test.go TestResultMapping (port of test_failed_step_and_conclusion) |
-| R5.11 | planned: internal/history/query_test.go TestNewestFirstAndFilters; internal/history/cli_test.go TestHistoryJSON |
-| R5.12 | planned: internal/history/store_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRowsAndMarksStale |
-| R5.13 | planned: internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped |
+| R5.11 | internal/store/jobsdata_test.go TestIntegrationListJobsFiltersAndPaging; internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters; internal/cli/resources_test.go TestHistoryJSON, TestHistoryFilters |
+| R5.12 | internal/jobsdata/reconcile/stale_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRows; internal/store/insights_jobs_test.go TestIntegrationStaleRunsListed (the stale marker on a list is in section 11) |
+| R5.13 | internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped; internal/api/handlers_commit_test.go TestGetCommitView |
 | R5.14 | internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsNeutralisesFormulas; apps/web/src/screens/jobs/Jobs.test.tsx (Export CSV) |
 | R5.15 | internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview; internal/history/savings_test.go TestRoundUpMinutes; internal/store/savings_test.go TestFinishedPoolJobsOnlyPoolJobsInWindow; apps/web/src/screens/savings/savings.test.tsx (Overview tiles) |
 | R5.16 | internal/history/savings_test.go TestMoneyUsesMatchingRate, TestMachineSizeChangesTheRate; internal/history/rates_test.go TestRateTableHasSourceAndDate; savings.test.tsx (rates with source and date) |
@@ -419,18 +419,18 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.32 | internal/settings/retention_test.go TestHourlyJobDeletesPastLimit, TestRetentionUsesSettings; internal/settings/settings_test.go TestOutOfRangeRefusedWithRange, TestEveryRangeMatchesFloorAndCeiling |
 | R5.33 | planned: internal/bench/compare_test.go TestRunsBothOnTheSameCommit, TestNothingShownWhenARunFails, TestNeverStartsByItself (CRSP92) |
 | R5.34 | internal/compare/compare_test.go TestMatchingByNameAcrossKinds, TestMedianAndP95, TestRowStatsAndMinutesSaved, TestCostMath, TestPublicRepositoryExcluded, TestAPISourceEndToEnd; apps/web/src/screens/savings/savings.test.tsx (Compare view); internal/api/handlers_compare_test.go TestSpeedComparisonJSON, TestSpeedComparisonIsReadOnly; internal/cli/resources_test.go TestCompareTableAndJSON |
-| R5.35 | internal/store/jobsdata_test.go TestMigrationTables, TestWriteAndReadRunJobSteps; internal/jobsdata/ingest/recorder_test.go TestWorkflowJobWritesRows |
-| R5.36 | internal/jobsdata/types_test.go TestJobTypeStripsMatrix, TestTaskIDFromBranch; internal/jobsdata/ingest/recorder_test.go TestWorktreeOnlyWhenReported |
-| R5.37 | internal/store/jobsdata_test.go TestRetention90_30_400, TestSummaryWrittenBeforeRawRowsLeave, TestListPagesTo100 |
-| R5.38 | internal/jobsdata/ingest/recorder_test.go TestNothingSecretStored; internal/store/jobsdata_test.go TestNoForbiddenColumns |
-| R5.39 | internal/api/handlers_jobsdata_test.go TestListJobsFilters, TestGetJobSteps, TestGetRun, TestGetJobStats, TestGetForecast, TestViewerRole |
-| R5.40 | internal/forecast/forecast_test.go TestSampleLast30Within90Days, TestMedianPoint, TestRangeP25P90WithTenPercentFloor, TestTimeoutNotInSample |
-| R5.41 | internal/forecast/forecast_test.go TestFallbackChain, TestNotEnoughHistoryUnderFive |
-| R5.42 | internal/forecast/forecast_test.go TestCriticalPathRange, TestDriftChangedLately |
-| R5.43 | internal/forecast/forecast_test.go TestQueueStartRange |
-| R5.44 | internal/forecast/forecast_test.go TestForecastLogHitRate; internal/api/handlers_jobsdata_test.go TestGetJobStatsForecastPoints |
-| R5.45 | internal/api/handlers_jobsdata_test.go TestExportJobsCSV, TestExportDailyCSV |
-| R5.46 | internal/api/handlers_jobsdata_test.go TestJobWithoutStepsSaysWhy; apps/web/src/screens/jobs/JobPage.test.tsx |
+| R5.35 | internal/store/jobsdata_test.go TestIntegrationJobsMigrationDownAndUp, TestIntegrationUpsertJobKeepsStateAndFacts, TestIntegrationRunsAttemptsCountsAndPaging; internal/jobsdata/ingest/recorder_test.go TestOnJobMapsAndStatesNeverMoveBack, TestSteps |
+| R5.36 | internal/jobsdata/types_test.go TestSplitName, TestTaskFromBranch; internal/jobsdata/ingest/recorder_test.go TestOnJobSkipsUnknownRepoAndKeepsKnownFields |
+| R5.37 | internal/store/jobsdata_test.go TestIntegrationPruneBoundaries, TestIntegrationListJobsFiltersAndPaging |
+| R5.38 | internal/store/no_secrets_test.go TestIntegrationSchemaHasNoSecretColumn |
+| R5.39 | internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters, TestGetJobDetail, TestGetRunEdgesFromTheWorkflowFile, TestGroupsStatsSummariesAndForecast, TestJobsDataRoutesNeedASignedInUserAndAWiredStore |
+| R5.40 | internal/forecast/forecast_test.go TestUsableWindowAndAge, TestPercentile, TestFromSeconds |
+| R5.41 | internal/forecast/forecast_test.go TestChainFallback, TestSameMachinePreference |
+| R5.42 | internal/forecast/forecast_test.go TestCriticalPath, TestCriticalPathOddGraphs, TestDrift |
+| R5.43 | internal/forecast/forecast_test.go TestSimulateQueue, TestSimulateQueueEdges; internal/api/handlers_jobsdata_test.go TestQueuePositionAndEtaFromTheSimulation |
+| R5.44 | internal/api/handlers_jobsdata_test.go TestGroupsStatsSummariesAndForecast |
+| R5.45 | internal/api/handlers_jobsdata_test.go TestJobsExportWithTheNewFilters, TestExportJobSummariesCSV |
+| R5.46 | internal/api/handlers_jobsdata_test.go TestGetJobDetail; apps/web/src/screens/jobs/JobPage.test.tsx |
 | R5.60 | internal/jobsize/jobsize_test.go TestMeasurePeaks, TestMeasureSystemPeak; internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary |
 | R5.61 | internal/jobsize/jobsize_test.go TestMeasureFlags; internal/agent/jobsample/readers_test.go TestCgroupPeakAndOOM, TestJobObjectSampler, TestCollectorIntervalAndOutcome; internal/agent/jobsample_link_test.go TestJobSampleSenderOutcomeOnFinal; internal/agent/jobsample_run_test.go TestJobSamplingStartSampleFinish |
 | R5.62 | internal/agent/jobsample/readers_test.go TestPSTableAndTree, TestParsePSTimeRejects, TestJobObjectSampler, TestCollectorPicksJobObject; internal/agent/jobsample/platform_linux_test.go, platform_darwin_test.go, platform_windows_test.go; internal/agent/jobsample_run_test.go TestJobSamplingUnreadableJob, TestJobSamplingOldController; internal/agent/jobsample_gate_test.go TestGateObserver; internal/agentlink/insights_test.go TestResourceSinkBatchesCarryFlags |
@@ -438,10 +438,10 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.64 | internal/agent/jobsample/sampler_bench_test.go BenchmarkSample, BenchmarkRealReaders |
 | R5.65 | internal/api/handlers_insights_test.go TestJobResourcesMeasured; apps/web/src/screens/insights/JobInsights.test.tsx |
 | R5.66 | internal/forecast/forecast_test.go TestSimulateQueueSlots; internal/api/timeline_test.go TestTimelineRowsAndSlotAssignment, TestTimelineFinishedAndRunningStates, TestTimelinePagingByTime, TestTimelineKeepsTheRowAcrossPages, TestTimelineMachineFilter, TestTimelineForecastPlacementAndStates, TestTimelineForecastClipsAtTwentyFourHours, TestTimelineJobWithoutHistoryAndPoolJobs, TestGetTimelineHandler |
-| R6.1 | planned: internal/events/latency_test.go TestP95UnderTwoSeconds |
+| R6.1 | internal/events/latency_test.go TestP95UnderTwoSeconds (in-process hub; the network adds the rest) |
 | R6.2 | internal/events/hub_test.go TestLoadThrottlePerMachine (the median of three is the machines feature) |
 | R6.3 | internal/events/hub_test.go TestSSEFormatAndServe (heartbeat), TestSlowSubscriberIsClosedAndNeverBlocksPublisher, TestStreamCap; internal/api/handlers_live_test.go TestStreamEventsTooManyStreams |
-| R6.4 | planned: internal/events/sse_test.go TestNoDataBeforeAuth, TestStreamClosesOnRoleRemoved; internal/audit/query_test.go TestViewerRefused |
+| R6.4 | internal/api/handlers_live_test.go TestStreamNoDataBeforeAuth, TestStreamClosesWhenRoleRemoved; internal/api/handlers_jobsdata_test.go TestJobsDataRoutesNeedASignedInUserAndAWiredStore (the viewer read of the audit log is in section 11) |
 | R6.5 | internal/logs/redact_test.go TestKnownValuesAndShapesRedacted |
 | R6.6 | internal/logs/redact_sinks_test.go TestNoSecretInAnySink, TestSecretKindTableIsComplete (the agent log line joins with R5.20) |
 | R6.7 | internal/logs/local_test.go TestNoNetworkImports (with the depguard rule `logs-stay-local` in .golangci.yml) |
@@ -450,7 +450,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.10 | internal/store/logsdb/store_test.go TestSeparateDatabaseFile |
 | R6.11 | internal/store/logsdb/bench_test.go BenchmarkSearchFirstPage (100,000 lines, not 10 GiB); planned: internal/history/bench_test.go BenchmarkHistoryPage |
 | R6.12 | internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/web/src/live/format.test.ts |
-| R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
+| R6.13 | packages/ui/src/components/LiveText.test.tsx (the shared part holds the 10 s limit) |
 | R6.14 | internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
 | R6.15 | scripts/ci/test_gitleaksignore_guard.py (an added line fails, a removed line passes) |
 
@@ -495,6 +495,12 @@ CRSP256 gaps, said plainly:
 - No CLI command for the savings report or the rates yet, and the rates have no config-file route.
 - **Platforms.** Built for Windows, Linux and macOS: the report reads the controller's database, so it does not depend on the system. Tested by hand on Linux only here; Windows was not run in this session. macOS is compiled and unit-tested in CI and was not run on a real Mac.
 
+CRSP271c gaps, said plainly:
+
+- **R5.12, the stale marker.** A failed GitHub read keeps every stored row (tested), but the `stale` field of `listJobs` is still always empty: the lists read only the store, never GitHub, and the reconcile pass does not tell the API that its last read failed.
+- **R6.4, the audit log for a viewer.** The contract (`listAuditEvents`, `exportAuditEvents`) lets a viewer read the audit log ("owner decision for M1"), while R6.4 and the web-console role table say admin and owner only. Owner question 3 is still open, so the role was not changed and no test pins either way. There is no log reader route yet (`internal/logs` is not built).
+- **R5.13, the screen.** The commit view has its data and its API route. No web screen draws it yet.
+
 Everything. The seams that change when it is built:
 
 - `packages/contract/openapi.yaml` gains `/api/v1/events`, `/api/v1/history`, `/api/v1/logs`, `/api/v1/audit` and the event schemas.
@@ -525,6 +531,8 @@ Built (CRSP262): `internal/metrics/` (snapshot and pool source, Prometheus text,
 Built (CRSP256): `internal/history/` (`rates.go` the rate table and its audited changes, `savings.go` the report and the store source), `internal/store/savings.go` (the finished pool jobs query), `internal/api/handlers_savings.go` (the three routes), `cmd/crsp/overview_source.go` (real minutes for the live Overview), `apps/web/src/screens/savings/`, `apps/web/src/screens/analytics/Savings.tsx` and `Compare.tsx`.
 
 Built (CRSP271b): `internal/logs/` (`slog.go` the logger with rotation, `crash.go` crash files, the `reported` marker and the fatal-error output), `internal/redact/` (the secret kinds `ValueKinds` and `ShapeKinds`, output `[redacted:<kind>]`), `internal/logging/` (tagged handler), `internal/doctor/checks/crashfiles.go`, redactor hooks in `internal/audit/` and `internal/api/errors.go`, the `logs-stay-local` rule in `.golangci.yml`.
+
+Built (CRSP271c): the history rows are the jobsdata tables of R5.35 (`internal/jobsdata`, `internal/store/jobsdata*.go`, `internal/jobsdata/reconcile`, `internal/api/handlers_jobsdata*.go`), not a separate `internal/history` store. `crsp history` (`internal/cli/cmd_history.go`) prints the rows of `listJobs` that are done. The commit view of R5.13 is `internal/history/commit.go` (pure functions) and `GET /api/v1/commits/{sha}` (`getCommitView`, viewer role, `internal/api/handlers_commit.go`). `internal/events/latency_test.go` proves R6.1 on the in-process hub. `packages/ui/src/components/LiveText.tsx` is the shared live text of R6.13.
 
 Planned files, in the globs of the front matter:
 
