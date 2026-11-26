@@ -210,6 +210,18 @@ func (s *JobsStore) UpsertJob(ctx context.Context, j jobsdata.Job) error {
 				row.State, row.Result = old.State, old.Result
 			}
 			fillEmpty(&row, old)
+			if old.State == string(jobsdata.Done) && old.Result != string(jobsdata.Lost) {
+				// R5.12: a finished row never changes: a redelivered event cannot move its result or its times.
+				// A job crsp marked lost is the one exception: GitHub's own end of it replaces the guess.
+				keepOld := func(dst *string, was string) {
+					if was != "" {
+						*dst = was
+					}
+				}
+				keepOld(&row.Result, old.Result)
+				keepOld(&row.StartedAt, old.StartedAt)
+				keepOld(&row.CompletedAt, old.CompletedAt)
+			}
 		case !errors.Is(err, sql.ErrNoRows):
 			return fmt.Errorf("get job: %w", err)
 		}
