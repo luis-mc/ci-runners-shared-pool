@@ -1,6 +1,6 @@
 {
   "env": {
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "350000",
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "model": "sonnet",
