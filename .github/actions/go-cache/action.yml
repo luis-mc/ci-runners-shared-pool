@@ -1,0 +1,35 @@
+name: Go cache, saved on main only
+description: >-
+  Restores the Go module and build caches in every run; saves them only on
+  main (CRSP319). PR cache entries are readable by that PR alone and filled
+  the 10 GB Actions cache. Put it BEFORE actions/setup-go (which gets
+  cache: false): setup-go downloads the go.mod toolchain into the module cache,
+  and a restore after that collides with it.
+runs:
+  using: composite
+  steps:
+    - if: github.ref != 'refs/heads/main'
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          ~/AppData/Local/go-build
+        key: go-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/go.sum', 'go.mod') }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ runner.arch }}-
+          setup-go-${{ runner.os }}-
+    # On main actions/cache restores now and saves in its post step.
+    - if: github.ref == 'refs/heads/main'
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          ~/AppData/Local/go-build
+        key: go-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('**/go.sum', 'go.mod') }}
+        restore-keys: |
+          go-${{ runner.os }}-${{ runner.arch }}-
+          setup-go-${{ runner.os }}-
