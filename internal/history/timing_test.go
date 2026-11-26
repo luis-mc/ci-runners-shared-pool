@@ -3,6 +3,8 @@ package history
 import (
 	"testing"
 	"time"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsdata"
 )
 
 var t0 = time.Date(2026, 11, 26, 10, 0, 0, 0, time.UTC)
@@ -56,5 +58,39 @@ func TestRerunUsesAttemptStart(t *testing.T) {
 	d, ok := Between(AttemptStart(2, created, rerunStart), at(3660)).Duration()
 	if !ok || d != time.Minute {
 		t.Fatalf("re-run duration %v %v, want 1m", d, ok)
+	}
+}
+
+// R5.8. Port of test_waterfall_times: GitHub wait and slot wait are split.
+func TestWaitSplitGitHubAndSlot(t *testing.T) {
+	j := jobsdata.Job{CreatedAt: at(0), StartedAt: at(30), QueuedAt: at(32), SlotAt: at(47), CompletedAt: at(150)}
+	tm := Split(j)
+	if tm.GitHubWait.MS != 30_000 || tm.SlotWait.MS != 15_000 || tm.Wait.MS != 45_000 {
+		t.Fatalf("wait split %+v", tm)
+	}
+	// No slot times: the wait is GitHub's alone and the slot wait is unknown.
+	tm = Split(jobsdata.Job{CreatedAt: at(0), StartedAt: at(30), CompletedAt: at(150)})
+	if tm.SlotWait.Known || tm.Wait.MS != 30_000 || tm.Run.MS != 120_000 {
+		t.Fatalf("no slot times %+v", tm)
+	}
+	if tm := Split(jobsdata.Job{}); tm.Wait.Known || tm.Run.Known {
+		t.Fatalf("empty job is unknown: %+v", tm)
+	}
+}
+
+// R5.8. The slot gate sits inside "Set up job": run time excludes it and wait includes it, so it is counted once.
+func TestSlotGateCountedOnce(t *testing.T) {
+	j := jobsdata.Job{CreatedAt: at(0), StartedAt: at(30), QueuedAt: at(32), SlotAt: at(47), CompletedAt: at(150)}
+	tm := Split(j)
+	if tm.Run.MS != 105_000 {
+		t.Fatalf("run %d, want 120s minus the 15s gate", tm.Run.MS)
+	}
+	if total := tm.Wait.MS + tm.Run.MS; total != 150_000 {
+		t.Fatalf("wait + run = %d ms, want created to completed 150000", total)
+	}
+	// A gate longer than the run never makes the run negative.
+	j.SlotAt = at(500)
+	if tm := Split(j); tm.Run.MS < 0 || !tm.Run.Known {
+		t.Fatalf("run %+v", tm.Run)
 	}
 }

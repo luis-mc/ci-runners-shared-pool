@@ -10,6 +10,8 @@ package history
 
 import (
 	"time"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/jobsdata"
 )
 
 // Span is a duration that may be unknown. An unknown span is never shown as 0 (R5.9).
@@ -52,4 +54,42 @@ func AttemptStart(attempt int, createdAt, attemptStartedAt time.Time) time.Time 
 		return createdAt
 	}
 	return time.Time{}
+}
+
+// Timing is the wait and run time of one job attempt.
+type Timing struct {
+	// GitHubWait is created_at to started_at: GitHub's own wait for a runner.
+	GitHubWait Span
+	// SlotWait is queued_at to slot_at: the wait in crsp's slot queue. It happens inside "Set up job".
+	SlotWait Span
+	// Wait is GitHubWait plus SlotWait. Unknown when GitHubWait is unknown.
+	Wait Span
+	// Run is started_at to completed_at minus SlotWait, so the gate is counted once (R5.8).
+	Run Span
+}
+
+// Split cuts a job attempt's times into GitHub wait, slot wait and run time (R5.8). Wait and run add up to
+// created_at to completed_at: the slot gate sits inside the started-to-completed span, so it is added to the
+// wait and taken out of the run. A missing slot time leaves slot wait unknown and the run uncut.
+func Split(j jobsdata.Job) Timing {
+	var t Timing
+	t.GitHubWait = Between(j.CreatedAt, j.StartedAt)
+	t.SlotWait = Between(j.QueuedAt, j.SlotAt)
+	run := Between(j.StartedAt, j.CompletedAt)
+	if run.Known && t.SlotWait.Known {
+		run.MS -= t.SlotWait.MS
+		if run.MS < 0 {
+			run.MS = 0
+		}
+	}
+	t.Run = run
+	switch {
+	case !t.GitHubWait.Known:
+		t.Wait = Unknown
+	case t.SlotWait.Known:
+		t.Wait = Span{MS: t.GitHubWait.MS + t.SlotWait.MS, Known: true}
+	default:
+		t.Wait = t.GitHubWait
+	}
+	return t
 }
