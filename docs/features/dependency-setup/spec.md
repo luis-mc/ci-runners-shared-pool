@@ -278,7 +278,9 @@ Open. Each has a recommended default; the owner answers.
 - Unknown progress arrives as 0 in the API with a `reason` (generated type); the Terminal, ProgressBar and DownloadProgress parts of CRSP247 are not used yet: the page shows the live line through the wizard and a folded log.
 - Not run on real Windows, macOS or Linux machines: the silent flags and `wsl --install -d ... --name crsp-docker` were tested against fakes only.
 
-**Not built (M2, M3).** DEP12 per target machine beyond the agent link, DEP13 full door behaviour (Setup shows the note on the controller's own machine only), DEP15 offline machines, time budget "3 times typical".
+**Built in CRSP270 (step two).** DEP13: the Setup summary shows the "Get this machine ready" door for every online machine of the pool that has no container engine, not only this PC; an offline machine gets none (DEP12). The door keeps the way back (`return=/setup/summary`). DEP4 to DEP8, DEP10 and DEP11 were already built in CRSP248 and CRSP265 (above); CRSP270 changed nothing there.
+
+**Not built (M2, M3).** DEP12 for a machine joined over SSH (offer after join: the Add machine door shows once the agent is online, no separate SSH-only path), DEP15 offline machines (needs a new agent-link message and file serving; until then "Do it myself"), time budget "3 times typical", resume only after "Restart now", the yes for removing conflicting Docker packages.
 
 ## 12. Research and code map
 
