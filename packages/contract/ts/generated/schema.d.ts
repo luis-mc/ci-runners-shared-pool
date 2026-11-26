@@ -1895,6 +1895,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/size-labels": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The size labels the pool understands, with a copy-paste example and the room of each machine
+         * @description scheduling R5.67a. A job may put cpu=N and ram=N in its runs-on. The labels become the CPU and memory limits of the job container and decide which machine can take the job. Each machine lists the most a job may ask of it.
+         */
+        get: operations["listSizeLabels"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/job-sizes": {
         parameters: {
             query?: never;
@@ -4031,6 +4051,27 @@ export interface components {
             reset_note: string;
             /** @description The YAML line for .crsp.yml */
             copy_line: string;
+        };
+        SizeLabelRow: {
+            key: string;
+            meaning: string;
+            example: string;
+            min: string;
+            max: string;
+        };
+        SizeLabelMachine: {
+            name: string;
+            /** @description linux, windows or macos */
+            os: string;
+            /** @description Most CPUs a job may ask for on this machine */
+            cpus: number;
+            /** @description Most memory in GiB a job may ask for on this machine */
+            memory_gib: number;
+        };
+        SizeLabelList: {
+            labels: components["schemas"]["SizeLabelRow"][];
+            example: string;
+            machines: components["schemas"]["SizeLabelMachine"][];
         };
         JobSizeCostRow: {
             /** @description framework or service */
@@ -11278,6 +11319,27 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content?: never;
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listSizeLabels: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The labels, the example and the machines. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SizeLabelList"];
+                };
             };
             default: components["responses"]["Error"];
         };
