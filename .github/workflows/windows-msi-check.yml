@@ -44,7 +44,9 @@ jobs:
           else
             sudo apt-get update && sudo apt-get install -y --no-install-recommends wine xvfb
           fi
-      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      # CRSP312: pull requests only read this cache; main saves it.
+      - id: msi-cache
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         if: steps.gate.outputs.present == 'true'
         with:
           path: ~/.cache/msi-build
@@ -52,6 +54,12 @@ jobs:
       - name: Build the MSI (not the shipped file)
         if: steps.gate.outputs.present == 'true'
         run: bash scripts/delivery/windows-msi-linux.sh
+      - name: Save the MSI build tools cache (main only)
+        if: ${{ steps.gate.outputs.present == 'true' && github.ref == 'refs/heads/main' && steps.msi-cache.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/msi-build
+          key: msi-build-${{ hashFiles('scripts/delivery/windows-build-tools.json') }}
       # CRSP147: one entry in the Windows programs list. The authoring has no second Uninstall key,
       # no hidden MSI entry, one UpgradeCode and a major upgrade (installer/wxs_test.go has the same rules).
       - name: One programs-list entry (authoring check)
