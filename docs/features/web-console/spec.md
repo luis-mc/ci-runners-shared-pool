@@ -875,6 +875,7 @@ Proof: CORE-1, CORE-5, CORE-7, UX-1, UX-2, UX-3, UX-5, UX-6, UX-7, UX-8, UX-11, 
 Proof: UX-4, UX-10, UX-12, UX-15, UX-16, UX-17, UX-42, UX-49, UX-51 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-85 `packages/ui/src/components/link-frame.test.tsx`
+Proof: UX-86 `packages/ui/src/components/SummaryLine.test.tsx`
 Proof: CORE-3 `apps/web/src/screens/pool/PoolMachines.test.tsx`
 Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
 Proof: UX-55 `e2e/tests/web-console/ux-look.spec.ts`
