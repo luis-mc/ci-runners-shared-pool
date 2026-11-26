@@ -1984,3 +1984,10 @@ One line of counts, number first, on Setup > Runners, Setup > Summary and the Ov
 |---|---|
 | Type | Column head of the runner tables (Setup Runners tab, Pool machine card): `persistent` or `ephemeral`. |
 | Isolation | Column head next to Type: `container`, `VM`, `microVM` or `on the machine` (a runner that runs as a service on the host itself). |
+## Live announcement words (CRSP271c, UX-17)
+
+What a screen reader is told when live numbers change. Not drawn on the page. One sentence per region, at most once per 10 seconds.
+
+| Where | Word |
+|---|---|
+| Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |

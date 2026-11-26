@@ -2,10 +2,18 @@
 // the four counts above Overview and Live (LOOK70). Nothing is configured here (Setup does that). Timers of
 // the section count every second in the browser (R5.150); when the stream drops the screens poll and the shell banner
 // says "Live updates paused" until it is back.
-import { ClockProvider, Page, PageHeader, StatGrid, StatTile, Tabs } from '@crsp/ui';
+import {
+  ClockProvider,
+  LiveText,
+  Page,
+  PageHeader,
+  StatGrid,
+  StatTile,
+  Tabs,
+} from '@crsp/ui';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useLiveState } from '../../live/LiveProvider';
-import { poolCounts } from './poolWords';
+import { poolCounts, poolCountsSentence } from './poolWords';
 
 export const POOL_TABS = [
   { id: 'overview', label: 'Overview', to: '/pool' },
@@ -24,32 +32,35 @@ export function PoolCountTiles({
   counts: ReturnType<typeof poolCounts> | undefined;
 }) {
   return (
-    <StatGrid>
-      <StatTile
-        label="Running"
-        {...(counts ? { value: String(counts.running) } : {})}
-        to="/pool/jobs?state=running"
-        linkName="Open the running jobs"
-      />
-      <StatTile
-        label="Starting"
-        {...(counts ? { value: String(counts.starting) } : {})}
-        to="/pool/jobs?state=running"
-        linkName="Open the jobs that are starting"
-      />
-      <StatTile
-        label="Queued"
-        {...(counts ? { value: String(counts.queued) } : {})}
-        to="/pool/queue"
-        linkName="Open the queue plan"
-      />
-      <StatTile
-        label="No runner fits"
-        {...(counts ? { value: String(counts.noRunner) } : {})}
-        to="/pool/queue"
-        linkName="Open the jobs that no runner fits"
-      />
-    </StatGrid>
+    <>
+      {counts ? <LiveText text={poolCountsSentence(counts)} /> : null}
+      <StatGrid>
+        <StatTile
+          label="Running"
+          {...(counts ? { value: String(counts.running) } : {})}
+          to="/pool/jobs?state=running"
+          linkName="Open the running jobs"
+        />
+        <StatTile
+          label="Starting"
+          {...(counts ? { value: String(counts.starting) } : {})}
+          to="/pool/jobs?state=running"
+          linkName="Open the jobs that are starting"
+        />
+        <StatTile
+          label="Queued"
+          {...(counts ? { value: String(counts.queued) } : {})}
+          to="/pool/queue"
+          linkName="Open the queue plan"
+        />
+        <StatTile
+          label="No runner fits"
+          {...(counts ? { value: String(counts.noRunner) } : {})}
+          to="/pool/queue"
+          linkName="Open the jobs that no runner fits"
+        />
+      </StatGrid>
+    </>
   );
 }
 
