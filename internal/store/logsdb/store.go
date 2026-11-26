@@ -192,28 +192,29 @@ func (d *DB) Prune(ctx context.Context, cutoff time.Time, maxBytesPerMachine int
 	if maxBytesPerMachine <= 0 {
 		return total, nil
 	}
-	rows, err := d.db.QueryContext(ctx, `SELECT machine, day, SUM(bytes) FROM logs GROUP BY machine, day ORDER BY machine, day`)
-	if err != nil {
-		return total, err
-	}
 	type dayRow struct {
 		day, bytes int64
 	}
-	perMachine := map[string][]dayRow{}
-	for rows.Next() {
-		var m string
-		var r dayRow
-		if err := rows.Scan(&m, &r.day, &r.bytes); err != nil {
-			_ = rows.Close()
-			return total, err
+	perMachine, err := func() (map[string][]dayRow, error) {
+		rows, err := d.db.QueryContext(ctx, `SELECT machine, day, SUM(bytes) FROM logs GROUP BY machine, day ORDER BY machine, day`)
+		if err != nil {
+			return nil, err
 		}
-		perMachine[m] = append(perMachine[m], r)
-	}
-	if err := rows.Err(); err != nil {
-		_ = rows.Close()
+		defer func() { _ = rows.Close() }()
+		out := map[string][]dayRow{}
+		for rows.Next() {
+			var m string
+			var r dayRow
+			if err := rows.Scan(&m, &r.day, &r.bytes); err != nil {
+				return nil, err
+			}
+			out[m] = append(out[m], r)
+		}
+		return out, rows.Err()
+	}()
+	if err != nil {
 		return total, err
 	}
-	_ = rows.Close()
 	for m, days := range perMachine {
 		var sum int64
 		for _, r := range days {

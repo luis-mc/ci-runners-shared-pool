@@ -31,10 +31,9 @@ func SetupStep(l *slog.Logger, runnerID, step string, err error) {
 // already redacted (R6.5). The attributes machine, runner, job and component
 // fill the line's fields; the rest go to Attrs as JSON.
 type AgentHandler struct {
-	sink   func(Line)
-	level  slog.Leveler
-	attrs  []slog.Attr
-	groups []string
+	sink  func(Line)
+	level slog.Leveler
+	attrs []slog.Attr
 }
 
 // NewAgentHandler returns the handler; level nil means Info.
