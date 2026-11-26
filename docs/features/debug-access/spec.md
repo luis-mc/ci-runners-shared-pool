@@ -101,14 +101,14 @@ One interface, one row per backend and OS. "Enter" is how the agent starts the s
 
 No mocks yet. Screens use design system v4 by ID and add no rules of their own. Every screen below exists in the web console first; the CLI repeats it (R5.30).
 
-**Repository setting (Settings, Repositories).** In each repository row's detail: a switch **Debug access** (saved at once, UX-22), off by default. When on, four fields appear: who may open (Admins and owner; or Owner only), session limit in minutes (default 30, most 120), idle limit in minutes (default 10), and **Hold failed jobs** for N minutes (default off, most 30). A line under the switch says in words what it allows and never allows (R5.14 to R5.17). A public repository shows the switch disabled with "Not available for public repositories." (UX-38). The settings page holds configuration only; the command to open a session is not here (UX-52).
+**Repository setting (Settings, Repositories).** In each repository row's detail: a switch **Debug access** (saved at once, UX-22), off by default. When on, four fields appear: who may open (Admins and owner; or Owner only), session limit in minutes (default 30, most 120), idle limit in minutes (default 10), and **Hold failed jobs** for N minutes (default off, most 30). A line under the switch says in words what it allows and never allows (R5.14 to R5.17; design system UX-22, UX-38). A public repository shows the switch disabled with "Not available for public repositories." (UX-38). The settings page holds configuration only; the command to open a session is not here (UX-52).
 
 **Job detail, Debug panel.** On the job page, one card **Debug access** holds the one place where a session starts (UX-52):
 
 - Running job, repository on, user allowed: button **Open debug session**, the question card asks for a reason (one line, 3 to 200 characters), then the terminal opens in the page.
 - Held failed job: a status word `◷ held, 12 min left` (UX-58) and the same button.
 - Not allowed: the button is disabled and the reason sits beside it (UX-38): "Debug access is off for this repository.", "Only admins can open a session.", "Another job of this repository is running in the same container.", "This is a pull request from a fork." and so on.
-- Open session: a terminal in a panel, a header with who opened it, the time left as a count, and **Extend** (once, +15 min, never past the repository's limit) and **End** (a question card first, UX-9). The panel never auto-focuses over text the user is typing elsewhere.
+- Open session: a terminal in a panel, a header with who opened it, the time left as a count, and **Extend** (once, +15 min, never past the repository's limit) and **End** (a question card first, UX-9). The panel never auto-focuses over text the user is typing elsewhere (design system UX-13, UX-52).
 - Past sessions of this job: a table (who, from, to, reason, how it ended, transcript link). Times follow UX-18.
 
 **Debug sessions list (Settings, Audit log tab, filter Debug sessions; also the Machine page).** A table of sessions across the pool: time, user, repository, job, machine, OS, backend, reason, length, how it ended (word, glyph and colour, UX-58). Admins and owner can open the transcript; viewers see the row but not the transcript. **End session** on an open row asks first (UX-62: names the user, the job and the machine). **Export** is the one primary of the toolbar, like the rest of the Audit log.
@@ -120,7 +120,7 @@ No mocks yet. Screens use design system v4 by ID and add no rules of their own. 
 - Empty: "No debug sessions yet. Open one from a running job." (UX-6)
 - Opening: the button is busy and says "Opening the session..." until the shell answers (UX-13).
 - Failed to open: a Problem line under the button says what failed and why ("The machine did not answer within 10 s.") (UX-27).
-- Lost link: the terminal says "The connection to build-02 dropped. The session ends in 60 s unless it comes back." The session never stays open past its limit because of a dropped link (R6.3).
+- Lost link: the terminal says "The connection to build-02 dropped. The session ends in 60 s unless it comes back." The session never stays open past its limit because of a dropped link (R6.3; design system UX-27).
 - Ended: the panel keeps its output on screen, shows how it ended in words and offers the transcript link.
 
 **CLI (same rules, same API).** `crsp debug open <job>` (reason with `--reason`), `crsp debug list`, `crsp debug end <session>`, `crsp debug extend <session>`, `crsp debug repo <owner/repo> --on|--off [--limit N --idle N --hold N]`. The CLI authenticates as the user's console role (the CLI spec's token). Output uses the same words as the console (CLI spec, UX words).
