@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
@@ -70,6 +71,8 @@ func runnerFail(err error) (int, gen.ErrorEnvelope) {
 	case errors.Is(err, runners.ErrNotFound):
 		return http.StatusNotFound, gen.ErrorEnvelope{Error: gen.ErrorBody{Code: CodeNotFound, Message: "no such runner or plan"}}
 	}
+	// The user sees only "internal error"; the log keeps the real one.
+	slog.Error("runner request failed", "error", err.Error())
 	return http.StatusInternalServerError, gen.ErrorEnvelope{Error: gen.ErrorBody{Code: CodeInternal, Message: "internal error"}}
 }
 

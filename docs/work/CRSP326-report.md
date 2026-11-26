@@ -1,0 +1,2 @@
+# CRSP326 report
+Cause confirmed: scopeResolver.Resolve has no "pool" case; a pool runner has no GitHub registration of its own. Failing tests first (TestOfflinePoolRunner*), then the fix in internal/runners/offline.go (pool runner: check every hidden registration, confirm lists them, delete each, record last), runnerFail logs at ERROR. Spec R5.88 and change note done. Local go test ./internal/runners ./internal/api ./cmd/crsp passes.
