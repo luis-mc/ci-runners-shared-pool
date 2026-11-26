@@ -23,6 +23,8 @@ runs:
         key: go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-
+          setup-go-${{ runner.os }}-
+    # The setup-go / setup-node key prefixes are a fallback so entries main already holds warm the first runs.
     # On main actions/cache restores now and saves in its post step.
     - if: github.ref == 'refs/heads/main'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
@@ -33,3 +35,4 @@ runs:
         key: go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           go-${{ runner.os }}-${{ runner.arch }}-${{ steps.go.outputs.version }}-
+          setup-go-${{ runner.os }}-
