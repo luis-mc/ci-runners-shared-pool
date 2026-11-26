@@ -40,6 +40,9 @@ type Hooks struct {
 	// OnJobSamples takes the JobResourceSamples batches of agents (ci-run-insights R5.19). When set, and the
 	// registry is on, HelloAck carries protocol version 4 and agents start sending them.
 	OnJobSamples func(ctx context.Context, machineID string, m *agentv1.JobResourceSamples)
+	// OnLogBatch takes the runner setup and agent log lines of agents (observability R5.20, R5.23). It
+	// never answers; with no hook a batch is dropped.
+	OnLogBatch func(ctx context.Context, machineID string, m *agentv1.LogBatch)
 }
 
 // RecoveryPath is the frozen recovery call (internal/recovery.Path).
@@ -290,6 +293,10 @@ func (s *Service) dispatch(ctx context.Context, id, agentVersion string, req *ag
 	case *agentv1.SessionRequest_JobResourceSamples:
 		if s.hooks.OnJobSamples != nil {
 			s.hooks.OnJobSamples(ctx, id, msg.JobResourceSamples)
+		}
+	case *agentv1.SessionRequest_LogBatch:
+		if s.hooks.OnLogBatch != nil {
+			s.hooks.OnLogBatch(ctx, id, msg.LogBatch)
 		}
 	case *agentv1.SessionRequest_CommandResult:
 		if !msg.CommandResult.GetOk() {

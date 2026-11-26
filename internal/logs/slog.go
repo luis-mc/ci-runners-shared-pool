@@ -35,6 +35,9 @@ type Options struct {
 	MaxSize    int64
 	MaxFiles   int
 	Redactor   *redact.Redactor
+	// Extra handlers get every record after the redactor, like the file: the agent adds
+	// NewAgentHandler here so its lines go to the controller (R5.20).
+	Extra []slog.Handler
 }
 
 // IDs are the ids a log line carries when it has them (R5.29).
@@ -83,6 +86,7 @@ func Setup(o Options) (*slog.Logger, io.Closer, error) {
 			handlers = append(handlers, slog.NewTextHandler(o.Stderr, &slog.HandlerOptions{Level: o.Level}))
 		}
 	}
+	handlers = append(handlers, o.Extra...)
 	l := slog.New(logging.NewTaggedHandler(fanout(handlers), o.Redactor)).
 		With("component", o.Component, "version", o.Version, "mode", o.Mode)
 	return l, closer, openErr

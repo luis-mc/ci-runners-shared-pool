@@ -404,7 +404,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.17 | internal/history/rates_test.go TestOverrideAndResetWriteAudit, TestValidateRefusesBadTables; internal/api/handlers_savings_test.go TestSavingsRatesAreOwnerOnlyAndValidated |
 | R5.18 | internal/history/savings_test.go TestPublicRepoSavesNoMoney; savings.test.tsx (public note) |
 | R5.19 | internal/history/savings_test.go TestReportRangesAndGroups; internal/api/handlers_savings_test.go TestSavingsReportJSON; savings.test.tsx (ranges, tables) |
-| R5.20 | internal/logs/agentlog_test.go TestSetupStepsCaptured, TestAgentLinesBatchOverTheLink; internal/machines/logbatch_test.go TestLogBatchReachesTheSink |
+| R5.20 | internal/logs/agentlog_test.go TestSetupStepsCaptured, TestAgentLinesBatchOverTheLink; internal/machines/logbatch_test.go TestLogBatchReachesTheSink; internal/agentlink/logs_test.go TestLogBatchRoundTrip |
 | R5.21 | internal/store/logsdb/search_test.go TestFullTextAndFilters; internal/logs/search_test.go TestQueryValidation; internal/api/handlers_logs_test.go TestLogSearchIsAdminOnly (the web page is planned) |
 | R5.22 | planned: internal/events/sse_test.go TestRunnerSetupLogLive |
 | R5.23 | internal/logs/buffer_test.go TestBufferKeepsOrderAndCountsDropped |
@@ -532,7 +532,7 @@ Planned files, in the globs of the front matter:
 - internal/audit/ (chain)
 - internal/logs/ (the live runner setup log stream, R5.22)
 
-Built (CRSP271d): `internal/logs/` (`store.go` the line and the store port, `failopen.go` the fail-open writer and its failure counter, `retention.go` limits, `buffer.go` the agent disk buffer, `agentlog.go` the agent's log handler and batch sender, `search.go` the query), `internal/store/logsdb/` (`logs.db`, its own migrations with an FTS5 table; it sits in `internal/store/` because only that folder may import the SQLite driver), `internal/api/handlers_logs.go` (the search route), the `OnLogBatch` hook in `internal/machines/link.go`.
+Built (CRSP271d): `internal/logs/` (`store.go` the line and the store port, `failopen.go` the fail-open writer and its failure counter, `retention.go` limits, `buffer.go` the agent disk buffer, `agentlog.go` the agent's log handler and batch sender, `search.go` the query), `internal/store/logsdb/` (`logs.db`, its own migrations with an FTS5 table; it sits in `internal/store/` because only that folder may import the SQLite driver), `internal/api/handlers_logs.go` (the search route), `internal/logs/logsapi/` (the adapter to the API port), `internal/agentlink/logs.go` (the batch and the controller sink), the `OnLogBatch` hook in `internal/machines/link.go`, `LogForwarder` in `internal/agent/run.go`, and the `logs.db` open in `cmd/crsp/machines_wiring.go`.
 
 Built (CRSP271): `internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), the web console reuses the shared UI parts that already hold the time format (`packages/ui/src/components/format.ts`), the shared clock (`packages/ui/src/components/Clock.tsx`) and the status word, glyph and colour set (`packages/ui/src/components/Status.tsx`), proven by `apps/web/src/live/format.test.ts`, `clock.test.tsx`, `status.test.tsx` and `store.test.ts`; `internal/store/jobsdata_utc_test.go` proves UTC storage.
 
