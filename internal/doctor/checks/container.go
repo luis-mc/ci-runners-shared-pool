@@ -43,6 +43,10 @@ type ContainerPool struct {
 	// DeclaredRunners is what the pool settings say; RecordedRunners is what
 	// the runner records hold.
 	DeclaredRunners, RecordedRunners int
+	// WarmWanted is how many ready (warm) ephemeral runners the pool should hold
+	// for its busy label sets; WarmReady is how many it holds now (runners
+	// R5.131, R6.5). WarmWanted 0 means the pool keeps none.
+	WarmWanted, WarmReady int
 }
 
 // ContainerSource gives the container checks their data. Engine returns the
@@ -61,6 +65,7 @@ func RegisterContainer(reg *doctor.Registry, src ContainerSource) {
 		doctor.NewCheck("container.image.current", doctor.GroupBackend, M2, false, c.imageCurrent),
 		doctor.NewCheck("container.layer.tools", doctor.GroupBackend, M2, false, c.layerTools),
 		doctor.NewCheck("container.toolcache", doctor.GroupBackend, M2, false, c.toolCache),
+		doctor.NewCheck("container.warm", doctor.GroupBackend, M2, false, c.warm),
 		doctor.NewCheck("container.records", doctor.GroupBackend, M2, false, c.records),
 		doctor.NewCheck("container.memory-cap", doctor.GroupBackend, M2, false, c.memoryCap),
 	} {
@@ -362,6 +367,30 @@ func (c *containerChecks) memoryCap(ctx context.Context, env doctor.Env) []docto
 		default:
 			out = append(out, doctor.Finding{Check: "container.memory-cap", Subject: s, Severity: doctor.OK, Title: "The pool " + p.Name + " was not stopped by the memory cap"})
 		}
+	}
+	return out
+}
+
+// warm: a pool that should keep warm runners holds them (runners R5.131).
+// Without the warm runner a job waits for a cold start, over the 15 s of
+// runners R6.5. It reads the counts the controller keeps; it starts nothing.
+func (c *containerChecks) warm(ctx context.Context, env doctor.Env) []doctor.Finding {
+	ps, out := c.pools(ctx, env, "container.warm")
+	for _, p := range ps {
+		if p.WarmWanted <= 0 {
+			continue
+		}
+		s := poolSubject(p)
+		f := doctor.Finding{Check: "container.warm", Subject: s}
+		if p.WarmReady >= p.WarmWanted {
+			f.Severity, f.Title = doctor.OK, fmt.Sprintf("%s holds %d warm runner(s)", p.Name, p.WarmReady)
+		} else {
+			f.Severity, f.Title = doctor.Warn, fmt.Sprintf("%s holds %d of %d warm runner(s)", p.Name, p.WarmReady, p.WarmWanted)
+			f.Detail = "The next job on " + p.MachineName + " starts from a cold container, which can take longer than 15 seconds."
+			f.Fix = doctor.Fix{Text: "Check the pool image (container.image.current) and the free slots of the machine; the controller makes the warm runner again by itself.",
+				Link: "/machines/" + p.MachineID}
+		}
+		out = append(out, f)
 	}
 	return out
 }
