@@ -326,7 +326,7 @@ describe('First run banner (R5.15)', () => {
           'No container engine answers on lab-pc. Linux runners need one.',
         ),
       ).toBeTruthy();
-      const link = screen.getByRole('link', { name: 'Get this machine ready' });
+      const link = screen.getByRole('button', { name: 'Get this machine ready' });
       expect(link.getAttribute('href')).toContain('/setup/machines/m2/ready');
       // An offline machine is not offered an install (DEP12).
       expect(screen.queryByText(/old-pc/)).toBeNull();
