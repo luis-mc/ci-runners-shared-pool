@@ -14,6 +14,11 @@ name: CI
 #   build    the six release targets (build.yml); artifacts crsp-<os>-<arch>
 #   e2e      Playwright against the built Linux binary
 #
+# CRSP324: `decide` also plans the areas a change touches (scripts/delivery/area_select.py with
+# scripts/delivery/ci-areas.json) and each job runs only for its areas, by a job-level `if`
+# (never a workflow-level paths filter). An unknown path, a release pull request, a push to
+# main and a failed plan all run everything. A job the plan skips is a planned skip, not a failure.
+#
 # Documentation-only changes skip this workflow (paths-ignore). Repo-config-only pull requests
 # (.claude, .nvmrc, .gitignore, .delivery/config.json) still start it, and `decide` skips every
 # job, so the run is green and the delivery watcher finds it (DS261, S15).
@@ -63,10 +68,21 @@ jobs:
       skip: ${{ steps.check.outputs.skip }}
       image: ${{ steps.image-scope.outputs.image }}
       release: ${{ steps.release.outputs.release }}
+      areas: ${{ steps.areas.outputs.areas }}
+      go_race: ${{ steps.areas.outputs.go_race }}
+      web_tests: ${{ steps.areas.outputs.web_tests }}
+      test_os: ${{ steps.areas.outputs.test_os }}
+      go_win_lint: ${{ steps.areas.outputs.go_win_lint }}
+      build: ${{ steps.areas.outputs.build }}
+      e2e: ${{ steps.areas.outputs.e2e }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          sparse-checkout: scripts/ci
+          # The area plan diffs against the base branch, so it needs the history.
+          fetch-depth: 0
+          sparse-checkout: |
+            scripts/ci
+            scripts/delivery
       - id: check
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -93,10 +109,28 @@ jobs:
           HEAD_REF: ${{ github.head_ref }}
         run: |
           release=false
-          if [ "$EVENT" = "pull_request" ] && [ "$DRAFT" != "true" ] && { [[ "$HEAD_REF" == *-integration ]] || [[ "$HEAD_REF" =~ -release-[0-9]+$ ]]; }; then
+          if [ "$EVENT" = "pull_request" ] && [ "$DRAFT" != "true" ] && { [[ "$HEAD_REF" == *-integration ]] || [[ "$HEAD_REF" =~ -release-[0-9]+$ ]] || [[ "$HEAD_REF" =~ ^release/ ]]; }; then
             release=true
           fi
           echo "release=$release" >> "$GITHUB_OUTPUT"
+      # CRSP324: which areas the change touches. A release pull request, a push to main and a failed
+      # plan run everything (empty outputs mean everything: every job tests `!= 'false'`).
+      - id: areas
+        env:
+          EVENT: ${{ github.event_name }}
+          RELEASE: ${{ steps.release.outputs.release }}
+          BASE_REF: ${{ github.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          args=(--github-output)
+          if [ "$RELEASE" = "true" ] || [ "$EVENT" = "push" ]; then
+            args+=(--all)
+          else
+            base="${BASE_REF:-$DEFAULT_BRANCH}"
+            git fetch --no-tags --quiet origin "$base" || true
+            args+=(--base "origin/$base")
+          fi
+          python3 scripts/delivery/area_select.py "${args[@]}" || echo "::warning::area plan failed, every job runs"
 
   # CRSP209: verify was one serial job of 9.6 to 17 min. The same checks now run in
   # three parallel jobs and the `verify` job at the end keeps the name a required
@@ -184,7 +218,9 @@ jobs:
           install-mode: goinstall
       # Windows-only files (*_windows.go) are invisible to the Linux pass above.
       # The macOS pass stays out: fyne.io/systray needs cgo and cannot typecheck cross-built.
+      # CRSP324 (S12): skipped when no .go, go.mod or Windows file changed; any .go file keeps it.
       - name: Lint (Go, GOOS=windows)
+        if: ${{ needs.decide.outputs.go_win_lint != 'false' }}
         run: |
           GOBIN="$RUNNER_TEMP/golangci-bin" go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.15.0
           GOOS=windows "$RUNNER_TEMP/golangci-bin/golangci-lint" run ./...
@@ -248,7 +284,7 @@ jobs:
   go-race:
     name: Go tests (race) ${{ matrix.shard }}
     needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.go_race != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_TESTS || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
@@ -294,7 +330,7 @@ jobs:
   tests:
     name: web tests and lifecycle conformance
     needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.web_tests != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_TESTS || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
@@ -348,9 +384,13 @@ jobs:
         env:
           GO: ${{ needs.go-race.result }}
           WEB: ${{ needs.tests.result }}
+          GO_PLAN: ${{ needs.decide.outputs.go_race }}
+          WEB_PLAN: ${{ needs.decide.outputs.web_tests }}
         run: |
-          echo "go-race=$GO web=$WEB"
-          [ "$GO" = "success" ] && [ "$WEB" = "success" ]
+          echo "go-race=$GO (plan $GO_PLAN) web=$WEB (plan $WEB_PLAN)"
+          # A job the area plan skipped is skipped on purpose; a skip the plan did not ask for is a failure.
+          [ "$GO" = "success" ] || { [ "$GO" = "skipped" ] && [ "$GO_PLAN" = "false" ]; }
+          [ "$WEB" = "success" ] || { [ "$WEB" = "skipped" ] && [ "$WEB_PLAN" = "false" ]; }
 
   # The name a required check matches: green only when lint, types and tests are.
   # Skipped, like the single job it replaces, when decide skips the run or the pull
@@ -374,7 +414,8 @@ jobs:
   test-os:
     name: Go tests (${{ matrix.os }})
     needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # CRSP324 (S12): macOS and Windows run only when a Go file, go.mod or a Windows file changed.
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.test_os != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -423,7 +464,7 @@ jobs:
   build:
     name: build
     needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.build != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ github.sha }}
@@ -668,7 +709,7 @@ jobs:
     needs: [decide, build, lint, types]
     # A release pull request never waits for lint and types and is never skipped; any
     # other run waits for them to pass (CRSP209, DL-97/DL-98).
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.e2e != 'false' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
     # CRSP268: pool first. CRSP_E2E, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
@@ -856,11 +897,12 @@ jobs:
           BUILD: ${{ needs.build.result }}
           SHARDS: ${{ needs.e2e-shards.result }}
           RELEASE: ${{ needs.decide.outputs.release }}
+          PLAN: ${{ needs.decide.outputs.e2e }}
           LINT: ${{ needs.lint.result }}
           TYPES: ${{ needs.types.result }}
         run: |
-          if [ "$SKIP" = "true" ] || [ "$BUILD" != "success" ]; then
-            echo "e2e did not run (decide skip=$SKIP, build=$BUILD); shards=$SHARDS"
+          if [ "$SKIP" = "true" ] || [ "$BUILD" != "success" ] || [ "$PLAN" = "false" ]; then
+            echo "e2e did not run (decide skip=$SKIP, build=$BUILD, area plan=$PLAN); shards=$SHARDS"
             [ "$SHARDS" = "skipped" ]
           elif [ "$RELEASE" != "true" ] && { [ "$LINT" != "success" ] || [ "$TYPES" != "success" ]; }; then
             # Not a release run: e2e waits for lint and types, and verify is red anyway.
