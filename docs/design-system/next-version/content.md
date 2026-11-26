@@ -1947,3 +1947,15 @@ The words of the savings tiles, the Savings and Compare tabs and the Savings rat
 | No job of this repository ran on both kinds of runner in this window. | Empty Compare. |
 | Hosted minutes are free for a public repository, so there is nothing to compare. | Public repository in Compare. |
 | In this window: {n} minutes saved, {amount} avoided (estimate). | Total line of Compare. |
+
+## Summary line words (CRSP298, UX-86)
+
+One line of counts, number first, on Setup > Runners, Setup > Summary and the Overview.
+
+| Where | Word |
+|---|---|
+| Pool line | {n} machine(s) · {n} runner(s) — {n} idle · {n} busy · {n} not ready |
+| Totals words | machine, machines, runner, runners |
+| State words | idle, busy, not ready (warning colour above zero), failed (danger colour above zero) |
+| Setup > Summary, Runners card | {n} runner(s) — {n} persistent · {n} ephemeral |
+| Setup > Summary, Machines card | unchanged sentence: {n} machine(s), {cpu} CPU and {gib} GiB in the pool. |

@@ -18,7 +18,8 @@ import {
   Text,
   TextLink,
   formatDuration,
-  Facts,
+  SummaryLine,
+  type SummaryItem,
   useNow,
   type Column,
   type StatusKind,
@@ -94,12 +95,24 @@ export function stateCounts(items: readonly Runner[]): {
   return { idle, busy, other: items.length - idle - busy };
 }
 
-/** D32: the pool's totals above the list, "2 machines, 6 runners, 2 busy". */
-export function runnerTotals(items: readonly Runner[]): string {
+/** CRSP298: the pool above the list as one summary line, "1 machine · 5 runners — 4 idle · 0 busy · 1 not ready" (UX-86). */
+export function runnerSummary(items: readonly Runner[]): {
+  total: SummaryItem[];
+  states: SummaryItem[];
+} {
   const machines = new Set(items.map((r) => r.machine_id)).size;
-  const busy = items.filter((r) => r.state === 'busy').length;
-  const n = (c: number, one: string, many: string) => `${c} ${c === 1 ? one : many}`;
-  return `${n(machines, 'machine', 'machines')}, ${n(items.length, 'runner', 'runners')}, ${busy} busy`;
+  const c = stateCounts(items);
+  return {
+    total: [
+      { count: machines, word: 'machine', plural: 'machines' },
+      { count: items.length, word: 'runner', plural: 'runners' },
+    ],
+    states: [
+      { count: c.idle, word: 'idle' },
+      { count: c.busy, word: 'busy' },
+      { count: c.other, word: 'not ready', tone: 'warning' },
+    ],
+  };
 }
 
 /** D32: the runners of each machine together, machines in name order. */
@@ -356,21 +369,7 @@ export function RunnersList() {
             );
           return (
             <Stack>
-              <Text>{runnerTotals(data.items)}</Text>
-              <Facts
-                items={[
-                  { name: 'Idle', value: String(stateCounts(data.items).idle) },
-                  { name: 'Busy', value: String(stateCounts(data.items).busy) },
-                  ...(stateCounts(data.items).other > 0
-                    ? [
-                        {
-                          name: 'Not ready',
-                          value: String(stateCounts(data.items).other),
-                        },
-                      ]
-                    : []),
-                ]}
-              />
+              <SummaryLine {...runnerSummary(data.items)} />
               {data.items.some((r) => r.state === 'failed') ? (
                 <Message
                   tone="needs-you"
