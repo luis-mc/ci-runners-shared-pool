@@ -18,15 +18,24 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
 # Install the pinned playwright-core in a throwaway folder, let it fetch the
 # three browsers and the system packages they need, then drop the folder.
+# CRSP325: security.ubuntu.com has served index entries whose .deb files answer 404 for
+# hours (libasound2). archive.ubuntu.com carries the same security pocket, so use it, and
+# try install-deps three times.
 RUN set -eu; \
     mkdir -p /opt/crsp/pw "${PLAYWRIGHT_BROWSERS_PATH}"; \
     cd /opt/crsp/pw; \
     npm init -y >/dev/null; \
     npm install --no-audit --no-fund --save-exact "playwright-core@${PLAYWRIGHT_VERSION}"; \
     export DEBUG=pw:install; \
-    # CRSP325: security.ubuntu.com has served index entries whose .deb files answer 404 for hours
-    # (libasound2). archive.ubuntu.com carries the same security pocket, so use it, and try three times.
-    for f in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do \n      [ -f "$f" ] && sed -i 's#http://security.ubuntu.com/ubuntu#http://archive.ubuntu.com/ubuntu#g' "$f"; \n    done; \n    for i in 1 2 3; do \n      timeout 900 node node_modules/playwright-core/cli.js install-deps chromium firefox webkit && break; \n      [ "$i" = 3 ] && exit 1; \n      echo "install-deps failed (attempt $i), retrying in 30 s"; sleep 30; \n    done; \n    for b in chromium firefox webkit; do \
+    for f in /etc/apt/sources.list.d/ubuntu.sources /etc/apt/sources.list; do \
+      if [ -f "$f" ]; then sed -i 's#http://security.ubuntu.com/ubuntu#http://archive.ubuntu.com/ubuntu#g' "$f"; fi; \
+    done; \
+    for i in 1 2 3; do \
+      timeout 900 node node_modules/playwright-core/cli.js install-deps chromium firefox webkit && break; \
+      if [ "$i" = 3 ]; then exit 1; fi; \
+      echo "install-deps failed (attempt $i), retrying in 30 s"; sleep 30; \
+    done; \
+    for b in chromium firefox webkit; do \
       timeout 600 node node_modules/playwright-core/cli.js install "$b" </dev/null; \
     done; \
     echo "${PLAYWRIGHT_VERSION}" > /opt/crsp/browsers/.crsp-playwright-version; \
