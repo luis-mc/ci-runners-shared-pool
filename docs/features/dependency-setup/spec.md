@@ -307,3 +307,4 @@ Proof: CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, CORE-7, UX-5, UX-6, UX-26, UX-29,
 Proof: UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-13, UX-54 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-87, UX-88, UX-89 `packages/ui/src/components/LiveProgress.test.tsx`
