@@ -375,9 +375,9 @@ describe('Get this machine ready (spec 4)', () => {
     mount(a);
     await press(/^Install WSL2 and Docker(?!ing)/);
     await press('Install 2 items');
-    await screen.findByText('Downloading Docker: 48.0 MB of 120 MB, 2 min left', {
-      selector: 'p',
-    });
+    await screen.findByText(/^Step 1 of 3: Downloading Docker/);
+    expect(screen.getByRole('log', { name: 'Command log' })).toBeTruthy();
+    expect(screen.getByText(/48\.0 MB of 120 MB/)).toBeTruthy();
     const primary = screen
       .getAllByRole<HTMLButtonElement>('button', { name: 'Installing' })
       .find((b) => b.getAttribute('aria-busy') === 'true');
@@ -385,7 +385,7 @@ describe('Get this machine ready (spec 4)', () => {
     await waitFor(() => expect(a.count('GET', `${BASE}/jobs/j1`)).toBeGreaterThan(1));
     await press('Stop');
     await waitFor(() => expect(a.count('POST', `${BASE}/jobs/j1/stop`)).toBe(1));
-    expect(screen.getByText('Show the log')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Hide log' })).toBeTruthy();
   });
 
   it('later steps cannot be pressed', async () => {

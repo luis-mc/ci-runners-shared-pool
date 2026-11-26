@@ -10,7 +10,6 @@ import {
   CheckRow,
   ChoiceField,
   CodeBlock,
-  Disclosure,
   Facts,
   Loading,
   Message,
@@ -42,7 +41,6 @@ import {
   itemFacts,
   itemWords,
   jobActive,
-  logText,
   overallValue,
   progressLine,
   recommended,
@@ -521,11 +519,6 @@ export function GetReadyWizard(p: GetReadyProps) {
           <Message tone="problem">{`Could not stop. ${stopError}`}</Message>
         ) : null}
         <Text>{`On ${machine}. You can leave this page; the work goes on.`}</Text>
-        {job && logText(job.log) ? (
-          <Disclosure summary="Show the log">
-            <CodeBlock text={logText(job.log)} label="Install log" />
-          </Disclosure>
-        ) : null}
       </Stack>
     );
     primary = {
@@ -685,6 +678,7 @@ export function GetReadyWizard(p: GetReadyProps) {
       firstStep={STEP.choose}
       phase={phase}
       reading="Reading the machine"
+      live={job ? job.log.map(toProgressEvent) : undefined}
       progress={
         phase === 'running'
           ? { text: line, ...(value !== undefined ? { value, max: 100 } : {}) }
