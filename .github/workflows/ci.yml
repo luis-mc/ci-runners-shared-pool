@@ -289,6 +289,7 @@ jobs:
           name: ci-go-test-times-linux
           path: test-results/go-test.json
           if-no-files-found: ignore
+          retention-days: 3
       - name: Web tests and guards
         if: ${{ always() }}
         run: pnpm exec vitest run
@@ -338,6 +339,7 @@ jobs:
           name: ci-go-test-times-${{ matrix.os }}
           path: test-results/go-test.json
           if-no-files-found: ignore
+          retention-days: 3
       # doctor R5.42, runners R5.68: the unit tests fake the link, so this one
       # step makes a real symbolic link with Developer Mode on (Windows only).
       - name: Real symbolic link (Windows, Developer Mode on)
@@ -431,7 +433,7 @@ jobs:
           provenance: false
           sbom: false
           cache-from: type=gha,scope=base-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=base-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=base-${{ matrix.arch }}' || '' }}
       - name: docker build base image (no push)
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         with:
@@ -461,7 +463,7 @@ jobs:
           tags: crsp-linux-browsers:ci
           load: true
           cache-from: type=gha,scope=browsers-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=browsers-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=browsers-${{ matrix.arch }}' || '' }}
       - name: Browsers sit at the fixed path
         if: ${{ matrix.all }}
         run: |
@@ -479,7 +481,7 @@ jobs:
           tags: crsp-layer-windows-packaging:ci
           load: true
           cache-from: type=gha,scope=windows-packaging-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=windows-packaging-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=windows-packaging-${{ matrix.arch }}' || '' }}
       # The extra packages layer builds on this one, so it goes to the registry.
       - name: docker build linux-packaging layer (no push)
         if: ${{ matrix.all }}
@@ -494,7 +496,7 @@ jobs:
           provenance: false
           sbom: false
           cache-from: type=gha,scope=linux-packaging-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=linux-packaging-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=linux-packaging-${{ matrix.arch }}' || '' }}
       # CRSP209: its own cache scope (llvm-<arch>) read and written here; with the
       # base digest should now be stable (provenance off above) the 10.7 min layer is a cache hit.
       - name: docker build llvm layer (no push)
@@ -509,7 +511,7 @@ jobs:
           tags: crsp-layer-llvm:ci
           load: true
           cache-from: type=gha,scope=llvm-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=llvm-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=llvm-${{ matrix.arch }}' || '' }}
       - name: docker build kvm layer (no push)
         if: ${{ matrix.all }}
         uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
@@ -521,7 +523,7 @@ jobs:
           tags: crsp-layer-kvm:ci
           load: true
           cache-from: type=gha,scope=kvm-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=kvm-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=kvm-${{ matrix.arch }}' || '' }}
       # runners R5.51: the extra packages layer is last, on top of a packaging
       # layer, with a list of names (CRSP60). Build only, no push.
       - name: docker build extra packages layer (no push)
@@ -535,7 +537,7 @@ jobs:
           tags: crsp-layer-extra-packages:ci
           load: true
           cache-from: type=gha,scope=extra-packages-${{ matrix.arch }}
-          cache-to: type=gha,mode=max,scope=extra-packages-${{ matrix.arch }}
+          cache-to: ${{ github.ref == 'refs/heads/main' && 'type=gha,mode=max,scope=extra-packages-${{ matrix.arch }}' || '' }}
       - name: Extra packages layer refuses a bad name
         if: ${{ matrix.all }}
         run: |

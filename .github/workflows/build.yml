@@ -45,6 +45,8 @@ jobs:
           name: web-embed
           path: internal/webui/dist
           if-no-files-found: error
+          # CRSP312: read inside the same run only; a release keeps the default.
+          retention-days: ${{ github.workflow == 'Release' && 90 || 2 }}
 
   binary:
     name: ${{ matrix.goos }}-${{ matrix.goarch }}
@@ -89,3 +91,5 @@ jobs:
           name: ${{ inputs.artifact-prefix }}${{ matrix.goos }}-${{ matrix.goarch }}
           path: out/
           if-no-files-found: error
+          # CRSP312: read inside the same run only; a release keeps the default.
+          retention-days: ${{ github.workflow == 'Release' && 90 || 2 }}

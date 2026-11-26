@@ -59,6 +59,7 @@ jobs:
           name: installer-linux-amd64
           path: pkgs
           if-no-files-found: error
+          retention-days: 2
 
   smoke-deb:
     name: smoke deb (systemd on the runner)
@@ -124,3 +125,4 @@ jobs:
           name: installer-darwin-arm64
           path: pkgs
           if-no-files-found: error
+          retention-days: 2
