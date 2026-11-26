@@ -3831,6 +3831,7 @@ a.ds-stat:focus-visible {
 [data-theme-name='terminal'] .ds-message__body,
 [data-theme-name='terminal'] .ds-field__help {
   font-family: var(--ds-font-prose);
+}
 /* summary line (component 81, UX-86) */
 .ds-summary {
   margin: 0;
