@@ -1978,3 +1978,9 @@ One line of counts, number first, on Setup > Runners, Setup > Summary and the Ov
 | Bar, phase | Step {i} of {n}: {phase} |
 | Bar, no percent | {phase}. {reason} No % is reported. {elapsed} |
 | Elapsed | {time} elapsed |
+## Runner table words
+
+| Word | Where |
+|---|---|
+| Type | Column head of the runner tables (Setup Runners tab, Pool machine card): `persistent` or `ephemeral`. |
+| Isolation | Column head next to Type: `container`, `VM`, `microVM` or `on the machine` (a runner that runs as a service on the host itself). |
