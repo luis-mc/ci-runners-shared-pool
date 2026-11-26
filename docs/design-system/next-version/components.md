@@ -480,6 +480,7 @@ A `Tag` is the small outlined label that names a kind next to a word, such as `i
 - **Used for:** showing which list row is selected, and which keys work (UX-57).
 - **Looks:** the selected row of a table or a result list, the row under the cursor (`j` and `k`, or a click or Tab), is in reverse video: `--ds-color-primary` fill with `--ds-color-on-primary` text. A row the user has ticked (a choice list) takes the `--ds-color-selection` fill and keeps its text colour. The key-hint bar is fixed at the window foot, with a thin top border; its keys sit inside the page frame (UX-69). Each key is listed once, whatever the spelling (`j / k` and `j k` are one key). It lists only the keys that work on the page: a page registers its keys (`useKeyHints`) and a part that adds keys registers them too, so `j / k` and `Enter` show only where a list exists. Each key is in the key style of component 38. The hints are text, never buttons (UX-8). The bar is not drawn on a touch or coarse pointer, where there are no keys. The page reserves the bar's real height, which is read from the bar itself (it wraps onto two lines on a phone), not a fixed 44 px.
 - **Source:** `packages/ui/src/components/Table.tsx`, `packages/ui/src/components/KeyHints.tsx` (`KeyHints`, `useKeyHints`), the `hints` slot of `Frame`, `packages/ui/src/components.css`
+- **Terminal theme:** the selected row is the `--ds-color-selection` tint with a 2 px `--ds-color-primary` inset on its left edge (CRSP300), and the key-hint bar shows each key in the main text colour over dim words.
 - **Rules:** UX-8, UX-50, UX-57, UX-60.
 - **Guard:** none yet.
 
@@ -830,6 +831,31 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `packages/ui/src/components/Timeline.tsx` (`Timeline`), `packages/ui/src/components/Timeline.types.ts`, `packages/ui/src/components/VizAlt.tsx`, `packages/ui/src/components.css` (`ds-timeline`). A page passes data only.
 - **Rules:** UX-41, UX-17, UX-18, UX-49, UX-57, UX-58, UX-16, UX-77, CORE-1, CORE-2, CORE-3.
 - **Guard:** `packages/ui/src/components/Timeline.test.tsx`; the DOM layout checks at 360, 393 and 1300 px (and no sideways scroll of the page at 1920 px) on the screens that use it.
+
+## 78. Panel
+
+- **Used for:** a titled box in the Terminal theme where the box itself carries a tone (CRSP300). The title is plain text set over the top border; no letter of it is coloured. The one exception is a machine name (`machine`), which is bold and in the tone colour. Optional dim text sits on the right of the border (`live ●`, `3/5`). In every other theme a panel looks like a pane (component 8).
+- **Tone:** `ok`, `note`, `needs`, `problem`, `accent`, `quiet` colour the border in the Terminal theme only. The state is always also in words inside the panel (CORE-5, UX-58). `Pane` and `Card` take `machine` too, for a card whose title is a machine name.
+- **Tokens:** `--ds-color-done`, `--ds-color-note`, `--ds-color-needs-you`, `--ds-color-problem`, `--ds-color-accent`, `--ds-color-text`, `--ds-color-text-muted`, `--ds-color-page`, `--ds-color-surface`.
+- **Source:** `packages/ui/src/components/Panel.tsx` (`Panel`: `title`, `count`, `meta`, `tone`, `machine`, `level`, `footer`), `packages/ui/src/components/Pane.tsx` and `Card.tsx` (`machine`), `packages/ui/src/components.css` (`ds-panel`). A page passes data only.
+- **Rules:** UX-2, UX-10, UX-51, UX-58, CORE-1, CORE-2, CORE-5.
+- **Guard:** `packages/ui/src/components/terminal.test.tsx`.
+
+## 79. Meter
+
+- **Used for:** a level against 100 % (CPU, memory, disk, mirror use) drawn with the block character `■`, filled in the tone colour and empty in the divider colour, with the level in words beside it.
+- **Looks:** `■■■■■■■■ 52%`, eight blocks by default (`cells`). Below `warnAt` (75 %) the filled blocks are the done colour, from there the needs-you colour, from `badAt` (90 %) the problem colour. The blocks are `aria-hidden`; the element is a `meter` with `aria-valuetext` of the words (CORE-5). A value is clamped between 0 and 100 %.
+- **Source:** `packages/ui/src/components/Meter.tsx` (`Meter`: `label`, `value`, `max`, `cells`, `warnAt`, `badAt`, `text`), `packages/ui/src/components.css` (`ds-meter`). `LevelBar` (component 16) keeps its API and only restyles.
+- **Rules:** UX-17, UX-41, UX-58, CORE-5.
+- **Guard:** `packages/ui/src/components/terminal.test.tsx`.
+
+## 80. Spark
+
+- **Used for:** a trend of a few numbers in one row (runner minutes saved, pass rate, run history), drawn with the eight-level block characters `▁▂▃▄▅▆▇█`, scaled between the lowest and the highest value.
+- **Looks:** one row of characters in a tone colour (`ok`, `note`, `needs`, `problem`, `quiet`). It is a picture with a text alternative: first, last, lowest and highest value with the unit. It never carries a meaning alone (CORE-5). `Sparkline` (component 53) keeps its SVG form; the Spark is the Terminal form for a table cell or a panel line.
+- **Source:** `packages/ui/src/components/Spark.tsx` (`Spark`: `label`, `values`, `tone`, `unit`; `sparkChars`), `packages/ui/src/components.css` (`ds-spark`).
+- **Rules:** UX-17, UX-58, CORE-5.
+- **Guard:** `packages/ui/src/components/terminal.test.tsx`.
 
 ## How to add a component
 

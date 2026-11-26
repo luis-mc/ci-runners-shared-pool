@@ -83,7 +83,7 @@ Text on a fill comes in pairs. Every fill role has its own `on-` text token. A f
 
 Owner decisions LOOK D1 and D2 (2026-11-15): the console looks like TUI panes, and all six palettes are themes the user picks in Settings (UX-60). A theme is a set of token values and nothing else (UX-55).
 
-- **Six themes:** `phosphor`, `tokyo-night`, `catppuccin`, `gruvbox`, `solarized`, `nord`. Each has a dark and a light value set.
+- **Six themes:** `phosphor`, `tokyo-night`, `catppuccin`, `gruvbox`, `solarized`, `nord`; the seventh, `terminal`, is chosen as the Look (see Terminal below). Each has a dark and a light value set.
 - **Default for a new install:** `phosphor`, in dark mode (owner decision LOOK D11). A page with no theme set is Phosphor; the tables of the first colour section above describe the starter values and are replaced by the Phosphor values below. The light themes keep exactly the look page values (D12).
 - **A sample of a theme:** an element that carries both `data-theme-name` and `data-theme` (the theme preview) keeps its own mode inside a page in any theme or mode.
 - **How a theme is applied:** the attribute `data-theme-name=<id>` on the page root picks the theme. The mode stays as written under "How themes work": `[data-theme=light|dark]` or the system setting. The two attributes are independent. The attribute may also sit on one element (the swatch row in Settings); the tokens then apply to that element and what is inside it.
@@ -454,6 +454,34 @@ A project may offer a compact density. It changes only these tokens. The touch t
 3. Load the font file from the project's own files. Never from another site.
 4. Check the contrast and the line length again.
 5. Add a `CHANGES.md` entry.
+
+### Terminal (`terminal`, CRSP300)
+
+Owner-approved concept of 2026-11-25 (btop look). A seventh theme that is chosen with the setting **Look** > _Terminal_ (Settings, Appearance), not from the six colour themes, so the colour-theme choice keeps its previews (UX-22). It is dark in every mode: the dark and the light value set are the same, and a choice of light or system mode leaves it as it is.
+
+- **Look:** 1 px borders, `--ds-radius-1` to `-3` are 0, no shadow (`--ds-shadow-2` and `-3` are `none`), no glow (`--ds-glow-focus` is a 1 px ring, `--ds-scanline-focus` is `none`). The font is JetBrains Mono for the console and Inter for prose (`--ds-font-prose`); neither is downloaded, a device without them uses its own monospace or sans.
+- **Panel title:** plain text in `--ds-color-text` over the border, no cut-in marks, no coloured letter. A machine name is bold and coloured (component 78).
+- **Selected row:** the `--ds-color-selection` tint with a 2 px `--ds-color-primary` inset on its left edge, instead of the reverse-video fill of the other themes.
+- **New tokens, in every theme:** `--ds-color-accent` (an ephemeral or new thing; the note colour in the six themes) and `--ds-color-warm` (a warm hint; the needs-you colour in the six themes).
+- **Palettes:** `data-pal=green` (default, no attribute), `amber`, `ice` on the page root, picked with the setting **Palette** when the Look is Terminal. A palette is a set of token values and nothing else (UX-55).
+- **Contrast:** the concept's `--dim` is the border (3:1). The muted text is `--dim` lightened to 4.5:1 on the page, the surface and the selection fill, so UX-17 holds in all three palettes.
+
+| Token (without `--ds-color-`) | green | amber | ice |
+| --- | --- | --- | --- |
+| `page` | `#0b0e0d` | `#0e0b06` | `#070b10` |
+| `surface` | `#0f1413` | `#140f08` | `#0b1219` |
+| `text` | `#cfd8d3` | `#e8d9b8` | `#c9d6e2` |
+| `text-muted`, `text-inactive` | `#8b9892` | `#9f8c67` | `#7f92a3` |
+| `border` | `#6b7a73` | `#8a7650` | `#62778a` |
+| `primary`, `focus`, `done` | `#4fd18b` | `#e8b44a` | `#5fd0c4` |
+| `needs-you` | `#d9c04a` | `#f0d060` | `#e0c868` |
+| `problem` | `#e0605a` | `#e0705a` | `#e86a7a` |
+| `note` | `#4fc3d9` | `#d9a24f` | `#5aa9f0` |
+| `accent` | `#b48ae0` | `#c8907a` | `#a98ae8` |
+| `warm` | `#e8944a` | `#e8944a` | `#f0a060` |
+| `selection` | `#17332a` | `#33260f` | `#112a3d` |
+
+The values live in `scripts/design/themes.data.ts` (`TERMINAL`); `scripts/design/themes.test.ts` proves the CSS and the contrast.
 
 ## Add a named theme
 

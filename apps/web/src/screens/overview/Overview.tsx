@@ -96,7 +96,7 @@ export function MachineLoadBars({ m }: { m: Machine }) {
 export function MachineCard({ m }: { m: Machine }) {
   const s = machineStatus(m);
   return (
-    <Card title={m.name} to={`/setup/machines/${m.id}`}>
+    <Card title={m.name} machine to={`/setup/machines/${m.id}`}>
       <Status kind={s.kind} word={s.word} />
       <MachineLoadBars m={m} />
     </Card>

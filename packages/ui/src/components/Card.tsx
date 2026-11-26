@@ -25,16 +25,27 @@ export function Card({
   children,
   footer,
   id,
+  machine,
 }: {
   title: string;
   count?: number | undefined;
   to?: string | undefined;
+  /** The title is a machine name (bold and coloured in the Terminal theme). */
+  machine?: boolean | undefined;
   children: ReactNode;
   footer?: ReactNode | undefined;
   id?: string | undefined;
 }) {
   return (
-    <Pane title={title} count={count} to={to} level={3} footer={footer} id={id}>
+    <Pane
+      title={title}
+      count={count}
+      to={to}
+      level={3}
+      footer={footer}
+      id={id}
+      machine={machine}
+    >
       {children}
     </Pane>
   );

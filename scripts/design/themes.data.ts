@@ -18,6 +18,10 @@ export interface Palette {
   readonly needs: string;
   readonly problem: string;
   readonly sel: string;
+  /** Magenta of the concept: an ephemeral or new thing. Defaults to the note colour. */
+  readonly accent?: string;
+  /** Orange of the concept: a warm hint. Defaults to the needs-you colour. */
+  readonly warm?: string;
 }
 
 export interface ThemeData {
@@ -27,9 +31,90 @@ export interface ThemeData {
   readonly radius: readonly [string, string, string];
   readonly dark: Palette;
   readonly light: Palette;
+  /** A flat theme: no glow, no scanline, no shadow, a 1 px ring for focus (the terminal theme). */
+  readonly flat?: boolean;
 }
 
 const sharp = ['0', '0', '0'] as const;
+
+function terminal(p: {
+  bg: string;
+  panel: string;
+  fg: string;
+  dim: string;
+  muted: string;
+  g: string;
+  y: string;
+  r: string;
+  c: string;
+  m: string;
+  o: string;
+  sel: string;
+}): Palette {
+  return {
+    page: p.bg,
+    surface: p.panel,
+    text: p.fg,
+    muted: p.muted,
+    inactive: p.muted,
+    border: p.dim,
+    primary: p.g,
+    onprimary: p.bg,
+    done: p.g,
+    note: p.c,
+    needs: p.y,
+    problem: p.r,
+    sel: p.sel,
+    accent: p.m,
+    warm: p.o,
+  };
+}
+
+/** The three palettes of the concept page (tokens --bg --panel --fg --dim --g --y --r --c --m --o --sel). */
+export const TERMINAL: Record<'green' | 'amber' | 'ice', Palette> = {
+  green: terminal({
+    bg: '#0b0e0d',
+    panel: '#0f1413',
+    fg: '#cfd8d3',
+    dim: '#6b7a73',
+    muted: '#8b9892',
+    g: '#4fd18b',
+    y: '#d9c04a',
+    r: '#e0605a',
+    c: '#4fc3d9',
+    m: '#b48ae0',
+    o: '#e8944a',
+    sel: '#17332a',
+  }),
+  amber: terminal({
+    bg: '#0e0b06',
+    panel: '#140f08',
+    fg: '#e8d9b8',
+    dim: '#8a7650',
+    muted: '#9f8c67',
+    g: '#e8b44a',
+    y: '#f0d060',
+    r: '#e0705a',
+    c: '#d9a24f',
+    m: '#c8907a',
+    o: '#e8944a',
+    sel: '#33260f',
+  }),
+  ice: terminal({
+    bg: '#070b10',
+    panel: '#0b1219',
+    fg: '#c9d6e2',
+    dim: '#62778a',
+    muted: '#7f92a3',
+    g: '#5fd0c4',
+    y: '#e0c868',
+    r: '#e86a7a',
+    c: '#5aa9f0',
+    m: '#a98ae8',
+    o: '#f0a060',
+    sel: '#112a3d',
+  }),
+};
 
 export const THEME_DATA: readonly ThemeData[] = [
   {
@@ -242,6 +327,21 @@ export const THEME_DATA: readonly ThemeData[] = [
       sel: '#dde3ec',
     },
   },
+  {
+    // The btop-style terminal theme (CRSP300; owner-approved concept 2026-11-25). It is dark in every mode: a
+    // choice of light or system mode leaves it as it is. --dim of the concept is the border; the muted text is
+    // --dim lightened to 4.5:1 on every surface (UX-17).
+    id: 'terminal',
+    name: 'Terminal',
+    radius: sharp,
+    flat: true,
+    dark: TERMINAL.green,
+    light: TERMINAL.green,
+  },
 ];
+
+/** The palettes of the terminal theme, picked with `data-pal` (green is the default and has no attribute). */
+export const TERMINAL_PALETTES = ['green', 'amber', 'ice'] as const;
+export type TerminalPalette = (typeof TERMINAL_PALETTES)[number];
 
 export const DEFAULT_THEME = 'phosphor';

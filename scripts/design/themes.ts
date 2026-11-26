@@ -4,6 +4,7 @@
  */
 import {
   DEFAULT_THEME,
+  TERMINAL,
   THEME_DATA,
   type Palette,
   type ThemeData,
@@ -61,6 +62,8 @@ export function colourTokens(p: Palette, mode: 'dark' | 'light'): Record<string,
     focus: p.primary,
     selection: p.sel,
   };
+  t.accent = p.accent ?? p.note;
+  t.warm = p.warm ?? p.needs;
   for (const [name, key] of TONES) {
     const tone = p[key];
     // A tint is the tone thinly mixed into the surface; thin enough that the tone still reads as text on it.
@@ -87,7 +90,18 @@ function rgba(h: string, a: number): string {
 }
 
 /** The effect tokens that follow the primary colour. */
-export function effectTokens(p: Palette, mode: 'dark' | 'light'): Record<string, string> {
+export function effectTokens(
+  p: Palette,
+  mode: 'dark' | 'light',
+  flat = false,
+): Record<string, string> {
+  if (flat)
+    return {
+      'glow-focus': `0 0 0 1px ${p.primary}`,
+      'scanline-focus': 'none',
+      'shadow-2': 'none',
+      'shadow-3': 'none',
+    };
   return mode === 'dark'
     ? {
         'glow-focus': `0 0 0 1px ${p.primary}, 0 0 8px ${rgba(p.primary, 0.55)}`,
@@ -112,7 +126,7 @@ export function themeDeclarations(
   const lines: string[] = [];
   for (const [k, v] of Object.entries(colourTokens(p, mode)))
     lines.push(`--ds-color-${k}: ${v};`);
-  for (const [k, v] of Object.entries(effectTokens(p, mode)))
+  for (const [k, v] of Object.entries(effectTokens(p, mode, t.flat === true)))
     lines.push(`--ds-${k}: ${v};`);
   t.radius.forEach((r, i) => lines.push(`--ds-radius-${i + 1}: ${r};`));
   return lines.map((l) => `${indent}${l}`).join('\n');
@@ -154,8 +168,19 @@ export function renderThemeCss(): string {
         `:root [data-theme='${mode}']${name} {\n${themeDeclarations(t, mode, '  ')}\n}`,
       );
   }
+  out.push(...renderPaletteCss());
   out.push(END);
   return out.join('\n');
+}
+
+/** The terminal theme's amber and ice palettes: `data-pal` on the page root, after every mode rule so it wins. */
+export function renderPaletteCss(): string[] {
+  const t = THEME_DATA.find((x) => x.id === 'terminal') as ThemeData;
+  return (['amber', 'ice'] as const).map((pal) => {
+    const palette = TERMINAL[pal];
+    const decl = themeDeclarations({ ...t, dark: palette, light: palette }, 'dark', '  ');
+    return `/* Terminal, ${pal} palette */\n:root[data-theme-name='terminal'][data-pal='${pal}'] {\n${decl}\n}`;
+  });
 }
 
 export const MARKERS = { START, END };
