@@ -3,7 +3,15 @@
 (function () {
   try {
     var root = document.documentElement;
-    var names = ['phosphor', 'tokyo-night', 'catppuccin', 'gruvbox', 'solarized', 'nord', 'terminal'];
+    var names = [
+      'phosphor',
+      'tokyo-night',
+      'catppuccin',
+      'gruvbox',
+      'solarized',
+      'nord',
+      'terminal',
+    ];
     var name = window.localStorage.getItem('crsp.theme-name');
     // A new install is Phosphor, dark (owner decision LOOK D11); a saved 'system' leaves the mode to the OS.
     root.setAttribute('data-theme-name', names.indexOf(name) >= 0 ? name : 'phosphor');
