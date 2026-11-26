@@ -447,7 +447,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.9 | planned: internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
 | R6.10 | planned: internal/logs/store_test.go TestSeparateDatabaseFile |
 | R6.11 | planned: internal/history/bench_test.go BenchmarkHistoryPage; internal/logs/bench_test.go BenchmarkSearchFirstPage |
-| R6.12 | internal/store/jobsdata_test.go TestStoredUTC; apps/web/src/live/format.test.ts |
+| R6.12 | internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/web/src/live/format.test.ts |
 | R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
 | R6.14 | planned: internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory |
 
