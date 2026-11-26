@@ -94,6 +94,8 @@ jobs:
           provenance: false
           sbom: false
           push: true
+          # The weekly run is `--pull --no-cache`: fresh base layers, fresh packages.
+          pull: ${{ env.FRESH == 'true' }}
           no-cache: ${{ env.FRESH == 'true' }}
           cache-from: ${{ env.FRESH != 'true' && format('type=gha,scope=base-{0}', matrix.arch) || '' }}
           tags: ${{ steps.stored.outputs.repo }}:${{ steps.key.outputs.key }}
