@@ -17,7 +17,7 @@ var networkPackages = []string{
 
 func goList(t *testing.T, format string, args ...string) []string {
 	t.Helper()
-	out, err := exec.Command("go", append([]string{"list", "-f", format}, args...)...).Output() //nolint:gosec // fixed go tool call in a test
+	out, err := exec.CommandContext(t.Context(), "go", append([]string{"list", "-f", format}, args...)...).Output() //nolint:gosec // fixed go tool call in a test
 	if err != nil {
 		t.Fatalf("go list %v: %v", args, err)
 	}
