@@ -40,6 +40,9 @@
     "apps/web/src/screens/setup/**": [
       "docs/features/dependency-setup/spec.md"
     ],
+    "apps/website/**": [
+      "docs/features/website/spec.md"
+    ],
     "cmd/crsp/**": [
       "docs/features/cli/spec.md"
     ],

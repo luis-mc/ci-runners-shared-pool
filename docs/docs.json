@@ -6,7 +6,8 @@
     "agent",
     "web-console",
     "cli",
-    "tray"
+    "tray",
+    "website"
   ],
   "topics": [
     "github",
