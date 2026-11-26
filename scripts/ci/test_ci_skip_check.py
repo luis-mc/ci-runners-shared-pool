@@ -26,6 +26,25 @@ class ShouldSkip(unittest.TestCase):
         skip, _ = c.should_skip("pull_request", REPO, "m", fake_api({}, []))
         self.assertFalse(skip)
 
+    def pr_get(self, names):
+        return lambda path: [{"filename": n} for n in names]
+
+    def test_config_only_pull_request_skips(self):
+        get = self.pr_get([".nvmrc", ".claude/settings.json", ".delivery/config.json"])
+        self.assertTrue(c.should_skip("pull_request", REPO, "m", get, pr="7")[0])
+
+    def test_code_in_pull_request_runs(self):
+        get = self.pr_get([".nvmrc", "internal/x.go"])
+        self.assertFalse(c.should_skip("pull_request", REPO, "m", get, pr="7")[0])
+
+    def test_workflow_and_delivery_scripts_run(self):
+        for n in (".github/workflows/ci.yml", ".delivery/gate-result.json", "package.json"):
+            get = self.pr_get([".nvmrc", n])
+            self.assertFalse(c.should_skip("pull_request", REPO, "m", get, pr="7")[0], n)
+
+    def test_empty_pull_request_runs(self):
+        self.assertFalse(c.should_skip("pull_request", REPO, "m", self.pr_get([]), pr="7")[0])
+
     def test_same_tree_skips(self):
         get = fake_api({"m": "T", "p1": "X", "p2": "T"},
                        [{"id": 1, "head_sha": "p1", "conclusion": "success"},

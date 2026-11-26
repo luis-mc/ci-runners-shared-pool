@@ -14,7 +14,9 @@ name: CI
 #   build    the six release targets (build.yml); artifacts crsp-<os>-<arch>
 #   e2e      Playwright against the built Linux binary
 #
-# Documentation-only changes skip this workflow; dev-standards.yml checks them.
+# Documentation-only changes skip this workflow (paths-ignore). Repo-config-only pull requests
+# (.claude, .nvmrc, .gitignore, .delivery/config.json) still start it, and `decide` skips every
+# job, so the run is green and the delivery watcher finds it (DS261, S15).
 on:
   pull_request:
     # Drafts are skipped by the job-level `if`; ready_for_review starts the run
@@ -68,6 +70,7 @@ jobs:
       - id: check
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: python3 scripts/ci/ci_skip_check.py
       # OPS41: the base image build is slow. It runs on a release pull request
       # (head branch *-integration or *-release-N), on main and on a manual run; on any other
