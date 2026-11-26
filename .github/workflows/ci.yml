@@ -685,13 +685,13 @@ jobs:
           sudo cp /var/cache/apt/archives/*.deb "$HOME/pw-debs/"
           sudo chown -R "$USER" "$HOME/pw-debs"
       - name: Save Playwright browsers (main only)
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/CRSP315-playwright-deps') && steps.pw-cache.outputs.cache-hit != 'true'
+        if: github.ref == 'refs/heads/main' && steps.pw-cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: ${{ steps.pw-cache.outputs.cache-primary-key }}
       - name: Save Playwright system packages (main only)
-        if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/CRSP315-playwright-deps') && steps.pw-deb.outputs.cache-hit != 'true'
+        if: github.ref == 'refs/heads/main' && steps.pw-deb.outputs.cache-hit != 'true'
         uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/pw-debs
