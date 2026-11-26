@@ -58,3 +58,72 @@ func TestOfflineDeleteRefusesWhatIsNotOfflineAndCrsps(t *testing.T) {
 		t.Fatalf("an unreadable list must change nothing: %v %v", err, api.deletes)
 	}
 }
+
+// poolOnlyResolver answers like the real resolver: a pool scope has no address.
+type poolOnlyResolver struct{ fakeResolver }
+
+func (p poolOnlyResolver) Resolve(ctx context.Context, s Scope) (Target, error) {
+	if s.Kind == ScopePool {
+		return Target{}, errors.New(`unknown runner scope "pool"`)
+	}
+	return p.fakeResolver.Resolve(ctx, s)
+}
+
+func offlinePoolRig(t *testing.T, status string, busy bool) (*rig, *apiGitHub, Record) {
+	t.Helper()
+	repos := []PoolRepo{repo(1, "a"), repo(2, "b")}
+	r, p := poolRig(t, &repos)
+	var held []github.Runner
+	for i, k := range r.kids(t) {
+		held = append(held, github.Runner{ID: int64(500 + i), Name: k.Name, Status: status, Busy: busy && i == 0})
+	}
+	api := &apiGitHub{fakeGitHub: r.gh, held: held}
+	r.svc.GitHub = api
+	r.svc.Resolver = poolOnlyResolver{}
+	return r, api, p
+}
+
+// R5.88: deleting an offline pool runner deletes its hidden registrations at
+// GitHub, then its own record. The confirmation lists what goes.
+func TestOfflinePoolRunnerDeletesItsRegistrations(t *testing.T) {
+	ctx := context.Background()
+	r, api, p := offlinePoolRig(t, "offline", false)
+	_, err := r.svc.DeleteOfflineRegistration(ctx, p.ID, false, "luis")
+	var nc *NeedsConfirmation
+	if !errors.As(err, &nc) || len(nc.Items) < 3 {
+		t.Fatalf("err = %v, want a yes naming the registrations", err)
+	}
+	if len(api.deletes) != 0 {
+		t.Fatalf("deleted without a yes: %v", api.deletes)
+	}
+	if _, err := r.svc.DeleteOfflineRegistration(ctx, p.ID, true, "luis"); err != nil {
+		t.Fatal(err)
+	}
+	if len(api.deletes) != 2 {
+		t.Fatalf("deletes = %v", api.deletes)
+	}
+	if left := r.list(t); len(left) != 0 {
+		t.Errorf("records left: %+v", left)
+	}
+}
+
+// R5.88: an online or busy registration refuses the whole delete; nothing goes.
+func TestOfflinePoolRunnerRefusesOnlineOrBusy(t *testing.T) {
+	for name, tc := range map[string]struct {
+		status string
+		busy   bool
+	}{"online": {"online", false}, "busy": {"offline", true}} {
+		r, api, p := offlinePoolRig(t, tc.status, tc.busy)
+		before := len(r.list(t))
+		_, err := r.svc.DeleteOfflineRegistration(context.Background(), p.ID, true, "luis")
+		var re *RefusalError
+		if !errors.As(err, &re) || len(api.deletes) != 0 || len(r.list(t)) != before {
+			t.Errorf("%s: err %v deletes %v", name, err, api.deletes)
+		}
+	}
+	r, api, p := offlinePoolRig(t, "offline", false)
+	api.listErr = errors.New("rate limited")
+	if _, err := r.svc.DeleteOfflineRegistration(context.Background(), p.ID, true, "luis"); err == nil || len(api.deletes) != 0 {
+		t.Fatalf("an unreadable list must change nothing: %v %v", err, api.deletes)
+	}
+}
