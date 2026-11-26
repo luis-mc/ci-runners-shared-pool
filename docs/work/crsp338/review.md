@@ -82,7 +82,7 @@ The root cause of most findings: the page mixes three jobs in one list. It is a 
 - The `Nothing has changed yet.` line on Review (UX-30).
 - The table folds on a phone and the page does not scroll sideways.
 
-Rule tension to decide: UX-22 says a switch is saved at once and a check box waits for Save; UX-4 says one primary per screen; UX-30 says a changing wizard has no exception while UX-62 asks for a question card on a destructive step. Options 1 (staged switches), 4 (two actions) and 8's turn-off wizard each need one of these rules clarified in `next-version` first.
+Rule tension to decide: UX-22 says a switch is saved at once and a check box waits for Save; UX-4 says one primary per screen; UX-30 says a changing wizard has no exception while UX-62 asks for a question card on a destructive step. Options 1 (staged switches), 4 (two actions) and the turn-off wizard each need one of these rules clarified in `next-version` first.
 
 ## Options built from these findings
 Six options on `?option=1..6` (see `index.html`). Each answers the findings as follows.

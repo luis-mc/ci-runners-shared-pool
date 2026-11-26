@@ -1,0 +1,187 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CRSP338 Pool setup options</title><style>body{font:15px/1.4 system-ui,sans-serif;margin:0 auto;max-width:1500px;padding:16px;background:#fff;color:#111}h2{margin-top:40px;border-top:2px solid #333;padding-top:12px}h3{margin:8px 0}.row{display:flex;flex-wrap:wrap;gap:16px;align-items:flex-start}.c{border:1px solid #ccc;padding:6px;background:#f7f7f7}.c img{display:block;max-width:100%}.d img{width:420px}.m img{width:150px}small{color:#555}nav a{margin-right:10px}</style></head><body><h1>CRSP338: Pool setup, six options</h1><p>Each state is a real screenshot of the web console on demo data, wide (1300 px, left) and phone (393 px, right). Click an image for full size. Review of the current screen: <a href="review.md">review.md</a>. Run it: start the dev server with <code>VITE_CRSP338_DEMO=1</code> and open <code>/setup/pool?option=1</code> to <code>6</code> (no option = the current screen).</p><nav><a href="#o0">0. Current screen</a><a href="#o1">1. Switch per repository, changes staged</a><a href="#o2">2. Two lists: Using the pool and Not using the pool</a><a href="#o3">3. Status and one Set up the pool button</a><a href="#o4">4. Bulk bar with both actions</a><a href="#o5">5. Status first, grouped by state</a><a href="#o6">6. Plain review and calm progress</a></nav>
+<h2 id="o0">Current. Current screen</h2><p>The screen as built: one list with ticks, one button that flips between Use pool and Stop using pool, a wizard that asks for the repositories again, developer text in Review, a question card for turn off.</p><p><small>Design-system rules followed: CORE-1..7 (findings F1-F13)</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/0-page-1300.png"><img loading="lazy" src="shots/0-page-1300.png" alt="Current screen Page at 1300 px"></a>
+<a class="c m" href="shots/0-page-393.png"><img loading="lazy" src="shots/0-page-393.png" alt="Current screen Page at 393 px"></a>
+</div>
+<h3>Selected</h3><div class="row"><a class="c d" href="shots/0-page-selected-1300.png"><img loading="lazy" src="shots/0-page-selected-1300.png" alt="Current screen Selected at 1300 px"></a>
+<a class="c m" href="shots/0-page-selected-393.png"><img loading="lazy" src="shots/0-page-selected-393.png" alt="Current screen Selected at 393 px"></a>
+</div>
+<h3>Choose</h3><div class="row"><a class="c d" href="shots/0-choose-1300.png"><img loading="lazy" src="shots/0-choose-1300.png" alt="Current screen Choose at 1300 px"></a>
+<a class="c m" href="shots/0-choose-393.png"><img loading="lazy" src="shots/0-choose-393.png" alt="Current screen Choose at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/0-review-1300.png"><img loading="lazy" src="shots/0-review-1300.png" alt="Current screen Review at 1300 px"></a>
+<a class="c m" href="shots/0-review-393.png"><img loading="lazy" src="shots/0-review-393.png" alt="Current screen Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/0-working-1300.png"><img loading="lazy" src="shots/0-working-1300.png" alt="Current screen Turning on at 1300 px"></a>
+<a class="c m" href="shots/0-working-393.png"><img loading="lazy" src="shots/0-working-393.png" alt="Current screen Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/0-done-1300.png"><img loading="lazy" src="shots/0-done-1300.png" alt="Current screen Done at 1300 px"></a>
+<a class="c m" href="shots/0-done-393.png"><img loading="lazy" src="shots/0-done-393.png" alt="Current screen Done at 393 px"></a>
+</div>
+<h3>Turn off: selected</h3><div class="row"><a class="c d" href="shots/0-off-page-selected-1300.png"><img loading="lazy" src="shots/0-off-page-selected-1300.png" alt="Current screen Turn off: selected at 1300 px"></a>
+<a class="c m" href="shots/0-off-page-selected-393.png"><img loading="lazy" src="shots/0-off-page-selected-393.png" alt="Current screen Turn off: selected at 393 px"></a>
+</div>
+<h3>Turn off: question</h3><div class="row"><a class="c d" href="shots/0-off-question-1300.png"><img loading="lazy" src="shots/0-off-question-1300.png" alt="Current screen Turn off: question at 1300 px"></a>
+<a class="c m" href="shots/0-off-question-393.png"><img loading="lazy" src="shots/0-off-question-393.png" alt="Current screen Turn off: question at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/0-off-done-1300.png"><img loading="lazy" src="shots/0-off-done-1300.png" alt="Current screen Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/0-off-done-393.png"><img loading="lazy" src="shots/0-off-done-393.png" alt="Current screen Turn off: Done at 393 px"></a>
+</div>
+<h3>After turn off</h3><div class="row"><a class="c d" href="shots/0-off-after-1300.png"><img loading="lazy" src="shots/0-off-after-1300.png" alt="Current screen After turn off at 1300 px"></a>
+<a class="c m" href="shots/0-off-after-393.png"><img loading="lazy" src="shots/0-off-after-393.png" alt="Current screen After turn off at 393 px"></a>
+</div>
+<h2 id="o1">1. Switch per repository, changes staged</h2><p>Every repository has its own On/Off switch; changes wait in the bottom bar as Review 3 changes, then one Review, Turning, Done wizard. No global Use or Stop button.</p><p><small>Design-system rules followed: CORE-1, CORE-4, CORE-5, UX-4, UX-7, UX-13, UX-22 (tension: switch that waits), UX-30, UX-42, UX-71</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/1-page-1300.png"><img loading="lazy" src="shots/1-page-1300.png" alt="Switch per repository, changes staged Page at 1300 px"></a>
+<a class="c m" href="shots/1-page-393.png"><img loading="lazy" src="shots/1-page-393.png" alt="Switch per repository, changes staged Page at 393 px"></a>
+</div>
+<h3>Selected</h3><div class="row"><a class="c d" href="shots/1-page-selected-1300.png"><img loading="lazy" src="shots/1-page-selected-1300.png" alt="Switch per repository, changes staged Selected at 1300 px"></a>
+<a class="c m" href="shots/1-page-selected-393.png"><img loading="lazy" src="shots/1-page-selected-393.png" alt="Switch per repository, changes staged Selected at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/1-review-1300.png"><img loading="lazy" src="shots/1-review-1300.png" alt="Switch per repository, changes staged Review at 1300 px"></a>
+<a class="c m" href="shots/1-review-393.png"><img loading="lazy" src="shots/1-review-393.png" alt="Switch per repository, changes staged Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/1-working-1300.png"><img loading="lazy" src="shots/1-working-1300.png" alt="Switch per repository, changes staged Turning on at 1300 px"></a>
+<a class="c m" href="shots/1-working-393.png"><img loading="lazy" src="shots/1-working-393.png" alt="Switch per repository, changes staged Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/1-done-1300.png"><img loading="lazy" src="shots/1-done-1300.png" alt="Switch per repository, changes staged Done at 1300 px"></a>
+<a class="c m" href="shots/1-done-393.png"><img loading="lazy" src="shots/1-done-393.png" alt="Switch per repository, changes staged Done at 393 px"></a>
+</div>
+<h3>Turn off: Review</h3><div class="row"><a class="c d" href="shots/1-off-review-1300.png"><img loading="lazy" src="shots/1-off-review-1300.png" alt="Switch per repository, changes staged Turn off: Review at 1300 px"></a>
+<a class="c m" href="shots/1-off-review-393.png"><img loading="lazy" src="shots/1-off-review-393.png" alt="Switch per repository, changes staged Turn off: Review at 393 px"></a>
+</div>
+<h3>Turning off</h3><div class="row"><a class="c d" href="shots/1-off-working-1300.png"><img loading="lazy" src="shots/1-off-working-1300.png" alt="Switch per repository, changes staged Turning off at 1300 px"></a>
+<a class="c m" href="shots/1-off-working-393.png"><img loading="lazy" src="shots/1-off-working-393.png" alt="Switch per repository, changes staged Turning off at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/1-off-done-1300.png"><img loading="lazy" src="shots/1-off-done-1300.png" alt="Switch per repository, changes staged Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/1-off-done-393.png"><img loading="lazy" src="shots/1-off-done-393.png" alt="Switch per repository, changes staged Turn off: Done at 393 px"></a>
+</div>
+<h2 id="o2">2. Two lists: Using the pool and Not using the pool</h2><p>The state is the list. Tick in a list, then Add n to the pool or Remove n from the pool. Each list has one action that names its count.</p><p><small>Design-system rules followed: CORE-4, CORE-7, UX-7, UX-10, UX-12, UX-30, UX-37, UX-38, UX-70</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/2-page-1300.png"><img loading="lazy" src="shots/2-page-1300.png" alt="Two lists: Using the pool and Not using the pool Page at 1300 px"></a>
+<a class="c m" href="shots/2-page-393.png"><img loading="lazy" src="shots/2-page-393.png" alt="Two lists: Using the pool and Not using the pool Page at 393 px"></a>
+</div>
+<h3>Selected</h3><div class="row"><a class="c d" href="shots/2-page-selected-1300.png"><img loading="lazy" src="shots/2-page-selected-1300.png" alt="Two lists: Using the pool and Not using the pool Selected at 1300 px"></a>
+<a class="c m" href="shots/2-page-selected-393.png"><img loading="lazy" src="shots/2-page-selected-393.png" alt="Two lists: Using the pool and Not using the pool Selected at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/2-review-1300.png"><img loading="lazy" src="shots/2-review-1300.png" alt="Two lists: Using the pool and Not using the pool Review at 1300 px"></a>
+<a class="c m" href="shots/2-review-393.png"><img loading="lazy" src="shots/2-review-393.png" alt="Two lists: Using the pool and Not using the pool Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/2-working-1300.png"><img loading="lazy" src="shots/2-working-1300.png" alt="Two lists: Using the pool and Not using the pool Turning on at 1300 px"></a>
+<a class="c m" href="shots/2-working-393.png"><img loading="lazy" src="shots/2-working-393.png" alt="Two lists: Using the pool and Not using the pool Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/2-done-1300.png"><img loading="lazy" src="shots/2-done-1300.png" alt="Two lists: Using the pool and Not using the pool Done at 1300 px"></a>
+<a class="c m" href="shots/2-done-393.png"><img loading="lazy" src="shots/2-done-393.png" alt="Two lists: Using the pool and Not using the pool Done at 393 px"></a>
+</div>
+<h3>Turn off: Review</h3><div class="row"><a class="c d" href="shots/2-off-review-1300.png"><img loading="lazy" src="shots/2-off-review-1300.png" alt="Two lists: Using the pool and Not using the pool Turn off: Review at 1300 px"></a>
+<a class="c m" href="shots/2-off-review-393.png"><img loading="lazy" src="shots/2-off-review-393.png" alt="Two lists: Using the pool and Not using the pool Turn off: Review at 393 px"></a>
+</div>
+<h3>Turning off</h3><div class="row"><a class="c d" href="shots/2-off-working-1300.png"><img loading="lazy" src="shots/2-off-working-1300.png" alt="Two lists: Using the pool and Not using the pool Turning off at 1300 px"></a>
+<a class="c m" href="shots/2-off-working-393.png"><img loading="lazy" src="shots/2-off-working-393.png" alt="Two lists: Using the pool and Not using the pool Turning off at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/2-off-done-1300.png"><img loading="lazy" src="shots/2-off-done-1300.png" alt="Two lists: Using the pool and Not using the pool Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/2-off-done-393.png"><img loading="lazy" src="shots/2-off-done-393.png" alt="Two lists: Using the pool and Not using the pool Turn off: Done at 393 px"></a>
+</div>
+<h2 id="o3">3. Status and one Set up the pool button</h2><p>The page only shows who uses the pool. One button opens the wizard, which owns the pick: Repositories, Review, Turning on, Done. No ticks on the page; blocked rows say why.</p><p><small>Design-system rules followed: CORE-4, CORE-5, CORE-6, UX-4, UX-5, UX-12, UX-30, UX-52, UX-70, UX-71</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/3-page-1300.png"><img loading="lazy" src="shots/3-page-1300.png" alt="Status and one Set up the pool button Page at 1300 px"></a>
+<a class="c m" href="shots/3-page-393.png"><img loading="lazy" src="shots/3-page-393.png" alt="Status and one Set up the pool button Page at 393 px"></a>
+</div>
+<h3>Choose</h3><div class="row"><a class="c d" href="shots/3-choose-1300.png"><img loading="lazy" src="shots/3-choose-1300.png" alt="Status and one Set up the pool button Choose at 1300 px"></a>
+<a class="c m" href="shots/3-choose-393.png"><img loading="lazy" src="shots/3-choose-393.png" alt="Status and one Set up the pool button Choose at 393 px"></a>
+</div>
+<h3>Choose (changed)</h3><div class="row"><a class="c d" href="shots/3-choose-changed-1300.png"><img loading="lazy" src="shots/3-choose-changed-1300.png" alt="Status and one Set up the pool button Choose (changed) at 1300 px"></a>
+<a class="c m" href="shots/3-choose-changed-393.png"><img loading="lazy" src="shots/3-choose-changed-393.png" alt="Status and one Set up the pool button Choose (changed) at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/3-review-1300.png"><img loading="lazy" src="shots/3-review-1300.png" alt="Status and one Set up the pool button Review at 1300 px"></a>
+<a class="c m" href="shots/3-review-393.png"><img loading="lazy" src="shots/3-review-393.png" alt="Status and one Set up the pool button Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/3-working-1300.png"><img loading="lazy" src="shots/3-working-1300.png" alt="Status and one Set up the pool button Turning on at 1300 px"></a>
+<a class="c m" href="shots/3-working-393.png"><img loading="lazy" src="shots/3-working-393.png" alt="Status and one Set up the pool button Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/3-done-1300.png"><img loading="lazy" src="shots/3-done-1300.png" alt="Status and one Set up the pool button Done at 1300 px"></a>
+<a class="c m" href="shots/3-done-393.png"><img loading="lazy" src="shots/3-done-393.png" alt="Status and one Set up the pool button Done at 393 px"></a>
+</div>
+<h3>Turn off: selected</h3><div class="row"><a class="c d" href="shots/3-off-page-selected-1300.png"><img loading="lazy" src="shots/3-off-page-selected-1300.png" alt="Option 3 turn off, repositories unticked at 1300 px"></a><a class="c m" href="shots/3-off-page-selected-393.png"><img loading="lazy" src="shots/3-off-page-selected-393.png" alt="Option 3 turn off, repositories unticked at 393 px"></a></div>
+<h3>Turn off: Review</h3><div class="row"><a class="c d" href="shots/3-off-review-1300.png"><img loading="lazy" src="shots/3-off-review-1300.png" alt="Status and one Set up the pool button Turn off: Review at 1300 px"></a>
+<a class="c m" href="shots/3-off-review-393.png"><img loading="lazy" src="shots/3-off-review-393.png" alt="Status and one Set up the pool button Turn off: Review at 393 px"></a>
+</div>
+<h3>Turning off</h3><div class="row"><a class="c d" href="shots/3-off-working-1300.png"><img loading="lazy" src="shots/3-off-working-1300.png" alt="Status and one Set up the pool button Turning off at 1300 px"></a>
+<a class="c m" href="shots/3-off-working-393.png"><img loading="lazy" src="shots/3-off-working-393.png" alt="Status and one Set up the pool button Turning off at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/3-off-done-1300.png"><img loading="lazy" src="shots/3-off-done-1300.png" alt="Status and one Set up the pool button Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/3-off-done-393.png"><img loading="lazy" src="shots/3-off-done-393.png" alt="Status and one Set up the pool button Turn off: Done at 393 px"></a>
+</div>
+<h2 id="o4">4. Bulk bar with both actions</h2><p>Ticks stay, but the bar offers Turn on (n) and Turn off (m), each counting only the ticked rows it applies to, each disabled with its reason.</p><p><small>Design-system rules followed: CORE-4, UX-4 (tension: two actions), UX-7, UX-12, UX-38, UX-42, UX-71</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/4-page-1300.png"><img loading="lazy" src="shots/4-page-1300.png" alt="Bulk bar with both actions Page at 1300 px"></a>
+<a class="c m" href="shots/4-page-393.png"><img loading="lazy" src="shots/4-page-393.png" alt="Bulk bar with both actions Page at 393 px"></a>
+</div>
+<h3>Selected</h3><div class="row"><a class="c d" href="shots/4-page-selected-1300.png"><img loading="lazy" src="shots/4-page-selected-1300.png" alt="Bulk bar with both actions Selected at 1300 px"></a>
+<a class="c m" href="shots/4-page-selected-393.png"><img loading="lazy" src="shots/4-page-selected-393.png" alt="Bulk bar with both actions Selected at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/4-review-1300.png"><img loading="lazy" src="shots/4-review-1300.png" alt="Bulk bar with both actions Review at 1300 px"></a>
+<a class="c m" href="shots/4-review-393.png"><img loading="lazy" src="shots/4-review-393.png" alt="Bulk bar with both actions Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/4-working-1300.png"><img loading="lazy" src="shots/4-working-1300.png" alt="Bulk bar with both actions Turning on at 1300 px"></a>
+<a class="c m" href="shots/4-working-393.png"><img loading="lazy" src="shots/4-working-393.png" alt="Bulk bar with both actions Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/4-done-1300.png"><img loading="lazy" src="shots/4-done-1300.png" alt="Bulk bar with both actions Done at 1300 px"></a>
+<a class="c m" href="shots/4-done-393.png"><img loading="lazy" src="shots/4-done-393.png" alt="Bulk bar with both actions Done at 393 px"></a>
+</div>
+<h3>Turn off: Review</h3><div class="row"><a class="c d" href="shots/4-off-review-1300.png"><img loading="lazy" src="shots/4-off-review-1300.png" alt="Bulk bar with both actions Turn off: Review at 1300 px"></a>
+<a class="c m" href="shots/4-off-review-393.png"><img loading="lazy" src="shots/4-off-review-393.png" alt="Bulk bar with both actions Turn off: Review at 393 px"></a>
+</div>
+<h3>Turning off</h3><div class="row"><a class="c d" href="shots/4-off-working-1300.png"><img loading="lazy" src="shots/4-off-working-1300.png" alt="Bulk bar with both actions Turning off at 1300 px"></a>
+<a class="c m" href="shots/4-off-working-393.png"><img loading="lazy" src="shots/4-off-working-393.png" alt="Bulk bar with both actions Turning off at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/4-off-done-1300.png"><img loading="lazy" src="shots/4-off-done-1300.png" alt="Bulk bar with both actions Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/4-off-done-393.png"><img loading="lazy" src="shots/4-off-done-393.png" alt="Bulk bar with both actions Turn off: Done at 393 px"></a>
+</div>
+<h2 id="o5">5. Status first, grouped by state</h2><p>Pool health on top (machines, runners, GitHub App), then groups Needs you, Using the pool, Not using the pool, each with one action naming its count. Progress is one card per repository.</p><p><small>Design-system rules followed: CORE-3, CORE-7, UX-10, UX-14, UX-37, UX-41, UX-52, UX-58, UX-75</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/5-page-1300.png"><img loading="lazy" src="shots/5-page-1300.png" alt="Status first, grouped by state Page at 1300 px"></a>
+<a class="c m" href="shots/5-page-393.png"><img loading="lazy" src="shots/5-page-393.png" alt="Status first, grouped by state Page at 393 px"></a>
+</div>
+<h3>Selected</h3><div class="row"><a class="c d" href="shots/5-page-selected-1300.png"><img loading="lazy" src="shots/5-page-selected-1300.png" alt="Status first, grouped by state Selected at 1300 px"></a>
+<a class="c m" href="shots/5-page-selected-393.png"><img loading="lazy" src="shots/5-page-selected-393.png" alt="Status first, grouped by state Selected at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/5-review-1300.png"><img loading="lazy" src="shots/5-review-1300.png" alt="Status first, grouped by state Review at 1300 px"></a>
+<a class="c m" href="shots/5-review-393.png"><img loading="lazy" src="shots/5-review-393.png" alt="Status first, grouped by state Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/5-working-1300.png"><img loading="lazy" src="shots/5-working-1300.png" alt="Status first, grouped by state Turning on at 1300 px"></a>
+<a class="c m" href="shots/5-working-393.png"><img loading="lazy" src="shots/5-working-393.png" alt="Status first, grouped by state Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/5-done-1300.png"><img loading="lazy" src="shots/5-done-1300.png" alt="Status first, grouped by state Done at 1300 px"></a>
+<a class="c m" href="shots/5-done-393.png"><img loading="lazy" src="shots/5-done-393.png" alt="Status first, grouped by state Done at 393 px"></a>
+</div>
+<h3>Turn off: Review</h3><div class="row"><a class="c d" href="shots/5-off-review-1300.png"><img loading="lazy" src="shots/5-off-review-1300.png" alt="Status first, grouped by state Turn off: Review at 1300 px"></a>
+<a class="c m" href="shots/5-off-review-393.png"><img loading="lazy" src="shots/5-off-review-393.png" alt="Status first, grouped by state Turn off: Review at 393 px"></a>
+</div>
+<h3>Turning off</h3><div class="row"><a class="c d" href="shots/5-off-working-1300.png"><img loading="lazy" src="shots/5-off-working-1300.png" alt="Status first, grouped by state Turning off at 1300 px"></a>
+<a class="c m" href="shots/5-off-working-393.png"><img loading="lazy" src="shots/5-off-working-393.png" alt="Status first, grouped by state Turning off at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/5-off-done-1300.png"><img loading="lazy" src="shots/5-off-done-1300.png" alt="Status first, grouped by state Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/5-off-done-393.png"><img loading="lazy" src="shots/5-off-done-393.png" alt="Status first, grouped by state Turn off: Done at 393 px"></a>
+</div>
+<h2 id="o6">6. Plain review and calm progress</h2><p>The page is as today but the bar names one action (Turn on 3) and says what is left alone. Review is sentences, steps are folded away, progress counts repositories.</p><p><small>Design-system rules followed: CORE-3, CORE-5, UX-4, UX-29, UX-30, UX-58, UX-72</small></p>
+<h3>Page</h3><div class="row"><a class="c d" href="shots/6-page-1300.png"><img loading="lazy" src="shots/6-page-1300.png" alt="Plain review and calm progress Page at 1300 px"></a>
+<a class="c m" href="shots/6-page-393.png"><img loading="lazy" src="shots/6-page-393.png" alt="Plain review and calm progress Page at 393 px"></a>
+</div>
+<h3>Selected</h3><div class="row"><a class="c d" href="shots/6-page-selected-1300.png"><img loading="lazy" src="shots/6-page-selected-1300.png" alt="Plain review and calm progress Selected at 1300 px"></a>
+<a class="c m" href="shots/6-page-selected-393.png"><img loading="lazy" src="shots/6-page-selected-393.png" alt="Plain review and calm progress Selected at 393 px"></a>
+</div>
+<h3>Review</h3><div class="row"><a class="c d" href="shots/6-review-1300.png"><img loading="lazy" src="shots/6-review-1300.png" alt="Plain review and calm progress Review at 1300 px"></a>
+<a class="c m" href="shots/6-review-393.png"><img loading="lazy" src="shots/6-review-393.png" alt="Plain review and calm progress Review at 393 px"></a>
+</div>
+<h3>Turning on</h3><div class="row"><a class="c d" href="shots/6-working-1300.png"><img loading="lazy" src="shots/6-working-1300.png" alt="Plain review and calm progress Turning on at 1300 px"></a>
+<a class="c m" href="shots/6-working-393.png"><img loading="lazy" src="shots/6-working-393.png" alt="Plain review and calm progress Turning on at 393 px"></a>
+</div>
+<h3>Done</h3><div class="row"><a class="c d" href="shots/6-done-1300.png"><img loading="lazy" src="shots/6-done-1300.png" alt="Plain review and calm progress Done at 1300 px"></a>
+<a class="c m" href="shots/6-done-393.png"><img loading="lazy" src="shots/6-done-393.png" alt="Plain review and calm progress Done at 393 px"></a>
+</div>
+<h3>Turn off: Review</h3><div class="row"><a class="c d" href="shots/6-off-review-1300.png"><img loading="lazy" src="shots/6-off-review-1300.png" alt="Plain review and calm progress Turn off: Review at 1300 px"></a>
+<a class="c m" href="shots/6-off-review-393.png"><img loading="lazy" src="shots/6-off-review-393.png" alt="Plain review and calm progress Turn off: Review at 393 px"></a>
+</div>
+<h3>Turning off</h3><div class="row"><a class="c d" href="shots/6-off-working-1300.png"><img loading="lazy" src="shots/6-off-working-1300.png" alt="Plain review and calm progress Turning off at 1300 px"></a>
+<a class="c m" href="shots/6-off-working-393.png"><img loading="lazy" src="shots/6-off-working-393.png" alt="Plain review and calm progress Turning off at 393 px"></a>
+</div>
+<h3>Turn off: Done</h3><div class="row"><a class="c d" href="shots/6-off-done-1300.png"><img loading="lazy" src="shots/6-off-done-1300.png" alt="Plain review and calm progress Turn off: Done at 1300 px"></a>
+<a class="c m" href="shots/6-off-done-393.png"><img loading="lazy" src="shots/6-off-done-393.png" alt="Plain review and calm progress Turn off: Done at 393 px"></a>
+</div>
+</body></html>
