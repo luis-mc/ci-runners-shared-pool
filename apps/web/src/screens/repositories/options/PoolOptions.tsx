@@ -37,7 +37,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { TIMING } from '../../../timing';
 import { ApiError, errorText, unwrap, useClient } from '../../../api/api';
 import { useMounted } from '../../../api/mounted';
-import { PUBLIC_SETTING_PATH, mayTry, publicWhileOff, usePublicRepositories } from '../publicRepositories';
+import {
+  PUBLIC_SETTING_PATH,
+  mayTry,
+  publicWhileOff,
+  usePublicRepositories,
+} from '../publicRepositories';
 import { allRepositories, needsYes, type Plan, type Repository } from '../plans';
 import { variableStatus } from '../Repositories';
 
@@ -67,7 +72,8 @@ function useRepos() {
 
 /** Why a repository cannot be changed, in words; none when it can. */
 function whyNot(r: Repository, publicEnabled: boolean | undefined): string | undefined {
-  if (publicWhileOff(r, publicEnabled)) return 'Public: the pool serves private repositories only.';
+  if (publicWhileOff(r, publicEnabled))
+    return 'Public: the pool serves private repositories only.';
   if (!mayTry(r)) return 'You need admin rights on this repository in GitHub.';
   return undefined;
 }
@@ -90,7 +96,13 @@ function byOwner(list: readonly Repository[]) {
     .map((owner) => ({ owner, rows: list.filter((r) => r.owner === owner) }));
 }
 
-function HiddenNote({ list, enabled }: { list: readonly Repository[]; enabled: boolean | undefined }) {
+function HiddenNote({
+  list,
+  enabled,
+}: {
+  list: readonly Repository[];
+  enabled: boolean | undefined;
+}) {
   const hidden = list.filter((r) => publicWhileOff(r, enabled));
   if (hidden.length === 0) return null;
   return (
@@ -116,17 +128,23 @@ interface Lead {
 function repoSteps(plan: Plan | undefined, full: string) {
   return (plan?.steps ?? []).filter((s) => s.target === full);
 }
-function repoState(plan: Plan | undefined, full: string): { kind: StatusKind; word: string } {
+function repoState(
+  plan: Plan | undefined,
+  full: string,
+): { kind: StatusKind; word: string } {
   const st = repoSteps(plan, full);
   if (st.length > 0 && st.every((s) => s.state === 'done' || s.state === 'skipped'))
     return { kind: 'ok', word: 'done' };
-  if (st.some((s) => s.state === 'running' || s.state === 'done')) return { kind: 'running', word: 'working' };
+  if (st.some((s) => s.state === 'running' || s.state === 'done'))
+    return { kind: 'running', word: 'working' };
   return { kind: 'waiting', word: 'waiting' };
 }
 
 function verbOf(changes: readonly Change[]): { work: string; name: string } {
-  if (changes.every((c) => c.to === 'on' && !c.repo.pool_on)) return { work: 'Turning on', name: 'Turn on the pool' };
-  if (changes.every((c) => c.to === 'off')) return { work: 'Turning off', name: 'Turn off the pool' };
+  if (changes.every((c) => c.to === 'on' && !c.repo.pool_on))
+    return { work: 'Turning on', name: 'Turn on the pool' };
+  if (changes.every((c) => c.to === 'off'))
+    return { work: 'Turning off', name: 'Turn off the pool' };
   if (changes.every(isRepair)) return { work: 'Repairing', name: 'Repair the pool' };
   return { work: 'Updating', name: 'Change the pool' };
 }
@@ -136,13 +154,24 @@ function sentence(c: Change): string {
   return `${c.repo.full_name}`;
 }
 
-function ReviewBody({ changes, plan, style }: { changes: readonly Change[]; plan: Plan | undefined; style: ReviewStyle }) {
+function ReviewBody({
+  changes,
+  plan,
+  style,
+}: {
+  changes: readonly Change[];
+  plan: Plan | undefined;
+  style: ReviewStyle;
+}) {
   const on = changes.filter((c) => c.to === 'on' && !isRepair(c));
   const off = changes.filter((c) => c.to === 'off');
   const fix = changes.filter(isRepair);
   const technical = (
     <Disclosure summary={`Technical steps (${plan?.steps.length ?? 0})`}>
-      <BulletList items={(plan?.steps ?? []).map((s) => s.text)} label="Technical steps" />
+      <BulletList
+        items={(plan?.steps ?? []).map((s) => s.text)}
+        label="Technical steps"
+      />
     </Disclosure>
   );
   if (style === 'list') {
@@ -163,7 +192,13 @@ function ReviewBody({ changes, plan, style }: { changes: readonly Change[]; plan
               value: (
                 <Status
                   kind="info"
-                  word={isRepair(c) ? 'will be repaired' : c.to === 'on' ? 'will turn on' : 'will turn off'}
+                  word={
+                    isRepair(c)
+                      ? 'will be repaired'
+                      : c.to === 'on'
+                        ? 'will turn on'
+                        : 'will turn off'
+                  }
                 />
               ),
             }))}
@@ -178,14 +213,22 @@ function ReviewBody({ changes, plan, style }: { changes: readonly Change[]; plan
       <Stack>
         {on.length > 0 ? (
           <Pane title="These will start using the pool" count={on.length}>
-            <BulletList items={on.map((c) => c.repo.full_name)} label="Will start using the pool" />
+            <BulletList
+              items={on.map((c) => c.repo.full_name)}
+              label="Will start using the pool"
+            />
           </Pane>
         ) : null}
         {off.length > 0 ? (
           <Pane title="These will stop using the pool" count={off.length}>
             <Stack>
-              <BulletList items={off.map((c) => c.repo.full_name)} label="Will stop using the pool" />
-              <Text tone="muted">Their runners are removed and their settings are kept.</Text>
+              <BulletList
+                items={off.map((c) => c.repo.full_name)}
+                label="Will stop using the pool"
+              />
+              <Text tone="muted">
+                Their runners are removed and their settings are kept.
+              </Text>
             </Stack>
           </Pane>
         ) : null}
@@ -204,23 +247,33 @@ function ReviewBody({ changes, plan, style }: { changes: readonly Change[]; plan
         {on.length > 0 ? (
           <>
             <Text>{`${count(on.length, 'repository', 'repositories')} will start using the pool:`}</Text>
-            <BulletList items={on.map((c) => c.repo.full_name)} label="Will start using the pool" />
+            <BulletList
+              items={on.map((c) => c.repo.full_name)}
+              label="Will start using the pool"
+            />
           </>
         ) : null}
         {off.length > 0 ? (
           <>
             <Text>{`${count(off.length, 'repository', 'repositories')} will stop using the pool:`}</Text>
-            <BulletList items={off.map((c) => c.repo.full_name)} label="Will stop using the pool" />
+            <BulletList
+              items={off.map((c) => c.repo.full_name)}
+              label="Will stop using the pool"
+            />
           </>
         ) : null}
         {fix.length > 0 ? (
           <>
             <Text>{`${count(fix.length, 'repository', 'repositories')} will get the missing setting back:`}</Text>
-            <BulletList items={fix.map((c) => c.repo.full_name)} label="Will be repaired" />
+            <BulletList
+              items={fix.map((c) => c.repo.full_name)}
+              label="Will be repaired"
+            />
           </>
         ) : null}
         <Text tone="muted">
-          Jobs of these repositories choose their runner by labels. Nothing runs on your machines until a job asks for it.
+          Jobs of these repositories choose their runner by labels. Nothing runs on your
+          machines until a job asks for it.
         </Text>
         {technical}
       </Stack>
@@ -250,7 +303,11 @@ function WorkBody({
             <Card key={c.repo.id} title={c.repo.full_name}>
               <Stack gap="tight">
                 <Status kind={s.kind} word={s.word} />
-                <Progress label={`${verb} ${c.repo.full_name}`} value={done} max={Math.max(st.length, 1)} />
+                <Progress
+                  label={`${verb} ${c.repo.full_name}`}
+                  value={done}
+                  max={Math.max(st.length, 1)}
+                />
               </Stack>
             </Card>
           );
@@ -276,8 +333,20 @@ function WorkBody({
                 name: s.text,
                 value: (
                   <Status
-                    kind={s.state === 'done' ? 'ok' : s.state === 'running' ? 'running' : 'waiting'}
-                    word={s.state === 'done' ? 'done' : s.state === 'running' ? 'working' : 'waiting'}
+                    kind={
+                      s.state === 'done'
+                        ? 'ok'
+                        : s.state === 'running'
+                          ? 'running'
+                          : 'waiting'
+                    }
+                    word={
+                      s.state === 'done'
+                        ? 'done'
+                        : s.state === 'running'
+                          ? 'working'
+                          : 'waiting'
+                    }
                   />
                 ),
               }))}
@@ -286,7 +355,11 @@ function WorkBody({
         </Stack>
       </Pane>
     );
-  return <Pane title={verb} count={changes.length}>{list}</Pane>;
+  return (
+    <Pane title={verb} count={changes.length}>
+      {list}
+    </Pane>
+  );
 }
 
 export function ChangeWizard({
@@ -308,8 +381,12 @@ export function ChangeWizard({
 }) {
   const client = useClient();
   const { mounted, sleep } = useMounted();
-  const verb = verbOf(changes.length > 0 ? changes : [{ repo: {} as Repository, to: 'on' }]);
-  const names = lead ? [lead.name, 'Review', verb.work, 'Done'] : ['Review', verb.work, 'Done'];
+  const verb = verbOf(
+    changes.length > 0 ? changes : [{ repo: {} as Repository, to: 'on' }],
+  );
+  const names = lead
+    ? [lead.name, 'Review', verb.work, 'Done']
+    : ['Review', verb.work, 'Done'];
   const off = lead ? 1 : 0;
   const [step, setStep] = useState(0);
   const [phase, setPhase] = useState<WizardPhase>(lead ? 'first-run' : 'planning');
@@ -324,7 +401,9 @@ export function ChangeWizard({
     try {
       const p = await unwrap(
         client.POST('/api/v1/repository-plans', {
-          body: { changes: changes.map((c) => ({ repository_id: c.repo.id, pool: c.to })) },
+          body: {
+            changes: changes.map((c) => ({ repository_id: c.repo.id, pool: c.to })),
+          },
         }),
       );
       setPlan(p);
@@ -357,7 +436,11 @@ export function ChangeWizard({
       setPlan(p);
       while (p.state === 'applying' || p.state === 'planned') {
         if (!(await sleep(TIMING.planPollMs))) return;
-        p = await unwrap(client.GET('/api/v1/repository-plans/{planId}', { params: { path: { planId: p.id } } }));
+        p = await unwrap(
+          client.GET('/api/v1/repository-plans/{planId}', {
+            params: { path: { planId: p.id } },
+          }),
+        );
         if (!mounted.current) return;
         setPlan(p);
       }
@@ -375,7 +458,11 @@ export function ChangeWizard({
     if (!plan) return;
     setStopping(true);
     try {
-      await unwrap(client.POST('/api/v1/repository-plans/{planId}/stop', { params: { path: { planId: plan.id } } }));
+      await unwrap(
+        client.POST('/api/v1/repository-plans/{planId}/stop', {
+          params: { path: { planId: plan.id } },
+        }),
+      );
     } catch (e) {
       if (!(e instanceof ApiError && e.status === 409)) setStopping(false);
     }
@@ -383,13 +470,19 @@ export function ChangeWizard({
 
   const total = plan?.steps.length ?? 0;
   const stepsDone = plan?.steps.filter((s) => s.state === 'done').length ?? 0;
-  const reposDone = changes.filter((c) => repoState(plan, c.repo.full_name).word === 'done').length;
-  const current = changes.find((c) => repoState(plan, c.repo.full_name).word === 'working');
+  const reposDone = changes.filter(
+    (c) => repoState(plan, c.repo.full_name).word === 'done',
+  ).length;
+  const current = changes.find(
+    (c) => repoState(plan, c.repo.full_name).word === 'working',
+  );
 
   let body: React.ReactNode;
   if (lead && step === 0) body = lead.body;
-  else if (step === off) body = <ReviewBody changes={changes} plan={plan} style={review} />;
-  else if (step === off + 1) body = <WorkBody changes={changes} plan={plan} style={work} verb={verb.work} />;
+  else if (step === off)
+    body = <ReviewBody changes={changes} plan={plan} style={review} />;
+  else if (step === off + 1)
+    body = <WorkBody changes={changes} plan={plan} style={work} verb={verb.work} />;
   else {
     const on = changes.filter((c) => c.to === 'on' && !isRepair(c)).length;
     const offN = changes.filter((c) => c.to === 'off').length;
@@ -413,7 +506,13 @@ export function ChangeWizard({
               value: (
                 <Status
                   kind={c.to === 'on' ? 'ok' : 'off'}
-                  word={isRepair(c) ? 'repaired' : c.to === 'on' ? 'using the pool' : 'not using the pool'}
+                  word={
+                    isRepair(c)
+                      ? 'repaired'
+                      : c.to === 'on'
+                        ? 'using the pool'
+                        : 'not using the pool'
+                  }
                 />
               ),
             }))}
@@ -458,9 +557,16 @@ export function ChangeWizard({
       }}
       primary={
         lead && step === 0
-          ? { label: lead.nextLabel, onPress: () => void toReview(), disabled: !lead.ready, reason: lead.reason }
+          ? {
+              label: lead.nextLabel,
+              onPress: () => void toReview(),
+              disabled: !lead.ready,
+              reason: lead.reason,
+            }
           : {
-              label: `${verb.name.replace('the pool', '')}${repos(changes.length)}`.replace(/^Turn on /, 'Turn on ').trim(),
+              label: `${verb.name.replace('the pool', '')}${repos(changes.length)}`
+                .replace(/^Turn on /, 'Turn on ')
+                .trim(),
               busyLabel: verb.work,
               onPress: () => void apply(),
             }
@@ -491,7 +597,10 @@ function toggle<T>(set: ReadonlySet<T>, v: T): Set<T> {
 }
 
 function matches(r: Repository, q: string, f: '' | 'on' | 'off'): boolean {
-  return r.full_name.toLowerCase().includes(q.trim().toLowerCase()) && (!f || (f === 'on') === r.pool_on);
+  return (
+    r.full_name.toLowerCase().includes(q.trim().toLowerCase()) &&
+    (!f || (f === 'on') === r.pool_on)
+  );
 }
 
 // ---------------------------------------------------------------- option 1: a switch per repository, changes staged
@@ -501,7 +610,8 @@ function Option1({ list, enabled, start }: Ctx) {
   const [q, setQ] = useState('');
   const [f, setF] = useState<'' | 'on' | 'off'>('');
   const shown = list.filter((r) => !publicWhileOff(r, enabled) && matches(r, q, f));
-  const effective = (r: Repository) => (staged.has(r.id) ? staged.get(r.id) === 'on' : r.pool_on);
+  const effective = (r: Repository) =>
+    staged.has(r.id) ? staged.get(r.id) === 'on' : r.pool_on;
   const flip = (r: Repository, on: boolean) =>
     setStaged((m) => {
       const n = new Map(m);
@@ -509,7 +619,9 @@ function Option1({ list, enabled, start }: Ctx) {
       else n.set(r.id, on ? 'on' : 'off');
       return n;
     });
-  const changes: Change[] = list.filter((r) => staged.has(r.id)).map((r) => ({ repo: r, to: staged.get(r.id)! }));
+  const changes: Change[] = list
+    .filter((r) => staged.has(r.id))
+    .map((r) => ({ repo: r, to: staged.get(r.id)! }));
   return (
     <Page>
       <Pane title="Repositories" count={shown.length}>
@@ -545,7 +657,12 @@ function Option1({ list, enabled, start }: Ctx) {
                         {...(why && !r.pool_on ? { disabledReason: why } : {})}
                       />
                       {staged.has(r.id) ? (
-                        <Status kind="waiting" word={staged.get(r.id) === 'on' ? 'will turn on' : 'will turn off'} />
+                        <Status
+                          kind="waiting"
+                          word={
+                            staged.get(r.id) === 'on' ? 'will turn on' : 'will turn off'
+                          }
+                        />
                       ) : (
                         <RepoStatus r={r} />
                       )}
@@ -560,7 +677,11 @@ function Option1({ list, enabled, start }: Ctx) {
       <ActionBar
         status={unsavedStatus(changes.length) ?? 'No changes'}
         secondary={
-          <Button onPress={() => setStaged(new Map())} disabled={changes.length === 0} reason="Nothing is changed.">
+          <Button
+            onPress={() => setStaged(new Map())}
+            disabled={changes.length === 0}
+            reason="Nothing is changed."
+          >
             Discard changes
           </Button>
         }
@@ -614,13 +735,23 @@ function PickList({
       <Stack gap="tight">
         <Cluster>
           <Button
-            onPress={() => setPicked(new Set(rows.filter((r) => !whyNot(r, enabled) || r.pool_on).map((r) => r.id)))}
+            onPress={() =>
+              setPicked(
+                new Set(
+                  rows.filter((r) => !whyNot(r, enabled) || r.pool_on).map((r) => r.id),
+                ),
+              )
+            }
             disabled={rows.length === 0}
             reason="No repository is listed."
           >
             {`Select all ${rows.length}`}
           </Button>
-          <Button onPress={() => setPicked(new Set())} disabled={picked.size === 0} reason="Nothing is selected.">
+          <Button
+            onPress={() => setPicked(new Set())}
+            disabled={picked.size === 0}
+            reason="Nothing is selected."
+          >
             Clear
           </Button>
         </Cluster>
@@ -634,7 +765,9 @@ function PickList({
               checked={picked.has(r.id)}
               onChange={() => setPicked(toggle(picked, r.id))}
               {...(why ? { disabledReason: why } : {})}
-              {...(s.kind === 'failed' ? { aside: s.word, asideTone: 'needs-you' as const } : {})}
+              {...(s.kind === 'failed'
+                ? { aside: s.word, asideTone: 'needs-you' as const }
+                : {})}
             />
           );
         })}
@@ -660,8 +793,16 @@ function Option2({ list, enabled, start }: Ctx) {
           setPicked={setRem}
           enabled={enabled}
           reason="Tick the repositories to take out of the pool."
-          actionLabel={(n) => (n === 0 ? 'Remove from the pool' : `Remove ${n} from the pool`)}
-          action={() => start(using.filter((r) => rem.has(r.id)).map((r) => ({ repo: r, to: 'off' as const })))}
+          actionLabel={(n) =>
+            n === 0 ? 'Remove from the pool' : `Remove ${n} from the pool`
+          }
+          action={() =>
+            start(
+              using
+                .filter((r) => rem.has(r.id))
+                .map((r) => ({ repo: r, to: 'off' as const })),
+            )
+          }
         />
         <PickList
           title="Not using the pool"
@@ -671,7 +812,13 @@ function Option2({ list, enabled, start }: Ctx) {
           enabled={enabled}
           reason="Tick the repositories to add to the pool."
           actionLabel={(n) => (n === 0 ? 'Add to the pool' : `Add ${n} to the pool`)}
-          action={() => start(not.filter((r) => add.has(r.id)).map((r) => ({ repo: r, to: 'on' as const })))}
+          action={() =>
+            start(
+              not
+                .filter((r) => add.has(r.id))
+                .map((r) => ({ repo: r, to: 'on' as const })),
+            )
+          }
         />
       </CardGrid>
     </Page>
@@ -687,7 +834,9 @@ function Option3({ list, enabled, reload }: Ctx) {
   const choosable = list;
   const changes: Change[] = choosable.flatMap((r) => {
     const on = want.has(r.id);
-    return on !== r.pool_on ? [{ repo: r, to: on ? ('on' as const) : ('off' as const) }] : [];
+    return on !== r.pool_on
+      ? [{ repo: r, to: on ? ('on' as const) : ('off' as const) }]
+      : [];
   });
   const lead: Lead = {
     name: 'Repositories',
@@ -700,11 +849,23 @@ function Option3({ list, enabled, reload }: Ctx) {
           <Text>Tick the repositories that should use the pool.</Text>
           <Cluster>
             <Button
-              onPress={() => setWant(new Set(choosable.filter((r) => r.pool_on || !whyNot(r, enabled)).map((r) => r.id)))}
+              onPress={() =>
+                setWant(
+                  new Set(
+                    choosable
+                      .filter((r) => r.pool_on || !whyNot(r, enabled))
+                      .map((r) => r.id),
+                  ),
+                )
+              }
             >
               {`Select all ${choosable.filter((r) => r.pool_on || !whyNot(r, enabled)).length}`}
             </Button>
-            <Button onPress={() => setWant(new Set())} disabled={want.size === 0} reason="Nothing is selected.">
+            <Button
+              onPress={() => setWant(new Set())}
+              disabled={want.size === 0}
+              reason="Nothing is selected."
+            >
               Clear
             </Button>
           </Cluster>
@@ -746,8 +907,19 @@ function Option3({ list, enabled, reload }: Ctx) {
       <Pane title="The pool">
         <Stack>
           <SummaryLine
-            total={[{ count: using.length, word: 'repository uses the pool', plural: 'repositories use the pool' }]}
-            states={[{ count: list.filter((r) => !r.pool_on && !whyNot(r, enabled)).length, word: 'could be added' }]}
+            total={[
+              {
+                count: using.length,
+                word: 'repository uses the pool',
+                plural: 'repositories use the pool',
+              },
+            ]}
+            states={[
+              {
+                count: list.filter((r) => !r.pool_on && !whyNot(r, enabled)).length,
+                word: 'could be added',
+              },
+            ]}
           />
           <Facts
             items={using.map((r) => ({ name: r.full_name, value: <RepoStatus r={r} /> }))}
@@ -797,10 +969,18 @@ function Option4({ list, enabled, start }: Ctx) {
             }
             selection={
               <>
-                <Button onPress={() => setPicked(new Set(shown.map((r) => r.id)))} disabled={shown.length === 0} reason="No repository is shown.">
+                <Button
+                  onPress={() => setPicked(new Set(shown.map((r) => r.id)))}
+                  disabled={shown.length === 0}
+                  reason="No repository is shown."
+                >
                   {`Select all ${shown.length}`}
                 </Button>
-                <Button onPress={() => setPicked(new Set())} disabled={picked.size === 0} reason="Nothing is selected.">
+                <Button
+                  onPress={() => setPicked(new Set())}
+                  disabled={picked.size === 0}
+                  reason="Nothing is selected."
+                >
                   Clear
                 </Button>
               </>
@@ -819,7 +999,9 @@ function Option4({ list, enabled, start }: Ctx) {
                       help={s.word}
                       checked={picked.has(r.id)}
                       onChange={() => setPicked(toggle(picked, r.id))}
-                      {...(!r.pool_on && whyNot(r, enabled) ? { disabledReason: whyNot(r, enabled)! } : {})}
+                      {...(!r.pool_on && whyNot(r, enabled)
+                        ? { disabledReason: whyNot(r, enabled)! }
+                        : {})}
                     />
                   );
                 })}
@@ -879,7 +1061,12 @@ function Group({
       title={title}
       count={rows.length}
       actions={
-        <Button kind={kind} disabled={sel.length === 0} reason="Tick at least one repository." onPress={() => onAct(sel)}>
+        <Button
+          kind={kind}
+          disabled={sel.length === 0}
+          reason="Tick at least one repository."
+          onPress={() => onAct(sel)}
+        >
           {label(sel.length)}
         </Button>
       }
@@ -895,7 +1082,9 @@ function Group({
               checked={picked.has(r.id)}
               onChange={() => setPicked(toggle(picked, r.id))}
               {...(why ? { disabledReason: why } : {})}
-              {...(variableStatus(r).kind === 'failed' && r.pool_on ? { aside: variableStatus(r).word, asideTone: 'needs-you' as const } : {})}
+              {...(variableStatus(r).kind === 'failed' && r.pool_on
+                ? { aside: variableStatus(r).word, asideTone: 'needs-you' as const }
+                : {})}
             />
           );
         })}
@@ -916,10 +1105,37 @@ function Option5({ list, enabled, start }: Ctx) {
   return (
     <Page>
       <StatGrid>
-        <StatTile label="Machines" value="2" unit="online" change="same" changeText="both ready" to="/setup/machines" linkName="Open Machines" />
-        <StatTile label="Runners" value={String(runners)} unit="ready" change="same" changeText="3 idle, 2 busy" to="/setup/runners" linkName="Open Runners" />
-        <StatTile label="GitHub App" value="Installed" change="better" changeText="webhooks delivering" />
-        <StatTile label="Repositories" value={`${good.length + bad.length} of ${visible.length}`} unit="use the pool" change={bad.length > 0 ? 'worse' : 'same'} changeText={bad.length > 0 ? `${bad.length} needs you` : 'all well'} />
+        <StatTile
+          label="Machines"
+          value="2"
+          unit="online"
+          change="same"
+          changeText="both ready"
+          to="/setup/machines"
+          linkName="Open Machines"
+        />
+        <StatTile
+          label="Runners"
+          value={String(runners)}
+          unit="ready"
+          change="same"
+          changeText="3 idle, 2 busy"
+          to="/setup/runners"
+          linkName="Open Runners"
+        />
+        <StatTile
+          label="GitHub App"
+          value="Installed"
+          change="better"
+          changeText="webhooks delivering"
+        />
+        <StatTile
+          label="Repositories"
+          value={`${good.length + bad.length} of ${visible.length}`}
+          unit="use the pool"
+          change={bad.length > 0 ? 'worse' : 'same'}
+          changeText={bad.length > 0 ? `${bad.length} needs you` : 'all well'}
+        />
       </StatGrid>
       <HiddenNote list={list} enabled={enabled} />
       {bad.length > 0 ? (
@@ -967,8 +1183,18 @@ function Option6({ list, enabled, start }: Ctx) {
   const act: Dir = ons.length > 0 ? 'on' : 'off';
   const target = act === 'on' ? ons : offs;
   const columns: Column<Repository>[] = [
-    { id: 'name', header: 'Repository', cell: (r) => r.full_name, sort: (r) => r.full_name },
-    { id: 'pool', header: 'Pool', cell: (r) => <RepoStatus r={r} />, sort: (r) => String(r.pool_on) },
+    {
+      id: 'name',
+      header: 'Repository',
+      cell: (r) => r.full_name,
+      sort: (r) => r.full_name,
+    },
+    {
+      id: 'pool',
+      header: 'Pool',
+      cell: (r) => <RepoStatus r={r} />,
+      sort: (r) => String(r.pool_on),
+    },
   ];
   return (
     <Page>
@@ -980,8 +1206,14 @@ function Option6({ list, enabled, start }: Ctx) {
             search={<SearchBar value={q} onChange={setQ} label="Search repositories" />}
             selection={
               <>
-                <Button onPress={() => setPicked(new Set(shown.map((r) => r.id)))}>{`Select all ${shown.length}`}</Button>
-                <Button onPress={() => setPicked(new Set())} disabled={picked.size === 0} reason="Nothing is selected.">
+                <Button
+                  onPress={() => setPicked(new Set(shown.map((r) => r.id)))}
+                >{`Select all ${shown.length}`}</Button>
+                <Button
+                  onPress={() => setPicked(new Set())}
+                  disabled={picked.size === 0}
+                  reason="Nothing is selected."
+                >
                   Clear
                 </Button>
               </>
@@ -1014,7 +1246,9 @@ function Option6({ list, enabled, start }: Ctx) {
             reason="Tick the repositories to turn on or off."
             onPress={() => start(target.map((r) => ({ repo: r, to: act })))}
           >
-            {target.length === 0 ? 'Turn on or off' : `${act === 'on' ? 'Turn on' : 'Turn off'} ${target.length}`}
+            {target.length === 0
+              ? 'Turn on or off'
+              : `${act === 'on' ? 'Turn on' : 'Turn off'} ${target.length}`}
           </Button>
         }
       />
@@ -1038,7 +1272,12 @@ export function PoolOption({ option }: { option: number }) {
   const { enabled } = usePublicRepositories();
   const [run, setRun] = useState<Change[] | undefined>(undefined);
   const style = STYLES[option] ?? STYLES[1]!;
-  if (!items) return <Page><Text>Reading the repositories</Text></Page>;
+  if (!items)
+    return (
+      <Page>
+        <Text>Reading the repositories</Text>
+      </Page>
+    );
   if (run)
     return (
       <Page>

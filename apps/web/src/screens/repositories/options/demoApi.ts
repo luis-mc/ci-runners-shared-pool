@@ -1,7 +1,7 @@
 // TEMPORARY (CRSP338): demo data and a stateful fake controller so the six Pool setup options run in the real
 // console without a controller. Loaded only when the dev server starts with VITE_CRSP338_DEMO=1; never part of the build.
 import { createApiClient } from '@crsp/contract';
-import { machine, repository, runner, signedIn } from '../../../testing/mock';
+import { machine, repository, signedIn } from '../../../testing/mock';
 import type { Schemas } from '../../../api/api';
 
 type Repo = Schemas['Repository'];
@@ -16,7 +16,9 @@ interface Stored {
 const LINUX = 'CRSP_RUNS_ON_LINUX';
 function make(owner: string, name: string, over: Partial<Repo> = {}): Repo {
   return repository({
-    id: Math.abs([...`${owner}/${name}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7)),
+    id: Math.abs(
+      [...`${owner}/${name}`].reduce((h, c) => (h * 31 + c.charCodeAt(0)) | 0, 7),
+    ),
     full_name: `${owner}/${name}`,
     owner,
     name,
@@ -57,12 +59,30 @@ function stepsFor(r: Repo, to: 'on' | 'off', repair: boolean): Step[] {
     state: 'planned',
   });
   if (repair)
-    return [mk(1, 'write_variable', `Write variable ${LINUX} of ${t} = ["self-hosted","crsp","linux"]`)];
+    return [
+      mk(
+        1,
+        'write_variable',
+        `Write variable ${LINUX} of ${t} = ["self-hosted","crsp","linux"]`,
+      ),
+    ];
   if (to === 'on')
     return [
-      mk(1, 'write_variable', `Write variable ${LINUX} of ${t} = ["self-hosted","crsp","linux"]`),
-      mk(2, 'write_variable', `Write variable CRSP_RUNS_ON_WINDOWS of ${t} = ["self-hosted","crsp","windows"]`),
-      mk(3, 'write_variable', `Write variable CRSP_RUNS_ON_MACOS of ${t} = ["self-hosted","crsp","macos"]`),
+      mk(
+        1,
+        'write_variable',
+        `Write variable ${LINUX} of ${t} = ["self-hosted","crsp","linux"]`,
+      ),
+      mk(
+        2,
+        'write_variable',
+        `Write variable CRSP_RUNS_ON_WINDOWS of ${t} = ["self-hosted","crsp","windows"]`,
+      ),
+      mk(
+        3,
+        'write_variable',
+        `Write variable CRSP_RUNS_ON_MACOS of ${t} = ["self-hosted","crsp","macos"]`,
+      ),
       mk(4, 'add_runner', `Add runner group crsp-pool to ${t}`),
       mk(5, 'pool_on', `Switch the pool on for ${t}`),
     ];
@@ -102,13 +122,20 @@ export function demoApi(search: string): { client: ReturnType<typeof createApiCl
     }
     const steps = p.plan.steps.map((s, i) => ({
       ...s,
-      state: (i < done ? 'done' : i === done ? 'running' : 'planned') as Step['state'],
+      state:
+        i < done
+          ? ('done' as const)
+          : i === done
+            ? ('running' as const)
+            : ('planned' as const),
     }));
     return { ...p.plan, state: 'applying', steps };
   };
 
   const api = signedIn()
-    .on('GET', '/api/v1/machines', { items: [machine(), machine({ id: 'm2', name: 'build-2' })] })
+    .on('GET', '/api/v1/machines', {
+      items: [machine(), machine({ id: 'm2', name: 'build-2' })],
+    })
     .on('GET', '/api/v1/jobs/groups', { items: [] })
     .on('GET', '/api/v1/github/org-pools', { items: [] })
     .on('GET', '/api/v1/github/repositories', (call) => {
@@ -117,7 +144,9 @@ export function demoApi(search: string): { client: ReturnType<typeof createApiCl
       return { items, stale: { stale: false } };
     })
     .on('POST', '/api/v1/repository-plans', (call) => {
-      const body = call.body as { changes: { repository_id: number; pool: 'on' | 'off' }[] };
+      const body = call.body as {
+        changes: { repository_id: number; pool: 'on' | 'off' }[];
+      };
       const id = `plan-${(n += 1)}`;
       const steps = body.changes.flatMap((c) => {
         const r = repos.find((x) => x.id === c.repository_id);

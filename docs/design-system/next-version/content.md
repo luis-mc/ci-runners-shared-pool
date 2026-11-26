@@ -1959,3 +1959,25 @@ One line of counts, number first, on Setup > Runners, Setup > Summary and the Ov
 | State words | idle, busy, not ready (warning colour above zero), failed (danger colour above zero) |
 | Setup > Summary, Runners card | {n} runner(s) — {n} persistent · {n} ephemeral |
 | Setup > Summary, Machines card | unchanged sentence: {n} machine(s), {cpu} CPU and {gib} GiB in the pool. |
+
+## Pool setup options words (CRSP338, options study, not approved)
+
+Words of the six demo options on Setup > Pool setup. Candidate words only; the owner picks one option, and the rest are deleted.
+
+| Word | Where |
+|---|---|
+| Using the pool, Not using the pool | Filter and list titles; the two states of a repository. |
+| Review {n} change(s), Discard changes, Unsaved changes ({n}) | Option 1 bar. |
+| Switch a repository on or off first. | Reason of the disabled Review button. |
+| will turn on, will turn off, will be repaired | Review status words. |
+| Add {n} to the pool, Remove {n} from the pool | Option 2 list actions. |
+| Tick the repositories to add to the pool., Tick the repositories to take out of the pool. | Their reasons. |
+| Set up the pool, Tick the repositories that should use the pool. | Option 3 page and wizard step. |
+| {n} of {m} repositories use the pool | Option 3 bar status. |
+| Turn on ({n}), Turn off ({n}), {n} selected: {a} to turn on, {b} to turn off | Option 4 bar. |
+| Needs you, Repair {n}, Turn on {n}, Turn off {n}, both ready | Option 5 groups and tiles. |
+| {n} repositories will start using the pool: / will stop using the pool: | Plain Review sentences. |
+| Technical steps ({n}) | The fold that holds the raw steps. |
+| Turning on {i} of {n}: {repository}, working, waiting, done | Progress by repository, never by step. |
+| {n} repositories now use the pool. {n} no longer use the pool. | Done messages. |
+| Public: the pool serves private repositories only., You need admin rights on this repository in GitHub. | Reasons shown on the row. |

@@ -72,10 +72,17 @@ The root cause of most findings: the page mixes three jobs in one list. It is a 
 - Evidence: public repositories are hidden behind a note and a `List them too` link that adds a query parameter; repositories without admin rights are excluded in the wizard but only named in the disabled reason of the global button.
 - Mental model: "Why can I not pick this one, and what do I do?"
 
+### F13. On a phone every row is seven lines tall and the tick is far from the name
+- Rules broken: **UX-16** (works from 360 px), **UX-25** (on a phone a row folds to two lines), **UX-14**, **CORE-4**.
+- Evidence (393 px screenshot `shots/0-page-selected-393.png`): the table folds each repository into a stack: a lone tick, the name, a muted line, then four labelled lines (Pool, Runner type, Fallback label, Jobs now). Eight repositories take about 2000 px; `Use pool` is far below the rows it acts on, and the click colour (F9) is the whole stacked block.
+- Mental model: "a list of names I can switch", not "a record per repository".
+
 ## What already works (keep)
 - One shared wizard part owns the step bar, Stop and Done (UX-54); the plan survives a reload (`?plan=`).
 - The `Nothing has changed yet.` line on Review (UX-30).
 - The table folds on a phone and the page does not scroll sideways.
+
+Rule tension to decide: UX-22 says a switch is saved at once and a check box waits for Save; UX-4 says one primary per screen; UX-30 says a changing wizard has no exception while UX-62 asks for a question card on a destructive step. Options 1 (staged switches), 4 (two actions) and 8's turn-off wizard each need one of these rules clarified in `next-version` first.
 
 ## Options built from these findings
 Six options on `?option=1..6` (see `index.html`). Each answers the findings as follows.
