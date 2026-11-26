@@ -14,16 +14,35 @@ name: CI
 #   build    the six release targets (build.yml); artifacts crsp-<os>-<arch>
 #   e2e      Playwright against the built Linux binary
 #
-# Documentation-only changes skip this workflow; dev-standards.yml checks them.
+# Documentation-only and repo-config-only changes (docs, .delivery, .claude, .nvmrc, .gitignore) skip this
+# workflow; dev-standards.yml checks them.
 on:
   pull_request:
     # Drafts are skipped by the job-level `if`; ready_for_review starts the run
     # when a draft is marked ready.
     types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore: ['**/*.md', 'docs/**']
+    paths-ignore:
+      [
+        '**/*.md',
+        'docs/**',
+        '.delivery/**',
+        '.claude/**',
+        '.nvmrc',
+        '.gitignore',
+        '.github/workflows/dev-standards.yml',
+      ]
   push:
     branches: [main]
-    paths-ignore: ['**/*.md', 'docs/**']
+    paths-ignore:
+      [
+        '**/*.md',
+        'docs/**',
+        '.delivery/**',
+        '.claude/**',
+        '.nvmrc',
+        '.gitignore',
+        '.github/workflows/dev-standards.yml',
+      ]
   workflow_dispatch:
 
 concurrency:
