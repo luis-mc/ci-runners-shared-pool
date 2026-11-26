@@ -10,6 +10,7 @@ import {
   Cluster,
   Empty,
   ErrorSummary,
+  LinkButton,
   Message,
   NumberField,
   Section,
@@ -430,6 +431,10 @@ export function NotificationsSettings() {
             )
           }
         </Load>
+        <Cluster>
+          <Text>What the pool sent, and what became of each message.</Text>
+          <LinkButton to="/notices">See the notices</LinkButton>
+        </Cluster>
         {testing ? <Text>Sending a test. Waiting for the answer.</Text> : null}
         {testLine ? (
           <Message tone={testLine.ok ? 'done' : 'problem'}>

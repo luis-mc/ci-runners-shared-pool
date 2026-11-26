@@ -762,6 +762,41 @@ type ManagedVariable struct {
 	CheckedAt    sql.NullString
 }
 
+type Notice struct {
+	ID          string
+	EventKey    string
+	Type        string
+	SubjectKind string
+	SubjectID   string
+	SubjectName string
+	State       string
+	Tone        string
+	Severity    string
+	Summary     string
+	Link        string
+	Flaps       int64
+	CreatedAt   string
+}
+
+type NoticeDelivery struct {
+	ID          string
+	NoticeID    string
+	ChannelID   string
+	ChannelKind string
+	ChannelName string
+	OwnerLogin  string
+	Target      string
+	Status      string
+	Attempt     int64
+	NextTryAt   string
+	LastError   string
+	GroupCount  int64
+	BurstGroup  string
+	CreatedAt   string
+	UpdatedAt   string
+	DeliveredAt sql.NullString
+}
+
 type NotificationChannel struct {
 	ID              string
 	Kind            string
@@ -783,6 +818,23 @@ type NotificationChannel struct {
 	LastTestOk      sql.NullInt64
 	CreatedAt       string
 	UpdatedAt       string
+}
+
+type NotifyEvent struct {
+	Key          string
+	Type         string
+	SubjectKind  string
+	SubjectID    string
+	SubjectName  string
+	State        string
+	Tone         string
+	Severity     string
+	Summary      string
+	Link         string
+	FirstFiredAt string
+	LastChangeAt string
+	Flaps        int64
+	OpenNoticeID string
 }
 
 type Plan struct {

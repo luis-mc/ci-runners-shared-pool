@@ -7,9 +7,9 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/notify/**", "internal/mail/**"]
+code: ["internal/notify/**", "internal/mail/**", "apps/web/src/screens/notices/**", "cmd/crsp/notify_wiring.go"]
 design_system: [UX-6, UX-9, UX-13, UX-18, UX-20, UX-22, UX-26, UX-27, UX-37, UX-38, UX-52, UX-58, components 8, components 14, components 15, components 18]
-last_verified: 2026-11-24
+last_verified: 2026-11-25
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -17,7 +17,9 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**Partly built (CRSP37).** Built: the notification channels (email over SMTP, signed webhook, desktop), their events and lowest severity, who may change them, the secrets in the OS secret store, the audit rows, and **Send test** for email and webhook (section 7, "Built so far"). **NOT YET IMPLEMENTED:** everything that makes a real notice: the event sources and states, dedupe and rate limits, the delivery queue with retries, real delivery of an event to a channel, the notices list, the mail adapter with bounce feedback, the tray notice stream (so a desktop test cannot show a notice), per-event switches with the role defaults, and the pool thresholds. See section 11.
+**Partly built (CRSP37, CRSP258).** Built: the channels, their events and lowest severity, who may change them, the secrets in the OS secret store, the audit rows and **Send test** (CRSP37); and, since CRSP258, real notices: the event sources and states, dedupe and rate limits, the delivery queue with retries, real delivery to webhook and email, the pool thresholds and the notices list (section 7, "Built in CRSP258"). **NOT YET IMPLEMENTED**, each with its reason in section 11: the tray notice stream (so a desktop notice is kept and waits, and a desktop test cannot show one), the mail provider adapter with bounce feedback and address confirmation (they need an outside mail provider account), per-event switches with the role defaults, and the CLI.
+
+**Platforms.** Built for every system the controller runs on. Run and tested on Windows and Linux. The macOS build is compiled and its unit tests run in CI; it was not run on a real Mac.
 
 ## 1. In one paragraph
 
@@ -81,6 +83,8 @@ No mocks yet. The screens below cite the design system v1 by ID and add no rules
 
 **Notices list.** The console keeps the last 30 days of notices: time (UX-18), event, subject, state and tone (UX-26). It only shows and links (UX-52).
 
+**Built screen (CRSP258).** One page, Notices (`/notices`), reached by the button **See the notices** on Settings, Notifications. A table of shared parts (page, section, table, status, empty state) with columns When, Event, About, State, Tone, What happened and Sent. The Sent column is one status word (the worst delivery decides it) and a row opens to one line per delivery: channel, host or address, result, tries, the next try and the last error. A notice that no channel carries says "Kept here only". A viewer sees only the deliveries of their own channels; an admin or the owner sees all. It has no switch and no form; the button **Open notification settings** goes back to Settings.
+
 **Built screen (CRSP37).** One page, Settings, Notifications (`/settings/notifications`, web-console 4.9), holds all channels instead of the per-event switch grid above: a table (name, kind, where it sends, events, lowest severity, on or off, last test), **Add** and **Edit** open one form that ends with Cancel and Save (UX-24), and each row has **Send test** and **Delete**. **Send test** locks while it runs and says so (UX-13, UX-38); its one result line sits under the table (UX-27). **Delete** asks first and names the channel and the events it stops carrying (UX-62). An email channel needs an address, a mail server, a port and a sender (user name and password are optional); a webhook needs an https address and a signing secret of 16 characters or more, which **Make a secret** fills in. A secret is never shown again: the form says only that one is set, and a field left empty keeps it. Words: Send test, Delete and the event words are in the design system `next-version` content (C7). The page does not yet have the per-event switches with role defaults, the doctor-row severity choice, the job-waiting threshold, the mail-adapter card or the notices list.
 
 **States.**
@@ -96,7 +100,7 @@ No mocks yet. The screens below cite the design system v1 by ID and add no rules
 
 ### Events
 
-**R5.1** — The controller MUST raise these events, each with a stable type name and a subject:
+**R5.1** (built, CRSP258: `machine.offline`, `job.waiting`, `disk.low`, `runner.outdated`, `doctor.finding` and `update.available` are read by polling every 5 s, section 7; "Problem when GitHub has set a date" for `runner.outdated` is planned, GitHub does not publish the date to the pool yet) — The controller MUST raise these events, each with a stable type name and a subject:
 
 | Type | Fires when | Resolves when | Default tone |
 |---|---|---|---|
@@ -107,69 +111,69 @@ No mocks yet. The screens below cite the design system v1 by ID and add no rules
 | `doctor.finding` | The doctor reports a new finding. | The finding is gone on a later run. | By the finding's severity |
 | `update.available` | A newer stable release of `crsp` exists. | The pool runs that version. | Note |
 
-**R5.2** — Each event MUST have a key of type plus subject. The controller MUST keep one state per key: firing or resolved, with the time of the last change.
+**R5.2** (built, CRSP258) — Each event MUST have a key of type plus subject. The controller MUST keep one state per key: firing or resolved, with the time of the last change.
 
-**R5.3** — A notice MUST be made only when a key's state changes (firing to resolved, or resolved to firing). A repeat of the same state MUST make no notice. This is "told once per change".
+**R5.3** (built, CRSP258) — A notice MUST be made only when a key's state changes (firing to resolved, or resolved to firing). A repeat of the same state MUST make no notice. This is "told once per change".
 
-**R5.4** — A doctor finding MUST carry its severity (`error`, `warning`, `info`). A user MUST be able to pick the lowest severity they get, per channel (default: `warning`).
+**R5.4** (built, CRSP258: the lowest severity is the channel's, default `warning`; a doctor `fail` is `error`, `warn` is `warning`) — A doctor finding MUST carry its severity (`error`, `warning`, `info`). A user MUST be able to pick the lowest severity they get, per channel (default: `warning`).
 
-**R5.5** — A `machine.offline` grace time MUST be applied before firing, so that an agent restart or update with drain makes no notice.
+**R5.5** (built, CRSP258) — A `machine.offline` grace time MUST be applied before firing, so that an agent restart or update with drain makes no notice.
 
 ### Who gets what
 
-**R5.6** — A user MUST get notices only about machines and repositories they can see in the console.
+**R5.6** (partly built, CRSP258: every signed-in user sees every machine, so no machine is hidden from a notice; the console has no per-repository view rights yet, so a `job.waiting` notice names its repository for everyone; the deliveries a user sees are only those of their own channels) — A user MUST get notices only about machines and repositories they can see in the console.
 
-**R5.7** (partly built, CRSP37: a user adds personal email and desktop channels, each with its own events and lowest severity; the role defaults are not built) — Each user MUST be able to turn each event on or off for each personal channel (tray, email). Defaults: owner and admins get every event on the tray; viewers get `job.waiting` on the tray; email is off for all.
+**R5.7** (partly built, CRSP37: a user adds personal email and desktop channels, each with its own events and lowest severity; the role defaults and the per-event grid are planned, a user has no channel until they add one) — Each user MUST be able to turn each event on or off for each personal channel (tray, email). Defaults: owner and admins get every event on the tray; viewers get `job.waiting` on the tray; email is off for all.
 
-**R5.8** — The owner and admins MUST be able to set the pool-wide thresholds: the offline grace time, N minutes for `job.waiting`, and the disk percent. Viewers MUST NOT change them.
+**R5.8** (built, CRSP258: API and audit; the CLI and a settings form are planned) — The owner and admins MUST be able to set the pool-wide thresholds: the offline grace time, N minutes for `job.waiting`, and the disk percent. Viewers MUST NOT change them.
 
 **R5.9** (built, CRSP37; a viewer does not see webhooks, because a webhook address can carry a token of its own) — Webhooks MUST be pool-wide. Only the owner and admins MUST be able to add, edit, remove or test them. Each webhook MUST carry its own event filter (types and lowest doctor severity).
 
-**R5.10** — Every setting in the console MUST also be readable and settable from the CLI (`crsp notify ...`), with the same rights.
+**R5.10** (planned: `crsp notify`; the settings exist as API operations, which the CLI will wrap) — Every setting in the console MUST also be readable and settable from the CLI (`crsp notify ...`), with the same rights.
 
 ### Dedupe and rate limits
 
-**R5.11** — A key that fires again within the flap window (default 10 min) after it resolved MUST NOT make a new firing notice. Instead the existing notice stays open, and the notices list counts the flaps.
+**R5.11** (built, CRSP258) — A key that fires again within the flap window (default 10 min) after it resolved MUST NOT make a new firing notice. Instead the existing notice stays open, and the notices list counts the flaps.
 
-**R5.12** — Each user MUST get at most a set number of notices per channel per hour (default 20, ceiling 200). Notices over the cap MUST be held and replaced by one summary at the end of the hour ("12 more notices. Open the console to see them.").
+**R5.12** (built, CRSP258: for personal channels; a webhook is paced by R5.14) — Each user MUST get at most a set number of notices per channel per hour (default 20, ceiling 200). Notices over the cap MUST be held and replaced by one summary at the end of the hour ("12 more notices. Open the console to see them.").
 
-**R5.13** — When five or more notices of one type are made within 60 s, they MUST be sent as one grouped notice ("6 machines are offline") per user and channel.
+**R5.13** (built, CRSP258: the first four go out at once, the fifth and later inside the 60 s are counted into one grouped notice sent when the window ends; personal channels) — When five or more notices of one type are made within 60 s, they MUST be sent as one grouped notice ("6 machines are offline") per user and channel.
 
-**R5.14** — Each webhook endpoint MUST get at most 60 deliveries per minute. Deliveries over that wait in the queue; none are dropped.
+**R5.14** (built, CRSP258) — Each webhook endpoint MUST get at most 60 deliveries per minute. Deliveries over that wait in the queue; none are dropped.
 
 ### Tray and desktop notices
 
-**R5.15** — The tray MUST show each notice for its signed-in user as one OS notice: a Windows toast, a macOS user notification, or a freedesktop notification on Linux.
+**R5.15** (planned: the tray and its stream belong to the tray spec; the controller keeps each desktop notice as a delivery that waits for the tray, `Service.PendingDesktop` and `AckDesktop`) — The tray MUST show each notice for its signed-in user as one OS notice: a Windows toast, a macOS user notification, or a freedesktop notification on Linux.
 
-**R5.16** — Clicking a desktop notice MUST open the console on the subject's page, signed in through a one-time link (decision 0005).
+**R5.16** (planned: tray) — Clicking a desktop notice MUST open the console on the subject's page, signed in through a one-time link (decision 0005).
 
-**R5.17** — The tray MUST remember the last notice it showed, so that a tray restart MUST NOT show a notice twice. Notices made while the tray was closed MUST be shown as one summary when it starts ("3 notices while you were away."), never one by one.
+**R5.17** (planned: tray) — The tray MUST remember the last notice it showed, so that a tray restart MUST NOT show a notice twice. Notices made while the tray was closed MUST be shown as one summary when it starts ("3 notices while you were away."), never one by one.
 
-**R5.18** — When the tray loses the controller for longer than 2 min, it MUST show one local notice ("Lost the controller.") and one more when it is back. It needs no controller to do this.
+**R5.18** (planned: tray) — When the tray loses the controller for longer than 2 min, it MUST show one local notice ("Lost the controller.") and one more when it is back. It needs no controller to do this.
 
 ### Webhooks
 
-**R5.19** (partly built, CRSP37: https is required on save and again at connect time, no redirect is followed; it covers the test send, real deliveries are not built) — A webhook MUST be an HTTPS URL. The controller MUST NOT follow redirects.
+**R5.19** (built, CRSP37 and CRSP258: https is required on save and again at connect time, no redirect is followed, for the test send and for real deliveries) — A webhook MUST be an HTTPS URL. The controller MUST NOT follow redirects.
 
-**R5.20** (partly built, CRSP37: the test body has these fields and no secret; real deliveries are not built) — Each delivery MUST be a JSON POST with: schema version, event id, delivery id, type, subject, state, tone, time, a plain-English summary, and a console link. It MUST NOT carry any token, key or secret.
+**R5.20** (built, CRSP37 and CRSP258: a real delivery has these fields, plus `count` for a grouped one, and no secret) — Each delivery MUST be a JSON POST with: schema version, event id, delivery id, type, subject, state, tone, time, a plain-English summary, and a console link. It MUST NOT carry any token, key or secret.
 
-**R5.21** (partly built, CRSP37: the test send is signed this way; real deliveries are not built) — Each delivery MUST be signed with HMAC-SHA256 over `<timestamp>.<body>`. The headers MUST be `X-CRP-Timestamp` (Unix seconds), `X-CRP-Signature` (`sha256=<hex>`) and `X-CRP-Delivery` (the delivery id, the same on every retry). The guide for receivers MUST say to reject a timestamp older than 5 min.
+**R5.21** (built, CRSP37 and CRSP258: the test and real deliveries are signed this way; the delivery id is the same on every retry; the receiver guide is planned, see section 11) — Each delivery MUST be signed with HMAC-SHA256 over `<timestamp>.<body>`. The headers MUST be `X-CRP-Timestamp` (Unix seconds), `X-CRP-Signature` (`sha256=<hex>`) and `X-CRP-Delivery` (the delivery id, the same on every retry). The guide for receivers MUST say to reject a timestamp older than 5 min.
 
-**R5.22** (partly built, CRSP37: the secret lives only in the OS secret store, is write-only and is replaced by writing a new one; the console, not the controller, makes it (32 random bytes from the browser) and shows it once in the form) — The controller MUST make each webhook secret (32 random bytes), show it once, and store it only in the OS secret store. Rotate MUST make a new secret and show it once; the old one stops at once.
+**R5.22** (partly built, CRSP37; Rotate is planned: the secret lives only in the OS secret store, is write-only and is replaced by writing a new one; the console, not the controller, makes it (32 random bytes from the browser) and shows it once in the form) — The controller MUST make each webhook secret (32 random bytes), show it once, and store it only in the OS secret store. Rotate MUST make a new secret and show it once; the old one stops at once.
 
-**R5.23** — A delivery that fails with a network error, a timeout (10 s), HTTP 408, 429 or 5xx MUST be tried again with exponential backoff and jitter: after about 30 s, 2 min, 10 min, 30 min, 1 h and 2 h. A `Retry-After` up to 1 h MUST be honoured. Any other 4xx MUST NOT be tried again.
+**R5.23** (built, CRSP258: a non-2xx redirect is final like any other 4xx; a refused address is final) — A delivery that fails with a network error, a timeout (10 s), HTTP 408, 429 or 5xx MUST be tried again with exponential backoff and jitter: after about 30 s, 2 min, 10 min, 30 min, 1 h and 2 h. A `Retry-After` up to 1 h MUST be honoured. Any other 4xx MUST NOT be tried again.
 
-**R5.24** — After the last try fails, the delivery MUST be marked failed, and the endpoint MUST show as failing in the console with the last error. Three failed deliveries in a row MUST raise a `doctor.finding` of severity `warning` for that endpoint.
+**R5.24** (built, CRSP258) — After the last try fails, the delivery MUST be marked failed, and the endpoint MUST show as failing in the console with the last error. Three failed deliveries in a row MUST raise a `doctor.finding` of severity `warning` for that endpoint.
 
 ### Email
 
-**R5.25** — Email MUST go through one mail adapter (`internal/mail`), set up by the owner. Nothing outside the adapter MUST talk to a mail provider.
+**R5.25** (planned: needs an outside mail provider account; today email goes by raw SMTP, N5) — Email MUST go through one mail adapter (`internal/mail`), set up by the owner. Nothing outside the adapter MUST talk to a mail provider.
 
-**R5.26** — The adapter MUST take bounce and complaint feedback from the provider, check its signature, and keep a suppression list. It MUST consult the list before every send (STACKSPEC 8.1).
+**R5.26** (planned: needs an outside mail provider account to send bounce feedback) — The adapter MUST take bounce and complaint feedback from the provider, check its signature, and keep a suppression list. It MUST consult the list before every send (STACKSPEC 8.1).
 
-**R5.27** — A user MUST confirm an email address with a one-time code before any notice is sent to it. A suppressed address MUST show as such in the user's settings.
+**R5.27** (planned: the one-time code needs the mail provider, R5.25; until then an email channel sends to the address its owner typed) — A user MUST confirm an email address with a one-time code before any notice is sent to it. A suppressed address MUST show as such in the user's settings.
 
-**R5.28** — Email sends MUST be enqueued as jobs and retried with the backoff of R5.23. A send MUST never run inside a request.
+**R5.28** (built, CRSP258: a send runs in the delivery worker, never in a request; a 5xx answer of the mail server is final, anything else is retried) — Email sends MUST be enqueued as jobs and retried with the backoff of R5.23. A send MUST never run inside a request.
 
 ### Send test
 
@@ -181,31 +185,31 @@ No mocks yet. The screens below cite the design system v1 by ID and add no rules
 
 ### History
 
-**R5.32** — The console MUST list every notice of the last 30 days, with its deliveries and their results, for the subjects the user can see.
+**R5.32** (built, CRSP258) — The console MUST list every notice of the last 30 days, with its deliveries and their results, for the subjects the user can see.
 
 ## 6. Non-functional requirements
 
-**R6.1** — A firing notice MUST reach the delivery queue within 5 s of the state change, and a desktop notice MUST appear within 10 s when the tray is connected.
+**R6.1** (built for the queue, CRSP258: the sources are read every 5 s and the delivery is written in the same transaction; the desktop part waits for the tray stream) — A firing notice MUST reach the delivery queue within 5 s of the state change, and a desktop notice MUST appear within 10 s when the tray is connected.
 
 **R6.2** (partly built, CRSP37: holds for channels; no mail credential of an adapter or tray credential exists yet) — No webhook secret, mail credential or tray credential MUST appear in the database, a log line, a crash file, the audit log, an API answer after creation, or a notice body.
 
-**R6.3** (partly built, CRSP37: the test send never goes out unsigned or with a guessed password) — Sending MUST fail closed: if the secret store cannot give the webhook secret, the delivery MUST NOT be sent unsigned; it stays queued and raises a `doctor.finding`.
+**R6.3** (built, CRSP37 and CRSP258: neither the test nor a real delivery goes out unsigned or with a guessed password; a delivery waits, is not counted as a try, and the finding names the endpoint) — Sending MUST fail closed: if the secret store cannot give the webhook secret, the delivery MUST NOT be sent unsigned; it stays queued and raises a `doctor.finding`.
 
-**R6.4** — A delivery job MUST be written in the same transaction as the state change that made it, so a controller crash loses no notice (stack profile section 11).
+**R6.4** (built, CRSP258: the delivery rows are the queue, in the same database; `job_queue` is not used) — A delivery job MUST be written in the same transaction as the state change that made it, so a controller crash loses no notice (stack profile section 11).
 
-**R6.5** — Notices and delivery records MUST be deleted after 30 days. The suppression list MUST be kept until the owner removes an entry.
+**R6.5** (partly built, CRSP258: notices, deliveries and resolved states are pruned after 30 days; the suppression list needs R5.26) — Notices and delivery records MUST be deleted after 30 days. The suppression list MUST be kept until the owner removes an entry.
 
-**R6.6** (partly built, CRSP37: every create, change, delete and test of a channel is in the audit log, with no secret; the mail adapter and the pool thresholds are not built) — Every change to webhooks, the mail adapter and pool-wide thresholds MUST be written to the audit log: who, what, when (product brief, Security).
+**R6.6** (partly built, CRSP37 and CRSP258: every create, change, delete and test of a channel, and every change of the pool thresholds, is in the audit log, with no secret; the mail adapter is not built) — Every change to webhooks, the mail adapter and pool-wide thresholds MUST be written to the audit log: who, what, when (product brief, Security).
 
-**R6.7** — Desktop notice text and console text MUST use the words and formats of design system v1 content: dates and times per UX-18, tones per UX-26, no retired words.
+**R6.7** (partly built, CRSP258: the words come from one table in `internal/notify/text.go`; the retired-words guard over them is planned) — Desktop notice text and console text MUST use the words and formats of design system v1 content: dates and times per UX-18, tones per UX-26, no retired words.
 
-**R6.8** — A desktop notice MUST be readable without its colour or icon: the tone and the subject are in its words (UX-26, UX-58).
+**R6.8** (built, CRSP258: the title carries the tone as a word) — A desktop notice MUST be readable without its colour or icon: the tone and the subject are in its words (UX-26, UX-58).
 
-**R6.9** — The notifier MUST hold at most 10 000 queued deliveries. Over that, the oldest Note-tone deliveries MUST be dropped first, and a `doctor.finding` MUST say how many.
+**R6.9** (built, CRSP258) — The notifier MUST hold at most 10 000 queued deliveries. Over that, the oldest Note-tone deliveries MUST be dropped first, and a `doctor.finding` MUST say how many.
 
 ## 7. Design
 
-Planned, NOT YET IMPLEMENTED.
+The picture below is the design. The channels (CRSP37) and the state, rules, queue and notices list (CRSP258) are built as described in "Built so far" and "Built in CRSP258"; the mail adapter and the tray stream in the picture are NOT YET IMPLEMENTED.
 
 ```mermaid
 flowchart TB
@@ -269,7 +273,22 @@ Operations: `listNotificationChannels`, `createNotificationChannel`, `updateNoti
 - **Limits.** One test per channel per user per 10 s (429 `rate_limited`, R5.31). The contract also names 5 tests per minute per user; no rate-limit middleware enforces that yet.
 - **Audit.** `notification.channel.create`, `.update`, `.delete` (in the same transaction as the change) and `.test` (with the kind and the result, not the message).
 - **Delete.** Without `confirm=true` the answer is 409 `needs_confirmation` naming the channel and its events (UX-62).
-- **Events and delivery.** The live event hub (`internal/events`) carries only the M1 live-view events (`job.waiting` among them); `machine.offline`, `disk.low`, `runner.outdated`, `doctor.finding` and `update.available` are not published anywhere yet, and R5.1 puts the events in milestone 8. So no event is delivered to a channel: delivery is NOT YET IMPLEMENTED (section 11).
+- **Events and delivery (as of CRSP37; replaced by CRSP258 below).** The live event hub (`internal/events`) carries only the M1 live-view events (`job.waiting` among them); `machine.offline`, `disk.low`, `runner.outdated`, `doctor.finding` and `update.available` are not published anywhere yet, and R5.1 puts the events in milestone 8. So no event is delivered to a channel: delivery is NOT YET IMPLEMENTED (section 11).
+
+### Built in CRSP258
+
+Operations: `listNotices` (GET `/api/v1/notices`), `getNotificationThresholds` and `setNotificationThresholds` (GET and PUT `/api/v1/notification-thresholds`, the last for admins and the owner). Code: `internal/notify` (`engine.go`, `queue.go`, `deliver.go`, `list.go`, `text.go`), `internal/store/notices.go`, `cmd/crsp/notify_wiring.go`, `apps/web/src/screens/notices/`.
+
+- **Data.** Migration `00048_notices.sql`: `notify_event` (one row per key: type, subject kind, id and name, state, tone, severity, summary, link, first fired, last change, flap count, the id of the open notice), `notices` (one row per notice made) and `notice_deliveries` (one row per notice and channel: status, tries, next try, last error, and for a grouped or summary delivery its count). The delivery rows are the queue; no `job_queue` row is used, so there is one transaction and one place to look. A delivery names its channel and a host or address only, never a path, a token or a secret (R6.2). The pool thresholds are one settings row, `notify_thresholds`, with the defaults of R5.1 when it is unset. `notify_pref` and `mail_address` are not built (section 11).
+- **Sources.** `Service.Observe(scope, facts)` takes the complete set of facts of one event type (and subject kinds); a key that is new or resolved and has a fact fires, a firing key in scope with no fact resolves. A source that fails changes nothing: silence from a source is never an all-clear. `cmd/crsp/notify_wiring.go` reads the other areas through their public interfaces and changes none of them: `machines.Service.List` (offline: the agent is not online, was seen once, is not the controller; fires `grace` after its last sign of life), the store's queued jobs (waiting longer than N minutes), `machinehealth.Service.Views` (a known volume below the threshold; it resolves 2 points above it; a runner app or agent older than the pinned version), `doctor.Service.Findings` (`fail` is `error`, `warn` is `warning`, `info` is `info`) and `update.Manager.Status`. The sources are read every 5 s. `Service.Report` sets one key and serves the notifier's own findings.
+- **State and notices.** `change` runs in one transaction: it reads the key, and only on a change of state writes the new state, the notice and one delivery per carrying channel. A channel carries a notice when it is on, names the event, and for a doctor finding the finding's severity is at least the channel's lowest. A key that fires again less than the flap window (default 10 min) after it resolved makes no new notice: the open notice counts the flap.
+- **Limits.** Personal channels: at most `hourly_cap` (default 20, ceiling 200) deliveries in any hour; later ones are held and replaced after an hour by one summary notice (`notice.summary`, "12 more notices. Open the console to see them."). The fifth delivery of one type and state inside 60 s becomes one grouped delivery that counts every later one and goes out when the 60 s end ("5 machines are offline."); the first four go out at once. A webhook endpoint gets at most 60 deliveries a minute; the rest wait in the queue. The queue holds at most 10 000 deliveries: over that the oldest Note-tone ones are dropped and a `doctor.finding` says how many.
+- **Delivery worker.** `Service.Run` ticks every 2 s. A webhook delivery is the JSON of R5.20 (and `count` for a grouped one), signed as in "Built so far"; an email delivery is a plain message through the channel's mail server; a desktop delivery becomes `waiting_tray` and is kept for the tray (`PendingDesktop`, `AckDesktop`). Retry (webhook and email): network error, timeout, 408, 429 and 5xx wait about 30 s, 2 min, 10 min, 30 min, 1 h and 2 h (jitter of 20 %); a Retry-After up to 1 h is honoured; any other 4xx, a redirect, a refused address and a 5xx answer of a mail server are final; after the seventh try the delivery is `failed` and shows its last error. A secret that cannot be read keeps the delivery queued (the try is not counted) and raises a `doctor.finding` for the endpoint; nothing is sent unsigned.
+- **Failing endpoint.** After three failed deliveries in a row, or an unreadable secret, the notifier raises a `doctor.finding` of severity `warning` with subject kind `endpoint`; it resolves when the endpoint delivers again.
+- **Retention.** Notices, deliveries and resolved states older than 30 days are deleted once a minute at most.
+- **Words.** Titles, tones, the resolved line and the group line come from `internal/notify/text.go`; a delivery's title carries the tone as a word ("Machine offline (Problem)").
+- **Who sees what.** `GET /api/v1/notices` is for any signed-in user and lists the last 30 days (up to 500). An admin or the owner sees every delivery; another user sees the deliveries of their own channels. The thresholds can be read by anyone and changed only by an admin or the owner; the change is audited with the old and new values.
+- **Not run on a real machine.** The tests use fake receivers (an in-process TLS server and an in-process mail server) and a fake clock. Nothing was sent to an outside address.
 
 ## 8. Failure modes
 
@@ -285,51 +304,51 @@ Operations: `listNotificationChannels`, `createNotificationChannel`, `updateNoti
 
 ## 9. How it is proven
 
-A row with a path has that test (built, CRSP37). A row that says planned names the path where its test will live; it is NOT YET IMPLEMENTED.
+A row with a path has that test. A row that says planned names why it is not built; it is NOT YET IMPLEMENTED. Tests from CRSP258 are in `internal/notify/engine_test.go` (engine) and `internal/notify/queue_test.go` (queue and delivery).
 
 | Requirement | Test |
 |---|---|
-| R5.1 | planned: internal/notify/events_test.go, TestEachEventFiresAndResolves |
-| R5.2 | planned: internal/notify/state_test.go, TestOneStatePerKey |
-| R5.3 | planned: internal/notify/state_test.go, TestNoticeOnlyOnChange |
-| R5.4 | planned: internal/notify/rules_test.go, TestDoctorSeverityFloor |
-| R5.5 | planned: internal/notify/events_test.go, TestOfflineGraceSkipsRestart |
-| R5.6 | planned: internal/notify/rules_test.go, TestOnlyVisibleSubjects |
-| R5.7 | internal/notify/notify_test.go, TestScopes (personal channels); the role defaults are planned: internal/notify/rules_test.go, TestPerUserPerEventDefaults |
-| R5.8 | planned: internal/api/notify_test.go, TestThresholdsNeedAdmin |
+| R5.1 | internal/notify/engine_test.go, TestEachEventFiresAndResolves; TestSourcesAreReadAndAFailingSourceChangesNothing; cmd/crsp wiring is typechecked and linted, the sources are not unit-tested against a real machines service (planned) |
+| R5.2 | internal/notify/engine_test.go, TestNoticeOnlyOnChange |
+| R5.3 | internal/notify/engine_test.go, TestNoticeOnlyOnChange |
+| R5.4 | internal/notify/engine_test.go, TestDoctorSeverityFloor |
+| R5.5 | internal/notify/engine_test.go, TestOfflineGraceSkipsRestart |
+| R5.6 | partly: internal/notify/queue_test.go, TestListShowsDeliveriesOnlyToTheirOwner; the per-repository part is planned (no per-repository view right exists) |
+| R5.7 | internal/notify/notify_test.go, TestScopes (personal channels); internal/notify/engine_test.go, TestChannelsGetOnlyTheirEvents; the role defaults are planned |
+| R5.8 | internal/notify/queue_test.go, TestThresholdsNeedAdminAndAreValidated; internal/api/handlers_notify_test.go, TestThresholdsNeedAdmin |
 | R5.9 | internal/notify/notify_test.go, TestScopes; internal/api/handlers_notify_test.go, TestNotifyRolesAndSecretsNeverReturned |
 | R5.10 | planned: cmd/crsp/notify_test.go, TestCLIMatchesConsole |
-| R5.11 | planned: internal/notify/limits_test.go, TestFlapWindow |
-| R5.12 | planned: internal/notify/limits_test.go, TestHourlyCapAndSummary |
-| R5.13 | planned: internal/notify/limits_test.go, TestBurstIsGrouped |
-| R5.14 | planned: internal/notify/webhook/webhook_test.go, TestEndpointRateNeverDrops |
-| R5.15 | planned: internal/tray/notice_test.go, TestOSNoticePerPlatform; e2e/tests/tray-notice.spec.ts |
+| R5.11 | internal/notify/engine_test.go, TestFlapWindow |
+| R5.12 | internal/notify/engine_test.go, TestHourlyCapAndSummary |
+| R5.13 | internal/notify/engine_test.go, TestBurstIsGrouped |
+| R5.14 | internal/notify/queue_test.go, TestEndpointRateNeverDrops |
+| R5.15 | planned: internal/tray/notice_test.go, TestOSNoticePerPlatform; the controller side is internal/notify/queue_test.go, TestDesktopWaitsForTheTray |
 | R5.16 | planned: internal/tray/notice_test.go, TestClickOpensSubjectWithOneTimeLink |
 | R5.17 | planned: internal/tray/notice_test.go, TestRestartShowsNoRepeatAndOneSummary |
 | R5.18 | planned: internal/tray/notice_test.go, TestLostControllerNotice |
-| R5.19 | internal/notify/notify_test.go, TestValidation, TestWebhookTestFailures (redirect), TestGuardRefusesLoopbackAtConnectTime, TestGuardAddresses; delivery is planned: internal/notify/webhook/webhook_test.go, TestHTTPSOnlyNoRedirects |
-| R5.20 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked (the test body); delivery is planned: internal/notify/webhook/webhook_test.go, TestPayloadShapeHasNoSecrets |
-| R5.21 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestSignKnownVector; internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest |
-| R5.22 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestUpdateSecretSemantics; apps/web/src/screens/settings/Notifications.test.tsx (Make a secret) |
-| R5.23 | planned: internal/notify/webhook/webhook_test.go, TestRetryScheduleAndRetryAfter |
-| R5.24 | planned: internal/notify/webhook/webhook_test.go, TestFailingEndpointRaisesFinding |
-| R5.25 | planned: guards (depguard rule in .golangci.yml): only internal/mail imports a mail client |
-| R5.26 | planned: internal/mail/mail_test.go, TestFeedbackSignedAndSuppressionConsulted |
-| R5.27 | planned: internal/mail/mail_test.go, TestAddressNeedsConfirmCode |
-| R5.28 | planned: internal/mail/mail_test.go, TestSendIsQueuedAndRetried |
+| R5.19 | internal/notify/notify_test.go, TestValidation, TestWebhookTestFailures (redirect), TestGuardRefusesLoopbackAtConnectTime, TestGuardAddresses; internal/notify/queue_test.go, TestOtherClientErrorsAreNotRetried (a redirect and a refused address are final) |
+| R5.20 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked; internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete |
+| R5.21 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestSignKnownVector; internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete, TestRetryScheduleAndRetryAfter (same delivery id) |
+| R5.22 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestUpdateSecretSemantics; apps/web/src/screens/settings/Notifications.test.tsx (Make a secret); Rotate is planned |
+| R5.23 | internal/notify/queue_test.go, TestRetryScheduleAndRetryAfter, TestRetryAfterIsHonouredUpToAnHour, TestOtherClientErrorsAreNotRetried, TestNetworkErrorIsRetried |
+| R5.24 | internal/notify/queue_test.go, TestFailingEndpointRaisesFinding |
+| R5.25 | planned: needs an outside mail provider account; guard: only internal/mail imports a mail client |
+| R5.26 | planned: needs an outside mail provider account |
+| R5.27 | planned: needs an outside mail provider account |
+| R5.28 | internal/notify/queue_test.go, TestEmailGoesThroughTheQueue, TestEmailRefusedIsFinalAndShown |
 | R5.29 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestEmailTestStartTLSAndAuth, TestDesktopTestSaysWhatIsMissing; e2e/tests/web-console/notifications.spec.ts |
 | R5.30 | internal/notify/notify_test.go, TestWebhookTestFailures, TestEmailTestFailures; apps/web/src/screens/settings/Notifications.test.tsx (Send test) |
 | R5.31 | internal/notify/notify_test.go, TestTestRateLimitPerChannelAndUser; internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest |
-| R5.32 | planned: e2e/tests/notifications.spec.ts, notices list shows 30 days with deliveries |
-| R6.1 | planned: internal/notify/latency_test.go, TestQueueWithin5s |
-| R6.2 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestCreateEmailKeepsPasswordOnlyInSecretStore; internal/store/notify_test.go, TestNotificationChannelsHoldNoSecretColumn; internal/api/handlers_notify_test.go, TestNotifyRolesAndSecretsNeverReturned |
-| R6.3 | internal/notify/notify_test.go, TestWebhookTestFailures (the secret store cannot give the secret); delivery is planned: internal/notify/webhook/webhook_test.go, TestNoSecretNoSend |
-| R6.4 | planned: internal/notify/state_test.go, TestDeliveryInSameTransaction |
-| R6.5 | planned: internal/notify/retention_test.go, TestThirtyDayPrune |
-| R6.6 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestDeleteNeedsConfirmAndRemovesSecrets; internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest (the audit rows) |
+| R5.32 | internal/notify/queue_test.go, TestListShowsDeliveriesOnlyToTheirOwner; apps/web/src/screens/notices/Notices.test.tsx |
+| R6.1 | partly: internal/notify/engine_test.go, TestStateNoticeAndDeliveryTogether (queued in the state change); the 5 s poll is a constant, not a timing test |
+| R6.2 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestCreateEmailKeepsPasswordOnlyInSecretStore; internal/store/notify_test.go, TestNotificationChannelsHoldNoSecretColumn; internal/store/no_secrets_test.go; internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete (no secret, no path in a body or a target) |
+| R6.3 | internal/notify/notify_test.go, TestWebhookTestFailures; internal/notify/queue_test.go, TestNoSecretNoSend |
+| R6.4 | internal/notify/engine_test.go, TestStateNoticeAndDeliveryTogether |
+| R6.5 | internal/notify/queue_test.go, TestThirtyDayPrune |
+| R6.6 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestDeleteNeedsConfirmAndRemovesSecrets; internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest; internal/notify/queue_test.go, TestThresholdsNeedAdminAndAreValidated (the audit row) |
 | R6.7 | planned: guards (design-system retired-words guard over notice text) |
-| R6.8 | planned: internal/notify/text_test.go, TestToneInWords |
-| R6.9 | planned: internal/notify/limits_test.go, TestQueueCeiling |
+| R6.8 | partly: internal/notify/queue_test.go, TestEmailGoesThroughTheQueue (the subject carries the tone as a word); apps/web/src/screens/notices/Notices.test.tsx |
+| R6.9 | internal/notify/queue_test.go, TestQueueCeiling |
 
 ## 10. Decisions
 
@@ -353,17 +372,20 @@ A row with a path has that test (built, CRSP37). A row that says planned names t
 
 ## 11. Not built yet
 
-Built by CRSP37: the channel store, the secrets, the audit rows, the five operations, Send test for email and webhook, and the Notifications settings page (section 7, "Built so far").
+Built by CRSP37: the channel store, the secrets, the audit rows, the five operations, Send test for email and webhook, and the Notifications settings page. Built by CRSP258: the event sources, the state per key, dedupe, the hourly cap, grouping, the delivery queue with retries, real delivery to webhook and email, the failing-endpoint finding, retention, the queue ceiling, the pool thresholds (API and audit) and the Notices page.
 
-NOT YET IMPLEMENTED:
+NOT YET IMPLEMENTED, with the reason:
 
-- Real delivery of an event to a channel (the event filter and lowest severity are stored, but nothing reads them yet). The sources `machine.offline`, `disk.low`, `runner.outdated`, `doctor.finding` and `update.available` are not published by any area, and the event hub (`internal/events`) has no such types; R5.1 places the events in milestone 8.
-- Event state and rules: `internal/notify` (the `Channel` interface seam), dedupe, flap window, rate limits, grouping (R5.2 to R5.5, R5.11 to R5.14).
-- The delivery queue, retries with backoff, failing-endpoint findings (R5.23, R5.24, R6.4, R6.9).
-- Desktop notices: the tray notice stream from the controller, with the tray's signed-in user (R5.15 to R5.18). A desktop **Send test** answers `ok: false` until then.
-- The mail adapter with provider API, bounce feedback, suppression list and address confirmation (R5.25 to R5.28). Email today is raw SMTP, see N5.
-- Per-event switches with the role defaults, the pool thresholds (R5.8), the CLI (R5.10), the notices list (R5.32), retention of notices (R6.5), the controller making the webhook secret and a Rotate action (R5.22).
-- Doctor findings and update checks depend on the doctor and update features.
+- **Desktop notices on screen (R5.15 to R5.18).** The tray and its signed-in user belong to the tray spec (open question 6). The controller keeps each desktop notice as a delivery that waits for the tray (`PendingDesktop`, `AckDesktop`); no stream route exists, so a desktop **Send test** still answers `ok: false`. Not run on any system's OS notice.
+- **The mail provider adapter, bounce feedback, the suppression list and address confirmation (R5.25 to R5.27).** They need an account with an outside mail provider to send and to receive signed feedback, which a test cannot have. Email goes by raw SMTP (N5, open question 1) and is queued and retried like a webhook (R5.28).
+- **Per-event switches with the role defaults (R5.7) and a thresholds form.** A user has no channel until they add one. The thresholds can be set through the API (R5.8); no screen sets them yet.
+- **The CLI (R5.10).** `crsp notify` is not written; the operations it will wrap exist.
+- **A Rotate action and the controller making the webhook secret (R5.22).**
+- **The receiver guide (R5.21)** that says to reject a timestamp older than 5 minutes; the rule is in section 7, "Built so far".
+- **`runner.outdated` as Problem when GitHub has set a date (R5.1)**, and a per-repository view right for R5.6.
+- **The retired-words guard over notice text (R6.7).**
+- **Not run on a real Mac.** The macOS build is compiled and unit-tested in CI only. Windows and Linux are the systems the tests ran on.
+- Doctor findings and update checks are read through the doctor and the update manager; a change to either area's public interface needs a change here.
 
 ## 12. Code map
 
@@ -375,8 +397,18 @@ Source: internal/store/notify.go
 Source: internal/store/queries/notifications.sql
 Source: internal/store/migrations/00010_notifications.sql
 Source: apps/web/src/screens/settings/Notifications.tsx
+Source: internal/notify/engine.go
+Source: internal/notify/queue.go
+Source: internal/notify/deliver.go
+Source: internal/notify/list.go
+Source: internal/notify/text.go
+Source: internal/store/notices.go
+Source: internal/store/queries/notices.sql
+Source: internal/store/migrations/00048_notices.sql
+Source: cmd/crsp/notify_wiring.go
+Source: apps/web/src/screens/notices/Notices.tsx
 
-Planned paths, NOT YET IMPLEMENTED: `internal/notify/webhook/`, `internal/mail/`, the tray notice stream and mode.
+Planned paths, NOT YET IMPLEMENTED: `internal/mail/`, the tray notice stream and mode. The webhook delivery lives in `internal/notify/deliver.go`, not in a `webhook/` package.
 
 ## Design-system proof
 
