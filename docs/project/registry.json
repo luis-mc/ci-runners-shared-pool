@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T06:38+00:00",
+  "updated": "2026-11-26T18:23+00:00",
   "tasks": [
     {
       "id": "CIX1",
@@ -329,15 +329,14 @@
       "id": "CRSP2",
       "owner": "project",
       "app": "crsp",
-      "status": "Waiting",
+      "status": "Needs you",
       "item": "Review milestone 1 on a real machine",
       "detail": "Orchestrator runs it on v0.1.23 (owner 22 Nov): steps 1,3,6-12,14; not 2,4,5,13",
-      "expected": "25 Nov ~10:00",
-      "changed": "2026-11-24T15:00+00:00",
-      "expected_basis": "no progress since 24 Nov; waits on owner decision",
+      "expected": "27 Nov ~09:00",
+      "changed": "2026-11-26T13:19+00:00",
+      "expected_basis": "owner review on a real machine, crsp login",
       "rides": "LOOK60",
-      "started": "2026-11-22T21:03+00:00",
-      "waits_on": "work"
+      "started": "2026-11-22T21:03+00:00"
     },
     {
       "id": "CRSP3",
@@ -4004,11 +4003,13 @@
       "owner": "project",
       "app": "",
       "status": "Needs you",
-      "item": "Switch moobable, comics-organizer, home-automation, lan-link to crsp",
-      "detail": "Owner 22 Nov 08:45: full switch, then validate, fix and improve crsp",
-      "expected": "25 Nov ~10:00",
-      "changed": "2026-11-24T15:00+00:00",
-      "expected_basis": "no progress since 24 Nov; waits on owner decision"
+      "item": "Switch 4 repos from dead pool-main to crsp-home",
+      "detail": "Old pool-main is gone, no runners. moobable, comics-organizer, home-automation, lan-link still point at it. Needs your go; moobable also needs a runner.",
+      "expected": "26 Nov ~22:00",
+      "changed": "2026-11-26T18:01+00:00",
+      "expected_basis": "pool offline on GameRoomPC; needs owner check, then switch",
+      "no_release": "ops change on other repos, ships nothing",
+      "started": "2026-11-25T16:27+00:00"
     },
     {
       "id": "CRSP227",
@@ -4202,30 +4203,25 @@
       "id": "CRSP240",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Fix flaky race test TestMaintainReleasesWhenCancelledWhileRunning",
       "detail": "internal/cli: under -race the cancel sometimes loses to the server reply, so maintain exits 0 (PR #401 run 45333705402)",
-      "expected": "25 Nov",
-      "changed": "2026-11-24T05:48+00:00",
-      "expected_basis": "next release wave after RELEASE-63"
+      "expected": "26 Nov ~18:45",
+      "changed": "2026-11-26T18:01+00:00",
+      "expected_basis": "agent still running; PR and CI ~30 min",
+      "rides": "CRSP245",
+      "started": "2026-11-25T09:54+00:00"
     },
     {
       "id": "CRSP241",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-67: Setup header, Pool match, Runners list",
       "detail": "Join LOOK69, LOOK70, LOOK71 on main; one CI run per PR, merge on green.",
-      "expected": "25 Nov ~23:30",
-      "changed": "2026-11-25T00:11+00:00",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T13:19+00:00",
       "release": 67,
-      "phases": [
-        {
-          "name": "ci",
-          "start": "2026-11-25T00:30+00:00",
-          "end": "2026-11-25T23:30+00:00"
-        }
-      ],
       "started": "2026-11-25T00:11+00:00"
     },
     {
@@ -4237,6 +4233,1284 @@
       "detail": "Playwright webServer fails on Windows ('{' is not recognized), so the pre-push e2e gate (DL-88) can never pass here and every spec push needs --no-verify. Fix the command, prove branch_gate --e2e-only passes locally.",
       "expected": "25 Nov",
       "changed": "2026-11-25T06:35+00:00"
+    },
+    {
+      "id": "CRSP243",
+      "owner": "project",
+      "app": "crsp",
+      "status": "Live",
+      "item": "Study: CRSP installs missing dependencies (Docker) with guidance",
+      "detail": "Research how others do it; feature page and plan: detect, offer, install, verify per system, type and target machine, in setup, add machine and add runner, always with feedback and guidance",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T12:05+00:00",
+      "no_release": "study ships nothing",
+      "started": "2026-11-25T09:54+00:00"
+    },
+    {
+      "id": "CRSP244",
+      "owner": "project",
+      "app": "crsp",
+      "status": "Built",
+      "item": "Look for updates installs with no confirm; stale page after update",
+      "detail": "Manual look must only look and offer Update to X; Automatic installs only from the idle timer. Console shows Service is restarting, not Failed to fetch; page reloads on a missing chunk (Setup-*.js) with a route error boundary",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T12:49+00:00",
+      "rides": "CRSP245",
+      "started": "2026-11-25T09:54+00:00"
+    },
+    {
+      "id": "CRSP245",
+      "owner": "project",
+      "app": "crsp",
+      "status": "Running",
+      "item": "Release 68: updates fix, pool-add-agent fixes, flaky test",
+      "detail": "CRSP244, OPS94, OPS95, CRSP240",
+      "expected": "26 Nov ~19:30",
+      "changed": "2026-11-26T17:47+00:00",
+      "release": 68,
+      "started": "2026-11-25T09:54+00:00",
+      "expected_basis": "agents to 18:45 (OPS94/95/240), join 10, CI 30, merge 5 min",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-26T13:10+00:00",
+          "end": "2026-11-26T18:45+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-26T18:45+00:00",
+          "end": "2026-11-26T18:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-26T18:55+00:00",
+          "end": "2026-11-26T19:25+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-26T19:25+00:00",
+          "end": "2026-11-26T19:30+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 30
+      }
+    },
+    {
+      "id": "CRSP246",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Study: runs-on.com vs CRSP",
+      "detail": "Cloud study: research runs-on.com, full functional and non-functional comparison with CRSP (better/same/worse), CRSP feature gaps with value and usability impact. Lives under docs/studies/.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T12:52+00:00",
+      "no_release": "study only",
+      "started": "2026-11-25T12:04+00:00"
+    },
+    {
+      "id": "CRSP247",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Live command terminal and real progress in action screens",
+      "detail": "Wizard/action screens show a terminal (commands run, machine name, role), real download %, and an honest overall bar that never sits stuck",
+      "expected": "26 Nov ~18:15",
+      "changed": "2026-11-26T17:38+00:00",
+      "expected_basis": "branch pushed, no PR yet; PR and CI ~40 min",
+      "rides": "CRSP245",
+      "started": "2026-11-25T12:59+00:00"
+    },
+    {
+      "id": "CRSP248",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Build dependency setup M1 (CRSP243 study)",
+      "detail": "Detect, offer with facts, install WSL2/Docker, resume, undo; D-DEP-1..11 at recommended defaults",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T15:04+00:00",
+      "rides": "CRSP245",
+      "started": "2026-11-25T12:59+00:00"
+    },
+    {
+      "id": "CRSP249",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Milestone status page",
+      "detail": "Check M1 to M8 against the specs, tests and change notes, then publish one status page.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T13:10+00:00",
+      "no_release": "ships nothing, a published page",
+      "started": "2026-11-25T13:07+00:00"
+    },
+    {
+      "id": "CRSP250",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Update runs-on study with verified site facts",
+      "detail": "Replace inferred rows in docs/studies/runs-on-vs-crsp with facts read from runs-on.com on this PC (pricing, security, DR, warm pools, cache, support, upgrades)",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T13:31+00:00",
+      "no_release": "study; ships nothing",
+      "started": "2026-11-25T13:18+00:00"
+    },
+    {
+      "id": "CRSP251",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Combined plan: milestones, CRSP243 install work, CRSP246 gaps",
+      "detail": "One plan page for owner agreement. No work starts until agreed.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T13:33+00:00",
+      "no_release": "a plan page, ships no code",
+      "started": "2026-11-25T13:31+00:00"
+    },
+    {
+      "id": "CRSP252",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Release: combined plan wave 1 (M2, M8, gaps)",
+      "detail": "Join and CI for rows A,B,C,F,G,H,I,M,Q,R,T,U,N of the combined plan",
+      "expected": "26 Nov ~22:35",
+      "changed": "2026-11-26T17:55+00:00",
+      "release": 69,
+      "expected_basis": "waits for CRSP271 to 21:50; join 15, CI 25, merge 5 min",
+      "release_waits_on": [
+        "CRSP245"
+      ],
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-26T13:20+00:00",
+          "end": "2026-11-26T21:50+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-26T21:50+00:00",
+          "end": "2026-11-26T22:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-26T22:05+00:00",
+          "end": "2026-11-26T22:30+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-26T22:30+00:00",
+          "end": "2026-11-26T22:35+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 30
+      }
+    },
+    {
+      "id": "CRSP253",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Plan row A: doctor for pool containers",
+      "detail": "doctor R5.37, R5.38",
+      "expected": "26 Nov ~17:15",
+      "changed": "2026-11-26T16:40+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP254",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Plan row B: runner gaps (ephemeral details)",
+      "detail": "runners R5.34, R5.63, R5.64, R5.92, R5.93, R6.5",
+      "expected": "26 Nov ~17:15",
+      "changed": "2026-11-26T16:39+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP255",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Plan row C: shared per-machine tool cache",
+      "detail": "sticky folders, atomic renames; caches M2, machines R5.60",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T17:26+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP256",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Plan row F: minutes and money saved on screen",
+      "detail": "Overview tile, rates, ranges, compare view; observability R5.16-R5.19, R5.34; G6",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:11+00:00",
+      "expected_basis": "un-held by owner; starts after RELEASE-70 live (new folders)",
+      "started": "2026-11-25T14:22+00:00",
+      "waits_on": "work",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP257",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Plan row G: history CSV export and audit hash chain",
+      "detail": "R5.14, R5.28",
+      "expected": "26 Nov ~17:15",
+      "changed": "2026-11-26T16:40+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP258",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Plan row H: notifications that fire",
+      "detail": "notifications R5.1-R5.28",
+      "expected": "26 Nov ~18:40",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "fix agent starts 17:51-17:52, ~35 min, then CI ~15 min",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP259",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Plan row I: config as code",
+      "detail": "export, dry-run plan, apply",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:11+00:00",
+      "expected_basis": "un-held by owner; starts after RELEASE-70 live (new folders)",
+      "started": "2026-11-25T14:22+00:00",
+      "waits_on": "work",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP260",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Plan row M: public CRSP website on Vercel, spec first",
+      "detail": "Spec for the public site in apps/web (Comiclex apps/web model, signed-out, static): home, product, docs, Controller-only download with release notes and checksums. No agent download. LAN console is apps/controller-console, served by the controller. Remote app parked (CRSP305).",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T17:36+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP261",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Plan row Q: cloud overflow, target-neutral (G1)",
+      "detail": "fallback variable points at any cloud label",
+      "expected": "26 Nov ~18:40",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "fix agent starts 17:51-17:52, ~35 min, then CI ~15 min",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP262",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Plan row R: metrics export (G2)",
+      "detail": "Prometheus then OpenTelemetry",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T18:26+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP263",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Plan row T: uptime per machine and fallback reason (G7)",
+      "detail": "builds on OPS83",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:39+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP264",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Plan row U: free-form size labels (G9)",
+      "detail": "cpu=4, ram=8; builds on CRSP89, OPS73",
+      "expected": "26 Nov ~18:40",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "fix agent starts 17:51-17:52, ~35 min, then CI ~15 min",
+      "rides": "CRSP252",
+      "started": "2026-11-25T14:22+00:00"
+    },
+    {
+      "id": "CRSP265",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Plan row N: dependency install step one (DEP1-3,9,14,16)",
+      "detail": "waits for CRSP248 merge (PR 420)",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:32+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T15:04+00:00"
+    },
+    {
+      "id": "CRSP266",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Row S: debug access to a running job (spec)",
+      "detail": "Plan row S (G4): controlled, logged SSH into a running job, off by default. Spec in the same branch.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T16:45+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T15:36+00:00"
+    },
+    {
+      "id": "CRSP267",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Row Y: agent auto-update, rollout, placement and removal (M3)",
+      "detail": "Plan row Y (M3): agent auto-update and rollout, machine placement and removal. All OSes.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T18:26+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T15:36+00:00"
+    },
+    {
+      "id": "CRSP268",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Row D: move this repo's CI onto the pool",
+      "detail": "Plan row D. Starts when row C (CRSP255) merges. Records M2 evidence.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T19:25+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T17:26+00:00"
+    },
+    {
+      "id": "CRSP269",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Row E: spec header sweep",
+      "detail": "Plan row E. Fix stale 'contract only' and 'NOT YET IMPLEMENTED' lines. Starts when A, B, C merge.",
+      "expected": "26 Nov ~19:30",
+      "changed": "2026-11-26T17:54+00:00",
+      "expected_basis": "agent starts 17:59, ~60 min, CI ~30 min",
+      "rides": "CRSP252",
+      "started": "2026-11-26T17:54+00:00"
+    },
+    {
+      "id": "CRSP270",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Row O: dependency install step two",
+      "detail": "Plan row O (DEP4-8,10-13,15). Starts when row N (CRSP265) merges.",
+      "expected": "26 Nov ~17:15",
+      "changed": "2026-11-26T16:39+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T16:25+00:00"
+    },
+    {
+      "id": "CRSP271",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Row J: remaining observability items",
+      "detail": "Plan row J, about 35 planned items. Starts when F and G (CRSP256, CRSP257) merge.",
+      "expected": "26 Nov ~21:30",
+      "changed": "2026-11-26T17:54+00:00",
+      "expected_basis": "agent starts 17:59, up to 4 PRs over ~3 h, CI ~30 min",
+      "rides": "CRSP252",
+      "started": "2026-11-26T17:54+00:00"
+    },
+    {
+      "id": "CRSP272",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row V: caches, cache receiver and mirrors (M7, G5)",
+      "detail": "Plan row V. Actions cache receiver, git mirror, registry mirror, cache warmth and wipe. Starts when row C (CRSP255) merges.",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:11+00:00",
+      "expected_basis": "un-held by owner; starts after RELEASE-70 live (new folders)",
+      "started": "2026-11-25T17:26+00:00",
+      "waits_on": "work",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP273",
+      "owner": "project",
+      "app": "",
+      "status": "On hold",
+      "item": "Row W: package proxy for npm, PyPI, crates, apt (M7, G8)",
+      "detail": "Plan row W. Waits for the row V design to be agreed.",
+      "expected": "27 Nov ~09:00",
+      "changed": "2026-11-26T16:39+00:00",
+      "expected_basis": "on hold by the owner; reviewed tomorrow morning",
+      "no_release": "design row"
+    },
+    {
+      "id": "CRSP274",
+      "owner": "project",
+      "app": "",
+      "status": "On hold",
+      "item": "Row K: installers per OS and release notes (M8)",
+      "detail": "Plan row K. Check what is left of MSI, pkg, deb, rpm. Waits on row Y (CRSP267) design.",
+      "expected": "27 Nov ~09:00",
+      "changed": "2026-11-26T16:39+00:00",
+      "expected_basis": "on hold by the owner; reviewed tomorrow morning",
+      "no_release": "design row"
+    },
+    {
+      "id": "CRSP275",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row Z: Windows and Linux VM per job (M4, G10), spec",
+      "detail": "Plan row Z (runners R5.28). One spec agent; owner reviews spec before build. Test VM boot exists (crsp vm).",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "release 71 starts only after RELEASE-70 is live (new folders)",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP276",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row AA: macOS VM backend (M5), spec",
+      "detail": "Plan row AA (runners R5.29). Virtualization.framework. Built, CI-tested, not run on a real Mac. Owner reviews spec first.",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "release 71 starts only after RELEASE-70 is live (new folders)",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP277",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row AB: microVMs, Firecracker or Cloud Hypervisor (M6), spec",
+      "detail": "Plan row AB (runners R5.30). Needs row Z design. Owner reviews spec first.",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "release 71 starts only after RELEASE-70 is live (new folders)",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP278",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row P: dependency install for offline machines (M3, DEP15)",
+      "detail": "Plan row P. Controller fetches, checks and serves. Needs rows O and Y merged.",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "release 71 starts only after RELEASE-70 is live (new folders)",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP279",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row X: milestone releases, tag, notes, doctor (M8)",
+      "detail": "Plan row X. Tag, notes and doctor cover new parts, per milestone as each completes.",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "release 71 starts only after RELEASE-70 is live (new folders)",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP280",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row L: code signing (deferred)",
+      "detail": "Plan row L. Owner deferred 25 Nov: releases stay unsigned.",
+      "expected": "31 Jan",
+      "changed": "2026-11-25T15:54+00:00",
+      "expected_basis": "deferred by owner to 31 Jan"
+    },
+    {
+      "id": "CRSP281",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Row Q2: overflow priority rules, GitHub-hosted and AWS EC2",
+      "detail": "Owner 25 Nov: several clouds with configurable priority. First targets GitHub-hosted runners (free minutes, per OS or size, budget cap) then AWS EC2 when free minutes or budget run out. Set up from the web app. Builds on CRSP261.",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "release 71 starts only after RELEASE-70 is live (new folders)",
+      "waits_on": "work",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP282",
+      "owner": "project",
+      "app": "",
+      "status": "Dropped",
+      "item": "Fix red PR 416 (CRSP244 lint)",
+      "detail": "Fix the lint failure on the CRSP244 branch; merge on green.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:40+00:00",
+      "rides": "CRSP245",
+      "started": "2026-11-25T15:55+00:00",
+      "dropped_reason": "PR closed, nothing left to fix"
+    },
+    {
+      "id": "CRSP283",
+      "owner": "project",
+      "app": "",
+      "status": "Dropped",
+      "item": "Fix red PR 421 (CRSP256 docs-map)",
+      "detail": "Rebuild docs/docs-map.json with docs_index.py build on the CRSP256 branch; merge on green.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:40+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T15:55+00:00",
+      "dropped_reason": "PR closed, nothing left to fix"
+    },
+    {
+      "id": "CRSP284",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Fix PR 427 CRSP262 citation-test (UX-22, UX-24 need a test path)",
+      "detail": "dev-standards design guards fail: observability spec cites UX-22 and UX-24 with no backticked test path.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T19:26+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T16:25+00:00"
+    },
+    {
+      "id": "CRSP285",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Fix PR 425 TRAY7 docs check warning (stale review-visuals)",
+      "detail": "dev-standards strict docs check: design-system next-version review-visuals older than files; run design_system.py visuals.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T19:26+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T16:25+00:00"
+    },
+    {
+      "id": "CRSP286",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Perf fix: run and job lists (audit P-1 to P-4)",
+      "detail": "Rewrite ListRuns/ListJobs to count and page cheaply, add composite indexes, widen read pool; benchmark with 10k runs and 100k jobs",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:02+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T16:40+00:00"
+    },
+    {
+      "id": "CRSP287",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Perf fix: API compression, cache, live reload (P-5, P-6)",
+      "detail": "gzip and ETag on API, asset cache headers, debounce and coalesce live reloads, drop redundant poll",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:02+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T16:41+00:00"
+    },
+    {
+      "id": "CRSP288",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Perf fix: overview reads and unchecked handlers (P-7)",
+      "detail": "Overview concurrent reads, count in SQL; review insights, timeline, forecast, fillFollowUps, machines handlers and fix what is slow",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:02+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T16:41+00:00"
+    },
+    {
+      "id": "CRSP289",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Perf audit round 2 after fixes",
+      "detail": "Re-run performance audit on merged fixes; log new findings as tasks",
+      "expected": "27 Nov ~02:50",
+      "changed": "2026-11-26T18:05+00:00",
+      "expected_basis": "1st: starts after RELEASE-70 live 02:05, audit ~45 min",
+      "no_release": "audit only"
+    },
+    {
+      "id": "CRSP290",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Perf fix: audit round 2 findings",
+      "detail": "Fix every finding of CRSP289; one PR per area, merge on green",
+      "expected": "27 Nov ~03:50",
+      "changed": "2026-11-26T18:05+00:00",
+      "expected_basis": "2nd: waits on audit CRSP289 (02:50), fixes ~60 min",
+      "rides": "CRSP329",
+      "waits_on": "work"
+    },
+    {
+      "id": "CRSP291",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Perf audit round 3 after round 2 fixes",
+      "detail": "Third performance audit on merged round 2 fixes; log new findings as tasks",
+      "expected": "27 Nov ~04:30",
+      "changed": "2026-11-26T18:05+00:00",
+      "expected_basis": "3rd: waits on fixes CRSP290 (03:50), audit ~40 min",
+      "no_release": "audit only, ships nothing",
+      "waits_on": "work"
+    },
+    {
+      "id": "CRSP292",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Perf fix: audit round 3 findings",
+      "detail": "Fix every finding of round 3 audit; merge on green, then release",
+      "expected": "27 Nov ~05:05",
+      "changed": "2026-11-26T18:05+00:00",
+      "expected_basis": "4th: waits on audit CRSP291 (04:30), fixes ~35 min",
+      "rides": "CRSP329",
+      "waits_on": "work"
+    },
+    {
+      "id": "CRSP293",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Fix macOS agentlink test failure in CI",
+      "detail": "internal/agentlink package fails on macos-latest after about 10 s (no test name in log); blocks #429, #425, #416",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T04:32+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T18:26+00:00"
+    },
+    {
+      "id": "CRSP294",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Fix main e2e: Remove button under bar; flaky Maintain test",
+      "detail": "Main CI red after CRSP267: ux-action-bar 360px /setup/machines/m1 has Remove from the pool under the bar; keyboard walk setup/machines; TestMaintainReleasesWhenCancelledWhileRunning flaky.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T09:38+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T20:24+00:00"
+    },
+    {
+      "id": "CRSP295",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Join all open PRs into one train, one CI (RELEASE-67/68/69)",
+      "detail": "Join #433, #432, #431, #428, #416, #429, #421 and #434 into one branch; fix conflicts and the red PR 416; one PR, one full CI, merge on green",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T22:51+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T21:11+00:00"
+    },
+    {
+      "id": "CRSP296",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Console UI: one compressed JS bundle, cached",
+      "detail": "Owner request 25 Nov: collapse all UX component JS into one compressed file (no per-screen chunks); gzip/brotli precompressed, immutable cache for hashed assets (P-5), fewer requests.",
+      "expected": "26 Nov ~18:40",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "fix agent starts 17:51-17:52, ~35 min, then CI ~15 min",
+      "rides": "CRSP252",
+      "started": "2026-11-25T22:27+00:00"
+    },
+    {
+      "id": "CRSP297",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Runner tables: Type vs Isolation columns",
+      "detail": "Type = persistent/ephemeral; new Isolation column (container / on the machine). Setup Runners tab and Pool machine card.",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "agent starts 17:54, spec then code ~50 min, CI ~25 min",
+      "rides": "CRSP252",
+      "started": "2026-11-25T22:30+00:00"
+    },
+    {
+      "id": "CRSP298",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Counter summary as one inline line",
+      "detail": "Setup Runners: merge the machine line and the idle/busy/not ready rows into one line; shared summary-line part, other counter lists too.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T11:46+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T22:30+00:00"
+    },
+    {
+      "id": "CRSP299",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Runner filter bar: 3 design options",
+      "detail": "Filter bar (search, System, Isolation, Kind, Size chips, Select all, Clear) looks bad; build 3 options as real screens for owner review.",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T17:54+00:00",
+      "expected_basis": "agent starts 17:53, three options with screenshots ~60 min",
+      "started": "2026-11-26T13:00+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP300",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Terminal theme in the real app",
+      "detail": "Build the btop terminal theme from the concept page: tokens, Panel, Meter, Spark, KeyHints, restyle; plain panel titles",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T03:24+00:00",
+      "no_release": "pending join",
+      "started": "2026-11-25T23:15+00:00"
+    },
+    {
+      "id": "CRSP301",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Timeline fields in the record",
+      "detail": "Add release start, release waits on release and PR to release to the record; new Full Progress timeline",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T17:55+00:00",
+      "no_release": "plugin change"
+    },
+    {
+      "id": "CRSP302",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Cool Terminal theme + dotted variant",
+      "detail": "Terminal theme as 2 themes: Cool Terminal (blocks, no dotted graphs) and Cool Terminal (dotted graphs). SegMeter default 10 segments 5% steps, partial fill, 3-20 segments by context. Approve design next-version.",
+      "expected": "26 Nov ~23:50",
+      "changed": "2026-11-26T17:52+00:00",
+      "expected_basis": "waits for RELEASE-69 live; it moves repo folders",
+      "rides": "CRSP327"
+    },
+    {
+      "id": "CRSP303",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "crsp.luismc.net shows console, 404 on session; build public site",
+      "detail": "Vercel project ci-runners-shared-pool, root apps/web = new public static site (CRSP260), domain crsp.luismc.net (Cloudflare). Console SPA moves to apps/controller-console (CRSP306) and never deploys to Vercel. Domain stays 404 until CRSP306 and the site merge.",
+      "expected": "26 Nov ~23:50",
+      "changed": "2026-11-26T17:53+00:00",
+      "expected_basis": "waits for RELEASE-69 live; it moves repo folders",
+      "rides": "CRSP327"
+    },
+    {
+      "id": "CRSP304",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Split installers: Controller (web app) and Agent (no UI)",
+      "detail": "Only the Controller installer is user-facing (installer/controller: server, apps/controller-console, service, tray). Agent installers (installer/agent) are release assets. New apps/controller/internal/agentinstallers fetches, checksums, caches and serves them; SSH push installs transparently; manual path shows command with LAN link. Offline: download once, cache, manual import.",
+      "expected": "26 Nov ~23:50",
+      "changed": "2026-11-26T17:53+00:00",
+      "expected_basis": "waits for RELEASE-69 live; it moves repo folders",
+      "rides": "CRSP327"
+    },
+    {
+      "id": "CRSP305",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "PARKED: remote web app via tunnel",
+      "detail": "Parked. Remote web app via tunnel, Comiclex model (apps/home tunnel-connector.ts, pairing.ts): connector would live in apps/controller/internal/tunnel; no apps/agent, no apps/remote folder. Starts only when lan-link is fully working, Comiclex migrated to it, all tested.",
+      "expected": "31 Dec; parked, no date",
+      "changed": "2026-11-26T00:21+00:00",
+      "expected_basis": "waits on lan-link and Comiclex migration"
+    },
+    {
+      "id": "CRSP306",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Move Go server to apps/controller, web app to apps/controller-console",
+      "detail": "git mv cmd/ and internal/ into apps/controller/ (server, agent mode, agentinstallers); web app (old apps/web) to apps/controller-console/, a sibling like Comiclex home-console, embedded in the controller binary. Rewrite imports, Makefile, CI paths, embed paths, docs map. Runs last, when no PR is open. Then new apps/web public site (CRSP260/303). Installers stay in installer/.",
+      "expected": "26 Nov ~23:50",
+      "changed": "2026-11-26T17:53+00:00",
+      "expected_basis": "waits for RELEASE-69 live; it moves repo folders",
+      "rides": "CRSP327"
+    },
+    {
+      "id": "CRSP307",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Allowlist RELOAD_KEY false positive in gitleaks",
+      "detail": "Main commit 2250e2b0 has a UI storage key name the full-history scan reads as a secret; narrow line allowlist so PR lint passes.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T00:53+00:00",
+      "no_release": "scanner config only",
+      "started": "2026-11-26T00:27+00:00"
+    },
+    {
+      "id": "CRSP308",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Bump dev-standards CI pin, plugin stamp (PR 439)",
+      "detail": "DS256: CI pin to luismc-docs 2.21.0, plugin-versions stamp; PR 439, merge when CI green",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T08:37+00:00",
+      "no_release": "tooling config only, nothing user-facing",
+      "started": "2026-11-26T07:34+00:00"
+    },
+    {
+      "id": "CRSP309",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Track .delivery/config.json in git (PR 440)",
+      "detail": "DS258: ignore .delivery/* except config.json; PR 440, merge when CI green",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T16:45+00:00",
+      "no_release": "repo config only, nothing user-facing",
+      "started": "2026-11-26T07:34+00:00"
+    },
+    {
+      "id": "CRSP310",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI: findings, solutions, review",
+      "detail": "Page docs/work/ci-leaner-findings.html; dev-standards reviews it, then owner decides what goes where",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:40+00:00",
+      "no_release": "analysis only"
+    },
+    {
+      "id": "CRSP311",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI: S8 pre-push runs the same format and lint checks as CI",
+      "detail": "pre-push prettier, gofmt and golangci-lint on changed files; see docs/work/ci-leaner-findings.html",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:52+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T10:37+00:00"
+    },
+    {
+      "id": "CRSP312",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI: S17+S13 cache and artifact hygiene in CI",
+      "detail": "buildx cache written only from main, per-run binaries kept 1 to 3 days; see docs/work/ci-leaner-findings.html",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:52+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T10:37+00:00"
+    },
+    {
+      "id": "CRSP313",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI: S5+S7 e2e shard balance and Go race split",
+      "detail": "rebalance shards from recorded times; split -race tests by package; see docs/work/ci-leaner-findings.html",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:52+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T10:37+00:00"
+    },
+    {
+      "id": "CRSP314",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI join: CRSP311, 312, 313",
+      "detail": "PR from CRSP314-integration; first CI run measures new shard timings",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:52+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T10:49+00:00"
+    },
+    {
+      "id": "CRSP315",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI S6: Playwright system packages baked or cached",
+      "detail": "Saves ~19 shard-min per run (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T16:45+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T13:06+00:00"
+    },
+    {
+      "id": "CRSP316",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Leaner CI S12: Go jobs only when Go or Windows files change",
+      "detail": "Skip macOS and Windows Go and 2nd Windows lint otherwise (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T17:33+00:00",
+      "expected_basis": "cloud agent starts 17:31, two PRs, ~60 min work, CI ~30 min",
+      "started": "2026-11-26T17:19+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP317",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Leaner CI S18: faster Go setup on Windows",
+      "detail": "GOCACHE on the D: drive, avoid slow tar restore (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T17:33+00:00",
+      "expected_basis": "cloud agent starts 17:31, two PRs, ~60 min work, CI ~30 min",
+      "started": "2026-11-26T17:19+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP318",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Leaner CI S20: adopt rerun_tests.py after a red run",
+      "detail": "Test failed tests plus changed code on agent and dispatch runs (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov ~19:15",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "agent starts 17:53, two PRs ~60 min, CI ~25 min",
+      "started": "2026-11-26T17:19+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP319",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI S22: setup-go and setup-node caches saved from main only",
+      "detail": "Restore everywhere, save on main (F22) (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T16:45+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T13:06+00:00"
+    },
+    {
+      "id": "CRSP320",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI S9: fix the two flaky tests",
+      "detail": "Controller TempDir race under -race; Windows internal/mirror failure (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T16:45+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T13:06+00:00"
+    },
+    {
+      "id": "CRSP321",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Leaner CI S11: local gate runs a smoke only, CI is the full run",
+      "detail": "Cuts 22 min local per PR (DL-12) (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov ~19:15",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "agent starts 17:53, two PRs ~60 min, CI ~25 min",
+      "started": "2026-11-26T17:19+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP322",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Leaner CI fix #448: actionlint failure in lint",
+      "detail": "Workflow lint failed on CRSP314 joined PR (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:52+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T12:02+00:00"
+    },
+    {
+      "id": "CRSP323",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Leaner CI S1: base image rebuilt only when its inputs change",
+      "detail": "Hash of images/** plus weekly rebuild; changes what a release PR proves (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "agent starts 17:52, rebase 30 min, CI ~30 min",
+      "started": "2026-11-26T12:06+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP324",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Leaner CI S2+S3: MSI lanes and jobs only for the areas that changed",
+      "detail": "Area job; release PRs keep full set only if you choose; conflicts DL-112 (docs/work/ci-leaner-findings.html)",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T17:33+00:00",
+      "expected_basis": "cloud agent starts 17:31, two PRs, ~60 min work, CI ~30 min",
+      "started": "2026-11-26T17:19+00:00",
+      "rides": "CRSP252"
+    },
+    {
+      "id": "CRSP325",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Fix base image build: Ubuntu security mirror 404 in browsers layer",
+      "detail": "install-deps gets 404 for libasound2 from security.ubuntu.com; breaks PRs and main (run 45806200097); add retry or archive.ubuntu.com fallback in images/layers/browsers/Dockerfile",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:52+00:00",
+      "no_release": "CI tooling, no product change",
+      "started": "2026-11-26T12:02+00:00"
+    },
+    {
+      "id": "CRSP326",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Delete registration on a stale pool runner says internal error",
+      "detail": "26 Nov: console Delete registration on gameroompc-pool-4 answers internal error. Likely scopeResolver.Resolve gets scope pool (cmd/crsp/areas_adapters.go:225) and runnerFail (handlers_runners.go:73) hides and does not log it. Fix: delete the hidden per-repo registrations of a pool runner, log unexpected errors.",
+      "expected": "26 Nov ~18:40",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "fix agent starts 17:51-17:52, ~35 min, then CI ~15 min",
+      "rides": "CRSP252",
+      "started": "2026-11-26T13:00+00:00"
+    },
+    {
+      "id": "CRSP327",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Release 70: UX theme and repository organisation",
+      "detail": "CRSP302 theme; CRSP306 move Go server and web app, CRSP304 split installers, CRSP303 public site",
+      "expected": "27 Nov ~02:05",
+      "changed": "2026-11-26T17:55+00:00",
+      "expected_basis": "starts when RELEASE-69 is live ~22:35; agents 2.5 h, join, CI",
+      "release": 70,
+      "release_waits_on": [
+        "CRSP252"
+      ],
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-26T22:35+00:00",
+          "end": "2026-11-27T01:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-27T01:05+00:00",
+          "end": "2026-11-27T01:25+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T01:25+00:00",
+          "end": "2026-11-27T02:00+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T02:00+00:00",
+          "end": "2026-11-27T02:05+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 40
+      },
+      "release_start": "2026-11-26T22:35+00:00"
+    },
+    {
+      "id": "CRSP328",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Website spec paths match CRSP303",
+      "detail": "apps/website to apps/web; Vercel project and domain; console to apps/controller-console",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T17:58+00:00",
+      "no_release": "spec wording only",
+      "started": "2026-11-26T17:51+00:00"
+    },
+    {
+      "id": "CRSP329",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-71: cloud overflow priority rules",
+      "detail": "Carrier for CRSP281; joins after RELEASE-70 is live",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:02+00:00",
+      "expected_basis": "starts after RELEASE-70 live ~02:05; agents 3 h, join, CI 30 min",
+      "release": 71,
+      "release_waits_on": [
+        "CRSP327"
+      ],
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-27T02:05+00:00",
+          "end": "2026-11-27T05:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-27T05:05+00:00",
+          "end": "2026-11-27T05:20+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T05:20+00:00",
+          "end": "2026-11-27T05:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T05:50+00:00",
+          "end": "2026-11-27T05:55+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 30
+      },
+      "release_start": "2026-11-27T02:05+00:00"
+    },
+    {
+      "id": "CRSP330",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-72: debug access build",
+      "detail": "Carrier for debug access build; joins after RELEASE-71",
+      "expected": "27 Nov ~12:00",
+      "changed": "2026-11-26T18:11+00:00",
+      "expected_basis": "after RELEASE-71 live ~05:55; agents 4 h, join, CI",
+      "release": 72,
+      "release_waits_on": [
+        "CRSP329"
+      ],
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-27T05:55+00:00",
+          "end": "2026-11-27T10:55+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-27T10:55+00:00",
+          "end": "2026-11-27T11:15+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T11:15+00:00",
+          "end": "2026-11-27T11:55+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T11:55+00:00",
+          "end": "2026-11-27T12:00+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 40
+      },
+      "release_start": "2026-11-27T05:55+00:00"
+    },
+    {
+      "id": "CRSP331",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Build debug access to a running job",
+      "detail": "Build the approved spec docs/features/debug-access (CRSP266): controlled, logged SSH into a running job, off by default. Starts after RELEASE-71 is live.",
+      "expected": "27 Nov ~12:00",
+      "changed": "2026-11-26T18:11+00:00",
+      "expected_basis": "after RELEASE-71 live; agent ~4 h",
+      "waits_on": "work",
+      "rides": "CRSP330"
+    },
+    {
+      "id": "CRSP332",
+      "owner": "project",
+      "app": "",
+      "status": "Waiting",
+      "item": "Build the public website in apps/web",
+      "detail": "Build the approved spec docs/features/website (CRSP260): static site, Vercel project ci-runners-shared-pool, crsp.luismc.net. Starts after RELEASE-70 live (CRSP306 frees apps/web).",
+      "expected": "27 Nov ~05:55",
+      "changed": "2026-11-26T18:11+00:00",
+      "expected_basis": "owner approved spec 26 Nov; after CRSP306 in RELEASE-70",
+      "waits_on": "work",
+      "rides": "CRSP329"
+    },
+    {
+      "id": "CRSP333",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Pool offline diagnosis and fix plan",
+      "detail": "Cloud agent reads repo and OPS94/95/96 work; writes docs/work/pool-offline-plan.md for the owner's 22:00 checklist",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T18:12+00:00",
+      "expected_basis": "agent starts 18:20, ~30 min",
+      "no_release": "CI config only, nothing a user sees",
+      "started": "2026-11-26T18:12+00:00"
+    },
+    {
+      "id": "CRSP334",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Setup commit: CI pin, plugin versions, project record",
+      "detail": "Commit the dev-standards CI pin bump, .claude/plugin-versions.json and the project record",
+      "expected": "26 Nov ~19:00",
+      "changed": "2026-11-26T18:23+00:00",
+      "expected_basis": "PR now; CI ~15 min",
+      "no_release": "CI config only, nothing a user sees",
+      "started": "2026-11-26T18:23+00:00"
     },
     {
       "id": "DOC1",
@@ -4266,13 +5540,13 @@
       "id": "DOC3",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "Rebuild the LOOK54 vs live site comparison page after v0.1.27 is installed",
       "detail": "Update claude.ai artifact WU5kchLNMAJ7dF8udLh4u4 in place: install v0.1.27 via crsp update, screenshot live screens, compare to LOOK54",
-      "expected": "25 Nov ~09:00",
-      "changed": "2026-11-25T00:38+00:00",
-      "expected_basis": "waits on RELEASE-67 merge, v0.1.27 tag, install",
-      "no_release": "a study page, ships nothing"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:32+00:00",
+      "no_release": "page rebuild ships nothing",
+      "started": "2026-11-25T16:25+00:00"
     },
     {
       "id": "HND1",
@@ -6625,15 +7899,13 @@
       "id": "OPS90",
       "owner": "operations",
       "app": "crsp",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke",
       "detail": "Update via Settings > Updates; add 2 persistent Linux; remove failed rows and re-add Windows; push crsp2-pool-smoke",
-      "expected": "25 Nov ~10:00",
-      "changed": "2026-11-24T15:00+00:00",
-      "expected_basis": "no progress since 24 Nov; waits on owner decision",
-      "no_release": "operations check on the owner's PC",
-      "started": "2026-11-24T06:04+00:00",
-      "waits_on": "work"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T21:12+00:00",
+      "no_release": "owner confirmed 0.1.27 already installed on GameRoomPC",
+      "started": "2026-11-24T06:04+00:00"
     },
     {
       "id": "OPS91",
@@ -6675,23 +7947,27 @@
       "id": "OPS94",
       "owner": "operations",
       "app": "crsp",
-      "status": "To do",
+      "status": "Running",
       "item": "pool-add-agent: lost agents volume leaves runners unregistered",
       "detail": "pool-add-agent says already added when slug is in /agents.json but /agents/<slug> is missing. Fix: treat a missing dir as not added and recreate it. Source: pool main volume loss 24 Nov (dev-standards-03).",
-      "expected": "26 Nov ~12:00",
-      "changed": "2026-11-24T15:04+00:00",
-      "expected_basis": "not started; needs owner priority"
+      "expected": "26 Nov ~18:45",
+      "changed": "2026-11-26T17:52+00:00",
+      "expected_basis": "branch pushed, no PR yet; PR and CI ~45 min",
+      "rides": "CRSP245",
+      "started": "2026-11-25T09:54+00:00"
     },
     {
       "id": "OPS95",
       "owner": "operations",
       "app": "crsp",
-      "status": "To do",
+      "status": "Running",
       "item": "pool-refresh --yes: build ok but missing container not created",
       "detail": "pool-refresh builds the image but fails 'could not compare the image ids' when the container is gone; compose up -d was needed by hand. Fix: create the container when absent. Source: 24 Nov (dev-standards-03).",
-      "expected": "26 Nov ~12:00",
-      "changed": "2026-11-24T15:04+00:00",
-      "expected_basis": "not started; needs owner priority"
+      "expected": "26 Nov ~18:45",
+      "changed": "2026-11-26T17:47+00:00",
+      "expected_basis": "agent starts 17:54, ~35 min, CI ~15 min",
+      "rides": "CRSP245",
+      "started": "2026-11-25T09:54+00:00"
     },
     {
       "id": "OPS96",
@@ -7213,12 +8489,13 @@
       "id": "TRAY7",
       "owner": "tray",
       "app": "crsp",
-      "status": "To do",
+      "status": "Built",
       "item": "macOS and Linux update and first-start windows in the crsp look",
       "detail": "From TRAY5 (D12, D19, D20): web update window in Phosphor; own browser profile so it opens at its size (D19, decide when built); first-start window Welcome, choices, Done (D20). Waits for the macOS and Linux tray versions.",
       "expected": "25 Nov",
-      "changed": "2026-11-23T23:06+00:00",
-      "expected_basis": "not started; after RELEASE-62 and the four-repo switch"
+      "changed": "2026-11-25T19:25+00:00",
+      "rides": "CRSP252",
+      "started": "2026-11-25T15:38+00:00"
     },
     {
       "id": "TRAY8",

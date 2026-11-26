@@ -310,6 +310,41 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
 .glance-live { border-left-color: var(--live); }
 
+/* Status badges and What is happening (Full Progress section 0, R5.61, R5.62): full width, tokens only */
+.status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .5rem;
+  width: 100%;
+  margin: 1.2em 0 .8em;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45em;
+  max-width: 100%;
+  padding: .2em .65em;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--rule-strong);
+  background: var(--surface);
+  font-size: .85rem;
+  overflow-wrap: anywhere;
+}
+.badge-label { color: var(--ink-muted); }
+.badge-value { font-weight: 600; color: var(--ink); }
+.badge-running { border-left-color: var(--running-mark); background: var(--running-bg); }
+.badge-built, .badge-live-24h, .badge-last-live { border-left-color: var(--live); }
+.badge-waiting, .badge-to-do { border-left-style: dashed; }
+.badge-alert { border-color: var(--signal); border-left-color: var(--signal); background: var(--waiting-bg); }
+.badge-alert .badge-label, .badge-alert .badge-value { color: var(--signal); }
+.badge-fail { border-color: var(--failed); border-left-color: var(--failed); background: var(--waiting-bg); }
+.badge-fail .badge-label, .badge-fail .badge-value { color: var(--failed); }
+.what-happens { width: 100%; margin: .6em 0 1.2em; }
+.happen-title { margin: 0 0 .3em; font-weight: 600; color: var(--ink-muted); }
+.what-happens ul { list-style: none; margin: 0; padding: 0; }
+.what-happens li { padding: .25em .7em; margin-block: .2em; border-left: 4px solid var(--live); overflow-wrap: anywhere; }
+.what-happens li.happen-fail { border-left-color: var(--failed); background: var(--waiting-bg); }
+
 /* Status chips */
 .status-chip {
   display: inline-block;
@@ -897,50 +932,61 @@ a .release-name { color: var(--signal); }
 .release-line .release-name { margin-right: 0; }
 .dropped-line, .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 details.status-fold.release-group > summary { color: var(--ink); }
+
+/* DS256, R5.57 and R5.58: the release tree (a PR carries its releases) */
+.release-timeline .rt-pr-bar { fill: var(--ink); }
+.release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
+.release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
+.release-timeline .rt-arrow-head { fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
+.release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+.release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
+.release-tree .st { font-weight: 700; }
+.release-tree .ci-note { color: var(--ink-muted); }
+.release-tree tr.pr td { background: var(--paper); border-top: 2px solid var(--ink); font-weight: 600; }
+.release-tree tr.pr td:first-child { border-left: 4px solid var(--ink); }
+.release-tree tr.ch td:first-child { position: relative; padding-left: 44px; border-left: 4px solid var(--ink); }
+.release-tree tr.ch td:first-child::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; border-left: 2px solid var(--ink-muted); }
+.release-tree tr.ch.last td:first-child::before { bottom: 50%; }
+.release-tree tr.ch td:first-child::after { content: ""; position: absolute; left: 20px; top: 50%; width: 16px; border-top: 2px solid var(--ink-muted); }
 </style>
 <style id="extra-css"></style>
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.17.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: Install, update and operations</h1><p>Where Install, update and operations stands.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.29.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: Install, update and operations</h1><p>Where Install, update and operations stands.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-25T06:38+00:00">25 Nov 06:38</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">25 Nov 06:37</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-26T17:52+00:00">26 Nov 17:52</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">26 Nov 18:06</a> (Lisbon)</p>
 <p class="lede">Planned. Work has not started.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="OPS90"><span class="task-id">OPS90</span><span class="glance-dep">no progress since 24 Nov; waits on owner decision</span> Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke <span class="glance-expected">25 Nov ~10:00</span></li>
+<li data-glance-task="OPS94"><span class="task-id">OPS94</span>pool-add-agent: lost agents volume leaves runners unregistered <span class="glance-expected">26 Nov ~18:45</span><span class="glance-basis">branch pushed, no PR yet; PR and CI ~45 min</span></li>
+<li data-glance-task="OPS95"><span class="task-id">OPS95</span>pool-refresh --yes: build ok but missing container not created <span class="glance-expected">26 Nov ~18:45</span><span class="glance-basis">agent starts 17:54, ~35 min, CI ~15 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="OPS96"><span class="task-id">OPS96</span>Windows runner add fails: Not configured (config.cmd)</li>
-<li data-glance-task="OPS52"><span class="task-id">OPS52</span>Spec crsp handling of dev-standards pool findings (20 Nov, 7 items)</li>
-<li data-glance-task="OPS53"><span class="task-id">OPS53</span>Postgres rights shared by every runner of one repo (pool finding 21 Nov)</li>
-<li data-glance-task="OPS54"><span class="task-id">OPS54</span>Postgres: copy role settings and memberships to every runner login (PG16)</li>
-<li data-glance-task="OPS55"><span class="task-id">OPS55</span>Slot cap vs runners: slot wait apart from job time, doctor warns, hold &lt; timeout</li>
-<li data-glance-task="OPS68"><span class="task-id">OPS68</span>Updater passes lifecycle conformance; Ed25519 manifest; new asset names</li>
-<li data-glance-task="OPS69"><span class="task-id">OPS69</span>MSI lifecycle lanes, release check, signed manifest and renamed assets</li>
-<li data-glance-task="OPS51"><span class="task-id">OPS51</span>Drop quiet hours: specs, words, pause reason, settings</li>
-<li class="glance-more">and 3 more</li>
+<li data-glance-task="OPS90"><span class="task-id">OPS90</span>Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">89</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">4</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">90</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">4</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="OPS90"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">OPS90</span>Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke<span class="no-release-line">ships nothing: operations check on the owner&#x27;s PC</span></td><td>Update via Settings &gt; Updates; add 2 persistent Linux; remove failed rows and re-add Windows; push crsp2-pool-smoke</td><td>25 Nov ~10:00<span class="expected-basis">no progress since 24 Nov; waits on owner decision</span></td></tr>
-<tr data-task="OPS94"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">OPS94</span>pool-add-agent: lost agents volume leaves runners unregistered</td><td>pool-add-agent says already added when slug is in /agents.json but /agents/&lt;slug&gt; is missing. Fix: treat a missing dir as not added and recreate it. Source: pool main volume loss 24 Nov (dev-standards-03).</td><td>26 Nov ~12:00<span class="expected-basis">not started; needs owner priority</span></td></tr>
-<tr data-task="OPS95"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">OPS95</span>pool-refresh --yes: build ok but missing container not created</td><td>pool-refresh builds the image but fails &#x27;could not compare the image ids&#x27; when the container is gone; compose up -d was needed by hand. Fix: create the container when absent. Source: 24 Nov (dev-standards-03).</td><td>26 Nov ~12:00<span class="expected-basis">not started; needs owner priority</span></td></tr>
+<tr data-task="OPS94"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">OPS94</span>pool-add-agent: lost agents volume leaves runners unregistered<span class="release-line"><span class="release-name">RELEASE-68</span></span></td><td>pool-add-agent says already added when slug is in /agents.json but /agents/&lt;slug&gt; is missing. Fix: treat a missing dir as not added and recreate it. Source: pool main volume loss 24 Nov (dev-standards-03).</td><td>26 Nov ~18:45<span class="expected-basis">branch pushed, no PR yet; PR and CI ~45 min</span></td></tr>
+<tr data-task="OPS95"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">OPS95</span>pool-refresh --yes: build ok but missing container not created<span class="release-line"><span class="release-name">RELEASE-68</span></span></td><td>pool-refresh builds the image but fails &#x27;could not compare the image ids&#x27; when the container is gone; compose up -d was needed by hand. Fix: create the container when absent. Source: 24 Nov (dev-standards-03).</td><td>26 Nov ~18:45<span class="expected-basis">agent starts 17:54, ~35 min, CI ~15 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">93 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">94 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="OPS90"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS90</span>Install 0.1.25 on GameRoomPC, add runners, rerun the lan-link smoke<span class="no-release-line">ships nothing: owner confirmed 0.1.27 already installed on GameRoomPC</span></td><td>Update via Settings &gt; Updates; add 2 persistent Linux; remove failed rows and re-add Windows; push crsp2-pool-smoke</td><td>25 Nov</td></tr>
 <tr data-task="OPS96"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS96</span>Windows runner add fails: Not configured (config.cmd)<span class="release-line"><span class="release-name">RELEASE-67</span></span></td><td>Add runner gameroompc-win-1 on GameRoomPC (Windows) fails at register: runner exited 1, Not configured. Find why config.cmd did not finish, fix, show the real cause in the console.</td><td>25 Nov</td></tr>
 <tr data-task="OPS52"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS52</span>Spec crsp handling of dev-standards pool findings (20 Nov, 7 items)<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>1 shared tool cache per runner user (ACL/own folders); 2 register on GitHub only after local record, roll back on failure, Doctor finds orphans; 3 &#x27;session already exists&#x27; after restart = wait, not error; 4 Windows service account without password quirks; 5 orphan agent folders cleaned/flagged; 6 Docker vhdx compact needs drained pool (ties to OPS51); 7 already covered by repository parallel limit</td><td>24 Nov</td></tr>
 <tr data-task="OPS53"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">OPS53</span>Postgres rights shared by every runner of one repo (pool finding 21 Nov)<span class="release-line"><span class="release-name">RELEASE-48</span></span></td><td>Second runner&#x27;s DB user lacked CREATEROLE and ADMIN membership of app roles the first created (42501). Per-repo shared owner role both runner users join; Doctor flags unused DB users</td><td>24 Nov</td></tr>
