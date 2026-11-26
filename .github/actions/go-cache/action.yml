@@ -8,6 +8,10 @@ runs:
   steps:
     - id: go
       shell: bash
+      # GOTOOLCHAIN=local: asking the go.mod toolchain would download it into the module
+      # cache before the restore below, and the restore would then collide with it.
+      env:
+        GOTOOLCHAIN: local
       run: |
         {
           echo "mod=$(go env GOMODCACHE)"
