@@ -311,6 +311,25 @@ describe('First run banner (R5.15)', () => {
       expect(await screen.findByRole('group', { name: 'Add a machine' })).toBeTruthy();
     });
 
+    it('shows the Get this machine ready door for another online machine with no engine (DEP13)', async () => {
+      const api = signedIn()
+        .on('GET', '/api/v1/setup', done())
+        .on('GET', '/api/v1/machines', {
+          items: [
+            machine({ id: 'm2', name: 'lab-pc', backends: [] }),
+            machine({ id: 'm3', name: 'old-pc', backends: [], online: false }),
+          ],
+        });
+      renderApp(api, '/setup?wizard=1');
+      expect(
+        await screen.findByText('No container engine answers on lab-pc. Linux runners need one.'),
+      ).toBeTruthy();
+      const link = screen.getByRole('link', { name: 'Get this machine ready' });
+      expect(link.getAttribute('href')).toContain('/setup/machines/m2/ready');
+      // An offline machine is not offered an install (DEP12).
+      expect(screen.queryByText(/old-pc/)).toBeNull();
+    });
+
     it('says the step is done when the machine in the pool is not this PC', async () => {
       const api = signedIn()
         .on('GET', '/api/v1/setup', done())
