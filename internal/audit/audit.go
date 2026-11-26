@@ -37,6 +37,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"sync/atomic"
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
@@ -163,6 +164,18 @@ var secretKey = regexp.MustCompile(`(?i)(private[-_]?key|secret|token|password|p
 
 const maxValueLen = 500
 
+var scrub atomic.Pointer[func(string) string]
+
+// SetRedactor puts the process redactor in front of the audit log (R6.5): every
+// string in the details passes it before it is stored. Nil removes it.
+func SetRedactor(f func(string) string) {
+	if f == nil {
+		scrub.Store(nil)
+		return
+	}
+	scrub.Store(&f)
+}
+
 // Redact returns a copy of details safe to store: values under secret-looking
 // keys become "[redacted]", long strings are cut, nested maps are walked.
 func Redact(details map[string]any) map[string]any {
@@ -182,6 +195,9 @@ func redactValue(key string, v any) any {
 	}
 	switch x := v.(type) {
 	case string:
+		if f := scrub.Load(); f != nil {
+			x = (*f)(x)
+		}
 		if len(x) > maxValueLen {
 			return x[:maxValueLen] + "…"
 		}
