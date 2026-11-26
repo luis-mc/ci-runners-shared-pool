@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code:
   - internal/debugaccess/**
-design_system: [CORE-1, CORE-2, CORE-3, CORE-4, CORE-5, CORE-6, CORE-7, UX-9, UX-13, UX-18, UX-22, UX-24, UX-27, UX-38, UX-52, UX-58, UX-62]
+design_system: []
 last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
@@ -77,7 +77,7 @@ flowchart TD
 ```
 
 1. The admin presses **Debug** on a running job, or on a failed job that was held (section 5, "Hold a failed job").
-2. The controller checks, in this order: the repository switch, the user's role and sight of the repository, the public and fork guard, and whether the environment can be entered safely (R5.5 to R5.10). The first failure stops it and says why (UX-38).
+2. The controller checks, in this order: the repository switch, the user's role and sight of the repository, the public and fork guard, and whether the environment can be entered safely (R5.5 to R5.10). The first failure stops it and says why (design system, disabled-with-reason rule).
 3. The admin types a one-line reason. The controller writes the session row and the audit row in one transaction (R6.4), then tells the agent over the existing link.
 4. The agent starts a shell in the job's own environment with the rights of a debug identity that holds no secrets (R5.11 to R5.14). Bytes go agent, controller, browser or CLI. The browser never reaches the machine.
 5. The session ends at the time limit, the idle limit, the end of the job (unless held), the **End** button, an admin's **End session** or the kill switch. The controller closes the record and keeps the transcript for 30 days.
@@ -99,28 +99,28 @@ One interface, one row per backend and OS. "Enter" is how the agent starts the s
 
 ## 4. Screens and states
 
-No mocks yet. Screens use design system v4 by ID and add no rules of their own. Every screen below exists in the web console first; the CLI repeats it (R5.30).
+No mocks yet. Screens follow design system v4 and add no rules of their own. Rule IDs (core and UX) are cited here when the screens are built, each with the test that proves it. Every screen below exists in the web console first; the CLI repeats it (R5.30).
 
-**Repository setting (Settings, Repositories).** In each repository row's detail: a switch **Debug access** (saved at once, UX-22), off by default. When on, four fields appear: who may open (Admins and owner; or Owner only), session limit in minutes (default 30, most 120), idle limit in minutes (default 10), and **Hold failed jobs** for N minutes (default off, most 30). A line under the switch says in words what it allows and never allows (R5.14 to R5.17; design system UX-22, UX-38). A public repository shows the switch disabled with "Not available for public repositories." (UX-38). The settings page holds configuration only; the command to open a session is not here (UX-52).
+**Repository setting (Settings, Repositories).** In each repository row's detail: a switch **Debug access** (saved at once, design system switch rule), off by default. When on, four fields appear: who may open (Admins and owner; or Owner only), session limit in minutes (default 30, most 120), idle limit in minutes (default 10), and **Hold failed jobs** for N minutes (default off, most 30). A line under the switch says in words what it allows and never allows (R5.14 to R5.17). A public repository shows the switch disabled with "Not available for public repositories." (design system, disabled-with-reason rule). The settings page holds configuration only; the command to open a session is not here (design system, one place for a command).
 
-**Job detail, Debug panel.** On the job page, one card **Debug access** holds the one place where a session starts (UX-52):
+**Job detail, Debug panel.** On the job page, one card **Debug access** holds the one place where a session starts (design system, one place for a command):
 
 - Running job, repository on, user allowed: button **Open debug session**, the question card asks for a reason (one line, 3 to 200 characters), then the terminal opens in the page.
-- Held failed job: a status word `◷ held, 12 min left` (UX-58) and the same button.
-- Not allowed: the button is disabled and the reason sits beside it (UX-38): "Debug access is off for this repository.", "Only admins can open a session.", "Another job of this repository is running in the same container.", "This is a pull request from a fork." and so on.
-- Open session: a terminal in a panel, a header with who opened it, the time left as a count, and **Extend** (once, +15 min, never past the repository's limit) and **End** (a question card first, UX-9). The panel never auto-focuses over text the user is typing elsewhere (design system UX-13, UX-52).
-- Past sessions of this job: a table (who, from, to, reason, how it ended, transcript link). Times follow UX-18.
+- Held failed job: a status word `◷ held, 12 min left` (design system status rule) and the same button.
+- Not allowed: the button is disabled and the reason sits beside it (design system, disabled-with-reason rule): "Debug access is off for this repository.", "Only admins can open a session.", "Another job of this repository is running in the same container.", "This is a pull request from a fork." and so on.
+- Open session: a terminal in a panel, a header with who opened it, the time left as a count, and **Extend** (once, +15 min, never past the repository's limit) and **End** (a question card first, design system ask-first rule). The panel never auto-focuses over text the user is typing elsewhere .
+- Past sessions of this job: a table (who, from, to, reason, how it ended, transcript link). Times follow the design system date and time rule.
 
-**Debug sessions list (Settings, Audit log tab, filter Debug sessions; also the Machine page).** A table of sessions across the pool: time, user, repository, job, machine, OS, backend, reason, length, how it ended (word, glyph and colour, UX-58). Admins and owner can open the transcript; viewers see the row but not the transcript. **End session** on an open row asks first (UX-62: names the user, the job and the machine). **Export** is the one primary of the toolbar, like the rest of the Audit log.
+**Debug sessions list (Settings, Audit log tab, filter Debug sessions; also the Machine page).** A table of sessions across the pool: time, user, repository, job, machine, OS, backend, reason, length, how it ended (word, glyph and colour, design system status rule). Admins and owner can open the transcript; viewers see the row but not the transcript. **End session** on an open row asks first (design system: names the user, the job and the machine). **Export** is the one primary of the toolbar, like the rest of the Audit log.
 
-**Pool-wide switch (Settings, Access).** One switch **Allow debug sessions on this pool**, owner only, on by default (the per-repository switch is still off by default). Turning it off ends every open session at once after a question card that names how many are open (UX-62). This is the kill switch (R5.26).
+**Pool-wide switch (Settings, Access).** One switch **Allow debug sessions on this pool**, owner only, on by default (the per-repository switch is still off by default). Turning it off ends every open session at once after a question card that names how many are open (design system, name-what-goes rule). This is the kill switch (R5.26).
 
 **States.**
 
-- Empty: "No debug sessions yet. Open one from a running job." (UX-6)
-- Opening: the button is busy and says "Opening the session..." until the shell answers (UX-13).
-- Failed to open: a Problem line under the button says what failed and why ("The machine did not answer within 10 s.") (UX-27).
-- Lost link: the terminal says "The connection to build-02 dropped. The session ends in 60 s unless it comes back." The session never stays open past its limit because of a dropped link (R6.3; design system UX-27).
+- Empty: "No debug sessions yet. Open one from a running job." (design system, no-dead-end rule)
+- Opening: the button is busy and says "Opening the session..." until the shell answers (design system, busy-button rule).
+- Failed to open: a Problem line under the button says what failed and why ("The machine did not answer within 10 s.") (design system, result-line rule).
+- Lost link: the terminal says "The connection to build-02 dropped. The session ends in 60 s unless it comes back." The session never stays open past its limit because of a dropped link (R6.3; design system result-line rule).
 - Ended: the panel keeps its output on screen, shows how it ended in words and offers the transcript link.
 
 **CLI (same rules, same API).** `crsp debug open <job>` (reason with `--reason`), `crsp debug list`, `crsp debug end <session>`, `crsp debug extend <session>`, `crsp debug repo <owner/repo> --on|--off [--limit N --idle N --hold N]`. The CLI authenticates as the user's console role (the CLI spec's token). Output uses the same words as the console (CLI spec, UX words).
@@ -131,7 +131,7 @@ No mocks yet. Screens use design system v4 by ID and add no rules of their own. 
 
 **R5.1** — Debug access MUST be off for every repository until an admin or the owner switches it on for that repository. A new repository, a repository added by a config import (config-as-code) and a repository restored from backup MUST be off. A config import MUST NOT switch it on without the same role check as the console.
 
-**R5.2** — Only the owner and admins who can see the repository MAY open a session. Viewers MUST NOT, and the console MUST show the command disabled with the reason (web-console R5.13, UX-38). The API MUST refuse it too (web-console R6.5). A repository may be narrowed to **Owner only**; it MUST NOT be widened beyond admins.
+**R5.2** — Only the owner and admins who can see the repository MAY open a session. Viewers MUST NOT, and the console MUST show the command disabled with the reason (web-console R5.13). The API MUST refuse it too (web-console R6.5). A repository may be narrowed to **Owner only**; it MUST NOT be widened beyond admins.
 
 **R5.3** — Opening a session MUST need a reason of 3 to 200 characters. The reason MUST be in the session row and the audit row.
 
@@ -225,7 +225,7 @@ No mocks yet. Screens use design system v4 by ID and add no rules of their own. 
 
 **R6.6** — The transcript store MUST cap at 5 MB per session and 500 MB for the pool (settings, default); at the cap the oldest transcripts go first and the audit rows stay.
 
-**R6.7** — Text MUST follow design system v4 content: times per UX-18, status per UX-58, no retired words.
+**R6.7** — Text MUST follow design system v4 content: times, status and words per the design system, no retired words.
 
 **R6.8** — The feature MUST add no inbound port, no new listening socket on any machine and no new credential store (stack profile; decision 0004).
 
