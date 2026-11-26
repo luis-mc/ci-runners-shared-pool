@@ -26,7 +26,7 @@ import {
   ActionBar,
 } from '@crsp/ui';
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ApiError, unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad, useQuestion } from '../../api/hooks';
 import { useSession } from '../../auth/session';
@@ -35,6 +35,7 @@ import { Ask, Load } from '../common';
 import { needsYes } from '../repositories/plans';
 import { KIND_NAMES, OS_WORD, oneStop } from './kinds';
 import { keepsText, uncleanText } from './RunnerPage';
+import { OptionBar } from './RunnerFilters';
 
 type Runner = Schemas['Runner'];
 type SizeClass = NonNullable<Runner['size_class']>;
@@ -161,6 +162,8 @@ export function RunnersList() {
   const [kind, setKind] = useState<'' | Schemas['RunnerKind']>('');
   const [size, setSize] = useState<'' | SizeClass>('');
   const [picked, setPicked] = useState<Set<string>>(new Set());
+  // CRSP299 (temporary): ?option=1..3 shows one of three filter bar designs; without it, the current bar.
+  const option = useSearchParams()[0].get('option');
   const admin = session.can('admin');
   const why = session.whyNot('admin');
 
@@ -361,6 +364,42 @@ export function RunnersList() {
                 .toLowerCase()
                 .includes(q.trim().toLowerCase()),
           );
+          const selection = (
+            <>
+              <Button onPress={() => setPicked(new Set(rows.map((r) => r.id)))}>
+                {`Select all ${rows.length}`}
+              </Button>
+              <Button
+                onPress={() => setPicked(new Set())}
+                disabled={picked.size === 0}
+                title="Nothing is selected."
+              >
+                Clear
+              </Button>
+              {picked.size > 0 ? (
+                <>
+                  <span>{`${picked.size} selected`}</span>
+                  <Button
+                    kind="danger"
+                    disabled={!admin}
+                    reason={why}
+                    onPress={() =>
+                      del.ask(
+                        chosen.map((r) => `Runner ${r.name}`),
+                        chosen.flatMap((r) =>
+                          r.current_job
+                            ? [`${r.current_job.repository} ${r.current_job.job_name}`]
+                            : [],
+                        ),
+                      )
+                    }
+                  >
+                    {`Delete ${chosen.length} ${chosen.length === 1 ? 'runner' : 'runners'}`}
+                  </Button>
+                </>
+              ) : null}
+            </>
+          );
           if (data.items.length === 0)
             return (
               <Section title="Runners" count={0}>
@@ -380,106 +419,85 @@ export function RunnersList() {
               ) : null}
               <Section title="Runners" count={rows.length}>
                 <Stack>
-                  <ListToolbar
-                    label="Runners"
-                    search={
-                      <SearchBar value={q} onChange={setQ} label="Search runners" />
-                    }
-                    filters={
-                      <Stack>
-                        <Cluster>
-                          <Text tone="muted">System</Text>
-                          <Chips
-                            label="System"
-                            options={[
-                              { value: 'linux', label: 'Linux' },
-                              { value: 'windows', label: 'Windows' },
-                              { value: 'macos', label: 'macOS' },
-                            ]}
-                            value={os}
-                            onChange={setOs}
-                          />
-                        </Cluster>
-                        <Cluster>
-                          <Text tone="muted">Isolation</Text>
-                          <Chips
-                            label="Isolation"
-                            options={[
-                              { value: 'container', label: 'container' },
-                              { value: 'VM', label: 'VM' },
-                              { value: 'microVM', label: 'microVM' },
-                            ]}
-                            value={iso}
-                            onChange={setIso}
-                          />
-                        </Cluster>
-                        <Cluster>
-                          <Text tone="muted">Kind</Text>
-                          <Chips
-                            label="Kind"
-                            options={[
-                              { value: 'persistent', label: 'persistent' },
-                              { value: 'ephemeral', label: 'ephemeral' },
-                            ]}
-                            value={kind}
-                            onChange={setKind}
-                          />
-                        </Cluster>
-                        <Cluster>
-                          <Text tone="muted">Size</Text>
-                          <Chips
-                            label="Size"
-                            options={[
-                              { value: 'small', label: 'small' },
-                              { value: 'medium', label: 'medium' },
-                              { value: 'large', label: 'large' },
-                              { value: 'xl', label: 'xl' },
-                            ]}
-                            value={size}
-                            onChange={setSize}
-                          />
-                        </Cluster>
-                      </Stack>
-                    }
-                    selection={
-                      <>
-                        <Button onPress={() => setPicked(new Set(rows.map((r) => r.id)))}>
-                          {`Select all ${rows.length}`}
-                        </Button>
-                        <Button
-                          onPress={() => setPicked(new Set())}
-                          disabled={picked.size === 0}
-                          title="Nothing is selected."
-                        >
-                          Clear
-                        </Button>
-                        {picked.size > 0 ? (
-                          <>
-                            <span>{`${picked.size} selected`}</span>
-                            <Button
-                              kind="danger"
-                              disabled={!admin}
-                              reason={why}
-                              onPress={() =>
-                                del.ask(
-                                  chosen.map((r) => `Runner ${r.name}`),
-                                  chosen.flatMap((r) =>
-                                    r.current_job
-                                      ? [
-                                          `${r.current_job.repository} ${r.current_job.job_name}`,
-                                        ]
-                                      : [],
-                                  ),
-                                )
-                              }
-                            >
-                              {`Delete ${chosen.length} ${chosen.length === 1 ? 'runner' : 'runners'}`}
-                            </Button>
-                          </>
-                        ) : null}
-                      </>
-                    }
-                  />
+                  {option === '1' || option === '2' || option === '3' ? (
+                    <OptionBar
+                      which={option}
+                      state={{ q, os, iso, kind, size }}
+                      set={(k, v) => {
+                        if (k === 'q') setQ(v);
+                        else if (k === 'os') setOs(v as typeof os);
+                        else if (k === 'iso') setIso(v as typeof iso);
+                        else if (k === 'kind') setKind(v as typeof kind);
+                        else setSize(v as typeof size);
+                      }}
+                      shown={rows.length}
+                      selection={selection}
+                    />
+                  ) : (
+                    <ListToolbar
+                      label="Runners"
+                      search={
+                        <SearchBar value={q} onChange={setQ} label="Search runners" />
+                      }
+                      filters={
+                        <Stack>
+                          <Cluster>
+                            <Text tone="muted">System</Text>
+                            <Chips
+                              label="System"
+                              options={[
+                                { value: 'linux', label: 'Linux' },
+                                { value: 'windows', label: 'Windows' },
+                                { value: 'macos', label: 'macOS' },
+                              ]}
+                              value={os}
+                              onChange={setOs}
+                            />
+                          </Cluster>
+                          <Cluster>
+                            <Text tone="muted">Isolation</Text>
+                            <Chips
+                              label="Isolation"
+                              options={[
+                                { value: 'container', label: 'container' },
+                                { value: 'VM', label: 'VM' },
+                                { value: 'microVM', label: 'microVM' },
+                              ]}
+                              value={iso}
+                              onChange={setIso}
+                            />
+                          </Cluster>
+                          <Cluster>
+                            <Text tone="muted">Kind</Text>
+                            <Chips
+                              label="Kind"
+                              options={[
+                                { value: 'persistent', label: 'persistent' },
+                                { value: 'ephemeral', label: 'ephemeral' },
+                              ]}
+                              value={kind}
+                              onChange={setKind}
+                            />
+                          </Cluster>
+                          <Cluster>
+                            <Text tone="muted">Size</Text>
+                            <Chips
+                              label="Size"
+                              options={[
+                                { value: 'small', label: 'small' },
+                                { value: 'medium', label: 'medium' },
+                                { value: 'large', label: 'large' },
+                                { value: 'xl', label: 'xl' },
+                              ]}
+                              value={size}
+                              onChange={setSize}
+                            />
+                          </Cluster>
+                        </Stack>
+                      }
+                      selection={selection}
+                    />
+                  )}
                   {rows.length === 0 ? (
                     <Message
                       tone="note"
