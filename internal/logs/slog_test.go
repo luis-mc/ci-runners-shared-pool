@@ -56,10 +56,11 @@ func TestJSONFieldsAndRotation(t *testing.T) {
 
 func TestBackgroundHasNoStderrAndBadFolderFallsBack(t *testing.T) {
 	var stderr bytes.Buffer
-	l, _, err := Setup(Options{Dir: t.TempDir(), Mode: "agent", Stderr: &stderr})
+	l, closer, err := Setup(Options{Dir: t.TempDir(), Mode: "agent", Stderr: &stderr})
 	if err != nil {
 		t.Fatal(err)
 	}
+	t.Cleanup(func() { _ = closer.Close() }) // Windows cannot delete an open log file
 	l.Info("quiet")
 	if stderr.Len() != 0 {
 		t.Errorf("background wrote to stderr: %q", stderr.String())
