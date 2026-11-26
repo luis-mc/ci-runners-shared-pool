@@ -175,7 +175,7 @@ export function NoticesScreen() {
         </Section>
         <Cluster>
           <Text>Channels and the events they carry are set on Settings.</Text>
-          <LinkButton to={settingsPath('notifications')}>
+          <LinkButton to={settingsPath('notifications')} kind="primary">
             Open notification settings
           </LinkButton>
         </Cluster>
