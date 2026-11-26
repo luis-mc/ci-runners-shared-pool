@@ -167,6 +167,9 @@ type Machine struct {
 	// DiskFloorGiB is the free-disk floor in force on the machine, in GiB
 	// (runners R5.83); 0 when unknown or off.
 	DiskFloorGiB int
+	// LargestFolders names the biggest crsp folders on the machine ("path size"),
+	// biggest first, for the disk finding (R5.37); empty when not reported.
+	LargestFolders []string
 	// Admin is true when the doctor on this machine runs with administrator
 	// rights, for checks that need them (R5.13). Reported by the agent.
 	Admin bool

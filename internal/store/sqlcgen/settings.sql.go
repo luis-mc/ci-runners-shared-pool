@@ -94,12 +94,13 @@ func (q *Queries) GetSetting(ctx context.Context, key string) (string, error) {
 }
 
 const insertAuditEvent = `-- name: InsertAuditEvent :one
-INSERT INTO audit_log (actor, actor_id, source, action, target_type, subject, detail, result)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO audit_log (at, actor, actor_id, source, action, target_type, subject, detail, result, prev_hash, hash)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id
 `
 
 type InsertAuditEventParams struct {
+	At         string
 	Actor      string
 	ActorID    string
 	Source     string
@@ -108,10 +109,13 @@ type InsertAuditEventParams struct {
 	Subject    string
 	Detail     string
 	Result     string
+	PrevHash   string
+	Hash       string
 }
 
 func (q *Queries) InsertAuditEvent(ctx context.Context, arg InsertAuditEventParams) (int64, error) {
 	row := q.queryRow(ctx, q.insertAuditEventStmt, insertAuditEvent,
+		arg.At,
 		arg.Actor,
 		arg.ActorID,
 		arg.Source,
@@ -120,6 +124,8 @@ func (q *Queries) InsertAuditEvent(ctx context.Context, arg InsertAuditEventPara
 		arg.Subject,
 		arg.Detail,
 		arg.Result,
+		arg.PrevHash,
+		arg.Hash,
 	)
 	var id int64
 	err := row.Scan(&id)
@@ -155,6 +161,17 @@ func (q *Queries) InsertRestoreDrill(ctx context.Context, arg InsertRestoreDrill
 	return err
 }
 
+const lastAuditHash = `-- name: LastAuditHash :one
+SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1
+`
+
+func (q *Queries) LastAuditHash(ctx context.Context) (string, error) {
+	row := q.queryRow(ctx, q.lastAuditHashStmt, lastAuditHash)
+	var hash string
+	err := row.Scan(&hash)
+	return hash, err
+}
+
 const lastRestoreDrill = `-- name: LastRestoreDrill :one
 SELECT id, backup_id, started_at, finished_at, state, detail FROM restore_drills ORDER BY started_at DESC LIMIT 1
 `
@@ -173,8 +190,53 @@ func (q *Queries) LastRestoreDrill(ctx context.Context) (RestoreDrill, error) {
 	return i, err
 }
 
+const listAuditChain = `-- name: ListAuditChain :many
+SELECT id, at, actor, "action", subject, detail, actor_id, source, target_type, result, prev_hash, hash FROM audit_log WHERE id > ? ORDER BY id ASC LIMIT ?
+`
+
+type ListAuditChainParams struct {
+	ID    int64
+	Limit int64
+}
+
+func (q *Queries) ListAuditChain(ctx context.Context, arg ListAuditChainParams) ([]AuditLog, error) {
+	rows, err := q.query(ctx, q.listAuditChainStmt, listAuditChain, arg.ID, arg.Limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []AuditLog
+	for rows.Next() {
+		var i AuditLog
+		if err := rows.Scan(
+			&i.ID,
+			&i.At,
+			&i.Actor,
+			&i.Action,
+			&i.Subject,
+			&i.Detail,
+			&i.ActorID,
+			&i.Source,
+			&i.TargetType,
+			&i.Result,
+			&i.PrevHash,
+			&i.Hash,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listAuditEvents = `-- name: ListAuditEvents :many
-SELECT id, at, actor, "action", subject, detail, actor_id, source, target_type, result FROM audit_log
+SELECT id, at, actor, "action", subject, detail, actor_id, source, target_type, result, prev_hash, hash FROM audit_log
 WHERE (?1 IS NULL OR actor = ?1)
   AND (?2 IS NULL OR action = ?2)
   AND (?3 IS NULL OR target_type = ?3)
@@ -226,6 +288,8 @@ func (q *Queries) ListAuditEvents(ctx context.Context, arg ListAuditEventsParams
 			&i.Source,
 			&i.TargetType,
 			&i.Result,
+			&i.PrevHash,
+			&i.Hash,
 		); err != nil {
 			return nil, err
 		}

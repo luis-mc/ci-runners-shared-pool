@@ -12,9 +12,15 @@ INSERT INTO settings (key, value, updated_by) VALUES (?, ?, ?)
 ON CONFLICT (key) DO UPDATE SET value = excluded.value, updated_at = strftime('%Y-%m-%dT%H:%M:%fZ', 'now'), updated_by = excluded.updated_by;
 
 -- name: InsertAuditEvent :one
-INSERT INTO audit_log (actor, actor_id, source, action, target_type, subject, detail, result)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO audit_log (at, actor, actor_id, source, action, target_type, subject, detail, result, prev_hash, hash)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 RETURNING id;
+
+-- name: LastAuditHash :one
+SELECT hash FROM audit_log ORDER BY id DESC LIMIT 1;
+
+-- name: ListAuditChain :many
+SELECT * FROM audit_log WHERE id > ? ORDER BY id ASC LIMIT ?;
 
 -- name: ListAuditEvents :many
 SELECT * FROM audit_log

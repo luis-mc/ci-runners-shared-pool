@@ -496,20 +496,28 @@ export function FirstMachineDone({ onDone }: { onDone: () => void }) {
   const own =
     result.state === 'ready' ? result.data.items.find((m) => m.is_controller) : undefined;
   const host = own ? (own.facts?.host_name ?? own.name) : undefined;
+  // DEP13: every online machine of the pool that cannot run Linux containers gets the door; an offline one gets none (DEP12).
+  const noEngine =
+    result.state === 'ready'
+      ? result.data.items.filter(
+          (m) => m.online && needsEngine(m, 'linux') && !m.backends.some((b) => b.usable),
+        )
+      : [];
   return (
     <Stack>
       <Message tone="done">
         {host ? `This PC, ${host}, is in the pool.` : 'Add the first machine is done.'}
       </Message>
-      {own && needsEngine(own, 'linux') && !own.backends.some((b) => b.usable) ? (
+      {noEngine.map((m) => (
         <ReadyDoor
-          machine={own}
+          key={m.id}
+          machine={m}
           os="linux"
           kind="ephemeral"
           back="/setup/summary"
-          words={`No container engine answers on ${own.name}. Linux runners need one.`}
+          words={`No container engine answers on ${m.name}. Linux runners need one.`}
         />
-      ) : null}
+      ))}
       {adding ? (
         <AddMachineWizard onDone={onDone} />
       ) : (

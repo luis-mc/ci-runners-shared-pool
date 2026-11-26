@@ -112,7 +112,21 @@ type AuditFilter struct {
 	Limit                               int
 }
 
-func auditParams(e AuditEntry) sqlcgen.InsertAuditEventParams {
+// InsertAudit appends one audit row, chained to the row before it (R5.28). The read of the last hash and the
+// insert run in one transaction, so two writers never chain to the same row.
+func (s *Store) InsertAudit(ctx context.Context, e AuditEntry) (int64, error) {
+	var id int64
+	err := s.WithTx(ctx, func(tx *Tx) error {
+		var err error
+		id, err = tx.InsertAudit(e)
+		return err
+	})
+	return id, err
+}
+
+// InsertAudit appends one audit row inside the transaction, so the row and the
+// change commit together or not at all (observability R5.25). The row stores the hash of the row before it.
+func (t *Tx) InsertAudit(e AuditEntry) (int64, error) {
 	if e.Detail == "" {
 		e.Detail = "{}"
 	}
@@ -122,27 +136,16 @@ func auditParams(e AuditEntry) sqlcgen.InsertAuditEventParams {
 	if e.Source == "" {
 		e.Source = "system"
 	}
-	return sqlcgen.InsertAuditEventParams{
-		Actor: e.Actor, ActorID: e.ActorID, Source: e.Source, Action: e.Action,
-		TargetType: e.TargetType, Subject: e.TargetID, Detail: e.Detail, Result: e.Result,
-	}
-}
-
-// InsertAudit appends one audit row.
-func (s *Store) InsertAudit(ctx context.Context, e AuditEntry) (int64, error) {
-	ctx, cancel := withDeadline(ctx)
-	defer cancel()
-	id, err := s.q.InsertAuditEvent(ctx, auditParams(e))
-	if err != nil {
+	prev, err := t.q.LastAuditHash(t.ctx)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return 0, fmt.Errorf("audit: %w", err)
 	}
-	return id, nil
-}
-
-// InsertAudit appends one audit row inside the transaction, so the row and the
-// change commit together or not at all (observability R5.25).
-func (t *Tx) InsertAudit(e AuditEntry) (int64, error) {
-	id, err := t.q.InsertAuditEvent(t.ctx, auditParams(e))
+	at := time.Now().UTC().Format(TimeFormat)
+	id, err := t.q.InsertAuditEvent(t.ctx, sqlcgen.InsertAuditEventParams{
+		At: at, Actor: e.Actor, ActorID: e.ActorID, Source: e.Source, Action: e.Action,
+		TargetType: e.TargetType, Subject: e.TargetID, Detail: e.Detail, Result: e.Result,
+		PrevHash: prev, Hash: AuditHash(prev, at, e),
+	})
 	if err != nil {
 		return 0, fmt.Errorf("audit: %w", err)
 	}
