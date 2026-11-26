@@ -11,7 +11,13 @@ import {
   signedIn,
   viewer,
 } from '../../testing/mock';
-import { currentJobText, isolationText, runnerStatus, stateCounts } from './Runners';
+import {
+  currentJobText,
+  isolationText,
+  runnerStatus,
+  runnerSummary,
+  stateCounts,
+} from './Runners';
 import { containerBackendAllowed, machineSupports, sentence } from './AddRunners';
 
 afterEach(cleanup);
@@ -461,14 +467,36 @@ describe('Idle and busy at a glance (RES7)', () => {
     expect(stateCounts(items)).toEqual({ idle: 1, busy: 2, other: 1 });
   });
 
-  it('shows the counts above the table', async () => {
+  it('says the pool as one summary line, number first, with no label and value rows (UX-86)', async () => {
     const api = signedIn().on('GET', '/api/v1/runners', {
-      items: [runner({ state: 'busy', current_job: job }), runner({ id: 'r2' })],
+      items: [
+        runner({ state: 'busy', current_job: job }),
+        runner({ id: 'r2' }),
+        runner({ id: 'r3', state: 'offline' }),
+      ],
     });
     renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
-    expect(screen.getByText('Idle')).toBeTruthy();
-    expect(screen.getByText('Busy')).toBeTruthy();
+    const line = screen.getByText(
+      (_, el) => el?.className === 'ds-summary' && !!el.textContent,
+    );
+    expect(line.textContent).toBe(
+      '1 machine · 3 runners — 1 idle · 1 busy · 1 not ready',
+    );
+    const warn = line.querySelector('[data-tone="warning"]');
+    expect(warn?.textContent).toBe('1 not ready');
+    expect(screen.queryByText('Idle')).toBeNull();
+    expect(screen.queryByText('Busy')).toBeNull();
+    expect(document.querySelector('.ds-facts')).toBeNull();
+  });
+
+  it('dims a zero and colours no zero', () => {
+    const s = runnerSummary([runner({ state: 'idle' })]);
+    expect(s.states).toEqual([
+      { count: 1, word: 'idle' },
+      { count: 0, word: 'busy' },
+      { count: 0, word: 'not ready', tone: 'warning' },
+    ]);
   });
 });
 

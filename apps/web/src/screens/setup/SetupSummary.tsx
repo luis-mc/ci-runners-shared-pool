@@ -9,6 +9,8 @@ import {
   Section,
   Stack,
   Status,
+  SummaryLine,
+  type SummaryItem,
   Text,
   TextLink,
 } from '@crsp/ui';
@@ -51,14 +53,6 @@ export function poolFigures(
   };
 }
 
-/** The line at the top of Runners and the Summary: "2 machines, 6 runners, 2 busy". */
-export function poolTotals(
-  f: Pick<PoolFigures, 'machines' | 'runners' | 'busy'>,
-): string {
-  const n = (c: number, one: string, many: string) => `${c} ${c === 1 ? one : many}`;
-  return `${n(f.machines, 'machine', 'machines')}, ${n(f.runners, 'runner', 'runners')}, ${f.busy} busy`;
-}
-
 /** The pool CPU and memory the machines give, as the Machines card says them (machines R5.58). */
 export function poolGives(machines: readonly Machine[]): string {
   const cpus = machines.reduce((n, m) => n + (m.settings.pool_cpus ?? 0), 0);
@@ -70,12 +64,19 @@ export function poolGives(machines: readonly Machine[]): string {
     : `${first}, pool size not set.`;
 }
 
-/** The Runners card line: how many runners, how many persistent and how many ephemeral. */
-export function runnerKinds(runners: readonly Runner[]): string {
+/** The Runners card line (UX-86): how many runners, how many persistent and how many ephemeral. */
+export function runnerKinds(runners: readonly Runner[]): {
+  total: SummaryItem[];
+  states: SummaryItem[];
+} {
   const p = runners.filter((r) => r.kind === 'persistent').length;
-  const e = runners.length - p;
-  const n = runners.length;
-  return `${n} ${n === 1 ? 'runner' : 'runners'}: ${p} persistent, ${e} ephemeral.`;
+  return {
+    total: [{ count: runners.length, word: 'runner', plural: 'runners' }],
+    states: [
+      { count: p, word: 'persistent' },
+      { count: runners.length - p, word: 'ephemeral' },
+    ],
+  };
 }
 
 /** The "Setup steps" list (LOOK64): the three first-run steps, each done or with the action that does it. */
@@ -166,7 +167,7 @@ export function SetupSummary() {
                 </Card>
                 <Card title="Runners" count={f.runners}>
                   <Stack>
-                    <Text>{runnerKinds(rs.items)}</Text>
+                    <SummaryLine {...runnerKinds(rs.items)} />
                     <TextLink to="/setup/runners">Open Runners</TextLink>
                   </Stack>
                 </Card>

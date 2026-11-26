@@ -3832,3 +3832,19 @@ a.ds-stat:focus-visible {
 [data-theme-name='terminal'] .ds-field__help {
   font-family: var(--ds-font-prose);
 }
+/* summary line (component 81, UX-86) */
+.ds-summary {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.ds-summary__item[data-zero] {
+  color: var(--ds-color-text-muted);
+}
+.ds-summary__item[data-tone='warning'] {
+  color: var(--ds-color-needs-you);
+  font-weight: var(--ds-weight-bold);
+}
+.ds-summary__item[data-tone='danger'] {
+  color: var(--ds-color-problem);
+  font-weight: var(--ds-weight-bold);
+}

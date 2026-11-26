@@ -50,6 +50,7 @@ export * from './components/Charts';
 export type * from './components/Viz.types';
 export * from './components/SearchTable';
 export * from './components/StatTile';
+export * from './components/SummaryLine';
 export * from './components/BarList';
 export * from './components/FindingList';
 export * from './components/Steps';

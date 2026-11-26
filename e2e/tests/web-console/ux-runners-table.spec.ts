@@ -65,3 +65,20 @@ for (const width of [1300, 1000, 393]) {
     expect(gap).toBeGreaterThan(2);
   });
 }
+
+// CRSP298, UX-86: the pool is one summary line, number first, on one line at every width; no label and value rows.
+for (const width of [1300, 393, 360]) {
+  test(`runners at ${width} px: the pool is one summary line`, async ({ page }) => {
+    await open(page, width);
+    const line = page.locator('.ds-summary');
+    await expect(line).toHaveText(
+      '1 machine · 2 runners — 1 idle · 0 busy · 1 not ready',
+    );
+    await expect(line.locator('[data-tone="warning"]')).toHaveText('1 not ready');
+    await expect(page.locator('.ds-facts')).toHaveCount(0);
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+    );
+    expect(overflow).toBe(false);
+  });
+}
