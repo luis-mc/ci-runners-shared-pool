@@ -397,6 +397,7 @@ type link struct {
 	sendMu sync.Mutex
 	facts  *agentv1.Facts
 	factMu sync.Mutex
+	bg     sync.WaitGroup // the goroutines of one session
 
 	drainMu sync.Mutex
 	drainID string // command id of the drain in progress; empty when none
@@ -431,10 +432,19 @@ func (l *link) redetect(ctx context.Context) *agentv1.Facts {
 	return f
 }
 
+// spawn runs f as a goroutine that runSession waits for before it returns.
+func (l *link) spawn(f func()) {
+	l.bg.Add(1)
+	go func() { defer l.bg.Done(); f() }()
+}
+
 func runSession(ctx context.Context, cfg Config, key, id, pin string) error {
 	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 	l := &link{cfg: cfg, kick: make(chan struct{}, 1)}
+	// Stop and wait for every goroutine of this session before returning: they
+	// write into the data folder (settings, health state, caches), and nothing
+	// may still write there once Run has returned.
+	defer func() { cancel(); l.bg.Wait() }()
 	l.budget = NewBudgeter(cfg)
 	l.wipes = &wiper{cfg: cfg, send: l.send, fsys: cfg.cacheFS(), poll: cfg.DrainPollEvery}
 	l.stream = newClient(pin, cfg.Controller).Session(ctx)
@@ -488,12 +498,12 @@ func runSession(ctx context.Context, cfg Config, key, id, pin string) error {
 	}
 
 	lastRecv := newStamp()
-	go l.sendLoop(ctx, cancel, lastRecv)
-	go l.healthLoop(ctx)
-	go l.cacheLoop(ctx)
-	go l.machineReportLoop(ctx)
-	go l.budgetLoop(ctx)
-	go l.policyLoop(ctx)
+	l.spawn(func() { l.sendLoop(ctx, cancel, lastRecv) })
+	l.spawn(func() { l.healthLoop(ctx) })
+	l.spawn(func() { l.cacheLoop(ctx) })
+	l.spawn(func() { l.machineReportLoop(ctx) })
+	l.spawn(func() { l.budgetLoop(ctx) })
+	l.spawn(func() { l.policyLoop(ctx) })
 
 	for {
 		msg, err := l.stream.Receive()
@@ -644,19 +654,19 @@ func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 	case *agentv1.SessionResponse_Redetect:
 		f := l.redetect(ctx)
 		_ = l.send(&agentv1.SessionRequest{Message: &agentv1.SessionRequest_Facts{Facts: f}})
-		go l.reportMachine(ctx, "")
+		l.spawn(func() { l.reportMachine(ctx, "") })
 		_ = l.send(&agentv1.SessionRequest{Message: &agentv1.SessionRequest_CommandResult{CommandResult: &agentv1.CommandResult{CommandId: m.Redetect.GetCommandId(), Ok: true, Outcome: "done"}}})
 	case *agentv1.SessionResponse_ReportMachine:
-		go l.reportMachine(ctx, m.ReportMachine.GetCommandId())
+		l.spawn(func() { l.reportMachine(ctx, m.ReportMachine.GetCommandId()) })
 	case *agentv1.SessionResponse_AddRunner, *agentv1.SessionResponse_StopRunner,
 		*agentv1.SessionResponse_RemoveRunner, *agentv1.SessionResponse_DrainRunner:
 		l.runnerCmd(ctx, msg)
 	case *agentv1.SessionResponse_ListenerControl:
 		l.listenerControl(ctx, m.ListenerControl)
 	case *agentv1.SessionResponse_UpdateRunnerFiles:
-		go l.updateFiles(ctx, m.UpdateRunnerFiles)
+		l.spawn(func() { l.updateFiles(ctx, m.UpdateRunnerFiles) })
 	case *agentv1.SessionResponse_RunHostCommand:
-		go l.runHostCommand(ctx, m.RunHostCommand)
+		l.spawn(func() { l.runHostCommand(ctx, m.RunHostCommand) })
 	case *agentv1.SessionResponse_DepsCheck:
 		go l.depsCheck(m.DepsCheck)
 	case *agentv1.SessionResponse_DepsInstall:
@@ -666,11 +676,11 @@ func (l *link) handle(ctx context.Context, msg *agentv1.SessionResponse) error {
 	case *agentv1.SessionResponse_DepsRestartHost:
 		l.depsRestartHost(m.DepsRestartHost)
 	case *agentv1.SessionResponse_ScanRunnerLeftovers:
-		go l.scanLeftovers(ctx, m.ScanRunnerLeftovers)
+		l.spawn(func() { l.scanLeftovers(ctx, m.ScanRunnerLeftovers) })
 	case *agentv1.SessionResponse_RemoveRunnerLeftovers:
-		go l.removeLeftovers(ctx, m.RemoveRunnerLeftovers)
+		l.spawn(func() { l.removeLeftovers(ctx, m.RemoveRunnerLeftovers) })
 	case *agentv1.SessionResponse_MeasureCaches:
-		go l.reportCaches(ctx, m.MeasureCaches.GetCommandId())
+		l.spawn(func() { l.reportCaches(ctx, m.MeasureCaches.GetCommandId()) })
 	case *agentv1.SessionResponse_RunnerHygiene:
 		l.applyHygiene(ctx, m.RunnerHygiene)
 	case *agentv1.SessionResponse_WipeCache:
