@@ -154,6 +154,9 @@ jobs:
 
       - name: CI scripts unit tests
         run: |
+          # CRSP319: a cold module cache (no main entry yet) would download inside the 10 s
+          # test timeout of test_ci_tiers (go list); with a warm cache this is a no-op.
+          go mod download
           python3 -m pip install --quiet -r scripts/ci/requirements-test.txt
           python3 -m pytest scripts/ci
 
