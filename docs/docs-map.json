@@ -152,6 +152,9 @@
     "internal/cpucap/**": [
       "docs/features/machines/spec.md"
     ],
+    "internal/debugaccess/**": [
+      "docs/features/debug-access/spec.md"
+    ],
     "internal/dockercompact/**": [
       "docs/features/caches/spec.md",
       "docs/features/machines/spec.md"
