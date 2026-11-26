@@ -644,24 +644,61 @@ jobs:
       - run: chmod +x bin/crsp
       # CRSP201: `playwright install --with-deps` took about 190 s per shard. The browser
       # download is cached per runner OS and the exact @playwright/test version
-      # from pnpm-lock.yaml; the browser builds are fixed by that version. A hit
-      # installs only the system packages; a miss installs as before. Playwright's
+      # from pnpm-lock.yaml; the browser builds are fixed by that version. Playwright's
       # own installer fetches the browser, so DL-94 (ci_tool.py) does not apply.
+      # CRSP315: the system packages come from a cache of their .deb files, so a hit
+      # reads no Ubuntu mirror (apt-get update and install-deps took 10 to 40 s per shard
+      # and up to 8 min when a mirror served 404s). CRSP319: restore everywhere, save on
+      # main only.
       - name: Playwright version
         id: pw
-        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
-      - name: Cache Playwright browsers
+        run: |
+          echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageVersion:-none}" >> "$GITHUB_OUTPUT"
+      - name: Restore Playwright browsers
         id: pw-cache
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ steps.pw.outputs.version }}
-      - name: Install Playwright browser and system packages
+      - name: Restore Playwright system packages (.deb files)
+        id: pw-deb
+        uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/pw-debs
+          key: playwright-debs-${{ runner.os }}-${{ steps.pw.outputs.image }}-${{ steps.pw.outputs.version }}
+      - name: Install Playwright browser
         if: steps.pw-cache.outputs.cache-hit != 'true'
-        run: pnpm exec playwright install --with-deps chromium
-      - name: Install Playwright system packages (browser cached)
-        if: steps.pw-cache.outputs.cache-hit == 'true'
-        run: pnpm exec playwright install-deps chromium
+        run: pnpm exec playwright install chromium
+      - name: Install Playwright system packages (cached .deb files)
+        if: steps.pw-deb.outputs.cache-hit == 'true'
+        # apt-get orders an upgrade set that a single dpkg call cannot (libasound2-data breaks the
+        # old libasound2t64). The files are local, so no mirror is read; unsafe-io skips fsync on
+        # a runner that is thrown away.
+        run: sudo apt-get install -y --no-install-recommends --no-download -o DPkg::Options::=--force-unsafe-io "$HOME"/pw-debs/*.deb || pnpm exec playwright install-deps chromium
+      - name: Install Playwright system packages (apt, then keep the .deb files)
+        if: steps.pw-deb.outputs.cache-hit != 'true'
+        run: |
+          set -eu
+          sudo rm -f /etc/apt/apt.conf.d/docker-clean
+          echo 'APT::Keep-Downloaded-Packages "true";' | sudo tee /etc/apt/apt.conf.d/99keep-debs >/dev/null
+          sudo rm -f /var/cache/apt/archives/*.deb
+          pnpm exec playwright install-deps chromium
+          mkdir -p "$HOME/pw-debs"
+          sudo cp /var/cache/apt/archives/*.deb "$HOME/pw-debs/"
+          sudo chown -R "$USER" "$HOME/pw-debs"
+      - name: Save Playwright browsers (main only)
+        if: github.ref == 'refs/heads/main' && steps.pw-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.pw-cache.outputs.cache-primary-key }}
+      - name: Save Playwright system packages (main only)
+        if: github.ref == 'refs/heads/main' && steps.pw-deb.outputs.cache-hit != 'true'
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/pw-debs
+          key: ${{ steps.pw-deb.outputs.cache-primary-key }}
 
       # Required. No retries, no continue-on-error (STACKSPEC 11.2, 11.3).
       # CRSP209: Playwright's own --shard split by test count, so one shard ran 4.9 min
