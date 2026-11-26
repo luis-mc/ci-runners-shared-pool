@@ -4,11 +4,25 @@ description: >-
   main (CRSP319). PR cache entries are readable by that PR alone and filled
   the 10 GB Actions cache. Put it BEFORE actions/setup-go (which gets
   cache: false): setup-go downloads the go.mod toolchain into the module cache,
-  and a restore after that collides with it.
+  and a restore after that collides with it. On Windows (CRSP317) nothing is
+  restored: GOCACHE and GOMODCACHE move to the fast D: drive instead.
 runs:
   using: composite
   steps:
-    - if: github.ref != 'refs/heads/main'
+    # CRSP317 (S18): the Windows runner's C: drive is slow, and restoring the Go cache is a long tar
+    # extract onto it. Put both caches on D: (when it exists) and restore nothing there: a cold module
+    # download on D: costs less than the extract. Later steps, setup-go included, read GITHUB_ENV.
+    - if: runner.os == 'Windows'
+      shell: pwsh
+      run: |
+        if (Test-Path 'D:\') {
+          New-Item -ItemType Directory -Force 'D:\gocache', 'D:\gomod' | Out-Null
+          "GOCACHE=D:\gocache" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "GOMODCACHE=D:\gomod" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+        } else {
+          Write-Host 'no D: drive on this runner: Go caches stay on C:'
+        }
+    - if: runner.os != 'Windows' && github.ref != 'refs/heads/main'
       uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
@@ -21,7 +35,7 @@ runs:
           go-${{ runner.os }}-${{ runner.arch }}-
           setup-go-${{ runner.os }}-
     # On main actions/cache restores now and saves in its post step.
-    - if: github.ref == 'refs/heads/main'
+    - if: runner.os != 'Windows' && github.ref == 'refs/heads/main'
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: |
