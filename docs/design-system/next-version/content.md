@@ -1959,3 +1959,11 @@ One line of counts, number first, on Setup > Runners, Setup > Summary and the Ov
 | State words | idle, busy, not ready (warning colour above zero), failed (danger colour above zero) |
 | Setup > Summary, Runners card | {n} runner(s) — {n} persistent · {n} ephemeral |
 | Setup > Summary, Machines card | unchanged sentence: {n} machine(s), {cpu} CPU and {gib} GiB in the pool. |
+
+## Runners filter words (CRSP299, options awaiting the owner's pick)
+
+| Where | Words |
+|---|---|
+| Runners filter bar, drop-down choices | Any system, Any isolation, Any kind, Any size (the first choice of each drop-down; shows every runner) |
+| Runners filter sheet | Filters; Filters ({n}) when n are set; sheet title Filter runners; Clear filters; Show {n} runners |
+| Active filters | System: Linux; Isolation: VM; Kind: persistent; Size: xl (one tag each) |

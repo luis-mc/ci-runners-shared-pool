@@ -84,51 +84,43 @@ function search(p: BarProps) {
 /** Option 1, "Drop-downs": the four filters are drop-downs side by side in one grid; search and selection stay in the toolbar. */
 export function DropDownBar(p: BarProps) {
   return (
-    <ListToolbar
-      label="Runners"
-      search={search(p)}
-      filters={
-        <FieldGrid>
-          {GROUPS.map((g) => (
-            <SelectField
-              key={g.key}
-              label={g.name}
-              width="full"
-              value={p.state[g.key]}
-              choices={[{ value: '', label: g.any }, ...g.options]}
-              onChange={(v) => p.set(g.key, v)}
-            />
-          ))}
-        </FieldGrid>
-      }
-      selection={p.selection}
-    />
+    <Stack>
+      <ListToolbar label="Runners" search={search(p)} selection={p.selection} />
+      <FieldGrid>
+        {GROUPS.map((g) => (
+          <SelectField
+            key={g.key}
+            label={g.name}
+            width="full"
+            value={p.state[g.key]}
+            choices={[{ value: '', label: g.any }, ...g.options]}
+            onChange={(v) => p.set(g.key, v)}
+          />
+        ))}
+      </FieldGrid>
+    </Stack>
   );
 }
 
 /** Option 2, "Joined choices": each filter is a joined button row (All first, component 12), named above. */
 export function JoinedBar(p: BarProps) {
   return (
-    <ListToolbar
-      label="Runners"
-      search={search(p)}
-      filters={
-        <FieldGrid>
-          {GROUPS.map((g) => (
-            <Stack key={g.key} gap="tight">
-              <Text tone="muted">{g.name}</Text>
-              <Segmented
-                label={g.name}
-                options={g.options}
-                value={p.state[g.key]}
-                onChange={(v) => p.set(g.key, v)}
-              />
-            </Stack>
-          ))}
-        </FieldGrid>
-      }
-      selection={p.selection}
-    />
+    <Stack>
+      <ListToolbar label="Runners" search={search(p)} selection={p.selection} />
+      <Cluster gap="loose">
+        {GROUPS.map((g) => (
+          <Stack key={g.key} gap="tight">
+            <Text tone="muted">{g.name}</Text>
+            <Segmented
+              label={g.name}
+              options={g.options}
+              value={p.state[g.key]}
+              onChange={(v) => p.set(g.key, v)}
+            />
+          </Stack>
+        ))}
+      </Cluster>
+    </Stack>
   );
 }
 
