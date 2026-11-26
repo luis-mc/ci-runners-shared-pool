@@ -13,8 +13,29 @@ const router = createBrowserRouter([
   { path: '*', element: <App />, errorElement: <RouteError /> },
 ]);
 
+// TEMPORARY (CRSP338): a dev server started with VITE_CRSP338_DEMO=1 runs on a fake controller (demo data).
+class NoStream {
+  onopen = null;
+  onerror = null;
+  onmessage = null;
+  addEventListener() {}
+  close() {}
+}
+let shown = router;
+if (import.meta.env.VITE_CRSP338_DEMO) {
+  const { demoApi } = await import('./screens/repositories/options/demoApi');
+  const demo = demoApi(window.location.search);
+  shown = createBrowserRouter([
+    {
+      path: '*',
+      element: <App {...demo} eventSource={() => new NoStream()} />,
+      errorElement: <RouteError />,
+    },
+  ]);
+}
+
 createRoot(container).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <RouterProvider router={shown} />
   </StrictMode>,
 );

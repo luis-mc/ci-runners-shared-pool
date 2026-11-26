@@ -200,7 +200,23 @@ export function GithubAppPane({ items }: { items: readonly Repository[] }) {
   );
 }
 
+// TEMPORARY (CRSP338): ?option=1..6 shows one of six design options; only a demo dev server has them.
+const PoolOption = import.meta.env.VITE_CRSP338_DEMO
+  ? lazy(() => import('./options/PoolOptions').then((m) => ({ default: m.PoolOption })))
+  : undefined;
+
 export function RepositoriesList() {
+  const option = Number(new URLSearchParams(useLocation().search).get('option'));
+  if (PoolOption && option >= 1 && option <= 6)
+    return (
+      <Suspense fallback={null}>
+        <PoolOption option={option} />
+      </Suspense>
+    );
+  return <RepositoriesListCurrent />;
+}
+
+function RepositoriesListCurrent() {
   const location = useLocation();
   const client = useClient();
   const session = useSession();
