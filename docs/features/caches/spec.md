@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/cache/**", "internal/mirror/**", "internal/tools/**", "internal/runnercache/**", "internal/caches/**", "internal/vmcheck/**", "internal/dockercompact/**"]
 design_system: [UX-4, UX-6, UX-9, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-34, UX-38, UX-41, UX-58, UX-62]
-last_verified: 2026-11-14
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**PARTLY BUILT (CRSP21, CRSP26, CRSP36, CRSP48).** Milestone 1 builds the per-runner cache quotas with eviction, the Rust cache cap with its per-key cap (R5.45), the pool-wide disk budget and size alert (R5.48, R5.49), the disk guard, the per-runner `CI_TOOLS_DIR`, the `vm_check` port (R5.36 to R5.40, built) and the list and wipe of those per-runner caches on the Images and caches screen (R5.42, built). Every other requirement is **NOT YET IMPLEMENTED**. The shared per-machine tool cache is planned for milestone 2. The Actions cache server, git mirror, registry mirror, cache warmth and wipe are planned for milestone 7. The package proxy has no milestone yet.
+**PARTLY BUILT (CRSP21, CRSP26, CRSP36, CRSP48).** Milestone 1 builds the per-runner cache quotas with eviction, the Rust cache cap with its per-key cap (R5.45), the pool-wide disk budget and size alert (R5.48, R5.49), the disk guard, the per-runner `CI_TOOLS_DIR`, the `vm_check` port (R5.36 to R5.40, built) and the list and wipe of those per-runner caches on the Images and caches screen (R5.42, built). Milestone 2 has the shared per-machine tool cache as library code (CRSP255, R5.14, R5.61 to R5.64), the VM cache (CRSP61, CRSP65, CRSP71) and the Docker disk compact (OPS52, CRSP136). Milestone 7 is built in part (CRSP272): the Actions cache receiver (`internal/lancache`), the git mirror (`internal/mirror`), cache warmth and wipe with a plan, and the cache switches; the registry mirror is built in the registry feature (REG9). Not built: the agent start that prepares the tool cache folder, the `tool_cache_cap_gib` setting, the doctor tool-cache check, the registry mirror re-check interval (R5.66) and the package proxy, which has no milestone yet. Every requirement not named here is planned.
 
 ## 1. In one paragraph
 
@@ -513,7 +513,7 @@ Open questions for the owner:
 
 ## 11. Not built yet
 
-Built in milestone 2 (CRSP53): R5.43 and R5.44 as library code and mounts; CRSP68: the pool start takes the lane when it makes the pool container. Built in milestone 1: R5.36 to R5.40, R5.45, R5.48 and R5.49. Not built there: the folders are made by the runner's first job, not by the agent at install; the alert of the disk guard is the job log line and the doctor finding (no notification yet); the quotas are the same for every runner (a per-machine value waits for the machine settings, whose `cache_cap_bytes` is stored but not yet read by the quota); the VM boot of `vm_check`. Everything else above is NOT YET IMPLEMENTED. In addition:
+Built in milestone 2 (CRSP53): R5.43 and R5.44 as library code and mounts; CRSP68: the pool start takes the lane when it makes the pool container. Built in milestone 1: R5.36 to R5.40, R5.45, R5.48 and R5.49. Not built there: the folders are made by the runner's first job, not by the agent at install; the alert of the disk guard is the job log line and the doctor finding (no notification yet); the quotas are the same for every runner (a per-machine value waits for the machine settings, whose `cache_cap_bytes` is stored but not yet read by the quota); the VM boot of `vm_check`. Later milestones are built in part, see the status line at the top. In addition:
 
 - **Package proxy** (npm, PyPI, crates, apt): no milestone. The seam is the registry mirror's upstream list and the agent's engine settings (R5.25); a package proxy would add per-ecosystem settings (`npm_config_registry`, `PIP_INDEX_URL`, Cargo `source.replacement`, apt proxy) the same way.
 - **Cache sharing between pools**: not planned. The seam is the pool column in `cache_entries`.

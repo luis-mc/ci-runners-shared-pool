@@ -801,11 +801,10 @@ Built by CRSP36: the Images and caches screen (R5.25) for caches. Built by CRSP2
 
 **NOT YET IMPLEMENTED:**
 
-- the Images tab has no data: milestone 1 builds no images, so `listImages` returns an empty list and `getImage`, `updateImageLayers` and `rebuildImage` answer 404 `not_found` ("Images arrive with milestone 2"); layer choice, rebuild and the image rows come with the containers of milestone 2. The Caches tab shows the per-runner tool and Rust caches only (caches R5.42); the Actions cache, git mirrors and registry mirror arrive with milestone 7, and no size history exists yet, so the size/cap meter (component 40) stands in for component 31;
+- the Images tab is served by the controller (`internal/api/handlers_images.go`, registry REG5); the Caches tab shows the holder rows of the Actions cache, the git mirrors, the tool cache and the registry mirror (caches R5.71, CRSP272). No size history exists yet, so the size/cap meter (component 40) stands in for component 31;
 - the later settings sub-pages: none (Updates is built by CRSP19; Budgets, Notifications, Audit log and Config export are built, CRSP37). The delivery of events to a notification channel is NOT YET IMPLEMENTED (notifications spec, section 11);
 - Budgets: a pool change that restarts runners and names the jobs it waits for (UX-62). Today a pool default reaches only machines that join later, so nothing restarts and the page says so; the controller lists no job a pool change waits for because none does yet (machines R5.22a);
 - the SPA fallback test of R5.2, the browser checks `no-external-requests.spec.ts` (R6.3) and `no-secrets.spec.ts` (R6.4);
-- the controller binary does not mount the GitHub area yet (`cmd/crsp/main.go` passes no `Options.GitHub`), so nobody can sign in there: every operation that needs a role answers 401 and the sign-in operations answer 501, until the area is wired;
 
 ## 12. Code map
 
