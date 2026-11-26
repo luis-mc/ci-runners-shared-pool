@@ -411,9 +411,9 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.26 | internal/audit/audit_test.go TestNoUpdateOrDeletePath, TestRetentionWritesOwnRow; internal/store/ops_test.go TestAuditIsAppendOnly |
 | R5.27 | internal/audit/query_test.go TestNewestFirstAndFilters; internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
 | R5.28 | internal/store/auditchain_test.go TestChainIntactAndLinked, TestChainDetectsFirstBrokenRow, TestChainOldRowsAndRetention; internal/audit/chain_test.go TestChainRecordsAreLinked, TestCheckChainReturnsReadError |
-| R5.29 | planned: internal/logs/slog_test.go TestJSONFieldsAndRotation |
-| R5.30 | planned: internal/logs/crash_test.go TestPanicWritesCrashFile, TestSetCrashOutputFolder |
-| R5.31 | planned: internal/logs/crash_test.go TestUnreportedCrashShownOnce |
+| R5.29 | internal/logs/slog_test.go TestJSONFieldsAndRotation |
+| R5.30 | internal/logs/crash_test.go TestPanicWritesCrashFile, TestSetCrashOutputFolder |
+| R5.31 | internal/logs/crash_test.go TestUnreportedCrashShownOnce; internal/doctor/checks/crashfiles_test.go TestCrashFilesListed (sending an agent's crash files on reconnect is planned) |
 | R5.32 | internal/settings/retention_test.go TestHourlyJobDeletesPastLimit, TestRetentionUsesSettings; internal/settings/settings_test.go TestOutOfRangeRefusedWithRange, TestEveryRangeMatchesFloorAndCeiling |
 | R5.33 | planned: internal/bench/compare_test.go TestRunsBothOnTheSameCommit, TestNothingShownWhenARunFails, TestNeverStartsByItself (CRSP92) |
 | R5.34 | internal/compare/compare_test.go TestMatchingByNameAcrossKinds, TestMedianAndP95, TestRowStatsAndMinutesSaved, TestCostMath, TestPublicRepositoryExcluded, TestAPISourceEndToEnd; apps/web/src/screens/savings/savings.test.tsx (Compare view); internal/api/handlers_compare_test.go TestSpeedComparisonJSON, TestSpeedComparisonIsReadOnly; internal/cli/resources_test.go TestCompareTableAndJSON |
@@ -440,16 +440,16 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.2 | internal/events/hub_test.go TestLoadThrottlePerMachine (the median of three is the machines feature) |
 | R6.3 | internal/events/hub_test.go TestSSEFormatAndServe (heartbeat), TestSlowSubscriberIsClosedAndNeverBlocksPublisher, TestStreamCap; internal/api/handlers_live_test.go TestStreamEventsTooManyStreams |
 | R6.4 | planned: internal/events/sse_test.go TestNoDataBeforeAuth, TestStreamClosesOnRoleRemoved; internal/audit/query_test.go TestViewerRefused |
-| R6.5 | planned: internal/logs/redact_test.go TestKnownValuesAndShapesRedacted |
-| R6.6 | planned: internal/logs/redact_sinks_test.go TestNoSecretInAnySink |
-| R6.7 | planned: internal/logs/local_test.go TestNoNetworkImports (with a depguard rule in .golangci.yml) |
+| R6.5 | internal/logs/redact_test.go TestKnownValuesAndShapesRedacted |
+| R6.6 | internal/logs/redact_sinks_test.go TestNoSecretInAnySink, TestSecretKindTableIsComplete (the agent log line joins with R5.20) |
+| R6.7 | internal/logs/local_test.go TestNoNetworkImports (with the depguard rule `logs-stay-local` in .golangci.yml) |
 | R6.8 | planned: internal/logs/retention_test.go TestDefaultsFloorsCeilings |
 | R6.9 | planned: internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
 | R6.10 | planned: internal/logs/store_test.go TestSeparateDatabaseFile |
 | R6.11 | planned: internal/history/bench_test.go BenchmarkHistoryPage; internal/logs/bench_test.go BenchmarkSearchFirstPage |
 | R6.12 | planned: internal/history/store_test.go TestStoredUTC; apps/web/src/live/format.test.ts |
 | R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
-| R6.14 | planned: internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory |
+| R6.14 | internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
 
 **Metrics export (CRSP262).**
 
@@ -521,12 +521,14 @@ Built (CRSP262): `internal/metrics/` (snapshot and pool source, Prometheus text,
 
 Built (CRSP256): `internal/history/` (`rates.go` the rate table and its audited changes, `savings.go` the report and the store source), `internal/store/savings.go` (the finished pool jobs query), `internal/api/handlers_savings.go` (the three routes), `cmd/crsp/overview_source.go` (real minutes for the live Overview), `apps/web/src/screens/savings/`, `apps/web/src/screens/analytics/Savings.tsx` and `Compare.tsx`.
 
+Built (CRSP271b): `internal/logs/` (`slog.go` the logger with rotation, `crash.go` crash files, the `reported` marker and the fatal-error output), `internal/redact/` (the secret kinds `ValueKinds` and `ShapeKinds`, output `[redacted:<kind>]`), `internal/logging/` (tagged handler), `internal/doctor/checks/crashfiles.go`, redactor hooks in `internal/audit/` and `internal/api/errors.go`, the `logs-stay-local` rule in `.golangci.yml`.
+
 Planned files, in the globs of the front matter:
 
 - internal/events/ (wait reasons)
 - internal/history/ (store, timing, savings, rates.json)
 - internal/audit/ (chain)
-- internal/logs/ (slog setup, redactor, rotation, crash files, agent buffer, logs.db, search, retention)
+- internal/logs/ (agent buffer, logs.db, search, retention)
 
 Built (OPS66): `internal/jobsize/` (the shared peak and summary logic), `internal/agent/jobsample/` (the readers and the collector), `internal/agent/jobsample_run.go` and `internal/agent/gate.go` (the attach points), `internal/store/insights_peaks.go` and migration 00034 (the stored runs and the job key summary), `internal/agentlink/insights.go` (the sink), `internal/api/handlers_insights.go` (the field).
 
