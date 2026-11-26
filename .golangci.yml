@@ -58,7 +58,13 @@ linters:
         # R6.7 (observability): logs stay local. No logging, history or audit
         # package makes a network call; there is no telemetry and no remote sink.
         logs-stay-local:
-          files: ['**/internal/logs/**', '**/internal/history/**', '**/internal/audit/**', '!$test']
+          files:
+            [
+              '**/internal/logs/**',
+              '**/internal/history/**',
+              '**/internal/audit/**',
+              '!$test',
+            ]
           deny:
             - pkg: 'net'
               desc: 'logs, history and audit stay local (observability R6.7)'
