@@ -266,7 +266,7 @@ Ported from runner-pool R5.10 (no rebuild under a running job) and learning 1 of
 
 ### 5.11 Parity with the old pool (after v0.1.0)
 
-Each requirement below targets a milestone after v0.1.0 and is **NOT YET IMPLEMENTED**. Until this is built, jobs that need it run on GitHub-hosted runners. Source: the handover page ([section 3 items 8 and 13](../../architecture/dev-standards-handover.md)).
+Each requirement below targets a milestone after v0.1.0. A requirement marked built or built in part says so in its own text; the others are **NOT YET IMPLEMENTED**. Until a requirement is built, jobs that need it run on GitHub-hosted runners. Source: the handover page ([section 3 items 8 and 13](../../architecture/dev-standards-handover.md)).
 
 **R5.53** (after v0.1.0, Built in part CRSP56 and CRSP61 (`agent.ReadWSLKVM` and `ParseWSLKVM` read the WSL VM: `/dev/kvm` and whether `kvm_intel` or `kvm_amd` is loaded, read-only; the doctor check `kvm.module` says how to fix it, doctor R5.32): `agent.ParseWslconfig`, `PlanKVMLoad`, `container.LoaderModule`, `KVMWait` and the loader service of `images/layers/compose.kvm.yaml`; the agent does not yet read `.wslconfig` on a real machine or report KVM state to the doctor) — **KVM on WSL2.** On Windows with WSL2, after `wsl --shutdown` or a reboot `/dev/kvm` is gone until the module `kvm_intel` or `kvm_amd` is loaded in the WSL VM. The agent checks `nestedVirtualization=true` in the user's `.wslconfig` and reports it as the backend reason when it is off ("nested virtualization is off in .wslconfig"); it never edits that file without a yes. When it is on and `/dev/kvm` is missing, the agent loads the module through a one-shot privileged helper that exits after the load; runners are never privileged. The `kvm` label (runners R5.36) is added only after `/dev/kvm` is usable. The step runs again at every WSL start. The pool container gets no `/dev/kvm` mapping (lesson 28, HND1): it is given the cgroup rule `c 10:232 rwm`, and its `kvm-wait.sh` creates the node with `mknod` once `/proc/misc` lists `kvm`, inside the bounded wait; when the wait ends without the device the pool starts without KVM and logs it.
 
@@ -463,7 +463,7 @@ The machine key travels as connection metadata on every call after join.
 
 ## 9. How it is proven
 
-Every test below is planned and NOT YET IMPLEMENTED. Paths are where the tests will live.
+A row marked built has its test. A row marked planned has no test yet; its path is where the test will live.
 
 | Requirement | Test | Status |
 |---|---|---|

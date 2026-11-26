@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/insights/**", "internal/jobsdata/reconcile/**", "internal/jobsdata/followup*.go", "internal/store/jobsdata_followups*.go", "internal/agent/jobsample/**", "internal/github/rest_insights*.go", "internal/doctor/checks/workflows*.go", "internal/agentlink/insights*.go", "internal/agent/jobsample*.go", "cmd/crsp/insights*wiring.go", "internal/store/insights*.go", "internal/store/queries/insights_*.sql", "internal/store/migrations/00030_ci_insights.sql", "internal/store/migrations/00031_insight_dismiss.sql", "internal/tray/menu*.go", "apps/web/src/screens/settings/InsightsUpdate*", "internal/api/handlers_insights*.go", "apps/web/src/screens/insights/**"]
 design_system: [UX-4, UX-6, UX-11, UX-14, UX-17, UX-18, UX-19, UX-25, UX-28, UX-29, UX-30, UX-33, UX-38, UX-41, UX-49, UX-52, UX-53, UX-54, UX-58, UX-62, UX-71, UX-72]
-last_verified: 2026-11-20
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**PROPOSED, CONTRACT ONLY (CIX8).** The shared contract is committed: migration 00030 and its queries, the Go types and interfaces under `internal/insights/`, `internal/jobsdata/reconcile/` and `internal/agent/jobsample/`, the agent link message for resource samples (protocol version 4) and the API under `/api/v1/insights/*`, which answers 501 "not built yet". Every requirement below is **NOT YET IMPLEMENTED**; the wave plan names the task that builds each group. Owner decisions of 20 Nov 2026: all 16 ideas and the Job page faults are built in one wave and one release (CIX).
+**BUILT (CIX8, CIX11 to CIX24, OPS66, LOOK46, LOOK56, LOOK66).** The contract of CIX8 is filled in: the engine and findings store, the CI data collector, the Job page faults, waits and timeline, pool sizing, run savings, workflow checks, test reports and guardrails, action plans, the `/api/v1/insights/*` routes, the agent link resource samples (protocol version 4) and the console screens. Each group of requirements is named in the change note of the task that built it. A row of the test table that says planned has no test yet. Owner decisions of 20 Nov 2026: all 16 ideas and the Job page faults are built in one wave and one release (CIX).
 
 ## 1. In one paragraph
 

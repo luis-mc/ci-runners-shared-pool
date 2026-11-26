@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/doctor/**"]
 design_system: [UX-4, UX-6, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-31, UX-52, UX-53, UX-58, UX-61, "components 1, 10, 11, 12, 15, 16, 17, 18, 19, 21"]
-last_verified: 2026-11-25
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -70,7 +70,7 @@ flowchart LR
 
 ## 4. Screens and states
 
-The Doctor screen is screen 8 of the brief. No mocks yet (NOT YET IMPLEMENTED); they go in `images/` with alt text when drawn.
+The Doctor screen is screen 8 of the brief. It is built in the web console (web-console 4.8, R5.26: `apps/web/src/screens/doctor`). No mocks are drawn for this spec; they go in `images/` with alt text when drawn.
 
 Layout:
 
@@ -145,7 +145,7 @@ States:
 
 ### 5.6 Where it runs
 
-**R5.20** — Console: the Doctor screen of section 4 starts runs, shows progress and findings live, and filters by severity, group and machine. NOT YET IMPLEMENTED (milestone 1).
+**R5.20** — Console: the Doctor screen of section 4 starts runs, shows progress and findings live, and filters by severity, group and machine. Built in part: the screen (`apps/web/src/screens/doctor/Doctor.tsx`) starts a run (`POST /api/v1/doctor/runs`) and lists the findings grouped by area with a status word; the filters by severity, group and machine are NOT YET IMPLEMENTED (milestone 1).
 
 **R5.21** — CLI: `crsp doctor` starts a run through the controller's API and prints the findings, worst first, one block per finding with its fix. Flags: `--machine NAME`, `--repo OWNER/NAME`, `--check PREFIX` (each may repeat), `--min-severity info|warn|fail` (default `warn`: hides `ok`, `info` and `skip` from text output), `--json`, `--local`. Built (CRSP23) without `--local`.
 
@@ -507,7 +507,7 @@ Not ported, with the reason:
 
 ## 9. How it is proven
 
-Rows that name a file without "planned" are built (CRSP23). Planned rows are NOT YET IMPLEMENTED.
+Rows that name a file without "planned" are built. Planned rows have no test yet.
 
 | Requirement | Test |
 |---|---|

@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: [cmd/crsp/**, internal/cli/**]
 design_system: [content action-vocabulary, content message-wording, content dates-times-numbers]
-last_verified: 2026-11-25
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-Today the binary has three commands: `controller`, `agent` (it says it is not built yet) and `version`. Everything else in this spec is NOT YET IMPLEMENTED. On a Mac, `crsp agent` also gives the agent a counter of macOS VMs for its machine report (machines R5.14, CRSP114); it adds no command.
+The binary is built in part. Built: `controller`, `agent` (`run`, `join`, `install`), `tray`, `version`, sign-in, contexts, repositories, machines, runners, jobs, `doctor`, `backup` and `restore`, `update`, `uninstall` and `completion`. Not built: `config export|import|apply` (M8, it says it is not built yet and exits 2) and the items in section 11. On a Mac, `crsp agent` also gives the agent a counter of macOS VMs for its machine report (machines R5.14, CRSP114); it adds no command.
 
 The controller and the agent write their logs through a redacting handler (`internal/logging`, github-integration R6.3), so no token, PEM block or stored secret value reaches a log line.
 
@@ -369,7 +369,7 @@ Built in milestone 1 (CRSP25): `controller`, `agent` and `tray` dispatch, `versi
 
 NOT YET IMPLEMENTED:
 
-- `config export|import|apply` (M8), `update` (M3), the `tray` mode (M8). Each says it is not built yet and exits 2.
+- `config export|import|apply` (M8). It says it is not built yet and exits 2. `update` and the `tray` mode are built.
 - `backup --out FILE`: the contract has no download operation, so `backup` starts a backup on the controller and names its file. A download operation is needed first.
 - OS secret stores (Windows Credential Manager, macOS Keychain, Linux Secret Service): the CLI uses the 0600 file store behind `internal/secrets` until each store lands. The file is refused when its mode is wider than 0600.
 - `login` runs GitHub's device flow with the URLs from `getCliLoginConfig` (the contract's shape) and then calls `exchangeCliToken`. The sequence diagram in section 3 shows the controller doing the polling; the contract does not.
