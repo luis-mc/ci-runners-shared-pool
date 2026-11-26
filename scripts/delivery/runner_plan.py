@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Heavy-job wrapper (DELIVERYSPEC DL-50, DL-51, D6): run one heavy local command without stealing the
+"""Heavy-job wrapper (DELIVERYSPEC D6): run one heavy local command without stealing the
 CI runners from a release train.
 
     runner_plan.py run --label NAME [options] -- <command> [args...]
