@@ -386,13 +386,13 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.1 | internal/overview/overview_test.go TestGetBuildsOverview, TestQueueListIsCappedButCountIsExact; internal/api/handlers_live_test.go TestGetOverview (the e2e screen test is planned) |
 | R5.2 | internal/events/hub_test.go TestFirstEventIsSnapshotThenChangesInOrder; internal/api/handlers_live_test.go TestStreamEventsSnapshotThenChanges |
 | R5.3 | internal/events/hub_test.go TestReplayByLastEventID, TestReplayGapSendsMarkedSnapshot, TestReplayAgeLimit; internal/api/handlers_live_test.go TestStreamEventsReplayByLastEventID |
-| R5.4 | planned: apps/web/src/live/store.test.ts "overview and strip read one store" |
-| R5.5 | planned: internal/events/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
-| R5.6 | planned: apps/web/src/live/clock.test.ts "ages tick and pause while hidden"; apps/web/src/live/status.test.ts |
+| R5.4 | apps/web/src/live/store.test.ts "overview and strip read one store" |
+| R5.5 | internal/scheduler/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
+| R5.6 | apps/web/src/live/clock.test.ts "ages tick and pause while hidden"; apps/web/src/live/status.test.ts |
 | R5.7 | planned: internal/history/store_test.go TestOneRowPerJobAttempt |
-| R5.8 | planned: internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
-| R5.9 | planned: internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
-| R5.10 | planned: internal/history/timing_test.go TestResultMapping (port of test_failed_step_and_conclusion) |
+| R5.8 | internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
+| R5.9 | internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
+| R5.10 | internal/history/timing_test.go TestResultMapping (port of test_failed_step_and_conclusion) |
 | R5.11 | planned: internal/history/query_test.go TestNewestFirstAndFilters; internal/history/cli_test.go TestHistoryJSON |
 | R5.12 | planned: internal/history/store_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRowsAndMarksStale |
 | R5.13 | planned: internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped |
@@ -447,7 +447,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.9 | planned: internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
 | R6.10 | planned: internal/logs/store_test.go TestSeparateDatabaseFile |
 | R6.11 | planned: internal/history/bench_test.go BenchmarkHistoryPage; internal/logs/bench_test.go BenchmarkSearchFirstPage |
-| R6.12 | planned: internal/history/store_test.go TestStoredUTC; apps/web/src/live/format.test.ts |
+| R6.12 | internal/store/jobsdata_test.go TestStoredUTC; apps/web/src/live/format.test.ts |
 | R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
 | R6.14 | planned: internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory |
 
@@ -523,10 +523,11 @@ Built (CRSP256): `internal/history/` (`rates.go` the rate table and its audited 
 
 Planned files, in the globs of the front matter:
 
-- internal/events/ (wait reasons)
-- internal/history/ (store, timing, savings, rates.json)
+- internal/history/ (store, savings, rates.json)
 - internal/audit/ (chain)
 - internal/logs/ (slog setup, redactor, rotation, crash files, agent buffer, logs.db, search, retention)
+
+Built (CRSP271): `internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), `apps/web/src/live/format.ts` (the one time format), `apps/web/src/live/clock.ts` (the shared clock), `apps/web/src/live/status.ts` (word, glyph and colour set).
 
 Built (OPS66): `internal/jobsize/` (the shared peak and summary logic), `internal/agent/jobsample/` (the readers and the collector), `internal/agent/jobsample_run.go` and `internal/agent/gate.go` (the attach points), `internal/store/insights_peaks.go` and migration 00034 (the stored runs and the job key summary), `internal/agentlink/insights.go` (the sink), `internal/api/handlers_insights.go` (the field).
 
