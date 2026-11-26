@@ -6,3 +6,11 @@ ac3ed37373ed913098ce2fca9ae2ad21287c3add:internal/redact/redact_test.go:project-
 5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/full-progress-ci-runners-shared-pool.html:project-named-secret:1215
 # CRSP282: RELOAD_KEY names a sessionStorage key, not a secret; false positive in history.
 12ebadd4c645dec84065014e006de145be78fbcd:apps/web/src/screens/common.tsx:project-named-secret:135
+# CRSP271b: the first version of the planted-secret table (R6.6) held dummy values named like keys (appkey-PLANTED-0001); false positives in history, not secrets.
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:30
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:31
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:32
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:35
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:36
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:39
+e3f2c1c92efe8f77e847659d8883c4030147f7bd:internal/logs/redact_test.go:generic-api-key:46

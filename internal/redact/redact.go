@@ -20,22 +20,47 @@ const Mask = "***"
 // minLen is the shortest value kept: a shorter one would blank ordinary text.
 const minLen = 6
 
-var shapes = []*regexp.Regexp{
-	regexp.MustCompile(`gh[pousr]_[A-Za-z0-9]{20,}`),
-	regexp.MustCompile(`github_pat_[A-Za-z0-9_]{20,}`),
-	regexp.MustCompile(`(?s)-----BEGIN [A-Z0-9 ]+-----.*?-----END [A-Z0-9 ]+-----`),
-	regexp.MustCompile(`crsp_cli_[A-Za-z0-9_-]{8,}`),
-	regexp.MustCompile(`crsp_acc_[A-Za-z0-9_-]{8,}`),
-	regexp.MustCompile(`eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}`),
-	regexp.MustCompile(`(?i)(authorization|cookie):\s*[^\r\n]+`),
-	regexp.MustCompile(`(?i)(--token|--pat)\s+\S+`),
-	regexp.MustCompile(`(?i)(ACTIONS_RUNNER_INPUT_(?:TOKEN|JITCONFIG)=)\S+`),
+// ValueKinds are the kinds of secret value a process holds and teaches the
+// redactor with AddKind (observability R6.5). A planted-secret test covers
+// each one, so a kind added here needs a row there.
+var ValueKinds = []string{
+	"app_private_key", "webhook_secret", "installation_token", "oauth_token", "refresh_token",
+	"registration_token", "remove_token", "jit_config", "join_code", "machine_key", "session_cookie",
 }
+
+type shape struct {
+	kind string
+	re   *regexp.Regexp
+	keep bool // keep group 1 (a name before the value)
+}
+
+var shapes = []shape{
+	{kind: "github_token", re: regexp.MustCompile(`gh[pousr]_[A-Za-z0-9]{20,}`)},
+	{kind: "github_pat", re: regexp.MustCompile(`github_pat_[A-Za-z0-9_]{20,}`)},
+	{kind: "private_key", re: regexp.MustCompile(`(?s)-----BEGIN [A-Z0-9 ]+-----.*?-----END [A-Z0-9 ]+-----`)},
+	{kind: "cli_token", re: regexp.MustCompile(`crsp_cli_[A-Za-z0-9_-]{8,}`)},
+	{kind: "access_token", re: regexp.MustCompile(`crsp_acc_[A-Za-z0-9_-]{8,}`)},
+	{kind: "jwt", re: regexp.MustCompile(`eyJ[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,}`)},
+	{kind: "auth_header", re: regexp.MustCompile(`(?i)(authorization|cookie):\s*[^\r\n]+`)},
+	{kind: "token_flag", re: regexp.MustCompile(`(?i)(--token|--pat)\s+\S+`)},
+	{kind: "runner_input", re: regexp.MustCompile(`(?i)(ACTIONS_RUNNER_INPUT_(?:TOKEN|JITCONFIG)=)\S+`), keep: true},
+}
+
+// ShapeKinds lists the kinds the shapes match, in table order.
+func ShapeKinds() []string {
+	out := make([]string, len(shapes))
+	for i, sh := range shapes {
+		out[i] = sh.kind
+	}
+	return out
+}
+
+type value struct{ v, kind string }
 
 // Redactor is safe for concurrent use.
 type Redactor struct {
 	mu     sync.RWMutex
-	values []string // longest first
+	values []value // longest first
 }
 
 // New returns a redactor that knows no values yet; the shapes always apply.
@@ -43,7 +68,10 @@ func New() *Redactor { return &Redactor{} }
 
 // Add teaches the redactor a secret value and its base64 forms. A value that
 // is too short is ignored.
-func (r *Redactor) Add(v string) {
+func (r *Redactor) Add(v string) { r.AddKind("secret", v) }
+
+// AddKind is Add with the kind that Tagged names in its replacement.
+func (r *Redactor) AddKind(kind, v string) {
 	v = strings.TrimSpace(v)
 	if len(v) < minLen {
 		return
@@ -58,31 +86,43 @@ func (r *Redactor) Add(v string) {
 	for _, f := range forms {
 		have := false
 		for _, x := range r.values {
-			if x == f {
+			if x.v == f {
 				have = true
 				break
 			}
 		}
 		if !have {
-			r.values = append(r.values, f)
+			r.values = append(r.values, value{f, kind})
 		}
 	}
-	sort.SliceStable(r.values, func(i, j int) bool { return len(r.values[i]) > len(r.values[j]) })
+	sort.SliceStable(r.values, func(i, j int) bool { return len(r.values[i].v) > len(r.values[j].v) })
 }
 
 // Redact returns s with known values and secret shapes replaced by Mask.
 func (r *Redactor) Redact(s string) string {
+	return r.apply(s, func(string) string { return Mask })
+}
+
+// Tagged returns s with each secret replaced by [redacted:<kind>] (R6.5).
+func (r *Redactor) Tagged(s string) string {
+	return r.apply(s, func(kind string) string { return "[redacted:" + kind + "]" })
+}
+
+// TaggedBytes is Tagged for a payload, the shape of events.Options.Redact.
+func (r *Redactor) TaggedBytes(b []byte) []byte { return []byte(r.Tagged(string(b))) }
+
+func (r *Redactor) apply(s string, mask func(kind string) string) string {
 	r.mu.RLock()
 	for _, v := range r.values {
-		s = strings.ReplaceAll(s, v, Mask)
+		s = strings.ReplaceAll(s, v.v, mask(v.kind))
 	}
 	r.mu.RUnlock()
-	for _, re := range shapes {
-		if re.NumSubexp() > 0 && strings.Contains(re.String(), "ACTIONS_RUNNER_INPUT") {
-			s = re.ReplaceAllString(s, "${1}"+Mask)
+	for _, sh := range shapes {
+		if sh.keep {
+			s = sh.re.ReplaceAllString(s, "${1}"+mask(sh.kind))
 			continue
 		}
-		s = re.ReplaceAllString(s, Mask)
+		s = sh.re.ReplaceAllString(s, mask(sh.kind))
 	}
 	return s
 }

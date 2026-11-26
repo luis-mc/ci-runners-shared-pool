@@ -55,6 +55,36 @@ linters:
             - pkg: 'github.com/actions/scaleset'
               desc: 'the scale set client belongs only in internal/github (3.3)'
 
+        # R6.7 (observability): logs stay local. No logging, history or audit
+        # package makes a network call; there is no telemetry and no remote sink.
+        logs-stay-local:
+          files:
+            [
+              '**/internal/logs/**',
+              '**/internal/history/**',
+              '**/internal/audit/**',
+              '!$test',
+            ]
+          deny:
+            - pkg: 'net'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'net/http'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'net/smtp'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'net/rpc'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'crypto/tls'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'connectrpc.com/connect'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'google.golang.org/grpc'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/internal/github'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/internal/agentlink'
+              desc: 'logs, history and audit stay local (observability R6.7)'
+
 issues:
   max-issues-per-linter: 0
   max-same-issues: 0

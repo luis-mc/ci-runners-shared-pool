@@ -4,7 +4,20 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"sync/atomic"
 )
+
+var scrubError atomic.Pointer[func(string) string]
+
+// SetErrorRedactor puts the process redactor in front of every error body
+// (observability R6.5). Nil removes it.
+func SetErrorRedactor(f func(string) string) {
+	if f == nil {
+		scrubError.Store(nil)
+		return
+	}
+	scrubError.Store(&f)
+}
 
 // Stable error codes of the envelope {"error":{"code":"...","message":"..."}}.
 // The list is the one in packages/contract/openapi.yaml (info.description).
@@ -37,6 +50,9 @@ type ErrorBody struct {
 // WriteError writes the error envelope. message must be safe to show a client:
 // never a secret, a path or a raw internal error.
 func WriteError(w http.ResponseWriter, status int, code, message string) {
+	if f := scrubError.Load(); f != nil {
+		message = (*f)(message)
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if err := json.NewEncoder(w).Encode(ErrorEnvelope{Error: ErrorBody{Code: code, Message: message}}); err != nil {
