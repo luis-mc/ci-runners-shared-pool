@@ -666,7 +666,9 @@ jobs:
         run: pnpm exec playwright install chromium
       - name: Install Playwright system packages (cached .deb files)
         if: steps.pw-deb.outputs.cache-hit == 'true'
-        run: sudo dpkg -i "$HOME"/pw-debs/*.deb || pnpm exec playwright install-deps chromium
+        # apt-get orders an upgrade set that a single dpkg call cannot (libasound2-data breaks the
+        # old libasound2t64). The files are local, so no mirror is read.
+        run: sudo apt-get install -y --no-install-recommends --no-download "$HOME"/pw-debs/*.deb || pnpm exec playwright install-deps chromium
       - name: Install Playwright system packages (apt, then keep the .deb files)
         if: steps.pw-deb.outputs.cache-hit != 'true'
         run: |
