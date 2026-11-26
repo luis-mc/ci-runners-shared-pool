@@ -82,7 +82,7 @@ func (c *Crasher) WriteCrash(msg string, stack []byte) (string, error) {
 	var b strings.Builder
 	fmt.Fprintf(&b, "version: %s\nos: %s\narch: %s\nmode: %s\ntime: %s\nmessage: %s\n\n%s\n",
 		c.Version, runtime.GOOS, runtime.GOARCH, c.Mode, c.now().Format(time.RFC3339),
-		r.Redact(msg), r.Redact(string(stack)))
+		r.Tagged(msg), r.Tagged(string(stack)))
 	stamp := c.now().Format("20060102T150405Z")
 	for n := 0; n < 100; n++ {
 		name := fmt.Sprintf("crash-%s-%s.txt", stamp, c.Mode)

@@ -83,7 +83,7 @@ func Setup(o Options) (*slog.Logger, io.Closer, error) {
 			handlers = append(handlers, slog.NewTextHandler(o.Stderr, &slog.HandlerOptions{Level: o.Level}))
 		}
 	}
-	l := slog.New(logging.NewHandler(fanout(handlers), o.Redactor)).
+	l := slog.New(logging.NewTaggedHandler(fanout(handlers), o.Redactor)).
 		With("component", o.Component, "version", o.Version, "mode", o.Mode)
 	return l, closer, openErr
 }

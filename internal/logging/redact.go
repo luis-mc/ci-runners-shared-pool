@@ -17,6 +17,7 @@ import (
 type Handler struct {
 	inner slog.Handler
 	r     *redact.Redactor
+	red   func(string) string
 }
 
 // NewHandler wraps inner. A nil redactor gets a fresh one (shapes only).
@@ -24,7 +25,15 @@ func NewHandler(inner slog.Handler, r *redact.Redactor) *Handler {
 	if r == nil {
 		r = redact.New()
 	}
-	return &Handler{inner: inner, r: r}
+	return &Handler{inner: inner, r: r, red: r.Redact}
+}
+
+// NewTaggedHandler is NewHandler with [redacted:<kind>] in place of the mask
+// (observability R6.5).
+func NewTaggedHandler(inner slog.Handler, r *redact.Redactor) *Handler {
+	h := NewHandler(inner, r)
+	h.red = h.r.Tagged
+	return h
 }
 
 // New returns a JSON logger on w whose output is redacted.
@@ -37,7 +46,7 @@ func (h *Handler) Enabled(ctx context.Context, l slog.Level) bool { return h.inn
 
 // Handle implements slog.Handler.
 func (h *Handler) Handle(ctx context.Context, rec slog.Record) error {
-	out := slog.NewRecord(rec.Time, rec.Level, h.r.Redact(rec.Message), rec.PC)
+	out := slog.NewRecord(rec.Time, rec.Level, h.red(rec.Message), rec.PC)
 	rec.Attrs(func(a slog.Attr) bool {
 		out.AddAttrs(h.clean(a))
 		return true
@@ -51,20 +60,20 @@ func (h *Handler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	for i, a := range attrs {
 		clean[i] = h.clean(a)
 	}
-	return &Handler{inner: h.inner.WithAttrs(clean), r: h.r}
+	return &Handler{inner: h.inner.WithAttrs(clean), r: h.r, red: h.red}
 }
 
 // WithGroup implements slog.Handler.
 func (h *Handler) WithGroup(name string) slog.Handler {
-	return &Handler{inner: h.inner.WithGroup(name), r: h.r}
+	return &Handler{inner: h.inner.WithGroup(name), r: h.r, red: h.red}
 }
 
 func (h *Handler) clean(a slog.Attr) slog.Attr {
 	v := a.Value.Resolve()
-	a.Key = h.r.Redact(a.Key)
+	a.Key = h.red(a.Key)
 	switch v.Kind() {
 	case slog.KindString:
-		a.Value = slog.StringValue(h.r.Redact(v.String()))
+		a.Value = slog.StringValue(h.red(v.String()))
 	case slog.KindGroup:
 		g := v.Group()
 		out := make([]slog.Attr, len(g))
@@ -76,7 +85,7 @@ func (h *Handler) clean(a slog.Attr) slog.Attr {
 		// An error, a Stringer or a struct: judge it by its text. When nothing
 		// is redacted the original value stays (the JSON handler keeps its shape).
 		text := fmt.Sprintf("%+v", v.Any())
-		if red := h.r.Redact(text); red != text {
+		if red := h.red(text); red != text {
 			a.Value = slog.StringValue(red)
 		}
 	default:
