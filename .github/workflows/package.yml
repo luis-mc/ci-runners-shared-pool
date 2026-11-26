@@ -65,11 +65,11 @@ jobs:
         with:
           python-version: '3.13'
 
+      - uses: ./.github/actions/go-cache
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
           cache: false
-      - uses: ./.github/actions/go-cache
 
       # PRODUCT: the packaged form of the product: a statically linked executable.
       - name: Build the packaged program
