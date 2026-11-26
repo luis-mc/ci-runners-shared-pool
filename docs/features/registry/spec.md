@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**CONTRACT ONLY (REG10).** The shared contract is built: the image key (`internal/registry/key.go`, R5.21, R5.22), the Go types and interfaces, the store tables and queries (migration 00019), the agent link messages (protocol version 3) and the API under `/api/v1/registry/*`, which answers 501 "not built yet". The agent side is built too (REG2, R5.13 to R5.20). The registry UI (REG5, R5.37 to R5.40) is built. IMG1 (build truth, R5.68 to R5.72) is built, except the link from an agent to the controller's recorder (see IMG1 below). Every other requirement below is **NOT YET IMPLEMENTED**; the owning task of each group is named in its heading.
+**BUILT (REG1 to REG15, IMG1 to IMG3).** The contract of REG10 is filled in: the image key (`internal/registry/key.go`, R5.21, R5.22), the store tables (migration 00019), the agent link messages (protocol version 3), the controller's answers under `/api/v1/registry/*` and the agent side (R5.13 to R5.20). The records, retention, replace and rollback, scan, pull-through mirror, profiles and the registry UI (R5.37 to R5.40) are built; see the change notes. IMG1 (build truth, R5.68 to R5.72) is built, except the link from an agent to the controller's recorder (see IMG1 below). Not built: the mirror re-check interval (R5.66, REG9). Every other requirement not marked built in its own text is planned.
 
 **BUILT (REG1).** R5.1 to R5.12 (registry core) are implemented: Distribution v3 under `/v2/` on the controller's private listener, tokens, staging and promotion, the agent sink and the engine CA step. The staging root is `crsp/incoming/` (REG1 changed it from `crsp/_incoming/`, which is not a valid OCI name).
 
@@ -368,7 +368,7 @@ All under `/api/v1/registry/*` with `x-cli: none` for now. `GET /api/v1/registry
 
 ## 9. How it is proven
 
-Rows for R5.13 to R5.20 (agent ensure-image), R5.21 and R5.22 (key), R5.59 to R5.62 (scan), R5.68 to R5.72 (build truth) and R5.73 to R5.76 (stack scan) are built and run in CI. Every other row is planned: none of those tests exist yet (NOT YET IMPLEMENTED). Paths are written without code marks until the files exist.
+Rows for R5.13 to R5.20 (agent ensure-image), R5.21 and R5.22 (key), R5.59 to R5.62 (scan), R5.68 to R5.72 (build truth) and R5.73 to R5.76 (stack scan) are built and run in CI. Rows marked built in the table below also run in CI. A row marked planned has no test yet. Paths are written without code marks until the files exist.
 
 | Requirement | Test |
 |---|---|
