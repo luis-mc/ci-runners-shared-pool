@@ -12,9 +12,9 @@
     "title": "Full Progress: CI Runners Shared Pool",
     "file": "full-progress-ci-runners-shared-pool.html",
     "url": "https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7",
-    "published_sha256": "a593958b41e5e9a409f455d7b3a4c8cf832d1edad23f1f5c45d99311070e69b6",
-    "published_at": "2026-11-25T06:37+00:00",
-    "published_fingerprint": "cb0b4c13b039281066f281190175d283d024bb5236242d394ac9ac459254c829",
+    "published_sha256": "0742c11cf262349e7c920a68a06fecaa7c12abe3982eb94551927b624354ee07",
+    "published_at": "2026-11-26T18:30+00:00",
+    "published_fingerprint": "e0170fae8248d18c06b72cbd0a2eb74974ad7789f48eddb2b2ae57398dc2553d",
     "local_path": "C:\\Work\\full-progress\\ci-runners-shared-pool\\full-progress-ci-runners-shared-pool.html",
     "local_opened": true
   },
@@ -27,7 +27,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-25T06:38+00:00"
+      "updated": "2026-11-26T17:52+00:00"
     },
     {
       "key": "tray",
@@ -37,7 +37,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-24T23:30+00:00"
+      "updated": "2026-11-26T16:39+00:00"
     },
     {
       "key": "look",
@@ -47,7 +47,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-25T05:38+00:00"
+      "updated": "2026-11-26T16:39+00:00"
     },
     {
       "key": "research",
@@ -57,7 +57,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-24T23:11+00:00"
+      "updated": "2026-11-26T16:39+00:00"
     },
     {
       "key": "handover",
@@ -67,7 +67,7 @@
       "apps": [
         "crsp"
       ],
-      "updated": "2026-11-24T23:11+00:00"
+      "updated": "2026-11-26T16:39+00:00"
     },
     {
       "key": "ci-run-insights",
@@ -80,7 +80,7 @@
         "agent",
         "dev-standards"
       ],
-      "updated": "2026-11-24T23:29+00:00"
+      "updated": "2026-11-26T16:39+00:00"
     }
   ],
   "project_prefixes": [
@@ -89,5 +89,9 @@
     "IMG",
     "REG"
   ],
-  "updated": "2026-11-25T06:38+00:00"
+  "updated": "2026-11-26T18:30+00:00",
+  "pr_links": {
+    "provider": "github",
+    "repo": "luis-mc/ci-runners-shared-pool"
+  }
 }

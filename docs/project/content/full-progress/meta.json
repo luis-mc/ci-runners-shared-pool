@@ -1,6 +1,6 @@
 {
   "title": "Full Progress: CI Runners Shared Pool",
   "hero": "Manager for shared self-hosted GitHub Actions runners on your own machines: controller, node agent, web console, CLI and tray in one binary, crsp.",
-  "lede": "v0.1.18 is tagged (RELEASE-46, 20 Nov). RELEASE-48 now also carries CI run insights (RELEASE-49, owner's call): 22 agents run in the cloud, merge ~19:45 Lisbon.",
+  "lede": "v0.1.27 is live (RELEASE-67). RELEASE-68 (pool-add-agent fixes, flaky test) and RELEASE-69 (leaner CI, runner gaps, notifications) are in progress: about 15 cloud agents run, 13 PRs are open and most are green. RELEASE-68 is expected ~16:45 and RELEASE-69 ~17:15 Lisbon.",
   "extra_css": ""
 }
