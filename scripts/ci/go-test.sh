@@ -17,6 +17,41 @@ cd "$(git rev-parse --show-toplevel)"
 json="${GO_TEST_JSON:-test-results/go-test.json}"
 # CRSP313: GO_TEST_SHARD=K/N runs one share of the packages and chunks (the tests job runs N
 # shards in parallel); unset, it runs everything (Windows, macOS, the local gate).
+# CRSP318: GO_TEST_RERUN=FILE (written by scripts/ci/rerun_plan.py on a dispatch run after a red run) with
+# mode "narrow" runs only the listed invocations (failed tests plus the packages of changed code), each with
+# the integration limit of 60 s. Any other mode, or no file, runs everything below.
+if [ -n "${GO_TEST_RERUN:-}" ] && [ -f "$GO_TEST_RERUN" ] &&
+  [ "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["mode"])' "$GO_TEST_RERUN")" = narrow ]; then
+  if [ "$(python3 -c 'import json,sys; print(len(json.load(open(sys.argv[1]))["invocations"]))' "$GO_TEST_RERUN")" = 0 ]; then
+    echo "rerun: no failed test in this shard and no changed package: nothing to run"
+    exit 0
+  fi
+  rc_file=$(mktemp)
+  trap 'rm -f "$rc_file"' EXIT
+  set +e
+  {
+    # one line per invocation: package, a tab, the -run regex (empty: the whole package)
+    while IFS=$'\t' read -r pkg run; do
+      [ -n "$pkg" ] || continue
+      if [ -n "$run" ]; then
+        go test -json -timeout 60s "$@" -run "$run" "$pkg" || echo "$?" >> "$rc_file"
+      else
+        go test -json -timeout 60s "$@" "$pkg" || echo "$?" >> "$rc_file"
+      fi
+    done < <(python3 -c 'import json,sys
+for i in json.load(open(sys.argv[1]))["invocations"]:
+    print(i[0] + "\t" + (i[2] if len(i) > 2 and i[1] == "-run" else ""))' "$GO_TEST_RERUN")
+  } | node scripts/ci/go-test-summary.mjs "$json"
+  sum_rc=${PIPESTATUS[1]}
+  set -e
+  go_rc=0
+  while read -r r; do [ "$r" -eq 0 ] || go_rc=$r; done < "$rc_file"
+  if [ "$go_rc" -ne 0 ]; then
+    echo "Go tests failed with exit code $go_rc" >&2
+    exit "$go_rc"
+  fi
+  exit "$sum_rc"
+fi
 tiers() { go list ./... | node scripts/ci/go-tiers.mjs "$1" ${GO_TEST_SHARD:+"$GO_TEST_SHARD"}; }
 unit_pkgs=$(tiers unit)
 integration_pkgs=$(tiers integration)
