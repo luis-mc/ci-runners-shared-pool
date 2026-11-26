@@ -1,6 +1,9 @@
 {
   "schema": 1,
   "map": {
+    "apps/web/**": [
+      "docs/features/website/spec.md"
+    ],
     "apps/web/src/**": [
       "docs/features/web-console/spec.md"
     ],
@@ -39,9 +42,6 @@
     ],
     "apps/web/src/screens/setup/**": [
       "docs/features/dependency-setup/spec.md"
-    ],
-    "apps/website/**": [
-      "docs/features/website/spec.md"
     ],
     "cmd/crsp/**": [
       "docs/features/cli/spec.md"
