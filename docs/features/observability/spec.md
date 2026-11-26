@@ -391,13 +391,13 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Pl
 | R5.4 | apps/web/src/live/store.test.ts "overview and strip read one store" |
 | R5.5 | internal/scheduler/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
 | R5.6 | apps/web/src/live/clock.test.tsx "ages tick and pause while hidden"; apps/web/src/live/status.test.tsx |
-| R5.7 | internal/store/jobsdata_test.go TestOneRowPerJobAttempt, TestIntegrationUpsertJobKeepsStateAndFacts |
+| R5.7 | internal/store/jobsdata_attempt_test.go TestOneRowPerJobAttempt; internal/store/jobsdata_test.go TestIntegrationUpsertJobKeepsStateAndFacts |
 | R5.8 | internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
 | R5.9 | internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
 | R5.10 | internal/history/timing_test.go TestResultMapping (port of test_failed_step_and_conclusion) |
 | R5.11 | internal/store/jobsdata_test.go TestIntegrationListJobsFiltersAndPaging; internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters; internal/cli/resources_test.go TestHistoryJSON, TestHistoryFilters |
-| R5.12 | internal/jobsdata/reconcile/stale_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRows; internal/store/insights_jobs_test.go TestIntegrationStaleRunsListed (the stale marker on a list is in section 11) |
-| R5.13 | internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped; internal/api/handlers_commit_test.go TestGetCommitView |
+| R5.12 | internal/jobsdata/reconcile/stale_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRows; internal/store/jobsdata_finished_test.go TestIntegrationFinishedRowNeverChanges, TestIntegrationLostRowTakesGitHubsEnd, TestIntegrationFinishedRowNeverListedForRefetch (the stale marker on a list is in section 11) |
+| R5.13 | internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped; internal/store/jobsdata_commit_test.go TestIntegrationRunsOfCommit; internal/api/handlers_commit_test.go TestGetCommitView, TestGetCommitViewRefusals |
 | R5.14 | internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsNeutralisesFormulas; apps/web/src/screens/jobs/Jobs.test.tsx (Export CSV) |
 | R5.15 | internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview; internal/history/savings_test.go TestRoundUpMinutes; internal/store/savings_test.go TestFinishedPoolJobsOnlyPoolJobsInWindow; apps/web/src/screens/savings/savings.test.tsx (Overview tiles) |
 | R5.16 | internal/history/savings_test.go TestMoneyUsesMatchingRate, TestMachineSizeChangesTheRate; internal/history/rates_test.go TestRateTableHasSourceAndDate; savings.test.tsx (rates with source and date) |
@@ -450,7 +450,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Pl
 | R6.10 | internal/store/logsdb/store_test.go TestSeparateDatabaseFile |
 | R6.11 | internal/store/logsdb/bench_test.go BenchmarkSearchFirstPage (100,000 lines, not 10 GiB); planned: internal/history/bench_test.go BenchmarkHistoryPage |
 | R6.12 | internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/web/src/live/format.test.ts |
-| R6.13 | packages/ui/src/components/LiveText.test.tsx (the shared part holds the 10 s limit) |
+| R6.13 | packages/ui/src/components/LiveText.test.tsx (the shared part holds the 10 s limit); apps/web/src/screens/pool/poolWords.test.tsx |
 | R6.14 | internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
 | R6.15 | scripts/ci/test_gitleaksignore_guard.py (an added line fails, a removed line passes) |
 
@@ -532,7 +532,7 @@ Built (CRSP256): `internal/history/` (`rates.go` the rate table and its audited 
 
 Built (CRSP271b): `internal/logs/` (`slog.go` the logger with rotation, `crash.go` crash files, the `reported` marker and the fatal-error output), `internal/redact/` (the secret kinds `ValueKinds` and `ShapeKinds`, output `[redacted:<kind>]`), `internal/logging/` (tagged handler), `internal/doctor/checks/crashfiles.go`, redactor hooks in `internal/audit/` and `internal/api/errors.go`, the `logs-stay-local` rule in `.golangci.yml`.
 
-Built (CRSP271c): the history rows are the jobsdata tables of R5.35 (`internal/jobsdata`, `internal/store/jobsdata*.go`, `internal/jobsdata/reconcile`, `internal/api/handlers_jobsdata*.go`), not a separate `internal/history` store. `crsp history` (`internal/cli/cmd_history.go`) prints the rows of `listJobs` that are done. The commit view of R5.13 is `internal/history/commit.go` (pure functions) and `GET /api/v1/commits/{sha}` (`getCommitView`, viewer role, `internal/api/handlers_commit.go`). `internal/events/latency_test.go` proves R6.1 on the in-process hub. `packages/ui/src/components/LiveText.tsx` is the shared live text of R6.13.
+Built (CRSP271c): the history rows are the jobsdata tables of R5.35 (`internal/jobsdata`, `internal/store/jobsdata*.go`, `internal/jobsdata/reconcile`, `internal/api/handlers_jobsdata*.go`), not a separate `internal/history` store. `crsp history` (`internal/cli/cmd_history.go`) prints the rows of `listJobs` that are done. The commit view of R5.13 is `internal/history/commit.go` (pure functions) and `GET /api/v1/commits/{sha}` (`getCommitView`, viewer role, `internal/api/handlers_commit.go`). `internal/events/latency_test.go` proves R6.1 on the in-process hub. `packages/ui/src/components/LiveText.tsx` is the shared live text of R6.13 (component 82), used for the four counts of `apps/web/src/screens/pool/PoolSection.tsx`. `internal/api/handlers_live.go` asks the session again every 10 s and closes an open stream whose user is signed out or has no role (R6.4).
 
 Planned files, in the globs of the front matter:
 
