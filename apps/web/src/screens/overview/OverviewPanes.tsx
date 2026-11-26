@@ -97,7 +97,11 @@ export function OverviewMachineCard({
   const size = sizeWords(m);
   const names = jobNames(m, running);
   return (
-    <Card title={size ? `${m.name} ${size}` : m.name} to={`/pool/machines/${m.id}`}>
+    <Card
+      title={size ? `${m.name} ${size}` : m.name}
+      machine
+      to={`/pool/machines/${m.id}`}
+    >
       <Stack gap="tight">
         {s.kind === 'ok' ? null : <Status kind={s.kind} word={s.word} />}
         <MachineSizeBars m={m} />

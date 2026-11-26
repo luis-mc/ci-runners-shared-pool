@@ -16,6 +16,18 @@ export const ANALYTICS_TABS = [
     to: '/analytics/insights',
     lead: 'Where the time goes, from past runs.',
   },
+  {
+    id: 'savings',
+    label: 'Savings',
+    to: '/analytics/savings',
+    lead: 'Minutes and money the pool saved against GitHub-hosted runners.',
+  },
+  {
+    id: 'compare',
+    label: 'Compare',
+    to: '/analytics/compare',
+    lead: 'The same jobs on crsp and on GitHub-hosted runners.',
+  },
   { id: 'charts', label: 'Charts', to: '/analytics/charts', lead: 'Numbers over time.' },
   {
     id: 'elsewhere',

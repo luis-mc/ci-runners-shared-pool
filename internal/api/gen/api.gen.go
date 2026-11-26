@@ -355,6 +355,27 @@ func (e CacheKind) Valid() bool {
 	}
 }
 
+// Defines values for ConfigChangeKind.
+const (
+	ConfigChangeKindAdded   ConfigChangeKind = "added"
+	ConfigChangeKindChanged ConfigChangeKind = "changed"
+	ConfigChangeKindRemoved ConfigChangeKind = "removed"
+)
+
+// Valid indicates whether the value is a known member of the ConfigChangeKind enum.
+func (e ConfigChangeKind) Valid() bool {
+	switch e {
+	case ConfigChangeKindAdded:
+		return true
+	case ConfigChangeKindChanged:
+		return true
+	case ConfigChangeKindRemoved:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CpuCapPct.
 const (
 	N100 CpuCapPct = 100
@@ -3496,6 +3517,51 @@ func (e RunsOnPullRequestResultState) Valid() bool {
 	}
 }
 
+// Defines values for SavingsRateOs.
+const (
+	SavingsRateOsLinux   SavingsRateOs = "linux"
+	SavingsRateOsMacos   SavingsRateOs = "macos"
+	SavingsRateOsWindows SavingsRateOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the SavingsRateOs enum.
+func (e SavingsRateOs) Valid() bool {
+	switch e {
+	case SavingsRateOsLinux:
+		return true
+	case SavingsRateOsMacos:
+		return true
+	case SavingsRateOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for SavingsReportRange.
+const (
+	SavingsReportRangeCustom SavingsReportRange = "custom"
+	SavingsReportRangeN30d   SavingsReportRange = "30d"
+	SavingsReportRangeN7d    SavingsReportRange = "7d"
+	SavingsReportRangeToday  SavingsReportRange = "today"
+)
+
+// Valid indicates whether the value is a known member of the SavingsReportRange enum.
+func (e SavingsReportRange) Valid() bool {
+	switch e {
+	case SavingsReportRangeCustom:
+		return true
+	case SavingsReportRangeN30d:
+		return true
+	case SavingsReportRangeN7d:
+		return true
+	case SavingsReportRangeToday:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for SettingsInsightsUpdatePeriod.
 const (
 	EveryNthRun SettingsInsightsUpdatePeriod = "every_nth_run"
@@ -4717,6 +4783,30 @@ func (e ListRunsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for GetSavingsReportParamsRange.
+const (
+	GetSavingsReportParamsRangeCustom GetSavingsReportParamsRange = "custom"
+	GetSavingsReportParamsRangeN30d   GetSavingsReportParamsRange = "30d"
+	GetSavingsReportParamsRangeN7d    GetSavingsReportParamsRange = "7d"
+	GetSavingsReportParamsRangeToday  GetSavingsReportParamsRange = "today"
+)
+
+// Valid indicates whether the value is a known member of the GetSavingsReportParamsRange enum.
+func (e GetSavingsReportParamsRange) Valid() bool {
+	switch e {
+	case GetSavingsReportParamsRangeCustom:
+		return true
+	case GetSavingsReportParamsRangeN30d:
+		return true
+	case GetSavingsReportParamsRangeN7d:
+		return true
+	case GetSavingsReportParamsRangeToday:
+		return true
+	default:
+		return false
+	}
+}
+
 // AddUserRequest defines model for AddUserRequest.
 type AddUserRequest struct {
 	Login string             `json:"login"`
@@ -4993,6 +5083,56 @@ type CliTokenCreated struct {
 // CliTokenList defines model for CliTokenList.
 type CliTokenList struct {
 	Items []CliToken `json:"items"`
+}
+
+// ConfigApplyRequest defines model for ConfigApplyRequest.
+type ConfigApplyRequest struct {
+	ConfirmRemovals *[]string `json:"confirm_removals,omitempty"`
+}
+
+// ConfigApplyResult defines model for ConfigApplyResult.
+type ConfigApplyResult struct {
+	Applied []ConfigChange `json:"applied"`
+	PlanId  string         `json:"plan_id"`
+}
+
+// ConfigChange defines model for ConfigChange.
+type ConfigChange struct {
+	Fields *[]ConfigFieldChange `json:"fields,omitempty"`
+	Kind   ConfigChangeKind     `json:"kind"`
+
+	// Name Empty for a section that is one set of fields.
+	Name    string `json:"name"`
+	Section string `json:"section"`
+}
+
+// ConfigChangeKind defines model for ConfigChange.Kind.
+type ConfigChangeKind string
+
+// ConfigFieldChange defines model for ConfigFieldChange.
+type ConfigFieldChange struct {
+	Field string      `json:"field"`
+	New   interface{} `json:"new,omitempty"`
+	Old   interface{} `json:"old,omitempty"`
+}
+
+// ConfigPlan defines model for ConfigPlan.
+type ConfigPlan struct {
+	Changes   []ConfigChange `json:"changes"`
+	CreatedAt time.Time      `json:"created_at"`
+
+	// Id Tied to the file and the state it was planned against. Absent while `problems` is not empty.
+	Id       *string   `json:"id,omitempty"`
+	Problems *[]string `json:"problems,omitempty"`
+
+	// Removals The `section/name` of each removal; the apply needs a yes that names each one.
+	Removals *[]string `json:"removals,omitempty"`
+}
+
+// ConfigPlanRequest defines model for ConfigPlanRequest.
+type ConfigPlanRequest struct {
+	// File The text of the config file.
+	File string `json:"file"`
 }
 
 // ConsoleLink defines model for ConsoleLink.
@@ -8869,6 +9009,65 @@ type RunsOnPullRequestResultList struct {
 	Items []RunsOnPullRequestResult `json:"items"`
 }
 
+// SavingsRate defines model for SavingsRate.
+type SavingsRate struct {
+	Os SavingsRateOs `json:"os"`
+
+	// PerMinute US dollars per billed minute.
+	PerMinute float64 `json:"per_minute"`
+	Size      string  `json:"size"`
+}
+
+// SavingsRateOs defines model for SavingsRate.Os.
+type SavingsRateOs string
+
+// SavingsRates defines model for SavingsRates.
+type SavingsRates struct {
+	Changed  bool   `json:"changed"`
+	CopiedOn string `json:"copied_on"`
+
+	// MachineSizes Machine name to the size its jobs are priced at.
+	MachineSizes map[string]string `json:"machine_sizes"`
+	Rates        []SavingsRate     `json:"rates"`
+	SourceUrl    string            `json:"source_url"`
+}
+
+// SavingsReport defines model for SavingsReport.
+type SavingsReport struct {
+	ByMachine    []SavingsRow `json:"by_machine"`
+	ByOs         []SavingsRow `json:"by_os"`
+	ByRepository []SavingsRow `json:"by_repository"`
+
+	// CopiedOn The date the shipped rates were copied
+	CopiedOn string    `json:"copied_on"`
+	From     time.Time `json:"from"`
+
+	// NotPriced Jobs with no rate for their system.
+	NotPriced    int                `json:"not_priced"`
+	Note         string             `json:"note"`
+	Range        SavingsReportRange `json:"range"`
+	RatesChanged bool               `json:"rates_changed"`
+	SourceUrl    string             `json:"source_url"`
+	To           time.Time          `json:"to"`
+	Total        SavingsRow         `json:"total"`
+}
+
+// SavingsReportRange defines model for SavingsReport.Range.
+type SavingsReportRange string
+
+// SavingsRow defines model for SavingsRow.
+type SavingsRow struct {
+	Jobs    int    `json:"jobs"`
+	Key     string `json:"key"`
+	Minutes int    `json:"minutes"`
+
+	// Money US dollars
+	Money float64 `json:"money"`
+
+	// PublicMinutes Minutes of public repositories
+	PublicMinutes int `json:"public_minutes"`
+}
+
 // Session defines model for Session.
 type Session struct {
 	// Csrf Send as X-CSRF-Token on every change.
@@ -10288,6 +10487,21 @@ type ExtendRunTimerParams struct {
 	Attempt *TimerAttempt `form:"attempt,omitempty" json:"attempt,omitempty"`
 }
 
+// GetSavingsReportParams defines parameters for GetSavingsReport.
+type GetSavingsReportParams struct {
+	// Range today (default), 7d, 30d or custom.
+	Range *GetSavingsReportParamsRange `form:"range,omitempty" json:"range,omitempty"`
+
+	// From First day of a custom range (YYYY-MM-DD).
+	From *openapi_types.Date `form:"from,omitempty" json:"from,omitempty"`
+
+	// To Last day of a custom range (YYYY-MM-DD), included.
+	To *openapi_types.Date `form:"to,omitempty" json:"to,omitempty"`
+}
+
+// GetSavingsReportParamsRange defines parameters for GetSavingsReport.
+type GetSavingsReportParamsRange string
+
 // RestartServiceParams defines parameters for RestartService.
 type RestartServiceParams struct {
 	// Confirmed The yes to the Review step that named the running jobs (tray R5.16).
@@ -10357,6 +10571,12 @@ type SetAppWebhookJSONRequestBody = AppWebhookUpdate
 
 // ExchangeCliTokenJSONRequestBody defines body for ExchangeCliToken for application/json ContentType.
 type ExchangeCliTokenJSONRequestBody = ExchangeCliTokenRequest
+
+// PlanConfigJSONRequestBody defines body for PlanConfig for application/json ContentType.
+type PlanConfigJSONRequestBody = ConfigPlanRequest
+
+// ApplyConfigPlanJSONRequestBody defines body for ApplyConfigPlan for application/json ContentType.
+type ApplyConfigPlanJSONRequestBody = ConfigApplyRequest
 
 // RemoveRegistrationJSONRequestBody defines body for RemoveRegistration for application/json ContentType.
 type RemoveRegistrationJSONRequestBody = RemoveRegistrationRequest
@@ -10481,6 +10701,9 @@ type UpdateRunnerSettingsJSONRequestBody = RunnerSettingsUpdate
 // OpenRunsOnPullRequestsJSONRequestBody defines body for OpenRunsOnPullRequests for application/json ContentType.
 type OpenRunsOnPullRequestsJSONRequestBody = OpenRunsOnPullRequestsRequest
 
+// UpdateSavingsRatesJSONRequestBody defines body for UpdateSavingsRates for application/json ContentType.
+type UpdateSavingsRatesJSONRequestBody = SavingsRates
+
 // UpdateSettingsJSONRequestBody defines body for UpdateSettings for application/json ContentType.
 type UpdateSettingsJSONRequestBody = Settings
 
@@ -10591,6 +10814,15 @@ type ServerInterface interface {
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	// (GET /api/v1/compare)
 	GetSpeedComparison(w http.ResponseWriter, r *http.Request, params GetSpeedComparisonParams)
+	// ExportConfigFile Export the setup as one config file
+	// (GET /api/v1/config/export)
+	ExportConfigFile(w http.ResponseWriter, r *http.Request)
+	// PlanConfig Plan a config file
+	// (POST /api/v1/config/plans)
+	PlanConfig(w http.ResponseWriter, r *http.Request)
+	// ApplyConfigPlan Apply a config plan
+	// (POST /api/v1/config/plans/{configPlanId}/apply)
+	ApplyConfigPlan(w http.ResponseWriter, r *http.Request, configPlanId string)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(w http.ResponseWriter, r *http.Request, params ListDoctorFindingsParams)
@@ -11068,6 +11300,18 @@ type ServerInterface interface {
 	// ExtendRunTimer Extend 10 min, during the grace of the run timer
 	// (POST /api/v1/runs/{runId}/timer/extend)
 	ExtendRunTimer(w http.ResponseWriter, r *http.Request, runId TimerRunId, params ExtendRunTimerParams)
+	// GetSavingsReport Minutes and money the pool saved, per repository, system and machine
+	// (GET /api/v1/savings)
+	GetSavingsReport(w http.ResponseWriter, r *http.Request, params GetSavingsReportParams)
+	// ResetSavingsRates Reset to the shipped rates
+	// (DELETE /api/v1/savings/rates)
+	ResetSavingsRates(w http.ResponseWriter, r *http.Request)
+	// GetSavingsRates The per-minute rates of GitHub-hosted runners
+	// (GET /api/v1/savings/rates)
+	GetSavingsRates(w http.ResponseWriter, r *http.Request)
+	// UpdateSavingsRates Change the rates and the size each machine is priced at
+	// (PUT /api/v1/savings/rates)
+	UpdateSavingsRates(w http.ResponseWriter, r *http.Request)
 	// RestartService Restart the service after a drain
 	// (POST /api/v1/service/restart)
 	RestartService(w http.ResponseWriter, r *http.Request, params RestartServiceParams)
@@ -11734,6 +11978,60 @@ func (siw *ServerInterfaceWrapper) GetSpeedComparison(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetSpeedComparison(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExportConfigFile operation middleware
+func (siw *ServerInterfaceWrapper) ExportConfigFile(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExportConfigFile(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PlanConfig operation middleware
+func (siw *ServerInterfaceWrapper) PlanConfig(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PlanConfig(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApplyConfigPlan operation middleware
+func (siw *ServerInterfaceWrapper) ApplyConfigPlan(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "configPlanId" -------------
+	var configPlanId string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "configPlanId", r.PathValue("configPlanId"), &configPlanId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "configPlanId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApplyConfigPlan(w, r, configPlanId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -17015,6 +17313,107 @@ func (siw *ServerInterfaceWrapper) ExtendRunTimer(w http.ResponseWriter, r *http
 	handler.ServeHTTP(w, r)
 }
 
+// GetSavingsReport operation middleware
+func (siw *ServerInterfaceWrapper) GetSavingsReport(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetSavingsReportParams
+
+	// ------------- Optional query parameter "range" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "range", r.URL.Query(), &params.Range, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "range"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "range", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSavingsReport(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ResetSavingsRates operation middleware
+func (siw *ServerInterfaceWrapper) ResetSavingsRates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ResetSavingsRates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetSavingsRates operation middleware
+func (siw *ServerInterfaceWrapper) GetSavingsRates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetSavingsRates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// UpdateSavingsRates operation middleware
+func (siw *ServerInterfaceWrapper) UpdateSavingsRates(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.UpdateSavingsRates(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // RestartService operation middleware
 func (siw *ServerInterfaceWrapper) RestartService(w http.ResponseWriter, r *http.Request) {
 
@@ -18177,6 +18576,10 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/replace", wrapper.PlanRunnerReplacement)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs", wrapper.ListJobs)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/compare", wrapper.GetSpeedComparison)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/savings", wrapper.GetSavingsReport)
+	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/savings/rates", wrapper.ResetSavingsRates)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/savings/rates", wrapper.GetSavingsRates)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/savings/rates", wrapper.UpdateSavingsRates)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/groups", wrapper.ListJobGroups)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/stats", wrapper.GetJobStats)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/summaries", wrapper.ListJobSummaries)
@@ -18210,6 +18613,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/exports/job-summaries", wrapper.ExportJobSummaries)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/exports/audit", wrapper.ExportAuditEvents)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/exports/config", wrapper.ExportConfig)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/config/export", wrapper.ExportConfigFile)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/config/plans", wrapper.PlanConfig)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/config/plans/{configPlanId}/apply", wrapper.ApplyConfigPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/repository-plans/{planId}/stop", wrapper.StopRepositoryPlan)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runner-plans/{planId}/stop", wrapper.StopRunnerPlan)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/images", wrapper.ListImages)
@@ -19044,6 +19450,162 @@ type GetSpeedComparisondefaultJSONResponse struct {
 }
 
 func (response GetSpeedComparisondefaultJSONResponse) VisitGetSpeedComparisonResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportConfigFileRequestObject struct {
+}
+
+type ExportConfigFileResponseObject interface {
+	VisitExportConfigFileResponse(w http.ResponseWriter) error
+}
+
+type ExportConfigFile200JSONResponse struct{ ExportFileJSONResponse }
+
+func (response ExportConfigFile200JSONResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExportConfigFile200ApplicationyamlResponse struct {
+	ExportFileApplicationyamlResponse
+}
+
+func (response ExportConfigFile200ApplicationyamlResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "application/yaml")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ExportConfigFile200TextcsvResponse struct{ ExportFileTextcsvResponse }
+
+func (response ExportConfigFile200TextcsvResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	w.Header().Set("Content-Type", "text/csv")
+	if response.ContentLength != 0 {
+		w.Header().Set("Content-Length", fmt.Sprint(response.ContentLength))
+	}
+	w.Header().Set("Content-Disposition", fmt.Sprint(response.Headers.ContentDisposition))
+	w.WriteHeader(200)
+
+	if closer, ok := response.Body.(io.ReadCloser); ok {
+		defer closer.Close()
+	}
+	_, err := io.Copy(w, response.Body)
+	return err
+}
+
+type ExportConfigFiledefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExportConfigFiledefaultJSONResponse) VisitExportConfigFileResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PlanConfigRequestObject struct {
+	Body *PlanConfigJSONRequestBody
+}
+
+type PlanConfigResponseObject interface {
+	VisitPlanConfigResponse(w http.ResponseWriter) error
+}
+
+type PlanConfig201JSONResponse ConfigPlan
+
+func (response PlanConfig201JSONResponse) VisitPlanConfigResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PlanConfigdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PlanConfigdefaultJSONResponse) VisitPlanConfigResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyConfigPlanRequestObject struct {
+	ConfigPlanId string `json:"configPlanId"`
+	Body         *ApplyConfigPlanJSONRequestBody
+}
+
+type ApplyConfigPlanResponseObject interface {
+	VisitApplyConfigPlanResponse(w http.ResponseWriter) error
+}
+
+type ApplyConfigPlan200JSONResponse ConfigApplyResult
+
+func (response ApplyConfigPlan200JSONResponse) VisitApplyConfigPlanResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyConfigPlandefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ApplyConfigPlandefaultJSONResponse) VisitApplyConfigPlanResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25447,6 +26009,160 @@ func (response ExtendRunTimerdefaultJSONResponse) VisitExtendRunTimerResponse(w 
 	return err
 }
 
+type GetSavingsReportRequestObject struct {
+	Params GetSavingsReportParams
+}
+
+type GetSavingsReportResponseObject interface {
+	VisitGetSavingsReportResponse(w http.ResponseWriter) error
+}
+
+type GetSavingsReport200JSONResponse SavingsReport
+
+func (response GetSavingsReport200JSONResponse) VisitGetSavingsReportResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSavingsReportdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetSavingsReportdefaultJSONResponse) VisitGetSavingsReportResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResetSavingsRatesRequestObject struct {
+}
+
+type ResetSavingsRatesResponseObject interface {
+	VisitResetSavingsRatesResponse(w http.ResponseWriter) error
+}
+
+type ResetSavingsRates200JSONResponse SavingsRates
+
+func (response ResetSavingsRates200JSONResponse) VisitResetSavingsRatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ResetSavingsRatesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ResetSavingsRatesdefaultJSONResponse) VisitResetSavingsRatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSavingsRatesRequestObject struct {
+}
+
+type GetSavingsRatesResponseObject interface {
+	VisitGetSavingsRatesResponse(w http.ResponseWriter) error
+}
+
+type GetSavingsRates200JSONResponse SavingsRates
+
+func (response GetSavingsRates200JSONResponse) VisitGetSavingsRatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetSavingsRatesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetSavingsRatesdefaultJSONResponse) VisitGetSavingsRatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateSavingsRatesRequestObject struct {
+	Body *UpdateSavingsRatesJSONRequestBody
+}
+
+type UpdateSavingsRatesResponseObject interface {
+	VisitUpdateSavingsRatesResponse(w http.ResponseWriter) error
+}
+
+type UpdateSavingsRates200JSONResponse SavingsRates
+
+func (response UpdateSavingsRates200JSONResponse) VisitUpdateSavingsRatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type UpdateSavingsRatesdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response UpdateSavingsRatesdefaultJSONResponse) VisitUpdateSavingsRatesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type RestartServiceRequestObject struct {
 	Params RestartServiceParams
 }
@@ -27074,6 +27790,15 @@ type StrictServerInterface interface {
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	// (GET /api/v1/compare)
 	GetSpeedComparison(ctx context.Context, request GetSpeedComparisonRequestObject) (GetSpeedComparisonResponseObject, error)
+	// ExportConfigFile Export the setup as one config file
+	// (GET /api/v1/config/export)
+	ExportConfigFile(ctx context.Context, request ExportConfigFileRequestObject) (ExportConfigFileResponseObject, error)
+	// PlanConfig Plan a config file
+	// (POST /api/v1/config/plans)
+	PlanConfig(ctx context.Context, request PlanConfigRequestObject) (PlanConfigResponseObject, error)
+	// ApplyConfigPlan Apply a config plan
+	// (POST /api/v1/config/plans/{configPlanId}/apply)
+	ApplyConfigPlan(ctx context.Context, request ApplyConfigPlanRequestObject) (ApplyConfigPlanResponseObject, error)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(ctx context.Context, request ListDoctorFindingsRequestObject) (ListDoctorFindingsResponseObject, error)
@@ -27551,6 +28276,18 @@ type StrictServerInterface interface {
 	// ExtendRunTimer Extend 10 min, during the grace of the run timer
 	// (POST /api/v1/runs/{runId}/timer/extend)
 	ExtendRunTimer(ctx context.Context, request ExtendRunTimerRequestObject) (ExtendRunTimerResponseObject, error)
+	// GetSavingsReport Minutes and money the pool saved, per repository, system and machine
+	// (GET /api/v1/savings)
+	GetSavingsReport(ctx context.Context, request GetSavingsReportRequestObject) (GetSavingsReportResponseObject, error)
+	// ResetSavingsRates Reset to the shipped rates
+	// (DELETE /api/v1/savings/rates)
+	ResetSavingsRates(ctx context.Context, request ResetSavingsRatesRequestObject) (ResetSavingsRatesResponseObject, error)
+	// GetSavingsRates The per-minute rates of GitHub-hosted runners
+	// (GET /api/v1/savings/rates)
+	GetSavingsRates(ctx context.Context, request GetSavingsRatesRequestObject) (GetSavingsRatesResponseObject, error)
+	// UpdateSavingsRates Change the rates and the size each machine is priced at
+	// (PUT /api/v1/savings/rates)
+	UpdateSavingsRates(ctx context.Context, request UpdateSavingsRatesRequestObject) (UpdateSavingsRatesResponseObject, error)
 	// RestartService Restart the service after a drain
 	// (POST /api/v1/service/restart)
 	RestartService(ctx context.Context, request RestartServiceRequestObject) (RestartServiceResponseObject, error)
@@ -28225,6 +28962,97 @@ func (sh *strictHandler) GetSpeedComparison(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetSpeedComparisonResponseObject); ok {
 		if err := validResponse.VisitGetSpeedComparisonResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExportConfigFile operation middleware
+func (sh *strictHandler) ExportConfigFile(w http.ResponseWriter, r *http.Request) {
+	var request ExportConfigFileRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExportConfigFile(ctx, request.(ExportConfigFileRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExportConfigFile")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExportConfigFileResponseObject); ok {
+		if err := validResponse.VisitExportConfigFileResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PlanConfig operation middleware
+func (sh *strictHandler) PlanConfig(w http.ResponseWriter, r *http.Request) {
+	var request PlanConfigRequestObject
+
+	var body PlanConfigJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PlanConfig(ctx, request.(PlanConfigRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PlanConfig")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PlanConfigResponseObject); ok {
+		if err := validResponse.VisitPlanConfigResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ApplyConfigPlan operation middleware
+func (sh *strictHandler) ApplyConfigPlan(w http.ResponseWriter, r *http.Request, configPlanId string) {
+	var request ApplyConfigPlanRequestObject
+
+	request.ConfigPlanId = configPlanId
+
+	var body ApplyConfigPlanJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		if !errors.Is(err, io.EOF) {
+			sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+			return
+		}
+	} else {
+		request.Body = &body
+	}
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyConfigPlan(ctx, request.(ApplyConfigPlanRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyConfigPlan")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ApplyConfigPlanResponseObject); ok {
+		if err := validResponse.VisitApplyConfigPlanResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -32597,6 +33425,111 @@ func (sh *strictHandler) ExtendRunTimer(w http.ResponseWriter, r *http.Request, 
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ExtendRunTimerResponseObject); ok {
 		if err := validResponse.VisitExtendRunTimerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetSavingsReport operation middleware
+func (sh *strictHandler) GetSavingsReport(w http.ResponseWriter, r *http.Request, params GetSavingsReportParams) {
+	var request GetSavingsReportRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSavingsReport(ctx, request.(GetSavingsReportRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSavingsReport")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetSavingsReportResponseObject); ok {
+		if err := validResponse.VisitGetSavingsReportResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ResetSavingsRates operation middleware
+func (sh *strictHandler) ResetSavingsRates(w http.ResponseWriter, r *http.Request) {
+	var request ResetSavingsRatesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ResetSavingsRates(ctx, request.(ResetSavingsRatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ResetSavingsRates")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ResetSavingsRatesResponseObject); ok {
+		if err := validResponse.VisitResetSavingsRatesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetSavingsRates operation middleware
+func (sh *strictHandler) GetSavingsRates(w http.ResponseWriter, r *http.Request) {
+	var request GetSavingsRatesRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetSavingsRates(ctx, request.(GetSavingsRatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetSavingsRates")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetSavingsRatesResponseObject); ok {
+		if err := validResponse.VisitGetSavingsRatesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// UpdateSavingsRates operation middleware
+func (sh *strictHandler) UpdateSavingsRates(w http.ResponseWriter, r *http.Request) {
+	var request UpdateSavingsRatesRequestObject
+
+	var body UpdateSavingsRatesJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.UpdateSavingsRates(ctx, request.(UpdateSavingsRatesRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "UpdateSavingsRates")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(UpdateSavingsRatesResponseObject); ok {
+		if err := validResponse.VisitUpdateSavingsRatesResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

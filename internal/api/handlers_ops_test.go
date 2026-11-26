@@ -16,6 +16,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/backup"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/configexport"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/configio"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines/secretstest"
 )
 
@@ -47,8 +48,13 @@ func newOpsEnv(t *testing.T) *opsEnv {
 	// jobs and wait for them, then close the database, then TempDir is removed.
 	t.Cleanup(func() { _ = db.Close() })
 	t.Cleanup(func() { cancel(); ops.Wait() })
+	cfgWho := func(ctx context.Context) (audit.Actor, auth.Principal) {
+		return audit.ActorFrom(ctx), auth.Principal{Login: "octo"}
+	}
+	engine := &configio.Engine{Audit: ops.Audit, Version: "test", Sections: []configio.Section{
+		configio.NewSettings(ops.Settings, cfgWho), configio.NewPool(ops.Settings, cfgWho), configio.NewQueue(ops.Settings, cfgWho)}}
 	mux = http.NewServeMux()
-	Register(mux, Options{Version: "test", DB: db, Logger: log, Settings: ops.Settings, Audit: ops.Audit, Backup: ops.Backup, Authn: asRole(auth.RoleOwner),
+	Register(mux, Options{Version: "test", ConfigAsCode: engine, DB: db, Logger: log, Settings: ops.Settings, Audit: ops.Audit, Backup: ops.Backup, Authn: asRole(auth.RoleOwner),
 		Config: configexport.Source{Version: "test", Settings: ops.Settings, Secrets: secretstest.New(),
 			Named: []configexport.NamedSecret{{Name: "Controller certificate key", Key: "crsp/controller/ca-key"}}},
 		Now: func() time.Time { return time.Date(2026, 11, 14, 10, 5, 0, 0, time.Local) }})

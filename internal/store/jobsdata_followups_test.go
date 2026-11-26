@@ -2,6 +2,7 @@ package store
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -80,5 +81,25 @@ func TestIntegrationFollowUpPayloadParentWinsOverInference(t *testing.T) {
 	must(t, err)
 	if len(d.StartedNext) != 1 || len(e.StartedNext) != 0 {
 		t.Fatalf("payload link lost: 100 has %d, 150 has %d", len(d.StartedNext), len(e.StartedNext))
+	}
+}
+
+// The batched parent lookup of fillFollowUps reads run_follow_ups by its primary key, never a scan.
+func TestParentRunsQueryUsesPrimaryKey(t *testing.T) {
+	s := jobsDB(t)
+	rows, err := s.db.QueryContext(context.Background(), `EXPLAIN QUERY PLAN SELECT repository_id, run_id, parent_run_id FROM run_follow_ups
+		WHERE (repository_id, run_id) IN (VALUES (?, ?), (?, ?))`, 1, 2, 1, 3)
+	must(t, err)
+	defer func() { _ = rows.Close() }()
+	var plan string
+	for rows.Next() {
+		var id, parent, unused int
+		var detail string
+		must(t, rows.Scan(&id, &parent, &unused, &detail))
+		plan += detail + "\n"
+	}
+	must(t, rows.Err())
+	if strings.Contains(plan, "SCAN run_follow_ups") || !strings.Contains(plan, "run_follow_ups") {
+		t.Fatalf("plan scans the table:\n%s", plan)
 	}
 }

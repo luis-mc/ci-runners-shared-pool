@@ -7,7 +7,7 @@
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { THEME_DATA, DEFAULT_THEME, type ThemeData } from './themes.data.ts';
+import { THEME_DATA, DEFAULT_THEME, TERMINAL, type ThemeData } from './themes.data.ts';
 import { colourTokens, effectTokens, ratio } from './themes.ts';
 
 const css = readFileSync(
@@ -103,6 +103,8 @@ const REQUIRED_COLOURS = [
   'on-primary',
   'focus',
   'selection',
+  'accent',
+  'warm',
   ...['done', 'note', 'needs-you', 'problem'].flatMap((n) => [
     n,
     `${n}-bg`,
@@ -114,7 +116,7 @@ const REQUIRED_COLOURS = [
 const ALLOWED = /^--ds-(color-|radius-[123]$|glow-focus$|scanline-focus$|shadow-[23]$)/;
 
 describe('every theme defines every token', () => {
-  it('has the six themes, Phosphor default', () => {
+  it('has the seven themes, Phosphor default', () => {
     expect(THEME_DATA.map((t) => t.id)).toEqual([
       'phosphor',
       'tokyo-night',
@@ -122,6 +124,7 @@ describe('every theme defines every token', () => {
       'gruvbox',
       'solarized',
       'nord',
+      'terminal',
     ]);
     expect(DEFAULT_THEME).toBe('phosphor');
   });
@@ -137,7 +140,10 @@ describe('every theme defines every token', () => {
             ]),
           ),
           ...Object.fromEntries(
-            Object.entries(effectTokens(t[mode], mode)).map(([k, v]) => [`--ds-${k}`, v]),
+            Object.entries(effectTokens(t[mode], mode, t.flat === true)).map(([k, v]) => [
+              `--ds-${k}`,
+              v,
+            ]),
           ),
           '--ds-radius-1': t.radius[0],
           '--ds-radius-2': t.radius[1],
@@ -205,4 +211,27 @@ describe('contrast in every theme (UX-17)', () => {
             3,
           );
       });
+});
+
+describe('terminal palettes (data-pal)', () => {
+  for (const pal of ['amber', 'ice'] as const)
+    it(`${pal}: written after the mode rules, tokens only, contrast holds`, () => {
+      const rule = rules.find((r) =>
+        r.selectors.map(ds).includes(`:root[data-theme-name=terminal][data-pal=${pal}]`),
+      );
+      expect(rule, `${pal} rule`).toBeTruthy();
+      const want = colourTokens(TERMINAL[pal], 'dark');
+      for (const [k, v] of Object.entries(want))
+        expect(rule?.decls.get(`--ds-color-${k}`), k).toBe(norm(v));
+      for (const k of rule?.decls.keys() ?? []) expect(k).toMatch(ALLOWED);
+      for (const bg of ['page', 'surface', 'selection'])
+        for (const fg of ['text', 'text-muted'])
+          expect(ratio(want[fg] as string, want[bg] as string)).toBeGreaterThanOrEqual(
+            4.5,
+          );
+      for (const bg of ['page', 'surface'])
+        expect(ratio(want.border as string, want[bg] as string)).toBeGreaterThanOrEqual(
+          3,
+        );
+    });
 });

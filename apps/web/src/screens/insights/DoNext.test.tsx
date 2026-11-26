@@ -7,11 +7,18 @@ import { jobsApi } from '../../testing/jobsData';
 afterEach(cleanup);
 
 describe('Do next', () => {
-  it('opens Analytics on Suggestions, first of four tabs, and ranks by minutes saved', async () => {
+  it('opens Analytics on Suggestions, first of six tabs, and ranks by minutes saved', async () => {
     renderApp(jobsApi(), '/analytics');
     await screen.findByRole('region', { name: 'Suggestions, best first' });
     const tabs = screen.getAllByRole('tab').map((t) => t.textContent);
-    expect(tabs).toEqual(['Suggestions', 'Insights', 'Charts', 'Run elsewhere']);
+    expect(tabs).toEqual([
+      'Suggestions',
+      'Insights',
+      'Savings',
+      'Compare',
+      'Charts',
+      'Run elsewhere',
+    ]);
     expect(
       screen.getByRole('tab', { name: 'Suggestions' }).getAttribute('aria-selected'),
     ).toBe('true');

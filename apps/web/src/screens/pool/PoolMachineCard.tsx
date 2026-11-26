@@ -96,7 +96,7 @@ export function PoolMachineCard({
   const stats = useMachineStats(m.id, window);
   const s = machineStatus(m);
   return (
-    <Card title={m.name} to={`/pool/machines/${m.id}`}>
+    <Card title={m.name} machine to={`/pool/machines/${m.id}`}>
       <Stack gap="tight">
         <Status kind={s.kind} word={s.word} />
         <MachineLoadBars m={m} />

@@ -620,6 +620,25 @@ function signedInBase(user: unknown): Mock {
         run: { total_seconds: 0, known: 0 },
       })),
     })
+    .on('GET', '/api/v1/savings', {
+      range: 'today',
+      from: '2026-11-25T00:00:00Z',
+      to: '2026-11-25T15:00:00Z',
+      total: { key: 'all', jobs: 4, minutes: 15, money: 0.12, public_minutes: 5 },
+      by_repository: [
+        { key: 'octo/app', jobs: 3, minutes: 10, money: 0.12, public_minutes: 0 },
+        { key: 'octo/public', jobs: 1, minutes: 5, money: 0, public_minutes: 5 },
+      ],
+      by_os: [{ key: 'linux', jobs: 4, minutes: 15, money: 0.12, public_minutes: 5 }],
+      by_machine: [
+        { key: 'standard', jobs: 4, minutes: 15, money: 0.12, public_minutes: 5 },
+      ],
+      not_priced: 0,
+      note: 'Estimate. Jobs of public repositories count their minutes but save no money.',
+      source_url: 'https://docs.github.com/en/billing/reference/actions-runner-pricing',
+      copied_on: '2026-11-15',
+      rates_changed: false,
+    })
     .on('GET', '/api/v1/runners/:id', runner())
     .on('GET', '/api/v1/images', { items: [image()] })
     .on('GET', '/api/v1/images/:id', image())

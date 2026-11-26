@@ -284,6 +284,8 @@ test('Pool and Analytics: the tabs are in one order', async ({ page }) => {
   expect(await page.getByRole('tab').allTextContents()).toEqual([
     'Suggestions',
     'Insights',
+    'Savings',
+    'Compare',
     'Charts',
     'Run elsewhere',
   ]);

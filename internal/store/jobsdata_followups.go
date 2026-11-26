@@ -186,6 +186,10 @@ func (s *JobsStore) fillFollowUps(ctx context.Context, rows []jobsdata.RunRow) e
 	if err != nil {
 		return err
 	}
+	parentOf, err := s.parentRunsOf(ctx, rows)
+	if err != nil {
+		return err
+	}
 	for i := range rows {
 		list := fus[[2]int64{rows[i].RepositoryID, rows[i].RunID}]
 		rows[i].StartedNext = list
@@ -196,12 +200,43 @@ func (s *JobsStore) fillFollowUps(ctx context.Context, rows []jobsdata.RunRow) e
 			}
 		}
 		if rows[i].Event == jobsdata.EventWorkflowRun {
-			if l, err := s.q.GetRunFollowUp(ctx, sqlcgen.GetRunFollowUpParams{RepositoryID: rows[i].RepositoryID, RunID: rows[i].RunID}); err == nil {
-				rows[i].ParentRunID = l.ParentRunID
+			if p, ok := parentOf[[2]int64{rows[i].RepositoryID, rows[i].RunID}]; ok {
+				rows[i].ParentRunID = p
 			}
 		}
 	}
 	return nil
+}
+
+// parentRunsOf reads the parent link of every workflow_run row in one query (one round trip per page,
+// not one per row).
+func (s *JobsStore) parentRunsOf(ctx context.Context, rows []jobsdata.RunRow) (map[[2]int64]int64, error) {
+	out := map[[2]int64]int64{}
+	var vals []string
+	var args []any
+	for _, r := range rows {
+		if r.Event == jobsdata.EventWorkflowRun {
+			vals = append(vals, "(?, ?)")
+			args = append(args, r.RepositoryID, r.RunID)
+		}
+	}
+	if len(vals) == 0 {
+		return out, nil
+	}
+	res, err := s.db.QueryContext(ctx, `SELECT repository_id, run_id, parent_run_id FROM run_follow_ups
+		WHERE (repository_id, run_id) IN (VALUES `+strings.Join(vals, ", ")+`)`, args...)
+	if err != nil {
+		return nil, fmt.Errorf("parent runs: %w", err)
+	}
+	defer func() { _ = res.Close() }()
+	for res.Next() {
+		var repo, run, parent int64
+		if err := res.Scan(&repo, &run, &parent); err != nil {
+			return nil, fmt.Errorf("scan parent run: %w", err)
+		}
+		out[[2]int64{repo, run}] = parent
+	}
+	return out, res.Err()
 }
 
 // groupFollowUps reads the rows of followUpsOf: parent run id, then aggCols.

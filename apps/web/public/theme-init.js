@@ -3,10 +3,20 @@
 (function () {
   try {
     var root = document.documentElement;
-    var names = ['phosphor', 'tokyo-night', 'catppuccin', 'gruvbox', 'solarized', 'nord'];
+    var names = [
+      'phosphor',
+      'tokyo-night',
+      'catppuccin',
+      'gruvbox',
+      'solarized',
+      'nord',
+      'terminal',
+    ];
     var name = window.localStorage.getItem('crsp.theme-name');
     // A new install is Phosphor, dark (owner decision LOOK D11); a saved 'system' leaves the mode to the OS.
     root.setAttribute('data-theme-name', names.indexOf(name) >= 0 ? name : 'phosphor');
+    var pal = window.localStorage.getItem('crsp.theme-palette');
+    if (pal === 'amber' || pal === 'ice') root.setAttribute('data-pal', pal);
     var mode = window.localStorage.getItem('crsp.theme-mode');
     // Nothing saved yet: a new install is dark (owner decision D4). Only a saved "system" follows the device.
     if (mode === 'dark' || mode === 'light') root.setAttribute('data-theme', mode);

@@ -2270,6 +2270,54 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/savings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Minutes and money the pool saved, per repository, system and machine
+         * @description observability R5.15, R5.16, R5.18, R5.19. Counts every finished job that ran on the pool, each rounded up to a whole minute. Money is minutes times the rate of the matching GitHub-hosted runner; a public repository counts its minutes and saves no money. Read only.
+         */
+        get: operations["getSavingsReport"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/savings/rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The per-minute rates of GitHub-hosted runners
+         * @description observability R5.16. The shipped rates carry the source address and the date they were copied.
+         */
+        get: operations["getSavingsRates"];
+        /**
+         * Change the rates and the size each machine is priced at
+         * @description observability R5.17. Writes an audit row. A negative rate, an unknown system or a size no rate has is refused.
+         */
+        put: operations["updateSavingsRates"];
+        post?: never;
+        /**
+         * Reset to the shipped rates
+         * @description observability R5.17. Writes an audit row.
+         */
+        delete: operations["resetSavingsRates"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs/groups": {
         parameters: {
             query?: never;
@@ -2877,6 +2925,66 @@ export interface paths {
         get: operations["exportConfig"];
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export the setup as one config file
+         * @description operations R5.28. One versioned YAML file: settings, pool defaults, queue order, machine settings, runner size classes, image layers, repository policies and notification channels. It holds no secret, no job history, no audit log and no machine key; each secret is named by reference. Named `crsp-setup-<stamp>.yaml`.
+         */
+        get: operations["exportConfigFile"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/plans": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan a config file
+         * @description operations R5.29. Checks the file and lists each change: added, changed (field, old value, new value) or removed, by name. Nothing changes. A file with a problem answers 201 with `problems` and no `id`. A file that is not a config file at all answers 400.
+         */
+        post: operations["planConfig"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/config/plans/{configPlanId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply a config plan
+         * @description operations R5.30. Applies exactly that plan. 409 conflict when the setup changed since the plan; 409 needs_confirmation, naming each removal, until `confirm_removals` names them all. Each change is written to the audit log. It stops at the first change that fails and says what was applied.
+         */
+        post: operations["applyConfigPlan"];
         delete?: never;
         options?: never;
         head?: never;
@@ -3803,6 +3911,57 @@ export interface components {
             hosted: components["schemas"]["SpeedSide"];
             minutes_saved: number;
             cost_avoided_usd: number;
+        };
+        SavingsRow: {
+            key: string;
+            jobs: number;
+            minutes: number;
+            /**
+             * Format: double
+             * @description US dollars
+             */
+            money: number;
+            /** @description Minutes of public repositories */
+            public_minutes: number;
+        };
+        SavingsReport: {
+            /** @enum {string} */
+            range: "today" | "7d" | "30d" | "custom";
+            /** Format: date-time */
+            from: string;
+            /** Format: date-time */
+            to: string;
+            total: components["schemas"]["SavingsRow"];
+            by_repository: components["schemas"]["SavingsRow"][];
+            by_os: components["schemas"]["SavingsRow"][];
+            by_machine: components["schemas"]["SavingsRow"][];
+            /** @description Jobs with no rate for their system. */
+            not_priced: number;
+            note: string;
+            source_url: string;
+            /** @description The date the shipped rates were copied */
+            copied_on: string;
+            rates_changed: boolean;
+        };
+        SavingsRate: {
+            /** @enum {string} */
+            os: "linux" | "windows" | "macos";
+            size: string;
+            /**
+             * Format: double
+             * @description US dollars per billed minute.
+             */
+            per_minute: number;
+        };
+        SavingsRates: {
+            source_url: string;
+            copied_on: string;
+            changed: boolean;
+            rates: components["schemas"]["SavingsRate"][];
+            /** @description Machine name to the size its jobs are priced at. */
+            machine_sizes: {
+                [key: string]: string;
+            };
         };
         SpeedComparison: {
             repository: string;
@@ -4895,6 +5054,40 @@ export interface components {
             items: components["schemas"]["Repository"][];
             next_cursor?: string;
             stale: components["schemas"]["Staleness"];
+        };
+        ConfigPlanRequest: {
+            /** @description The text of the config file. */
+            file: string;
+        };
+        ConfigFieldChange: {
+            field: string;
+            old?: unknown;
+            new?: unknown;
+        };
+        ConfigChange: {
+            section: string;
+            /** @description Empty for a section that is one set of fields. */
+            name: string;
+            /** @enum {string} */
+            kind: "added" | "changed" | "removed";
+            fields?: components["schemas"]["ConfigFieldChange"][];
+        };
+        ConfigPlan: {
+            /** @description Tied to the file and the state it was planned against. Absent while `problems` is not empty. */
+            id?: string;
+            problems?: string[];
+            changes: components["schemas"]["ConfigChange"][];
+            /** @description The `section/name` of each removal; the apply needs a yes that names each one. */
+            removals?: string[];
+            /** Format: date-time */
+            created_at: string;
+        };
+        ConfigApplyRequest: {
+            confirm_removals?: string[];
+        };
+        ConfigApplyResult: {
+            plan_id: string;
+            applied: components["schemas"]["ConfigChange"][];
         };
         /**
          * @example {
@@ -11672,6 +11865,101 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    getSavingsReport: {
+        parameters: {
+            query?: {
+                /** @description today (default), 7d, 30d or custom. */
+                range?: "today" | "7d" | "30d" | "custom";
+                /** @description First day of a custom range (YYYY-MM-DD). */
+                from?: string;
+                /** @description Last day of a custom range (YYYY-MM-DD), included. */
+                to?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The report. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsReport"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getSavingsRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsRates"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    updateSavingsRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SavingsRates"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsRates"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    resetSavingsRates: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The shipped table. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SavingsRates"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     listJobGroups: {
         parameters: {
             query?: {
@@ -12448,6 +12736,71 @@ export interface operations {
         requestBody?: never;
         responses: {
             200: components["responses"]["ExportFile"];
+            default: components["responses"]["Error"];
+        };
+    };
+    exportConfigFile: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            200: components["responses"]["ExportFile"];
+            default: components["responses"]["Error"];
+        };
+    };
+    planConfig: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ConfigPlanRequest"];
+            };
+        };
+        responses: {
+            /** @description The plan. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigPlan"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    applyConfigPlan: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                configPlanId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["ConfigApplyRequest"];
+            };
+        };
+        responses: {
+            /** @description What was applied. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ConfigApplyResult"];
+                };
+            };
             default: components["responses"]["Error"];
         };
     };

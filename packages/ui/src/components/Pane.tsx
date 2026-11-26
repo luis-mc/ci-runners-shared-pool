@@ -14,6 +14,7 @@ export function Pane({
   children,
   footer,
   id,
+  machine,
 }: {
   title: string;
   /** A number shown after the title, as in ┤ Machines 3 ├. */
@@ -28,6 +29,8 @@ export function Pane({
   footer?: ReactNode | undefined;
   /** An address on the page: a link can end in `#id` (the Help cards). */
   id?: string | undefined;
+  /** The title is a machine name: in the Terminal theme it is bold and coloured (CRSP300). */
+  machine?: boolean | undefined;
 }) {
   const Heading = level === 2 ? 'h2' : 'h3';
   return (
@@ -37,7 +40,7 @@ export function Pane({
       aria-label={title}
       data-actions={actions ? true : undefined}
     >
-      <Heading className="ds-pane__title">
+      <Heading className="ds-pane__title" data-machine={machine || undefined}>
         <ClampText text={title}>
           {to ? (
             <Link to={to} className="ds-link">

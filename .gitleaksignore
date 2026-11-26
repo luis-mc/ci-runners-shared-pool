@@ -4,3 +4,5 @@ ac3ed37373ed913098ce2fca9ae2ad21287c3add:internal/redact/redact_test.go:project-
 5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/full-progress-ci-runners-shared-pool.html:project-named-secret:898
 5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/registry.json:project-named-secret:3275
 5f7264a6ceaa9a0ec6a75ae135beb3b65f597a45:docs/project/full-progress-ci-runners-shared-pool.html:project-named-secret:1215
+# CRSP282: RELOAD_KEY names a sessionStorage key, not a secret; false positive in history.
+12ebadd4c645dec84065014e006de145be78fbcd:apps/web/src/screens/common.tsx:project-named-secret:135

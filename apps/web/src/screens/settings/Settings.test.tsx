@@ -124,6 +124,23 @@ describe('Colour themes (UX-60)', () => {
     ).toBe(true);
   });
 
+  it('offers the Terminal palettes only for the Terminal theme and applies one at once', async () => {
+    window.localStorage.clear();
+    document.documentElement.removeAttribute('data-pal');
+    renderApp(signedIn(), '/settings/appearance');
+    expect(screen.queryByRole('group', { name: 'Palette' })).toBeNull();
+    fireEvent.click(await screen.findByRole('radio', { name: /^Terminal/ }));
+    expect(document.documentElement.getAttribute('data-theme-name')).toBe('terminal');
+    expect(screen.queryByRole('group', { name: 'Theme' })).toBeNull();
+    fireEvent.click(await screen.findByRole('radio', { name: /^Amber/ }));
+    expect(document.documentElement.getAttribute('data-pal')).toBe('amber');
+    expect(window.localStorage.getItem('crsp.theme-palette')).toBe('amber');
+    fireEvent.click(screen.getByRole('radio', { name: /^Green/ }));
+    expect(document.documentElement.hasAttribute('data-pal')).toBe(false);
+    fireEvent.click(screen.getByRole('radio', { name: /^Colour themes/ }));
+    expect(document.documentElement.getAttribute('data-theme-name')).toBe('phosphor');
+  });
+
   it('picks a theme, applies it at once and keeps it in this browser', async () => {
     window.localStorage.clear();
     renderApp(signedIn(), '/settings/appearance');

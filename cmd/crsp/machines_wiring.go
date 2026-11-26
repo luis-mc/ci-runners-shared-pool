@@ -139,7 +139,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 		OnIdle: idle.call, PoolDefaults: pool, SSH: machines.NewSSHRunner(), MinProtocol: minAgentProtocol,
 		Packages: pkgSource, ConsoleURL: consoleURL, WindowsPackages: winPackages,
 	})
-	cs := caches.New(caches.Options{Machines: svc, Audit: rec})
+	cs := caches.New(caches.Options{Machines: svc, Audit: rec, Mirrors: newMirrorService(cfg, db, rec, svc, logger), HolderID: cachesHolder})
 	lk := agentlink.New(svc)
 	pinned, err := depsetup.Load()
 	if err != nil {

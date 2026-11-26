@@ -28,6 +28,11 @@ import {
   TextField,
   TimePicker,
   applyThemeName,
+  applyPalette,
+  lastColourTheme,
+  TERMINAL_THEME_ID,
+  savedPalette,
+  TERMINAL_PALETTE_CHOICES,
   formatDateTime,
   formatSize,
   rememberThemeMode,
@@ -43,8 +48,10 @@ import { Ask, Load } from '../common';
 import { TabForm, useTabPart } from './TabForm';
 import { SECTIONS, settingsPath } from './sections';
 import { AuditLogSettings, ConfigExportSettings } from './AuditLog';
+import { ConfigAsCodeSettings } from './ConfigAsCode';
 import { InsightsUpdateSettings } from './InsightsUpdate';
 import { BudgetsSettings } from './Budgets';
+import { SavingsRatesSettings } from '../savings/SavingsRates';
 import { NotificationsSettings } from './Notifications';
 import { PublicRepositoriesSettings } from './PublicRepositoriesSettings';
 import { NetworkSettings } from './ListenAddress';
@@ -129,6 +136,9 @@ export function RepositoriesTab() {
       <At id="budgets">
         <BudgetsSettings />
       </At>
+      <At id="savings-rates">
+        <SavingsRatesSettings />
+      </At>
     </TabForm>
   );
 }
@@ -180,6 +190,9 @@ export function DataTab() {
       </At>
       <At id="config-export">
         <ConfigExportSettings />
+      </At>
+      <At id="config-as-code">
+        <ConfigAsCodeSettings />
       </At>
     </TabForm>
   );
@@ -434,6 +447,7 @@ export function ThemeApplier() {
   const client = useClient();
   useEffect(() => {
     applyThemeName(savedThemeName());
+    applyPalette(savedPalette());
     let on = true;
     unwrap(client.GET('/api/v1/me/preferences'))
       .then((p) => on && applyTheme(p.theme))
@@ -452,6 +466,8 @@ export function AppearanceSettings() {
     [],
   );
   const [themeName, setThemeName] = useState(savedThemeName);
+  const [palette, setPalette] = useState(savedPalette);
+  const terminal = themeName === TERMINAL_THEME_ID;
   const save = useCommand(async (theme: Schemas['Theme']) => {
     const p = await unwrap(client.PUT('/api/v1/me/preferences', { body: { theme } }));
     applyTheme(p.theme);
@@ -463,19 +479,50 @@ export function AppearanceSettings() {
         {(p) => (
           <Stack>
             <ChoiceField
-              label="Theme"
-              help="The colours of the console. The choice is saved at once."
-              value={themeName}
+              label="Look"
+              help="Colour themes keep the console's own look. Terminal is the dark, flat look of a system monitor. The choice is saved at once."
+              value={terminal ? 'terminal' : 'colours'}
               onChange={(v) => {
-                setThemeName(v);
-                applyThemeName(v);
+                const next = v === 'terminal' ? TERMINAL_THEME_ID : lastColourTheme();
+                setThemeName(next);
+                applyThemeName(next);
               }}
-              choices={THEMES.map((t) => ({
-                value: t.id,
-                label: t.name,
-                preview: t.id,
-              }))}
+              choices={[
+                { value: 'colours', label: 'Colour themes' },
+                { value: 'terminal', label: 'Terminal' },
+              ]}
             />
+            {terminal ? null : (
+              <ChoiceField
+                label="Theme"
+                help="The colours of the console. The choice is saved at once."
+                value={themeName}
+                onChange={(v) => {
+                  setThemeName(v);
+                  applyThemeName(v);
+                }}
+                choices={THEMES.map((t) => ({
+                  value: t.id,
+                  label: t.name,
+                  preview: t.id,
+                }))}
+              />
+            )}
+            {terminal ? (
+              <ChoiceField
+                label="Palette"
+                help="The colours of the Terminal theme. The choice is saved at once."
+                value={palette}
+                onChange={(v) => {
+                  setPalette(v);
+                  applyPalette(v);
+                }}
+                choices={TERMINAL_PALETTE_CHOICES.map((t) => ({
+                  value: t.id,
+                  label: t.name,
+                }))}
+              />
+            ) : null}
             <ChoiceField
               label="Mode"
               help="System follows your device. The choice is saved at once."
