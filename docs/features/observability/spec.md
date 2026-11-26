@@ -404,10 +404,10 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R5.17 | internal/history/rates_test.go TestOverrideAndResetWriteAudit, TestValidateRefusesBadTables; internal/api/handlers_savings_test.go TestSavingsRatesAreOwnerOnlyAndValidated |
 | R5.18 | internal/history/savings_test.go TestPublicRepoSavesNoMoney; savings.test.tsx (public note) |
 | R5.19 | internal/history/savings_test.go TestReportRangesAndGroups; internal/api/handlers_savings_test.go TestSavingsReportJSON; savings.test.tsx (ranges, tables) |
-| R5.20 | planned: internal/logs/agentlog_test.go TestSetupStepsCaptured |
-| R5.21 | planned: internal/logs/search_test.go TestFullTextAndFilters |
+| R5.20 | internal/logs/agentlog_test.go TestSetupStepsCaptured, TestAgentLinesBatchOverTheLink; internal/machines/logbatch_test.go TestLogBatchReachesTheSink |
+| R5.21 | internal/store/logsdb/search_test.go TestFullTextAndFilters; internal/logs/search_test.go TestQueryValidation; internal/api/handlers_logs_test.go TestLogSearchIsAdminOnly (the web page is planned) |
 | R5.22 | planned: internal/events/sse_test.go TestRunnerSetupLogLive |
-| R5.23 | planned: internal/logs/buffer_test.go TestBufferKeepsOrderAndCountsDropped |
+| R5.23 | internal/logs/buffer_test.go TestBufferKeepsOrderAndCountsDropped |
 | R5.24 | internal/audit/audit_test.go TestRowFields; internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
 | R5.25 | internal/audit/audit_test.go TestAuditFailureRollsBackChange |
 | R5.26 | internal/audit/audit_test.go TestNoUpdateOrDeletePath, TestRetentionWritesOwnRow; internal/store/ops_test.go TestAuditIsAppendOnly |
@@ -445,10 +445,10 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.5 | internal/logs/redact_test.go TestKnownValuesAndShapesRedacted |
 | R6.6 | internal/logs/redact_sinks_test.go TestNoSecretInAnySink, TestSecretKindTableIsComplete (the agent log line joins with R5.20) |
 | R6.7 | internal/logs/local_test.go TestNoNetworkImports (with the depguard rule `logs-stay-local` in .golangci.yml) |
-| R6.8 | planned: internal/logs/retention_test.go TestDefaultsFloorsCeilings |
-| R6.9 | planned: internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
-| R6.10 | planned: internal/logs/store_test.go TestSeparateDatabaseFile |
-| R6.11 | planned: internal/history/bench_test.go BenchmarkHistoryPage; internal/logs/bench_test.go BenchmarkSearchFirstPage |
+| R6.8 | internal/logs/retention_test.go TestDefaultsFloorsCeilings; internal/store/logsdb/store_test.go TestPruneByDayAndSize |
+| R6.9 | internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
+| R6.10 | internal/store/logsdb/store_test.go TestSeparateDatabaseFile |
+| R6.11 | internal/store/logsdb/bench_test.go BenchmarkSearchFirstPage (100,000 lines, not 10 GiB); planned: internal/history/bench_test.go BenchmarkHistoryPage |
 | R6.12 | internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/web/src/live/format.test.ts |
 | R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
 | R6.14 | internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
@@ -530,7 +530,9 @@ Planned files, in the globs of the front matter:
 
 - internal/history/ (store, savings, rates.json)
 - internal/audit/ (chain)
-- internal/logs/ (agent buffer, logs.db, search, retention)
+- internal/logs/ (the live runner setup log stream, R5.22)
+
+Built (CRSP271d): `internal/logs/` (`store.go` the line and the store port, `failopen.go` the fail-open writer and its failure counter, `retention.go` limits, `buffer.go` the agent disk buffer, `agentlog.go` the agent's log handler and batch sender, `search.go` the query), `internal/store/logsdb/` (`logs.db`, its own migrations with an FTS5 table; it sits in `internal/store/` because only that folder may import the SQLite driver), `internal/api/handlers_logs.go` (the search route), the `OnLogBatch` hook in `internal/machines/link.go`.
 
 Built (CRSP271): `internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), the web console reuses the shared UI parts that already hold the time format (`packages/ui/src/components/format.ts`), the shared clock (`packages/ui/src/components/Clock.tsx`) and the status word, glyph and colour set (`packages/ui/src/components/Status.tsx`), proven by `apps/web/src/live/format.test.ts`, `clock.test.tsx`, `status.test.tsx` and `store.test.ts`; `internal/store/jobsdata_utc_test.go` proves UTC storage.
 
