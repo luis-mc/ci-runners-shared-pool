@@ -39,7 +39,9 @@ for (const path of ['/', '/product', '/download', '/docs', '/docs/guides/install
     await page.waitForLoadState('networkidle');
     // Scroll to the end so late shifts count, then read.
     await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
-    await page.waitForTimeout(300);
+    await page.evaluate(
+      () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+    );
     const { lcp, cls } = await page.evaluate(() => {
       const w = window as unknown as { __lcp: number; __cls: number };
       return { lcp: w.__lcp, cls: w.__cls };
