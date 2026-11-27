@@ -1,0 +1,54 @@
+name: website
+
+# The public website (docs/features/website, CRSP332). On a pull request that touches the site, the docs it publishes
+# or the shared UI: typecheck, lint, the site's unit tests (the build, the docs publishing, link check), then the
+# site's own Playwright project (layout at 360, 393 and 1300 px, axe, no JavaScript, no third-party request, headers,
+# docs search, LCP). The Playwright project builds the site from a recorded release, so the run needs no network
+# and no Vercel account. The production deploy follows `main` on Vercel; this workflow never deploys.
+on:
+  pull_request:
+    paths:
+      - 'apps/web/**'
+      - 'docs/**'
+      - 'packages/ui/**'
+      - '.github/workflows/website.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  site:
+    name: site
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - uses: ./.github/actions/pnpm-cache
+      - name: Install (frozen)
+        run: pnpm install --frozen-lockfile
+      - name: Typecheck and lint
+        run: |
+          pnpm --filter web typecheck
+          pnpm --filter web lint
+      - name: Unit tests (build, docs, links, search)
+        run: pnpm exec vitest run --project site
+      - name: Playwright browser
+        run: pnpm --filter web exec playwright install --with-deps chromium
+      - name: Browser tests (layout, axe, no JavaScript, network, headers, search, LCP)
+        run: pnpm --filter web e2e
+      - name: Keep the failure report
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: website-test-results
+          path: apps/web/test-results
+          if-no-files-found: ignore

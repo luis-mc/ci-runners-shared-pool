@@ -3,7 +3,7 @@ id: website
 title: Public website
 apps: [website]
 topics: [install, ui, operations]
-status: proposed
+status: building
 version: 0.0.0
 owner: owner
 type: reference
@@ -19,7 +19,7 @@ generator: luismc-docs 2.21.0
 ---
 # Public website
 
-**Status: partly built (CRSP303).** `apps/web` holds a static Home page, the Controller Download page and a 404 page. Everything else below is **NOT YET IMPLEMENTED** (section 10). Points that need the owner are in section 9.
+**Status: built (CRSP303, CRSP332), waiting for the owner's Vercel setup.** `apps/web` holds Home, Product, Download (with the older versions), Docs with search, Security and a 404 page, with real console screenshots, the marketing frame in the design system and the site's own browser tests. What is not built is in section 10. Points that need the owner are in section 9.
 
 ## 1. In one paragraph
 
@@ -97,11 +97,11 @@ The look is a signed-out landing page in the Comiclex style: a hero, feature ban
 
 **States.** With no JavaScript, Download lists every system. Docs search needs JavaScript; without it the docs stay readable and navigable. If the release data cannot be built, the build fails and the last good deploy stays live (R5.8). Every screenshot has alt text. On a phone the page is one column and the install steps stay readable (R6.3).
 
-Layout, colour and imagery are the owner's call (section 9, Q5).
+Layout, colour and imagery follow the shared Terminal look and the marketing frame (design system components 86 to 91); brand assets are the owner's call (section 9, Q5).
 
 ## 5. Functional requirements
 
-All requirements are **planned** except those section 10 lists as built (CRSP303).
+All requirements are built (CRSP303, CRSP332) except those section 10 lists as not built.
 
 ### Content
 
@@ -176,16 +176,18 @@ Only the owner can do these. No agent creates the Vercel project.
 - [ ] **Q2** Decided (CRSP303, CRSP306): the website is `apps/web`; the console moves to `apps/controller-console` and `web-console`'s code paths follow.
 - [ ] **Q3** Analytics: none in v1 (recommended) or a cookieless tool.
 - [ ] **Q4** Which pool and period may supply measured savings numbers, if any (R5.5).
-- [ ] **Q5** Visual direction, brand assets (logo, favicon, social image), and whether the website gets its own design-system section.
+- [ ] **Q5** Brand assets (logo, favicon, social image). Decided in CRSP332: the visual direction is the shared Terminal look; the marketing frame (site frame, hero, feature band, screenshot, prose, doc search) is design-system components 86 to 91 in `next-version`, with the tokens `--ds-frame-marketing` and `--ds-measure-prose`, and the site builds only those parts.
 - [ ] **Q6** The public docs folders (R5.17), above all `design-system`, `studies` and `architecture`.
-- [ ] **Q7** Vercel account and project, root directory `apps/web`, project `ci-runners-shared-pool`, domain `crsp.luismc.net` (Cloudflare), domain and DNS, the deploy hook stored as a GitHub secret.
+- [ ] **Q7** Vercel account and project, root directory `apps/web`, project `ci-runners-shared-pool`, domain `crsp.luismc.net` (Cloudflare), and a Deploy Hook (Settings, Git, Deploy Hooks, branch `main`) whose URL is stored as the GitHub repository secret `VERCEL_DEPLOY_HOOK_URL`. Until the secret exists, `.github/workflows/website-deploy.yml` says so and stops without error. No agent creates any of these.
 - [ ] **Q8** Whether a Compare or Pricing page is wanted (the old draft had them; this one has none).
 
 ## 10. How it is proven and what is not built
 
-**Built (CRSP303).** The site is `apps/web`: Vite and React, rendered to static HTML by `apps/web/scripts/build.ts` with the shared `packages/ui` parts (no app CSS). Pages: Home, Download and 404, with `sitemap.xml`, `robots.txt` and `release.json`. Built requirements: R5.1 in part (Home, Download, 404), R5.2, R5.3, R5.6, R5.7 to R5.12 (not signed text, release notes link; the signing text is a short note linking the install guide), R5.13 in part (a link to the releases page), R6.2, R6.5, R6.6 (`apps/web/vercel.json`), R6.9 in part (one `h1`, title, description, canonical, sitemap, `SoftwareApplication` data; no `robots` crawl rules beyond allow). Built tests: T1 to T5, T14, and the JavaScript size part of T15, in `apps/web/src/**/*.test.ts(x)`.
+**Built (CRSP303, CRSP332).** The site is `apps/web`: Vite and React, rendered to static HTML by `apps/web/scripts/build.ts` with the shared `packages/ui` parts (no app CSS). Pages: Home, Product, Download, Docs (an index with search and one page per published doc), Security and 404, with `sitemap.xml`, `robots.txt`, `llms.txt`, `search-index.json` and `release.json`. The docs build (`src/lib/docs.ts`) reads `docs/llms.txt` for the list of pages and titles and `docs/docs-map.json` (every doc it names must exist), renders Markdown with `marked`, rewrites relative links, draws Mermaid at build time to inline SVG with the theme's colours (`beautiful-mermaid`; its style block, inline style and font import are removed, so the strict policy and the no-third-party rule hold), and fails the build on a broken link or anchor, a public page that `llms.txt` does not list, or two pages with one path. Generated indexes and `changes/` notes are not pages. A picture in a doc is not copied; its words stay. Product reads the first paragraph of each feature spec. The savings example on Home reads section 6 of the study and fails the build when it changes shape (R5.5). Console shots are made by `pnpm --filter web shots` (`apps/web/shots/shots.spec.ts`: the built console, the console e2e suite's mocked API as a seeded demo Controller, and `src/lib/shotcheck.ts`, which refuses a page that shows this computer's name, the person's login, the repository owner, a token or an email address) and committed under `apps/web/content/shots/` with a manifest. R5.13: the full older-versions list from the release feed, newest first, never `edge`. R5.14: `.github/workflows/website-deploy.yml` (a published release, the Release workflow finishing, nightly, by hand with a dry run), the hook URL read from the secret `VERCEL_DEPLOY_HOOK_URL`. R5.15 to R5.21: docs publishing, search (a static word index of about 90 kB gzipped, loaded on the first key; the search box needs script and is hidden without it), the version and last-verified line, "Edit on GitHub". Release data ignores the agent installers (`CrspAgent-*`) that a release also holds: they are never listed (R5.7).
 
-**Not built.** Product and Security pages and the console screenshots (R5.4, R5.5), docs publishing and search (R5.15 to R5.21, T6 to T9), the in-list older versions (R5.13), the deploy hook and nightly rebuild (R5.14, T16), the axe, layout and no-JavaScript browser tests (T10 to T12), LCP (T15), the macOS and Windows build matrix (T17) and the shot script (T13). These are CRSP332. A marketing frame (page gutter, hero, feature band) is not in the design system yet (Q5).
+**Tests.** Unit and build tests run in the site project (`apps/web/src/**/*.test.ts(x)`, one build in `beforeAll`, no timeout above 10 s): T1, T2, T4, T5, T6, T7, T9, T13, T14, T16 and the JavaScript size part of T15. The site's own Playwright project (`apps/web/playwright.config.ts`, `apps/web/e2e/`, run by `pnpm --filter web e2e` and by `.github/workflows/website.yml`; separate from the console's e2e suite at the repository root) builds the site from the recorded release and serves it with the headers of `vercel.json`: T3 and T11 (`nojs.spec.ts`), T8 (`docs.spec.ts`), T10 (`layout.spec.ts` at 360, 393 and 1300 px, `axe.spec.ts` in light and dark), T12 (`network.spec.ts`: same-origin requests only, no cookie, the four headers, no policy violation in the console) and the LCP and layout-shift part of T15 (`perf.spec.ts`: 393 px, 4x CPU slowdown, 4G).
+
+**Not built.** The macOS and Windows build matrix (T17): `website.yml` runs on Linux only. A per-system primary action on Download (the buttons are per file). The weekly check of links to sites other than GitHub. The Vercel project, domain and deploy hook (section 9). Brand assets (Q5). Measured savings numbers (Q4): only the study's example is shown.
 
 | ID | Test | Layer | Covers |
 |---|---|---|---|
@@ -209,4 +211,4 @@ Only the owner can do these. No agent creates the Vercel project.
 
 **Suggested rows, in order:** (1) scaffold `apps/web` and its workflow; (2) release data and Download; (3) docs publishing; (4) Home, Product, Security with real screenshots; (5) SEO, accessibility, performance gates; (6) the owner's Vercel setup and launch.
 
-**Code map.** Built: `apps/web/**`. Planned: `.github/workflows/website.yml`, one `release: published` workflow.
+**Code map.** Built: `apps/web/**`, `.github/workflows/website.yml`, `.github/workflows/website-deploy.yml`, the marketing parts in `packages/ui/src/components/Marketing.tsx`.

@@ -3974,3 +3974,288 @@ a.ds-stat:focus-visible {
 [data-graphs='dotted'] .ds-spark__dots {
   display: inline;
 }
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Marketing frame (CRSP332, components 86 to 91): the public site's frame, hero, feature band, screenshot, prose and
+   static doc search. Only tokens; one column on a phone (360 px), two on a wide screen.
+   --------------------------------------------------------------------------------------------------------------- */
+.ds-site {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-block-size: 100vh;
+  min-inline-size: 0;
+}
+.ds-site__bar,
+.ds-site__main,
+.ds-site__footer {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--ds-frame-marketing);
+  margin-inline: auto;
+  padding-inline: var(--ds-page-gutter);
+  min-inline-size: 0;
+}
+.ds-site__bar {
+  padding-block-start: var(--ds-space-2);
+}
+.ds-site__main {
+  display: grid;
+  gap: var(--ds-space-6);
+  align-content: start;
+  padding-block: var(--ds-page-padding);
+}
+.ds-site__footer {
+  display: grid;
+  gap: var(--ds-space-2);
+  padding-block: var(--ds-space-5);
+  border-block-start: var(--ds-border-thin) solid var(--ds-color-divider);
+}
+.ds-site__bar .ds-topmenu__list {
+  padding-inline: 0;
+}
+.ds-site__skip {
+  position: absolute;
+  inset-inline-start: var(--ds-space-2);
+  inset-block-start: var(--ds-space-2);
+  transform: translateY(-200%);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  color: var(--ds-color-text);
+  background: var(--ds-color-surface);
+  border: var(--ds-border-medium) solid var(--ds-color-focus);
+  z-index: 1;
+}
+.ds-site__skip:focus {
+  transform: none;
+}
+
+.ds-hero {
+  display: grid;
+  gap: var(--ds-space-6);
+  align-items: center;
+  min-inline-size: 0;
+}
+.ds-hero__text {
+  display: grid;
+  gap: var(--ds-space-4);
+  align-content: start;
+  justify-items: start;
+  min-inline-size: 0;
+}
+.ds-hero__title {
+  font-size: var(--ds-size-6);
+  overflow-wrap: anywhere;
+}
+.ds-hero__lead {
+  margin: 0;
+  font-size: var(--ds-size-4);
+  line-height: var(--ds-line-height);
+  color: var(--ds-color-text-muted);
+}
+.ds-hero__media,
+.ds-band-feature__media {
+  min-inline-size: 0;
+}
+
+.ds-band-feature {
+  display: grid;
+  gap: var(--ds-space-5);
+  align-items: start;
+  min-inline-size: 0;
+}
+.ds-band-feature__text {
+  display: grid;
+  gap: var(--ds-space-3);
+  align-content: start;
+  min-inline-size: 0;
+}
+.ds-band-feature__lead {
+  margin: 0;
+  color: var(--ds-color-text-muted);
+}
+.ds-band-feature__body {
+  display: grid;
+  gap: var(--ds-space-4);
+  min-inline-size: 0;
+}
+
+.ds-shot {
+  margin: 0;
+  display: grid;
+  gap: var(--ds-space-2);
+  min-inline-size: 0;
+}
+.ds-shot__img {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  border: var(--ds-border-thin) solid var(--ds-color-divider);
+  border-radius: var(--ds-radius-2);
+}
+.ds-shot__caption {
+  font-size: var(--ds-size-2);
+  color: var(--ds-color-text-muted);
+}
+
+.ds-prose {
+  display: grid;
+  gap: var(--ds-space-3);
+  max-inline-size: var(--ds-measure-prose);
+  min-inline-size: 0;
+  line-height: var(--ds-line-height);
+  overflow-wrap: anywhere;
+}
+.ds-prose > * {
+  margin: 0;
+  min-inline-size: 0;
+}
+.ds-prose h1,
+.ds-prose h2,
+.ds-prose h3,
+.ds-prose h4 {
+  line-height: var(--ds-line-height-tight);
+  color: var(--ds-color-primary);
+}
+.ds-prose h2 {
+  margin-block-start: var(--ds-space-4);
+  font-size: var(--ds-size-5);
+}
+.ds-prose h3 {
+  font-size: var(--ds-size-4);
+}
+.ds-prose h4 {
+  font-size: var(--ds-size-3);
+}
+.ds-prose ul,
+.ds-prose ol {
+  padding-inline-start: var(--ds-space-5);
+}
+.ds-prose li + li {
+  margin-block-start: var(--ds-space-1);
+}
+.ds-prose a {
+  color: var(--ds-color-primary);
+  text-underline-offset: var(--ds-space-1);
+}
+.ds-prose a:visited {
+  color: var(--ds-color-primary);
+}
+.ds-prose a:hover {
+  color: var(--ds-color-text);
+}
+.ds-prose a:focus-visible {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-prose code {
+  font-family: var(--ds-font-mono);
+  font-size: var(--ds-size-2);
+}
+.ds-prose pre {
+  margin: 0;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  padding: var(--ds-space-3);
+  font-family: var(--ds-font-mono);
+  font-size: var(--ds-size-2);
+  background: var(--ds-color-page);
+  border: var(--ds-border-thin) solid var(--ds-color-divider);
+  border-radius: var(--ds-radius-2);
+}
+.ds-prose pre:focus-visible {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+}
+.ds-prose blockquote {
+  padding-inline-start: var(--ds-space-3);
+  border-inline-start: var(--ds-border-medium) solid var(--ds-color-border);
+  color: var(--ds-color-text-muted);
+}
+.ds-prose hr {
+  inline-size: 100%;
+  border: 0;
+  border-block-start: var(--ds-border-thin) solid var(--ds-color-divider);
+}
+/* A table in running text scrolls inside its own box, so the page never scrolls sideways (R6.3). */
+.ds-prose .ds-prose__table {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+.ds-prose table {
+  border-collapse: collapse;
+  font-size: var(--ds-size-2);
+}
+.ds-prose th,
+.ds-prose td {
+  padding: var(--ds-space-1) var(--ds-space-3);
+  text-align: start;
+  vertical-align: top;
+  border: var(--ds-border-thin) solid var(--ds-color-divider);
+}
+.ds-prose th {
+  color: var(--ds-color-primary);
+}
+.ds-prose img,
+.ds-prose svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+.ds-prose .ds-prose__diagram {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+/* A diagram drawn at build time carries only shapes that read these variables; the colours come from the theme. */
+.ds-prose__diagram svg {
+  --bg: var(--ds-color-page);
+  --_text: var(--ds-color-text);
+  --_text-sec: var(--ds-color-text);
+  --_text-muted: var(--ds-color-text-muted);
+  --_text-faint: var(--ds-color-text-muted);
+  --_line: var(--ds-color-border);
+  --_arrow: var(--ds-color-primary);
+  --_node-fill: var(--ds-color-surface);
+  --_node-stroke: var(--ds-color-border);
+  --_group-fill: var(--ds-color-page);
+  --_group-hdr: var(--ds-color-surface);
+  --_inner-stroke: var(--ds-color-divider);
+  --_key-badge: var(--ds-color-surface);
+  font-family: var(--ds-font-body);
+}
+
+.ds-docsearch {
+  display: grid;
+  gap: var(--ds-space-3);
+  min-inline-size: 0;
+}
+.ds-docsearch__box {
+  max-inline-size: var(--ds-width-field-full);
+}
+.ds-docsearch__list {
+  display: grid;
+  gap: var(--ds-space-5);
+  min-inline-size: 0;
+}
+.ds-docsearch__group {
+  display: grid;
+  gap: var(--ds-space-2);
+}
+.ds-docsearch__items {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-docsearch__hint {
+  color: var(--ds-color-text-muted);
+}
+.ds-docsearch__list [hidden] {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .ds-hero {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .ds-band-feature[data-media] {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+}

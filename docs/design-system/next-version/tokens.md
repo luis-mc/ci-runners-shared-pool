@@ -341,6 +341,8 @@ These tokens take a different value at each width. The gutter is the space at th
 | ------------------- | ------- | -------------------------------------------------------------------------------------------------------------------- |
 | `--ds-frame-narrow` | `40rem` | the sign-in and other auth pages only (`Page frame="narrow"`, UX-69); no other page uses it                          |
 | `--ds-frame-wide`   | `96rem` | (1536 px; was `76rem`) the one page frame: header, menu, page and key-hint bar share its left and right edge (UX-69) |
+| `--ds-frame-marketing` | `72rem` | the column of a public, signed-out page: menu, page and footer of the site frame (component 86); no console page uses it |
+| `--ds-measure-prose`   | `72ch`  | the widest line of running text from a document (component 90) |
 
 ### Control heights
 
