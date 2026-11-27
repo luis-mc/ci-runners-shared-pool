@@ -340,8 +340,10 @@ func (s *JobsStore) ListJobs(ctx context.Context, f jobsdata.JobFilter) ([]jobsd
 	defer cancel()
 	where, args := jobWhere(f)
 	var total int
-	if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
-		return nil, 0, fmt.Errorf("count jobs: %w", err)
+	if !f.NoCount {
+		if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
+			return nil, 0, fmt.Errorf("count jobs: %w", err)
+		}
 	}
 	if f.After != 0 {
 		if where == "" {

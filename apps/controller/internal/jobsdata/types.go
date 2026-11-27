@@ -242,6 +242,7 @@ type JobFilter struct {
 	From, To     time.Time // on created_at
 	After        int64     // job id of the last job of the previous page
 	Limit        int
+	NoCount      bool // skip the total (ListJobs answers 0): for a caller that walks every page and never shows it
 }
 
 // JobDetail is a job with steps, attempts and history.
