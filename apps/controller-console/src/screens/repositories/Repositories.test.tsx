@@ -65,8 +65,9 @@ describe('Repositories list', () => {
     const needs = await screen.findByRole('region', { name: /^Needs you/ });
     await waitFor(() =>
       expect(
-        within(needs).getByRole<HTMLInputElement>('checkbox', { name: 'Select octo/site' })
-          .checked,
+        within(needs).getByRole<HTMLInputElement>('checkbox', {
+          name: 'Select octo/site',
+        }).checked,
       ).toBe(true),
     );
     expect(within(needs).getByRole('button', { name: 'Repair 1' })).toBeTruthy();

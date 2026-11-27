@@ -45,7 +45,9 @@ describe('Repositories in three groups (CRSP340)', () => {
   it('ticks cards of one group and turns the group action into a count', async () => {
     renderApp(app(), '/setup/pool');
     const not = await screen.findByRole('region', { name: /^Not using the pool/ });
-    const turnOn = within(not).getByRole<HTMLButtonElement>('button', { name: 'Turn on' });
+    const turnOn = within(not).getByRole<HTMLButtonElement>('button', {
+      name: 'Turn on',
+    });
     expect(turnOn.disabled).toBe(true);
     fireEvent.click(within(not).getByRole('checkbox', { name: 'Select acme/web' }));
     fireEvent.click(within(not).getByRole('checkbox', { name: 'Select octo/app' }));
@@ -85,7 +87,8 @@ describe('Repositories: inactive types are not listed', () => {
     expect(await screen.findByRole('link', { name: 'octo/site' })).toBeTruthy();
     expect(screen.getByRole('link', { name: 'pub/open' })).toBeTruthy();
     expect(
-      screen.getByRole<HTMLInputElement>('checkbox', { name: /^Select pub[/]open/ }).disabled,
+      screen.getByRole<HTMLInputElement>('checkbox', { name: /^Select pub[/]open/ })
+        .disabled,
     ).toBe(true);
     expect(screen.getByText(/2 public repositories are listed in grey/)).toBeTruthy();
     fireEvent.click(screen.getByRole('link', { name: 'Hide them' }));

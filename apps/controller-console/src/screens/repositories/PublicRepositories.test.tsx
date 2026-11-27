@@ -145,14 +145,17 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
     expect(within(app).queryByText('Private')).toBeNull();
     expect(within(app).queryByText('inactive type')).toBeNull();
     expect(
-      within(site).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]site/ })
-        .disabled,
+      within(site).getByRole<HTMLInputElement>('checkbox', {
+        name: /^Select octo[/]site/,
+      }).disabled,
     ).toBe(true);
     expect(
       within(app).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]app/ })
         .disabled,
     ).toBe(false);
-    expect(screen.queryByRole('link', { name: 'Turn on public repositories' })).toBeNull();
+    expect(
+      screen.queryByRole('link', { name: 'Turn on public repositories' }),
+    ).toBeNull();
   });
 
   it('does not lock public cards while the setting is on', async () => {
@@ -160,8 +163,9 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
     await screen.findByRole('button', { name: 'Types: Private & Public' });
     const site = await screen.findByRole('region', { name: /^octo[/]site/ });
     expect(
-      within(site).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]site/ })
-        .disabled,
+      within(site).getByRole<HTMLInputElement>('checkbox', {
+        name: /^Select octo[/]site/,
+      }).disabled,
     ).toBe(false);
     expect(within(site).queryByText('inactive type')).toBeNull();
   });
@@ -171,7 +175,9 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
     await screen.findByRole('button', { name: 'Types: Private (default)' });
     const site = await screen.findByRole('region', { name: /^octo[/]site/ });
     expect(
-      within(site).getByText(/Public repositories are off\. Turn them on in Settings first\./),
+      within(site).getByText(
+        /Public repositories are off\. Turn them on in Settings first\./,
+      ),
     ).toBeTruthy();
   });
 
