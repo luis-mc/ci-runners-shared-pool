@@ -123,6 +123,11 @@ body {
   .ds-header__live {
     min-inline-size: 0;
   }
+  /* A status word wraps here: nowrap would push the machines text under Commands at 393 px (CRSP373). */
+  .ds-header__state .ds-status {
+    white-space: normal;
+    min-inline-size: 0;
+  }
   .ds-header__commands {
     grid-area: commands;
     justify-self: end;
