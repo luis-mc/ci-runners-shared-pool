@@ -4859,7 +4859,7 @@ export interface components {
             port: number;
             /** @description False listens on 127.0.0.1 only; true listens on every address of this PC. */
             expose: boolean;
-            needs_key: boolean;
+            key_required: boolean;
             /** @description Push the same metrics to an OpenTelemetry collector (OTLP over HTTP). */
             push_enabled: boolean;
             /** @description Collector address, for example http://collector:4318. */

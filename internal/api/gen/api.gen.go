@@ -7388,15 +7388,15 @@ type MetricsSettings struct {
 	Enabled bool `json:"enabled"`
 
 	// Expose False listens on 127.0.0.1 only; true listens on every address of this PC.
-	Expose  bool `json:"expose"`
-	KeyMade bool `json:"key_made"`
+	Expose      bool `json:"expose"`
+	KeyMade     bool `json:"key_made"`
+	KeyRequired bool `json:"key_required"`
 
 	// LastPushAt Absent when nothing was pushed yet.
 	LastPushAt *time.Time `json:"last_push_at,omitempty"`
 
 	// LastPushError Absent when the last push worked.
 	LastPushError *string `json:"last_push_error,omitempty"`
-	NeedsKey      bool    `json:"needs_key"`
 	Port          int     `json:"port"`
 
 	// PushEnabled Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
@@ -7418,9 +7418,9 @@ type MetricsSettingsSet struct {
 	Enabled bool `json:"enabled"`
 
 	// Expose False listens on 127.0.0.1 only; true listens on every address of this PC.
-	Expose   bool `json:"expose"`
-	NeedsKey bool `json:"needs_key"`
-	Port     int  `json:"port"`
+	Expose      bool `json:"expose"`
+	KeyRequired bool `json:"key_required"`
+	Port        int  `json:"port"`
 
 	// PushEnabled Push the same metrics to an OpenTelemetry collector (OTLP over HTTP).
 	PushEnabled bool `json:"push_enabled"`
