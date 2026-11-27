@@ -3,6 +3,8 @@ package debugaccess
 import (
 	"context"
 	"fmt"
+	"os"
+	"path/filepath"
 	"sync"
 	"testing"
 	"time"
@@ -58,9 +60,54 @@ type env struct {
 	ids  int
 }
 
+// templateDB is a migrated, closed database made once per test binary. Migrating a fresh store costs about
+// 1.5 s under -race, so a copy of the file is what each test opens (the package must finish inside the unit
+// tier's 10 s, scripts/ci/go-tiers.json).
+var (
+	templateOnce sync.Once
+	templateDir  string
+	templateErr  error
+)
+
+func templateStore() (string, error) {
+	templateOnce.Do(func() {
+		templateDir, templateErr = os.MkdirTemp("", "debugaccess-template-")
+		if templateErr != nil {
+			return
+		}
+		db, err := store.OpenForTests(context.Background(), templateDir)
+		if err != nil {
+			templateErr = err
+			return
+		}
+		templateErr = db.Close() // closing checkpoints the WAL into controller.db
+	})
+	return templateDir, templateErr
+}
+
+func TestMain(m *testing.M) {
+	code := m.Run()
+	if templateDir != "" {
+		_ = os.RemoveAll(templateDir)
+	}
+	os.Exit(code)
+}
+
 func newEnv(t *testing.T) *env {
 	t.Helper()
-	db, err := store.OpenForTests(context.Background(), t.TempDir())
+	tdir, err := templateStore()
+	if err != nil {
+		t.Fatal(err)
+	}
+	dir := t.TempDir()
+	b, err := os.ReadFile(filepath.Join(tdir, store.DatabaseFile))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, store.DatabaseFile), b, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	db, err := store.OpenForTests(context.Background(), dir)
 	if err != nil {
 		t.Fatal(err)
 	}
