@@ -88,6 +88,8 @@ type Options struct {
 	RegistryMirror RegistryMirrorService
 	// Caches serves the caches routes (handlers_caches.go). Nil answers 501.
 	Caches CachesService
+	// CacheHub serves the one hub's routes (handlers_caches_hub.go, caches R5.77). Nil answers 501.
+	CacheHub CacheHubService
 	// Notify serves the notification channel routes (handlers_notify.go). Nil answers 501.
 	Notify NotifyService
 	// EnvSets serves the environment set routes and the merged runner

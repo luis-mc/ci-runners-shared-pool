@@ -53,7 +53,8 @@ var otherAreaAuth = map[string]string{
 	"listAuditEvents": authUser, "listDoctorFindings": authUser, "listJobs": authUser, "listMachines": authUser,
 	"listRunners": authUser, "listSlots": authUser, "listAssignLeases": authUser, "streamEvents": authUser,
 	"listRuns": authUser, "getRun": authUser, "getCommitView": authUser, "listJobGroups": authUser, "getJobStats": authUser, "listJobSummaries": authUser, "getForecast": authUser,
-	"exportJobSummaries": authUser,
+	"exportJobSummaries": authUser, "getCacheHub": authUser,
+	"putCacheSettings": authAdmin,
 
 	"applyUpdate": authAdmin, "setUpdatePolicy": authAdmin, "installUpdate": authAdmin, "checkForUpdate": authAdmin, "exportConfig": authAdmin, "rebuildImage": authAdmin,
 	"restartService": authAdmin, "getMetricsSettings": authAdmin, "putMetricsSettings": authAdmin, "makeMetricsToken": authAdmin, "getListenAddress": authAdmin, "putListenAddress": authAdmin, "stopRunnerPlan": authAdmin, "updateImageLayers": authAdmin, "wipeCache": authAdmin,

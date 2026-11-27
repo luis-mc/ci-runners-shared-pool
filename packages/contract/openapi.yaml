@@ -4898,6 +4898,56 @@ paths:
                 $ref: '#/components/schemas/Cache'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/caches/hub:
+    get:
+      operationId: getCacheHub
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [caches]
+      summary: The one cache hub of the pool, its budget and its numbers
+      description: >-
+        caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git
+        mirrors, registry mirror, package proxy), the one byte budget, hits and
+        misses, and warmth by repository.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The hub.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheHub'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/caches/settings:
+    put:
+      operationId: putCacheSettings
+      x-cli: none
+      x-cli-reason: 'Later: remaining console screens get commands in their own task (cli open question 7).'
+      tags: [caches]
+      summary: Change the hub's switches and its byte budget
+      description: >-
+        caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget
+        applies at once and evicts the least recently used items. Audited as
+        cache.settings.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CacheHubSettings'
+      responses:
+        '200':
+          description: The stored settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheHubSettings'
+        default:
+          $ref: '#/components/responses/Error'
 
   # ---------------------------------------------------------------- image registry (REG10 contract)
   # docs/features/registry. GET /api/v1/registry and /api/v1/registry/logins and /ca-bundle are the
@@ -12160,6 +12210,129 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Cache'
+    CacheHubSettings:
+      type: object
+      description: The hub's switches and its one byte budget (caches R5.66, R5.73).
+      required: [actions_cache, git_mirror, registry_mirror, package_proxy, budget_gib]
+      properties:
+        actions_cache:
+          type: boolean
+        git_mirror:
+          type: boolean
+        registry_mirror:
+          type: boolean
+        package_proxy:
+          type: boolean
+          description: The npm and PyPI proxy (caches R5.74 to R5.76).
+        budget_gib:
+          type: integer
+          minimum: 1
+          maximum: 4096
+          description: One budget for every kind; default 60.
+        git_refresh_minutes:
+          type: integer
+          minimum: 1
+          maximum: 1440
+        warmth_hours:
+          type: integer
+          minimum: 1
+          maximum: 720
+      example:
+        actions_cache: true
+        git_mirror: true
+        registry_mirror: false
+        package_proxy: true
+        budget_gib: 60
+        git_refresh_minutes: 15
+        warmth_hours: 24
+    CacheHubCard:
+      type: object
+      description: One kind of the hub (caches R5.77).
+      required: [kind, on, size_bytes, entry_count, hits, misses, served_bytes, status, wipe_id]
+      properties:
+        kind:
+          type: string
+          enum: [actions_cache, git_mirror, registry_mirror, package_proxy]
+        'on':
+          type: boolean
+        size_bytes:
+          type: integer
+          format: int64
+        entry_count:
+          type: integer
+        hits:
+          type: integer
+          format: int64
+        misses:
+          type: integer
+          format: int64
+        served_bytes:
+          type: integer
+          format: int64
+        last_used_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [ok, waiting, failed]
+        note:
+          type: string
+          description: One plain line, such as why the receiver waits.
+        wipe_id:
+          type: string
+          description: The cache id that POST /api/v1/caches/{cacheId}/wipe takes.
+    CacheHubRepo:
+      type: object
+      description: One row of Warmth by repository (caches R5.78).
+      required: [repo, hits, misses, size_bytes, warmth]
+      properties:
+        repo:
+          type: string
+        hits:
+          type: integer
+          format: int64
+        misses:
+          type: integer
+          format: int64
+        size_bytes:
+          type: integer
+          format: int64
+        warmth:
+          type: integer
+          minimum: 0
+          maximum: 100
+    CacheHub:
+      type: object
+      description: The one cache hub in the controller (caches R5.73, R5.77, R5.78).
+      required: [settings, budget_bytes, used_bytes, cards, hits, misses, served_bytes, warm_machines, repos]
+      properties:
+        settings:
+          $ref: '#/components/schemas/CacheHubSettings'
+        budget_bytes:
+          type: integer
+          format: int64
+        used_bytes:
+          type: integer
+          format: int64
+        cards:
+          type: array
+          items:
+            $ref: '#/components/schemas/CacheHubCard'
+        hits:
+          type: integer
+          format: int64
+        misses:
+          type: integer
+          format: int64
+        served_bytes:
+          type: integer
+          format: int64
+        warm_machines:
+          type: integer
+        repos:
+          type: array
+          items:
+            $ref: '#/components/schemas/CacheHubRepo'
 
     # ---------- notifications (CRSP32)
     NotificationEvent:

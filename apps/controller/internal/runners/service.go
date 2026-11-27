@@ -13,6 +13,7 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runnercache"
 )
 
@@ -35,6 +36,9 @@ type Service struct {
 	// NoSharedTools keeps every runner's own folders (the CRSP_NO_SHARED_TOOLS
 	// environment value, caches R5.57).
 	NoSharedTools bool
+	// PackageProxy gives a persistent runner of one repository the package
+	// proxy key and token while the proxy is on (caches R5.76); nil gives none.
+	PackageProxy func(ctx context.Context, githubURL string) lancache.ProxyGrant
 	// CacheQuota is the declared cache sizing every new runner gets (runners
 	// R5.39); a zero value takes the defaults.
 	CacheQuota runnercache.Quota
@@ -707,6 +711,11 @@ func (s *Service) addRunner(ctx context.Context, a AddSpec, actor string) error 
 	spec := backend.RunnerSpec{ID: id, Name: a.Name, OS: a.OS, Arch: a.Arch, Labels: a.Labels, GitHubURL: t.URL, Group: t.Group,
 		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, WindowsSymlinkRight: a.OS == "windows" && a.Symlink, CacheQuota: s.CacheQuota, MaxParallel: a.MaxParallel, KeepDependencies: a.KeepDependencies,
 		Container: a.Backend == string(backend.Docker), SharedTools: s.sharedTools(a, t)}
+	// Container runners cannot read the controller CA from the host yet, so
+	// only the other persistent runners get the package proxy (caches section 11).
+	if s.PackageProxy != nil && !spec.Container {
+		spec.PackageProxy = s.PackageProxy(ctx, t.URL)
+	}
 	// Names GitHub already knows before the add: only a registration that the
 	// add itself made is removed when it fails.
 	before, listErr := s.GitHub.ListRunners(ctx, t.InstallationID, t.Scope)

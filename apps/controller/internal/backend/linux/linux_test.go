@@ -578,3 +578,20 @@ func TestSecondRunnerSharesToolFoldersByGroup(t *testing.T) {
 		t.Errorf("each runner has its own build folder:\n%s", envText)
 	}
 }
+
+// Caches R5.76: the package proxy values the agent decided at start reach the
+// runner's environment; without them nothing is added.
+func TestEnvCarriesThePackageProxy(t *testing.T) {
+	r := newRig()
+	spec := r.spec()
+	spec.PackageEnv = map[string]string{"npm_config_registry": "https://ctl:8443/pkg/npm/o__r/tok/"}
+	if _, err := r.b.Start(context.Background(), spec, backend.StartConfig{Registration: "REGTOKEN"}); err != nil {
+		t.Fatal(err)
+	}
+	if env := string(r.fs.Files["/var/lib/crsp/runners/box-1/.env"]); !strings.Contains(env, "npm_config_registry=https://ctl:8443/pkg/npm/o__r/tok/\n") {
+		t.Errorf(".env:\n%s", env)
+	}
+	if env := string(started(t).fs.Files["/var/lib/crsp/runners/box-1/.env"]); strings.Contains(env, "npm_config_registry") {
+		t.Errorf("default adds the variable:\n%s", env)
+	}
+}

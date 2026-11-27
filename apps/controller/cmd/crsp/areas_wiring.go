@@ -31,6 +31,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/history"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/mirror"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/notify"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
@@ -88,7 +89,9 @@ type controllerDeps struct {
 	MachineSecrets secrets.Store
 	// Backends are the runner backends of the controller's own OS; nil means none.
 	Backends backend.Registry
-	Now      func() time.Time
+	// Hub is the one cache hub (caches R5.73 to R5.80); nil leaves its routes at 501.
+	Hub *mirror.Service
+	Now func() time.Time
 }
 
 // controller is the built controller: the API options, the setup link printed
@@ -264,6 +267,8 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		PoolName: pool, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services,
 		// Shared tool folders with group access, one build folder per runner (caches R5.57).
 		SharedToolsRoot: os.Getenv("CRSP_SHARED_TOOLS_ROOT"), NoSharedTools: os.Getenv("CRSP_NO_SHARED_TOOLS") != "",
+		// The package proxy key and token of the runner's repository (caches R5.76).
+		PackageProxy: hubGrant(d.Hub),
 		// A public repository gets no new runner while the setting is off (github-integration R5.55).
 		// A plan with no scope takes the first repository with the pool on (D31, until OPS23).
 		DefaultScope: func(ctx context.Context) (runners.Scope, error) {
@@ -412,6 +417,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.Options.JobsData = d.DB.Jobs()
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
+	if d.Hub != nil {
+		c.Options.CacheHub = d.Hub
+	}
 	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}
 	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
 	nsvc := notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger, Now: d.Now, ConsoleURL: console})
