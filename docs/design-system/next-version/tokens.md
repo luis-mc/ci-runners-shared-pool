@@ -455,14 +455,15 @@ A project may offer a compact density. It changes only these tokens. The touch t
 4. Check the contrast and the line length again.
 5. Add a `CHANGES.md` entry.
 
-### Terminal (`terminal`, CRSP300)
+### Cool Terminal (`terminal`, CRSP300, CRSP302)
 
-Owner-approved concept of 2026-11-25 (btop look). A seventh theme that is chosen with the setting **Look** > _Terminal_ (Settings, Appearance), not from the six colour themes, so the colour-theme choice keeps its previews (UX-22). It is dark in every mode: the dark and the light value set are the same, and a choice of light or system mode leaves it as it is.
+Owner-approved concept of 2026-11-25 (btop look). A seventh theme that is chosen with the setting **Look** > _Cool Terminal_ or _Cool Terminal (dotted graphs)_ (Settings, Appearance), not from the six colour themes, so the colour-theme choice keeps its previews (UX-22). It is dark in every mode: the dark and the light value set are the same, and a choice of light or system mode leaves it as it is.
 
 - **Look:** 1 px borders, `--ds-radius-1` to `-3` are 0, no shadow (`--ds-shadow-2` and `-3` are `none`), no glow (`--ds-glow-focus` is a 1 px ring, `--ds-scanline-focus` is `none`). The font is JetBrains Mono for the console and Inter for prose (`--ds-font-prose`); neither is downloaded, a device without them uses its own monospace or sans.
 - **Panel title:** plain text in `--ds-color-text` over the border, no cut-in marks, no coloured letter. A machine name is bold and coloured (component 78).
 - **Selected row:** the `--ds-color-selection` tint with a 2 px `--ds-color-primary` inset on its left edge, instead of the reverse-video fill of the other themes.
 - **New tokens, in every theme:** `--ds-color-accent` (an ephemeral or new thing; the note colour in the six themes) and `--ds-color-warm` (a warm hint; the needs-you colour in the six themes).
+- **Graphs (CRSP302):** the two Looks are one theme and differ only in how graphs are drawn. `data-graphs` on the page root is absent for _Cool Terminal_ (blocks: `■` segments, `▁▂▃▄▅▆▇█` sparks) and `dotted` for _Cool Terminal (dotted graphs)_ (round dot segments, braille sparks `⢀⣀⣄⣤⣦⣶⣷⣿`). It is a presentation choice only and changes no colour (UX-55). The segment gap is the token `--ds-seg-gap` (`2px`, every theme).
 - **Palettes:** `data-pal=green` (default, no attribute), `amber`, `ice` on the page root, picked with the setting **Palette** when the Look is Terminal. A palette is a set of token values and nothing else (UX-55).
 - **Contrast:** the concept's `--dim` is the border (3:1). The muted text is `--dim` lightened to 4.5:1 on the page, the surface and the selection fill, so UX-17 holds in all three palettes.
 

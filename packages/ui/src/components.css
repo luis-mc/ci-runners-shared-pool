@@ -3903,3 +3903,74 @@ a.ds-stat:focus-visible {
 .ds-terminal__mark {
   font-weight: var(--ds-weight-bold);
 }
+
+/* Segment meter (component 85, UX-91): segments with partial fill; blocks in the Cool Terminal theme, dots when
+   data-graphs=dotted. Outside the theme a LevelBar keeps its bar and hides the segments. */
+.ds-segs {
+  display: inline-flex;
+  gap: var(--ds-seg-gap);
+  align-items: center;
+}
+.ds-segs__cell {
+  --ds-seg-on: var(--ds-color-done);
+  inline-size: 1ch;
+  block-size: 1em;
+  background: linear-gradient(
+    to right,
+    var(--ds-seg-on) var(--ds-seg-fill),
+    var(--ds-color-divider) var(--ds-seg-fill)
+  );
+}
+.ds-segmeter {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ds-space-2);
+  white-space: nowrap;
+}
+.ds-segmeter[data-level='warn'] .ds-segs__cell,
+.ds-level__bar[data-level='warn'] .ds-segs__cell {
+  --ds-seg-on: var(--ds-color-needs-you);
+}
+.ds-segmeter[data-level='bad'] .ds-segs__cell,
+.ds-level__bar[data-level='bad'] .ds-segs__cell {
+  --ds-seg-on: var(--ds-color-problem);
+}
+.ds-segmeter__text {
+  color: var(--ds-color-text-muted);
+}
+[data-graphs='dotted'] .ds-segs__cell {
+  inline-size: 0.8ch;
+  block-size: 0.8ch;
+  border-radius: 50%;
+}
+.ds-level__bar .ds-segs {
+  display: none;
+}
+[data-theme-name='terminal'] .ds-level__bar {
+  background: transparent;
+  border-radius: 0;
+  block-size: auto;
+  overflow: visible;
+}
+[data-theme-name='terminal'] .ds-level__fill {
+  display: none;
+}
+[data-theme-name='terminal'] .ds-level__bar .ds-segs {
+  display: flex;
+}
+[data-theme-name='terminal'] .ds-level__bar .ds-segs__cell {
+  flex: 1 1 0;
+  inline-size: auto;
+  min-inline-size: 0;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-level__bar .ds-segs__cell {
+  flex: 0 0 0.8ch;
+}
+/* Spark: the dotted form swaps the character set. */
+.ds-spark__dots,
+[data-graphs='dotted'] .ds-spark__blocks {
+  display: none;
+}
+[data-graphs='dotted'] .ds-spark__dots {
+  display: inline;
+}

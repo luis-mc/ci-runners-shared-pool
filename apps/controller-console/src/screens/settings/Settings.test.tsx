@@ -129,7 +129,7 @@ describe('Colour themes (UX-60)', () => {
     document.documentElement.removeAttribute('data-pal');
     renderApp(signedIn(), '/settings/appearance');
     expect(screen.queryByRole('group', { name: 'Palette' })).toBeNull();
-    fireEvent.click(await screen.findByRole('radio', { name: /^Terminal/ }));
+    fireEvent.click(await screen.findByRole('radio', { name: /^Cool Terminal$/ }));
     expect(document.documentElement.getAttribute('data-theme-name')).toBe('terminal');
     expect(screen.queryByRole('group', { name: 'Theme' })).toBeNull();
     fireEvent.click(await screen.findByRole('radio', { name: /^Amber/ }));
@@ -139,6 +139,23 @@ describe('Colour themes (UX-60)', () => {
     expect(document.documentElement.hasAttribute('data-pal')).toBe(false);
     fireEvent.click(screen.getByRole('radio', { name: /^Colour themes/ }));
     expect(document.documentElement.getAttribute('data-theme-name')).toBe('phosphor');
+  });
+
+  it('offers Cool Terminal with dotted graphs as a second Look and keeps it in this browser', async () => {
+    window.localStorage.clear();
+    document.documentElement.removeAttribute('data-graphs');
+    renderApp(signedIn(), '/settings/appearance');
+    fireEvent.click(
+      await screen.findByRole('radio', { name: /^Cool Terminal \(dotted graphs\)/ }),
+    );
+    expect(document.documentElement.getAttribute('data-theme-name')).toBe('terminal');
+    expect(document.documentElement.getAttribute('data-graphs')).toBe('dotted');
+    expect(window.localStorage.getItem('crsp.theme-graphs')).toBe('dotted');
+    expect(screen.getByRole('group', { name: 'Palette' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('radio', { name: /^Cool Terminal$/ }));
+    expect(document.documentElement.hasAttribute('data-graphs')).toBe(false);
+    fireEvent.click(screen.getByRole('radio', { name: /^Colour themes/ }));
+    expect(document.documentElement.hasAttribute('data-graphs')).toBe(false);
   });
 
   it('picks a theme, applies it at once and keeps it in this browser', async () => {

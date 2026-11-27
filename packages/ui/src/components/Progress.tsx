@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { formatDuration } from './format';
+import { Segments } from './SegMeter';
 
 /** One phase of a weighted bar (UX-88). `pct` is 0 to 100 for this phase, or null when it reports none. */
 export interface ProgressPhaseData {
@@ -108,11 +109,14 @@ export function LevelBar({
   max,
   text,
   help,
+  segments,
 }: {
   label: string;
   value: number;
   max: number;
   text: string;
+  /** Segments in the Cool Terminal themes (3 to 20, default 10, UX-91). */
+  segments?: number | undefined;
   /** A term-help button (component 66) beside the name. */
   help?: ReactNode;
 }) {
@@ -132,8 +136,10 @@ export function LevelBar({
         aria-valuenow={value}
         aria-valuetext={text}
         data-over={value > max || undefined}
+        data-level={pct >= 90 ? 'bad' : pct >= 75 ? 'warn' : 'ok'}
       >
         <span className="ds-level__fill" style={{ inlineSize: `${pct}%` }} />
+        <Segments pct={pct} segments={segments} />
       </div>
       <span className="ds-level__text">{text}</span>
     </div>

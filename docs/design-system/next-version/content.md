@@ -432,10 +432,10 @@ The words of Settings, Appearance (UX-60).
 | Place | Word |
 |---|---|
 | Look label | Look |
-| Look help | Colour themes keep the console's own look. Terminal is the dark, flat look of a system monitor. The choice is saved at once. |
-| Look choices | Colour themes, Terminal |
+| Look help | Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once. |
+| Look choices | Colour themes, Cool Terminal, Cool Terminal (dotted graphs) |
 | Palette label | Palette |
-| Palette help | The colours of the Terminal theme. The choice is saved at once. |
+| Palette help | The colours of the Cool Terminal themes. The choice is saved at once. |
 | Palette choices | Green, Amber, Ice |
 | Choice label | Theme |
 | Choice help | The colours of the console. The choice is saved at once. |

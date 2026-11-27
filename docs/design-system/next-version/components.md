@@ -853,7 +853,8 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 
 - **Used for:** a trend of a few numbers in one row (runner minutes saved, pass rate, run history), drawn with the eight-level block characters `▁▂▃▄▅▆▇█`, scaled between the lowest and the highest value.
 - **Looks:** one row of characters in a tone colour (`ok`, `note`, `needs`, `problem`, `quiet`). It is a picture with a text alternative: first, last, lowest and highest value with the unit. It never carries a meaning alone (CORE-5). `Sparkline` (component 53) keeps its SVG form; the Spark is the Terminal form for a table cell or a panel line.
-- **Source:** `packages/ui/src/components/Spark.tsx` (`Spark`: `label`, `values`, `tone`, `unit`; `sparkChars`), `packages/ui/src/components.css` (`ds-spark`).
+- **Dotted graphs:** in *Cool Terminal (dotted graphs)* (`data-graphs=dotted`) the same eight levels are drawn with braille dots `⢀⣀⣄⣤⣦⣶⣷⣿` (`sparkDots`); the words and the text alternative do not change.
+- **Source:** `packages/ui/src/components/Spark.tsx` (`Spark`: `label`, `values`, `tone`, `unit`; `sparkChars`, `sparkDots`), `packages/ui/src/components.css` (`ds-spark`).
 - **Rules:** UX-17, UX-58, CORE-5.
 - **Guard:** `packages/ui/src/components/terminal.test.tsx`.
 ## 81. Summary line
@@ -899,3 +900,12 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - Looks says in words what it looks like. It holds no values: a token name or a size belongs in tokens.md.
 - Cite the UX rules it follows by ID.
 - Add a `CHANGES.md` entry.
+
+## 85. Segment meter
+
+- **Used for:** a level against a limit (CPU, memory, disk, a pool's busy share) as a row of segments with the level in words beside it. `LevelBar` (component 16) draws the same segments in the Cool Terminal themes.
+- **Looks:** 10 segments by default (`segments`, 3 to 20; a narrow place passes fewer, a wide one more). The level is rounded to a step of 5 %; each segment covers `100 / segments` per cent and is empty, partly filled or full, so at 10 segments a level of 55 % shows five full segments and one half-filled. Blocks in the Cool Terminal theme; round dots in *Cool Terminal (dotted graphs)* (`data-graphs=dotted`). Filled segments are the done colour, from `warnAt` (75 %) the needs-you colour, from `badAt` (90 %) the problem colour. The segments are `aria-hidden`; the element is a `meter` with `aria-valuetext` of the words (CORE-5). A value is clamped between 0 and 100 %. The gap between segments is `--ds-seg-gap`.
+- **States:** _ok_, _warn_, _bad_ (by level); _empty_ (0 %); _full_ (100 %).
+- **Source:** `packages/ui/src/components/SegMeter.tsx` (`SegMeter`: `label`, `value`, `max`, `segments`, `warnAt`, `badAt`, `text`; `segmentFills`), `packages/ui/src/components.css` (`ds-segs`, `ds-segmeter`).
+- **Rules:** UX-17, UX-58, UX-91, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/segmeter.test.tsx`.
