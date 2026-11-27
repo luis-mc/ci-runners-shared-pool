@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/internal/api/gen"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/auth"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/events"
 )
 
@@ -26,7 +27,13 @@ type Live struct {
 	Hub events.Hub
 	// KeepAlive overrides events.KeepAlive; tests shorten it.
 	KeepAlive time.Duration
+	// Recheck is how often an open stream asks again whether its session still stands and its role still reads
+	// (R6.4). Zero means SessionRecheck.
+	Recheck time.Duration
 }
+
+// SessionRecheck is the gap between two session checks of an open event stream.
+const SessionRecheck = 10 * time.Second
 
 // Overview implements LiveService.
 func (l Live) Overview(ctx context.Context) (gen.Overview, error) { return l.Overviews.Get(ctx) }
@@ -58,12 +65,55 @@ type sseResponse struct {
 	ctx       context.Context
 	sub       events.Subscription
 	keepAlive time.Duration
+	// stillAllowed says whether the session of the stream still stands and its role still reads (R6.4); nil
+	// skips the check. recheck is the gap between two checks.
+	stillAllowed func(context.Context) bool
+	recheck      time.Duration
 }
 
 func (r sseResponse) VisitStreamEventsResponse(w http.ResponseWriter) error {
-	req := (&http.Request{}).WithContext(r.ctx)
+	ctx, cancel := context.WithCancel(r.ctx)
+	defer cancel()
+	if r.stillAllowed != nil {
+		go func() {
+			tick := time.NewTicker(r.recheck)
+			defer tick.Stop()
+			for {
+				select {
+				case <-ctx.Done():
+					return
+				case <-tick.C:
+					if !r.stillAllowed(ctx) {
+						cancel() // the stream ends: the session ended or the role was removed
+						return
+					}
+				}
+			}
+		}()
+	}
+	req := (&http.Request{}).WithContext(ctx)
 	events.Serve(w, req, r.sub, r.keepAlive)
 	return nil
+}
+
+// streamStillAllowed builds the session check of an open stream: the same authenticator and the same role rule
+// as the gate in front of streamEvents. An answer that is neither "not signed in" nor a role that is too low
+// (a database hiccup) leaves the stream open; the next check asks again.
+func (s *server) streamStillAllowed(ctx context.Context) func(context.Context) bool {
+	req := requestFrom(ctx)
+	if s.authn == nil || req == nil {
+		return nil
+	}
+	return func(ctx context.Context) bool {
+		p, err := s.authn.Authenticate(ctx, req)
+		switch {
+		case err == nil:
+			return roleAllows(p, authUser)
+		case errors.Is(err, auth.ErrUnauthenticated):
+			return false
+		}
+		return ctx.Err() == nil
+	}
 }
 
 // StreamEvents implements GET /api/v1/events (observability R5.2, R5.3, R6.3).
@@ -88,8 +138,12 @@ func (s *server) StreamEvents(ctx context.Context, req gen.StreamEventsRequestOb
 			Body: gen.ErrorEnvelope{Error: gen.ErrorBody{Code: CodeInternal, Message: "the event stream could not be opened"}}}, nil
 	}
 	var ka time.Duration
+	recheck := SessionRecheck
 	if l, ok := s.opts.Live.(Live); ok {
 		ka = l.KeepAlive
+		if l.Recheck > 0 {
+			recheck = l.Recheck
+		}
 	}
-	return sseResponse{ctx: ctx, sub: sub, keepAlive: ka}, nil
+	return sseResponse{ctx: ctx, sub: sub, keepAlive: ka, stillAllowed: s.streamStillAllowed(ctx), recheck: recheck}, nil
 }

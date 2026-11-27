@@ -142,6 +142,8 @@ type Options struct {
 
 type server struct {
 	opts Options
+	// authn is the authenticator the gate uses; a long-lived stream asks it again (observability R6.4).
+	authn Authenticator
 }
 
 var _ gen.StrictServerInterface = (*server)(nil)
@@ -163,7 +165,7 @@ func Register(mux *http.ServeMux, opts Options) {
 	// One middleware checks every operation: who signed in, the role of its
 	// x-auth, the Origin and the CSRF token of a change (R6.2, R6.5).
 	strictMW := []gen.StrictMiddlewareFunc{newAuthz(authn, opts.GitHub != nil, opts.Logger).middleware()}
-	strict := gen.NewStrictHandlerWithOptions(&server{opts: opts}, strictMW, gen.StrictHTTPServerOptions{
+	strict := gen.NewStrictHandlerWithOptions(&server{opts: opts, authn: authn}, strictMW, gen.StrictHTTPServerOptions{
 		RequestErrorHandlerFunc: func(w http.ResponseWriter, _ *http.Request, err error) {
 			opts.Logger.Debug("bad request", "err", err)
 			WriteError(w, http.StatusBadRequest, CodeBadRequest, "the request is not valid")

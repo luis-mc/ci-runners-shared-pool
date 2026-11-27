@@ -52,7 +52,7 @@ var otherAreaAuth = map[string]string{
 	"getQueueSettings": authUser, "getRunner": authUser, "getRunnerEnv": authUser, "listEnvSets": authUser, "listJobSizes": authUser, "listSizeLabels": authUser, "getRunnerClasses": authUser, "getRunnerPlan": authUser, "getSettings": authUser,
 	"listAuditEvents": authUser, "listDoctorFindings": authUser, "listJobs": authUser, "listMachines": authUser,
 	"listRunners": authUser, "listSlots": authUser, "listAssignLeases": authUser, "streamEvents": authUser,
-	"listRuns": authUser, "getRun": authUser, "listJobGroups": authUser, "getJobStats": authUser, "listJobSummaries": authUser, "getForecast": authUser,
+	"listRuns": authUser, "getRun": authUser, "getCommitView": authUser, "listJobGroups": authUser, "getJobStats": authUser, "listJobSummaries": authUser, "getForecast": authUser,
 	"exportJobSummaries": authUser,
 
 	"applyUpdate": authAdmin, "setUpdatePolicy": authAdmin, "installUpdate": authAdmin, "checkForUpdate": authAdmin, "exportConfig": authAdmin, "rebuildImage": authAdmin,

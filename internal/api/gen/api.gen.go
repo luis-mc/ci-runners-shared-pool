@@ -355,6 +355,27 @@ func (e CacheKind) Valid() bool {
 	}
 }
 
+// Defines values for CommitRunState.
+const (
+	CommitRunStateDone    CommitRunState = "done"
+	CommitRunStateQueued  CommitRunState = "queued"
+	CommitRunStateRunning CommitRunState = "running"
+)
+
+// Valid indicates whether the value is a known member of the CommitRunState enum.
+func (e CommitRunState) Valid() bool {
+	switch e {
+	case CommitRunStateDone:
+		return true
+	case CommitRunStateQueued:
+		return true
+	case CommitRunStateRunning:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for ConfigChangeKind.
 const (
 	ConfigChangeKindAdded   ConfigChangeKind = "added"
@@ -5206,6 +5227,63 @@ type CliTokenCreated struct {
 // CliTokenList defines model for CliTokenList.
 type CliTokenList struct {
 	Items []CliToken `json:"items"`
+}
+
+// CommitRun The latest attempt of one workflow run of a commit.
+type CommitRun struct {
+	Attempt     int            `json:"attempt"`
+	CompletedAt *time.Time     `json:"completed_at,omitempty"`
+	CreatedAt   time.Time      `json:"created_at"`
+	HtmlUrl     *string        `json:"html_url,omitempty"`
+	Id          int64          `json:"id"`
+	JobsDone    int            `json:"jobs_done"`
+	JobsTotal   int            `json:"jobs_total"`
+	Result      *JobResult     `json:"result,omitempty"`
+	State       CommitRunState `json:"state"`
+	Workflow    string         `json:"workflow"`
+}
+
+// CommitRunState defines model for CommitRun.State.
+type CommitRunState string
+
+// CommitSlowJob The job that ran longest in the commit.
+type CommitSlowJob struct {
+	JobId   int64   `json:"job_id"`
+	Name    string  `json:"name"`
+	RunId   int64   `json:"run_id"`
+	Seconds float64 `json:"seconds"`
+
+	// SharePercent The job's time over the wall time of the commit, 0 to 100. 0 when the wall time is not known.
+	SharePercent int `json:"share_percent"`
+
+	// SlowestSteps The two slowest steps, longest first. The set up, complete and post steps are left out.
+	SlowestSteps []CommitStep `json:"slowest_steps"`
+	Workflow     string       `json:"workflow"`
+}
+
+// CommitStep One step and how long it took.
+type CommitStep struct {
+	Name    string  `json:"name"`
+	Seconds float64 `json:"seconds"`
+}
+
+// CommitView Every run of one head commit (observability R5.13).
+type CommitView struct {
+	// AllRunsDone True only when there is at least one run and every run has finished.
+	AllRunsDone bool `json:"all_runs_done"`
+
+	// HeadSha The commit as asked for, or the full id when the stored runs have one.
+	HeadSha    string      `json:"head_sha"`
+	Repository *string     `json:"repository,omitempty"`
+	Runs       []CommitRun `json:"runs"`
+	RunsDone   int         `json:"runs_done"`
+	RunsTotal  int         `json:"runs_total"`
+
+	// SlowestJob The job that ran longest in the commit.
+	SlowestJob *CommitSlowJob `json:"slowest_job,omitempty"`
+
+	// WallSeconds From the first run created to the last run completed, or to now while a run is open.
+	WallSeconds float64 `json:"wall_seconds"`
 }
 
 // ConfigApplyRequest defines model for ConfigApplyRequest.
@@ -10311,6 +10389,11 @@ type WipeCacheParams struct {
 	Confirm *Confirm `form:"confirm,omitempty" json:"confirm,omitempty"`
 }
 
+// GetCommitViewParams defines parameters for GetCommitView.
+type GetCommitViewParams struct {
+	RepositoryId *int64 `form:"repository_id,omitempty" json:"repository_id,omitempty"`
+}
+
 // GetSpeedComparisonParams defines parameters for GetSpeedComparison.
 type GetSpeedComparisonParams struct {
 	// Repository The repository as owner/repo. The handler answers 400 when it is missing or not in that form.
@@ -11097,6 +11180,9 @@ type ServerInterface interface {
 	// WipeCache Empty one cache
 	// (POST /api/v1/caches/{cacheId}/wipe)
 	WipeCache(w http.ResponseWriter, r *http.Request, cacheId CacheId, params WipeCacheParams)
+	// GetCommitView Every run of one head commit, and where its time went
+	// (GET /api/v1/commits/{sha})
+	GetCommitView(w http.ResponseWriter, r *http.Request, sha string, params GetCommitViewParams)
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	// (GET /api/v1/compare)
 	GetSpeedComparison(w http.ResponseWriter, r *http.Request, params GetSpeedComparisonParams)
@@ -12233,6 +12319,48 @@ func (siw *ServerInterfaceWrapper) WipeCache(w http.ResponseWriter, r *http.Requ
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.WipeCache(w, r, cacheId, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCommitView operation middleware
+func (siw *ServerInterfaceWrapper) GetCommitView(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "sha" -------------
+	var sha string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sha", r.PathValue("sha"), &sha, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sha", Err: err})
+		return
+	}
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params GetCommitViewParams
+
+	// ------------- Optional query parameter "repository_id" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "repository_id", r.URL.Query(), &params.RepositoryId, runtime.BindQueryParameterOptions{Type: "integer", Format: "int64"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "repository_id"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repository_id", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCommitView(w, r, sha, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -19099,6 +19227,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/summaries", wrapper.ListJobSummaries)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs", wrapper.ListRuns)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runs/{runId}", wrapper.GetRun)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/commits/{sha}", wrapper.GetCommitView)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/forecast", wrapper.GetForecast)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/{jobId}", wrapper.GetJob)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/overview", wrapper.GetOverview)
@@ -19929,6 +20058,46 @@ type WipeCachedefaultJSONResponse struct {
 }
 
 func (response WipeCachedefaultJSONResponse) VisitWipeCacheResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCommitViewRequestObject struct {
+	Sha    string `json:"sha"`
+	Params GetCommitViewParams
+}
+
+type GetCommitViewResponseObject interface {
+	VisitGetCommitViewResponse(w http.ResponseWriter) error
+}
+
+type GetCommitView200JSONResponse CommitView
+
+func (response GetCommitView200JSONResponse) VisitGetCommitViewResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCommitViewdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetCommitViewdefaultJSONResponse) VisitGetCommitViewResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -28498,6 +28667,9 @@ type StrictServerInterface interface {
 	// WipeCache Empty one cache
 	// (POST /api/v1/caches/{cacheId}/wipe)
 	WipeCache(ctx context.Context, request WipeCacheRequestObject) (WipeCacheResponseObject, error)
+	// GetCommitView Every run of one head commit, and where its time went
+	// (GET /api/v1/commits/{sha})
+	GetCommitView(ctx context.Context, request GetCommitViewRequestObject) (GetCommitViewResponseObject, error)
 	// GetSpeedComparison The same job on crsp and on GitHub-hosted runners
 	// (GET /api/v1/compare)
 	GetSpeedComparison(ctx context.Context, request GetSpeedComparisonRequestObject) (GetSpeedComparisonResponseObject, error)
@@ -29662,6 +29834,33 @@ func (sh *strictHandler) WipeCache(w http.ResponseWriter, r *http.Request, cache
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(WipeCacheResponseObject); ok {
 		if err := validResponse.VisitWipeCacheResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCommitView operation middleware
+func (sh *strictHandler) GetCommitView(w http.ResponseWriter, r *http.Request, sha string, params GetCommitViewParams) {
+	var request GetCommitViewRequestObject
+
+	request.Sha = sha
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCommitView(ctx, request.(GetCommitViewRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCommitView")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCommitViewResponseObject); ok {
+		if err := validResponse.VisitGetCommitViewResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

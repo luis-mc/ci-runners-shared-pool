@@ -57,3 +57,8 @@ export function placeWords(
 }
 
 export { waitWords };
+
+/** The sentence a screen reader gets when the four counts change (R6.13, UX-17). */
+export function poolCountsSentence(c: PoolCounts): string {
+  return `${c.running} running, ${c.starting} starting, ${c.queued} queued, ${c.noRunner} with no runner that fits`;
+}

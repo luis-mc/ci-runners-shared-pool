@@ -2438,6 +2438,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/commits/{sha}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Every run of one head commit, and where its time went
+         * @description observability R5.13. Lists the latest attempt of every workflow run of the commit. `all_runs_done` is true only when there is at least one run and every run has finished, including a run started on demand later. `slowest_job` names the job that ran longest, its share of the wall time and its two slowest steps; the set up, complete and post steps are left out. Reads stored rows only, never GitHub.
+         */
+        get: operations["getCommitView"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/forecast": {
         parameters: {
             query?: never;
@@ -6433,6 +6453,61 @@ export interface components {
             note?: string;
             /** @description node_id of the jobs a matrix or a reusable workflow expands at run time. */
             dynamic_nodes: string[];
+        };
+        /** @description The latest attempt of one workflow run of a commit. */
+        CommitRun: {
+            /** Format: int64 */
+            id: number;
+            attempt: number;
+            workflow: string;
+            /** @enum {string} */
+            state: "queued" | "running" | "done";
+            result?: components["schemas"]["JobResult"];
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            completed_at?: string;
+            html_url?: string;
+            jobs_total: number;
+            jobs_done: number;
+        };
+        /** @description One step and how long it took. */
+        CommitStep: {
+            name: string;
+            /** Format: double */
+            seconds: number;
+        };
+        /** @description The job that ran longest in the commit. */
+        CommitSlowJob: {
+            /** Format: int64 */
+            job_id: number;
+            /** Format: int64 */
+            run_id: number;
+            name: string;
+            workflow: string;
+            /** Format: double */
+            seconds: number;
+            /** @description The job's time over the wall time of the commit, 0 to 100. 0 when the wall time is not known. */
+            share_percent: number;
+            /** @description The two slowest steps, longest first. The set up, complete and post steps are left out. */
+            slowest_steps: components["schemas"]["CommitStep"][];
+        };
+        /** @description Every run of one head commit (observability R5.13). */
+        CommitView: {
+            /** @description The commit as asked for, or the full id when the stored runs have one. */
+            head_sha: string;
+            repository?: string;
+            /** @description True only when there is at least one run and every run has finished. */
+            all_runs_done: boolean;
+            runs_total: number;
+            runs_done: number;
+            /**
+             * Format: double
+             * @description From the first run created to the last run completed, or to now while a run is open.
+             */
+            wall_seconds: number;
+            runs: components["schemas"]["CommitRun"][];
+            slowest_job?: components["schemas"]["CommitSlowJob"];
         };
         /** @description A run attempt with its jobs and needs graph. */
         RunItem: {
@@ -12305,6 +12380,32 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunItem"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCommitView: {
+        parameters: {
+            query?: {
+                repository_id?: number;
+            };
+            header?: never;
+            path: {
+                /** @description The head commit, 7 to 40 hex characters. */
+                sha: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The commit. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CommitView"];
                 };
             };
             default: components["responses"]["Error"];

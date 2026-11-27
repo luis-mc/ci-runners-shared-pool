@@ -373,6 +373,14 @@ type Reader interface {
 	Summaries(ctx context.Context, from, to time.Time) ([]DailySummary, error)
 }
 
+// CommitReader reads the runs of one head commit for the commit view (observability R5.13). The SQLite store
+// implements it beside Reader; a Reader that does not leaves the route answering 501.
+type CommitReader interface {
+	// RunsOfCommit gives the latest attempt of every run whose head commit starts with headSHA, oldest first,
+	// with its jobs. A zero repositoryID looks in every repository.
+	RunsOfCommit(ctx context.Context, repositoryID int64, headSHA string) ([]RunDetail, error)
+}
+
 // Store is both halves.
 type Store interface {
 	Writer

@@ -882,6 +882,16 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Rules:** UX-90, UX-29, CORE-5.
 - **Guard:** `packages/ui/src/components/LiveProgress.test.tsx`.
 
+## 84. Live text
+
+- **Used for:** the text equivalent of a number or bar that changes while a person watches, for a screen reader: the four counts of the Pool Overview and Live pages. The numbers on screen are not live regions; this part is.
+- **Looks:** nothing. It is hidden from the eye. A screen reader is given one polite sentence (`2 running, 0 starting, 3 queued, 1 with no runner that fits`), read whole.
+- **Anatomy:** `text` (the sentence the page builds from its numbers) and an optional `gap`. The first text is not announced. The first change after that goes out at once; a later change waits until 10 seconds have passed since the last announcement, and then only the newest text goes out, so a burst of changes is one announcement per region. `useThrottledText` is the same limit without the element.
+- **Tokens:** none.
+- **Source:** `packages/ui/src/components/LiveText.tsx` (`LiveText`, `useThrottledText`, `LIVE_TEXT_GAP_MS`). A page passes the sentence only.
+- **Rules:** UX-17, CORE-5.
+- **Guard:** `packages/ui/src/components/LiveText.test.tsx` (at most one announcement per 10 s); `apps/web/src/screens/pool/poolWords.test.tsx`.
+
 ## How to add a component
 
 - Give it the next number.

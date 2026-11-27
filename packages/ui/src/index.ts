@@ -16,6 +16,7 @@ export * from './components/Pane';
 export * from './components/Panel';
 export * from './components/Meter';
 export * from './components/Spark';
+export * from './components/LiveText';
 export * from './components/Progress';
 export * from './components/State';
 export * from './components/Table';
