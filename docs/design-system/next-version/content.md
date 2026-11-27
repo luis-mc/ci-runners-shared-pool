@@ -1331,7 +1331,7 @@ The words of the Registry tab under Images and caches: the registry of ready-mad
 
 ## Registry job-log words (REG13)
 
-The lines the agent writes to the job log while it asks the controller for a job image, waits, pulls, builds and pushes (`internal/backend/container/ensure.go`, `images.go`). People read them in the job log, so they are user words. `{n}` is a number, `{reason}` is the cause in plain words. `internal/backend/container/words_test.go` builds each line from the code and fails when a line and its row differ, or a row has no line. A change of a word here changes the Go string in the same branch.
+The lines the agent writes to the job log while it asks the controller for a job image, waits, pulls, builds and pushes (`apps/controller/internal/backend/container/ensure.go`, `images.go`). People read them in the job log, so they are user words. `{n}` is a number, `{reason}` is the cause in plain words. `apps/controller/internal/backend/container/words_test.go` builds each line from the code and fails when a line and its row differ, or a row has no line. A change of a word here changes the Go string in the same branch.
 
 | Where | Line |
 |---|---|
@@ -1701,7 +1701,7 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 
 ### Suggestion steps words
 
-The numbered steps of a suggestion, by its kind. `{repository}` is the repository the suggestion is about; `{subject}` the workflow file, job or test it names. Every step sentence is in the page's words and nowhere else (`apps/web/src/screens/insights/steps.ts`).
+The numbered steps of a suggestion, by its kind. `{repository}` is the repository the suggestion is about; `{subject}` the workflow file, job or test it names. Every step sentence is in the page's words and nowhere else (`apps/controller-console/src/screens/insights/steps.ts`).
 
 | Kind | Steps |
 |---|---|

@@ -8,16 +8,16 @@ version: 0.1.0
 owner: owner
 type: reference
 code:
-  - internal/tray/**
-  - internal/updatewindow/**
+  - apps/controller/internal/tray/**
+  - apps/controller/internal/updatewindow/**
 design_system: [UX-1, UX-6, UX-9, UX-17, UX-18, UX-26, UX-29, UX-30, UX-58, UX-62]
-last_verified: 2026-11-24
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
 # Tray
 
-PARTLY BUILT (CRSP26, CRSP19). The tray side of M1 is built: menu, status, Open, stopped state, log folder, autostart, single instance, Linux tray-host probe, `crsp tray --smoke`, CI smoke. CRSP19 added the full menu (version header, Look for updates, Restart the service, Open on GitHub, Quit tray), the update item, and self-update on all OSes with drain (Restart and Update moved from M3 into this milestone). The service side of the local channel is built (CRSP19: `internal/trayserver`; R5.8, R6.8, `status` with the update fields, `check`, `link` with a target). TRAY1 built the one-time sign-in link end to end: the controller now builds the auth service on its database, `link` makes a real one-time link for the bound OS user, and `/auth/link` signs in (R5.7, R5.9 sign-in and binding, R6.1). NOT YET IMPLEMENTED: the console list of bindings with Remove (second half of R5.9), the installer rule (R5.22), the idle-resource check (R6.4) and the content-words guard (R6.7). Everything marked (M8) is planned.
+PARTLY BUILT (CRSP26, CRSP19). The tray side of M1 is built: menu, status, Open, stopped state, log folder, autostart, single instance, Linux tray-host probe, `crsp tray --smoke`, CI smoke. CRSP19 added the full menu (version header, Look for updates, Restart the service, Open on GitHub, Quit tray), the update item, and self-update on all OSes with drain (Restart and Update moved from M3 into this milestone). The service side of the local channel is built (CRSP19: `apps/controller/internal/trayserver`; R5.8, R6.8, `status` with the update fields, `check`, `link` with a target). TRAY1 built the one-time sign-in link end to end: the controller now builds the auth service on its database, `link` makes a real one-time link for the bound OS user, and `/auth/link` signs in (R5.7, R5.9 sign-in and binding, R6.1). NOT YET IMPLEMENTED: the console list of bindings with Remove (second half of R5.9), the installer rule (R5.22), the idle-resource check (R6.4) and the content-words guard (R6.7). Everything marked (M8) is planned.
 
 ## 1. In one paragraph
 
@@ -211,7 +211,7 @@ The band, the buttons and the focus ring follow the design system, component 49 
 
 **R5.48** (built, TRAY5; owner decision D13) — **An update ends with one toast or the window, never a modal box.** The stage records `started_by`: `auto` (nobody clicked), `tray` (the update window) or `console` (the console page or the command line). After the restart the new tray (`--updated`) waits for the done stage and then: for `auto`, for a stage without the field, and where no native window exists, it shows one desktop toast with the crsp icon, `Now running 0.1.13.`; a click on the toast opens the update window on Done. For `tray` it opens the window on Done (the one window; it only appears again when the person closed it). For `console` it says nothing: the console showed the end. A failed update says nothing here. The result is said once per version and user. No `MessageBox` is shown after an update.
 
-**R5.49** (built, TRAY5; owner decisions D14, D16, D17) — **The window is the console's look, laid out from its content.** Colours come from the Phosphor dark tokens (`packages/ui/src/tokens.css`) through the generator `internal/updatewindow/genart`, which writes `tokens_gen.go`; no colour is typed in the window code. Background, text, progress bar and buttons use the tokens; the primary button is filled and the others are outlined, like the console. The band at the top is the crsp icon and `CI RUNNERS SHARED POOL` in the primary colour on the page colour with faint scanlines, drawn from the tokens. The layout is computed in units of the font height (`internal/updatewindow/layout.go`); the window height follows the content. The hidden flag `crsp update-window --layout-check` builds the window off screen for every state at 100, 125, 150 and 200 % with the real fonts and exits 1 when any text, button or bar is clipped or overlaps; with `--screenshots <dir>` it also writes a PNG of every state. The Windows job of `tray-smoke` runs it and keeps the PNG files as the artifact `update-window-screenshots`.
+**R5.49** (built, TRAY5; owner decisions D14, D16, D17) — **The window is the console's look, laid out from its content.** Colours come from the Phosphor dark tokens (`packages/ui/src/tokens.css`) through the generator `apps/controller/internal/updatewindow/genart`, which writes `tokens_gen.go`; no colour is typed in the window code. Background, text, progress bar and buttons use the tokens; the primary button is filled and the others are outlined, like the console. The band at the top is the crsp icon and `CI RUNNERS SHARED POOL` in the primary colour on the page colour with faint scanlines, drawn from the tokens. The layout is computed in units of the font height (`apps/controller/internal/updatewindow/layout.go`); the window height follows the content. The hidden flag `crsp update-window --layout-check` builds the window off screen for every state at 100, 125, 150 and 200 % with the real fonts and exits 1 when any text, button or bar is clipped or overlaps; with `--screenshots <dir>` it also writes a PNG of every state. The Windows job of `tray-smoke` runs it and keeps the PNG files as the artifact `update-window-screenshots`.
 
 **R5.50** (built, TRAY8) — **The menu shows what the last status says, and no version that is not newer.** The tray repeats the visibility of every menu item with each status, so a hide or show the desktop dropped (the `Update to X` line left on view while the header says `up to date`) is put right by the next status; it changes a title, a tick, the tooltip and the icon only when they differ. A release is a found update only when the service says so and it is newer than the version the service runs (`Status.NewerFound`): the header, the `Update to X` line, the once-per-version offer, `Look for updates` and the update window (R5.46) all use that one rule, so a version equal to or older than the running one is never offered and the header and the line never disagree.
 
@@ -302,7 +302,7 @@ flowchart LR
   svc -. agent link 8461, M3 .-> ctl
 ```
 
-- **Package.** `internal/tray` holds the menu, the status poller, the autostart writers per OS (build tags), the single-instance lock, and the Linux tray-host probe. `fyne.io/systray` draws the icon and menu.
+- **Package.** `apps/controller/internal/tray` holds the menu, the status poller, the autostart writers per OS (build tags), the single-instance lock, and the Linux tray-host probe. `fyne.io/systray` draws the icon and menu.
 - **Local channel.** One small request-response protocol (JSON lines) on the named pipe `\\.\pipe\crsp-tray` or the socket `/run/crsp/tray.sock` (Linux) or `/var/run/crsp/tray.sock` (macOS). Calls: `status` (also carries `version`, `auto_update`, `latest_version`, `update_available`, `update_state`), `link` (returns a one-time URL; an optional `target` is the console path to land on, for the Review steps), `check` (look for a newer stable release, answers like `status`), `mode` (`mode`: automatic, always or paused), `pause` (`pause`: one_hour or until_resumed) and `resume`, which answer like `status` (CRSP75, R5.42), `notices` (M8). Restart and update are not channel calls: the tray opens the console Review step with `link`, and the console calls the HTTP API (`POST /api/v1/update/apply?confirmed=true`, `POST /api/v1/service/restart?confirmed=true`). The service reads the caller's OS user from the pipe or the socket.
 - **One-time link.** The controller stores `link_codes(hash, github_user_id, purpose, target_path, expires_at, used_at)`. The URL is `<scheme>://<host>:8460/auth/link?code=<code>`, `http` for 127.0.0.1 and ::1, `https` for any other address (web-console R5.1). The console marks the code used in the same transaction that makes the session, then redirects to `target_path`.
 - **Bindings.** The controller stores `tray_bindings(machine_id, os_user_id, github_user_id, created_at)`. `os_user_id` is the Windows SID or the Unix uid.
@@ -329,62 +329,62 @@ Rows marked built have tests that exist and run in CI. Rows marked planned are n
 
 | Requirement | Test |
 |---|---|
-| R5.1 | built: internal/tray/menu_test.go, TestMenuOrder, TestUpdateItemOnlyWhenNewerAndAutoOff |
-| R5.42 | built (CRSP75): internal/tray/policy_test.go, TestModeSubmenuIsTwoRadioItemsWithOneTick, TestPauseAndResumeItems, TestNoPolicyHidesTheModeItems, TestHeaderNamesWhyTheMachineTakesNoJobs, TestClientSetsModePauseAndResume, TestOpenerChangesPolicyAndNoticesAFailure; internal/trayserver/server_unix_test.go, TestChannelModePauseAndResume; internal/machines/policy_test.go, TestPauseFromTheTray |
-| R5.43 | built (CRSP147): internal/tray/update_prompt_test.go, TestLookForUpdatesAsksAndNeverInstallsByItself, TestLookForUpdatesWithoutDialogNeverInstalls, TestInstallNowFailureIsSaid, TestUpToDateAndAlreadyUpdatingAskNothing, TestPromptBodyAndChoicesAreTheOwnersWords, TestOfferedOncePerVersion. The OS dialogs (PowerShell form, zenity, kdialog, osascript) are not driven in CI; TRAY4: internal/tray/appwindow_test.go, TestLookupWindowsPrefersEdgeThenChrome, TestLookupDarwinLooksInApplicationsAndHome, TestLookupLinuxTriesNamesInOrder, TestAppWindowArgsAreAppModeAt520By420, TestAppWindowOpensTheBrowserElseTheDefault, TestOfferOpensTheUpdatePageAndAsksNothingNatively, TestOfferFallsBackToTheNativeBox, TestLookWhileUpdatingOpensTheProgressWindow |
-| R5.44 | built (OPS24): internal/tray/runner_problems_test.go |
-| R5.45 | built (TRAY6): internal/tray/apply_test.go, TestStatusWhileMenuOpenIsQueuedAndAppliedAfterClose, TestOnlyChangedItemsAreTouched, TestUpdateItemShownInPlace (fake tray surface). The Windows menu-open check is built, compiled in CI only |
-| R5.46 | built (TRAY5): internal/updatewindow/model_test.go (every stage maps to its view, Enter and Escape are buttons of the view, Done after the restart, a leftover stage is not shown on Review), internal/tray/update_native_test.go (the menu item and the offer open the native window), .github/workflows/tray-smoke.yml (Windows: one window only) |
-| R5.47 | built (TRAY5): internal/updatewindow/model_test.go TestCancelOnlyBeforeInstalling, TestCancelEndsWithNothingChanged; internal/update/cancel_test.go; internal/trayserver/server_unix_test.go TestChannelCancelIsItsOwnCall |
-| R5.48 | built (TRAY5): internal/tray/update_after_test.go (the toast or the window decision, one toast, a click opens the window, console and failed say nothing), internal/update/cancel_test.go TestStartedByFollowsTheActorAndSurvivesTheRestart |
-| R5.49 | built (TRAY5): internal/updatewindow/layout_test.go (nothing clipped at every DPI, no fixed pixel heights), art_test.go (the palette is the generated tokens, faint scanlines), tray-smoke Windows layout check and screenshots |
-| R5.50 | built (TRAY8): internal/tray/apply_test.go TestMissedHideOfTheUpdateLineIsReasserted, TestOnlyChangedItemsAreTouched; internal/tray/update_prompt_test.go TestOfferNeverOffersAVersionThatIsNotNewer |
-| R5.51 | built (TRAY8): internal/updatewindow/model_test.go TestNoUpdateAnswerShowsUpToDate, TestReviewNeverOffersAVersionThatIsNotNewer, TestReviewBodyWrapsWithoutCutting; internal/tray/update_prompt_test.go TestInstallAnsweredNoUpdateSaysUpToDate; apps/web Updates.test.tsx (no Update to line for a version that is not newer) |
-| R5.52 | built (TRAY10): internal/updatewindow/paint_windows_test.go TestFontsMeasureAfterTheScreenDCIsReleased (Windows), layout_test.go TestClippedFlagsALineWiderThanItsBoxAndAFailedMeasure, TestInstallingBodyWrapsAtEveryDPI |
-| R5.53 | built (TRAY11): internal/update/msi_busy_test.go (TestBusyInstallerWaitsEvery15SecondsThenInstalls, TestBusyWaitHasNoLimit, TestExit1618GoesBackToWaiting, TestLogSayingAnotherInstallationEndedMsiexecIsBusy, TestBusyDetectionHelpers, fake clock, no sleeps); internal/updatewindow/model_test.go TestWaitingForAnotherInstaller; internal/updatewindow/layout_test.go (`SampleViews` holds the new state, so `update-window --layout-check` covers it) |
-| R5.54 | built (TRAY11): internal/updatewindow/model_test.go TestRestartingOnlyAfterTheInstallerFinished; internal/update/msi_busy_test.go TestRealMSIFailureEndsFailedWithTheLog, TestMsiexecGoneWithoutAResultIsAFailure, TestStaleRestartingAttemptIsFailedAtStart, TestStageOfTheRunningVersionIsLeftAlone, TestRecoverMSIWithBusyLogDoesNotCountAsAFailure, TestRecoverMSISettlesAnInstallThatNeverRanOrWentQuiet, TestAfterAFailureANewAttemptStarts |
-| R5.55 | built (TRAY7): internal/updatewindow/web_test.go (the page is served only on its secret address and host, a press needs the POST and the header, the page holds the Phosphor tokens and no markup injection, Not now ends the process, a silent page is a closed window, a second start finds the first, every state renders), internal/updatewindow/web_test.go (Update now starts the install once, a hidden button cannot be pressed, Cancel shows its busy word and only before the install), internal/tray/appwindow_test.go (own profile and size arguments, no browser). Checked by hand in a real Chromium on Linux (screenshots in the PR). macOS: built and unit-tested in CI only, never run on a real Mac; Windows: the native window is unchanged |
-| R5.56 | built (TRAY7): internal/updatewindow/firststart_test.go (steps in order, a later step cannot be pressed, both choices on, a failure is said, no retired word), internal/tray/appwindow_test.go TestFirstStartIsShownOncePerUser |
-| R5.2 | built: internal/tray/menu_test.go, TestServiceLinePerState, TestHeaderPerUpdateState; internal/tray/tray_test.go, TestStatusTextPerState (tooltip) |
-| R5.3 | built: internal/tray/tray_test.go, TestPollerUpdatesWithin10s (injected clock) |
-| R5.4 | built: internal/tray/tray_test.go, TestIconIsAlwaysTheDiscDifferingOnlyInColour, TestCommittedAppIconMatches |
-| R5.5 | built: internal/tray/tray_test.go, TestQuitLeavesServiceRunning (the client has no stop call) |
-| R5.6 | built: internal/tray/tray_test.go, TestOpenAsksLinkAndLaunchesBrowser, TestClientStatusAndLink (fake channel and browser) |
-| R5.7 | built (TRAY1): cmd/crsp/auth_wiring_unix_test.go, TestOpenSignsInOnceFromTheBoundOSUser (redirect without the code, working session, replay refused), TestOpenLinkExpiresAfterSixtySeconds; apps/web/src/shell/Shell.test.tsx, says the tray link expired and offers GitHub sign-in |
-| R5.8 | built: internal/trayserver/server_unix_test.go, TestChannelReadsPeerUserFromTheOS (Linux; the caller's uid comes from SO_PEERCRED, a spoofed field in the request is ignored), TestChannelClosedWhenCallerUnknownAndBadCalls; Windows (client process SID, PIPE_REJECT_REMOTE_CLIENTS) and macOS (LOCAL_PEERCRED) built, compiled in CI only |
-| R5.9 | built in part (TRAY1): cmd/crsp/auth_wiring_unix_test.go, TestOpenFromAnUnboundOSUserGetsGitHubSignInNotASession, TestOpenAfterTheBoundUserWasRemovedAsksForGitHubAgain, TestOpenBeforeSetupGivesThePlainConsole; internal/auth/tray_test.go, TestTrayBindingByGitHubSignIn; internal/store/authstore_test.go, TestTrayBindingIsPerOSUserAndGoesWithTheUser. NOT YET IMPLEMENTED: the console list of bindings and Remove (internal/api/binding_test.go, TestOwnerRemovesBinding) |
-| R5.10 | built: internal/tray/tray_test.go, TestOpenCommandPrintsLink; the service side of `link` is built in TRAY1 (cmd/crsp/auth_wiring_unix_test.go) |
-| R5.11 | planned: internal/agent/link_test.go, TestAgentAsksControllerForLink |
-| R5.12 | built: internal/tray/tray_test.go, TestStoppedStateWithExitCode, TestPollerKeepsLastThenAsksOS (Linux parser tested; Windows and macOS readers built, run only in CI smoke) |
-| R5.13 | built: internal/tray/tray_test.go, TestLogFolderPathPerOS |
-| R5.14 | built: internal/tray/tray_test.go, TestOpenWhileStoppedShowsProblem |
-| R5.15 | built: internal/tray/menu_test.go, TestRestartAndUpdateOpenTheReviewStep; apps/web/src/screens/settings/Updates.test.tsx, Review step names the running jobs; apps/web/src/screens/wizards.test.tsx, update wizard in the ten states |
-| R5.16 | built: internal/api/handlers_update_test.go, TestRestartAndUpdateRefusedWithoutConfirmed, TestRestartAndUpdateWithConfirmed |
-| R5.17 | built: internal/update/update_test.go, TestAutoOnDownloadsVerifiesThenDrainsThenInstallsOnIdle (a running job stops the install), TestApplyRefusedWithoutConfirmedListsJobs |
-| R5.18 | built: internal/tray/menu_test.go, TestUpdateItemOnlyWhenNewerAndAutoOff, TestTrayRelaunchesWhenServiceIsNewer; internal/update/update_test.go (helper per OS). The real install on each OS is not run in CI yet (needs CRSP18's MSI) |
-| R5.28 | built: internal/settings/settings_test.go, TestAutoUpdateDefaultsOnAndToggles; internal/api/handlers_update_test.go, TestSettingsAutoUpdateDefaultOnAndToggle; internal/cli/cmd_update_test.go, TestUpdateAutoTogglesTheSetting; apps/web/src/screens/settings/Updates.test.tsx |
-| R5.29 | built: internal/tray/menu_test.go, TestClientCarriesUpdateFieldsAndTarget, TestLookForUpdatesSaysTheResult |
-| R5.30 | built: internal/tray/menu_test.go, TestOpenOnGitHubOpensTheRepository |
-| R5.31 | built: internal/tray/modal_guard_test.go, TestTrayAsksNothing, TestNoticeWindowIs24Hours; internal/tray/update_prompt_test.go, TestNoWindowShowsOneNoticeFromTheWordsTable, TestNoticesOncePer24Hours |
-| R5.32 | built: internal/updatewindow/lifecycle_test.go, TestEveryLifecycleStateRenders, TestRolledBackNamesTheRetryTime, TestNoBannedWordInAnyView; internal/updatewindow/layout_test.go, TestNothingIsClippedAtAnyDPI (fake font at 100, 125, 150, 200%). The real-font check `crsp update-window --layout-check` runs on Windows only |
-| R5.33 | built: internal/updatewindow/lifecycle_test.go, TestRemoveHasNoDefaultAndIsDisabledUntilChosen, TestRemoveExitCodes, TestRemoveArrowKeysStepTheChoice, TestRemoveLayoutGrowsWithALongPath; the drawn window is built for Windows and compiled by GOOS=windows go vet |
-| R5.19 | planned: internal/tray/notices_test.go, TestNoticeShownOncePerChangeAcrossRestart |
-| R5.20 | planned: internal/tray/notices_test.go, TestNoticeClickOpensLink |
-| R5.21 | built: internal/tray/tray_test.go, TestAutostartOnOff (XDG and LaunchAgent writers; the Windows Run-key writer is built, not unit tested) |
-| R5.22 | planned: internal/install/headless_test.go, TestHeadlessWritesNoAutostart |
-| R5.23 | built: internal/tray/single_unix_test.go, TestSecondInstanceExits0; CI smoke second-instance step. Windows mutex built, proven by CI smoke only |
-| R5.24 | built: internal/tray/sni_linux_test.go (probe); CI smoke "no tray area exits 2" under a private session D-Bus. The notice-once-per-version flag: internal/tray/tray_test.go, TestNoticeOncePerVersion |
-| R5.25 | built: internal/tray/sni_linux_test.go, TestNoSessionExit3 |
+| R5.1 | built: apps/controller/internal/tray/menu_test.go, TestMenuOrder, TestUpdateItemOnlyWhenNewerAndAutoOff |
+| R5.42 | built (CRSP75): apps/controller/internal/tray/policy_test.go, TestModeSubmenuIsTwoRadioItemsWithOneTick, TestPauseAndResumeItems, TestNoPolicyHidesTheModeItems, TestHeaderNamesWhyTheMachineTakesNoJobs, TestClientSetsModePauseAndResume, TestOpenerChangesPolicyAndNoticesAFailure; apps/controller/internal/trayserver/server_unix_test.go, TestChannelModePauseAndResume; apps/controller/internal/machines/policy_test.go, TestPauseFromTheTray |
+| R5.43 | built (CRSP147): apps/controller/internal/tray/update_prompt_test.go, TestLookForUpdatesAsksAndNeverInstallsByItself, TestLookForUpdatesWithoutDialogNeverInstalls, TestInstallNowFailureIsSaid, TestUpToDateAndAlreadyUpdatingAskNothing, TestPromptBodyAndChoicesAreTheOwnersWords, TestOfferedOncePerVersion. The OS dialogs (PowerShell form, zenity, kdialog, osascript) are not driven in CI; TRAY4: apps/controller/internal/tray/appwindow_test.go, TestLookupWindowsPrefersEdgeThenChrome, TestLookupDarwinLooksInApplicationsAndHome, TestLookupLinuxTriesNamesInOrder, TestAppWindowArgsAreAppModeAt520By420, TestAppWindowOpensTheBrowserElseTheDefault, TestOfferOpensTheUpdatePageAndAsksNothingNatively, TestOfferFallsBackToTheNativeBox, TestLookWhileUpdatingOpensTheProgressWindow |
+| R5.44 | built (OPS24): apps/controller/internal/tray/runner_problems_test.go |
+| R5.45 | built (TRAY6): apps/controller/internal/tray/apply_test.go, TestStatusWhileMenuOpenIsQueuedAndAppliedAfterClose, TestOnlyChangedItemsAreTouched, TestUpdateItemShownInPlace (fake tray surface). The Windows menu-open check is built, compiled in CI only |
+| R5.46 | built (TRAY5): apps/controller/internal/updatewindow/model_test.go (every stage maps to its view, Enter and Escape are buttons of the view, Done after the restart, a leftover stage is not shown on Review), apps/controller/internal/tray/update_native_test.go (the menu item and the offer open the native window), .github/workflows/tray-smoke.yml (Windows: one window only) |
+| R5.47 | built (TRAY5): apps/controller/internal/updatewindow/model_test.go TestCancelOnlyBeforeInstalling, TestCancelEndsWithNothingChanged; apps/controller/internal/update/cancel_test.go; apps/controller/internal/trayserver/server_unix_test.go TestChannelCancelIsItsOwnCall |
+| R5.48 | built (TRAY5): apps/controller/internal/tray/update_after_test.go (the toast or the window decision, one toast, a click opens the window, console and failed say nothing), apps/controller/internal/update/cancel_test.go TestStartedByFollowsTheActorAndSurvivesTheRestart |
+| R5.49 | built (TRAY5): apps/controller/internal/updatewindow/layout_test.go (nothing clipped at every DPI, no fixed pixel heights), art_test.go (the palette is the generated tokens, faint scanlines), tray-smoke Windows layout check and screenshots |
+| R5.50 | built (TRAY8): apps/controller/internal/tray/apply_test.go TestMissedHideOfTheUpdateLineIsReasserted, TestOnlyChangedItemsAreTouched; apps/controller/internal/tray/update_prompt_test.go TestOfferNeverOffersAVersionThatIsNotNewer |
+| R5.51 | built (TRAY8): apps/controller/internal/updatewindow/model_test.go TestNoUpdateAnswerShowsUpToDate, TestReviewNeverOffersAVersionThatIsNotNewer, TestReviewBodyWrapsWithoutCutting; apps/controller/internal/tray/update_prompt_test.go TestInstallAnsweredNoUpdateSaysUpToDate; apps/controller-console Updates.test.tsx (no Update to line for a version that is not newer) |
+| R5.52 | built (TRAY10): apps/controller/internal/updatewindow/paint_windows_test.go TestFontsMeasureAfterTheScreenDCIsReleased (Windows), layout_test.go TestClippedFlagsALineWiderThanItsBoxAndAFailedMeasure, TestInstallingBodyWrapsAtEveryDPI |
+| R5.53 | built (TRAY11): apps/controller/internal/update/msi_busy_test.go (TestBusyInstallerWaitsEvery15SecondsThenInstalls, TestBusyWaitHasNoLimit, TestExit1618GoesBackToWaiting, TestLogSayingAnotherInstallationEndedMsiexecIsBusy, TestBusyDetectionHelpers, fake clock, no sleeps); apps/controller/internal/updatewindow/model_test.go TestWaitingForAnotherInstaller; apps/controller/internal/updatewindow/layout_test.go (`SampleViews` holds the new state, so `update-window --layout-check` covers it) |
+| R5.54 | built (TRAY11): apps/controller/internal/updatewindow/model_test.go TestRestartingOnlyAfterTheInstallerFinished; apps/controller/internal/update/msi_busy_test.go TestRealMSIFailureEndsFailedWithTheLog, TestMsiexecGoneWithoutAResultIsAFailure, TestStaleRestartingAttemptIsFailedAtStart, TestStageOfTheRunningVersionIsLeftAlone, TestRecoverMSIWithBusyLogDoesNotCountAsAFailure, TestRecoverMSISettlesAnInstallThatNeverRanOrWentQuiet, TestAfterAFailureANewAttemptStarts |
+| R5.55 | built (TRAY7): apps/controller/internal/updatewindow/web_test.go (the page is served only on its secret address and host, a press needs the POST and the header, the page holds the Phosphor tokens and no markup injection, Not now ends the process, a silent page is a closed window, a second start finds the first, every state renders), apps/controller/internal/updatewindow/web_test.go (Update now starts the install once, a hidden button cannot be pressed, Cancel shows its busy word and only before the install), apps/controller/internal/tray/appwindow_test.go (own profile and size arguments, no browser). Checked by hand in a real Chromium on Linux (screenshots in the PR). macOS: built and unit-tested in CI only, never run on a real Mac; Windows: the native window is unchanged |
+| R5.56 | built (TRAY7): apps/controller/internal/updatewindow/firststart_test.go (steps in order, a later step cannot be pressed, both choices on, a failure is said, no retired word), apps/controller/internal/tray/appwindow_test.go TestFirstStartIsShownOncePerUser |
+| R5.2 | built: apps/controller/internal/tray/menu_test.go, TestServiceLinePerState, TestHeaderPerUpdateState; apps/controller/internal/tray/tray_test.go, TestStatusTextPerState (tooltip) |
+| R5.3 | built: apps/controller/internal/tray/tray_test.go, TestPollerUpdatesWithin10s (injected clock) |
+| R5.4 | built: apps/controller/internal/tray/tray_test.go, TestIconIsAlwaysTheDiscDifferingOnlyInColour, TestCommittedAppIconMatches |
+| R5.5 | built: apps/controller/internal/tray/tray_test.go, TestQuitLeavesServiceRunning (the client has no stop call) |
+| R5.6 | built: apps/controller/internal/tray/tray_test.go, TestOpenAsksLinkAndLaunchesBrowser, TestClientStatusAndLink (fake channel and browser) |
+| R5.7 | built (TRAY1): apps/controller/cmd/crsp/auth_wiring_unix_test.go, TestOpenSignsInOnceFromTheBoundOSUser (redirect without the code, working session, replay refused), TestOpenLinkExpiresAfterSixtySeconds; apps/controller-console/src/shell/Shell.test.tsx, says the tray link expired and offers GitHub sign-in |
+| R5.8 | built: apps/controller/internal/trayserver/server_unix_test.go, TestChannelReadsPeerUserFromTheOS (Linux; the caller's uid comes from SO_PEERCRED, a spoofed field in the request is ignored), TestChannelClosedWhenCallerUnknownAndBadCalls; Windows (client process SID, PIPE_REJECT_REMOTE_CLIENTS) and macOS (LOCAL_PEERCRED) built, compiled in CI only |
+| R5.9 | built in part (TRAY1): apps/controller/cmd/crsp/auth_wiring_unix_test.go, TestOpenFromAnUnboundOSUserGetsGitHubSignInNotASession, TestOpenAfterTheBoundUserWasRemovedAsksForGitHubAgain, TestOpenBeforeSetupGivesThePlainConsole; apps/controller/internal/auth/tray_test.go, TestTrayBindingByGitHubSignIn; apps/controller/internal/store/authstore_test.go, TestTrayBindingIsPerOSUserAndGoesWithTheUser. NOT YET IMPLEMENTED: the console list of bindings and Remove (apps/controller/internal/api/binding_test.go, TestOwnerRemovesBinding) |
+| R5.10 | built: apps/controller/internal/tray/tray_test.go, TestOpenCommandPrintsLink; the service side of `link` is built in TRAY1 (apps/controller/cmd/crsp/auth_wiring_unix_test.go) |
+| R5.11 | planned: apps/controller/internal/agent/link_test.go, TestAgentAsksControllerForLink |
+| R5.12 | built: apps/controller/internal/tray/tray_test.go, TestStoppedStateWithExitCode, TestPollerKeepsLastThenAsksOS (Linux parser tested; Windows and macOS readers built, run only in CI smoke) |
+| R5.13 | built: apps/controller/internal/tray/tray_test.go, TestLogFolderPathPerOS |
+| R5.14 | built: apps/controller/internal/tray/tray_test.go, TestOpenWhileStoppedShowsProblem |
+| R5.15 | built: apps/controller/internal/tray/menu_test.go, TestRestartAndUpdateOpenTheReviewStep; apps/controller-console/src/screens/settings/Updates.test.tsx, Review step names the running jobs; apps/controller-console/src/screens/wizards.test.tsx, update wizard in the ten states |
+| R5.16 | built: apps/controller/internal/api/handlers_update_test.go, TestRestartAndUpdateRefusedWithoutConfirmed, TestRestartAndUpdateWithConfirmed |
+| R5.17 | built: apps/controller/internal/update/update_test.go, TestAutoOnDownloadsVerifiesThenDrainsThenInstallsOnIdle (a running job stops the install), TestApplyRefusedWithoutConfirmedListsJobs |
+| R5.18 | built: apps/controller/internal/tray/menu_test.go, TestUpdateItemOnlyWhenNewerAndAutoOff, TestTrayRelaunchesWhenServiceIsNewer; apps/controller/internal/update/update_test.go (helper per OS). The real install on each OS is not run in CI yet (needs CRSP18's MSI) |
+| R5.28 | built: apps/controller/internal/settings/settings_test.go, TestAutoUpdateDefaultsOnAndToggles; apps/controller/internal/api/handlers_update_test.go, TestSettingsAutoUpdateDefaultOnAndToggle; apps/controller/internal/cli/cmd_update_test.go, TestUpdateAutoTogglesTheSetting; apps/controller-console/src/screens/settings/Updates.test.tsx |
+| R5.29 | built: apps/controller/internal/tray/menu_test.go, TestClientCarriesUpdateFieldsAndTarget, TestLookForUpdatesSaysTheResult |
+| R5.30 | built: apps/controller/internal/tray/menu_test.go, TestOpenOnGitHubOpensTheRepository |
+| R5.31 | built: apps/controller/internal/tray/modal_guard_test.go, TestTrayAsksNothing, TestNoticeWindowIs24Hours; apps/controller/internal/tray/update_prompt_test.go, TestNoWindowShowsOneNoticeFromTheWordsTable, TestNoticesOncePer24Hours |
+| R5.32 | built: apps/controller/internal/updatewindow/lifecycle_test.go, TestEveryLifecycleStateRenders, TestRolledBackNamesTheRetryTime, TestNoBannedWordInAnyView; apps/controller/internal/updatewindow/layout_test.go, TestNothingIsClippedAtAnyDPI (fake font at 100, 125, 150, 200%). The real-font check `crsp update-window --layout-check` runs on Windows only |
+| R5.33 | built: apps/controller/internal/updatewindow/lifecycle_test.go, TestRemoveHasNoDefaultAndIsDisabledUntilChosen, TestRemoveExitCodes, TestRemoveArrowKeysStepTheChoice, TestRemoveLayoutGrowsWithALongPath; the drawn window is built for Windows and compiled by GOOS=windows go vet |
+| R5.19 | planned: apps/controller/internal/tray/notices_test.go, TestNoticeShownOncePerChangeAcrossRestart |
+| R5.20 | planned: apps/controller/internal/tray/notices_test.go, TestNoticeClickOpensLink |
+| R5.21 | built: apps/controller/internal/tray/tray_test.go, TestAutostartOnOff (XDG and LaunchAgent writers; the Windows Run-key writer is built, not unit tested) |
+| R5.22 | planned: apps/controller/internal/install/headless_test.go, TestHeadlessWritesNoAutostart |
+| R5.23 | built: apps/controller/internal/tray/single_unix_test.go, TestSecondInstanceExits0; CI smoke second-instance step. Windows mutex built, proven by CI smoke only |
+| R5.24 | built: apps/controller/internal/tray/sni_linux_test.go (probe); CI smoke "no tray area exits 2" under a private session D-Bus. The notice-once-per-version flag: apps/controller/internal/tray/tray_test.go, TestNoticeOncePerVersion |
+| R5.25 | built: apps/controller/internal/tray/sni_linux_test.go, TestNoSessionExit3 |
 | R5.26 | built: .github/workflows/tray-smoke.yml, job smoke on ubuntu-latest (xvfb, SNI host), windows-latest and macos-latest |
 | R5.27 | built: .github/workflows/tray-smoke.yml, second-instance step |
-| R6.1 | built (TRAY1): internal/auth/tray_test.go, TestTrayLinkTargetSafe (128 bits), TestTrayLinkExpiresAfter60Seconds, TestTrayLinkOnceLoopbackOnly; internal/store/authstore_test.go, TestLinkCodeUsedOnceUnderRace (8 racing uses, one wins), TestLinkCodeExpiredAndUnknownAreRefused, TestLinkCodeStoredAsHashOnly (hash in the table, code absent from the audit rows); cmd/crsp/auth_wiring_unix_test.go, TestOpenLinkFromAnotherMachineIsRefused. The audit rows are checked in the same tests (an issue, a use and a refused use each write one) |
-| R6.2 | built: internal/tray/tray_test.go, TestTrayStateHoldsNoSecret |
-| R6.3 | planned: internal/tray/privilege_test.go, TestTrayOpensNoPort; CI tray-smoke checks no listening port |
+| R6.1 | built (TRAY1): apps/controller/internal/auth/tray_test.go, TestTrayLinkTargetSafe (128 bits), TestTrayLinkExpiresAfter60Seconds, TestTrayLinkOnceLoopbackOnly; apps/controller/internal/store/authstore_test.go, TestLinkCodeUsedOnceUnderRace (8 racing uses, one wins), TestLinkCodeExpiredAndUnknownAreRefused, TestLinkCodeStoredAsHashOnly (hash in the table, code absent from the audit rows); apps/controller/cmd/crsp/auth_wiring_unix_test.go, TestOpenLinkFromAnotherMachineIsRefused. The audit rows are checked in the same tests (an issue, a use and a refused use each write one) |
+| R6.2 | built: apps/controller/internal/tray/tray_test.go, TestTrayStateHoldsNoSecret |
+| R6.3 | planned: apps/controller/internal/tray/privilege_test.go, TestTrayOpensNoPort; CI tray-smoke checks no listening port |
 | R6.4 | planned: CI job tray-smoke, idle memory and CPU sample over 5 minutes (nightly) |
-| R6.5 | built: internal/tray/tray_test.go, TestTooltipCutAt127 |
-| R6.6 | built: internal/tray/tray_test.go, TestSlowServiceTimesOutIn3s |
-| R6.7 | planned: guards/content-words test over internal/tray strings |
-| R6.8 | built (Unix): internal/trayserver/server_unix_test.go, TestSocketMode0660; the Windows pipe refuses remote clients with PIPE_REJECT_REMOTE_CLIENTS and is open to local signed-in users only (SDDL), not run in CI yet |
+| R6.5 | built: apps/controller/internal/tray/tray_test.go, TestTooltipCutAt127 |
+| R6.6 | built: apps/controller/internal/tray/tray_test.go, TestSlowServiceTimesOutIn3s |
+| R6.7 | planned: guards/content-words test over apps/controller/internal/tray strings |
+| R6.8 | built (Unix): apps/controller/internal/trayserver/server_unix_test.go, TestSocketMode0660; the Windows pipe refuses remote clients with PIPE_REJECT_REMOTE_CLIENTS and is open to local signed-in users only (SDDL), not run in CI yet |
 
 ## 10. Decisions
 
@@ -401,7 +401,7 @@ Rows marked built have tests that exist and run in CI. Rows marked planned are n
 
 ## 11. Not built yet
 
-Built in CRSP26: the tray process and everything it runs in the user's session. Built in CRSP19: the service side of the local channel (`internal/trayserver`, wired in `cmd/crsp/tray_wiring.go`): `status` (with version, auto_update, latest, update state, running jobs of the controller's machine), `check`, and `link`. The socket is `/run/crsp/tray.sock` or `/var/run/crsp/tray.sock` (mode 0660, group `crsp` when it exists; `CRSP_TRAY_SOCKET` overrides), the pipe is `\\.\pipe\crsp-tray`. Built in TRAY1: the controller builds the auth service on its database (`internal/store/authstore.go`, `cmd/crsp/auth_wiring.go`) and `trayBackend.Links` makes the link. A bound OS user gets `/auth/link?code=...` (60 seconds, once, stored as a hash, loopback only). An OS user with no binding, or whose bound user was removed, gets `/auth/github/login?bind_tray=...`: GitHub sign-in, then the binding. A GitHub account that the owner has not allowed ends at "No access", so no OS user gets a session for a person who is not a console user. A console with no owner yet gets the plain address (the setup wizard). A used, expired, unknown or non-loopback code lands on `/sign-in?error=link_expired` or `link_local_only`. The bindings are keyed by the machine name `controller` and the OS user (Unix uid or Windows SID). Not built: the console list of bindings with Remove (R5.9, second half), and the first-run shortcut that binds the owner at setup. Sign-in now applies to the whole console, because the controller passes the GitHub area to the API; the repository routes of that area wait for their store (github-integration spec). `status` fills `State` with `ok` and does not yet count waiting jobs or runners.
+Built in CRSP26: the tray process and everything it runs in the user's session. Built in CRSP19: the service side of the local channel (`apps/controller/internal/trayserver`, wired in `apps/controller/cmd/crsp/tray_wiring.go`): `status` (with version, auto_update, latest, update state, running jobs of the controller's machine), `check`, and `link`. The socket is `/run/crsp/tray.sock` or `/var/run/crsp/tray.sock` (mode 0660, group `crsp` when it exists; `CRSP_TRAY_SOCKET` overrides), the pipe is `\\.\pipe\crsp-tray`. Built in TRAY1: the controller builds the auth service on its database (`apps/controller/internal/store/authstore.go`, `apps/controller/cmd/crsp/auth_wiring.go`) and `trayBackend.Links` makes the link. A bound OS user gets `/auth/link?code=...` (60 seconds, once, stored as a hash, loopback only). An OS user with no binding, or whose bound user was removed, gets `/auth/github/login?bind_tray=...`: GitHub sign-in, then the binding. A GitHub account that the owner has not allowed ends at "No access", so no OS user gets a session for a person who is not a console user. A console with no owner yet gets the plain address (the setup wizard). A used, expired, unknown or non-loopback code lands on `/sign-in?error=link_expired` or `link_local_only`. The bindings are keyed by the machine name `controller` and the OS user (Unix uid or Windows SID). Not built: the console list of bindings with Remove (R5.9, second half), and the first-run shortcut that binds the owner at setup. Sign-in now applies to the whole console, because the controller passes the GitHub area to the API; the repository routes of that area wait for their store (github-integration spec). `status` fills `State` with `ok` and does not yet count waiting jobs or runners.
 
 Seams that will change:
 
@@ -420,52 +420,52 @@ Open owner questions:
 
 ## 12. Code map
 
-Source: internal/tray/status.go
-Source: internal/tray/poller.go
-Source: internal/tray/channel.go
-Source: internal/tray/channel_unix.go
-Source: internal/tray/channel_windows.go
-Source: internal/trayserver/server.go
-Source: cmd/crsp/tray_wiring.go
-Source: internal/tray/open.go
-Source: internal/tray/open_cmd.go
-Source: internal/tray/menu.go
-Source: internal/tray/apply.go
-Source: internal/update/manager.go
-Source: apps/web/src/screens/settings/Updates.tsx
-Source: internal/tray/icon.go
-Source: internal/tray/run.go
-Source: internal/tray/update_native.go
-Source: internal/tray/update_after.go
-Source: internal/updatewindow/model.go
-Source: internal/updatewindow/layout.go
-Source: internal/updatewindow/art.go
-Source: internal/updatewindow/window_windows.go
-Source: internal/updatewindow/web.go
-Source: internal/updatewindow/webpage.go
-Source: internal/updatewindow/webupdate.go
-Source: internal/updatewindow/firststart.go
-Source: internal/tray/firststart.go
-Source: internal/tray/update_native_other.go
-Source: internal/tray/autostart.go
-Source: internal/tray/single_unix.go
-Source: internal/tray/single_windows.go
-Source: internal/tray/svcstate_linux.go
-Source: internal/tray/sni_linux.go
-Source: internal/tray/state.go
-Source: internal/tray/logfolder.go
-Source: cmd/crsp/main.go
+Source: apps/controller/internal/tray/status.go
+Source: apps/controller/internal/tray/poller.go
+Source: apps/controller/internal/tray/channel.go
+Source: apps/controller/internal/tray/channel_unix.go
+Source: apps/controller/internal/tray/channel_windows.go
+Source: apps/controller/internal/trayserver/server.go
+Source: apps/controller/cmd/crsp/tray_wiring.go
+Source: apps/controller/internal/tray/open.go
+Source: apps/controller/internal/tray/open_cmd.go
+Source: apps/controller/internal/tray/menu.go
+Source: apps/controller/internal/tray/apply.go
+Source: apps/controller/internal/update/manager.go
+Source: apps/controller-console/src/screens/settings/Updates.tsx
+Source: apps/controller/internal/tray/icon.go
+Source: apps/controller/internal/tray/run.go
+Source: apps/controller/internal/tray/update_native.go
+Source: apps/controller/internal/tray/update_after.go
+Source: apps/controller/internal/updatewindow/model.go
+Source: apps/controller/internal/updatewindow/layout.go
+Source: apps/controller/internal/updatewindow/art.go
+Source: apps/controller/internal/updatewindow/window_windows.go
+Source: apps/controller/internal/updatewindow/web.go
+Source: apps/controller/internal/updatewindow/webpage.go
+Source: apps/controller/internal/updatewindow/webupdate.go
+Source: apps/controller/internal/updatewindow/firststart.go
+Source: apps/controller/internal/tray/firststart.go
+Source: apps/controller/internal/tray/update_native_other.go
+Source: apps/controller/internal/tray/autostart.go
+Source: apps/controller/internal/tray/single_unix.go
+Source: apps/controller/internal/tray/single_windows.go
+Source: apps/controller/internal/tray/svcstate_linux.go
+Source: apps/controller/internal/tray/sni_linux.go
+Source: apps/controller/internal/tray/state.go
+Source: apps/controller/internal/tray/logfolder.go
+Source: apps/controller/cmd/crsp/main.go
 Source: .github/workflows/tray-smoke.yml
 Source: packaging/autostart/README.md
 
-Also: menu_open_windows.go and menu_open_other.go (is the menu open), autostart_windows.go, autostart_other.go, svcstate_darwin.go, svcstate_windows.go, notify_*.go and sni_other.go are the per-OS parts; internal/tray/testdata/snihost is the StatusNotifierWatcher stand-in for the Linux smoke.
+Also: menu_open_windows.go and menu_open_other.go (is the menu open), autostart_windows.go, autostart_other.go, svcstate_darwin.go, svcstate_windows.go, notify_*.go and sni_other.go are the per-OS parts; apps/controller/internal/tray/testdata/snihost is the StatusNotifierWatcher stand-in for the Linux smoke.
 
 ## Design-system proof
 
 A rule this spec cites is proven by a test that exists. A rule whose guard is still `none yet` (ux-rules.md) is held by the follow guard, which fails when the rule table is malformed or a citation does not resolve.
 
-Proof: UX-79, UX-80, UX-82 `internal/updatewindow/lifecycle_test.go`
-Proof: UX-83 `internal/tray/modal_guard_test.go`
+Proof: UX-79, UX-80, UX-82 `apps/controller/internal/updatewindow/lifecycle_test.go`
+Proof: UX-83 `apps/controller/internal/tray/modal_guard_test.go`
 Proof: CORE-1, CORE-7, UX-1, UX-6, UX-18, UX-26, UX-29, UX-30, UX-58, UX-62 `scripts/design/design-system-follow.test.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`

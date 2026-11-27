@@ -8,18 +8,18 @@ version: 0.1.0
 owner: owner
 type: reference
 code:
-  - internal/events/**
-  - apps/web/src/screens/savings/**
-  - apps/web/src/screens/analytics/Savings.tsx
-  - apps/web/src/screens/analytics/Compare.tsx
-  - internal/overview/**
-  - internal/history/**
-  - internal/audit/**
-  - internal/logs/**
-  - internal/compare/**
-  - internal/metrics/**
+  - apps/controller/internal/events/**
+  - apps/controller-console/src/screens/savings/**
+  - apps/controller-console/src/screens/analytics/Savings.tsx
+  - apps/controller-console/src/screens/analytics/Compare.tsx
+  - apps/controller/internal/overview/**
+  - apps/controller/internal/history/**
+  - apps/controller/internal/audit/**
+  - apps/controller/internal/logs/**
+  - apps/controller/internal/compare/**
+  - apps/controller/internal/metrics/**
 design_system: [UX-6, UX-13, UX-22, UX-24, UX-38, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
-last_verified: 2026-11-25
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -166,13 +166,13 @@ Milestone numbers are those of the product brief.
 
 Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section 4.6. Ingest: `github-integration` R5.96 to R5.99. Queue start range: `scheduling` R5.72.
 
-**R5.35** (OPS34) — **What is stored.** The controller stores runs, attempts, jobs, steps, needs edges, daily summaries and the forecast made when a job started: `job_history` (one row per job attempt, R5.7, with the added columns job key, job type, matrix values, branch, event, pull request, runner kind, clean-up time, cache state, task id, worktree as reported, attempt), `job_steps` (job, number, name, started, completed, result), `job_needs` (repository, run, job name, needed job name), `job_key_daily` (job key, day, count, median and p90 run time, median wait, failures) and `forecast_log` (job, low, middle, high, basis, samples). Package `internal/jobsdata`; the SQLite store is in `internal/store`.
+**R5.35** (OPS34) — **What is stored.** The controller stores runs, attempts, jobs, steps, needs edges, daily summaries and the forecast made when a job started: `job_history` (one row per job attempt, R5.7, with the added columns job key, job type, matrix values, branch, event, pull request, runner kind, clean-up time, cache state, task id, worktree as reported, attempt), `job_steps` (job, number, name, started, completed, result), `job_needs` (repository, run, job name, needed job name), `job_key_daily` (job key, day, count, median and p90 run time, median wait, failures) and `forecast_log` (job, low, middle, high, basis, samples). Package `apps/controller/internal/jobsdata`; the SQLite store is in `apps/controller/internal/store`.
 
 **R5.36** (OPS34, decisions 6, 9, 10) — **Derived fields.** The job key is repository + workflow + job name with matrix values. The job type is the job name without matrix values. The task id is parsed from a branch that starts with one (`<TASK>-<slug>`); the worktree is stored only when the job reported it. The runner kind is persistent or ephemeral. A job is light or heavy by the scheduler's class.
 
 **R5.37** (OPS34, decisions 1, 2) — **Retention.** Job rows (with their runs and attempts) are kept 90 days, step rows 30 days, daily summaries 400 days (R6.8). Rows leave in that order: the daily summary of a job key is written before its raw rows are deleted. The Done list shows 25 rows, *Show more* adds 25 up to 100 per page, and older rows are reached by filter and time range, within the retention. This replaces the "last 100 finished jobs" rule of the earlier Jobs screen (web-console D34).
 
-**R5.38** (OPS34; reworded by CIX7, owner decision D4 of 20 Nov 2026) — **Privacy.** Stored: repository, workflow file name, job name, matrix values, step names, branch name, commit sha, pull request number, timings, runner and machine names. CI run insights may also store, on the owner's machines only, CI job logs, test reports, guardrail reports and the datasets built from them (test results, CPU and memory samples, workflow checks) to improve its features (ci-run-insights R5.2 to R5.6). Every log and report passes the redact package (`internal/redact`) before it is written; the values of the runner's `env:` block are dropped, names kept. Each repository's CI data has a retention limit and a size cap, set in Settings, Data (ci-run-insights R5.5, R6.2). Never stored: secrets, environment values, actor email, commit messages. Step, job and test names are shown as text and never as markup. Everything stays on the owner's machines (R6.7).
+**R5.38** (OPS34; reworded by CIX7, owner decision D4 of 20 Nov 2026) — **Privacy.** Stored: repository, workflow file name, job name, matrix values, step names, branch name, commit sha, pull request number, timings, runner and machine names. CI run insights may also store, on the owner's machines only, CI job logs, test reports, guardrail reports and the datasets built from them (test results, CPU and memory samples, workflow checks) to improve its features (ci-run-insights R5.2 to R5.6). Every log and report passes the redact package (`apps/controller/internal/redact`) before it is written; the values of the runner's `env:` block are dropped, names kept. Each repository's CI data has a retention limit and a size cap, set in Settings, Data (ci-run-insights R5.5, R6.2). Never stored: secrets, environment values, actor email, commit messages. Step, job and test names are shown as text and never as markup. Everything stays on the owner's machines (R6.7).
 
 **R5.39** (OPS34) — **Read-only API.** `listJobs` (filters: repository, machine, runner, runner kind, job key, branch, result, range, cursor), `getJob` (steps, attempts, needs, history, critical path), `getRun`, `getJobStats` (daily waits and run times, weekday by hour counts, forecast-against-actual points, filtered like `listJobs`) and `getForecast` are viewer role (R6.4).
 
@@ -192,31 +192,31 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 ### Measured job peaks (OPS66)
 
-**R5.60** (OPS66, owner decisions of 21 Nov 2026 on job sizing, build plan T3) — **Measure each job's peaks.** While a job runs on a crsp runner the agent measures its CPU and memory and reports, per job run: the **peak CPU** (cores; the 95th percentile over the sample windows, one window per sample, so a 1 s window for the cgroup and Job Object readers; the largest window is one noisy reading and is not the peak), the **peak memory** (the largest reading, or the peak the system kept for the whole job when it keeps one: cgroup `memory.peak`, Job Object `PeakJobMemoryUsed`), the **sample count** and the **duration**. All three operating systems are built together. A job the agent cannot read ends with a final batch that says why, and shows "not measured" with the reason, never a zero. Built (OPS66). Source: `internal/jobsize/jobsize.go` `Measure`.
+**R5.60** (OPS66, owner decisions of 21 Nov 2026 on job sizing, build plan T3) — **Measure each job's peaks.** While a job runs on a crsp runner the agent measures its CPU and memory and reports, per job run: the **peak CPU** (cores; the 95th percentile over the sample windows, one window per sample, so a 1 s window for the cgroup and Job Object readers; the largest window is one noisy reading and is not the peak), the **peak memory** (the largest reading, or the peak the system kept for the whole job when it keeps one: cgroup `memory.peak`, Job Object `PeakJobMemoryUsed`), the **sample count** and the **duration**. All three operating systems are built together. A job the agent cannot read ends with a final batch that says why, and shows "not measured" with the reason, never a zero. Built (OPS66). Source: `apps/controller/internal/jobsize/jobsize.go` `Measure`.
 
-**R5.61** (OPS66) — **Flags.** A run carries `oom_killed` (the system killed it for memory: a cgroup `oom_kill` count above the count at the first sample, or a Job Object that ended a process for a limit) and `cut_short` (it ended before the agent could read it to the end: the agent stopped, the runner went away, the link was lost). A run with either flag, or with fewer than 2 known samples, is not good: it is stored and shown, and counts for no summary (R5.63). Built (OPS66). Source: `internal/jobsize/jobsize.go` `Measurement.Good`; `internal/agent/jobsample_run.go`.
+**R5.61** (OPS66) — **Flags.** A run carries `oom_killed` (the system killed it for memory: a cgroup `oom_kill` count above the count at the first sample, or a Job Object that ended a process for a limit) and `cut_short` (it ended before the agent could read it to the end: the agent stopped, the runner went away, the link was lost). A run with either flag, or with fewer than 2 known samples, is not good: it is stored and shown, and counts for no summary (R5.63). Built (OPS66). Source: `apps/controller/internal/jobsize/jobsize.go` `Measurement.Good`; `apps/controller/internal/agent/jobsample_run.go`.
 
-**R5.62** (OPS66) — **One reader per system behind one interface.** The agent's `jobsample.Sampler` has one reader per system: Linux reads the job's cgroup v2 (`cpu.stat` `usage_usec`, `memory.current`, `memory.peak`, `memory.events` `oom_kill`) for a container or VM job, and the `/proc` process tree for a persistent runner; Windows puts the runner's process into a named Job Object and reads `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION` (user and kernel time, terminated processes) and `JOBOBJECT_EXTENDED_LIMIT_INFORMATION.PeakJobMemoryUsed`; macOS lists the process tree with `ps` (`proc_pid_rusage` needs cgo, and the agent is built without it). A Job Object keeps no current memory, only its peak, so its memory samples are the peak so far. The agent attaches at the job-started and job-completed points of its gate (`Gate.Start`, `Gate.Finish`, `Gate.FinishCut`) through the `JobObserver` seam, and sends `JobResourceSamples` over the agent link (protocol version 4; fields `oom_killed`, `cut_short`, `memory_peak_bytes`). Built (OPS66); **open:** the lookup of the runner's process id or cgroup for a started job (`JobSampling.Locate`) has no production implementation yet, so until it lands a job is reported "not measured" with the reason "no runner process for this job" (see section 11). Source: `internal/agent/jobsample/`, `internal/agent/jobsample_run.go`, `internal/agent/gate.go`.
+**R5.62** (OPS66) — **One reader per system behind one interface.** The agent's `jobsample.Sampler` has one reader per system: Linux reads the job's cgroup v2 (`cpu.stat` `usage_usec`, `memory.current`, `memory.peak`, `memory.events` `oom_kill`) for a container or VM job, and the `/proc` process tree for a persistent runner; Windows puts the runner's process into a named Job Object and reads `JOBOBJECT_BASIC_AND_IO_ACCOUNTING_INFORMATION` (user and kernel time, terminated processes) and `JOBOBJECT_EXTENDED_LIMIT_INFORMATION.PeakJobMemoryUsed`; macOS lists the process tree with `ps` (`proc_pid_rusage` needs cgo, and the agent is built without it). A Job Object keeps no current memory, only its peak, so its memory samples are the peak so far. The agent attaches at the job-started and job-completed points of its gate (`Gate.Start`, `Gate.Finish`, `Gate.FinishCut`) through the `JobObserver` seam, and sends `JobResourceSamples` over the agent link (protocol version 4; fields `oom_killed`, `cut_short`, `memory_peak_bytes`). Built (OPS66); **open:** the lookup of the runner's process id or cgroup for a started job (`JobSampling.Locate`) has no production implementation yet, so until it lands a job is reported "not measured" with the reason "no runner process for this job" (see section 11). Source: `apps/controller/internal/agent/jobsample/`, `apps/controller/internal/agent/jobsample_run.go`, `apps/controller/internal/agent/gate.go`.
 
-**R5.63** (OPS66) — **Per job key summary.** The controller stores one row per job run (`job_run_peaks`, migration 00034), keyed by repository, workflow, job key and runner, written when the final batch arrives. The summary of a job key (repository, workflow, job key) reads its **last 30 good runs** and gives the **p90** of their peak CPU and of their peak memory, and `measured` is true from **5 good runs** on, the same 5-run rule as the time forecast (R5.41). Under 5 runs the console says "Not measured yet: {n} of 5 good runs" and later sizing work must not use the number. Built (OPS66). Source: `internal/jobsize/jobsize.go` `Summarise`; `internal/store/insights_peaks.go`.
+**R5.63** (OPS66) — **Per job key summary.** The controller stores one row per job run (`job_run_peaks`, migration 00034), keyed by repository, workflow, job key and runner, written when the final batch arrives. The summary of a job key (repository, workflow, job key) reads its **last 30 good runs** and gives the **p90** of their peak CPU and of their peak memory, and `measured` is true from **5 good runs** on, the same 5-run rule as the time forecast (R5.41). Under 5 runs the console says "Not measured yet: {n} of 5 good runs" and later sizing work must not use the number. Built (OPS66). Source: `apps/controller/internal/jobsize/jobsize.go` `Summarise`; `apps/controller/internal/store/insights_peaks.go`.
 
-**R5.64** (OPS66) — **Cost and interval.** Sampling stays under 1 percent of one CPU core (R6.4 of ci-run-insights). The readers that cost one or two small reads (cgroup files, a Job Object query) sample every **1 s**: `BenchmarkRealReaders` measures 6 us for the four cgroup files, 0.0006 percent of a core. The process-tree reader lists every process, about 5 us each, so about 2.5 ms on a 500-process machine and once per running job: at 1 s with 8 jobs that would be 2 percent of a core, so it samples every **5 s** (0.4 percent). A batch goes out every 15 s. Built (OPS66). Source: `internal/agent/jobsample/jobsample.go`.
+**R5.64** (OPS66) — **Cost and interval.** Sampling stays under 1 percent of one CPU core (R6.4 of ci-run-insights). The readers that cost one or two small reads (cgroup files, a Job Object query) sample every **1 s**: `BenchmarkRealReaders` measures 6 us for the four cgroup files, 0.0006 percent of a core. The process-tree reader lists every process, about 5 us each, so about 2.5 ms on a 500-process machine and once per running job: at 1 s with 8 jobs that would be 2 percent of a core, so it samples every **5 s** (0.4 percent). A batch goes out every 15 s. Built (OPS66). Source: `apps/controller/internal/agent/jobsample/jobsample.go`.
 
-**R5.65** (OPS66) — **Read and show.** `GET /api/v1/jobs/{jobId}/resources` (`getJobResources`, viewer role) carries an optional `measured` object (`JobMeasured`: peak CPU, peak memory, sample count, duration, flags, source, runner, and `key`, the summary of R5.63). The job detail page shows "Measured peak CPU" and "Measured peak memory" with the shared UI parts only (design system v4), the OOM and cut-short flags, and the job key line. Built (OPS66). Source: `internal/api/handlers_insights.go` `GetJobResources`; `apps/web/src/screens/insights/JobInsights.tsx`.
+**R5.65** (OPS66) — **Read and show.** `GET /api/v1/jobs/{jobId}/resources` (`getJobResources`, viewer role) carries an optional `measured` object (`JobMeasured`: peak CPU, peak memory, sample count, duration, flags, source, runner, and `key`, the summary of R5.63). The job detail page shows "Measured peak CPU" and "Measured peak memory" with the shared UI parts only (design system v4), the OOM and cut-short flags, and the job key line. Built (OPS66). Source: `apps/controller/internal/api/handlers_insights.go` `GetJobResources`; `apps/controller-console/src/screens/insights/JobInsights.tsx`.
 
 **R5.66** (LOOK58a) — **Slot timeline API.** `GET /api/v1/timeline` (user role; `machine_id`, `before`, `hours`) gives one row per machine job slot (`<machine_id>:<n>`, label "<machine name> slot <n>", n from 1 to the machine's `JobSlots`, the count the queue simulation of R5.43 uses) and a row `<machine_id>:waiting` only when a bar needs it. The store keeps no slot number of a finished job, so each job of the last 24 hours takes the lowest row whose last bar has ended, in order of start, the same on every page. A page holds the jobs that ended before `before` (default now) and at most `hours` back (default 6, at most 24, never older than 24 hours); `more_before` is true while older jobs within 24 hours exist. The first call adds the running bars and the forecast. Queued jobs are placed on slots by the queue simulation of scheduling R5.72 (`forecast.SimulateQueueSlots`): `forecast` from the median start to start plus the job's median, `end_lo` and `end_hi` from the low and high simulations, all clipped at now + 24 hours; a job that would start later waits in the waiting row. `to` is the end of the last forecast, or now. States: `running`, `done` (also cancelled), `failed`, `timer_ran_out` (a job that timed out), `forecast`, `no_runner_fits` and `waiting_room` (wait reasons `no_runner_with_labels` and `load_over_budget`, waiting row, no forecast), `waiting_runner` (a job with no history, or one the simulation cannot place). `reserved` is never sent: the scheduler has no slot reservation yet. A waiting bar starts now, has no end and carries `wait_from`. `detail` is plain words with relative times ("starts in about 12 min").
 
 ### Minutes saved
 
-**R5.15** — (M1, Built) Minutes saved counts every job that ran on the pool. Each job counts its run time rounded up to the next whole minute, the way GitHub bills hosted jobs. The Overview shows two tiles, *Minutes saved today* and *Money saved today*, each a link to Analytics > Savings. The live Overview feed counts the same finished pool jobs (`cmd/crsp/overview_source.go`); a finished job counts when it has a machine, a start and an end.
+**R5.15** — (M1, Built) Minutes saved counts every job that ran on the pool. Each job counts its run time rounded up to the next whole minute, the way GitHub bills hosted jobs. The Overview shows two tiles, *Minutes saved today* and *Money saved today*, each a link to Analytics > Savings. The live Overview feed counts the same finished pool jobs (`apps/controller/cmd/crsp/overview_source.go`); a finished job counts when it has a machine, a start and an end.
 
-**R5.16** — (M8, Built by CRSP256) Money saved is minutes saved times the per-minute rate of the GitHub-hosted runner that matches the job's OS and size. The rates ship in a table copied from GitHub's published Actions runner pricing (docs.github.com, "Actions runner pricing" in the billing docs). The table stores the source URL and the date it was copied. The figure is labelled "estimate" and shows that date. The rate is picked by the job's OS and the size its machine is mapped to (default `standard`); a job whose OS has no rate adds no money and is counted in `not_priced`. Source: `internal/history/rates.go`, the shipped table in `internal/history/rates.json`. **The shipped rates are those of `internal/compare/prices.json` (private repositories: linux 0.008, linux arm 0.005, windows 0.016, macos 0.08 dollars a minute), dated 2026-11-15; `docs.github.com` could not be reached from the session that built this, so they were not re-copied from the page. Re-read them there and move `copied_on` in `rates.json` with them.**
+**R5.16** — (M8, Built by CRSP256) Money saved is minutes saved times the per-minute rate of the GitHub-hosted runner that matches the job's OS and size. The rates ship in a table copied from GitHub's published Actions runner pricing (docs.github.com, "Actions runner pricing" in the billing docs). The table stores the source URL and the date it was copied. The figure is labelled "estimate" and shows that date. The rate is picked by the job's OS and the size its machine is mapped to (default `standard`); a job whose OS has no rate adds no money and is counted in `not_priced`. Source: `apps/controller/internal/history/rates.go`, the shipped table in `apps/controller/internal/history/rates.json`. **The shipped rates are those of `apps/controller/internal/compare/prices.json` (private repositories: linux 0.008, linux arm 0.005, windows 0.016, macos 0.08 dollars a minute), dated 2026-11-15; `docs.github.com` could not be reached from the session that built this, so they were not re-copied from the page. Re-read them there and move `copied_on` in `rates.json` with them.**
 
 **R5.17** — (M8, Built by CRSP256) The owner can change every rate, and the size each machine maps to, in Settings and in the config file. A change writes an audit row. "Reset to shipped rates" restores the table. On screen: Settings > Repositories, section *Savings rates* (one number field per rate and one size choice per machine, saved by the tab's one Save; the owner only). Routes `GET`, `PUT` and `DELETE /api/v1/savings/rates`; audit actions `savings.rates.change` and `savings.rates.reset`, written in the same transaction as the change. The config file route is not built: the table lives in the settings row `savings_rates`.
 
 **R5.18** — (M8, Built by CRSP256) Jobs of public repositories count their minutes but save no money, because GitHub-hosted standard runners are free for public repositories. The report says so in its note and counts those minutes in `public_minutes`. A repository counts as public when GitHub says `public`; `internal` repositories are billed and save money.
 
-**R5.19** — (M8, Built by CRSP256) A minutes-saved report covers today, 7 days, 30 days and a chosen range, per repository, OS and machine. On screen: Analytics > Savings (range choice *Today*, *7 days*, *30 days*, *A range* with two date pickers; three tables by repository, system and machine). Route `GET /api/v1/savings?range=today|7d|30d|custom&from&to`; a custom range is at most 366 days and includes its last day. There is no CLI command yet (`x-cli: none`). Source: `internal/history/savings.go`.
+**R5.19** — (M8, Built by CRSP256) A minutes-saved report covers today, 7 days, 30 days and a chosen range, per repository, OS and machine. On screen: Analytics > Savings (range choice *Today*, *7 days*, *30 days*, *A range* with two date pickers; three tables by repository, system and machine). Route `GET /api/v1/savings?range=today|7d|30d|custom&from&to`; a custom range is at most 366 days and includes its last day. There is no CLI command yet (`x-cli: none`). Source: `apps/controller/internal/history/savings.go`.
 
 ### Runner setup and agent logs
 
@@ -256,7 +256,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.72** — **Prometheus page.** `GET /metrics` answers the Prometheus text format 0.0.4. It answers `401` with `WWW-Authenticate: Bearer` when a key is asked for and the request has none or a wrong one (constant-time comparison). It serves only `/metrics`, never the console or the API.
 
-**R5.73** — **OpenTelemetry push.** The controller posts OTLP over HTTP with JSON encoding to `<collector>/v1/metrics` (a bare address gets that path) every 10 to 3600 seconds (default 60). Durations are delta histograms, counts are cumulative sums, the rest are gauges. The resource carries `service.name=crsp` and `service.version`. A failed push is logged, shown in the console, and the loop goes on. No library is added: the body is built by `internal/metrics`. A collector address with a user name or password is refused.
+**R5.73** — **OpenTelemetry push.** The controller posts OTLP over HTTP with JSON encoding to `<collector>/v1/metrics` (a bare address gets that path) every 10 to 3600 seconds (default 60). Durations are delta histograms, counts are cumulative sums, the rest are gauges. The resource carries `service.name=crsp` and `service.version`. A failed push is logged, shown in the console, and the loop goes on. No library is added: the body is built by `apps/controller/internal/metrics`. A collector address with a user name or password is refused.
 
 **R5.74** — **How the numbers are made.** Runners by state come from the runner records. Job numbers count the jobs that finished since the controller started, so every series only grows. Queue wait is the time from the queue ticket (else GitHub's creation time) to the start; job duration is start to end. A job that ran with no crsp machine and a GitHub-hosted label (`ubuntu-latest`, `windows-latest`, `macos-latest`) counts as a fallback. The cache hit ratio is warm jobs over warm and cold jobs. A machine's uptime is the time since this controller saw it come online, 0 while offline; it is not the machine's boot time. A feed that fails leaves its numbers empty and the others still come out.
 
@@ -264,7 +264,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.76** — **Scrape text.** The console gives a ready `prometheus.yml` block for the saved settings: the job name, `localhost` (or this PC's name when exposed), the port, and `YOUR-TOKEN` as a placeholder when a key is asked for. Copy changes nothing.
 
-**R5.77** — **Who and where.** The three routes (`getMetricsSettings`, `putMetricsSettings`, `makeMetricsToken`) are admin role; the owner is above admin. The settings live in the settings table under `metrics_export`. The package `internal/metrics` is pure Go and reads other areas only through the `Feeds` functions the controller gives it (`cmd/crsp/metrics_wiring.go`). **Platforms:** built for Windows, Linux and macOS. Tested on Windows and Linux. macOS is compiled and unit-tested in CI and has not been run on a real Mac.
+**R5.77** — **Who and where.** The three routes (`getMetricsSettings`, `putMetricsSettings`, `makeMetricsToken`) are admin role; the owner is above admin. The settings live in the settings table under `metrics_export`. The package `apps/controller/internal/metrics` is pure Go and reads other areas only through the `Feeds` functions the controller gives it (`apps/controller/cmd/crsp/metrics_wiring.go`). **Platforms:** built for Windows, Linux and macOS. Tested on Windows and Linux. macOS is compiled and unit-tested in CI and has not been run on a real Mac.
 
 ### Retention
 
@@ -272,7 +272,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.33** (M3, NOT YET IMPLEMENTED, CRSP92) — **Speed comparison.** The owner picks one workflow of one repository. crsp runs it on the pool and on GitHub-hosted runners, once each on the same commit, and shows the two times next to each other with the minutes saved (R5.15) and the machine it ran on. The comparison is started by hand, asks first because it uses hosted minutes, runs at most once at a time, and never runs without the owner starting it. The result is kept with the date and the commit, and the console shows a number only when both runs succeeded.
 
-**R5.34** (M3, CRSP92; on screen CRSP256: Analytics > Compare) — **Speed comparison from history.** `crsp compare <owner/repo> [--days N]` and the read-only route `GET /api/v1/compare?repository=owner/repo&days=N` read the finished workflow-run jobs of one repository from GitHub (the window is 14 days when absent, at most 90) and match jobs by name across the two runner kinds: a job whose runner labels hold `self-hosted` ran on crsp, any other ran on a GitHub-hosted runner. Queue wait is started minus created, run time is completed minus started; only successful and failed jobs with real timestamps count. For each job name seen on both kinds the answer holds the median and the 95th percentile of queue wait and run time per kind, the minutes saved (for every crsp run, the hosted median of queue plus run minus the crsp median, so a slower pool shows a negative number) and the hosted cost avoided (each crsp run rounded up to whole minutes, times the per-minute price). The price table is one file, `internal/compare/prices.json`, keyed by `runs-on` label with a default. A public repository is excluded, with the reason, because hosted minutes there are free (R5.18). It reads only and starts no job. An optional workflow template for a fair A/B run is in `docs/guides/speed-comparison-workflow.md`; the by-hand run of R5.33 stays separate. The console shows it in Analytics > Compare: a repository field (owner/repo), a days field, the button *Compare* (busy while it reads), and a table of the jobs with the median run on each kind, minutes saved and cost avoided; a public repository shows the reason, no numbers.
+**R5.34** (M3, CRSP92; on screen CRSP256: Analytics > Compare) — **Speed comparison from history.** `crsp compare <owner/repo> [--days N]` and the read-only route `GET /api/v1/compare?repository=owner/repo&days=N` read the finished workflow-run jobs of one repository from GitHub (the window is 14 days when absent, at most 90) and match jobs by name across the two runner kinds: a job whose runner labels hold `self-hosted` ran on crsp, any other ran on a GitHub-hosted runner. Queue wait is started minus created, run time is completed minus started; only successful and failed jobs with real timestamps count. For each job name seen on both kinds the answer holds the median and the 95th percentile of queue wait and run time per kind, the minutes saved (for every crsp run, the hosted median of queue plus run minus the crsp median, so a slower pool shows a negative number) and the hosted cost avoided (each crsp run rounded up to whole minutes, times the per-minute price). The price table is one file, `apps/controller/internal/compare/prices.json`, keyed by `runs-on` label with a default. A public repository is excluded, with the reason, because hosted minutes there are free (R5.18). It reads only and starts no job. An optional workflow template for a fair A/B run is in `docs/guides/speed-comparison-workflow.md`; the by-hand run of R5.33 stays separate. The console shows it in Analytics > Compare: a repository field (owner/repo), a days field, the button *Compare* (busy while it reads), and a table of the jobs with the median run on each kind, minutes saved and cost avoided; a public repository shows the reason, no numbers.
 
 ## 6. Non-functional requirements
 
@@ -332,10 +332,10 @@ Whichever of a time or a size limit is reached first applies. The oldest data go
 
 | Package | Job |
 |---|---|
-| `internal/events` | Event hub: numbering, replay buffer, snapshot, fan-out, SSE handler |
-| `internal/history` | Job history store, timing rules (port of `ci_runs.py`), minutes and money saved, rate table |
-| `internal/audit` | Audit writer (inside the caller's transaction), reader, hash chain, retention |
-| `internal/logs` | `slog` setup, redactor, file rotation, crash files, agent log buffer, `logs.db` with search, retention |
+| `apps/controller/internal/events` | Event hub: numbering, replay buffer, snapshot, fan-out, SSE handler |
+| `apps/controller/internal/history` | Job history store, timing rules (port of `ci_runs.py`), minutes and money saved, rate table |
+| `apps/controller/internal/audit` | Audit writer (inside the caller's transaction), reader, hash chain, retention |
+| `apps/controller/internal/logs` | `slog` setup, redactor, file rotation, crash files, agent log buffer, `logs.db` with search, retention |
 
 ### Live stream
 
@@ -349,7 +349,7 @@ Whichever of a time or a size limit is reached first applies. The oldest data go
 - Table `job_history` in the main database, keyed by (repository, run id, run attempt, job id). Indexes on `completed_at`, repository, machine and result.
 - Sources: the `workflow_job` events or the scale-set messages (decision 0002) give GitHub's times and conclusion; the slot queue gives `queued_at`, `slot_at` and `released_at`; the agent gives machine, runner and backend.
 - Timing functions are pure and take times as input (no clock inside), like `seconds()` and `build_finished()` in `ci_runs.py`. Their tests port `test_waterfall_times`, `test_failed_step_and_conclusion`, `test_rerun_uses_the_attempt_start`, `test_other_repo_rows_in_the_slot_log_are_ignored`, `test_now_skips_bookkeeping_steps` and `test_cache_reuses_finished_runs_and_skips_job_calls` from dev-standards `claude/plugins/delivery/tests/test_ci_runs.py`.
-- Rate table: `internal/history/rates.json`, embedded, with `source_url`, `copied_on` and rows of (OS, size, USD per minute). The owner's overrides live in the settings table.
+- Rate table: `apps/controller/internal/history/rates.json`, embedded, with `source_url`, `copied_on` and rows of (OS, size, USD per minute). The owner's overrides live in the settings table.
 
 ### Audit
 
@@ -385,87 +385,87 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Pl
 
 | Requirement | Test |
 |---|---|
-| R5.1 | internal/overview/overview_test.go TestGetBuildsOverview, TestQueueListIsCappedButCountIsExact; internal/api/handlers_live_test.go TestGetOverview (the e2e screen test is planned) |
-| R5.2 | internal/events/hub_test.go TestFirstEventIsSnapshotThenChangesInOrder; internal/api/handlers_live_test.go TestStreamEventsSnapshotThenChanges |
-| R5.3 | internal/events/hub_test.go TestReplayByLastEventID, TestReplayGapSendsMarkedSnapshot, TestReplayAgeLimit; internal/api/handlers_live_test.go TestStreamEventsReplayByLastEventID |
-| R5.4 | apps/web/src/live/store.test.ts "overview and strip read one store" |
-| R5.5 | internal/scheduler/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
-| R5.6 | apps/web/src/live/clock.test.tsx "ages tick and pause while hidden"; apps/web/src/live/status.test.tsx |
-| R5.7 | internal/store/jobsdata_attempt_test.go TestOneRowPerJobAttempt; internal/store/jobsdata_test.go TestIntegrationUpsertJobKeepsStateAndFacts |
-| R5.8 | internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
-| R5.9 | internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
-| R5.10 | internal/history/timing_test.go TestResultMapping (port of test_failed_step_and_conclusion) |
-| R5.11 | internal/store/jobsdata_test.go TestIntegrationListJobsFiltersAndPaging; internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters; internal/cli/resources_test.go TestHistoryJSON, TestHistoryFilters |
-| R5.12 | internal/jobsdata/reconcile/stale_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRows; internal/store/jobsdata_finished_test.go TestIntegrationFinishedRowNeverChanges, TestIntegrationLostRowTakesGitHubsEnd, TestIntegrationFinishedRowNeverListedForRefetch (the stale marker on a list is in section 11) |
-| R5.13 | internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped; internal/store/jobsdata_commit_test.go TestIntegrationRunsOfCommit; internal/api/handlers_commit_test.go TestGetCommitView, TestGetCommitViewRefusals |
-| R5.14 | internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsNeutralisesFormulas; apps/web/src/screens/jobs/Jobs.test.tsx (Export CSV) |
-| R5.15 | internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview; internal/history/savings_test.go TestRoundUpMinutes; internal/store/savings_test.go TestFinishedPoolJobsOnlyPoolJobsInWindow; apps/web/src/screens/savings/savings.test.tsx (Overview tiles) |
-| R5.16 | internal/history/savings_test.go TestMoneyUsesMatchingRate, TestMachineSizeChangesTheRate; internal/history/rates_test.go TestRateTableHasSourceAndDate; savings.test.tsx (rates with source and date) |
-| R5.17 | internal/history/rates_test.go TestOverrideAndResetWriteAudit, TestValidateRefusesBadTables; internal/api/handlers_savings_test.go TestSavingsRatesAreOwnerOnlyAndValidated |
-| R5.18 | internal/history/savings_test.go TestPublicRepoSavesNoMoney; savings.test.tsx (public note) |
-| R5.19 | internal/history/savings_test.go TestReportRangesAndGroups; internal/api/handlers_savings_test.go TestSavingsReportJSON; savings.test.tsx (ranges, tables) |
-| R5.20 | internal/logs/agentlog_test.go TestSetupStepsCaptured, TestAgentLinesBatchOverTheLink; internal/machines/logbatch_test.go TestLogBatchReachesTheSink; internal/agentlink/logs_test.go TestLogBatchRoundTrip |
-| R5.21 | internal/store/logsdb/search_test.go TestFullTextAndFilters; internal/logs/search_test.go TestQueryValidation; internal/api/handlers_logs_test.go TestLogSearchIsAdminOnly (the web page is planned) |
-| R5.22 | planned: internal/events/sse_test.go TestRunnerSetupLogLive |
-| R5.23 | internal/logs/buffer_test.go TestBufferKeepsOrderAndCountsDropped |
-| R5.24 | internal/audit/audit_test.go TestRowFields; internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
-| R5.25 | internal/audit/audit_test.go TestAuditFailureRollsBackChange |
-| R5.26 | internal/audit/audit_test.go TestNoUpdateOrDeletePath, TestRetentionWritesOwnRow; internal/store/ops_test.go TestAuditIsAppendOnly |
-| R5.27 | internal/audit/query_test.go TestNewestFirstAndFilters; internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
-| R5.28 | internal/store/auditchain_test.go TestChainIntactAndLinked, TestChainDetectsFirstBrokenRow, TestChainOldRowsAndRetention; internal/audit/chain_test.go TestChainRecordsAreLinked, TestCheckChainReturnsReadError |
-| R5.29 | internal/logs/slog_test.go TestJSONFieldsAndRotation |
-| R5.30 | internal/logs/crash_test.go TestPanicWritesCrashFile, TestSetCrashOutputFolder |
-| R5.31 | internal/logs/crash_test.go TestUnreportedCrashShownOnce; internal/doctor/checks/crashfiles_test.go TestCrashFilesListed (sending an agent's crash files on reconnect is planned) |
-| R5.32 | internal/settings/retention_test.go TestHourlyJobDeletesPastLimit, TestRetentionUsesSettings; internal/settings/settings_test.go TestOutOfRangeRefusedWithRange, TestEveryRangeMatchesFloorAndCeiling |
-| R5.33 | planned: internal/bench/compare_test.go TestRunsBothOnTheSameCommit, TestNothingShownWhenARunFails, TestNeverStartsByItself (CRSP92) |
-| R5.34 | internal/compare/compare_test.go TestMatchingByNameAcrossKinds, TestMedianAndP95, TestRowStatsAndMinutesSaved, TestCostMath, TestPublicRepositoryExcluded, TestAPISourceEndToEnd; apps/web/src/screens/savings/savings.test.tsx (Compare view); internal/api/handlers_compare_test.go TestSpeedComparisonJSON, TestSpeedComparisonIsReadOnly; internal/cli/resources_test.go TestCompareTableAndJSON |
-| R5.35 | internal/store/jobsdata_test.go TestIntegrationJobsMigrationDownAndUp, TestIntegrationUpsertJobKeepsStateAndFacts, TestIntegrationRunsAttemptsCountsAndPaging; internal/jobsdata/ingest/recorder_test.go TestOnJobMapsAndStatesNeverMoveBack, TestSteps |
-| R5.36 | internal/jobsdata/types_test.go TestSplitName, TestTaskFromBranch; internal/jobsdata/ingest/recorder_test.go TestOnJobSkipsUnknownRepoAndKeepsKnownFields |
-| R5.37 | internal/store/jobsdata_test.go TestIntegrationPruneBoundaries, TestIntegrationListJobsFiltersAndPaging |
-| R5.38 | internal/store/no_secrets_test.go TestIntegrationSchemaHasNoSecretColumn |
-| R5.39 | internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters, TestGetJobDetail, TestGetRunEdgesFromTheWorkflowFile, TestGroupsStatsSummariesAndForecast, TestJobsDataRoutesNeedASignedInUserAndAWiredStore |
-| R5.40 | internal/forecast/forecast_test.go TestUsableWindowAndAge, TestPercentile, TestFromSeconds |
-| R5.41 | internal/forecast/forecast_test.go TestChainFallback, TestSameMachinePreference |
-| R5.42 | internal/forecast/forecast_test.go TestCriticalPath, TestCriticalPathOddGraphs, TestDrift |
-| R5.43 | internal/forecast/forecast_test.go TestSimulateQueue, TestSimulateQueueEdges; internal/api/handlers_jobsdata_test.go TestQueuePositionAndEtaFromTheSimulation |
-| R5.44 | internal/api/handlers_jobsdata_test.go TestGroupsStatsSummariesAndForecast |
-| R5.45 | internal/api/handlers_jobsdata_test.go TestJobsExportWithTheNewFilters, TestExportJobSummariesCSV |
-| R5.46 | internal/api/handlers_jobsdata_test.go TestGetJobDetail; apps/web/src/screens/jobs/JobPage.test.tsx |
-| R5.60 | internal/jobsize/jobsize_test.go TestMeasurePeaks, TestMeasureSystemPeak; internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary |
-| R5.61 | internal/jobsize/jobsize_test.go TestMeasureFlags; internal/agent/jobsample/readers_test.go TestCgroupPeakAndOOM, TestJobObjectSampler, TestCollectorIntervalAndOutcome; internal/agent/jobsample_link_test.go TestJobSampleSenderOutcomeOnFinal; internal/agent/jobsample_run_test.go TestJobSamplingStartSampleFinish |
-| R5.62 | internal/agent/jobsample/readers_test.go TestPSTableAndTree, TestParsePSTimeRejects, TestJobObjectSampler, TestCollectorPicksJobObject; internal/agent/jobsample/platform_linux_test.go, platform_darwin_test.go, platform_windows_test.go; internal/agent/jobsample_run_test.go TestJobSamplingUnreadableJob, TestJobSamplingOldController; internal/agent/jobsample_gate_test.go TestGateObserver; internal/agentlink/insights_test.go TestResourceSinkBatchesCarryFlags |
-| R5.63 | internal/jobsize/jobsize_test.go TestSummaryMeasuredAtFive, TestSummaryKeepsNewest30; internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary, TestMigrationJobRunPeaks |
-| R5.64 | internal/agent/jobsample/sampler_bench_test.go BenchmarkSample, BenchmarkRealReaders |
-| R5.65 | internal/api/handlers_insights_test.go TestJobResourcesMeasured; apps/web/src/screens/insights/JobInsights.test.tsx |
-| R5.66 | internal/forecast/forecast_test.go TestSimulateQueueSlots; internal/api/timeline_test.go TestTimelineRowsAndSlotAssignment, TestTimelineFinishedAndRunningStates, TestTimelinePagingByTime, TestTimelineKeepsTheRowAcrossPages, TestTimelineMachineFilter, TestTimelineForecastPlacementAndStates, TestTimelineForecastClipsAtTwentyFourHours, TestTimelineJobWithoutHistoryAndPoolJobs, TestGetTimelineHandler |
-| R6.1 | internal/events/latency_test.go TestP95UnderTwoSeconds (in-process hub; the network adds the rest) |
-| R6.2 | internal/events/hub_test.go TestLoadThrottlePerMachine (the median of three is the machines feature) |
-| R6.3 | internal/events/hub_test.go TestSSEFormatAndServe (heartbeat), TestSlowSubscriberIsClosedAndNeverBlocksPublisher, TestStreamCap; internal/api/handlers_live_test.go TestStreamEventsTooManyStreams |
-| R6.4 | internal/api/handlers_live_test.go TestStreamNoDataBeforeAuth, TestStreamClosesWhenRoleRemoved; internal/api/handlers_jobsdata_test.go TestJobsDataRoutesNeedASignedInUserAndAWiredStore (the viewer read of the audit log is in section 11) |
-| R6.5 | internal/logs/redact_test.go TestKnownValuesAndShapesRedacted |
-| R6.6 | internal/logs/redact_sinks_test.go TestNoSecretInAnySink, TestSecretKindTableIsComplete (the agent log line joins with R5.20) |
-| R6.7 | internal/logs/local_test.go TestNoNetworkImports (with the depguard rule `logs-stay-local` in .golangci.yml) |
-| R6.8 | internal/logs/retention_test.go TestDefaultsFloorsCeilings; internal/store/logsdb/store_test.go TestPruneByDayAndSize |
-| R6.9 | internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
-| R6.10 | internal/store/logsdb/store_test.go TestSeparateDatabaseFile |
-| R6.11 | internal/store/logsdb/bench_test.go BenchmarkSearchFirstPage (100,000 lines, not 10 GiB); planned: internal/history/bench_test.go BenchmarkHistoryPage |
-| R6.12 | internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/web/src/live/format.test.ts |
-| R6.13 | packages/ui/src/components/LiveText.test.tsx (the shared part holds the 10 s limit); apps/web/src/screens/pool/poolWords.test.tsx |
-| R6.14 | internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
+| R5.1 | apps/controller/internal/overview/overview_test.go TestGetBuildsOverview, TestQueueListIsCappedButCountIsExact; apps/controller/internal/api/handlers_live_test.go TestGetOverview (the e2e screen test is planned) |
+| R5.2 | apps/controller/internal/events/hub_test.go TestFirstEventIsSnapshotThenChangesInOrder; apps/controller/internal/api/handlers_live_test.go TestStreamEventsSnapshotThenChanges |
+| R5.3 | apps/controller/internal/events/hub_test.go TestReplayByLastEventID, TestReplayGapSendsMarkedSnapshot, TestReplayAgeLimit; apps/controller/internal/api/handlers_live_test.go TestStreamEventsReplayByLastEventID |
+| R5.4 | apps/controller-console/src/live/store.test.ts "overview and strip read one store" |
+| R5.5 | apps/controller/internal/scheduler/waitreason_test.go TestWaitReasons, TestNoRunnerWithLabelsAfterThreshold |
+| R5.6 | apps/controller-console/src/live/clock.test.tsx "ages tick and pause while hidden"; apps/controller-console/src/live/status.test.tsx |
+| R5.7 | apps/controller/internal/store/jobsdata_attempt_test.go TestOneRowPerJobAttempt; apps/controller/internal/store/jobsdata_test.go TestIntegrationUpsertJobKeepsStateAndFacts |
+| R5.8 | apps/controller/internal/history/timing_test.go TestWaitSplitGitHubAndSlot, TestSlotGateCountedOnce (port of test_waterfall_times) |
+| R5.9 | apps/controller/internal/history/timing_test.go TestNeverNegative, TestZeroTimeIsUnknown, TestRerunUsesAttemptStart |
+| R5.10 | apps/controller/internal/history/timing_test.go TestResultMapping (port of test_failed_step_and_conclusion) |
+| R5.11 | apps/controller/internal/store/jobsdata_test.go TestIntegrationListJobsFiltersAndPaging; apps/controller/internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters; apps/controller/internal/cli/resources_test.go TestHistoryJSON, TestHistoryFilters |
+| R5.12 | apps/controller/internal/jobsdata/reconcile/stale_test.go TestFinishedRowNeverRefetched, TestGitHubFailureKeepsRows; apps/controller/internal/store/jobsdata_finished_test.go TestIntegrationFinishedRowNeverChanges, TestIntegrationLostRowTakesGitHubsEnd, TestIntegrationFinishedRowNeverListedForRefetch (the stale marker on a list is in section 11) |
+| R5.13 | apps/controller/internal/history/commit_test.go TestAllRunsDoneNeedsEveryRun, TestSlowestJobShare, TestBookkeepingStepsSkipped; apps/controller/internal/store/jobsdata_commit_test.go TestIntegrationRunsOfCommit; apps/controller/internal/api/handlers_commit_test.go TestGetCommitView, TestGetCommitViewRefusals |
+| R5.14 | apps/controller/internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsNeutralisesFormulas; apps/controller-console/src/screens/jobs/Jobs.test.tsx (Export CSV) |
+| R5.15 | apps/controller/internal/overview/overview_test.go TestRoundUpMinutes, TestGetBuildsOverview; apps/controller/internal/history/savings_test.go TestRoundUpMinutes; apps/controller/internal/store/savings_test.go TestFinishedPoolJobsOnlyPoolJobsInWindow; apps/controller-console/src/screens/savings/savings.test.tsx (Overview tiles) |
+| R5.16 | apps/controller/internal/history/savings_test.go TestMoneyUsesMatchingRate, TestMachineSizeChangesTheRate; apps/controller/internal/history/rates_test.go TestRateTableHasSourceAndDate; savings.test.tsx (rates with source and date) |
+| R5.17 | apps/controller/internal/history/rates_test.go TestOverrideAndResetWriteAudit, TestValidateRefusesBadTables; apps/controller/internal/api/handlers_savings_test.go TestSavingsRatesAreOwnerOnlyAndValidated |
+| R5.18 | apps/controller/internal/history/savings_test.go TestPublicRepoSavesNoMoney; savings.test.tsx (public note) |
+| R5.19 | apps/controller/internal/history/savings_test.go TestReportRangesAndGroups; apps/controller/internal/api/handlers_savings_test.go TestSavingsReportJSON; savings.test.tsx (ranges, tables) |
+| R5.20 | apps/controller/internal/logs/agentlog_test.go TestSetupStepsCaptured, TestAgentLinesBatchOverTheLink; apps/controller/internal/machines/logbatch_test.go TestLogBatchReachesTheSink; apps/controller/internal/agentlink/logs_test.go TestLogBatchRoundTrip |
+| R5.21 | apps/controller/internal/store/logsdb/search_test.go TestFullTextAndFilters; apps/controller/internal/logs/search_test.go TestQueryValidation; apps/controller/internal/api/handlers_logs_test.go TestLogSearchIsAdminOnly (the web page is planned) |
+| R5.22 | planned: apps/controller/internal/events/sse_test.go TestRunnerSetupLogLive |
+| R5.23 | apps/controller/internal/logs/buffer_test.go TestBufferKeepsOrderAndCountsDropped |
+| R5.24 | apps/controller/internal/audit/audit_test.go TestRowFields; apps/controller/internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
+| R5.25 | apps/controller/internal/audit/audit_test.go TestAuditFailureRollsBackChange |
+| R5.26 | apps/controller/internal/audit/audit_test.go TestNoUpdateOrDeletePath, TestRetentionWritesOwnRow; apps/controller/internal/store/ops_test.go TestAuditIsAppendOnly |
+| R5.27 | apps/controller/internal/audit/query_test.go TestNewestFirstAndFilters; apps/controller/internal/api/handlers_ops_test.go TestEveryWriteHandlerRecords |
+| R5.28 | apps/controller/internal/store/auditchain_test.go TestChainIntactAndLinked, TestChainDetectsFirstBrokenRow, TestChainOldRowsAndRetention; apps/controller/internal/audit/chain_test.go TestChainRecordsAreLinked, TestCheckChainReturnsReadError |
+| R5.29 | apps/controller/internal/logs/slog_test.go TestJSONFieldsAndRotation |
+| R5.30 | apps/controller/internal/logs/crash_test.go TestPanicWritesCrashFile, TestSetCrashOutputFolder |
+| R5.31 | apps/controller/internal/logs/crash_test.go TestUnreportedCrashShownOnce; apps/controller/internal/doctor/checks/crashfiles_test.go TestCrashFilesListed (sending an agent's crash files on reconnect is planned) |
+| R5.32 | apps/controller/internal/settings/retention_test.go TestHourlyJobDeletesPastLimit, TestRetentionUsesSettings; apps/controller/internal/settings/settings_test.go TestOutOfRangeRefusedWithRange, TestEveryRangeMatchesFloorAndCeiling |
+| R5.33 | planned: apps/controller/internal/bench/compare_test.go TestRunsBothOnTheSameCommit, TestNothingShownWhenARunFails, TestNeverStartsByItself (CRSP92) |
+| R5.34 | apps/controller/internal/compare/compare_test.go TestMatchingByNameAcrossKinds, TestMedianAndP95, TestRowStatsAndMinutesSaved, TestCostMath, TestPublicRepositoryExcluded, TestAPISourceEndToEnd; apps/controller-console/src/screens/savings/savings.test.tsx (Compare view); apps/controller/internal/api/handlers_compare_test.go TestSpeedComparisonJSON, TestSpeedComparisonIsReadOnly; apps/controller/internal/cli/resources_test.go TestCompareTableAndJSON |
+| R5.35 | apps/controller/internal/store/jobsdata_test.go TestIntegrationJobsMigrationDownAndUp, TestIntegrationUpsertJobKeepsStateAndFacts, TestIntegrationRunsAttemptsCountsAndPaging; apps/controller/internal/jobsdata/ingest/recorder_test.go TestOnJobMapsAndStatesNeverMoveBack, TestSteps |
+| R5.36 | apps/controller/internal/jobsdata/types_test.go TestSplitName, TestTaskFromBranch; apps/controller/internal/jobsdata/ingest/recorder_test.go TestOnJobSkipsUnknownRepoAndKeepsKnownFields |
+| R5.37 | apps/controller/internal/store/jobsdata_test.go TestIntegrationPruneBoundaries, TestIntegrationListJobsFiltersAndPaging |
+| R5.38 | apps/controller/internal/store/no_secrets_test.go TestIntegrationSchemaHasNoSecretColumn |
+| R5.39 | apps/controller/internal/api/handlers_jobsdata_test.go TestListJobsPassesTheFilters, TestGetJobDetail, TestGetRunEdgesFromTheWorkflowFile, TestGroupsStatsSummariesAndForecast, TestJobsDataRoutesNeedASignedInUserAndAWiredStore |
+| R5.40 | apps/controller/internal/forecast/forecast_test.go TestUsableWindowAndAge, TestPercentile, TestFromSeconds |
+| R5.41 | apps/controller/internal/forecast/forecast_test.go TestChainFallback, TestSameMachinePreference |
+| R5.42 | apps/controller/internal/forecast/forecast_test.go TestCriticalPath, TestCriticalPathOddGraphs, TestDrift |
+| R5.43 | apps/controller/internal/forecast/forecast_test.go TestSimulateQueue, TestSimulateQueueEdges; apps/controller/internal/api/handlers_jobsdata_test.go TestQueuePositionAndEtaFromTheSimulation |
+| R5.44 | apps/controller/internal/api/handlers_jobsdata_test.go TestGroupsStatsSummariesAndForecast |
+| R5.45 | apps/controller/internal/api/handlers_jobsdata_test.go TestJobsExportWithTheNewFilters, TestExportJobSummariesCSV |
+| R5.46 | apps/controller/internal/api/handlers_jobsdata_test.go TestGetJobDetail; apps/controller-console/src/screens/jobs/JobPage.test.tsx |
+| R5.60 | apps/controller/internal/jobsize/jobsize_test.go TestMeasurePeaks, TestMeasureSystemPeak; apps/controller/internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary |
+| R5.61 | apps/controller/internal/jobsize/jobsize_test.go TestMeasureFlags; apps/controller/internal/agent/jobsample/readers_test.go TestCgroupPeakAndOOM, TestJobObjectSampler, TestCollectorIntervalAndOutcome; apps/controller/internal/agent/jobsample_link_test.go TestJobSampleSenderOutcomeOnFinal; apps/controller/internal/agent/jobsample_run_test.go TestJobSamplingStartSampleFinish |
+| R5.62 | apps/controller/internal/agent/jobsample/readers_test.go TestPSTableAndTree, TestParsePSTimeRejects, TestJobObjectSampler, TestCollectorPicksJobObject; apps/controller/internal/agent/jobsample/platform_linux_test.go, platform_darwin_test.go, platform_windows_test.go; apps/controller/internal/agent/jobsample_run_test.go TestJobSamplingUnreadableJob, TestJobSamplingOldController; apps/controller/internal/agent/jobsample_gate_test.go TestGateObserver; apps/controller/internal/agentlink/insights_test.go TestResourceSinkBatchesCarryFlags |
+| R5.63 | apps/controller/internal/jobsize/jobsize_test.go TestSummaryMeasuredAtFive, TestSummaryKeepsNewest30; apps/controller/internal/store/insights_peaks_test.go TestPeaksStoreRunAndKeySummary, TestMigrationJobRunPeaks |
+| R5.64 | apps/controller/internal/agent/jobsample/sampler_bench_test.go BenchmarkSample, BenchmarkRealReaders |
+| R5.65 | apps/controller/internal/api/handlers_insights_test.go TestJobResourcesMeasured; apps/controller-console/src/screens/insights/JobInsights.test.tsx |
+| R5.66 | apps/controller/internal/forecast/forecast_test.go TestSimulateQueueSlots; apps/controller/internal/api/timeline_test.go TestTimelineRowsAndSlotAssignment, TestTimelineFinishedAndRunningStates, TestTimelinePagingByTime, TestTimelineKeepsTheRowAcrossPages, TestTimelineMachineFilter, TestTimelineForecastPlacementAndStates, TestTimelineForecastClipsAtTwentyFourHours, TestTimelineJobWithoutHistoryAndPoolJobs, TestGetTimelineHandler |
+| R6.1 | apps/controller/internal/events/latency_test.go TestP95UnderTwoSeconds (in-process hub; the network adds the rest) |
+| R6.2 | apps/controller/internal/events/hub_test.go TestLoadThrottlePerMachine (the median of three is the machines feature) |
+| R6.3 | apps/controller/internal/events/hub_test.go TestSSEFormatAndServe (heartbeat), TestSlowSubscriberIsClosedAndNeverBlocksPublisher, TestStreamCap; apps/controller/internal/api/handlers_live_test.go TestStreamEventsTooManyStreams |
+| R6.4 | apps/controller/internal/api/handlers_live_test.go TestStreamNoDataBeforeAuth, TestStreamClosesWhenRoleRemoved; apps/controller/internal/api/handlers_jobsdata_test.go TestJobsDataRoutesNeedASignedInUserAndAWiredStore (the viewer read of the audit log is in section 11) |
+| R6.5 | apps/controller/internal/logs/redact_test.go TestKnownValuesAndShapesRedacted |
+| R6.6 | apps/controller/internal/logs/redact_sinks_test.go TestNoSecretInAnySink, TestSecretKindTableIsComplete (the agent log line joins with R5.20) |
+| R6.7 | apps/controller/internal/logs/local_test.go TestNoNetworkImports (with the depguard rule `logs-stay-local` in .golangci.yml) |
+| R6.8 | apps/controller/internal/logs/retention_test.go TestDefaultsFloorsCeilings; apps/controller/internal/store/logsdb/store_test.go TestPruneByDayAndSize |
+| R6.9 | apps/controller/internal/logs/failopen_test.go TestFullStoreDoesNotBlockJobs |
+| R6.10 | apps/controller/internal/store/logsdb/store_test.go TestSeparateDatabaseFile |
+| R6.11 | apps/controller/internal/store/logsdb/bench_test.go BenchmarkSearchFirstPage (100,000 lines, not 10 GiB); planned: apps/controller/internal/history/bench_test.go BenchmarkHistoryPage |
+| R6.12 | apps/controller/internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/controller-console/src/live/format.test.ts |
+| R6.13 | packages/ui/src/components/LiveText.test.tsx (the shared part holds the 10 s limit); apps/controller-console/src/screens/pool/poolWords.test.tsx |
+| R6.14 | apps/controller/internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
 | R6.15 | scripts/ci/test_gitleaksignore_guard.py (an added line fails, a removed line passes) |
 
 **Metrics export (CRSP262).**
 
 | Requirement | Test |
 |---|---|
-| R5.70 | internal/metrics/metrics_test.go TestConfig, TestServiceLifecycle; internal/metrics/persist_test.go TestDBStoreRoundTripAndAudit; internal/api/handlers_metrics_test.go TestMetricsSettingsOffByDefault |
-| R5.71 | internal/metrics/metrics_test.go TestPrometheusText, TestOTLPSameMetricSet |
-| R5.72 | internal/metrics/metrics_test.go TestHandlerToken |
-| R5.73 | internal/metrics/metrics_test.go TestPushOnce, TestConfig |
-| R5.74 | internal/metrics/metrics_test.go TestPoolSource, TestCacheHitRateZeroLookups |
-| R5.75 | internal/metrics/persist_test.go TestSecretToken; internal/api/handlers_metrics_test.go TestMetricsSettingsPutChecksAndKeeps |
-| R5.76 | internal/metrics/metrics_test.go TestScrapeConfig; apps/web/src/screens/settings/MetricsSettings.test.tsx |
-| R5.77 | internal/api/handlers_metrics_test.go TestMetricsSettingsAdminOnly; internal/api route and role tables |
+| R5.70 | apps/controller/internal/metrics/metrics_test.go TestConfig, TestServiceLifecycle; apps/controller/internal/metrics/persist_test.go TestDBStoreRoundTripAndAudit; apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsOffByDefault |
+| R5.71 | apps/controller/internal/metrics/metrics_test.go TestPrometheusText, TestOTLPSameMetricSet |
+| R5.72 | apps/controller/internal/metrics/metrics_test.go TestHandlerToken |
+| R5.73 | apps/controller/internal/metrics/metrics_test.go TestPushOnce, TestConfig |
+| R5.74 | apps/controller/internal/metrics/metrics_test.go TestPoolSource, TestCacheHitRateZeroLookups |
+| R5.75 | apps/controller/internal/metrics/persist_test.go TestSecretToken; apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsPutChecksAndKeeps |
+| R5.76 | apps/controller/internal/metrics/metrics_test.go TestScrapeConfig; apps/controller-console/src/screens/settings/MetricsSettings.test.tsx |
+| R5.77 | apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsAdminOnly; apps/controller/internal/api route and role tables |
 
 ## 10. Decisions
 
@@ -490,7 +490,7 @@ Open owner questions:
 
 CRSP256 gaps, said plainly:
 
-- **G6, the fallback reason next to each fallback run, is not built.** crsp knows why a repository routes to hosted runners now (`GET` repository routing: `why` = `fallback_on` and so on) but stores no reason per run, so a past fallback run has none to show. Showing today's reason beside an old run would be wrong. It needs the reason written on the job row when the fallback passes (`internal/repos/fallback.go` `EvaluateFallback`) and a column on the Jobs and Run elsewhere tables.
+- **G6, the fallback reason next to each fallback run, is not built.** crsp knows why a repository routes to hosted runners now (`GET` repository routing: `why` = `fallback_on` and so on) but stores no reason per run, so a past fallback run has none to show. Showing today's reason beside an old run would be wrong. It needs the reason written on the job row when the fallback passes (`apps/controller/internal/repos/fallback.go` `EvaluateFallback`) and a column on the Jobs and Run elsewhere tables.
 - The rates are not re-copied from GitHub's page (it was unreachable from the build session), see R5.16.
 - No CLI command for the savings report or the rates yet, and the rates have no config-file route.
 - **Platforms.** Built for Windows, Linux and macOS: the report reads the controller's database, so it does not depend on the system. Tested by hand on Linux only here; Windows was not run in this session. macOS is compiled and unit-tested in CI and was not run on a real Mac.
@@ -498,7 +498,7 @@ CRSP256 gaps, said plainly:
 CRSP271c gaps, said plainly:
 
 - **R5.12, the stale marker.** A failed GitHub read keeps every stored row (tested), but the `stale` field of `listJobs` is still always empty: the lists read only the store, never GitHub, and the reconcile pass does not tell the API that its last read failed.
-- **R6.4, the audit log for a viewer.** The contract (`listAuditEvents`, `exportAuditEvents`) lets a viewer read the audit log ("owner decision for M1"), while R6.4 and the web-console role table say admin and owner only. Owner question 3 is still open, so the role was not changed and no test pins either way. There is no log reader route yet (`internal/logs` is not built).
+- **R6.4, the audit log for a viewer.** The contract (`listAuditEvents`, `exportAuditEvents`) lets a viewer read the audit log ("owner decision for M1"), while R6.4 and the web-console role table say admin and owner only. Owner question 3 is still open, so the role was not changed and no test pins either way. There is no log reader route yet (`apps/controller/internal/logs` is not built).
 - **R5.13, the screen.** The commit view has its data and its API route. No web screen draws it yet.
 
 Everything. The seams that change when it is built:
@@ -513,38 +513,38 @@ Everything. The seams that change when it is built:
 
 ## 12. Code map
 
-Built (CRSP18): `internal/audit/audit.go` (writer, reader, redaction, prune), `internal/settings/settings.go` and `internal/settings/retention.go` (settings and the hourly retention job), `internal/api/handlers_ops.go`.
+Built (CRSP18): `apps/controller/internal/audit/audit.go` (writer, reader, redaction, prune), `apps/controller/internal/settings/settings.go` and `apps/controller/internal/settings/retention.go` (settings and the hourly retention job), `apps/controller/internal/api/handlers_ops.go`.
 
 Built (CRSP23):
 
-- internal/events/ (hub, SSE writer)
-- internal/overview/ (overview and snapshot builder)
-- internal/api/handlers_live.go (overview and stream routes)
+- apps/controller/internal/events/ (hub, SSE writer)
+- apps/controller/internal/overview/ (overview and snapshot builder)
+- apps/controller/internal/api/handlers_live.go (overview and stream routes)
 
-Source: internal/events/hub.go
-Source: internal/events/sse.go
-Source: internal/overview/overview.go
-Source: internal/api/handlers_live.go
+Source: apps/controller/internal/events/hub.go
+Source: apps/controller/internal/events/sse.go
+Source: apps/controller/internal/overview/overview.go
+Source: apps/controller/internal/api/handlers_live.go
 
-Built (CRSP262): `internal/metrics/` (snapshot and pool source, Prometheus text, OTLP push, handler, config, scrape text, service, settings and key stores), `internal/api/handlers_metrics.go`, `cmd/crsp/metrics_wiring.go`, `apps/web/src/screens/settings/MetricsSettings.tsx`.
+Built (CRSP262): `apps/controller/internal/metrics/` (snapshot and pool source, Prometheus text, OTLP push, handler, config, scrape text, service, settings and key stores), `apps/controller/internal/api/handlers_metrics.go`, `apps/controller/cmd/crsp/metrics_wiring.go`, `apps/controller-console/src/screens/settings/MetricsSettings.tsx`.
 
-Built (CRSP256): `internal/history/` (`rates.go` the rate table and its audited changes, `savings.go` the report and the store source), `internal/store/savings.go` (the finished pool jobs query), `internal/api/handlers_savings.go` (the three routes), `cmd/crsp/overview_source.go` (real minutes for the live Overview), `apps/web/src/screens/savings/`, `apps/web/src/screens/analytics/Savings.tsx` and `Compare.tsx`.
+Built (CRSP256): `apps/controller/internal/history/` (`rates.go` the rate table and its audited changes, `savings.go` the report and the store source), `apps/controller/internal/store/savings.go` (the finished pool jobs query), `apps/controller/internal/api/handlers_savings.go` (the three routes), `apps/controller/cmd/crsp/overview_source.go` (real minutes for the live Overview), `apps/controller-console/src/screens/savings/`, `apps/controller-console/src/screens/analytics/Savings.tsx` and `Compare.tsx`.
 
-Built (CRSP271b): `internal/logs/` (`slog.go` the logger with rotation, `crash.go` crash files, the `reported` marker and the fatal-error output), `internal/redact/` (the secret kinds `ValueKinds` and `ShapeKinds`, output `[redacted:<kind>]`), `internal/logging/` (tagged handler), `internal/doctor/checks/crashfiles.go`, redactor hooks in `internal/audit/` and `internal/api/errors.go`, the `logs-stay-local` rule in `.golangci.yml`.
+Built (CRSP271b): `apps/controller/internal/logs/` (`slog.go` the logger with rotation, `crash.go` crash files, the `reported` marker and the fatal-error output), `apps/controller/internal/redact/` (the secret kinds `ValueKinds` and `ShapeKinds`, output `[redacted:<kind>]`), `apps/controller/internal/logging/` (tagged handler), `apps/controller/internal/doctor/checks/crashfiles.go`, redactor hooks in `apps/controller/internal/audit/` and `apps/controller/internal/api/errors.go`, the `logs-stay-local` rule in `.golangci.yml`.
 
-Built (CRSP271c): the history rows are the jobsdata tables of R5.35 (`internal/jobsdata`, `internal/store/jobsdata*.go`, `internal/jobsdata/reconcile`, `internal/api/handlers_jobsdata*.go`), not a separate `internal/history` store. `crsp history` (`internal/cli/cmd_history.go`) prints the rows of `listJobs` that are done. The commit view of R5.13 is `internal/history/commit.go` (pure functions) and `GET /api/v1/commits/{sha}` (`getCommitView`, viewer role, `internal/api/handlers_commit.go`). `internal/events/latency_test.go` proves R6.1 on the in-process hub. `packages/ui/src/components/LiveText.tsx` is the shared live text of R6.13 (component 82), used for the four counts of `apps/web/src/screens/pool/PoolSection.tsx`. `internal/api/handlers_live.go` asks the session again every 10 s and closes an open stream whose user is signed out or has no role (R6.4).
+Built (CRSP271c): the history rows are the jobsdata tables of R5.35 (`apps/controller/internal/jobsdata`, `apps/controller/internal/store/jobsdata*.go`, `apps/controller/internal/jobsdata/reconcile`, `apps/controller/internal/api/handlers_jobsdata*.go`), not a separate `apps/controller/internal/history` store. `crsp history` (`apps/controller/internal/cli/cmd_history.go`) prints the rows of `listJobs` that are done. The commit view of R5.13 is `apps/controller/internal/history/commit.go` (pure functions) and `GET /api/v1/commits/{sha}` (`getCommitView`, viewer role, `apps/controller/internal/api/handlers_commit.go`). `apps/controller/internal/events/latency_test.go` proves R6.1 on the in-process hub. `packages/ui/src/components/LiveText.tsx` is the shared live text of R6.13 (component 82), used for the four counts of `apps/controller-console/src/screens/pool/PoolSection.tsx`. `apps/controller/internal/api/handlers_live.go` asks the session again every 10 s and closes an open stream whose user is signed out or has no role (R6.4).
 
 Planned files, in the globs of the front matter:
 
-- internal/history/ (store, savings, rates.json)
-- internal/audit/ (chain)
-- internal/logs/ (the live runner setup log stream, R5.22)
+- apps/controller/internal/history/ (store, savings, rates.json)
+- apps/controller/internal/audit/ (chain)
+- apps/controller/internal/logs/ (the live runner setup log stream, R5.22)
 
-Built (CRSP271d): `internal/logs/` (`store.go` the line and the store port, `failopen.go` the fail-open writer and its failure counter, `retention.go` limits, `buffer.go` the agent disk buffer, `agentlog.go` the agent's log handler and batch sender, `search.go` the query), `internal/store/logsdb/` (`logs.db`, its own migrations with an FTS5 table; it sits in `internal/store/` because only that folder may import the SQLite driver), `internal/api/handlers_logs.go` (the search route), `internal/logs/logsapi/` (the adapter to the API port), `internal/agentlink/logs.go` (the batch and the controller sink), the `OnLogBatch` hook in `internal/machines/link.go`, `LogForwarder` in `internal/agent/run.go`, and the `logs.db` open in `cmd/crsp/machines_wiring.go`.
+Built (CRSP271d): `apps/controller/internal/logs/` (`store.go` the line and the store port, `failopen.go` the fail-open writer and its failure counter, `retention.go` limits, `buffer.go` the agent disk buffer, `agentlog.go` the agent's log handler and batch sender, `search.go` the query), `apps/controller/internal/store/logsdb/` (`logs.db`, its own migrations with an FTS5 table; it sits in `apps/controller/internal/store/` because only that folder may import the SQLite driver), `apps/controller/internal/api/handlers_logs.go` (the search route), `apps/controller/internal/logs/logsapi/` (the adapter to the API port), `apps/controller/internal/agentlink/logs.go` (the batch and the controller sink), the `OnLogBatch` hook in `apps/controller/internal/machines/link.go`, `LogForwarder` in `apps/controller/internal/agent/run.go`, and the `logs.db` open in `apps/controller/cmd/crsp/machines_wiring.go`.
 
-Built (CRSP271): `internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), the web console reuses the shared UI parts that already hold the time format (`packages/ui/src/components/format.ts`), the shared clock (`packages/ui/src/components/Clock.tsx`) and the status word, glyph and colour set (`packages/ui/src/components/Status.tsx`), proven by `apps/web/src/live/format.test.ts`, `clock.test.tsx`, `status.test.tsx` and `store.test.ts`; `internal/store/jobsdata_utc_test.go` proves UTC storage.
+Built (CRSP271): `apps/controller/internal/history/timing.go` (wait split, never negative, zero time unknown, re-run from attempt start, result mapping and totals), `apps/controller/internal/scheduler/waitreason.go` (the 2-minute no-runner-with-labels rule), the web console reuses the shared UI parts that already hold the time format (`packages/ui/src/components/format.ts`), the shared clock (`packages/ui/src/components/Clock.tsx`) and the status word, glyph and colour set (`packages/ui/src/components/Status.tsx`), proven by `apps/controller-console/src/live/format.test.ts`, `clock.test.tsx`, `status.test.tsx` and `store.test.ts`; `apps/controller/internal/store/jobsdata_utc_test.go` proves UTC storage.
 
-Built (OPS66): `internal/jobsize/` (the shared peak and summary logic), `internal/agent/jobsample/` (the readers and the collector), `internal/agent/jobsample_run.go` and `internal/agent/gate.go` (the attach points), `internal/store/insights_peaks.go` and migration 00034 (the stored runs and the job key summary), `internal/agentlink/insights.go` (the sink), `internal/api/handlers_insights.go` (the field).
+Built (OPS66): `apps/controller/internal/jobsize/` (the shared peak and summary logic), `apps/controller/internal/agent/jobsample/` (the readers and the collector), `apps/controller/internal/agent/jobsample_run.go` and `apps/controller/internal/agent/gate.go` (the attach points), `apps/controller/internal/store/insights_peaks.go` and migration 00034 (the stored runs and the job key summary), `apps/controller/internal/agentlink/insights.go` (the sink), `apps/controller/internal/api/handlers_insights.go` (the field).
 
 Ported from dev-standards (cite in each ported file): `claude/plugins/delivery/scripts/ci_runs.py`, `claude/plugins/delivery/templates/shared/scripts/delivery/ci_watch.py`, `claude/plugins/delivery/tests/test_ci_runs.py`, `claude/plugins/delivery/scripts/load.py`.
 

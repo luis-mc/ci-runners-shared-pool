@@ -7,9 +7,9 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/registry/**", "internal/agentlink/registry.go", "internal/agent/registry.go", "internal/backend/container/ensure.go", "cmd/crsp/registry*wiring.go", "internal/backend/container/buildstream.go", "internal/store/imagebuilds.go", "internal/store/registry_core.go", "internal/regcreds/engineca.go", "internal/backend/container/engineca.go", "internal/api/handlers_registry*.go", "internal/api/stubs_registry_*.go", "internal/store/queries/registry_*.sql", "internal/store/queries/image_builds.sql", "internal/store/migrations/00019_registry.sql", "apps/web/src/screens/registry/**"]
+code: ["apps/controller/internal/registry/**", "apps/controller/internal/agentlink/registry.go", "apps/controller/internal/agent/registry.go", "apps/controller/internal/backend/container/ensure.go", "apps/controller/cmd/crsp/registry*wiring.go", "apps/controller/internal/backend/container/buildstream.go", "apps/controller/internal/store/imagebuilds.go", "apps/controller/internal/store/registry_core.go", "apps/controller/internal/regcreds/engineca.go", "apps/controller/internal/backend/container/engineca.go", "apps/controller/internal/api/handlers_registry*.go", "apps/controller/internal/api/stubs_registry_*.go", "apps/controller/internal/store/queries/registry_*.sql", "apps/controller/internal/store/queries/image_builds.sql", "apps/controller/internal/store/migrations/00019_registry.sql", "apps/controller-console/src/screens/registry/**"]
 design_system: [UX-4, UX-5, UX-13, UX-16, UX-19, UX-25, UX-28, UX-29, UX-30, UX-34, UX-38, UX-41, UX-49, UX-54, UX-58, UX-62, UX-71, UX-72, UX-73]
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**BUILT (REG1 to REG15, IMG1 to IMG3).** The contract of REG10 is filled in: the image key (`internal/registry/key.go`, R5.21, R5.22), the store tables (migration 00019), the agent link messages (protocol version 3), the controller's answers under `/api/v1/registry/*` and the agent side (R5.13 to R5.20). The records, retention, replace and rollback, scan, pull-through mirror, profiles and the registry UI (R5.37 to R5.40) are built; see the change notes. IMG1 (build truth, R5.68 to R5.72) is built, except the link from an agent to the controller's recorder (see IMG1 below). Not built: the mirror re-check interval (R5.66, REG9). Every other requirement not marked built in its own text is planned.
+**BUILT (REG1 to REG15, IMG1 to IMG3).** The contract of REG10 is filled in: the image key (`apps/controller/internal/registry/key.go`, R5.21, R5.22), the store tables (migration 00019), the agent link messages (protocol version 3), the controller's answers under `/api/v1/registry/*` and the agent side (R5.13 to R5.20). The records, retention, replace and rollback, scan, pull-through mirror, profiles and the registry UI (R5.37 to R5.40) are built; see the change notes. IMG1 (build truth, R5.68 to R5.72) is built, except the link from an agent to the controller's recorder (see IMG1 below). Not built: the mirror re-check interval (R5.66, REG9). Every other requirement not marked built in its own text is planned.
 
 **BUILT (REG1).** R5.1 to R5.12 (registry core) are implemented: Distribution v3 under `/v2/` on the controller's private listener, tokens, staging and promotion, the agent sink and the engine CA step. The staging root is `crsp/incoming/` (REG1 changed it from `crsp/_incoming/`, which is not a valid OCI name).
 
@@ -76,7 +76,7 @@ A push never delays the job that started it. People never talk to `/v2/`; the co
 
 ## 4. Screens and states
 
-The REG-5 screens of the RES20 review build are approved as shown (owner, 19 Nov 2026): `apps/web/src/screens/images-next` on `origin/RES20-image-registry`, words in `registryWords.ts` and in the `next-version` content section "Registry words". REG5 moves them into the real console:
+The REG-5 screens of the RES20 review build are approved as shown (owner, 19 Nov 2026): `apps/controller-console/src/screens/images-next` on `origin/RES20-image-registry`, words in `registryWords.ts` and in the `next-version` content section "Registry words". REG5 moves them into the real console:
 
 | Screen | Reads | States |
 |---|---|---|
@@ -120,19 +120,19 @@ Every group names the task that owns it. "Must" is binding.
 
 **R5.81** — The registry sends no telemetry, metrics, logs or event notifications to any host; tracing from the Distribution library stays off. The core and the mirror configuration set no notification endpoint, no reporting and no health probe; crsp never imports Distribution's `tracing` or server `registry` package or an OpenTelemetry exporter, and never installs a tracer, meter or logger provider. The mirror's pulls from its upstream are its purpose and are not telemetry.
 
-**Built by REG1:** R5.1 to R5.12, in `internal/registry/core/` (mount, door, tokens, promotion, sink, disk gate), `internal/store/registry_core.go` over `queries/registry_core.sql` (migration 00022 is unused), `internal/regcreds/engineca.go` and `internal/backend/container/engineca.go` (the engine CA step), and `cmd/crsp/registry_wiring.go` (the controller hook).
+**Built by REG1:** R5.1 to R5.12, in `apps/controller/internal/registry/core/` (mount, door, tokens, promotion, sink, disk gate), `apps/controller/internal/store/registry_core.go` over `queries/registry_core.sql` (migration 00022 is unused), `apps/controller/internal/regcreds/engineca.go` and `apps/controller/internal/backend/container/engineca.go` (the engine CA step), and `apps/controller/cmd/crsp/registry_wiring.go` (the controller hook).
 
 - **Mount (R5.1 to R5.3).** `core.New` runs `handlers.NewApp` of Distribution v3.1.2 on filesystem storage in the registry folder (the folder of the registry settings, else `<data_dir>/registry`) and a second in-process namespace on the same driver for promotion, delete and GC. The controller mounts it at `/v2/` on its console listener only when `core.CheckListen` (the lancache private LAN rule) accepts the listen address; a wildcard or public address leaves the controller with no registry and agents build locally. Every request must come from a private, loopback or link-local peer and carry a token (Bearer, or the password of a Basic login); anonymous reads get 401. The door checks the scope of the path (`manifests`, `blobs`, `blobs/uploads`, `tags/list`, `referrers`), refuses DELETE and the catalogue to machines, asks a pull scope on the `from` of a blob mount, and answers 503 to a push in the read-only window (`SetReadOnly`, R5.48). v3.1.2 has no referrers route, so `GET /v2/<name>/referrers/<digest>` is served by the door from the manifests of the repository whose `subject` is the digest (`artifactType` filter, `OCI-Filters-Applied`), and a manifest push with a subject answers `OCI-Subject`. Pull and push events carry the machine of the token (`Events()`); the controller logs them, and REG4's `Consume` takes the same channel when joined.
 - **Tokens (R5.10, R5.11).** `core.Issuer` signs `crsp1.<claims>.<hmac>` with a 32-byte key kept in the secret store (`crsp/registry/token-key`), 10 minutes, scopes as asked or refused: pull on `crsp/std/*` and `crsp/custom/*` (and the own staging), push (with pull) only on `crsp/incoming/<own machine id>/*`, never delete. The store keeps only the token id, the machine and the names (`registry_token_leases`); a deleted lease revokes. A push token first asks the `DiskGate` (R5.8): the free-disk guard of the runner hooks (`runnercache.Guard`, 10 percent) and, when the wiring gives it, the budget of the kind; `ErrOverBudget` refuses and `Refused` lets REG6 open its recommendation.
 - **Promotion (R5.5 to R5.7).** `core.Promoter` takes a `PushReport` with state pushed through `Sink.PushReport` (once per push id). It checks that the staging name is below the own root and follows from the target, that the target follows from the key input (standard or custom name), that `ComputeKey(key input)` equals the key, that the manifest tagged with the key in staging has the reported digest and hashes to it, that the eight labels of R5.7 are present on the image config (for an index, on the child of the arch, ignoring attestations) and agree with the key input, and that the tag is new in the store and in the registry. It then links the blobs into the target by mounts (no data moves), puts the manifest, tags it with the key and writes the tag row and state (`current`, or `variant` for a branch run) in one transaction. Any failed check is recorded as `refused` with the reason and returned as `ErrPromoteRefuse`. Promoted hooks (`OnPromoted`) run after the row is written; their errors are logged.
 - **Engine CA (R5.12).** `regcreds.InstallEngineCA` writes the CA into `/etc/docker/certs.d/<host:port>/ca.crt` and `/etc/containers/certs.d/<host:port>/ca.crt` (a folder only where its engine is), and into `~/.docker/certs.d/<host>/ca.crt` for Docker Desktop on macOS and Windows (`host_port` on Windows). The container backend runs it once per registry host before the first pull or push, from `Config.ControllerCA`; `container.FetchControllerCA(pin, client)` downloads `/api/v1/ca.pem` and keeps only the certificate whose SHA-256 is the pinned fingerprint. A failed step is logged and the pull goes on.
-- **Wired (REG12).** `wireRegistry` in `cmd/crsp/registry_wiring.go` opens the core (`openCore`) and hands it to the other parts: the agent sink answers tokens and promotion through the core's issuer and promoter, records, retention, replace and scan use its registry, layer source and promoted hook, and the pull-through mirror takes its token guard (`Issuer.MirrorGuard`). The core is closed with the controller. **Not yet:** the agent does not set `Config.ControllerCA` (REG2's backend wiring passes `FetchControllerCA(pin, nil)`); the engine CA step skips the `wsl docker` route; the scan has no referrer store (`Referrers` is nil: the SBOM and report are not kept as referrers yet); the budget callbacks of the `DiskGate` and the promoter are wired (REG15, below).
+- **Wired (REG12).** `wireRegistry` in `apps/controller/cmd/crsp/registry_wiring.go` opens the core (`openCore`) and hands it to the other parts: the agent sink answers tokens and promotion through the core's issuer and promoter, records, retention, replace and scan use its registry, layer source and promoted hook, and the pull-through mirror takes its token guard (`Issuer.MirrorGuard`). The core is closed with the controller. **Not yet:** the agent does not set `Config.ControllerCA` (REG2's backend wiring passes `FetchControllerCA(pin, nil)`); the engine CA step skips the `wsl docker` route; the scan has no referrer store (`Referrers` is nil: the SBOM and report are not kept as referrers yet); the budget callbacks of the `DiskGate` and the promoter are wired (REG15, below).
 
 ### REG2: ensure image on the agent (R5.13 to R5.20)
 
 **R5.13** — `PrepareImage` becomes: local engine, then `EnsureImage`, then pull by digest, else build (IMG1) and push. The order is fixed.
 
-**R5.14** — When the controller does not answer (offline, no session), the job **waits** for it and its log shows "Waiting for the controller to say whether the image is in the registry" with the time waited; there is no local build in that case (owner decision). Every job-log word of the registry flow is a row of the "Registry job-log words" table in `docs/design-system/next-version/content.md`, and `internal/backend/container/words_test.go` fails when a Go string and its row differ (REG13).
+**R5.14** — When the controller does not answer (offline, no session), the job **waits** for it and its log shows "Waiting for the controller to say whether the image is in the registry" with the time waited; there is no local build in that case (owner decision). Every job-log word of the registry flow is a row of the "Registry job-log words" table in `docs/design-system/next-version/content.md`, and `apps/controller/internal/backend/container/words_test.go` fails when a Go string and its row differ (REG13).
 
 **R5.15** — A local build happens only on a clear `OUTCOME_NOT_FOUND`. `OUTCOME_BUSY` is asked again after `retry_after_ms`, never built on.
 
@@ -148,7 +148,7 @@ Every group names the task that owns it. "Must" is binding.
 
 ### REG3: keys, pointers and update-of detection (R5.21 to R5.28)
 
-**Built (REG3).** R5.21 to R5.28 are built in `internal/registry/keys/` (Keyer, labels, pointer rules, update-of detection, similar) over `internal/store/registry_keys.go`. The call that picks a job's image (REG2, `internal/backend/container/ensure.go`) calls `Keyer.KeyFor`; the controller wires `Detector.OnPromoted` as a Promoted hook and calls `Detector.OnBranchMerged` when a branch merges. Choices where this spec was open: a repository's first default-branch image becomes its pointer (a first use, not a move); `io.crsp.lineage` is `<owner/name>|<profile>|<arch>` (`std` for a standard image); the similar share is shared bytes over the bytes of the larger image.
+**Built (REG3).** R5.21 to R5.28 are built in `apps/controller/internal/registry/keys/` (Keyer, labels, pointer rules, update-of detection, similar) over `apps/controller/internal/store/registry_keys.go`. The call that picks a job's image (REG2, `apps/controller/internal/backend/container/ensure.go`) calls `Keyer.KeyFor`; the controller wires `Detector.OnPromoted` as a Promoted hook and calls `Detector.OnBranchMerged` when a branch merges. Choices where this spec was open: a repository's first default-branch image becomes its pointer (a first use, not a move); `io.crsp.lineage` is `<owner/name>|<profile>|<arch>` (`std` for a standard image); the similar share is shared bytes over the bytes of the larger image.
 
 **R5.21** — The image key is exactly:
 
@@ -172,7 +172,7 @@ Canonical JSON (`registry.CanonicalJSON`): one object, no whitespace, keys in by
 
 ### REG4: records, pull metrics, layer accounting, read API (R5.29 to R5.36)
 
-**Built (REG4).** R5.29 to R5.36 are built in `internal/registry/records/` and `internal/api/handlers_registry_reg4.go`. Where the text leaves a choice: a pull counts in `registry_pull_daily` only when it is done and came from the registry (`source` pulled), once per pull id; local use and local builds are rows but no count. A registry event of a pull moves the image's last pull time and counts nothing (the agent's `PullReport` is the one count). Time saved is the agent's figure, or the typical build time of the profile and arch minus the pull time. The images list leaves out staged and refused images unless the `state` filter asks for them.
+**Built (REG4).** R5.29 to R5.36 are built in `apps/controller/internal/registry/records/` and `apps/controller/internal/api/handlers_registry_reg4.go`. Where the text leaves a choice: a pull counts in `registry_pull_daily` only when it is done and came from the registry (`source` pulled), once per pull id; local use and local builds are rows but no count. A registry event of a pull moves the image's last pull time and counts nothing (the agent's `PullReport` is the one count). Time saved is the agent's figure, or the typical build time of the profile and arch minus the pull time. The images list leaves out staged and refused images unless the `state` filter asks for them.
 
 **R5.29** — Image states: `staged`, `refused`, `current`, `variant`, `superseded`, `deleted` (`registry.State`, `registry_images.state`).
 
@@ -196,7 +196,7 @@ Canonical JSON (`registry.CanonicalJSON`): one object, no whitespace, keys in by
 
 ### REG5: registry UI (R5.37 to R5.40)
 
-**R5.37** (built) — The approved RES20 REG-5 screens move from `origin/RES20-image-registry` `apps/web/src/screens/images-next` into the real console under `apps/web/src/screens/registry/`, reading the real API; review-only hooks and the mock API stay behind.
+**R5.37** (built) — The approved RES20 REG-5 screens move from `origin/RES20-image-registry` `apps/controller-console/src/screens/images-next` into the real console under `apps/controller-console/src/screens/registry/`, reading the real API; review-only hooks and the mock API stay behind.
 
 **R5.38** (built) — The words come from `registryWords.ts` as approved and the "Registry words" section moves from `next-version` into the live content version with a `CHANGES` entry.
 
@@ -224,7 +224,7 @@ Canonical JSON (`registry.CanonicalJSON`): one object, no whitespace, keys in by
 
 **R5.49** — An over-budget kind names what to delete first: unused, then the oldest superseded, then variants, then least pulled.
 
-**R5.50** — A disk-full push refusal opens an `over_budget` recommendation. Wired (REG15): `cmd/crsp/registry_budget.go` gives the `DiskGate` (`OverBudget`, `Refused`) and the `Promoter` (`Room`) REG6's budgets, read fresh at each call so a changed budget counts at once. A push token for a kind whose used bytes (REG4 layer accounting, shared layers counted once against the oldest image) are at or over its budget is refused with `ErrOverBudget`, the machine keeps its local image, and `PushRefused` opens or keeps the one `over_budget` recommendation naming what to delete first (R5.49). A promotion is refused (`ErrPromoteRefuse` wrapping `ErrOverBudget`, nothing tagged) when the layers the accounting does not count yet would take the kind over budget. Each kind is checked alone: a full standard budget never blocks custom.
+**R5.50** — A disk-full push refusal opens an `over_budget` recommendation. Wired (REG15): `apps/controller/cmd/crsp/registry_budget.go` gives the `DiskGate` (`OverBudget`, `Refused`) and the `Promoter` (`Room`) REG6's budgets, read fresh at each call so a changed budget counts at once. A push token for a kind whose used bytes (REG4 layer accounting, shared layers counted once against the oldest image) are at or over its budget is refused with `ErrOverBudget`, the machine keeps its local image, and `PushRefused` opens or keeps the one `over_budget` recommendation naming what to delete first (R5.49). A promotion is refused (`ErrPromoteRefuse` wrapping `ErrOverBudget`, nothing tagged) when the layers the accounting does not count yet would take the kind over budget. Each kind is checked alone: a full standard budget never blocks custom.
 
 **R5.51** — Every delete, move to read-only and cleanup writes an audit entry.
 
@@ -256,7 +256,7 @@ Canonical JSON (`registry.CanonicalJSON`): one object, no whitespace, keys in by
 
 **R5.62** — Tool binaries come through pinned, sha256-checked downloads (DL-94).
 
-**Built by REG8:** R5.59 to R5.62, in `internal/registry/scan/` and tested with fake scanner binaries. `Scanner` implements `registry.Scanner` over `queries/registry_scan.sql` (no new column, so migration 00027 is unused): `Hook()` is the promoted hook that queues the row, `Claim` offers the pusher's images first and takes a row once, `Record` stores counts, or marks the row `failed` with the reason when the tool failed or a referrer could not be stored; a failed scan never returns an error to a pull or a promotion. `Runner` runs `syft registry:<ref>` and `trivy image <ref>` by digest only (a tag is refused) and counts packages from the SPDX SBOM and vulnerabilities by severity from the Trivy JSON report. `RegistryClient` stores each document as an OCI 1.1 artifact manifest whose `subject` is the image manifest digest. `Fetcher` and `LoadPin` read `scripts/delivery/tools.json` (the file CI uses) and accept a download only when its sha256 equals the pin. **Not yet:** the Trivy pin (`tools_pin.py entry trivy ...` needs the release hashes, which the REG8 sandbox could not reach), the agent side that calls `Claim` over the agent link and runs `Runner`, and the controller wiring of `Hook()`; REG1 and REG2 join them.
+**Built by REG8:** R5.59 to R5.62, in `apps/controller/internal/registry/scan/` and tested with fake scanner binaries. `Scanner` implements `registry.Scanner` over `queries/registry_scan.sql` (no new column, so migration 00027 is unused): `Hook()` is the promoted hook that queues the row, `Claim` offers the pusher's images first and takes a row once, `Record` stores counts, or marks the row `failed` with the reason when the tool failed or a referrer could not be stored; a failed scan never returns an error to a pull or a promotion. `Runner` runs `syft registry:<ref>` and `trivy image <ref>` by digest only (a tag is refused) and counts packages from the SPDX SBOM and vulnerabilities by severity from the Trivy JSON report. `RegistryClient` stores each document as an OCI 1.1 artifact manifest whose `subject` is the image manifest digest. `Fetcher` and `LoadPin` read `scripts/delivery/tools.json` (the file CI uses) and accept a download only when its sha256 equals the pin. **Not yet:** the Trivy pin (`tools_pin.py entry trivy ...` needs the release hashes, which the REG8 sandbox could not reach), the agent side that calls `Claim` over the agent link and runs `Runner`, and the controller wiring of `Hook()`; REG1 and REG2 join them.
 
 ### REG9: pull-through mirror (R5.63 to R5.67)
 
@@ -264,11 +264,11 @@ Canonical JSON (`registry.CanonicalJSON`): one object, no whitespace, keys in by
 
 **R5.64** — Its folder (default `<data_dir>/registry-mirror`) and budget are separate from R5.41. Each upstream has its own subfolder (`docker.io`, `registry.example.com_5000`). A full mirror (folder over budget) answers 503, and engines then pull from the upstream; it never evicts, the owner wipes it (caches R5.30). Built (REG9).
 
-**R5.65** — Engines on machines are pointed at the mirror (caches R5.25), and the base pull of a build goes through it. The host command `engine-mirror <host:port> on|off <upstreams>` (`internal/registry/mirror/engineconf`, run by the agent while the machine is drained) writes Docker's `registry-mirrors` (Docker Hub only), a containerd `certs.d/<upstream>/hosts.toml` per upstream and a Podman `registries.conf.d/50-crsp-mirror.conf`; it changes only what it owns, writes nothing when the files already hold the settings, and says which engine to restart. Docker Desktop (Windows, macOS) is a setting of the app: no file is written there. Partly built (REG9): the controller does not send this host command yet, and the build's base pull is IMG1's.
+**R5.65** — Engines on machines are pointed at the mirror (caches R5.25), and the base pull of a build goes through it. The host command `engine-mirror <host:port> on|off <upstreams>` (`apps/controller/internal/registry/mirror/engineconf`, run by the agent while the machine is drained) writes Docker's `registry-mirrors` (Docker Hub only), a containerd `certs.d/<upstream>/hosts.toml` per upstream and a Podman `registries.conf.d/50-crsp-mirror.conf`; it changes only what it owns, writes nothing when the files already hold the settings, and says which engine to restart. Docker Desktop (Windows, macOS) is a setting of the app: no file is written there. Partly built (REG9): the controller does not send this host command yet, and the build's base pull is IMG1's.
 
 **R5.66** — A mirrored tag is re-checked upstream after `tag_recheck_minutes` (default 60); a stale tag is served when upstream is offline. Partly built (REG9): the setting is saved, validated (1 minute to 7 days) and sets the proxy's content lifetime (never under 7 days). Distribution asks the upstream for a tag on every pull and, when it cannot answer, serves the cached tag; a re-check interval and the "stale" mark in the console are not built.
 
-**R5.67** — The mirror follows the same private address and token rules (R5.2, R5.3). Built (REG11, the join): `cmd/crsp/registry_wiring.go` (`wireRegistry`, `openRegistryCore`, the seam REG1 fills; nil-safe, so a build with no registry core runs as before), `internal/registry/sink/` (the controller's answers to the agent registry calls over `Locator`, `TokenIssuer`, `Recorder` and `Promoter`), `internal/registry/records/imagestore.go` (`registry.ImageStore` for REG3, REG7 and REG1; query `SetRegistryImageState`), the `BuildReport` agent message and its two ends (`internal/agent/registry.go`, `internal/agentlink/registry.go`), `container.BuildLink` (the build sink slot of the agent process). The mirror was wired by REG9; the stack scan, the profile resolver and the keyer are built in `wireRegistry`; `machines.Hooks.Registry` is `registryAvailable()`.
+**R5.67** — The mirror follows the same private address and token rules (R5.2, R5.3). Built (REG11, the join): `apps/controller/cmd/crsp/registry_wiring.go` (`wireRegistry`, `openRegistryCore`, the seam REG1 fills; nil-safe, so a build with no registry core runs as before), `apps/controller/internal/registry/sink/` (the controller's answers to the agent registry calls over `Locator`, `TokenIssuer`, `Recorder` and `Promoter`), `apps/controller/internal/registry/records/imagestore.go` (`registry.ImageStore` for REG3, REG7 and REG1; query `SetRegistryImageState`), the `BuildReport` agent message and its two ends (`apps/controller/internal/agent/registry.go`, `apps/controller/internal/agentlink/registry.go`), `container.BuildLink` (the build sink slot of the agent process). The mirror was wired by REG9; the stack scan, the profile resolver and the keyer are built in `wireRegistry`; `machines.Hooks.Registry` is `registryAvailable()`.
 
 Built (REG9): the mirror is served only through a token `Guard` that REG1 passes in; with none it answers 401 to every request, so it is never anonymous. The private address rule is the listener's (REG1).
 
@@ -308,7 +308,7 @@ Built (REG9): the mirror is served only through a token `Guard` that REG1 passes
 
 **R5.80** — Today's `runners.ImageKey` keys are read as an older generation and age out. **BUILT (IMG3).** `profiles.OlderGeneration` lists the local tags the registry does not know.
 
-**R5.82** (OPS60; source: on 21 Nov, adding a Linux runner on a Windows machine built an image around the Windows `crsp.exe`, and `RUN crsp version` failed through WSL interop) — **The Linux image holds a Linux crsp of its own architecture.** The build copies a `crsp` of the image's OS and architecture (`linux/amd64` or `linux/arm64`) into `linux-base`, never the controller's own file when that is not one. On a Linux host of the same architecture it is the agent's own binary. On any other host (Windows, macOS, or Linux of the other architecture) it is the Linux release asset of the same version (`crsp-linux-<arch>_<version>.tar.gz`, the plain name for a release up to 0.1.14), fetched once from GitHub, checked against the `SHA256SUMS` of that release, and kept in `<data folder>/linux-crsp/<version>/<arch>/` with its own checksum, which is checked again before each use. Before docker starts, the file header is read: only an ELF executable of the image's machine type passes, and a Windows or macOS program, a text file or the wrong architecture stops the build with the reason (`no Linux crsp binary for the image: crsp.exe is a Windows program, not Linux amd64`). A build with no release to fetch (a development build, no network, no matching asset, a checksum that does not match) fails the same way, before the image build, naming what to do. The image key is unchanged. Built by OPS60: `internal/backend/container/linuxcrsp.go`, `stage.go`.
+**R5.82** (OPS60; source: on 21 Nov, adding a Linux runner on a Windows machine built an image around the Windows `crsp.exe`, and `RUN crsp version` failed through WSL interop) — **The Linux image holds a Linux crsp of its own architecture.** The build copies a `crsp` of the image's OS and architecture (`linux/amd64` or `linux/arm64`) into `linux-base`, never the controller's own file when that is not one. On a Linux host of the same architecture it is the agent's own binary. On any other host (Windows, macOS, or Linux of the other architecture) it is the Linux release asset of the same version (`crsp-linux-<arch>_<version>.tar.gz`, the plain name for a release up to 0.1.14), fetched once from GitHub, checked against the `SHA256SUMS` of that release, and kept in `<data folder>/linux-crsp/<version>/<arch>/` with its own checksum, which is checked again before each use. Before docker starts, the file header is read: only an ELF executable of the image's machine type passes, and a Windows or macOS program, a text file or the wrong architecture stops the build with the reason (`no Linux crsp binary for the image: crsp.exe is a Windows program, not Linux amd64`). A build with no release to fetch (a development build, no network, no matching asset, a checksum that does not match) fails the same way, before the image build, naming what to do. The image key is unchanged. Built by OPS60: `apps/controller/internal/backend/container/linuxcrsp.go`, `stage.go`.
 
 ## 6. Non-functional requirements
 
@@ -324,20 +324,20 @@ Built (REG9): the mirror is served only through a token `Guard` that REG1 passes
 
 | Part | Package or file | Task |
 |---|---|---|
-| Key, names, types, interfaces | `internal/registry/key.go`, `types.go`, `interfaces.go` | REG10 (frozen) |
-| Distribution mount, token issuer, promote | `internal/registry/core/` | REG1 |
-| Agent ensure-image | `internal/backend/container/ensure.go`, `internal/agent/registry.go` | REG2 |
-| Controller side of the agent link calls | `internal/agentlink/registry.go` | REG2 |
-| Keyer, pointers, update detection | `internal/registry/keys/` | REG3 |
-| Store adapter, Locator, Recorder | `internal/registry/records/` | REG4 |
-| Retention | `internal/registry/retention/` | REG6 |
-| Replace | `internal/registry/replace/` | REG7 |
-| Scan | `internal/registry/scan/` | REG8 |
-| Mirror | `internal/registry/mirror/` | REG9 |
+| Key, names, types, interfaces | `apps/controller/internal/registry/key.go`, `types.go`, `interfaces.go` | REG10 (frozen) |
+| Distribution mount, token issuer, promote | `apps/controller/internal/registry/core/` | REG1 |
+| Agent ensure-image | `apps/controller/internal/backend/container/ensure.go`, `apps/controller/internal/agent/registry.go` | REG2 |
+| Controller side of the agent link calls | `apps/controller/internal/agentlink/registry.go` | REG2 |
+| Keyer, pointers, update detection | `apps/controller/internal/registry/keys/` | REG3 |
+| Store adapter, Locator, Recorder | `apps/controller/internal/registry/records/` | REG4 |
+| Retention | `apps/controller/internal/registry/retention/` | REG6 |
+| Replace | `apps/controller/internal/registry/replace/` | REG7 |
+| Scan | `apps/controller/internal/registry/scan/` | REG8 |
+| Mirror | `apps/controller/internal/registry/mirror/` | REG9 |
 
 ### 7.2 Key vectors
 
-Computed by `internal/registry/key.go`, checked in `key_test.go` and independently with Python (`json.dumps(sort_keys=True, separators=(",", ":"))`). The stack files of vectors 2 and 3 are `package.json` = `{"name":"docs-site"}` CRLF, `.nvmrc` = `22` LF, `pnpm-lock.yaml` = `lockfileVersion: '9.0'` LF, whose stack hash is `3ce86298410301e478baa185c81f75e9d8e02dcf22633e16d02d5ee627d67eb0`.
+Computed by `apps/controller/internal/registry/key.go`, checked in `key_test.go` and independently with Python (`json.dumps(sort_keys=True, separators=(",", ":"))`). The stack files of vectors 2 and 3 are `package.json` = `{"name":"docs-site"}` CRLF, `.nvmrc` = `22` LF, `pnpm-lock.yaml` = `lockfileVersion: '9.0'` LF, whose stack hash is `3ce86298410301e478baa185c81f75e9d8e02dcf22633e16d02d5ee627d67eb0`.
 
 | # | Input (as given, before canonical form) | Expected key |
 |---|---|---|
@@ -372,40 +372,40 @@ Rows for R5.13 to R5.20 (agent ensure-image), R5.21 and R5.22 (key), R5.59 to R5
 
 | Requirement | Test |
 |---|---|
-| R5.1, R5.3 | internal/registry/core/mount_test.go (OCI conformance subset: push, pull, delete, referrers; anonymous refused) |
-| R5.2 | internal/registry/core/listen_test.go (public and wildcard refused) |
-| R5.4 | internal/registry/key_test.go (names; planned case) |
-| R5.5, R5.6, R5.7 | internal/registry/core/promote_test.go (digest, labels, key, tag exists, refused state) |
-| R5.8 | internal/registry/core/budget_guard_test.go |
-| R5.9 | `internal/backend/container/ensure_test.go` (built: TestEnsurePullDigestMismatchBuildsLocally) |
-| R5.10, R5.11 | internal/registry/core/token_test.go (10 min, scopes, other machine's staging refused) |
-| R5.81 | `internal/registry/core/notelemetry_test.go` (built: TestNoTelemetryInSource scans every non-test Go file for the forbidden imports and provider calls, TestScannerSeesTelemetry, TestCoreConfigSendsNothing, TestNoTelemetryAtRuntime with every OTEL exporter set to a local collector); `internal/registry/mirror/notelemetry_test.go` (built: TestMirrorConfigSendsNothing) |
-| R5.12 | internal/backend/container/cainstall_test.go |
-| R5.13 to R5.18 | `internal/backend/container/ensure_test.go` (built: local first, no registry, found and pulled by digest, digest mismatch, transfer failure, token refused, not found and pushed in the background, no staging name, wait for the controller, wait ends with the job, busy, unclear answer, push waits, push fails and is retried, push refused, progress text) |
-| R5.19, R5.20 | `internal/agentlink/registry_test.go` (built: stub answers, request ids, capability); `internal/agent/registry_test.go` (built: version 3 only on the ack, no session, round trip, link drop, MachineReport flag); `internal/machines/recovery_test.go` (built: TestHelloAckVersionFollowsRegistry) |
-| R5.21, R5.22, R5.23 | `internal/registry/key_test.go` (built: TestKeyVectors, TestStackHashVector, TestStackHashIgnoresOrderAndCRLFOnly, TestKeyChangesWithEveryPart, TestKeyRefusesBadInput) |
-| R5.21, R5.23, R5.7 labels | `internal/registry/keys/keys_test.go` (built: TestSameStackFilesSameKey, TestLockFileChangeGivesNewKey, TestLabels) |
-| R5.24, R5.27 | `internal/registry/keys/update_test.go` (built: TestStandardPointerMovesAloneCustomNever, TestPointerPerRepository), `internal/store/registry_keys_test.go` (built) |
-| R5.25, R5.26 | `internal/registry/keys/update_test.go` (built: TestUpdateOfDetected, TestNoUpdateCases, TestBranchVariantThenMerge) |
-| R5.28 | `internal/registry/keys/keys_test.go` (built: TestSimilar) |
-| R5.29 to R5.32 | `internal/registry/records/records_test.go` (built: TestLocatorEnsure, TestLayerAccounting, TestLayerAccountingTiesAndBadInput, TestPromotedHookAccountsLayers, TestRecordPull, TestRecordPush, TestRecordEvent, TestPrune) |
-| R5.33 to R5.36 | `internal/registry/records/records_test.go` (built: TestOverview, TestOverviewWhereStates, TestImagesFilters, TestImageDetail, TestPullsListAndTimeLeft, TestNextCleanup); `internal/api/handlers_registry_read_test.go` (built: one test per handler, the 501 and error cases) |
-| R5.37 to R5.40 | `apps/web/src/screens/registry/Registry.test.tsx`, `apps/web/src/screens/registry/PullingStep.test.tsx` (built); `e2e/tests/web-console/registry.spec.ts` (built: every screen at 360, 393 and 1300 px, delete asks first and refuses a used image, the replace wizard, budgets); `e2e/tests/web-console/ux-routes.spec.ts` (the routes and the Registry tab, dark and light) |
-| R5.8, R5.41, R5.50 | cmd/crsp/registry_budget_test.go; internal/registry/core/core_test.go (REG15) |
-| R5.41, R5.42 | internal/registry/retention/budget_test.go; internal/api/handlers_registry_retention_test.go (built, REG6) |
-| R5.43 to R5.45, R5.49, R5.50 | internal/registry/retention/rules_test.go (built, REG6) |
-| R5.46, R5.47 | internal/registry/retention/delete_test.go (built, REG6; the in-use refusal on SQLite in internal/store/registry_retention_test.go) |
-| R5.48, R5.52 | internal/registry/retention/cleanup_test.go (built, REG6; the fake registry stands for Distribution, so pulls during the window are proven by REG1's registry test) |
-| R5.51 | internal/api/handlers_registry_retention_test.go (built, REG6: audit entries; the store test checks each action is recorded) |
-| R5.53 to R5.58 | `internal/registry/replace/replace_test.go` (built: TestPlanLifecycle, TestAnotherRepositoryKeepsTheOldImage, TestRollbackRestoresThePointer, TestRollbackAfterKeepUntilIsRefused, TestStopAfterCurrentStepThenResume, TestRecoverStopsOrphanedRunningPlans, TestCompare); `internal/store/registry_replace_test.go` (built: plan survives a reopen); `internal/api/handlers_registry_reg7_test.go` (built: error mapping) |
-| R5.59 to R5.62 | internal/registry/scan/scan_test.go |
-| R5.63 to R5.67 | `internal/registry/mirror/mirror_test.go` (proxy config per upstream, folders, routing, no guard refused, budget); `internal/registry/mirror/service_test.go` (settings round trip through the store); `internal/api/handlers_registry_reg9_test.go` (settings API, refusals, admin only); `internal/registry/mirror/engineconf/engineconf_test.go` and `internal/agent/engine_mirror_test.go` (engine files written once, idempotent) |
-| R5.68 to R5.72 | `internal/registry/builds/progress_test.go`, `internal/registry/builds/tail_test.go`, `internal/registry/builds/gate_test.go` (built: parser, failure class, redacted tail, one build at a time, half the cores); `internal/backend/container/buildstream_test.go` (built: streamed steps, record, failure, concurrency, cores); `internal/store/imagebuilds_test.go` (built: record life, typical seconds, time left, list order); `internal/api/handlers_builds_test.go` (built: list, get, 404, 501); `internal/backend/sys/stream_test.go` (built: streamed lines) |
-| R5.73 to R5.76 | `internal/stackscan/scan_test.go` (built: recorded tree in internal/stackscan/testdata/tree.json); `internal/github/webhook_steps_test.go` (built: TestRESTListBlobsAt, TestRESTListBlobsAtHeldBackOnLowBudget) |
-| R5.77 to R5.80 | `internal/profiles/profiles_test.go` (built: defaults, mapping, precedence, ref, views, older generation); `internal/store/profilestore_test.go` (built: tables) |
-| R5.82 | `internal/backend/container/linuxcrsp_test.go` (built: TestCheckLinuxBinary, TestLinuxCrspFetchedOnceAndKept, TestLinuxCrspRefusals, TestLinuxCrspOwnBinaryOnSameArchLinuxHost, TestStageRefusesWindowsBinary, TestStageUsesLinuxCrspHook) |
-| R5.83 | `internal/jobsize/scan_test.go` TestScanStacks (reads the commit through the stack scan's reader); `internal/stackscan/scan_test.go` (the stack hash does not change) | new |
-| R6.1 | internal/store/no_secrets_test.go (registry tables); internal/registry/core/token_test.go (no token in logs) |
+| R5.1, R5.3 | apps/controller/internal/registry/core/mount_test.go (OCI conformance subset: push, pull, delete, referrers; anonymous refused) |
+| R5.2 | apps/controller/internal/registry/core/listen_test.go (public and wildcard refused) |
+| R5.4 | apps/controller/internal/registry/key_test.go (names; planned case) |
+| R5.5, R5.6, R5.7 | apps/controller/internal/registry/core/promote_test.go (digest, labels, key, tag exists, refused state) |
+| R5.8 | apps/controller/internal/registry/core/budget_guard_test.go |
+| R5.9 | `apps/controller/internal/backend/container/ensure_test.go` (built: TestEnsurePullDigestMismatchBuildsLocally) |
+| R5.10, R5.11 | apps/controller/internal/registry/core/token_test.go (10 min, scopes, other machine's staging refused) |
+| R5.81 | `apps/controller/internal/registry/core/notelemetry_test.go` (built: TestNoTelemetryInSource scans every non-test Go file for the forbidden imports and provider calls, TestScannerSeesTelemetry, TestCoreConfigSendsNothing, TestNoTelemetryAtRuntime with every OTEL exporter set to a local collector); `apps/controller/internal/registry/mirror/notelemetry_test.go` (built: TestMirrorConfigSendsNothing) |
+| R5.12 | apps/controller/internal/backend/container/cainstall_test.go |
+| R5.13 to R5.18 | `apps/controller/internal/backend/container/ensure_test.go` (built: local first, no registry, found and pulled by digest, digest mismatch, transfer failure, token refused, not found and pushed in the background, no staging name, wait for the controller, wait ends with the job, busy, unclear answer, push waits, push fails and is retried, push refused, progress text) |
+| R5.19, R5.20 | `apps/controller/internal/agentlink/registry_test.go` (built: stub answers, request ids, capability); `apps/controller/internal/agent/registry_test.go` (built: version 3 only on the ack, no session, round trip, link drop, MachineReport flag); `apps/controller/internal/machines/recovery_test.go` (built: TestHelloAckVersionFollowsRegistry) |
+| R5.21, R5.22, R5.23 | `apps/controller/internal/registry/key_test.go` (built: TestKeyVectors, TestStackHashVector, TestStackHashIgnoresOrderAndCRLFOnly, TestKeyChangesWithEveryPart, TestKeyRefusesBadInput) |
+| R5.21, R5.23, R5.7 labels | `apps/controller/internal/registry/keys/keys_test.go` (built: TestSameStackFilesSameKey, TestLockFileChangeGivesNewKey, TestLabels) |
+| R5.24, R5.27 | `apps/controller/internal/registry/keys/update_test.go` (built: TestStandardPointerMovesAloneCustomNever, TestPointerPerRepository), `apps/controller/internal/store/registry_keys_test.go` (built) |
+| R5.25, R5.26 | `apps/controller/internal/registry/keys/update_test.go` (built: TestUpdateOfDetected, TestNoUpdateCases, TestBranchVariantThenMerge) |
+| R5.28 | `apps/controller/internal/registry/keys/keys_test.go` (built: TestSimilar) |
+| R5.29 to R5.32 | `apps/controller/internal/registry/records/records_test.go` (built: TestLocatorEnsure, TestLayerAccounting, TestLayerAccountingTiesAndBadInput, TestPromotedHookAccountsLayers, TestRecordPull, TestRecordPush, TestRecordEvent, TestPrune) |
+| R5.33 to R5.36 | `apps/controller/internal/registry/records/records_test.go` (built: TestOverview, TestOverviewWhereStates, TestImagesFilters, TestImageDetail, TestPullsListAndTimeLeft, TestNextCleanup); `apps/controller/internal/api/handlers_registry_read_test.go` (built: one test per handler, the 501 and error cases) |
+| R5.37 to R5.40 | `apps/controller-console/src/screens/registry/Registry.test.tsx`, `apps/controller-console/src/screens/registry/PullingStep.test.tsx` (built); `e2e/tests/web-console/registry.spec.ts` (built: every screen at 360, 393 and 1300 px, delete asks first and refuses a used image, the replace wizard, budgets); `e2e/tests/web-console/ux-routes.spec.ts` (the routes and the Registry tab, dark and light) |
+| R5.8, R5.41, R5.50 | apps/controller/cmd/crsp/registry_budget_test.go; apps/controller/internal/registry/core/core_test.go (REG15) |
+| R5.41, R5.42 | apps/controller/internal/registry/retention/budget_test.go; apps/controller/internal/api/handlers_registry_retention_test.go (built, REG6) |
+| R5.43 to R5.45, R5.49, R5.50 | apps/controller/internal/registry/retention/rules_test.go (built, REG6) |
+| R5.46, R5.47 | apps/controller/internal/registry/retention/delete_test.go (built, REG6; the in-use refusal on SQLite in apps/controller/internal/store/registry_retention_test.go) |
+| R5.48, R5.52 | apps/controller/internal/registry/retention/cleanup_test.go (built, REG6; the fake registry stands for Distribution, so pulls during the window are proven by REG1's registry test) |
+| R5.51 | apps/controller/internal/api/handlers_registry_retention_test.go (built, REG6: audit entries; the store test checks each action is recorded) |
+| R5.53 to R5.58 | `apps/controller/internal/registry/replace/replace_test.go` (built: TestPlanLifecycle, TestAnotherRepositoryKeepsTheOldImage, TestRollbackRestoresThePointer, TestRollbackAfterKeepUntilIsRefused, TestStopAfterCurrentStepThenResume, TestRecoverStopsOrphanedRunningPlans, TestCompare); `apps/controller/internal/store/registry_replace_test.go` (built: plan survives a reopen); `apps/controller/internal/api/handlers_registry_reg7_test.go` (built: error mapping) |
+| R5.59 to R5.62 | apps/controller/internal/registry/scan/scan_test.go |
+| R5.63 to R5.67 | `apps/controller/internal/registry/mirror/mirror_test.go` (proxy config per upstream, folders, routing, no guard refused, budget); `apps/controller/internal/registry/mirror/service_test.go` (settings round trip through the store); `apps/controller/internal/api/handlers_registry_reg9_test.go` (settings API, refusals, admin only); `apps/controller/internal/registry/mirror/engineconf/engineconf_test.go` and `apps/controller/internal/agent/engine_mirror_test.go` (engine files written once, idempotent) |
+| R5.68 to R5.72 | `apps/controller/internal/registry/builds/progress_test.go`, `apps/controller/internal/registry/builds/tail_test.go`, `apps/controller/internal/registry/builds/gate_test.go` (built: parser, failure class, redacted tail, one build at a time, half the cores); `apps/controller/internal/backend/container/buildstream_test.go` (built: streamed steps, record, failure, concurrency, cores); `apps/controller/internal/store/imagebuilds_test.go` (built: record life, typical seconds, time left, list order); `apps/controller/internal/api/handlers_builds_test.go` (built: list, get, 404, 501); `apps/controller/internal/backend/sys/stream_test.go` (built: streamed lines) |
+| R5.73 to R5.76 | `apps/controller/internal/stackscan/scan_test.go` (built: recorded tree in apps/controller/internal/stackscan/testdata/tree.json); `apps/controller/internal/github/webhook_steps_test.go` (built: TestRESTListBlobsAt, TestRESTListBlobsAtHeldBackOnLowBudget) |
+| R5.77 to R5.80 | `apps/controller/internal/profiles/profiles_test.go` (built: defaults, mapping, precedence, ref, views, older generation); `apps/controller/internal/store/profilestore_test.go` (built: tables) |
+| R5.82 | `apps/controller/internal/backend/container/linuxcrsp_test.go` (built: TestCheckLinuxBinary, TestLinuxCrspFetchedOnceAndKept, TestLinuxCrspRefusals, TestLinuxCrspOwnBinaryOnSameArchLinuxHost, TestStageRefusesWindowsBinary, TestStageUsesLinuxCrspHook) |
+| R5.83 | `apps/controller/internal/jobsize/scan_test.go` TestScanStacks (reads the commit through the stack scan's reader); `apps/controller/internal/stackscan/scan_test.go` (the stack hash does not change) | new |
+| R6.1 | apps/controller/internal/store/no_secrets_test.go (registry tables); apps/controller/internal/registry/core/token_test.go (no token in logs) |
 
 ## 10. Decisions
 
@@ -433,40 +433,40 @@ Not built: the registry core (REG1: Distribution under `/v2/`, the token issuer,
 
 Built (REG2):
 
-- internal/backend/container/ensure.go (`Controller`, `ControllerSlot` `Link`, the wait, the pull by digest, the push in the background, the progress text), `images.go` (`PrepareImage` order), `internal/backend/sys` (`StreamCommands`)
-- internal/agent/registry.go (`RegistryClient`, protocol version 3 in Hello, `registry: true` in the MachineReport)
-- internal/machines/link.go (`Hooks.Registry`: HelloAck version 3)
+- apps/controller/internal/backend/container/ensure.go (`Controller`, `ControllerSlot` `Link`, the wait, the pull by digest, the push in the background, the progress text), `images.go` (`PrepareImage` order), `apps/controller/internal/backend/sys` (`StreamCommands`)
+- apps/controller/internal/agent/registry.go (`RegistryClient`, protocol version 3 in Hello, `registry: true` in the MachineReport)
+- apps/controller/internal/machines/link.go (`Hooks.Registry`: HelloAck version 3)
 
-Built (REG5): `apps/web/src/screens/registry/` (`RegistryTab.tsx`, `RegistryImagePage.tsx`, `RegistryBudgetsPage.tsx`, `RegistryMirrorPage.tsx`, `RegistryReplacePage.tsx`, `PullingStep.tsx`, `words.ts`), the Registry tab in `screens/images/ImagesAndCaches.tsx`, the routes `/pool/images/registry/budgets`, `/mirror`, `/:id`, `/:id/replace` in `App.tsx`, the pulling lines in `screens/runners/AddRunners.tsx`, and the registry API of the e2e fixtures `e2e/tests/web-console/registry-fixtures.ts`.
+Built (REG5): `apps/controller-console/src/screens/registry/` (`RegistryTab.tsx`, `RegistryImagePage.tsx`, `RegistryBudgetsPage.tsx`, `RegistryMirrorPage.tsx`, `RegistryReplacePage.tsx`, `PullingStep.tsx`, `words.ts`), the Registry tab in `screens/images/ImagesAndCaches.tsx`, the routes `/pool/images/registry/budgets`, `/mirror`, `/:id`, `/:id/replace` in `App.tsx`, the pulling lines in `screens/runners/AddRunners.tsx`, and the registry API of the e2e fixtures `e2e/tests/web-console/registry-fixtures.ts`.
 
 Built (REG10):
 
-- internal/registry/ (`key.go` with the key and names, `types.go`, `interfaces.go`, `doc.go`)
-- internal/agentlink/registry.go (controller side stub of the protocol version 3 calls)
-- internal/profiles/ (IMG3: profiles, defaults, stack mapping, resolver, read side), internal/store/profilestore.go, migration 00021_image_profiles.sql and `image_profiles.sql`
-- internal/store/migrations/00019_registry.sql and the query files `registry_core.sql` (REG1), `registry_keys.sql` (REG3), `registry_records.sql` (REG4), `registry_retention.sql` (REG6), `registry_replace.sql` (REG7), `registry_scan.sql` (REG8), `registry_mirror.sql` (REG9), `image_builds.sql` (IMG1)
-- internal/registry/keys/ (REG3: Keyer, labels, pointer rules, Detector, similar) and internal/store/registry_keys.go (pointer and lineage store)
-- internal/registry/scan/ (REG8: `scanner.go`, `run.go`, `referrers.go`, `fetch.go`)
-- internal/api/stubs_registry_reg4.go, `_reg6.go` (501 per owning task); REG9's stub is replaced by `handlers_registry_reg9.go`; IMG1's stub is replaced by `handlers_registry_img1.go`; REG7's stub is replaced by `handlers_registry_reg7.go`, `internal/registry/replace/` and `internal/store/registry_replace.go`
+- apps/controller/internal/registry/ (`key.go` with the key and names, `types.go`, `interfaces.go`, `doc.go`)
+- apps/controller/internal/agentlink/registry.go (controller side stub of the protocol version 3 calls)
+- apps/controller/internal/profiles/ (IMG3: profiles, defaults, stack mapping, resolver, read side), apps/controller/internal/store/profilestore.go, migration 00021_image_profiles.sql and `image_profiles.sql`
+- apps/controller/internal/store/migrations/00019_registry.sql and the query files `registry_core.sql` (REG1), `registry_keys.sql` (REG3), `registry_records.sql` (REG4), `registry_retention.sql` (REG6), `registry_replace.sql` (REG7), `registry_scan.sql` (REG8), `registry_mirror.sql` (REG9), `image_builds.sql` (IMG1)
+- apps/controller/internal/registry/keys/ (REG3: Keyer, labels, pointer rules, Detector, similar) and apps/controller/internal/store/registry_keys.go (pointer and lineage store)
+- apps/controller/internal/registry/scan/ (REG8: `scanner.go`, `run.go`, `referrers.go`, `fetch.go`)
+- apps/controller/internal/api/stubs_registry_reg4.go, `_reg6.go` (501 per owning task); REG9's stub is replaced by `handlers_registry_reg9.go`; IMG1's stub is replaced by `handlers_registry_img1.go`; REG7's stub is replaced by `handlers_registry_reg7.go`, `apps/controller/internal/registry/replace/` and `apps/controller/internal/store/registry_replace.go`
 
 Built (REG1):
 
-- internal/registry/core/ (`registry.go` mount, door, referrers, GC, `names.go`, `guard.go`, `token.go`, `promote.go`, `sink.go`, `gate.go`)
-- internal/store/registry_core.go (ledger and token leases over `queries/registry_core.sql`), internal/regcreds/engineca.go, internal/backend/container/engineca.go, cmd/crsp/registry_wiring.go (and its hook in `main.go`)
+- apps/controller/internal/registry/core/ (`registry.go` mount, door, referrers, GC, `names.go`, `guard.go`, `token.go`, `promote.go`, `sink.go`, `gate.go`)
+- apps/controller/internal/store/registry_core.go (ledger and token leases over `queries/registry_core.sql`), apps/controller/internal/regcreds/engineca.go, apps/controller/internal/backend/container/engineca.go, apps/controller/cmd/crsp/registry_wiring.go (and its hook in `main.go`)
 
 Built (REG6):
 
-- internal/registry/retention/ (budgets, settings, recommendations, safe delete, cleanup and its weekly `Tick`)
-- internal/store/registry_retention.go (the retention data adapter over `queries/registry_retention.sql`); internal/api/handlers_registry_reg6.go replaces `stubs_registry_reg6.go`
-- Wired by the join (REG11): `retention.New` in `cmd/crsp/registry_wiring.go`; `Service.Tick` runs every 5 minutes once a registry core is present.
+- apps/controller/internal/registry/retention/ (budgets, settings, recommendations, safe delete, cleanup and its weekly `Tick`)
+- apps/controller/internal/store/registry_retention.go (the retention data adapter over `queries/registry_retention.sql`); apps/controller/internal/api/handlers_registry_reg6.go replaces `stubs_registry_reg6.go`
+- Wired by the join (REG11): `retention.New` in `apps/controller/cmd/crsp/registry_wiring.go`; `Service.Tick` runs every 5 minutes once a registry core is present.
 
-Built (IMG1): internal/registry/builds/ (`progress.go` parser, `tail.go` redacted tail and failure class, `gate.go` one build at a time and the cores, `record.go` records and events, `api.go` the API view), internal/backend/container/buildstream.go (the streamed build), `Runner.RunStream` in internal/backend/sys, internal/store/imagebuilds.go, internal/api/handlers_registry_img1.go (replaces `stubs_registry_img1.go`), the `image.build` event (`events.ImageBuild`; `LiveEvent` of the contract gained `image.build` and `image_build`).
+Built (IMG1): apps/controller/internal/registry/builds/ (`progress.go` parser, `tail.go` redacted tail and failure class, `gate.go` one build at a time and the cores, `record.go` records and events, `api.go` the API view), apps/controller/internal/backend/container/buildstream.go (the streamed build), `Runner.RunStream` in apps/controller/internal/backend/sys, apps/controller/internal/store/imagebuilds.go, apps/controller/internal/api/handlers_registry_img1.go (replaces `stubs_registry_img1.go`), the `image.build` event (`events.ImageBuild`; `LiveEvent` of the contract gained `image.build` and `image_build`).
 
 Migration numbers reserved for the wave, so parallel tasks never collide: 00020 IMG2, 00021 IMG3, 00022 REG1, 00023 REG3, 00024 REG4, 00025 REG6, 00026 REG7, 00027 REG8, 00028 REG9, 00029 IMG1. A task that needs no new column uses none.
 
-Built (REG14): the registry API fields the screens used to work out themselves (R5.33a, R5.35a, R5.54, R5.54a): `internal/registry/records/read.go` (`extras`, `UnusedDays`, `RecommendedImages`, `InUse`, `SharedBytes`, `VariantGoneDays`, `LineageEntry.Relation`), `internal/api/handlers_registry_reg4.go`, `internal/api/handlers_registry_reg7.go` (`replaceSteps`), `replace.Service.KeepDaysDefault`, and the screens `RegistryTab.tsx`, `RegistryImagePage.tsx`, `RegistryReplacePage.tsx`, `RegistryBudgetsPage.tsx`. **Not yet:** the ready-made line of Add runners (`ReadyMadeLine`) still maps the machine arch to `amd64` or `arm64` and shows the first current image of that arch, not the image of the machine's profile; it needs the Add runners plan to carry the job image key of the machine.
+Built (REG14): the registry API fields the screens used to work out themselves (R5.33a, R5.35a, R5.54, R5.54a): `apps/controller/internal/registry/records/read.go` (`extras`, `UnusedDays`, `RecommendedImages`, `InUse`, `SharedBytes`, `VariantGoneDays`, `LineageEntry.Relation`), `apps/controller/internal/api/handlers_registry_reg4.go`, `apps/controller/internal/api/handlers_registry_reg7.go` (`replaceSteps`), `replace.Service.KeepDaysDefault`, and the screens `RegistryTab.tsx`, `RegistryImagePage.tsx`, `RegistryReplacePage.tsx`, `RegistryBudgetsPage.tsx`. **Not yet:** the ready-made line of Add runners (`ReadyMadeLine`) still maps the machine arch to `amd64` or `arm64` and shows the first current image of that arch, not the image of the machine's profile; it needs the Add runners plan to carry the job image key of the machine.
 
-Built (REG9): internal/registry/mirror/ (`config.go`, `mirror.go`, `service.go`), internal/registry/mirror/engineconf/, internal/store/registry_mirror.go, internal/api/handlers_registry_reg9.go, internal/agent/engine_mirror.go, cmd/crsp/registry_mirror_wiring.go. No new migration: the columns of `registry_mirror_settings` in 00019 are enough (00028 stays unused).
+Built (REG9): apps/controller/internal/registry/mirror/ (`config.go`, `mirror.go`, `service.go`), apps/controller/internal/registry/mirror/engineconf/, apps/controller/internal/store/registry_mirror.go, apps/controller/internal/api/handlers_registry_reg9.go, apps/controller/internal/agent/engine_mirror.go, apps/controller/cmd/crsp/registry_mirror_wiring.go. No new migration: the columns of `registry_mirror_settings` in 00019 are enough (00028 stays unused).
 
 ## Design-system proof
 

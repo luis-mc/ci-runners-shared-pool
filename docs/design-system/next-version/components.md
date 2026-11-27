@@ -455,7 +455,7 @@ A `Tag` is the small outlined label that names a kind next to a word, such as `i
 - **Used for:** the keyboard-first entry of UX-57. `Ctrl+K` (`Cmd+K` on macOS) opens a search over the areas, the items found by name and the commands the user's role allows. Focus starts in the search box. Typing filters; Down and Up (and `j` and `k` outside the box) move through the results, `Enter` opens one, `Escape` closes. `?` opens the list of every shortcut. Both sit in the one overlay of component 9 and use the search bar of component 21. A command opens the one place where it lives (UX-52).
 - **Looks:** a dialog with a search bar over a list of results. A result names the thing and says its kind in a quiet word (area, machine, command). The chosen result has a weight and a tint, never colour alone. The shortcut list is a facts list of key and action.
 - **Parts:** `SearchList` (`packages/ui/src/components/SearchList.tsx`) is the search box, the filtered list, the arrow movement and `Enter`; the palette uses it and a list page may too. `ArrowNavigation` (`packages/ui/src/components/Navigation.tsx`) is mounted once in the shell and gives every page Down, Up, `j` and `k` (UX-57), and with `handleRowKey` (`RowKeys.ts`) Left, Right, Home and End along every horizontal row. A page and the `Tabs` part never wire their own arrow keys.
-- **Source:** `packages/ui/src/components/Shell.tsx` (`ResultList`, `ShortcutTable`), `packages/ui/src/components/SearchList.tsx`, `packages/ui/src/components/Navigation.tsx`, `apps/web/src/shell/Shell.tsx`
+- **Source:** `packages/ui/src/components/Shell.tsx` (`ResultList`, `ShortcutTable`), `packages/ui/src/components/SearchList.tsx`, `packages/ui/src/components/Navigation.tsx`, `apps/controller-console/src/shell/Shell.tsx`
 - **Rules:** UX-17, UX-43, UX-44, UX-46, UX-47, UX-57.
 - **Guard:** none yet.
 
@@ -490,7 +490,7 @@ A `Tag` is the small outlined label that names a kind next to a word, such as `i
 - **Looks:** each row shows the theme name and, under it, a small row of that theme's colours (surface, primary, Done, Note, Needs you, Problem) in a box in the theme's page colour. The swatches are drawn from the theme's own tokens; the row is decoration and the name carries the meaning. The theme row may show a `ThemePreview` of that theme in dark and one in light (`Choice.preview`) instead of the swatch row; Settings, Appearance does. A choice with previews is drawn as cards in a grid, 3 per row on a desktop, 2 on a tablet and 1 on a phone; each card holds the radio, the theme name and the dark and light previews side by side, the whole card is the choice, and the selected card has a 2 px primary border. The mode (system, dark, light) is a second one-choice list beside it. `ThemePreview` is a small live sample of a theme in dark or light: a pane with its title in the border, a selected row in reverse video and a primary button, all from that theme's tokens. It is a picture with one label, not a control.
 - **Source:** `packages/ui/src/components/Fields.tsx` (`Choice.swatch`), `packages/ui/src/components/ThemePreview.tsx`, `packages/ui/src/themes.ts`
 - **Rules:** UX-22, UX-55, UX-60.
-- **Guard:** `scripts/design/themes.test.ts` (tokens and contrast); `apps/web/src/screens/settings/Settings.test.tsx` (picking and keeping a theme).
+- **Guard:** `scripts/design/themes.test.ts` (tokens and contrast); `apps/controller-console/src/screens/settings/Settings.test.tsx` (picking and keeping a theme).
 
 ## 43. Field grid
 
@@ -518,7 +518,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 - **Behaviour:** Move up and Move down swap the row with its neighbour. With a row focused, Alt+ArrowUp and Alt+ArrowDown do the same and focus follows the row. A live line says the new place. A stored value with a repeated or missing item is normalised on load: the first of each is kept and the missing are appended in the default order.
 - **Source:** `packages/ui/src/components/OrderList.tsx` (`OrderList`, `normaliseOrder`), `packages/ui/src/components.css`
 - **Rules:** UX-16, UX-20.
-- **Guard:** `packages/ui/src/components/OrderList.test.tsx`, `apps/web/src/screens/settings/Budgets.test.tsx`.
+- **Guard:** `packages/ui/src/components/OrderList.test.tsx`, `apps/controller-console/src/screens/settings/Budgets.test.tsx`.
 - **Words:** see content.md, Ordered list words.
 
 ## 46. Open row
@@ -549,10 +549,10 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** the update on Windows: one native window for the whole update (Review, Downloading, Waiting for jobs, Installing, Restarting, Done, Failed), and the banner and dialog bitmaps of the MSI. Outside the shared UI package because Windows draws it; it still wears the same tokens.
 - **Looks:** the Phosphor dark theme: page fill, text and muted text, a progress bar with a border and a filled part, a divider line above one row of buttons on the right. At the top a band: the crsp icon and the product name in the primary colour on the page colour with faint scanlines. The heading is bold in the primary colour (done colour on Done, problem colour on a failure). The primary button is filled, the others outlined, with a focus ring just inside the button; a busy button is dim and says so. The window has a title, the crsp icon and a close button only, no minimise or maximise, is centred on the screen of the tray icon, comes to the front once and is never always on top. It is laid out in units of the font height, so no text is cut off at 100, 125, 150 or 200 %. The installer bitmaps keep their light side where the stock dialogs write text, and carry the same band art (icon, name, scanlines) on the other side.
-- **Source:** `internal/updatewindow/` (`model.go` the states, `layout.go` the units, `art.go` the band and the installer bitmaps, `window_windows.go` the window), `internal/updatewindow/tokens_gen.go` (generated from `packages/ui/src/tokens.css` by `internal/updatewindow/genart`), `installer/build.ps1` and `installer/crsp.wxs` (`WixUIBannerBmp`, `WixUIDialogBmp`)
+- **Source:** `apps/controller/internal/updatewindow/` (`model.go` the states, `layout.go` the units, `art.go` the band and the installer bitmaps, `window_windows.go` the window), `apps/controller/internal/updatewindow/tokens_gen.go` (generated from `packages/ui/src/tokens.css` by `apps/controller/internal/updatewindow/genart`), `installer/build.ps1` and `installer/crsp.wxs` (`WixUIBannerBmp`, `WixUIDialogBmp`)
 - **Rules:** CORE-1 to CORE-7, UX-30 (steps in order, later steps cannot be pressed), UX-71 (the buttons on one bar at the foot), UX-4.
-- **Guard:** `internal/updatewindow/layout_test.go` and `art_test.go` (nothing clipped at every DPI, the palette equals the tokens), and `crsp update-window --layout-check` on the Windows runner (`.github/workflows/tray-smoke.yml`).
-- **Web form (macOS and Linux, TRAY7):** the same window as a page that the `crsp update-window` process serves on `127.0.0.1` and opens as an app window of Edge, Chrome or Chromium in an own browser profile at 520 by 440. It paints the same model (`model.go`) with the same words and the same tokens (written into the page from `tokens_gen.go`) and the same band art; the first-start window (Welcome, Your choices, All set; 560 by 520) uses the same page. Source: `internal/updatewindow/web.go`, `webpage.go`, `webupdate.go`, `firststart.go`. Guard: `internal/updatewindow/web_test.go`, `firststart_test.go`.
+- **Guard:** `apps/controller/internal/updatewindow/layout_test.go` and `art_test.go` (nothing clipped at every DPI, the palette equals the tokens), and `crsp update-window --layout-check` on the Windows runner (`.github/workflows/tray-smoke.yml`).
+- **Web form (macOS and Linux, TRAY7):** the same window as a page that the `crsp update-window` process serves on `127.0.0.1` and opens as an app window of Edge, Chrome or Chromium in an own browser profile at 520 by 440. It paints the same model (`model.go`) with the same words and the same tokens (written into the page from `tokens_gen.go`) and the same band art; the first-start window (Welcome, Your choices, All set; 560 by 520) uses the same page. Source: `apps/controller/internal/updatewindow/web.go`, `webpage.go`, `webupdate.go`, `firststart.go`. Guard: `apps/controller/internal/updatewindow/web_test.go`, `firststart_test.go`.
 
 ## 50. Waterfall
 
@@ -722,7 +722,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Phone (360, 393 px):** the answer is a sheet at the bottom of the screen, full width (UX-43); the button is `--ds-target-min` square (UX-16).
 - **Source:** `packages/ui/src/components/Help.tsx` (`TermHelp`), `packages/ui/src/components/Popover.tsx`, `packages/ui/src/components.css`
 - **Rules:** UX-43, UX-44, UX-46, UX-47, UX-16, UX-17, UX-57, CORE-3.
-- **Guard:** `apps/web/src/screens/help/Help.test.tsx`, `e2e/tests/web-console/help.spec.ts`, and the `primary` guard of `e2e/tests/web-console/ux-guards.ts`.
+- **Guard:** `apps/controller-console/src/screens/help/Help.test.tsx`, `e2e/tests/web-console/help.spec.ts`, and the `primary` guard of `e2e/tests/web-console/ux-guards.ts`.
 
 ## 67. Search table
 
@@ -735,7 +735,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Looks:** the toolbar is one row at 1300 px; the panel is one bordered box of the width of a form field and a half; the chosen row has a primary outline.
 - **Source:** `packages/ui/src/components/SearchTable.tsx` (`SearchTable`, `parseSearch`, `matchesSearch`), `packages/ui/src/components/Table.tsx` (`current`, `onSelect`), `packages/ui/src/components.css`.
 - **Rules:** UX-31, UX-57, UX-43, UX-72, UX-74, UX-49, CORE-1, CORE-2, CORE-4.
-- **Guard:** `packages/ui/src/components/SearchTable.test.tsx`, `apps/web/src/screens/jobs/inspector.test.tsx`, `e2e/tests/web-console/pool-jobs.spec.ts`, `e2e/tests/web-console/jobs-doctor.spec.ts`, `e2e/tests/web-console/ux-keyboard.spec.ts`.
+- **Guard:** `packages/ui/src/components/SearchTable.test.tsx`, `apps/controller-console/src/screens/jobs/inspector.test.tsx`, `e2e/tests/web-console/pool-jobs.spec.ts`, `e2e/tests/web-console/jobs-doctor.spec.ts`, `e2e/tests/web-console/ux-keyboard.spec.ts`.
 
 ## 68. Date and time
 
@@ -752,13 +752,13 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Phone (360, 393 px):** one column; a picture is at most 20 rem wide and scales to the card; the badge is `--ds-target-min` high.
 - **Source:** `packages/ui/src/components/Help.tsx` (`HelpQuestionCard`), `packages/ui/src/components/HelpPictures.tsx`, `packages/ui/src/components/Card.tsx` (`CardGrid columns`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-10, UX-51, UX-17, UX-16, UX-72, CORE-1, CORE-5.
-- **Guard:** `packages/ui/src/components/Help.test.tsx`, `apps/web/src/screens/help/Help.test.tsx`, `e2e/tests/web-console/help.spec.ts` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
+- **Guard:** `packages/ui/src/components/Help.test.tsx`, `apps/controller-console/src/screens/help/Help.test.tsx`, `e2e/tests/web-console/help.spec.ts` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
 ## 70. Update window
 
 - **Used for:** the whole update of the desktop app, in one window (UX-79, UX-80). Steps: Review, Downloading, Waiting for work to finish, Installing, Testing, Done. It shows progress and Cancel where the updater supports it. The result is on Done ("Updated to version 1.2.3."). On Windows it is a native window; the web console shows the same steps in its own page (component 73). An update nobody asked for ends with one tray notice that opens Done (component 74).
 - **Looks:** the product band at the top with the product icon, the step line, one detail line, a progress bar and a button row at the right. It grows with its content; it has no scrollbar.
-- **Source:** `internal/updatewindow` (native), `parts/rust/question_window.rs` of the starter
+- **Source:** `apps/controller/internal/updatewindow` (native), `parts/rust/question_window.rs` of the starter
 - **Rules:** UX-79, UX-80, UX-16, UX-17, CORE-1, CORE-3, CORE-5, CORE-6.
 - **Guard:** the layout check of the window at 100%, 150% and 200% text scale; `scripts/design/guards/lifecycle/states-render.mjs` (LC-24, LC-30).
 
@@ -790,7 +790,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 
 - **Used for:** the native side of the lifecycle. One question window shows update progress and the remove question. The tray menu only notifies.
 - **Looks:** the window is sized from its content and the text scale, never a fixed size. The tray shows one notice per event per 24 hours.
-- **Source:** `internal/updatewindow`, `internal/tray`, `internal/trayserver`
+- **Source:** `apps/controller/internal/updatewindow`, `apps/controller/internal/tray`, `apps/controller/internal/trayserver`
 - **Rules:** UX-83, UX-79, UX-80, CORE-3, CORE-4.
 - **Guard:** `scripts/design/guards/lifecycle/tray-modal.mjs` (LC-22, LC-30) and `scripts/design/guards/lifecycle/states-render.mjs` (LC-30).
 
@@ -804,7 +804,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Phone (360, 393 px):** one column; long words wrap.
 - **Source:** `packages/ui/src/components/Steps.tsx`, `packages/ui/src/components.css`
 - **Rules:** UX-10, UX-72, CORE-1, CORE-5.
-- **Guard:** `apps/web/src/screens/insights/DoNext.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
+- **Guard:** `apps/controller-console/src/screens/insights/DoNext.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
 ## 76. Side menu
 
@@ -816,7 +816,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Phone (360, 393 px):** the list sits above the body; each item is at least `--ds-target-min` high.
 - **Source:** `packages/ui/src/components/SideMenu.tsx`, `packages/ui/src/components.css`
 - **Rules:** UX-85, UX-16, UX-69, CORE-1, CORE-5.
-- **Guard:** `packages/ui/src/components/link-frame.test.tsx`, `apps/web/src/screens/help/Help.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
+- **Guard:** `packages/ui/src/components/link-frame.test.tsx`, `apps/controller-console/src/screens/help/Help.test.tsx` and the DOM layout checks of `ux-routes.spec.ts` at 360, 393 and 1300 px.
 
 ## 77. Slot timeline
 
@@ -864,7 +864,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Tokens:** `--ds-color-text-muted`, `--ds-color-needs-you`, `--ds-color-problem`, `--ds-weight-bold`. No new token.
 - **Source:** `packages/ui/src/components/SummaryLine.tsx` (`SummaryLine`), `packages/ui/src/components.css` (`ds-summary`). A page passes numbers only.
 - **Rules:** UX-86, UX-17, UX-58, CORE-1, CORE-3, CORE-7.
-- **Guard:** `packages/ui/src/components/SummaryLine.test.tsx`; `apps/web/src/screens/runners/Runners.test.tsx`; the no-app-CSS scan and the DOM layout checks at 360, 393 and 1300 px.
+- **Guard:** `packages/ui/src/components/SummaryLine.test.tsx`; `apps/controller-console/src/screens/runners/Runners.test.tsx`; the no-app-CSS scan and the DOM layout checks at 360, 393 and 1300 px.
 
 ## 82. Terminal
 
@@ -890,7 +890,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Tokens:** none.
 - **Source:** `packages/ui/src/components/LiveText.tsx` (`LiveText`, `useThrottledText`, `LIVE_TEXT_GAP_MS`). A page passes the sentence only.
 - **Rules:** UX-17, CORE-5.
-- **Guard:** `packages/ui/src/components/LiveText.test.tsx` (at most one announcement per 10 s); `apps/web/src/screens/pool/poolWords.test.tsx`.
+- **Guard:** `packages/ui/src/components/LiveText.test.tsx` (at most one announcement per 10 s); `apps/controller-console/src/screens/pool/poolWords.test.tsx`.
 
 ## How to add a component
 

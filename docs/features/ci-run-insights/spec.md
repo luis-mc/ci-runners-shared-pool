@@ -7,9 +7,9 @@ status: proposed
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/insights/**", "internal/jobsdata/reconcile/**", "internal/jobsdata/followup*.go", "internal/store/jobsdata_followups*.go", "internal/agent/jobsample/**", "internal/github/rest_insights*.go", "internal/doctor/checks/workflows*.go", "internal/agentlink/insights*.go", "internal/agent/jobsample*.go", "cmd/crsp/insights*wiring.go", "internal/store/insights*.go", "internal/store/queries/insights_*.sql", "internal/store/migrations/00030_ci_insights.sql", "internal/store/migrations/00031_insight_dismiss.sql", "internal/tray/menu*.go", "apps/web/src/screens/settings/InsightsUpdate*", "internal/api/handlers_insights*.go", "apps/web/src/screens/insights/**"]
+code: ["apps/controller/internal/insights/**", "apps/controller/internal/jobsdata/reconcile/**", "apps/controller/internal/jobsdata/followup*.go", "apps/controller/internal/store/jobsdata_followups*.go", "apps/controller/internal/agent/jobsample/**", "apps/controller/internal/github/rest_insights*.go", "apps/controller/internal/doctor/checks/workflows*.go", "apps/controller/internal/agentlink/insights*.go", "apps/controller/internal/agent/jobsample*.go", "apps/controller/cmd/crsp/insights*wiring.go", "apps/controller/internal/store/insights*.go", "apps/controller/internal/store/queries/insights_*.sql", "apps/controller/internal/store/migrations/00030_ci_insights.sql", "apps/controller/internal/store/migrations/00031_insight_dismiss.sql", "apps/controller/internal/tray/menu*.go", "apps/controller-console/src/screens/settings/InsightsUpdate*", "apps/controller/internal/api/handlers_insights*.go", "apps/controller-console/src/screens/insights/**"]
 design_system: [UX-4, UX-6, UX-11, UX-14, UX-17, UX-18, UX-19, UX-25, UX-28, UX-29, UX-30, UX-33, UX-38, UX-41, UX-49, UX-52, UX-53, UX-54, UX-58, UX-62, UX-71, UX-72]
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -150,7 +150,7 @@ Requirement IDs are this spec's own. "Idea n" is the owner's list of 20 Nov 2026
 
 **R5.1** — **What is seen.** crsp analyses every job of every repository it watches: jobs of crsp runners and jobs of other runners (self-hosted runners of another pool, GitHub-hosted runners). The source is the existing ingest (observability R5.35, github-integration R5.96 to R5.99). A job crsp did not run has no slot times; its wait is GitHub's `created_at` to `started_at`.
 
-**R5.2** — **Job logs.** After a job completes, the collector downloads its log (`GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`), passes every line through the redact package (`internal/redact`, with the values the controller holds) and drops the values of the runner's `env:` block, keeping names only. The redacted log is stored gzipped in the CI data folder (`<data dir>/ci-data/<repository id>/logs/<run id>-<attempt>-<job id>.log.gz`) and indexed in `ci_job_logs` (size, lines, sha256, stored and expiry times, state). A log over 64 MiB is not stored; its row says `too_large`.
+**R5.2** — **Job logs.** After a job completes, the collector downloads its log (`GET /repos/{owner}/{repo}/actions/jobs/{job_id}/logs`), passes every line through the redact package (`apps/controller/internal/redact`, with the values the controller holds) and drops the values of the runner's `env:` block, keeping names only. The redacted log is stored gzipped in the CI data folder (`<data dir>/ci-data/<repository id>/logs/<run id>-<attempt>-<job id>.log.gz`) and indexed in `ci_job_logs` (size, lines, sha256, stored and expiry times, state). A log over 64 MiB is not stored; its row says `too_large`.
 
 **R5.3** — **Test and guardrail reports.** After a run completes, the collector lists its artifacts and downloads those whose content is a test report (R5.33) or a guardrail report (R5.31), up to 50 MiB each and 200 MiB per run. Raw files are stored redacted in `<data dir>/ci-data/<repository id>/reports/` and indexed in `ci_report_files`; parsed rows go to `test_results` and `guardrail_reports`.
 
@@ -313,7 +313,7 @@ Whichever of a time or a size limit is reached first applies; the oldest goes fi
 
 **R6.4** — **Agent cost.** Sampling (R5.19) uses under 1 percent of one CPU core per machine (OPS66, measured in observability R5.64; it was 0.5 percent before the 1 s cgroup and Job Object readers) and under 1 KiB/s on the agent link per running job.
 
-**R6.5** — **Privacy.** As R5.4 and observability R5.38 (reworded by CIX7) and R6.5 to R6.7: every stored log and report passes the redactor; the redaction test (observability R6.6) covers the CI data sink; no insights package makes a network call other than to GitHub through `internal/github` and the agent link.
+**R6.5** — **Privacy.** As R5.4 and observability R5.38 (reworded by CIX7) and R6.5 to R6.7: every stored log and report passes the redactor; the redaction test (observability R6.6) covers the CI data sink; no insights package makes a network call other than to GitHub through `apps/controller/internal/github` and the agent link.
 
 **R6.6** — **Never silent.** No analyser writes to pool, machine, runner or repository settings. Only `startInsightPlan`, called by an admin after Review, changes the setup, with an audit row per change (observability R5.24, R5.25).
 
@@ -329,21 +329,21 @@ Whichever of a time or a size limit is reached first applies; the oldest goes fi
 
 | Package | Job | Ideas |
 |---|---|---|
-| `internal/insights` | Finding, kind, scope, window, job facts; the `Analyser`, `FindingStore` and `JobSource` interfaces; the engine that runs analysers and resolves | 1 |
-| `internal/insights/collect` | Fetch steps, logs, artifacts, commit trees within the budget; redact; store files; retention of files | D4 |
-| `internal/insights/waits` | Wait, hold and run split; hold cap; housekeeping lane | 11, 13 |
-| `internal/insights/capacity` | Demand per label set, the G/G/c estimate, pool size and repository slots advice, resource summaries | 2, 9, 12 |
-| `internal/insights/timeline` | Runner lanes, idle gaps, idle next to a queue, after-merge work | 3, 16 |
-| `internal/insights/runs` | Critical path savings, superseded, two events, re-tested tree, fail-fast | 4, 14, 15 |
-| `internal/insights/workflows` | Workflow file checks | 5 |
-| `internal/insights/guardrails` | Guard report parser, crsp's own guardrail checks | 6 |
-| `internal/insights/tests` | Report parsers, test times, flaky, duplicated, no assertions | 7, 8 |
-| `internal/insights/digest` | The weekly local digest | 10 |
-| `internal/insights/actions` | Plans for setup changes: review, start, audit | R5.10 |
-| `internal/agent/jobsample` | Agent-side CPU and memory sampling per job | 9 |
-| `internal/jobsdata/reconcile` | Runner origin, steps by REST, stale state reconcile | 17 |
-| `internal/github/rest_insights.go` | REST calls of the collector: logs, artifacts, commit trees | D4, 14 |
-| `internal/github/rest_insights_jobs.go` | REST calls of reconcile: one job, the jobs of a run attempt | 17 |
+| `apps/controller/internal/insights` | Finding, kind, scope, window, job facts; the `Analyser`, `FindingStore` and `JobSource` interfaces; the engine that runs analysers and resolves | 1 |
+| `apps/controller/internal/insights/collect` | Fetch steps, logs, artifacts, commit trees within the budget; redact; store files; retention of files | D4 |
+| `apps/controller/internal/insights/waits` | Wait, hold and run split; hold cap; housekeeping lane | 11, 13 |
+| `apps/controller/internal/insights/capacity` | Demand per label set, the G/G/c estimate, pool size and repository slots advice, resource summaries | 2, 9, 12 |
+| `apps/controller/internal/insights/timeline` | Runner lanes, idle gaps, idle next to a queue, after-merge work | 3, 16 |
+| `apps/controller/internal/insights/runs` | Critical path savings, superseded, two events, re-tested tree, fail-fast | 4, 14, 15 |
+| `apps/controller/internal/insights/workflows` | Workflow file checks | 5 |
+| `apps/controller/internal/insights/guardrails` | Guard report parser, crsp's own guardrail checks | 6 |
+| `apps/controller/internal/insights/tests` | Report parsers, test times, flaky, duplicated, no assertions | 7, 8 |
+| `apps/controller/internal/insights/digest` | The weekly local digest | 10 |
+| `apps/controller/internal/insights/actions` | Plans for setup changes: review, start, audit | R5.10 |
+| `apps/controller/internal/agent/jobsample` | Agent-side CPU and memory sampling per job | 9 |
+| `apps/controller/internal/jobsdata/reconcile` | Runner origin, steps by REST, stale state reconcile | 17 |
+| `apps/controller/internal/github/rest_insights.go` | REST calls of the collector: logs, artifacts, commit trees | D4, 14 |
+| `apps/controller/internal/github/rest_insights_jobs.go` | REST calls of reconcile: one job, the jobs of a run attempt | 17 |
 
 ### Kinds and minutes
 
@@ -368,10 +368,10 @@ A subject is the stable key of a finding inside its kind; the store keeps one op
 
 ### The contract (CIX8)
 
-- Migration `internal/store/migrations/00031_insight_dismiss.sql` (CIX23, D17): `insight_findings.hidden_until`.
-- Migration `internal/store/migrations/00030_ci_insights.sql`: `insight_findings`, `insight_analyser_runs`, `insight_plans`, `ci_job_logs`, `ci_report_files`, `test_results`, `job_resource_samples`, `job_resource_summary`, `workflow_checks`, `guardrail_reports`, `insight_digests`, and the job columns `runner_origin`, `runner_group`, `runner_labels`, `steps_source`, `checked_at`. Numbers 00022 to 00029 stay reserved for the registry wave.
-- Queries in `internal/store/queries/insights_*.sql`, one file per family; sqlc writes `internal/store/sqlcgen/insights_*.sql.go`.
-- API: `/api/v1/insights/*`, `/api/v1/runs/{runId}/savings`, `/api/v1/repositories/{repositoryId}/workflow-checks`, `/api/v1/jobs/{jobId}/resources`; new optional fields on `Job` and `Settings`. Handlers in `internal/api/handlers_insights.go` (CIX21); a service not wired answers 501.
+- Migration `apps/controller/internal/store/migrations/00031_insight_dismiss.sql` (CIX23, D17): `insight_findings.hidden_until`.
+- Migration `apps/controller/internal/store/migrations/00030_ci_insights.sql`: `insight_findings`, `insight_analyser_runs`, `insight_plans`, `ci_job_logs`, `ci_report_files`, `test_results`, `job_resource_samples`, `job_resource_summary`, `workflow_checks`, `guardrail_reports`, `insight_digests`, and the job columns `runner_origin`, `runner_group`, `runner_labels`, `steps_source`, `checked_at`. Numbers 00022 to 00029 stay reserved for the registry wave.
+- Queries in `apps/controller/internal/store/queries/insights_*.sql`, one file per family; sqlc writes `apps/controller/internal/store/sqlcgen/insights_*.sql.go`.
+- API: `/api/v1/insights/*`, `/api/v1/runs/{runId}/savings`, `/api/v1/repositories/{repositoryId}/workflow-checks`, `/api/v1/jobs/{jobId}/resources`; new optional fields on `Job` and `Settings`. Handlers in `apps/controller/internal/api/handlers_insights.go` (CIX21); a service not wired answers 501.
 - Agent link: `JobResourceSamples` (request field 31), protocol version 4. The agent sends it only when the controller's HelloAck says version 4 or more.
 
 ### The queue estimate
@@ -398,65 +398,65 @@ Every row is planned; the paths are where each test will live (wave CIX).
 
 | Requirement | Test |
 |---|---|
-| R5.1 | internal/insights/engine_test.go TestSeesOtherRunnersJobs |
-| R5.2 | internal/insights/collect/logs_test.go TestLogRedactedAndEnvValuesDropped, TestTooLargeNotStored, TestLogOnceAndKeepOff, TestRedactorFailureStoresNothing; internal/github/rest_insights_test.go TestJobLogAndArtifactFollowRedirectWithoutToken, TestLogErrors |
-| R5.3 | internal/insights/collect/artifacts_test.go TestReportArtifactsByContentWithinCaps, TestBrokenReportAndRunCap, TestClassifyByContent; internal/github/rest_insights_test.go TestRunArtifactsPagesAndCommitTree |
-| R5.4 | internal/insights/collect/privacy_test.go TestNoSecretNoEnvNoEmailStored, TestSecretOnTheChunkBoundary; internal/store/insights_test.go TestNoForbiddenColumns |
-| R5.5 | internal/settings/settings_test.go TestInsightsRanges; apps/web/src/screens/settings/CiData.test.tsx |
-| R5.6 | internal/insights/collect/retention_test.go TestDaysThenSizeCapOldestFirst, TestMissingFileDoesNotStopPrune |
-| R5.7 | internal/store/insights_test.go TestFindingRoundTrip |
-| R5.8 | internal/insights/engine_test.go TestResolvedWhenConditionEnds, TestFailedRunResolvesNothing, TestNoDismissRoute; internal/store/insights_test.go TestDismissHidesForSevenDays; internal/api/handlers_insights_test.go TestDismissRoute; apps/web/src/screens/insights/Finding.test.tsx |
-| R5.9 | internal/insights/engine_test.go TestMinutesRoundedAndLabelled |
-| R5.10 | planned: internal/insights/actions/actions_test.go TestNothingChangesBeforeStart, TestStartWritesAuditPerChange; apps/web/src/screens/insights/ActionWizard.test.tsx |
-| R5.11 | internal/insights/rank_test.go TestRankByMinutesThenAge, TestRankZeroMinutesByGuardrail, internal/store/insights_test.go TestListRankFilterPage; apps/web/src/screens/insights/DoNext.test.tsx |
-| R5.12 | internal/insights/waits/split_test.go TestCrspSplit, TestOtherRunnerNoHold, TestUnknownNotZero |
-| R5.13 | internal/insights/waits/split_test.go TestGroupByRepositoryKeyDay |
-| R5.111 | internal/insights/waits/split_test.go TestGroupByLabelAndP90; internal/api/handlers_insights_test.go TestWaitSplitHoldCapAndRanges; cmd/crsp/insights_wiring_test.go TestInsightsAreaReadsWaitsFromTheStore |
-| R5.14 | internal/insights/waits/hold_test.go TestHoldOverCapWithReason |
-| R5.15 | internal/insights/capacity/demand_test.go TestUtilisationAndArrivals |
-| R5.16 | internal/insights/capacity/queue_test.go TestAllenCunneenKnownValues, TestSaturatedGivesMinimumSlots |
-| R5.17 | internal/insights/capacity/advice_test.go TestPoolSizeWithinHeadroom, TestNoRoomNoAction |
-| R5.18 | internal/insights/capacity/advice_test.go TestRepoLimitRaiseAndCap |
-| R5.19 | internal/agent/jobsample/sampler_test.go TestCgroupAndProcessTree, TestUnknownWithReason; internal/agent/jobsample_link_test.go TestJobSampleSenderV3SendsNothing; internal/machines/job_samples_test.go TestJobSamplesReachHook |
-| R5.20 | internal/insights/capacity/resources_test.go TestSummaryAtJobEnd, internal/store/insights_resources_test.go TestResourcesStoreSummaryAtEnd |
-| R5.21 | internal/insights/timeline/timeline_test.go TestLanesIdleAndAfterMerge |
-| R5.22 | internal/insights/timeline/idle_test.go TestIdleNextToQueueFinding |
-| R5.23 | internal/insights/runs/savings_test.go TestTopThreeSavings |
-| R5.24 | internal/insights/runs/superseded_test.go TestSupersededMinutes |
-| R5.25 | internal/insights/runs/superseded_test.go TestTwoEventsOneHead |
-| R5.26 | internal/insights/runs/superseded_test.go TestRetestedTree |
-| R5.27 | internal/insights/runs/failfast_test.go TestMinutesAfterFirstFailure |
-| R5.28 | internal/insights/waits/housekeeping_test.go TestShortJobsWaitingLong |
-| R5.29 | internal/insights/workflows/checks_test.go TestEachCheck, TestStepOrderLintAfterTest, TestMatrixAxisGrowth; internal/store/insights_checks_test.go TestWorkflowChecksStoreRoundTrip |
-| R5.30 | internal/insights/workflows/checks_test.go TestAnalyserFindings; internal/doctor/checks/workflows_test.go TestWorkflowFindings; apps/web/src/screens/insights/RepositoryPanes.test.tsx |
-| R5.31 | internal/insights/guardrails/report_test.go TestParseGuardJSON |
-| R5.32 | internal/insights/guardrails/status_test.go TestOwnChecksAndSources |
-| R5.33 | internal/insights/tests/parsers_test.go TestEachFormatFromFixture |
-| R5.34 | internal/insights/tests/times_test.go TestOverG1Limit |
-| R5.35 | internal/insights/tests/flaky_test.go TestSameCommitDifferentResult, internal/insights/tests/service_test.go TestFlakyWindowIs14Days |
-| R5.36 | internal/insights/tests/duplicate_test.go TestSameIdTwoJobs |
-| R5.37 | internal/insights/tests/assertions_test.go TestZeroOnlyWhenReported |
-| R5.38 | internal/insights/digest/digest_test.go TestWeeklyFileTopThree, TestNextRunMonday0800, TestNextRunLisbon, TestKeepsLast52; internal/tray/menu_test.go TestDigestItemOnlyWithAFile; cmd/crsp/insights_wiring_test.go TestLatestDigest |
-| R5.39 | internal/jobsdata/reconcile/origin_test.go TestCrspOtherHosted; apps/web/src/screens/jobs/JobPage.test.tsx; internal/jobsdata/ingest/origin_test.go TestOnRunnerRecordsOrigin; internal/store/insights_jobs_test.go TestIntegrationSetRunnerOriginKeepsStored; internal/github/rest_insights_jobs_test.go TestRESTJobReadsRunnerAndSteps; internal/api/handlers_insights_test.go TestRunnerInfoOnJob |
-| R5.40 | internal/jobsdata/reconcile/steps_test.go TestStepsByRESTOnce, TestWatchReadsAtMostEveryMinute; internal/jobsdata/ingest/origin_test.go TestOnStepsMarksSourceEvents; internal/store/insights_jobs_test.go TestIntegrationApplyKeepsEventSteps |
-| R5.41 | internal/jobsdata/reconcile/stale_test.go TestStaleQueuedBecomesDone, TestGoneBecomesLost; internal/store/insights_jobs_test.go TestIntegrationApplyDoneAndOrigin, TestIntegrationMarkLost, TestIntegrationCompletedRunListedWhenFresh |
-| R5.42 | internal/api/handlers_insights_test.go TestRolesAndShapes, TestWaitSplitHoldCapAndRanges, TestTimelineSpan, TestUnwiredServiceAnswers501 |
-| R5.43 | internal/doctor/checks/workflows_test.go TestWorkflowFindings, TestWorkflowFindingsWithoutSource |
-| R5.44 | internal/insights/engine_cost_test.go TestPeriodDue, TestFinishedRunStartsAPass, TestEveryNthRunWaitsForN, TestHourlyIgnoresFinishedRuns; internal/jobsdata/ingest/recorder_test.go TestOnJobCompletedCallsOnceAtDone; internal/settings/settings_test.go TestInsightsUpdatePeriod; cmd/crsp/insights_wiring_test.go TestBridgeForwardsFinishedRuns, TestPeriodOfSettings; apps/web/src/screens/settings/InsightsUpdate.test.tsx |
-| R5.45 | internal/insights/engine_cost_test.go TestCostWarningOpensAndResolves, TestCostAdviceFollowsThePeriod, TestProcessMeterMeasuresAPass; cmd/crsp/insights_wiring_test.go TestNewInsightsEngineMeasuresEachPass |
-| R5.46 | internal/jobsdata/followup_test.go TestInferParentPicksTheRunThatFinishedLastBeforeTheChild; internal/store/jobsdata_followups_test.go TestIntegrationFollowUpLinkedWhenTheChildArrivesFirst, TestIntegrationFollowUpPayloadParentWinsOverInference |
-| R5.47 | internal/jobsdata/followup_test.go TestOverallStateStaysRunningWhileAFollowUpIs; internal/api/handlers_jobsdata_test.go TestRunDetailAndListCarryTheFollowUps |
-| R5.48 | apps/web/src/screens/jobs/followUps.test.tsx |
-| R5.49 | internal/insights/timeline/timeline_test.go TestFollowUpRunnerWaitIsASegment; apps/web/src/screens/insights/Views.test.tsx |
-| R6.1 | internal/insights/collect/budget_test.go TestQuarterShareAndOrder, TestCollectorWaitsForTheShare; internal/github/rest_insights_test.go TestInsightsCallsAreBackground |
-| R6.2 | internal/insights/collect/retention_test.go TestDefaultsFloorsCeilings |
-| R6.3 | internal/insights/engine_bench_test.go BenchmarkPass20kJobs, internal/insights/engine_test.go TestRunSchedule |
-| R6.4 | internal/agent/jobsample/sampler_bench_test.go BenchmarkSample |
-| R6.5 | internal/insights/collect/privacy_test.go TestRedactionCoversCIData, TestNoNetworkImportInInsights |
-| R6.6 | internal/insights/engine_test.go TestAnalysersNeverWriteSettings |
-| R6.7 | internal/store/insights_bench_test.go BenchmarkFindingsPage |
-| R6.8 | internal/insights/engine_test.go TestFailOpen |
-| R6.9 | internal/store/insights_test.go TestStoredUTC |
+| R5.1 | apps/controller/internal/insights/engine_test.go TestSeesOtherRunnersJobs |
+| R5.2 | apps/controller/internal/insights/collect/logs_test.go TestLogRedactedAndEnvValuesDropped, TestTooLargeNotStored, TestLogOnceAndKeepOff, TestRedactorFailureStoresNothing; apps/controller/internal/github/rest_insights_test.go TestJobLogAndArtifactFollowRedirectWithoutToken, TestLogErrors |
+| R5.3 | apps/controller/internal/insights/collect/artifacts_test.go TestReportArtifactsByContentWithinCaps, TestBrokenReportAndRunCap, TestClassifyByContent; apps/controller/internal/github/rest_insights_test.go TestRunArtifactsPagesAndCommitTree |
+| R5.4 | apps/controller/internal/insights/collect/privacy_test.go TestNoSecretNoEnvNoEmailStored, TestSecretOnTheChunkBoundary; apps/controller/internal/store/insights_test.go TestNoForbiddenColumns |
+| R5.5 | apps/controller/internal/settings/settings_test.go TestInsightsRanges; apps/controller-console/src/screens/settings/CiData.test.tsx |
+| R5.6 | apps/controller/internal/insights/collect/retention_test.go TestDaysThenSizeCapOldestFirst, TestMissingFileDoesNotStopPrune |
+| R5.7 | apps/controller/internal/store/insights_test.go TestFindingRoundTrip |
+| R5.8 | apps/controller/internal/insights/engine_test.go TestResolvedWhenConditionEnds, TestFailedRunResolvesNothing, TestNoDismissRoute; apps/controller/internal/store/insights_test.go TestDismissHidesForSevenDays; apps/controller/internal/api/handlers_insights_test.go TestDismissRoute; apps/controller-console/src/screens/insights/Finding.test.tsx |
+| R5.9 | apps/controller/internal/insights/engine_test.go TestMinutesRoundedAndLabelled |
+| R5.10 | planned: apps/controller/internal/insights/actions/actions_test.go TestNothingChangesBeforeStart, TestStartWritesAuditPerChange; apps/controller-console/src/screens/insights/ActionWizard.test.tsx |
+| R5.11 | apps/controller/internal/insights/rank_test.go TestRankByMinutesThenAge, TestRankZeroMinutesByGuardrail, apps/controller/internal/store/insights_test.go TestListRankFilterPage; apps/controller-console/src/screens/insights/DoNext.test.tsx |
+| R5.12 | apps/controller/internal/insights/waits/split_test.go TestCrspSplit, TestOtherRunnerNoHold, TestUnknownNotZero |
+| R5.13 | apps/controller/internal/insights/waits/split_test.go TestGroupByRepositoryKeyDay |
+| R5.111 | apps/controller/internal/insights/waits/split_test.go TestGroupByLabelAndP90; apps/controller/internal/api/handlers_insights_test.go TestWaitSplitHoldCapAndRanges; apps/controller/cmd/crsp/insights_wiring_test.go TestInsightsAreaReadsWaitsFromTheStore |
+| R5.14 | apps/controller/internal/insights/waits/hold_test.go TestHoldOverCapWithReason |
+| R5.15 | apps/controller/internal/insights/capacity/demand_test.go TestUtilisationAndArrivals |
+| R5.16 | apps/controller/internal/insights/capacity/queue_test.go TestAllenCunneenKnownValues, TestSaturatedGivesMinimumSlots |
+| R5.17 | apps/controller/internal/insights/capacity/advice_test.go TestPoolSizeWithinHeadroom, TestNoRoomNoAction |
+| R5.18 | apps/controller/internal/insights/capacity/advice_test.go TestRepoLimitRaiseAndCap |
+| R5.19 | apps/controller/internal/agent/jobsample/sampler_test.go TestCgroupAndProcessTree, TestUnknownWithReason; apps/controller/internal/agent/jobsample_link_test.go TestJobSampleSenderV3SendsNothing; apps/controller/internal/machines/job_samples_test.go TestJobSamplesReachHook |
+| R5.20 | apps/controller/internal/insights/capacity/resources_test.go TestSummaryAtJobEnd, apps/controller/internal/store/insights_resources_test.go TestResourcesStoreSummaryAtEnd |
+| R5.21 | apps/controller/internal/insights/timeline/timeline_test.go TestLanesIdleAndAfterMerge |
+| R5.22 | apps/controller/internal/insights/timeline/idle_test.go TestIdleNextToQueueFinding |
+| R5.23 | apps/controller/internal/insights/runs/savings_test.go TestTopThreeSavings |
+| R5.24 | apps/controller/internal/insights/runs/superseded_test.go TestSupersededMinutes |
+| R5.25 | apps/controller/internal/insights/runs/superseded_test.go TestTwoEventsOneHead |
+| R5.26 | apps/controller/internal/insights/runs/superseded_test.go TestRetestedTree |
+| R5.27 | apps/controller/internal/insights/runs/failfast_test.go TestMinutesAfterFirstFailure |
+| R5.28 | apps/controller/internal/insights/waits/housekeeping_test.go TestShortJobsWaitingLong |
+| R5.29 | apps/controller/internal/insights/workflows/checks_test.go TestEachCheck, TestStepOrderLintAfterTest, TestMatrixAxisGrowth; apps/controller/internal/store/insights_checks_test.go TestWorkflowChecksStoreRoundTrip |
+| R5.30 | apps/controller/internal/insights/workflows/checks_test.go TestAnalyserFindings; apps/controller/internal/doctor/checks/workflows_test.go TestWorkflowFindings; apps/controller-console/src/screens/insights/RepositoryPanes.test.tsx |
+| R5.31 | apps/controller/internal/insights/guardrails/report_test.go TestParseGuardJSON |
+| R5.32 | apps/controller/internal/insights/guardrails/status_test.go TestOwnChecksAndSources |
+| R5.33 | apps/controller/internal/insights/tests/parsers_test.go TestEachFormatFromFixture |
+| R5.34 | apps/controller/internal/insights/tests/times_test.go TestOverG1Limit |
+| R5.35 | apps/controller/internal/insights/tests/flaky_test.go TestSameCommitDifferentResult, apps/controller/internal/insights/tests/service_test.go TestFlakyWindowIs14Days |
+| R5.36 | apps/controller/internal/insights/tests/duplicate_test.go TestSameIdTwoJobs |
+| R5.37 | apps/controller/internal/insights/tests/assertions_test.go TestZeroOnlyWhenReported |
+| R5.38 | apps/controller/internal/insights/digest/digest_test.go TestWeeklyFileTopThree, TestNextRunMonday0800, TestNextRunLisbon, TestKeepsLast52; apps/controller/internal/tray/menu_test.go TestDigestItemOnlyWithAFile; apps/controller/cmd/crsp/insights_wiring_test.go TestLatestDigest |
+| R5.39 | apps/controller/internal/jobsdata/reconcile/origin_test.go TestCrspOtherHosted; apps/controller-console/src/screens/jobs/JobPage.test.tsx; apps/controller/internal/jobsdata/ingest/origin_test.go TestOnRunnerRecordsOrigin; apps/controller/internal/store/insights_jobs_test.go TestIntegrationSetRunnerOriginKeepsStored; apps/controller/internal/github/rest_insights_jobs_test.go TestRESTJobReadsRunnerAndSteps; apps/controller/internal/api/handlers_insights_test.go TestRunnerInfoOnJob |
+| R5.40 | apps/controller/internal/jobsdata/reconcile/steps_test.go TestStepsByRESTOnce, TestWatchReadsAtMostEveryMinute; apps/controller/internal/jobsdata/ingest/origin_test.go TestOnStepsMarksSourceEvents; apps/controller/internal/store/insights_jobs_test.go TestIntegrationApplyKeepsEventSteps |
+| R5.41 | apps/controller/internal/jobsdata/reconcile/stale_test.go TestStaleQueuedBecomesDone, TestGoneBecomesLost; apps/controller/internal/store/insights_jobs_test.go TestIntegrationApplyDoneAndOrigin, TestIntegrationMarkLost, TestIntegrationCompletedRunListedWhenFresh |
+| R5.42 | apps/controller/internal/api/handlers_insights_test.go TestRolesAndShapes, TestWaitSplitHoldCapAndRanges, TestTimelineSpan, TestUnwiredServiceAnswers501 |
+| R5.43 | apps/controller/internal/doctor/checks/workflows_test.go TestWorkflowFindings, TestWorkflowFindingsWithoutSource |
+| R5.44 | apps/controller/internal/insights/engine_cost_test.go TestPeriodDue, TestFinishedRunStartsAPass, TestEveryNthRunWaitsForN, TestHourlyIgnoresFinishedRuns; apps/controller/internal/jobsdata/ingest/recorder_test.go TestOnJobCompletedCallsOnceAtDone; apps/controller/internal/settings/settings_test.go TestInsightsUpdatePeriod; apps/controller/cmd/crsp/insights_wiring_test.go TestBridgeForwardsFinishedRuns, TestPeriodOfSettings; apps/controller-console/src/screens/settings/InsightsUpdate.test.tsx |
+| R5.45 | apps/controller/internal/insights/engine_cost_test.go TestCostWarningOpensAndResolves, TestCostAdviceFollowsThePeriod, TestProcessMeterMeasuresAPass; apps/controller/cmd/crsp/insights_wiring_test.go TestNewInsightsEngineMeasuresEachPass |
+| R5.46 | apps/controller/internal/jobsdata/followup_test.go TestInferParentPicksTheRunThatFinishedLastBeforeTheChild; apps/controller/internal/store/jobsdata_followups_test.go TestIntegrationFollowUpLinkedWhenTheChildArrivesFirst, TestIntegrationFollowUpPayloadParentWinsOverInference |
+| R5.47 | apps/controller/internal/jobsdata/followup_test.go TestOverallStateStaysRunningWhileAFollowUpIs; apps/controller/internal/api/handlers_jobsdata_test.go TestRunDetailAndListCarryTheFollowUps |
+| R5.48 | apps/controller-console/src/screens/jobs/followUps.test.tsx |
+| R5.49 | apps/controller/internal/insights/timeline/timeline_test.go TestFollowUpRunnerWaitIsASegment; apps/controller-console/src/screens/insights/Views.test.tsx |
+| R6.1 | apps/controller/internal/insights/collect/budget_test.go TestQuarterShareAndOrder, TestCollectorWaitsForTheShare; apps/controller/internal/github/rest_insights_test.go TestInsightsCallsAreBackground |
+| R6.2 | apps/controller/internal/insights/collect/retention_test.go TestDefaultsFloorsCeilings |
+| R6.3 | apps/controller/internal/insights/engine_bench_test.go BenchmarkPass20kJobs, apps/controller/internal/insights/engine_test.go TestRunSchedule |
+| R6.4 | apps/controller/internal/agent/jobsample/sampler_bench_test.go BenchmarkSample |
+| R6.5 | apps/controller/internal/insights/collect/privacy_test.go TestRedactionCoversCIData, TestNoNetworkImportInInsights |
+| R6.6 | apps/controller/internal/insights/engine_test.go TestAnalysersNeverWriteSettings |
+| R6.7 | apps/controller/internal/store/insights_bench_test.go BenchmarkFindingsPage |
+| R6.8 | apps/controller/internal/insights/engine_test.go TestFailOpen |
+| R6.9 | apps/controller/internal/store/insights_test.go TestStoredUTC |
 
 ## 10. Decisions
 
@@ -486,24 +486,24 @@ Everything. The seams that change when it is built:
 
 Contract (CIX8):
 
-- internal/insights/ (types, interfaces, kinds)
-- internal/insights/collect, waits, capacity, timeline, runs, workflows, guardrails, tests, digest, actions (interfaces)
-- internal/agent/jobsample/ (sampler interface)
-- internal/jobsdata/reconcile/ (interfaces)
-- internal/store/migrations/00030_ci_insights.sql, internal/store/queries/insights_*.sql
-- internal/api/handlers_insights.go, internal/api/jobs_mapping.go, cmd/crsp/insights_wiring.go
+- apps/controller/internal/insights/ (types, interfaces, kinds)
+- apps/controller/internal/insights/collect, waits, capacity, timeline, runs, workflows, guardrails, tests, digest, actions (interfaces)
+- apps/controller/internal/agent/jobsample/ (sampler interface)
+- apps/controller/internal/jobsdata/reconcile/ (interfaces)
+- apps/controller/internal/store/migrations/00030_ci_insights.sql, apps/controller/internal/store/queries/insights_*.sql
+- apps/controller/internal/api/handlers_insights.go, apps/controller/internal/api/jobs_mapping.go, apps/controller/cmd/crsp/insights_wiring.go
 
-Source: internal/insights/insights.go
-Source: internal/store/migrations/00030_ci_insights.sql
-| Source: internal/api/stubs_insights.go |
-| Source: internal/insights/collect/collector.go |
-| Source: internal/github/rest_insights.go |
-| Source: internal/store/insights_ci_data.go |
+Source: apps/controller/internal/insights/insights.go
+Source: apps/controller/internal/store/migrations/00030_ci_insights.sql
+| Source: apps/controller/internal/api/stubs_insights.go |
+| Source: apps/controller/internal/insights/collect/collector.go |
+| Source: apps/controller/internal/github/rest_insights.go |
+| Source: apps/controller/internal/store/insights_ci_data.go |
 |  |
-| Planned: internal/github/rest_insights_jobs.go, internal/doctor/checks/workflows.go, internal/agentlink/insights.go, cmd/crsp/insights_wiring.go, internal/store/insights*.go, internal/api/handlers_insights*.go, apps/web/src/screens/insights/. |
-| Source: internal/api/handlers_insights.go |
-| Source: cmd/crsp/insights_wiring.go |
-| Planned: internal/github/rest_insights.go, internal/github/rest_insights_jobs.go, internal/doctor/checks/workflows.go, internal/agentlink/insights.go, internal/store/insights*.go, apps/web/src/screens/insights/. |
+| Planned: apps/controller/internal/github/rest_insights_jobs.go, apps/controller/internal/doctor/checks/workflows.go, apps/controller/internal/agentlink/insights.go, apps/controller/cmd/crsp/insights_wiring.go, apps/controller/internal/store/insights*.go, apps/controller/internal/api/handlers_insights*.go, apps/controller-console/src/screens/insights/. |
+| Source: apps/controller/internal/api/handlers_insights.go |
+| Source: apps/controller/cmd/crsp/insights_wiring.go |
+| Planned: apps/controller/internal/github/rest_insights.go, apps/controller/internal/github/rest_insights_jobs.go, apps/controller/internal/doctor/checks/workflows.go, apps/controller/internal/agentlink/insights.go, apps/controller/internal/store/insights*.go, apps/controller-console/src/screens/insights/. |
 
 ## Design-system proof
 

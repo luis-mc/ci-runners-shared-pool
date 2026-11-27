@@ -45,7 +45,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | cli | D1 | [How does the CLI sign in?](../features/cli/spec.md) | GitHub device flow through the controller; the CLI keeps only a controller token (decision 0002). | decided | 2026-11-13 |
 | cli | D2 | [How does the CLI reach the API?](../features/cli/spec.md) | The Go client generated from the same OpenAPI contract as the web console (decision 0001). | decided | 2026-11-13 |
 | cli | D3 | [How does a headless machine open the console?](../features/cli/spec.md) | `crsp open` prints a one-time link (decision 0005). | decided | 2026-11-13 |
-| cli | D4 | [Which command library?](../features/cli/spec.md) | The standard `flag` package with a small command table in `internal/cli`: no new dependency; completion scripts are written from the table. (CRSP25, answers open question 6; the owner may still choose cobra.) | decided | 2026-11-14 |
+| cli | D4 | [Which command library?](../features/cli/spec.md) | The standard `flag` package with a small command table in `apps/controller/internal/cli`: no new dependency; completion scripts are written from the table. (CRSP25, answers open question 6; the owner may still choose cobra.) | decided | 2026-11-14 |
 | cli | D5 | [What is the verb for new runners?](../features/cli/spec.md) | `runner add` (owner decision for M1; answers open question 1). | decided | 2026-11-14 |
 | doctor | D1 | [Does the doctor repair?](../features/doctor/spec.md) | No. It reads only; each finding gives words, a command and a link to where the fix lives (UX-52) | decided | 2026-11-14 |
 | doctor | D2 | [Severity levels](../features/doctor/spec.md) | `ok`, `info`, `skip`, `warn`, `fail`; `needs_admin` is a flag on `skip` | decided | 2026-11-14 |

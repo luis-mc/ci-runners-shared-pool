@@ -7,9 +7,9 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: ["internal/notify/**", "internal/mail/**", "apps/web/src/screens/notices/**", "cmd/crsp/notify_wiring.go"]
+code: ["apps/controller/internal/notify/**", "apps/controller/internal/mail/**", "apps/controller-console/src/screens/notices/**", "apps/controller/cmd/crsp/notify_wiring.go"]
 design_system: [UX-6, UX-9, UX-13, UX-18, UX-20, UX-22, UX-26, UX-27, UX-37, UX-38, UX-52, UX-58, components 8, components 14, components 15, components 18]
-last_verified: 2026-11-25
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -167,7 +167,7 @@ No mocks yet. The screens below cite the design system v1 by ID and add no rules
 
 ### Email
 
-**R5.25** (planned: needs an outside mail provider account; today email goes by raw SMTP, N5) — Email MUST go through one mail adapter (`internal/mail`), set up by the owner. Nothing outside the adapter MUST talk to a mail provider.
+**R5.25** (planned: needs an outside mail provider account; today email goes by raw SMTP, N5) — Email MUST go through one mail adapter (`apps/controller/internal/mail`), set up by the owner. Nothing outside the adapter MUST talk to a mail provider.
 
 **R5.26** (planned: needs an outside mail provider account to send bounce feedback) — The adapter MUST take bounce and complaint feedback from the provider, check its signature, and keep a suppression list. It MUST consult the list before every send (STACKSPEC 8.1).
 
@@ -201,7 +201,7 @@ No mocks yet. The screens below cite the design system v1 by ID and add no rules
 
 **R6.6** (partly built, CRSP37 and CRSP258: every create, change, delete and test of a channel, and every change of the pool thresholds, is in the audit log, with no secret; the mail adapter is not built) — Every change to webhooks, the mail adapter and pool-wide thresholds MUST be written to the audit log: who, what, when (product brief, Security).
 
-**R6.7** (partly built, CRSP258: the words come from one table in `internal/notify/text.go`; the retired-words guard over them is planned) — Desktop notice text and console text MUST use the words and formats of design system v1 content: dates and times per UX-18, tones per UX-26, no retired words.
+**R6.7** (partly built, CRSP258: the words come from one table in `apps/controller/internal/notify/text.go`; the retired-words guard over them is planned) — Desktop notice text and console text MUST use the words and formats of design system v1 content: dates and times per UX-18, tones per UX-26, no retired words.
 
 **R6.8** (built, CRSP258: the title carries the tone as a word) — A desktop notice MUST be readable without its colour or icon: the tone and the subject are in its words (UX-26, UX-58).
 
@@ -214,11 +214,11 @@ The picture below is the design. The channels (CRSP37) and the state, rules, que
 ```mermaid
 flowchart TB
   subgraph controller
-    sources[Sources] --> notify[internal/notify<br/>state, rules, limits]
+    sources[Sources] --> notify[apps/controller/internal/notify<br/>state, rules, limits]
     notify --> store[(SQLite:<br/>notify_event, notify_pref,<br/>notify_endpoint, notify_delivery,<br/>job_queue)]
     worker[Delivery worker] --> store
-    worker --> webhook[internal/notify/webhook]
-    worker --> mail[internal/mail adapter]
+    worker --> webhook[apps/controller/internal/notify/webhook]
+    worker --> mail[apps/controller/internal/mail adapter]
     worker --> stream[Notice stream<br/>for trays]
     secrets[OS secret store] --> webhook
     secrets --> mail
@@ -241,13 +241,13 @@ flowchart TB
 **Interfaces.**
 
 ```go
-// internal/notify
+// apps/controller/internal/notify
 type Channel interface {
     Name() string
     Deliver(ctx context.Context, n Notice) (Result, error) // one try; the worker retries
 }
 
-// internal/mail
+// apps/controller/internal/mail
 type Adapter interface {
     Send(ctx context.Context, m Message) error
     HandleFeedback(r *http.Request) error // checks the signature, updates the suppression list
@@ -260,33 +260,33 @@ type Adapter interface {
 
 ### Built so far (CRSP37)
 
-Operations: `listNotificationChannels`, `createNotificationChannel`, `updateNotificationChannel`, `deleteNotificationChannel`, `testNotificationChannel` (`packages/contract/openapi.yaml`; code in `internal/notify`, `internal/api/handlers_notify.go`, `internal/store/notify.go`).
+Operations: `listNotificationChannels`, `createNotificationChannel`, `updateNotificationChannel`, `deleteNotificationChannel`, `testNotificationChannel` (`packages/contract/openapi.yaml`; code in `apps/controller/internal/notify`, `apps/controller/internal/api/handlers_notify.go`, `apps/controller/internal/store/notify.go`).
 
 - **Channels.** Table `notification_channels` (migration `00010_notifications.sql`, queries `notifications.sql`). A channel has a kind (`email`, `webhook`, `desktop`), a name, a scope (`personal` for email and desktop, with the signed-in user as owner; `pool` for a webhook), `enabled`, its events, the lowest severity (default `warning`), and by kind an address and mail server, or an https address. The table has no column for a secret, only the flags `has_signing` and `smtp_has_password`.
 - **Who.** Any signed-in user adds, changes, deletes and tests their own personal channels. Another user's personal channel does not exist for anyone else, not even the owner (404). A webhook needs an admin or the owner for every change and test (403 otherwise), and is listed only to them. The service checks this, not only the route.
-- **Secrets.** The webhook signing secret and the SMTP password go only to the OS secret store (`internal/secrets`), under the keys `crsp/notify/<channel id>/signing` and `crsp/notify/<channel id>/smtp-auth`. They are write-only: a response carries `secret_set` and `smtp.has_password`, never the value. In an update, a secret left out stays, and a secret sent as an empty string is removed. Deleting a channel removes both. If the secret store cannot be reached, the request fails and no channel is kept without its secret. The audit rows name the changed fields and never a value; logs name only the key.
+- **Secrets.** The webhook signing secret and the SMTP password go only to the OS secret store (`apps/controller/internal/secrets`), under the keys `crsp/notify/<channel id>/signing` and `crsp/notify/<channel id>/smtp-auth`. They are write-only: a response carries `secret_set` and `smtp.has_password`, never the value. In an update, a secret left out stays, and a secret sent as an empty string is removed. Deleting a channel removes both. If the secret store cannot be reached, the request fails and no channel is kept without its secret. The audit rows name the changed fields and never a value; logs name only the key.
 - **Checks on save.** The name is one line of at most 80 characters. At least one event, each one of the six types of R5.1. An email address and a sender are plain addresses (no display name, no list, no control character, so they are safe in a mail header). The port is 1 to 65535. A webhook address is an https URL without a user name or password. A signing secret is at least 16 characters.
 - **Address guard (SSRF).** The controller never sends to itself or to an address that only the controller machine can reach: loopback, the unspecified address, link-local (which includes the cloud metadata address 169.254.169.254) and multicast are refused, for the webhook and for the mail server. Local network addresses (10.x, 172.16.x, 192.168.x, fd00::/8) are allowed, because a self-hosted pool lives there. The check runs twice: on save, for a literal address or `localhost`, and at connect time on the address really dialled, so a name that resolves to a refused address is stopped as well. No proxy is used and no redirect is followed. A mail server on the controller machine itself must be named by the machine's network address, not by 127.0.0.1. This answers open question 2 for now: `http://` is refused everywhere.
 - **Webhook test.** One POST with a 10 s limit and no retry. The body is JSON: `schema_version` (1), `event_id`, `delivery_id`, `type` (`test`), `test` (true), `subject`, `state`, `tone`, `time`, `summary`. Headers: `X-CRP-Timestamp` (Unix seconds), `X-CRP-Signature` (`sha256=` and the hex of HMAC-SHA256 over `<timestamp>.<body>` with the signing secret), `X-CRP-Delivery` (the delivery id) and `X-CRP-Test: true`. A receiver rejects a timestamp older than 5 minutes and compares the signature in constant time. A 2xx answer is delivered; any other answer, a redirect, a timeout or a refused connection is a failed test with the reason. The result names the host only, never the path or the query, because they can hold a token. If the signing secret cannot be read, nothing is sent (R6.3).
 - **Email test.** One message through `net/smtp` to the channel's address, with a 15 s limit and no retry: implicit TLS on port 465, otherwise STARTTLS wherever the server offers it, then PLAIN (or LOGIN, when the server offers only that) when a password is set. A password is never sent over an unencrypted link. The message is marked as a test by its subject `[crsp test] Test notice`, its body and the header `X-CRP-Test: true`. A refusal says which step the server refused and its answer (the password is removed from any text shown).
-- **Desktop test.** `ok: false` with the message: "No desktop notice was shown. The controller has no way to send a notice to a tray yet: the tray only asks the controller for its status, and nothing lets the controller push a notice to it (notifications R5.15)." What is missing: a notice stream from the controller to the tray (section 7, "Tray link"). `internal/tray` can show a notice (`DesktopNotice`) and `internal/trayserver` serves the tray's requests, but neither can be reached by the controller in the other direction.
+- **Desktop test.** `ok: false` with the message: "No desktop notice was shown. The controller has no way to send a notice to a tray yet: the tray only asks the controller for its status, and nothing lets the controller push a notice to it (notifications R5.15)." What is missing: a notice stream from the controller to the tray (section 7, "Tray link"). `apps/controller/internal/tray` can show a notice (`DesktopNotice`) and `apps/controller/internal/trayserver` serves the tray's requests, but neither can be reached by the controller in the other direction.
 - **Limits.** One test per channel per user per 10 s (429 `rate_limited`, R5.31). The contract also names 5 tests per minute per user; no rate-limit middleware enforces that yet.
 - **Audit.** `notification.channel.create`, `.update`, `.delete` (in the same transaction as the change) and `.test` (with the kind and the result, not the message).
 - **Delete.** Without `confirm=true` the answer is 409 `needs_confirmation` naming the channel and its events (UX-62).
-- **Events and delivery (as of CRSP37; replaced by CRSP258 below).** The live event hub (`internal/events`) carries only the M1 live-view events (`job.waiting` among them); `machine.offline`, `disk.low`, `runner.outdated`, `doctor.finding` and `update.available` are not published anywhere yet, and R5.1 puts the events in milestone 8. So no event is delivered to a channel: delivery is NOT YET IMPLEMENTED (section 11).
+- **Events and delivery (as of CRSP37; replaced by CRSP258 below).** The live event hub (`apps/controller/internal/events`) carries only the M1 live-view events (`job.waiting` among them); `machine.offline`, `disk.low`, `runner.outdated`, `doctor.finding` and `update.available` are not published anywhere yet, and R5.1 puts the events in milestone 8. So no event is delivered to a channel: delivery is NOT YET IMPLEMENTED (section 11).
 
 ### Built in CRSP258
 
-Operations: `listNotices` (GET `/api/v1/notices`), `getNotificationThresholds` and `setNotificationThresholds` (GET and PUT `/api/v1/notification-thresholds`, the last for admins and the owner). Code: `internal/notify` (`engine.go`, `queue.go`, `deliver.go`, `list.go`, `text.go`), `internal/store/notices.go`, `cmd/crsp/notify_wiring.go`, `apps/web/src/screens/notices/`.
+Operations: `listNotices` (GET `/api/v1/notices`), `getNotificationThresholds` and `setNotificationThresholds` (GET and PUT `/api/v1/notification-thresholds`, the last for admins and the owner). Code: `apps/controller/internal/notify` (`engine.go`, `queue.go`, `deliver.go`, `list.go`, `text.go`), `apps/controller/internal/store/notices.go`, `apps/controller/cmd/crsp/notify_wiring.go`, `apps/controller-console/src/screens/notices/`.
 
 - **Data.** Migration `00048_notices.sql`: `notify_event` (one row per key: type, subject kind, id and name, state, tone, severity, summary, link, first fired, last change, flap count, the id of the open notice), `notices` (one row per notice made) and `notice_deliveries` (one row per notice and channel: status, tries, next try, last error, and for a grouped or summary delivery its count). The delivery rows are the queue; no `job_queue` row is used, so there is one transaction and one place to look. A delivery names its channel and a host or address only, never a path, a token or a secret (R6.2). The pool thresholds are one settings row, `notify_thresholds`, with the defaults of R5.1 when it is unset. `notify_pref` and `mail_address` are not built (section 11).
-- **Sources.** `Service.Observe(scope, facts)` takes the complete set of facts of one event type (and subject kinds); a key that is new or resolved and has a fact fires, a firing key in scope with no fact resolves. A source that fails changes nothing: silence from a source is never an all-clear. `cmd/crsp/notify_wiring.go` reads the other areas through their public interfaces and changes none of them: `machines.Service.List` (offline: the agent is not online, was seen once, is not the controller; fires `grace` after its last sign of life), the store's queued jobs (waiting longer than N minutes), `machinehealth.Service.Views` (a known volume below the threshold; it resolves 2 points above it; a runner app or agent older than the pinned version), `doctor.Service.Findings` (`fail` is `error`, `warn` is `warning`, `info` is `info`) and `update.Manager.Status`. The sources are read every 5 s. `Service.Report` sets one key and serves the notifier's own findings.
+- **Sources.** `Service.Observe(scope, facts)` takes the complete set of facts of one event type (and subject kinds); a key that is new or resolved and has a fact fires, a firing key in scope with no fact resolves. A source that fails changes nothing: silence from a source is never an all-clear. `apps/controller/cmd/crsp/notify_wiring.go` reads the other areas through their public interfaces and changes none of them: `machines.Service.List` (offline: the agent is not online, was seen once, is not the controller; fires `grace` after its last sign of life), the store's queued jobs (waiting longer than N minutes), `machinehealth.Service.Views` (a known volume below the threshold; it resolves 2 points above it; a runner app or agent older than the pinned version), `doctor.Service.Findings` (`fail` is `error`, `warn` is `warning`, `info` is `info`) and `update.Manager.Status`. The sources are read every 5 s. `Service.Report` sets one key and serves the notifier's own findings.
 - **State and notices.** `change` runs in one transaction: it reads the key, and only on a change of state writes the new state, the notice and one delivery per carrying channel. A channel carries a notice when it is on, names the event, and for a doctor finding the finding's severity is at least the channel's lowest. A key that fires again less than the flap window (default 10 min) after it resolved makes no new notice: the open notice counts the flap.
 - **Limits.** Personal channels: at most `hourly_cap` (default 20, ceiling 200) deliveries in any hour; later ones are held and replaced after an hour by one summary notice (`notice.summary`, "12 more notices. Open the console to see them."). The fifth delivery of one type and state inside 60 s becomes one grouped delivery that counts every later one and goes out when the 60 s end ("5 machines are offline."); the first four go out at once. A webhook endpoint gets at most 60 deliveries a minute; the rest wait in the queue. The queue holds at most 10 000 deliveries: over that the oldest Note-tone ones are dropped and a `doctor.finding` says how many.
 - **Delivery worker.** `Service.Run` ticks every 2 s. A webhook delivery is the JSON of R5.20 (and `count` for a grouped one), signed as in "Built so far"; an email delivery is a plain message through the channel's mail server; a desktop delivery becomes `waiting_tray` and is kept for the tray (`PendingDesktop`, `AckDesktop`). Retry (webhook and email): network error, timeout, 408, 429 and 5xx wait about 30 s, 2 min, 10 min, 30 min, 1 h and 2 h (jitter of 20 %); a Retry-After up to 1 h is honoured; any other 4xx, a redirect, a refused address and a 5xx answer of a mail server are final; after the seventh try the delivery is `failed` and shows its last error. A secret that cannot be read keeps the delivery queued (the try is not counted) and raises a `doctor.finding` for the endpoint; nothing is sent unsigned.
 - **Failing endpoint.** After three failed deliveries in a row, or an unreadable secret, the notifier raises a `doctor.finding` of severity `warning` with subject kind `endpoint`; it resolves when the endpoint delivers again.
 - **Retention.** Notices, deliveries and resolved states older than 30 days are deleted once a minute at most.
-- **Words.** Titles, tones, the resolved line and the group line come from `internal/notify/text.go`; a delivery's title carries the tone as a word ("Machine offline (Problem)").
+- **Words.** Titles, tones, the resolved line and the group line come from `apps/controller/internal/notify/text.go`; a delivery's title carries the tone as a word ("Machine offline (Problem)").
 - **Who sees what.** `GET /api/v1/notices` is for any signed-in user and lists the last 30 days (up to 500). An admin or the owner sees every delivery; another user sees the deliveries of their own channels. The thresholds can be read by anyone and changed only by an admin or the owner; the change is audited with the old and new values.
 - **Not run on a real machine.** The tests use fake receivers (an in-process TLS server and an in-process mail server) and a fake clock. Nothing was sent to an outside address.
 
@@ -304,51 +304,51 @@ Operations: `listNotices` (GET `/api/v1/notices`), `getNotificationThresholds` a
 
 ## 9. How it is proven
 
-A row with a path has that test. A row that says planned names why it is not built; it is NOT YET IMPLEMENTED. Tests from CRSP258 are in `internal/notify/engine_test.go` (engine) and `internal/notify/queue_test.go` (queue and delivery).
+A row with a path has that test. A row that says planned names why it is not built; it is NOT YET IMPLEMENTED. Tests from CRSP258 are in `apps/controller/internal/notify/engine_test.go` (engine) and `apps/controller/internal/notify/queue_test.go` (queue and delivery).
 
 | Requirement | Test |
 |---|---|
-| R5.1 | internal/notify/engine_test.go, TestEachEventFiresAndResolves; TestSourcesAreReadAndAFailingSourceChangesNothing; cmd/crsp wiring is typechecked and linted, the sources are not unit-tested against a real machines service (planned) |
-| R5.2 | internal/notify/engine_test.go, TestNoticeOnlyOnChange |
-| R5.3 | internal/notify/engine_test.go, TestNoticeOnlyOnChange |
-| R5.4 | internal/notify/engine_test.go, TestDoctorSeverityFloor |
-| R5.5 | internal/notify/engine_test.go, TestOfflineGraceSkipsRestart |
-| R5.6 | partly: internal/notify/queue_test.go, TestListShowsDeliveriesOnlyToTheirOwner; the per-repository part is planned (no per-repository view right exists) |
-| R5.7 | internal/notify/notify_test.go, TestScopes (personal channels); internal/notify/engine_test.go, TestChannelsGetOnlyTheirEvents; the role defaults are planned |
-| R5.8 | internal/notify/queue_test.go, TestThresholdsNeedAdminAndAreValidated; internal/api/handlers_notify_test.go, TestThresholdsNeedAdmin |
-| R5.9 | internal/notify/notify_test.go, TestScopes; internal/api/handlers_notify_test.go, TestNotifyRolesAndSecretsNeverReturned |
-| R5.10 | planned: cmd/crsp/notify_test.go, TestCLIMatchesConsole |
-| R5.11 | internal/notify/engine_test.go, TestFlapWindow |
-| R5.12 | internal/notify/engine_test.go, TestHourlyCapAndSummary |
-| R5.13 | internal/notify/engine_test.go, TestBurstIsGrouped |
-| R5.14 | internal/notify/queue_test.go, TestEndpointRateNeverDrops |
-| R5.15 | planned: internal/tray/notice_test.go, TestOSNoticePerPlatform; the controller side is internal/notify/queue_test.go, TestDesktopWaitsForTheTray |
-| R5.16 | planned: internal/tray/notice_test.go, TestClickOpensSubjectWithOneTimeLink |
-| R5.17 | planned: internal/tray/notice_test.go, TestRestartShowsNoRepeatAndOneSummary |
-| R5.18 | planned: internal/tray/notice_test.go, TestLostControllerNotice |
-| R5.19 | internal/notify/notify_test.go, TestValidation, TestWebhookTestFailures (redirect), TestGuardRefusesLoopbackAtConnectTime, TestGuardAddresses; internal/notify/queue_test.go, TestOtherClientErrorsAreNotRetried (a redirect and a refused address are final) |
-| R5.20 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked; internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete |
-| R5.21 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestSignKnownVector; internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete, TestRetryScheduleAndRetryAfter (same delivery id) |
-| R5.22 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestUpdateSecretSemantics; apps/web/src/screens/settings/Notifications.test.tsx (Make a secret); Rotate is planned |
-| R5.23 | internal/notify/queue_test.go, TestRetryScheduleAndRetryAfter, TestRetryAfterIsHonouredUpToAnHour, TestOtherClientErrorsAreNotRetried, TestNetworkErrorIsRetried |
-| R5.24 | internal/notify/queue_test.go, TestFailingEndpointRaisesFinding |
-| R5.25 | planned: needs an outside mail provider account; guard: only internal/mail imports a mail client |
+| R5.1 | apps/controller/internal/notify/engine_test.go, TestEachEventFiresAndResolves; TestSourcesAreReadAndAFailingSourceChangesNothing; apps/controller/cmd/crsp wiring is typechecked and linted, the sources are not unit-tested against a real machines service (planned) |
+| R5.2 | apps/controller/internal/notify/engine_test.go, TestNoticeOnlyOnChange |
+| R5.3 | apps/controller/internal/notify/engine_test.go, TestNoticeOnlyOnChange |
+| R5.4 | apps/controller/internal/notify/engine_test.go, TestDoctorSeverityFloor |
+| R5.5 | apps/controller/internal/notify/engine_test.go, TestOfflineGraceSkipsRestart |
+| R5.6 | partly: apps/controller/internal/notify/queue_test.go, TestListShowsDeliveriesOnlyToTheirOwner; the per-repository part is planned (no per-repository view right exists) |
+| R5.7 | apps/controller/internal/notify/notify_test.go, TestScopes (personal channels); apps/controller/internal/notify/engine_test.go, TestChannelsGetOnlyTheirEvents; the role defaults are planned |
+| R5.8 | apps/controller/internal/notify/queue_test.go, TestThresholdsNeedAdminAndAreValidated; apps/controller/internal/api/handlers_notify_test.go, TestThresholdsNeedAdmin |
+| R5.9 | apps/controller/internal/notify/notify_test.go, TestScopes; apps/controller/internal/api/handlers_notify_test.go, TestNotifyRolesAndSecretsNeverReturned |
+| R5.10 | planned: apps/controller/cmd/crsp/notify_test.go, TestCLIMatchesConsole |
+| R5.11 | apps/controller/internal/notify/engine_test.go, TestFlapWindow |
+| R5.12 | apps/controller/internal/notify/engine_test.go, TestHourlyCapAndSummary |
+| R5.13 | apps/controller/internal/notify/engine_test.go, TestBurstIsGrouped |
+| R5.14 | apps/controller/internal/notify/queue_test.go, TestEndpointRateNeverDrops |
+| R5.15 | planned: apps/controller/internal/tray/notice_test.go, TestOSNoticePerPlatform; the controller side is apps/controller/internal/notify/queue_test.go, TestDesktopWaitsForTheTray |
+| R5.16 | planned: apps/controller/internal/tray/notice_test.go, TestClickOpensSubjectWithOneTimeLink |
+| R5.17 | planned: apps/controller/internal/tray/notice_test.go, TestRestartShowsNoRepeatAndOneSummary |
+| R5.18 | planned: apps/controller/internal/tray/notice_test.go, TestLostControllerNotice |
+| R5.19 | apps/controller/internal/notify/notify_test.go, TestValidation, TestWebhookTestFailures (redirect), TestGuardRefusesLoopbackAtConnectTime, TestGuardAddresses; apps/controller/internal/notify/queue_test.go, TestOtherClientErrorsAreNotRetried (a redirect and a refused address are final) |
+| R5.20 | apps/controller/internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked; apps/controller/internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete |
+| R5.21 | apps/controller/internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestSignKnownVector; apps/controller/internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete, TestRetryScheduleAndRetryAfter (same delivery id) |
+| R5.22 | apps/controller/internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestUpdateSecretSemantics; apps/controller-console/src/screens/settings/Notifications.test.tsx (Make a secret); Rotate is planned |
+| R5.23 | apps/controller/internal/notify/queue_test.go, TestRetryScheduleAndRetryAfter, TestRetryAfterIsHonouredUpToAnHour, TestOtherClientErrorsAreNotRetried, TestNetworkErrorIsRetried |
+| R5.24 | apps/controller/internal/notify/queue_test.go, TestFailingEndpointRaisesFinding |
+| R5.25 | planned: needs an outside mail provider account; guard: only apps/controller/internal/mail imports a mail client |
 | R5.26 | planned: needs an outside mail provider account |
 | R5.27 | planned: needs an outside mail provider account |
-| R5.28 | internal/notify/queue_test.go, TestEmailGoesThroughTheQueue, TestEmailRefusedIsFinalAndShown |
-| R5.29 | internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestEmailTestStartTLSAndAuth, TestDesktopTestSaysWhatIsMissing; e2e/tests/web-console/notifications.spec.ts |
-| R5.30 | internal/notify/notify_test.go, TestWebhookTestFailures, TestEmailTestFailures; apps/web/src/screens/settings/Notifications.test.tsx (Send test) |
-| R5.31 | internal/notify/notify_test.go, TestTestRateLimitPerChannelAndUser; internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest |
-| R5.32 | internal/notify/queue_test.go, TestListShowsDeliveriesOnlyToTheirOwner; apps/web/src/screens/notices/Notices.test.tsx |
-| R6.1 | partly: internal/notify/engine_test.go, TestStateNoticeAndDeliveryTogether (queued in the state change); the 5 s poll is a constant, not a timing test |
-| R6.2 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestCreateEmailKeepsPasswordOnlyInSecretStore; internal/store/notify_test.go, TestNotificationChannelsHoldNoSecretColumn; internal/store/no_secrets_test.go; internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete (no secret, no path in a body or a target) |
-| R6.3 | internal/notify/notify_test.go, TestWebhookTestFailures; internal/notify/queue_test.go, TestNoSecretNoSend |
-| R6.4 | internal/notify/engine_test.go, TestStateNoticeAndDeliveryTogether |
-| R6.5 | internal/notify/queue_test.go, TestThirtyDayPrune |
-| R6.6 | internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestDeleteNeedsConfirmAndRemovesSecrets; internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest; internal/notify/queue_test.go, TestThresholdsNeedAdminAndAreValidated (the audit row) |
+| R5.28 | apps/controller/internal/notify/queue_test.go, TestEmailGoesThroughTheQueue, TestEmailRefusedIsFinalAndShown |
+| R5.29 | apps/controller/internal/notify/notify_test.go, TestWebhookTestIsSignedAndMarked, TestEmailTestStartTLSAndAuth, TestDesktopTestSaysWhatIsMissing; e2e/tests/web-console/notifications.spec.ts |
+| R5.30 | apps/controller/internal/notify/notify_test.go, TestWebhookTestFailures, TestEmailTestFailures; apps/controller-console/src/screens/settings/Notifications.test.tsx (Send test) |
+| R5.31 | apps/controller/internal/notify/notify_test.go, TestTestRateLimitPerChannelAndUser; apps/controller/internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest |
+| R5.32 | apps/controller/internal/notify/queue_test.go, TestListShowsDeliveriesOnlyToTheirOwner; apps/controller-console/src/screens/notices/Notices.test.tsx |
+| R6.1 | partly: apps/controller/internal/notify/engine_test.go, TestStateNoticeAndDeliveryTogether (queued in the state change); the 5 s poll is a constant, not a timing test |
+| R6.2 | apps/controller/internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestCreateEmailKeepsPasswordOnlyInSecretStore; apps/controller/internal/store/notify_test.go, TestNotificationChannelsHoldNoSecretColumn; apps/controller/internal/store/no_secrets_test.go; apps/controller/internal/notify/queue_test.go, TestRealDeliveryIsSignedAndComplete (no secret, no path in a body or a target) |
+| R6.3 | apps/controller/internal/notify/notify_test.go, TestWebhookTestFailures; apps/controller/internal/notify/queue_test.go, TestNoSecretNoSend |
+| R6.4 | apps/controller/internal/notify/engine_test.go, TestStateNoticeAndDeliveryTogether |
+| R6.5 | apps/controller/internal/notify/queue_test.go, TestThirtyDayPrune |
+| R6.6 | apps/controller/internal/notify/notify_test.go, TestCreateWebhookKeepsSecretOnlyInSecretStore, TestDeleteNeedsConfirmAndRemovesSecrets; apps/controller/internal/api/handlers_notify_test.go, TestNotifyUpdateDeleteConfirmAndTest; apps/controller/internal/notify/queue_test.go, TestThresholdsNeedAdminAndAreValidated (the audit row) |
 | R6.7 | planned: guards (design-system retired-words guard over notice text) |
-| R6.8 | partly: internal/notify/queue_test.go, TestEmailGoesThroughTheQueue (the subject carries the tone as a word); apps/web/src/screens/notices/Notices.test.tsx |
-| R6.9 | internal/notify/queue_test.go, TestQueueCeiling |
+| R6.8 | partly: apps/controller/internal/notify/queue_test.go, TestEmailGoesThroughTheQueue (the subject carries the tone as a word); apps/controller-console/src/screens/notices/Notices.test.tsx |
+| R6.9 | apps/controller/internal/notify/queue_test.go, TestQueueCeiling |
 
 ## 10. Decisions
 
@@ -356,7 +356,7 @@ A row with a path has that test. A row that says planned names why it is not bui
 |---|---|---|---|
 | N1 | When to notify | Once per change of state, not per check | 2026-11-14 |
 | N2 | Webhook signing | HMAC-SHA256 over timestamp and body, secret in the OS secret store | 2026-11-14 |
-| N3 | Mail | One adapter in `internal/mail`, provider API with bounce feedback (STACKSPEC 8.1); raw SMTP only with a recorded deviation | 2026-11-14 |
+| N3 | Mail | One adapter in `apps/controller/internal/mail`, provider API with bounce feedback (STACKSPEC 8.1); raw SMTP only with a recorded deviation | 2026-11-14 |
 | N4 | Order | Tray notices ship with the tray; the rest in milestone 8 | 2026-11-14 |
 | N5 | Channels before delivery | Channel store, secrets, audit and Send test are built first (CRSP37); email goes by raw SMTP (`net/smtp`) with STARTTLS, a deviation from N3 that stays open for the owner (open question 1) | 2026-11-14 |
 
@@ -389,26 +389,26 @@ NOT YET IMPLEMENTED, with the reason:
 
 ## 12. Code map
 
-Source: internal/notify/notify.go
-Source: internal/notify/guard.go
-Source: internal/notify/send.go
-Source: internal/api/handlers_notify.go
-Source: internal/store/notify.go
-Source: internal/store/queries/notifications.sql
-Source: internal/store/migrations/00010_notifications.sql
-Source: apps/web/src/screens/settings/Notifications.tsx
-Source: internal/notify/engine.go
-Source: internal/notify/queue.go
-Source: internal/notify/deliver.go
-Source: internal/notify/list.go
-Source: internal/notify/text.go
-Source: internal/store/notices.go
-Source: internal/store/queries/notices.sql
-Source: internal/store/migrations/00048_notices.sql
-Source: cmd/crsp/notify_wiring.go
-Source: apps/web/src/screens/notices/Notices.tsx
+Source: apps/controller/internal/notify/notify.go
+Source: apps/controller/internal/notify/guard.go
+Source: apps/controller/internal/notify/send.go
+Source: apps/controller/internal/api/handlers_notify.go
+Source: apps/controller/internal/store/notify.go
+Source: apps/controller/internal/store/queries/notifications.sql
+Source: apps/controller/internal/store/migrations/00010_notifications.sql
+Source: apps/controller-console/src/screens/settings/Notifications.tsx
+Source: apps/controller/internal/notify/engine.go
+Source: apps/controller/internal/notify/queue.go
+Source: apps/controller/internal/notify/deliver.go
+Source: apps/controller/internal/notify/list.go
+Source: apps/controller/internal/notify/text.go
+Source: apps/controller/internal/store/notices.go
+Source: apps/controller/internal/store/queries/notices.sql
+Source: apps/controller/internal/store/migrations/00048_notices.sql
+Source: apps/controller/cmd/crsp/notify_wiring.go
+Source: apps/controller-console/src/screens/notices/Notices.tsx
 
-Planned paths, NOT YET IMPLEMENTED: `internal/mail/`, the tray notice stream and mode. The webhook delivery lives in `internal/notify/deliver.go`, not in a `webhook/` package.
+Planned paths, NOT YET IMPLEMENTED: `apps/controller/internal/mail/`, the tray notice stream and mode. The webhook delivery lives in `apps/controller/internal/notify/deliver.go`, not in a `webhook/` package.
 
 ## Design-system proof
 

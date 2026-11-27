@@ -7,9 +7,9 @@ status: building
 version: 0.0.0
 owner: owner
 type: reference
-code: ["internal/agent/backends.go", "internal/agent/engine.go", "internal/doctor/checks/engine.go", "internal/backend/container/**", "internal/machines/**", "apps/web/src/screens/runners/**", "apps/web/src/screens/setup/**"]
+code: ["apps/controller/internal/agent/backends.go", "apps/controller/internal/agent/engine.go", "apps/controller/internal/doctor/checks/engine.go", "apps/controller/internal/backend/container/**", "apps/controller/internal/machines/**", "apps/controller-console/src/screens/runners/**", "apps/controller-console/src/screens/setup/**"]
 design_system: [CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, UX-5, UX-6, UX-9, UX-13, UX-26, UX-29, UX-30, UX-38, UX-42, UX-54, UX-62, "components 4, 16, 18, 19, 26, 39, 48"]
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -46,14 +46,14 @@ Owner question: if Docker is uninstalled, will crsp install it and make the imag
 
 | Thing | Detected | Installed | What happens when missing |
 |---|---|---|---|
-| crsp itself | yes | **yes**: MSI, `install.sh`, SSH join (the Windows path downloads the installer and checks its SHA-256, `internal/machines/sshwin.go`) | n/a |
-| Docker command and engine | yes: `docker version` (`internal/agent/backends.go` `detectDocker`); reasons `docker is not installed`, `docker is installed but the engine does not answer; start Docker` | **no** | backend `Present=false`/`Usable=false`; container runners cannot start |
-| Engine kind | yes: Docker Desktop, Docker in WSL2 via Windows CLI, via `wsl docker`, native (`internal/agent/engine.go` `DetectEngine`); Linux or Windows containers (`ContainerOS`) | no | `EngineNone` with a reason |
+| crsp itself | yes | **yes**: MSI, `install.sh`, SSH join (the Windows path downloads the installer and checks its SHA-256, `apps/controller/internal/machines/sshwin.go`) | n/a |
+| Docker command and engine | yes: `docker version` (`apps/controller/internal/agent/backends.go` `detectDocker`); reasons `docker is not installed`, `docker is installed but the engine does not answer; start Docker` | **no** | backend `Present=false`/`Usable=false`; container runners cannot start |
+| Engine kind | yes: Docker Desktop, Docker in WSL2 via Windows CLI, via `wsl docker`, native (`apps/controller/internal/agent/engine.go` `DetectEngine`); Linux or Windows containers (`ContainerOS`) | no | `EngineNone` with a reason |
 | WSL2 | yes: `wsl --status`, `wsl --version`; reasons `wsl.exe is not installed`, `WSL is installed but not ready; run wsl --install` | **no** | reason text only |
 | Podman, nerdctl, Hyper-V, KVM, Tart, Firecracker | yes (`backends.go`) | no | reason text only |
 | Doctor check `machine.engine` | yes | no; "never starts or changes an engine" | Warning with a **text** fix (`engineFix`: start Docker Desktop, `sudo service docker start`, or "install Docker"); a link to the machine page |
 | Add runners page | yes (`AddRunners.tsx`, `kinds.ts`) | no | Persistent greyed with the reason; note "The container backend must be allowed on the machine" |
-| Image `crsp-pool:<key>` | yes (local engine) | **yes, once an engine answers**: ensure-image order is local, then registry by digest, then a local build from the embedded `images/` Dockerfiles (registry R5.13; `internal/backend/container/ensure.go`) | job waits for the controller; build is local |
+| Image `crsp-pool:<key>` | yes (local engine) | **yes, once an engine answers**: ensure-image order is local, then registry by digest, then a local build from the embedded `images/` Dockerfiles (registry R5.13; `apps/controller/internal/backend/container/ensure.go`) | job waits for the controller; build is local |
 | Container `crsp-persistent-pool` and its two volumes | yes | **yes, once an engine answers**: `StartPersistent` makes the pool container run, with `docker run` and checked arguments (runners R5.93, `persistent.go`) | start fails with a crsp error |
 | `pool-refresh` | not a crsp command; it is the dev-standards script. Open task OPS95 records that it built the image but did not make a missing container | n/a | lesson: crsp's own path must create a missing container, never assume it exists |
 
@@ -215,16 +215,16 @@ IDs `DEP1` and up. Milestone is a proposal.
 
 ## 9. How it is proven
 
-Tests of M1 (go and vitest, with fakes for Windows and WSL so CI on Linux runs them): `internal/agent/deps_test.go`, `internal/agent/install/install_test.go`, `internal/depsetup/*_test.go`, `internal/agentlink/deps_test.go`, `internal/store` jobs test, `internal/api/handlers_dependencies_test.go`, `apps/web/src/screens/dependencies/GetReady.test.tsx` (every state, wizard harness). Plan for the rest:
+Tests of M1 (go and vitest, with fakes for Windows and WSL so CI on Linux runs them): `apps/controller/internal/agent/deps_test.go`, `apps/controller/internal/agent/install/install_test.go`, `apps/controller/internal/depsetup/*_test.go`, `apps/controller/internal/agentlink/deps_test.go`, `apps/controller/internal/store` jobs test, `apps/controller/internal/api/handlers_dependencies_test.go`, `apps/controller-console/src/screens/dependencies/GetReady.test.tsx` (every state, wizard harness). Plan for the rest:
 
 | Req | Test |
 |---|---|
-| DEP1 | `internal/agent` table test: reports for no docker, stopped engine, wrong container OS, WSL missing, WSL not ready (fake `Sys`) |
+| DEP1 | `apps/controller/internal/agent` table test: reports for no docker, stopped engine, wrong container OS, WSL missing, WSL not ready (fake `Sys`) |
 | DEP3, DEP4 | web test of Review: lists items, size, time, admin, restart, licence; "Nothing has changed yet."; no call before yes |
-| DEP5 | `internal/agent/install` test: hash mismatch runs nothing; unknown item refused |
+| DEP5 | `apps/controller/internal/agent/install` test: hash mismatch runs nothing; unknown item refused |
 | DEP7 | controller test: paused plan survives restart and resumes at Verify; no restart with a running job |
 | DEP8 | agent test: Verify fails when the test container fails, though install exited 0 |
-| DEP9 | `internal/backend/container` test: missing pool container is created; existing image is not rebuilt |
+| DEP9 | `apps/controller/internal/backend/container` test: missing pool container is created; existing image is not rebuilt |
 | DEP10, DEP11 | test: second run changes nothing; undo removes only the recorded items |
 | DEP12 | machines test: offline machine is not offered an install |
 | Screens | `e2e` wizard harness (UX-54) for every state of section 4 at 360, 393, 1300 px |
@@ -252,15 +252,15 @@ Open. Each has a recommended default; the owner answers.
 
 **Built in CRSP248 (M1).** Owner decisions D-DEP-1..11 are at their recommended defaults.
 
-- DEP1 detect by need: `internal/agent/deps.go` (`DetectDeps`, reuses `DetectEngine`, `detectDocker`, `detectWSL2`), answered to `DepsCheck` over the agent link.
-- DEP2, DEP3 explain and offer with facts: `internal/depsetup/offer.go`, facts from the pinned list `internal/depsetup/pinned.json` (shipped with the release). One recommended choice; Docker Desktop only with the licence note and tick.
-- DEP4 consent (built early with M1): the Review step is the consent; `POST .../dependencies/jobs` does nothing without `confirmed`; audit row `dependency.consent`. DEP5 pinned installers with hash check before run, unknown item refused (`internal/agent/install`). DEP6 live events with real command lines and bytes. DEP7 reboot is the user's choice (`restart-host`, asks first, refused while a job runs); the job is stored (migration 00044) and resumes after the agent returns. DEP8 verify including a test container. DEP9 prepare (see below). DEP10 undo of only the recorded items; DEP11 idempotent; DEP14 doctor text names the wizard and links `?setup=deps`; DEP16 no install without need.
-- Web: wizard "Get this machine ready" (`apps/web/src/screens/dependencies/`), doors in Add runners, Add machine and Setup.
+- DEP1 detect by need: `apps/controller/internal/agent/deps.go` (`DetectDeps`, reuses `DetectEngine`, `detectDocker`, `detectWSL2`), answered to `DepsCheck` over the agent link.
+- DEP2, DEP3 explain and offer with facts: `apps/controller/internal/depsetup/offer.go`, facts from the pinned list `apps/controller/internal/depsetup/pinned.json` (shipped with the release). One recommended choice; Docker Desktop only with the licence note and tick.
+- DEP4 consent (built early with M1): the Review step is the consent; `POST .../dependencies/jobs` does nothing without `confirmed`; audit row `dependency.consent`. DEP5 pinned installers with hash check before run, unknown item refused (`apps/controller/internal/agent/install`). DEP6 live events with real command lines and bytes. DEP7 reboot is the user's choice (`restart-host`, asks first, refused while a job runs); the job is stored (migration 00044) and resumes after the agent returns. DEP8 verify including a test container. DEP9 prepare (see below). DEP10 undo of only the recorded items; DEP11 idempotent; DEP14 doctor text names the wizard and links `?setup=deps`; DEP16 no install without need.
+- Web: wizard "Get this machine ready" (`apps/controller-console/src/screens/dependencies/`), doors in Add runners, Add machine and Setup.
 - Events: `DepsEvent` on the agent link has the shape of the CRSP247 progress contract; the API sends it snake_case (`DependencyEvent`) and the page maps it with `toProgressEvent`.
 
 **Built in CRSP265 (step one, all systems).** On top of CRSP248, for Windows, Linux and macOS.
 
-- DEP9 prepare is real: after Verify, `container.Backend.PreparePool` makes the base image `crsp-pool:<key>` through the existing local, registry, build path and, for a persistent Linux runner on a Windows or macOS machine, the persistent pool container `crsp-persistent-pool` with its two volumes. It registers no runner, builds nothing that is there and never re-creates a pool container. A machine without the container backend says the image is made at the first runner, as before. Wired by `Config.PreparePool` (agent) and `agentPreparePool` (`cmd/crsp`).
+- DEP9 prepare is real: after Verify, `container.Backend.PreparePool` makes the base image `crsp-pool:<key>` through the existing local, registry, build path and, for a persistent Linux runner on a Windows or macOS machine, the persistent pool container `crsp-persistent-pool` with its two volumes. It registers no runner, builds nothing that is there and never re-creates a pool container. A machine without the container backend says the image is made at the first runner, as before. Wired by `Config.PreparePool` (agent) and `agentPreparePool` (`apps/controller/cmd/crsp`).
 - DEP1, DEP2, DEP3 on Linux: Fedora and the Red Hat family are installed through Docker's rpm repository (undo kinds `rpm-repo-file`, `rpm-package`); the offer for every Linux family shows the same facts and, for families crsp does not install, the manual steps.
 - DEP1, DEP2, DEP3 on macOS: Docker Desktop through the Homebrew cask, with the licence tick; a stopped Docker Desktop is opened (no install, no tick); Verify waits up to 4 minutes for the engine and then says the person may need to approve one system prompt (undo kind `brew-cask`). A stopped Docker in the crsp WSL distro on Windows is started the same way (no install).
 - DEP14 on every system: the doctor text of `machine.engine` names Docker Desktop on a Mac (it showed a Linux `systemctl` line before) and links `?setup=deps` for all three systems.
@@ -297,7 +297,7 @@ Open. Each has a recommended default; the owner answers.
 - R9. **actions-runner-controller**: the older mode needed cert-manager installed first; scale-set mode dropped it. Lesson: remove prerequisites where you can; where you cannot, check them first. Source: [ARC quickstart](https://docs.github.com/en/enterprise-server@3.15/actions/tutorials/use-actions-runner-controller/quickstart), [installing ARC](https://github.com/actions/actions-runner-controller/blob/master/docs/installing-arc.md).
 - Not verified in this study: Portainer's setup wizard; the exact `winget` and Homebrew cask behaviour for Docker; Docker Desktop silent flag names today. Verify at build time.
 
-**Code map**: `internal/agent/backends.go` (detection), `internal/agent/engine.go` (engine kind), `internal/doctor/checks/engine.go` (doctor text fix), `internal/backend/container/ensure.go` (image ensure), `internal/backend/container/persistent.go` (pool container), `images/persistent/compose.yaml` (readable form), `internal/machines/sshjoin.go` and `sshwin.go` (installs crsp, not Docker), `apps/web/src/screens/runners/AddRunners.tsx` and `kinds.ts` (greying), `docs/features/runners/spec.md` R5.47, R5.93, R5.139.
+**Code map**: `apps/controller/internal/agent/backends.go` (detection), `apps/controller/internal/agent/engine.go` (engine kind), `apps/controller/internal/doctor/checks/engine.go` (doctor text fix), `apps/controller/internal/backend/container/ensure.go` (image ensure), `apps/controller/internal/backend/container/persistent.go` (pool container), `images/persistent/compose.yaml` (readable form), `apps/controller/internal/machines/sshjoin.go` and `sshwin.go` (installs crsp, not Docker), `apps/controller-console/src/screens/runners/AddRunners.tsx` and `kinds.ts` (greying), `docs/features/runners/spec.md` R5.47, R5.93, R5.139.
 
 ## Design-system proof
 

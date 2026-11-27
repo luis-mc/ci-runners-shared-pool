@@ -13,7 +13,7 @@ design_system:
   - v4 ux-rules one primary action, no dead ends, accessible, an overview only shows and links, status as word glyph and colour
   - v4 tokens themes, breakpoints, focus
   - v4 content dates times and numbers, message wording
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.21.0
 ---
@@ -153,7 +153,7 @@ All requirements are **planned**.
 
 **One fact, one place.** The site reads release data, docs, the study and the install guide. Prose that copies a doc is a defect.
 
-**Console name.** The Vercel project is `ci-runners-shared-pool`; its root directory is `apps/web` and it holds this new public static site (CRSP260, CRSP303). The domain is `crsp.luismc.net` (Cloudflare DNS). The LAN console SPA moves to `apps/controller-console` (CRSP306) and is served by the Controller; it never deploys to Vercel. Until CRSP306 merges, the old console still sits in `apps/web` and `web-console` lists that path, so the site's build starts only after CRSP306.
+**Console name.** The Vercel project is `ci-runners-shared-pool`; its root directory is `apps/web` and it holds this new public static site (CRSP260, CRSP303). The domain is `crsp.luismc.net` (Cloudflare DNS). The LAN console SPA moves to `apps/controller-console` (CRSP306) and is served by the Controller; it never deploys to Vercel. CRSP306 moved the console to `apps/controller-console` (and the Go server to `apps/controller`), so `apps/web` is free for the site; `web-console` lists the new path.
 
 **CI and release.** A `website.yml` workflow runs on pull requests touching `apps/web/**`, `docs/**` or `packages/ui/**`: build, link check, unit tests, axe, Playwright. The production deploy follows `main`; each pull request gets a Vercel preview; rollback is a redeploy of the previous deployment. Links to sites other than GitHub are checked weekly, not per pull request.
 

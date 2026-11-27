@@ -8,13 +8,13 @@ version: 0.1.0
 owner: owner
 type: reference
 code:
-  - internal/agent/**
-  - internal/machines/**
-  - internal/load/**
-  - internal/power/**
-  - internal/cpucap/**
-  - internal/machinehealth/**
-  - internal/dockercompact/**
+  - apps/controller/internal/agent/**
+  - apps/controller/internal/machines/**
+  - apps/controller/internal/load/**
+  - apps/controller/internal/power/**
+  - apps/controller/internal/cpucap/**
+  - apps/controller/internal/machinehealth/**
+  - apps/controller/internal/dockercompact/**
 design_system: [UX-4, UX-5, UX-6, UX-9, UX-13, UX-16, UX-17, UX-18, UX-19, UX-22, UX-26, UX-29, UX-30, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62]
 last_verified: 2026-11-27
 artifact:
@@ -95,9 +95,9 @@ The Machines screen and the Add machine wizard follow design system v1 ([ux-rule
 | Machine detail | Facts, backends with their reason when not usable, settings, running jobs, the install command again | UX-25, UX-22, UX-61 |
 | Machine detail, When it works | The mode (Automatic, Always, Paused), the Pause on battery switch, the CPU cap (25, 50, 75, 100%), the power source, and the reason when the machine takes no new job. Each control saves at once. A pause from the tray shows with its end and a Resume | UX-13, UX-22, UX-38, UX-58 |
 | Machine detail, Budget and slots | The four fields (Memory budget, CPU budget, Job slots, Time to finish running jobs) top-align in one row with their boxes on one line; the help of a field sits under its box, so a long name or help never moves the other boxes | UX-23, UX-78 |
-| Machine detail, Disk | The field Free disk to keep (GB), what the machine does under it (new jobs wait with `disk_low`, running jobs finish) and the free space now; the Save bar saves it. A floor that config turned off is shown as Off, read-only | UX-22, UX-23, CORE-1, CORE-5; `apps/web/src/screens/machines/MachineDiskFloor.test.tsx` |
+| Machine detail, Disk | The field Free disk to keep (GB), what the machine does under it (new jobs wait with `disk_low`, running jobs finish) and the free space now; the Save bar saves it. A floor that config turned off is shown as Off, read-only | UX-22, UX-23, CORE-1, CORE-5; `apps/controller-console/src/screens/machines/MachineDiskFloor.test.tsx` |
 | Machine detail, Gate maximum wait | The field Gate maximum wait (min), 1 or 2, in the Budget and slots section, with help; the one Save bar saves it. A saved value above 2 shows the note "Saved as {n} minutes. The hook cuts the wait to 2. Set 2 or less and press Save." The Doctor fix opens the page at this field (`#gate-max-wait`) | UX-22, UX-56, UX-38 |
-| Machine detail, Uptime | Three tiles (percent online over 24 hours, 7 days and 30 days, with the share of time it took jobs), the time watched when it is shorter than the window, and a table of the periods without jobs with their reason (From, Lasted, State, Why). Not seen yet: "No uptime yet." | CORE-1, CORE-3, CORE-5, UX-10, UX-28, UX-58, UX-72; `apps/web/src/screens/machines/MachineUptime.test.tsx` |
+| Machine detail, Uptime | Three tiles (percent online over 24 hours, 7 days and 30 days, with the share of time it took jobs), the time watched when it is shorter than the window, and a table of the periods without jobs with their reason (From, Lasted, State, Why). Not seen yet: "No uptime yet." | CORE-1, CORE-3, CORE-5, UX-10, UX-28, UX-58, UX-72; `apps/controller-console/src/screens/machines/MachineUptime.test.tsx` |
 | Machine detail, Service | The button Restart the service, with a line that says no running job is stopped. It opens the wizard of an agent machine (`/setup/machines/{id}/restart`) or, for the controller's own machine, Settings, Updates, Review. Locked with its reason for a viewer and for an offline machine | UX-4, UX-38 |
 | Restart the service, wizard | Review (what it does, the running jobs it waits for, or "No job runs on this machine now."), Restarting (State, Jobs still running), Done ("The service of {machine} restarted.", Jobs stopped 0). Offline machine: first run with Try again. The controller's machine: stopped, pointing to Settings, Updates. A restart that does not end in 5 minutes after the jobs ended: failed, with Try again | UX-5, UX-13, UX-29, UX-30, UX-38, UX-54 |
 | Machines, list column Takes jobs | The word Taking jobs, Paused, On battery or Busy | UX-58 |
@@ -270,7 +270,7 @@ Each requirement below targets a milestone after v0.1.0. A requirement marked bu
 
 **R5.53** (after v0.1.0, Built in part CRSP56 and CRSP61 (`agent.ReadWSLKVM` and `ParseWSLKVM` read the WSL VM: `/dev/kvm` and whether `kvm_intel` or `kvm_amd` is loaded, read-only; the doctor check `kvm.module` says how to fix it, doctor R5.32): `agent.ParseWslconfig`, `PlanKVMLoad`, `container.LoaderModule`, `KVMWait` and the loader service of `images/layers/compose.kvm.yaml`; the agent does not yet read `.wslconfig` on a real machine or report KVM state to the doctor) — **KVM on WSL2.** On Windows with WSL2, after `wsl --shutdown` or a reboot `/dev/kvm` is gone until the module `kvm_intel` or `kvm_amd` is loaded in the WSL VM. The agent checks `nestedVirtualization=true` in the user's `.wslconfig` and reports it as the backend reason when it is off ("nested virtualization is off in .wslconfig"); it never edits that file without a yes. When it is on and `/dev/kvm` is missing, the agent loads the module through a one-shot privileged helper that exits after the load; runners are never privileged. The `kvm` label (runners R5.36) is added only after `/dev/kvm` is usable. The step runs again at every WSL start. The pool container gets no `/dev/kvm` mapping (lesson 28, HND1): it is given the cgroup rule `c 10:232 rwm`, and its `kvm-wait.sh` creates the node with `mknod` once `/proc/misc` lists `kvm`, inside the bounded wait; when the wait ends without the device the pool starts without KVM and logs it.
 
-**R5.54** (M2, v0.3.0, partly built, CRSP50) — **WSL memory sizing.** The agent reads the `memory=` and `processors=` values of `.wslconfig` and the memory the WSL VM holds (R5.17), and shows them in the machine facts. The runner count and per-runner memory cap are set from the declared value, never from a live reading. It exports the CPU limit to jobs and splits it per runner, so `nproc` in a container matches the cap. A declared value above what the machine can give is refused with the reason. A change to `.wslconfig` needs `wsl --shutdown`, so the console says it waits for the machine to drain (R5.30). Built (CRSP50): the agent reads `.wslconfig` (`memory=`, `processors=`, `nestedVirtualization=`) from the console user's profile, then its own, into the machine facts (`internal/poolsize`, `internal/agent/wslconfig.go`); a declared value above what the machine has is refused with the reason; the CPU split (`poolsize.PerRunner`, the pool CPUs over the job slots) is exported to jobs as `CI_MAX_PARALLEL` (runners R5.53). Built (HND17): a container pool gets a pinned CPU set from the machine's CPU budget and a memory cap (`--cpuset-cpus`, `--memory` and `--memory-swap` equal) in `internal/backend/container` (`CPUAllocator`, `ResourceArgs`, `Config.CPUBudget`, default 60% of the CPUs). Sets never overlap between concurrent pool containers; a set is freed when its container is removed or gone (image swap, a failed create, `CleanUp`), and `RecoverCPUSets` adopts the sets of live containers after a crash. A full budget refuses the start with the reason and takes nothing. The unit is the pool container, as the docker flags are set when it is made; a split per runner inside it is not built. NOT YET IMPLEMENTED: calling `RecoverCPUSets` at agent start, the console showing the declared values and the drain wait for a `.wslconfig` change.
+**R5.54** (M2, v0.3.0, partly built, CRSP50) — **WSL memory sizing.** The agent reads the `memory=` and `processors=` values of `.wslconfig` and the memory the WSL VM holds (R5.17), and shows them in the machine facts. The runner count and per-runner memory cap are set from the declared value, never from a live reading. It exports the CPU limit to jobs and splits it per runner, so `nproc` in a container matches the cap. A declared value above what the machine can give is refused with the reason. A change to `.wslconfig` needs `wsl --shutdown`, so the console says it waits for the machine to drain (R5.30). Built (CRSP50): the agent reads `.wslconfig` (`memory=`, `processors=`, `nestedVirtualization=`) from the console user's profile, then its own, into the machine facts (`apps/controller/internal/poolsize`, `apps/controller/internal/agent/wslconfig.go`); a declared value above what the machine has is refused with the reason; the CPU split (`poolsize.PerRunner`, the pool CPUs over the job slots) is exported to jobs as `CI_MAX_PARALLEL` (runners R5.53). Built (HND17): a container pool gets a pinned CPU set from the machine's CPU budget and a memory cap (`--cpuset-cpus`, `--memory` and `--memory-swap` equal) in `apps/controller/internal/backend/container` (`CPUAllocator`, `ResourceArgs`, `Config.CPUBudget`, default 60% of the CPUs). Sets never overlap between concurrent pool containers; a set is freed when its container is removed or gone (image swap, a failed create, `CleanUp`), and `RecoverCPUSets` adopts the sets of live containers after a crash. A full budget refuses the start with the reason and takes nothing. The unit is the pool container, as the docker flags are set when it is made; a split per runner inside it is not built. NOT YET IMPLEMENTED: calling `RecoverCPUSets` at agent start, the console showing the declared values and the drain wait for a `.wslconfig` change.
 
 **R5.58** (M2, v0.3.0, built, CRSP50 and CRSP70) — **The pool size is the owner's, checked against the budget.** The owner sets the memory (GiB) and CPUs the pool may use on a machine. The setting is accepted when it fits: the memory budget (85% of the total, counting the memory used outside WSL, the WSL VM and the guests R5.54 of runners), the CPU budget (60%), the floors (4 GiB and 2 CPUs) and 1.5 GiB per CPU. Otherwise it is refused, naming the budget that is short and the nearest sizes that pass (for example "10 GiB fits 6 CPUs; 7 CPUs needs 10.5 GiB"). Memory used outside WSL is the median of about 5 samples, one second apart, so a short spike of another program does not shrink the room. A change that lowers the size below the current one needs a second, explicit confirmation, never a side effect of another change. The sizing inputs (machine total, used outside WSL, budget, room, Docker ceiling, the figure that decided) are shown with the result. Port of DS R5.20 to R5.24 and `test_dl176_pool_resize.py`. Built (CRSP50): `poolsize.Check` (the floors, the CPU budget, 1.5 GiB per CPU, the memory budget, the Docker ceiling, the nearest sizes), the 5-sample sizing read (`load.SizingRead`, scheduling R5.47), the settings fields `pool_memory_gib` and `pool_cpus` (OpenAPI, migration 00012, wire), the refusal with the sizing inputs in its text, and the shrink rule: a size below the current one, or clearing it, answers 409 `needs_confirmation` and is saved only with `confirm_shrink` (the general `confirm` does not stand for it; another change never touches the pool size, and a lower budget that no longer holds it is refused). Built by CRSP70: the dry run `POST /api/v1/machines/{id}/pool-size-check` (admin; `PoolSizeCheck`: the result, the sizing figures, the nearest sizes and whether the size is below the current one; it saves nothing), and the console form on the machine's page (LOOK22: a plain section, no wizard; OPS47: its one Save bar is the page's action bar, component 48, UX-42, sticky at the foot of the main content above the key-hint bar and never inside a wrapper of its own, so it does not scroll away). It reads the budget when it opens and shows the room and the CPU budget, offers a choice of Recommended half of the free room, Recommended three quarters of it, or Custom (OPS47: the choice that shows the size now is selected when the page opens, so the group is never blank: half or three quarters when the size set equals that recommended size, else Custom with the current memory and CPUs filled in; nothing is selected only while no size is set), checks the size live 250 ms after the last edit, asks for its own tick ("Yes, lower the pool size") before a lower size, is saved by the page's one Save, which reads the check once more right before saving and sends nothing when the size changed meanwhile, and sends `confirm_shrink` only for a lower size. The controller computes the two recommended sizes (LOOK22): `PoolSizeCheck.recommended_half` and `recommended_three_quarters`, each `memory_gib` (that share of `room_gib`, rounded down to whole GiB, at least the 4 GiB floor) and `cpus` (the same share of the CPU budget, at most memory / 1.5, at least 2); `poolsize.Recommend`. NOT YET IMPLEMENTED: clearing the pool size from the console (open question M-10), the controller taking its own 5-sample read (it uses the newest load the agent reported), guest memory in the room (0 until the container backend), and the agent resizing its slots from the pool size. Since OPS61 the recommended sizes and a warning on Custom follow the measured use of the PC itself (R5.71). Built by CRSP64: the pool CPUs and memory are the limits (`--cpus`, `--memory`) of each repository pool container of the container backend (runners R5.27, open question 42).
 
@@ -326,7 +326,7 @@ The controller serves the packages of the release it was built from at `GET /api
 - **WSL.** When the pool runs in WSL2 (`.wslconfig` is present or the WSL VM is up), the block shows the cap `.wslconfig` declares (`wsl_cap_gib`, or "not set" when WSL takes its half), the cap that matches the pool, and the lines `[wsl2]` and `memory=<pool>GB` to copy. There is no apply path in the product (the agent only reads `.wslconfig`, R5.54), so it is a recommendation with Copy: crsp never edits the file, and the block says WSL must restart (`wsl --shutdown`) for a change to apply. A declared cap above total RAM less the p95 is flagged (`wsl_cap_above_pc`) and the Doctor says so (doctor R5.64).
 - **Screen.** Only shared parts (Facts, Message, Text, Stack, CodeBlock): CORE-1 to CORE-7 checked, UX-4, UX-10, UX-17, UX-71; the words are in the design system `next-version` content (Pool size words, C12). Layout is proven at 360, 393 and 1300 px.
 
-**R5.72** (M1, built OPS83; owner decision 22 Nov, back end only) — **The agent reports the machine's own health.** A new message `HealthReport` (agent protocol field 32 of `SessionRequest`, additive) goes to the controller with Hello and then every minute. It is built by `internal/agent/health`: one `Monitor`, collectors per OS (`linux.go`, `windows.go`, `darwin.go`) that read through one `Env` interface, so tests feed fixed answers. Each cheap collector has a time budget (5 s) and gives up with an unknown reason when it takes longer. The slow ones (OS updates, Docker disk use, power, GitHub reachability) run off the hot path at their own pace and the report repeats their last answer. **A value an OS cannot give is reported as unknown with the reason (`known=false`, `unknown_reason`), never as 0**; the API leaves the field out and names the reason.
+**R5.72** (M1, built OPS83; owner decision 22 Nov, back end only) — **The agent reports the machine's own health.** A new message `HealthReport` (agent protocol field 32 of `SessionRequest`, additive) goes to the controller with Hello and then every minute. It is built by `apps/controller/internal/agent/health`: one `Monitor`, collectors per OS (`linux.go`, `windows.go`, `darwin.go`) that read through one `Env` interface, so tests feed fixed answers. Each cheap collector has a time budget (5 s) and gives up with an unknown reason when it takes longer. The slow ones (OS updates, Docker disk use, power, GitHub reachability) run off the hot path at their own pace and the report repeats their last answer. **A value an OS cannot give is reported as unknown with the reason (`known=false`, `unknown_reason`), never as 0**; the API leaves the field out and names the reason.
 
 **R5.73** (M1, built OPS83) — **The cheap items, read every minute, on Linux, Windows and macOS.**
 
@@ -338,7 +338,7 @@ The controller serves the packages of the release it was built from at `GET /api
 | Swap | `/proc/meminfo` | page file (`Win32_PageFileUsage`) | `sysctl vm.swapusage` |
 | OOM kills | cgroup v2 `memory.events` `oom_kill` of `/sys/fs/cgroup/crsp*` (pool) and `crsp*/*` (job) | System event 2004 (Resource-Exhaustion-Detector), last 24 h | unknown: no count crsp can read |
 | Agent to controller round trip, last heartbeat, reconnects in 24 h, clock skew | from the heartbeats: the round trip is the time from sending a heartbeat to its answer, the skew is the agent clock at the middle of the trip minus the controller time in the answer (`health.Beats`) | same | same |
-| GitHub reachable and latency, DNS | a HEAD to the configured GitHub address (`internal/addresses`) every 5 minutes, and a lookup of its host | same | same |
+| GitHub reachable and latency, DNS | a HEAD to the configured GitHub address (`apps/controller/internal/addresses`) every 5 minutes, and a lookup of its host | same | same |
 | Versions | agent, oldest runner app, Docker engine, WSL (Windows) | same | same |
 | CPU temperature and throttling | thermal zones, `core_throttle_count` | unknown (needs admin) | unknown (needs admin, unreliable) |
 | Load average, CPU steal | `/proc/loadavg`, `/proc/stat` | unknown | load average; steal unknown |
@@ -390,12 +390,12 @@ The controller serves the packages of the release it was built from at `GET /api
 ```mermaid
 flowchart LR
   subgraph controller[Controller]
-    api[HTTP API :8460] --> svc[internal/machines]
+    api[HTTP API :8460] --> svc[apps/controller/internal/machines]
     link[Agent link :8461, connect-go] --> svc
     svc --> db[(SQLite: machines, machine_keys, join_codes, machine_settings, machine_load)]
   end
   subgraph machine[Each machine]
-    agent[internal/agent] --> load[internal/load]
+    agent[apps/controller/internal/agent] --> load[apps/controller/internal/load]
     agent --> detect[backend detection]
     agent --> secret[(OS secret store: key, pinned cert)]
     gate[job-started gate] --> load
@@ -425,9 +425,9 @@ flowchart TD
 
 **Packages.**
 
-- `internal/machines`: join codes, keys, the machine record, settings, drain and removal, offline detection. Controller side.
-- `internal/agent`: the agent mode. Link, reconnect, facts and backend detection, settings cache, drain execution, service install and uninstall, and the job tool flow of a Windows or macOS machine (`toolstore.go`: tool store, private job home, tool plan probe; runners R5.110 to R5.119).
-- `internal/load`: the load measurement per OS, medians, WSL VM and Docker reads, cgroup v2. Pure functions over parsed input, with the OS calls behind one probe interface so tests feed fixed output (as `load.py` does with its test seams).
+- `apps/controller/internal/machines`: join codes, keys, the machine record, settings, drain and removal, offline detection. Controller side.
+- `apps/controller/internal/agent`: the agent mode. Link, reconnect, facts and backend detection, settings cache, drain execution, service install and uninstall, and the job tool flow of a Windows or macOS machine (`toolstore.go`: tool store, private job home, tool plan probe; runners R5.110 to R5.119).
+- `apps/controller/internal/load`: the load measurement per OS, medians, WSL VM and Docker reads, cgroup v2. Pure functions over parsed input, with the OS calls behind one probe interface so tests feed fixed output (as `load.py` does with its test seams).
 
 **Agent link contract.** `packages/contract/proto/agent/v1/agent.proto` grows:
 
@@ -467,105 +467,105 @@ A row marked built has its test. A row marked planned has no test yet; its path 
 
 | Requirement | Test | Status |
 |---|---|---|
-| R5.1 | internal/machines/local_agent_test.go | built (CRSP120) |
-| R5.2 | internal/machines/local_agent_test.go | built (CRSP120) |
-| R5.3 | internal/machines/joincode_test.go | planned |
-| R5.4 | internal/machines/joincode_test.go | planned |
-| R5.3a | internal/machines/sshjoin_test.go (fake and real SSH exchange); internal/machines/sshwin_test.go (Windows: cmd and PowerShell shells, non-admin refusal, download with SHA-256 before install, install command with `--yes`, key never persisted, progress, TestSSHJoinWindowsPinsTheControllerCertificate: the pin is set before the download and the GitHub fallback keeps normal TLS); cmd/crsp/agent_install_test.go TestInstallYesNeedsNoStdin; internal/api/machines_ssh_join_test.go; apps/web/src/screens/machines/AddMachine.test.tsx (RES3, CRSP123) |
-| R5.4a | internal/api/machines_ssh_join_test.go TestJoinCodeProgressWaitingConnectedReady; apps/web/src/screens/machines/AddMachine.test.tsx (RES3) |
-| R5.5 | internal/agent/join_test.go | planned |
-| R5.6 | internal/machines/join_test.go | planned |
-| R5.7 | internal/agent/secretstore_test.go | planned |
-| R5.8 | internal/machines/auth_test.go | planned |
-| R5.9 | internal/agent/nolisten_test.go | planned |
-| R5.10 | internal/agent/facts_test.go | planned |
-| R5.11 | internal/agent/backends_test.go | planned |
-| R5.12 | internal/machines/settings_test.go | planned |
-| R5.13 | internal/agent/backends_test.go | planned |
-| R5.14 | internal/agent/macvm_limit_test.go | built in part (CRSP114) |
-| R5.15 | internal/load/sample_test.go | planned; ports `test_load.py` |
-| R5.16 | internal/load/median_test.go | Built: `internal/load/median_test.go` TestMedianIgnoresASpike, TestSamplerDecidesOnMedianOfLastFive |
-| R5.17 | internal/load/wslvm_test.go | planned; ports `test_dl177_pool_measure.py` VmReadTests |
-| R5.18 | internal/load/docker_test.go; internal/machines/engine_test.go TestMachineReportRecordsTheEngine; internal/agent/backends_test.go TestBackendsWSL2NotReadyFalseReportWhenDockerDesktopRunsOnWSL2; apps/web/src/screens/machines/Machines.test.tsx | planned; ports `test_dl177_pool_measure.py` DockerReadTests |
-| R5.19 | internal/load/cgroup_test.go | Built: `internal/load/cgroup_test.go` TestCgroupWorseOfHostAndContainer |
-| R5.20 | internal/load/unknown_test.go | planned |
-| R5.21 | internal/load/measure_only_test.go | planned |
-| R5.22 | internal/machines/settings_test.go | planned; internal/machines/settings_survive_test.go TestUserSettingsNeverRevertAfterReconnectOrSync, TestUserSettingsSurviveAControllerRestart (RES6) |
-| R5.22a | internal/machines/pool_defaults_test.go; internal/settings/pool_test.go; internal/api/handlers_pool_test.go | built, CRSP37 |
-| R5.23 | internal/agent/gate_test.go | planned; ports runner-pool R5.2 cases |
-| R5.24 | internal/agent/settings_cache_test.go | planned; internal/agent/settings_survive_test.go TestAgentReconnectKeepsTheUsersSettings (RES6) |
-| R5.25 | internal/machines/settings_test.go | planned |
-| R5.26 | internal/machines/drain_test.go | planned |
-| R5.27 | internal/machines/windows_test.go | planned |
+| R5.1 | apps/controller/internal/machines/local_agent_test.go | built (CRSP120) |
+| R5.2 | apps/controller/internal/machines/local_agent_test.go | built (CRSP120) |
+| R5.3 | apps/controller/internal/machines/joincode_test.go | planned |
+| R5.4 | apps/controller/internal/machines/joincode_test.go | planned |
+| R5.3a | apps/controller/internal/machines/sshjoin_test.go (fake and real SSH exchange); apps/controller/internal/machines/sshwin_test.go (Windows: cmd and PowerShell shells, non-admin refusal, download with SHA-256 before install, install command with `--yes`, key never persisted, progress, TestSSHJoinWindowsPinsTheControllerCertificate: the pin is set before the download and the GitHub fallback keeps normal TLS); apps/controller/cmd/crsp/agent_install_test.go TestInstallYesNeedsNoStdin; apps/controller/internal/api/machines_ssh_join_test.go; apps/controller-console/src/screens/machines/AddMachine.test.tsx (RES3, CRSP123) |
+| R5.4a | apps/controller/internal/api/machines_ssh_join_test.go TestJoinCodeProgressWaitingConnectedReady; apps/controller-console/src/screens/machines/AddMachine.test.tsx (RES3) |
+| R5.5 | apps/controller/internal/agent/join_test.go | planned |
+| R5.6 | apps/controller/internal/machines/join_test.go | planned |
+| R5.7 | apps/controller/internal/agent/secretstore_test.go | planned |
+| R5.8 | apps/controller/internal/machines/auth_test.go | planned |
+| R5.9 | apps/controller/internal/agent/nolisten_test.go | planned |
+| R5.10 | apps/controller/internal/agent/facts_test.go | planned |
+| R5.11 | apps/controller/internal/agent/backends_test.go | planned |
+| R5.12 | apps/controller/internal/machines/settings_test.go | planned |
+| R5.13 | apps/controller/internal/agent/backends_test.go | planned |
+| R5.14 | apps/controller/internal/agent/macvm_limit_test.go | built in part (CRSP114) |
+| R5.15 | apps/controller/internal/load/sample_test.go | planned; ports `test_load.py` |
+| R5.16 | apps/controller/internal/load/median_test.go | Built: `apps/controller/internal/load/median_test.go` TestMedianIgnoresASpike, TestSamplerDecidesOnMedianOfLastFive |
+| R5.17 | apps/controller/internal/load/wslvm_test.go | planned; ports `test_dl177_pool_measure.py` VmReadTests |
+| R5.18 | apps/controller/internal/load/docker_test.go; apps/controller/internal/machines/engine_test.go TestMachineReportRecordsTheEngine; apps/controller/internal/agent/backends_test.go TestBackendsWSL2NotReadyFalseReportWhenDockerDesktopRunsOnWSL2; apps/controller-console/src/screens/machines/Machines.test.tsx | planned; ports `test_dl177_pool_measure.py` DockerReadTests |
+| R5.19 | apps/controller/internal/load/cgroup_test.go | Built: `apps/controller/internal/load/cgroup_test.go` TestCgroupWorseOfHostAndContainer |
+| R5.20 | apps/controller/internal/load/unknown_test.go | planned |
+| R5.21 | apps/controller/internal/load/measure_only_test.go | planned |
+| R5.22 | apps/controller/internal/machines/settings_test.go | planned; apps/controller/internal/machines/settings_survive_test.go TestUserSettingsNeverRevertAfterReconnectOrSync, TestUserSettingsSurviveAControllerRestart (RES6) |
+| R5.22a | apps/controller/internal/machines/pool_defaults_test.go; apps/controller/internal/settings/pool_test.go; apps/controller/internal/api/handlers_pool_test.go | built, CRSP37 |
+| R5.23 | apps/controller/internal/agent/gate_test.go | planned; ports runner-pool R5.2 cases |
+| R5.24 | apps/controller/internal/agent/settings_cache_test.go | planned; apps/controller/internal/agent/settings_survive_test.go TestAgentReconnectKeepsTheUsersSettings (RES6) |
+| R5.25 | apps/controller/internal/machines/settings_test.go | planned |
+| R5.26 | apps/controller/internal/machines/drain_test.go | planned |
+| R5.27 | apps/controller/internal/machines/windows_test.go | planned |
 | R5.28 | dropped (OPS51) | none |
-| R5.29 | internal/runnercache/runnercache_test.go TestEvictionOrderOldestFirstUntilItFits, TestNeverEvictsWhileARunnerIsBusy; internal/hooks/hooks_test.go TestJobDoneEvictsOldestOverQuota | built for the runner quotas; planned (M7) for the machine setting |
-| R5.30 | internal/machines/drain_test.go | planned; internal/machines/settings_survive_test.go TestSettingChangedWhileADrainWaitsIsNotUndone, TestFactsSyncDoesNotRevertARename (RES6) |
-| R5.31 | internal/machines/drain_test.go | planned |
-| R5.32 | internal/agent/drain_idle_test.go | planned |
-| R5.33 | internal/machines/drain_timeout_test.go TestDrainTimeoutWarnsAndKeepsWaiting, TestDrainTimeoutIsPerMachine, TestNoDecisionStopsJobs | built |
-| R5.34 | internal/machines/drain_test.go | planned |
-| R5.35 | internal/machines/offline_test.go | planned; cmd/crsp/machine_up_edges_test.go TestMachineUpEdges (a heartbeat dated more than 30 s ahead is not fresh and is logged as machine.heartbeat.skew, RES13) |
-| R5.36 | internal/agent/backoff_test.go | planned |
-| R5.37 | internal/agent/link_loss_test.go | planned |
-| R5.38 | internal/machines/reconcile_test.go | planned |
-| R5.39 | internal/agent/revoked_test.go | planned |
-| R5.40 | internal/machines/remove_test.go TestRemoveNamesWhatGoesDrainsThenRevokes; apps/web/src/screens/machines/MachineLeavePool.test.tsx; internal/runners/machine_remove_test.go TestRemoveMachineRunnersOnline | built |
-| R5.41 | internal/machines/remove_test.go TestRemoveNamesWhatGoesDrainsThenRevokes; internal/runners/machine_remove_test.go TestRemoveMachineRunnersKeepsWhatItCouldNotRemove | built |
-| R5.42 | internal/machines/remove_offline_test.go TestRemoveOfflineMachineRevokesAtOnce, TestRemoveOfflineMachineDeregistersItsRunners; internal/runners/machine_remove_test.go TestRemoveMachineRunnersOffline | built |
-| R5.43 | internal/machines/join_test.go | planned |
-| R5.44 | internal/agent/plan_test.go TestServiceAccounts (built, CRSP42) |
-| R5.45 | internal/agent/plan_test.go TestInstallWithoutAdminRightsStopsFirst, TestFailedStepNamesWhatWasLeftBehind, TestCLIXMLErrorIsDecodedToOneLine; cmd/crsp/agent_install_test.go (built, CRSP119) |
-| R5.46 | internal/agent/service_install_test.go | planned; plus a CI start of the built agent per OS |
-| R5.47 | internal/agent/service_windows_test.go | planned |
-| R5.48 | internal/agent/install_plan_test.go | planned |
-| R5.49 | internal/agent/uninstall_test.go | planned |
-| R5.50 | apps/web/src/machines/Machines.test.tsx | planned |
-| R5.51 | cmd/crsp/machines_cmd_test.go | planned |
-| R5.52 | internal/api/machines_auth_test.go | planned |
-| R5.53 | internal/agent/engine_test.go TestParseWSLKVM, TestReadWSLKVMOnlyOnWindowsAndOnlyReads; internal/agent/wsl_kvm_test.go TestParseWslconfig, TestWslKVMLoadsOnlyWhenNestedIsNotOff; internal/backend/container/kvm_test.go TestKVMWaitIsBoundedAndStartsWithoutKVM, TestLoaderModuleByVendor, TestComposeKVMLoaderOnlyPrivileged | built in part; CRSP56 |
-| R5.54 | `internal/poolsize/poolsize_test.go` TestParseWSLConfigReadsOnlyWSL2, TestDeclaredAboveMachineIsRefused, TestCPUSplitAndEnv; `internal/agent/wslconfig_test.go` TestFactsReadWSLConfig; `internal/backend/container/cpuset_test.go` TestAllocationNeverOverlaps, TestCPUsAreFreedOnRelease, TestRefusesWhenBudgetExhaustedAndHoldsNothing, TestResourceArgsMemoryAndSwapEqual, TestCrashRecoveryAdoptsLiveSets; `internal/machines/pool_size_test.go` TestWSLConfigFactsAndDockerCeiling | partly built; the console is planned (v0.3.0) |
-| R5.55 | `internal/machines/holder_test.go` TestDrainNamesTheHolderAndHowLongItRuns; `internal/api/machines_holder_test.go` TestChangeShowsTheDrainHolderAndChoices; `apps/web/src/screens/machines/Machines.test.tsx` Machine detail, a drain that waits | new, from the 14 Nov runs of the old pool |
-| R5.56 | `internal/machines/holder_test.go` TestHolderFarPastItsUsualDurationIsFlaggedOnceWithChoices; `internal/api/machines_holder_test.go` TestChangeShowsTheDrainHolderAndChoices | new |
-| R5.57 | `internal/machines/holder_test.go` TestScopedDrainCountsOnlyItsOwnRunners; `internal/agent/drain_idle_test.go` TestScopedHoldCountsOnlyItsOwnRunners, TestHoldRunnersWithoutNamesIsTheWholeMachine | new |
-| R5.58 | `internal/poolsize/poolsize_test.go` TestPoolSizeThatFitsIsAccepted, TestMemoryBudgetRefusalNamesNearestSize, TestRatioRefusalSaysTheNeed, TestShrinkNeedsExplicitConfirm; `internal/machines/pool_size_test.go` TestPoolSizeShrinkNeedsItsOwnConfirm, TestAnotherChangeDoesNotShrinkThePool; `internal/api/machines_pool_size_test.go` TestPoolSizeThroughTheAPI; `internal/load/sizing_test.go` TestSizingReadIsMedianOfFiveSamplesOneSecondApart; `internal/runners/jit_test.go` TestJitRunnerCarriesPoolSize; `internal/backend/container/stage_test.go` TestPoolSizeBecomesPoolLimits | built; `internal/machines` PoolSizeCheck is covered by `internal/api/machines_pool_size_test.go` TestPoolSizeCheckDryRun and the console by `apps/web/src/screens/machines/Machines.test.tsx` (Machine detail, the pool size; OPS47 preselect) and `e2e/tests/web-console/ux-action-bar.spec.ts` (the bar stays at the foot on every page that has one) `internal/poolsize/poolsize_test.go` TestRecommendHalfAndThreeQuarters, TestRecommendKeepsTheFloors, TestCheckFillsRecommendedSizes and `internal/api/machines_pool_size_test.go` (recommended sizes). Port of `test_dl176_pool_resize.py` in the checks above |
-| R5.59 | `internal/agent/runner_link_test.go` TestMachineReportArrivesAfterHello; `cmd/crsp/remote_wiring_test.go` TestReportSourcesReadTheAgentReport, TestKVMReportedChecksRunOnTheReport | new |
-| R5.60 | planned: internal/agent/diskfloor_test.go TestNoNewRunnerUnderTheFloor, TestHoldEndsWithMargin, TestUnreadableDiskNeverHolds (CRSP83) |
-| R5.61 | `internal/machines/policy_test.go` TestPolicyDefaults, TestModeTransitions, TestPauseFromTheTray, TestPolicyReachesTheAgent; `internal/agent/policy_test.go` TestAutomaticAcceptsOnMains, TestAlwaysIgnoresBattery, TestPausedTakesNoNewJobAndFinishesRunning, TestTimedPauseEndsAndUntilResumedDoesNot, TestTrayPauseHoldsInAlways; `internal/api/machines_policy_test.go` TestMachinePolicyThroughTheAPI; `apps/web/src/screens/machines/MachinePolicy.test.tsx` | new |
-| R5.62 | `internal/machines/policy_test.go` TestAcceptingReportSetsMachineStatus; `internal/machines/taking_test.go` TestComputeAvailability, TestViewTakingFollowsStopAndResume; `internal/agent/policy_test.go` TestAcceptingReportAndCPUCapOverTheLink, TestOverBudgetReportsBudget, TestDrainedMachineReportsPaused; `internal/api/machines_policy_test.go` TestMachineStatusShowsTheAgentsReport; `internal/scheduler/accepting_test.go` | new |
-| R5.63 | `internal/power/power_test.go` TestLinuxSupplies, TestPmset, TestSystemPowerStatus; `internal/agent/policy_test.go` TestAutomaticPausesOnBatteryAndNeverCutsARunningJob, TestBatteryPauseSwitchOff | new |
-| R5.64 | `internal/cpucap/cpucap_test.go` TestCPUMax, TestApplyCgroupsWritesCPUMaxOfEachRunnerService, TestApplyCgroupsWithoutCgroupV2; `internal/cpucap/cap_windows_test.go` (GOOS=windows) TestJobObjectCapReadsBack, TestJobObjectAssignsAProcessTree; `internal/machines/policy_test.go` TestCPUCapValues; `internal/agent/policy_test.go` TestAcceptingReportAndCPUCapOverTheLink; `internal/machines/policy_test.go` TestCPUCapStateFollowsTheChosenPct; `apps/web/src/screens/machines/MachinePolicy.test.tsx` the CPU cap state follows the chosen value | new |
-| R5.65 | `internal/joinfile/joinfile_test.go` (names, values, code once, CRLF and LF, shellcheck of the sh, bad values refused); `internal/packages/packages_test.go` (SHA-256 checked, mismatch never served or kept, unlisted name refused); `internal/machines/joinfile_test.go` TestJoinFileCodeWorksOnceAndExpires, TestJoinFileWithdrawsAnOlderCode, TestJoinFileAuditHasNoCode, TestJoinFileRefusals; `internal/api/machines_joinfile_test.go` (admin only, file per system, single use and polling, audit without the code, 501 without packages, package endpoint with SHA-256); `internal/cli/cmd_joinfile_test.go` (owner-only file), `internal/cli/ownerfile_windows_test.go` (reads the DACL back: protected, no Everyone or Users), `internal/cli/ownerfile_unix_test.go`; `internal/joinfile/pin_test.go` (the pin is in every template, the first lines say one-time and delete, the shell file accepts the pinned controller and refuses another certificate and a server certificate not signed by the pin) | built (CRSP122, CRSP133) |
-| R6.1 | internal/machines/tls_test.go | planned |
-| R6.2 | internal/machines/secrets_test.go | planned |
-| R6.3 | internal/machines/joincode_test.go | planned |
-| R6.4 | internal/machines/audit_test.go | planned |
-| R6.5 | `cmd/crsp-idle-soak` (soak program, run by `.github/workflows/soak.yml` nightly and on dispatch; 1% of one core and 50 MB over a 60 s window) | built |
-| R6.6 | internal/load/sample_bench_test.go | planned (benchmark) |
-| R6.7 | internal/machines/stale_test.go | planned |
-| R6.8 | internal/machines/load_retention_test.go | planned |
-| R6.9 | internal/machines/scale_test.go | planned |
+| R5.29 | apps/controller/internal/runnercache/runnercache_test.go TestEvictionOrderOldestFirstUntilItFits, TestNeverEvictsWhileARunnerIsBusy; apps/controller/internal/hooks/hooks_test.go TestJobDoneEvictsOldestOverQuota | built for the runner quotas; planned (M7) for the machine setting |
+| R5.30 | apps/controller/internal/machines/drain_test.go | planned; apps/controller/internal/machines/settings_survive_test.go TestSettingChangedWhileADrainWaitsIsNotUndone, TestFactsSyncDoesNotRevertARename (RES6) |
+| R5.31 | apps/controller/internal/machines/drain_test.go | planned |
+| R5.32 | apps/controller/internal/agent/drain_idle_test.go | planned |
+| R5.33 | apps/controller/internal/machines/drain_timeout_test.go TestDrainTimeoutWarnsAndKeepsWaiting, TestDrainTimeoutIsPerMachine, TestNoDecisionStopsJobs | built |
+| R5.34 | apps/controller/internal/machines/drain_test.go | planned |
+| R5.35 | apps/controller/internal/machines/offline_test.go | planned; apps/controller/cmd/crsp/machine_up_edges_test.go TestMachineUpEdges (a heartbeat dated more than 30 s ahead is not fresh and is logged as machine.heartbeat.skew, RES13) |
+| R5.36 | apps/controller/internal/agent/backoff_test.go | planned |
+| R5.37 | apps/controller/internal/agent/link_loss_test.go | planned |
+| R5.38 | apps/controller/internal/machines/reconcile_test.go | planned |
+| R5.39 | apps/controller/internal/agent/revoked_test.go | planned |
+| R5.40 | apps/controller/internal/machines/remove_test.go TestRemoveNamesWhatGoesDrainsThenRevokes; apps/controller-console/src/screens/machines/MachineLeavePool.test.tsx; apps/controller/internal/runners/machine_remove_test.go TestRemoveMachineRunnersOnline | built |
+| R5.41 | apps/controller/internal/machines/remove_test.go TestRemoveNamesWhatGoesDrainsThenRevokes; apps/controller/internal/runners/machine_remove_test.go TestRemoveMachineRunnersKeepsWhatItCouldNotRemove | built |
+| R5.42 | apps/controller/internal/machines/remove_offline_test.go TestRemoveOfflineMachineRevokesAtOnce, TestRemoveOfflineMachineDeregistersItsRunners; apps/controller/internal/runners/machine_remove_test.go TestRemoveMachineRunnersOffline | built |
+| R5.43 | apps/controller/internal/machines/join_test.go | planned |
+| R5.44 | apps/controller/internal/agent/plan_test.go TestServiceAccounts (built, CRSP42) |
+| R5.45 | apps/controller/internal/agent/plan_test.go TestInstallWithoutAdminRightsStopsFirst, TestFailedStepNamesWhatWasLeftBehind, TestCLIXMLErrorIsDecodedToOneLine; apps/controller/cmd/crsp/agent_install_test.go (built, CRSP119) |
+| R5.46 | apps/controller/internal/agent/service_install_test.go | planned; plus a CI start of the built agent per OS |
+| R5.47 | apps/controller/internal/agent/service_windows_test.go | planned |
+| R5.48 | apps/controller/internal/agent/install_plan_test.go | planned |
+| R5.49 | apps/controller/internal/agent/uninstall_test.go | planned |
+| R5.50 | apps/controller-console/src/machines/Machines.test.tsx | planned |
+| R5.51 | apps/controller/cmd/crsp/machines_cmd_test.go | planned |
+| R5.52 | apps/controller/internal/api/machines_auth_test.go | planned |
+| R5.53 | apps/controller/internal/agent/engine_test.go TestParseWSLKVM, TestReadWSLKVMOnlyOnWindowsAndOnlyReads; apps/controller/internal/agent/wsl_kvm_test.go TestParseWslconfig, TestWslKVMLoadsOnlyWhenNestedIsNotOff; apps/controller/internal/backend/container/kvm_test.go TestKVMWaitIsBoundedAndStartsWithoutKVM, TestLoaderModuleByVendor, TestComposeKVMLoaderOnlyPrivileged | built in part; CRSP56 |
+| R5.54 | `apps/controller/internal/poolsize/poolsize_test.go` TestParseWSLConfigReadsOnlyWSL2, TestDeclaredAboveMachineIsRefused, TestCPUSplitAndEnv; `apps/controller/internal/agent/wslconfig_test.go` TestFactsReadWSLConfig; `apps/controller/internal/backend/container/cpuset_test.go` TestAllocationNeverOverlaps, TestCPUsAreFreedOnRelease, TestRefusesWhenBudgetExhaustedAndHoldsNothing, TestResourceArgsMemoryAndSwapEqual, TestCrashRecoveryAdoptsLiveSets; `apps/controller/internal/machines/pool_size_test.go` TestWSLConfigFactsAndDockerCeiling | partly built; the console is planned (v0.3.0) |
+| R5.55 | `apps/controller/internal/machines/holder_test.go` TestDrainNamesTheHolderAndHowLongItRuns; `apps/controller/internal/api/machines_holder_test.go` TestChangeShowsTheDrainHolderAndChoices; `apps/controller-console/src/screens/machines/Machines.test.tsx` Machine detail, a drain that waits | new, from the 14 Nov runs of the old pool |
+| R5.56 | `apps/controller/internal/machines/holder_test.go` TestHolderFarPastItsUsualDurationIsFlaggedOnceWithChoices; `apps/controller/internal/api/machines_holder_test.go` TestChangeShowsTheDrainHolderAndChoices | new |
+| R5.57 | `apps/controller/internal/machines/holder_test.go` TestScopedDrainCountsOnlyItsOwnRunners; `apps/controller/internal/agent/drain_idle_test.go` TestScopedHoldCountsOnlyItsOwnRunners, TestHoldRunnersWithoutNamesIsTheWholeMachine | new |
+| R5.58 | `apps/controller/internal/poolsize/poolsize_test.go` TestPoolSizeThatFitsIsAccepted, TestMemoryBudgetRefusalNamesNearestSize, TestRatioRefusalSaysTheNeed, TestShrinkNeedsExplicitConfirm; `apps/controller/internal/machines/pool_size_test.go` TestPoolSizeShrinkNeedsItsOwnConfirm, TestAnotherChangeDoesNotShrinkThePool; `apps/controller/internal/api/machines_pool_size_test.go` TestPoolSizeThroughTheAPI; `apps/controller/internal/load/sizing_test.go` TestSizingReadIsMedianOfFiveSamplesOneSecondApart; `apps/controller/internal/runners/jit_test.go` TestJitRunnerCarriesPoolSize; `apps/controller/internal/backend/container/stage_test.go` TestPoolSizeBecomesPoolLimits | built; `apps/controller/internal/machines` PoolSizeCheck is covered by `apps/controller/internal/api/machines_pool_size_test.go` TestPoolSizeCheckDryRun and the console by `apps/controller-console/src/screens/machines/Machines.test.tsx` (Machine detail, the pool size; OPS47 preselect) and `e2e/tests/web-console/ux-action-bar.spec.ts` (the bar stays at the foot on every page that has one) `apps/controller/internal/poolsize/poolsize_test.go` TestRecommendHalfAndThreeQuarters, TestRecommendKeepsTheFloors, TestCheckFillsRecommendedSizes and `apps/controller/internal/api/machines_pool_size_test.go` (recommended sizes). Port of `test_dl176_pool_resize.py` in the checks above |
+| R5.59 | `apps/controller/internal/agent/runner_link_test.go` TestMachineReportArrivesAfterHello; `apps/controller/cmd/crsp/remote_wiring_test.go` TestReportSourcesReadTheAgentReport, TestKVMReportedChecksRunOnTheReport | new |
+| R5.60 | planned: apps/controller/internal/agent/diskfloor_test.go TestNoNewRunnerUnderTheFloor, TestHoldEndsWithMargin, TestUnreadableDiskNeverHolds (CRSP83) |
+| R5.61 | `apps/controller/internal/machines/policy_test.go` TestPolicyDefaults, TestModeTransitions, TestPauseFromTheTray, TestPolicyReachesTheAgent; `apps/controller/internal/agent/policy_test.go` TestAutomaticAcceptsOnMains, TestAlwaysIgnoresBattery, TestPausedTakesNoNewJobAndFinishesRunning, TestTimedPauseEndsAndUntilResumedDoesNot, TestTrayPauseHoldsInAlways; `apps/controller/internal/api/machines_policy_test.go` TestMachinePolicyThroughTheAPI; `apps/controller-console/src/screens/machines/MachinePolicy.test.tsx` | new |
+| R5.62 | `apps/controller/internal/machines/policy_test.go` TestAcceptingReportSetsMachineStatus; `apps/controller/internal/machines/taking_test.go` TestComputeAvailability, TestViewTakingFollowsStopAndResume; `apps/controller/internal/agent/policy_test.go` TestAcceptingReportAndCPUCapOverTheLink, TestOverBudgetReportsBudget, TestDrainedMachineReportsPaused; `apps/controller/internal/api/machines_policy_test.go` TestMachineStatusShowsTheAgentsReport; `apps/controller/internal/scheduler/accepting_test.go` | new |
+| R5.63 | `apps/controller/internal/power/power_test.go` TestLinuxSupplies, TestPmset, TestSystemPowerStatus; `apps/controller/internal/agent/policy_test.go` TestAutomaticPausesOnBatteryAndNeverCutsARunningJob, TestBatteryPauseSwitchOff | new |
+| R5.64 | `apps/controller/internal/cpucap/cpucap_test.go` TestCPUMax, TestApplyCgroupsWritesCPUMaxOfEachRunnerService, TestApplyCgroupsWithoutCgroupV2; `apps/controller/internal/cpucap/cap_windows_test.go` (GOOS=windows) TestJobObjectCapReadsBack, TestJobObjectAssignsAProcessTree; `apps/controller/internal/machines/policy_test.go` TestCPUCapValues; `apps/controller/internal/agent/policy_test.go` TestAcceptingReportAndCPUCapOverTheLink; `apps/controller/internal/machines/policy_test.go` TestCPUCapStateFollowsTheChosenPct; `apps/controller-console/src/screens/machines/MachinePolicy.test.tsx` the CPU cap state follows the chosen value | new |
+| R5.65 | `apps/controller/internal/joinfile/joinfile_test.go` (names, values, code once, CRLF and LF, shellcheck of the sh, bad values refused); `apps/controller/internal/packages/packages_test.go` (SHA-256 checked, mismatch never served or kept, unlisted name refused); `apps/controller/internal/machines/joinfile_test.go` TestJoinFileCodeWorksOnceAndExpires, TestJoinFileWithdrawsAnOlderCode, TestJoinFileAuditHasNoCode, TestJoinFileRefusals; `apps/controller/internal/api/machines_joinfile_test.go` (admin only, file per system, single use and polling, audit without the code, 501 without packages, package endpoint with SHA-256); `apps/controller/internal/cli/cmd_joinfile_test.go` (owner-only file), `apps/controller/internal/cli/ownerfile_windows_test.go` (reads the DACL back: protected, no Everyone or Users), `apps/controller/internal/cli/ownerfile_unix_test.go`; `apps/controller/internal/joinfile/pin_test.go` (the pin is in every template, the first lines say one-time and delete, the shell file accepts the pinned controller and refuses another certificate and a server certificate not signed by the pin) | built (CRSP122, CRSP133) |
+| R6.1 | apps/controller/internal/machines/tls_test.go | planned |
+| R6.2 | apps/controller/internal/machines/secrets_test.go | planned |
+| R6.3 | apps/controller/internal/machines/joincode_test.go | planned |
+| R6.4 | apps/controller/internal/machines/audit_test.go | planned |
+| R6.5 | `apps/controller/cmd/crsp-idle-soak` (soak program, run by `.github/workflows/soak.yml` nightly and on dispatch; 1% of one core and 50 MB over a 60 s window) | built |
+| R6.6 | apps/controller/internal/load/sample_bench_test.go | planned (benchmark) |
+| R6.7 | apps/controller/internal/machines/stale_test.go | planned |
+| R6.8 | apps/controller/internal/machines/load_retention_test.go | planned |
+| R6.9 | apps/controller/internal/machines/scale_test.go | planned |
 | R6.10 | e2e/tests/machines.spec.ts | planned |
-| R5.66 | internal/machines/compact_test.go TestSettingsValidateCompact; internal/api/machines_policy_test.go TestMachineDockerCompactSettingsAndStatus; internal/cli/cmd_machine_settings_test.go; apps/web/src/screens/machines/MachineDockerDisk.test.tsx | built (CRSP136) |
-| R5.67 | internal/machines/filerepo_test.go TestFileRepoKeepsMachinesAndKeysAcrossARestart, TestFileRepoRefusesADamagedFile | built (CRSP205) |
-| R5.68 | internal/store/controllerstate_test.go TestMachinesSurviveRestart, TestImportMachinesJSON | built (OPS59) |
-| R5.69 | cmd/crsp/machines_wiring.go auditedRepo (console audit); internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine (machine.rejoin entry) | built (OPS59) |
-| R5.70 | internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine, TestAgentRejoinMatchesHostOSArch; internal/machines/join_test.go TestJoinMakesNamesUnique | built (OPS59) |
-| R5.71 | `internal/load/hostuse_test.go` TestHostUseNeedsADayOfSamples, TestHostUseP95IsTheNearestRank, TestHostUseForgetsAfterAWeek, TestHostUseKeepsThePeakOfAStep, TestHostUseSaveRestore, TestParsePSOwnCountsOnlyCrsp, TestHostOwnBytesPerOS (linux, darwin, windows, floor), TestSamplerReportsHostUse, TestRefreshReadsPoolContainersAndOwnUse; `internal/poolsize/poolsize_test.go` TestMeasuredRoomTable, TestRecommendedBasisTable, TestLeavesLessThanHostIsAWarningNotABlock, TestWSLCapIsShown; `internal/api/machines_pool_size_test.go` TestPoolSizeCheckSaysMeasuredOrMeasuring; `apps/web/src/screens/machines/PoolSizeMeasured.test.tsx`; `e2e/tests/web-console/ux-pool-size.spec.ts` (DOM layout at 360, 393 and 1300 px) | built (OPS61) |
-| R5.72 | `internal/agent/health/other_test.go` TestMonitorCollect, TestMonitorBudgetAndSlowOffPath; `internal/agent/health/linux_test.go` TestLinuxUnknownIsNotZero | built (OPS83) |
-| R5.73 | `internal/agent/health/linux_test.go` TestLinuxBootSwapLoad, TestLinuxOOMTargets, TestLinuxThermalThrottle, TestLinuxCPUTimes; `internal/agent/health/other_test.go` TestWindowsBootSwapOOM, TestDarwin, TestBootTracking, TestBeats, TestMonitorGitHubDownAndOOMDelta | built (OPS83) |
-| R5.74 | `internal/agent/health/linux_test.go` TestLinuxUpdatesDebian, TestLinuxUpdatesRHEL, TestLinuxPower; `internal/agent/health/other_test.go` TestParseWindowsUpdates, TestHourInRange, TestWindowsPower, TestWindowsWSLVersion, TestDarwinUpdatesAndPower, TestParseDockerDF | built (OPS83) |
-| R5.75 | `internal/machinehealth/service_test.go` TestIngestAndDaysUntilFull, TestTrendNeedsData; `internal/store/jobstats_test.go` TestMachineHealthRowsAndDiskSamples | built (OPS83) |
-| R5.76 | `internal/machinehealth/service_test.go` TestRestartMayHitJobs | built (OPS83) |
-| R5.77 | `internal/machinehealth/service_test.go` TestOutOfDate, TestOOMStateAndVersions | built (OPS83) |
-| R5.78 | `internal/store/jobstats_test.go` TestJobStatsCountsAveragesAndFailures, TestJobStatsAveragesRunnerAndEmpty, TestJobStatsBusyClipsToWindow, TestJobStatsUseTheIndexes; `internal/machinehealth/service_test.go` TestJobStatsWindowsAndRates | built (OPS83) |
-| R5.79 | `internal/api/handlers_machinehealth_test.go` TestMachineHealthRoute, TestJobStatsRoutes, TestHealthThresholdsRoutes, TestHealthRoutesOffAnswer501 | built (OPS83) |
-| R5.80 | `internal/machines/disk_floor_test.go` TestDiskFloorIsUnsetByDefault, TestDiskFloorRange, TestDiskFloorReachesTheAgent, TestDiskFloorOffInConfigRefusesTheConsole; `internal/machines/settings_survive_test.go` TestUserSettingsNeverRevertAfterReconnectOrSync; `internal/agent/disk_floor_test.go` TestConsoleFloorAppliesLive, TestFloorOverTheWire; `internal/api/machines_disk_floor_test.go` TestMachineDiskFloorThroughTheAPI; `apps/web/src/screens/machines/MachineDiskFloor.test.tsx` |
-| R5.81 | `internal/machines/drain_test.go` TestRestartServiceWaitsForJobsAsksTheAgentAndEndsOnReconnect, TestRestartServiceRefusesTheControllerAndAnOfflineMachine; `internal/agent/follow_test.go` TestAgentRestartsItsServiceWhenTheControllerAsks, TestAgentSaysItCannotRestart; `internal/api/machines_api_test.go` TestGateMaxWaitSavesWithinTheCapAndRestartRefusesOffline; `apps/web/src/screens/machines/MachineRestart.test.tsx`; `e2e/tests/web-console/machine-restart-gate.spec.ts` | built (CRSP235) |
-| R5.82 | `internal/machines/settings_test.go` TestGateMaxWaitIsSavedWithinTheHoldCap; `apps/web/src/screens/machines/Machines.test.tsx` (Gate maximum wait cases); `e2e/tests/web-console/machine-restart-gate.spec.ts` | built (CRSP235) |
-| R5.83 | `internal/machinehealth/uptime_test.go` TestObserveWritesOnlyChanges, TestObserveAfterControllerRestartClosesTheGap, TestPresenceKeepsTheRowInForceAndPrunes; `internal/machines/presence_test.go` TestPresenceObserverSeesOnlineOfflineAndReason | built (CRSP263) |
-| R5.84 | `internal/machinehealth/uptime_test.go` TestComputeUptimeWindowsAndPeriods, TestComputeUptimeNothingWatchedAndOngoing | built (CRSP263) |
-| R5.85 | `internal/machinehealth/uptime_test.go` TestComputeUptimeWindowsAndPeriods | built (CRSP263) |
-| R5.86 | `internal/api/handlers_machineuptime_test.go` TestMachineUptimeRoute, TestMachineUptimeOffAnswers501; `apps/web/src/screens/machines/MachineUptime.test.tsx` | built (CRSP263) |
+| R5.66 | apps/controller/internal/machines/compact_test.go TestSettingsValidateCompact; apps/controller/internal/api/machines_policy_test.go TestMachineDockerCompactSettingsAndStatus; apps/controller/internal/cli/cmd_machine_settings_test.go; apps/controller-console/src/screens/machines/MachineDockerDisk.test.tsx | built (CRSP136) |
+| R5.67 | apps/controller/internal/machines/filerepo_test.go TestFileRepoKeepsMachinesAndKeysAcrossARestart, TestFileRepoRefusesADamagedFile | built (CRSP205) |
+| R5.68 | apps/controller/internal/store/controllerstate_test.go TestMachinesSurviveRestart, TestImportMachinesJSON | built (OPS59) |
+| R5.69 | apps/controller/cmd/crsp/machines_wiring.go auditedRepo (console audit); apps/controller/internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine (machine.rejoin entry) | built (OPS59) |
+| R5.70 | apps/controller/internal/store/controllerstate_test.go TestLocalRejoinKeepsMachine, TestAgentRejoinMatchesHostOSArch; apps/controller/internal/machines/join_test.go TestJoinMakesNamesUnique | built (OPS59) |
+| R5.71 | `apps/controller/internal/load/hostuse_test.go` TestHostUseNeedsADayOfSamples, TestHostUseP95IsTheNearestRank, TestHostUseForgetsAfterAWeek, TestHostUseKeepsThePeakOfAStep, TestHostUseSaveRestore, TestParsePSOwnCountsOnlyCrsp, TestHostOwnBytesPerOS (linux, darwin, windows, floor), TestSamplerReportsHostUse, TestRefreshReadsPoolContainersAndOwnUse; `apps/controller/internal/poolsize/poolsize_test.go` TestMeasuredRoomTable, TestRecommendedBasisTable, TestLeavesLessThanHostIsAWarningNotABlock, TestWSLCapIsShown; `apps/controller/internal/api/machines_pool_size_test.go` TestPoolSizeCheckSaysMeasuredOrMeasuring; `apps/controller-console/src/screens/machines/PoolSizeMeasured.test.tsx`; `e2e/tests/web-console/ux-pool-size.spec.ts` (DOM layout at 360, 393 and 1300 px) | built (OPS61) |
+| R5.72 | `apps/controller/internal/agent/health/other_test.go` TestMonitorCollect, TestMonitorBudgetAndSlowOffPath; `apps/controller/internal/agent/health/linux_test.go` TestLinuxUnknownIsNotZero | built (OPS83) |
+| R5.73 | `apps/controller/internal/agent/health/linux_test.go` TestLinuxBootSwapLoad, TestLinuxOOMTargets, TestLinuxThermalThrottle, TestLinuxCPUTimes; `apps/controller/internal/agent/health/other_test.go` TestWindowsBootSwapOOM, TestDarwin, TestBootTracking, TestBeats, TestMonitorGitHubDownAndOOMDelta | built (OPS83) |
+| R5.74 | `apps/controller/internal/agent/health/linux_test.go` TestLinuxUpdatesDebian, TestLinuxUpdatesRHEL, TestLinuxPower; `apps/controller/internal/agent/health/other_test.go` TestParseWindowsUpdates, TestHourInRange, TestWindowsPower, TestWindowsWSLVersion, TestDarwinUpdatesAndPower, TestParseDockerDF | built (OPS83) |
+| R5.75 | `apps/controller/internal/machinehealth/service_test.go` TestIngestAndDaysUntilFull, TestTrendNeedsData; `apps/controller/internal/store/jobstats_test.go` TestMachineHealthRowsAndDiskSamples | built (OPS83) |
+| R5.76 | `apps/controller/internal/machinehealth/service_test.go` TestRestartMayHitJobs | built (OPS83) |
+| R5.77 | `apps/controller/internal/machinehealth/service_test.go` TestOutOfDate, TestOOMStateAndVersions | built (OPS83) |
+| R5.78 | `apps/controller/internal/store/jobstats_test.go` TestJobStatsCountsAveragesAndFailures, TestJobStatsAveragesRunnerAndEmpty, TestJobStatsBusyClipsToWindow, TestJobStatsUseTheIndexes; `apps/controller/internal/machinehealth/service_test.go` TestJobStatsWindowsAndRates | built (OPS83) |
+| R5.79 | `apps/controller/internal/api/handlers_machinehealth_test.go` TestMachineHealthRoute, TestJobStatsRoutes, TestHealthThresholdsRoutes, TestHealthRoutesOffAnswer501 | built (OPS83) |
+| R5.80 | `apps/controller/internal/machines/disk_floor_test.go` TestDiskFloorIsUnsetByDefault, TestDiskFloorRange, TestDiskFloorReachesTheAgent, TestDiskFloorOffInConfigRefusesTheConsole; `apps/controller/internal/machines/settings_survive_test.go` TestUserSettingsNeverRevertAfterReconnectOrSync; `apps/controller/internal/agent/disk_floor_test.go` TestConsoleFloorAppliesLive, TestFloorOverTheWire; `apps/controller/internal/api/machines_disk_floor_test.go` TestMachineDiskFloorThroughTheAPI; `apps/controller-console/src/screens/machines/MachineDiskFloor.test.tsx` |
+| R5.81 | `apps/controller/internal/machines/drain_test.go` TestRestartServiceWaitsForJobsAsksTheAgentAndEndsOnReconnect, TestRestartServiceRefusesTheControllerAndAnOfflineMachine; `apps/controller/internal/agent/follow_test.go` TestAgentRestartsItsServiceWhenTheControllerAsks, TestAgentSaysItCannotRestart; `apps/controller/internal/api/machines_api_test.go` TestGateMaxWaitSavesWithinTheCapAndRestartRefusesOffline; `apps/controller-console/src/screens/machines/MachineRestart.test.tsx`; `e2e/tests/web-console/machine-restart-gate.spec.ts` | built (CRSP235) |
+| R5.82 | `apps/controller/internal/machines/settings_test.go` TestGateMaxWaitIsSavedWithinTheHoldCap; `apps/controller-console/src/screens/machines/Machines.test.tsx` (Gate maximum wait cases); `e2e/tests/web-console/machine-restart-gate.spec.ts` | built (CRSP235) |
+| R5.83 | `apps/controller/internal/machinehealth/uptime_test.go` TestObserveWritesOnlyChanges, TestObserveAfterControllerRestartClosesTheGap, TestPresenceKeepsTheRowInForceAndPrunes; `apps/controller/internal/machines/presence_test.go` TestPresenceObserverSeesOnlineOfflineAndReason | built (CRSP263) |
+| R5.84 | `apps/controller/internal/machinehealth/uptime_test.go` TestComputeUptimeWindowsAndPeriods, TestComputeUptimeNothingWatchedAndOngoing | built (CRSP263) |
+| R5.85 | `apps/controller/internal/machinehealth/uptime_test.go` TestComputeUptimeWindowsAndPeriods | built (CRSP263) |
+| R5.86 | `apps/controller/internal/api/handlers_machineuptime_test.go` TestMachineUptimeRoute, TestMachineUptimeOffAnswers501; `apps/controller-console/src/screens/machines/MachineUptime.test.tsx` | built (CRSP263) |
 
 ## 10. Decisions
 
@@ -608,21 +608,21 @@ Open questions from CRSP75 (the conservative choice is built; change it by answe
 Everything not named as built at the top is NOT YET IMPLEMENTED. The seams that will change:
 
 - `packages/contract/proto/agent/v1/agent.proto`: `Register` becomes `Join`; session messages grow (section 7).
-- `internal/store/migrations`: new tables for machines, keys, join codes, settings and load.
+- `apps/controller/internal/store/migrations`: new tables for machines, keys, join codes, settings and load.
 - `packages/contract/openapi.yaml`: machine endpoints for the console and CLI.
-- `cmd/crsp/main.go`: the `agent` mode and the `machines` subcommands.
-- `internal/config/config.go`: the agent link port (8461) and the controller address for the agent.
+- `apps/controller/cmd/crsp/main.go`: the `agent` mode and the `machines` subcommands.
+- `apps/controller/internal/config/config.go`: the agent link port (8461) and the controller address for the agent.
 - Pool defaults (R5.22a, CRSP37): built for a machine that joins. Not built: applying a changed pool default to machines that already joined. That would restart runners, so it has to name the jobs it waits for (UX-62) through the drain of R5.30.
 
 ## 12. Code map
 
 Source: packages/contract/proto/agent/v1/agent.proto
-Source: internal/config/config.go
-Source: cmd/crsp/main.go
+Source: apps/controller/internal/config/config.go
+Source: apps/controller/cmd/crsp/main.go
 
-Planned, not yet in the tree: `internal/agent/`, `internal/machines/`, `internal/load/`, `apps/web/src/machines/`.
+Planned, not yet in the tree: `apps/controller/internal/agent/`, `apps/controller/internal/machines/`, `apps/controller/internal/load/`, `apps/controller-console/src/machines/`.
 
-Built in CRSP75: `internal/power/` (battery), `internal/cpucap/` (CPU cap), `internal/machines/policy.go`, `internal/agent/policy.go`, `apps/web/src/screens/machines/MachinePolicy.tsx`.
+Built in CRSP75: `apps/controller/internal/power/` (battery), `apps/controller/internal/cpucap/` (CPU cap), `apps/controller/internal/machines/policy.go`, `apps/controller/internal/agent/policy.go`, `apps/controller-console/src/screens/machines/MachinePolicy.tsx`.
 
 ## Design-system proof
 
