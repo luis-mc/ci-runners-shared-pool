@@ -18,6 +18,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { TIMING } from '../../timing';
+import { useLiveLog } from '../liveLog';
 import { settingsPath } from './sections';
 
 type UpdateStatus = Schemas['UpdateStatus'];
@@ -132,6 +133,30 @@ function stateWord(s: UpdateStatus): string {
 
 type Kind = 'update' | 'restart';
 
+// The weighted bar of the work step (UX-88), one list per kind: what the service goes through, in order.
+const UPDATE_PHASES = [
+  { name: 'Waiting for running jobs to end', weight: 2 },
+  { name: 'Downloading the release', weight: 3 },
+  { name: 'Installing', weight: 2 },
+  { name: 'Restarting the service', weight: 1 },
+] as const;
+const RESTART_PHASES = [
+  { name: 'Waiting for running jobs to end', weight: 2 },
+  { name: 'Restarting the service', weight: 1 },
+  { name: 'Connecting again', weight: 1 },
+] as const;
+const UPDATE_AT: Partial<Record<UpdateStatus['state'], number>> = {
+  waiting_for_jobs: 0,
+  downloading: 1,
+  installing: 2,
+  restarting: 3,
+};
+const RESTART_AT: Partial<Record<UpdateStatus['state'], number>> = {
+  waiting_for_jobs: 0,
+  installing: 1,
+  restarting: 1,
+};
+
 /** How long a restart took, in words: "40 seconds", "1 minute 24 seconds". */
 export function took(ms: number): string {
   const total = Math.max(1, Math.round(ms / 1000));
@@ -178,6 +203,42 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
     tookMs.current = Number.isFinite(took) && took >= 0 ? took : undefined;
   };
   const navigate = useNavigate();
+  const live = useLiveLog(kind === 'update' ? UPDATE_PHASES : RESTART_PHASES);
+  const SERVICE = { name: 'The service', role: 'controller' as const, os: '' };
+  /** One row per change of what the service reports; the percent only when the service sends one. */
+  const observe = (u: UpdateStatus, over?: 'done' | 'away') => {
+    const table = kind === 'update' ? UPDATE_AT : RESTART_AT;
+    const last = (kind === 'update' ? UPDATE_PHASES : RESTART_PHASES).length - 1;
+    const machine = SERVICE;
+    if (over === 'done')
+      return live.say({
+        at: last,
+        pct: 100,
+        line:
+          kind === 'update'
+            ? `Version ${u.current_version} answers.`
+            : 'The service answers again.',
+        machine,
+      });
+    if (over === 'away')
+      return live.say({
+        at: last,
+        pct: null,
+        reason: 'The service reports no percent while it restarts.',
+        line: 'The service is restarting. Waiting for it to answer.',
+        machine,
+      });
+    const at = table[u.state] ?? (u.state === 'idle' ? 0 : undefined);
+    if (at === undefined) return;
+    const pct = u.state === 'downloading' ? (u.stage?.percent ?? null) : null;
+    live.say({
+      at,
+      pct,
+      ...(pct === null ? { reason: 'The service reports no percent here.' } : {}),
+      line: u.state === 'idle' ? 'Starting' : (STATE_WORDS[u.state] ?? stateWord(u)),
+      machine,
+    });
+  };
 
   const [phase, setPhase] = useState<WizardPhase>('loading');
   const [status, setStatus] = useState<UpdateStatus | undefined>(undefined);
@@ -256,6 +317,7 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
       try {
         const u = await unwrap(client.GET('/api/v1/update'));
         setStatus(u);
+        observe(u);
         if (
           (compact ? u.state === 'failed' : mine(u)) ||
           (compact && u.stage?.name === 'failed' && !stageLive(u))
@@ -271,6 +333,7 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
         if (finished) {
           if (kind === 'restart') measure(u);
           setLostService(false);
+          observe(u, 'done');
           setPhase('done');
           break;
         }
@@ -280,6 +343,10 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
       } catch {
         // The service stops to install and comes back: keep following.
         setLostService(true);
+        observe(
+          status ?? ({ state: 'restarting', current_version: '' } as UpdateStatus),
+          'away',
+        );
         since ??= Date.now();
       }
       if (
@@ -301,6 +368,17 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
 
   const start = async () => {
     setPhase('running');
+    live.clear();
+    live.say({
+      at: 0,
+      pct: null,
+      reason: 'Asking the service to begin.',
+      command:
+        kind === 'update'
+          ? `Update to ${status?.latest_version ?? 'the newest release'}`
+          : 'Restart the service',
+      machine: { name: 'This console', role: 'controller', os: '' },
+    });
     try {
       const u = await unwrap(
         kind === 'update'
@@ -312,6 +390,7 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
             }),
       );
       setStatus(u);
+      observe(u);
       startedHere.current = true;
       attemptId.current = u.attempt?.id;
       startedAt.current = u.attempt?.started_at;
@@ -373,7 +452,15 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
     // A window that was not opened by a program stays open: go to the console instead.
     void navigate('/');
   };
-  const shown = compact ? stageLine : stateWord;
+  // While the work runs, an idle answer means the service has not started the step yet: never "Not looked for yet".
+  const shown = (u: UpdateStatus) =>
+    u.state === 'idle' && phase === 'running'
+      ? kind === 'update'
+        ? 'Starting the update'
+        : 'Restarting the service'
+      : compact
+        ? stageLine(u)
+        : stateWord(u);
   const isDone = phase === 'done' || phase === 'done-after-reload';
 
   let body;
@@ -515,6 +602,7 @@ export function UpdateWizard({ compact = false }: { compact?: boolean } = {}) {
       firstStep={0}
       phase={phase}
       reading="Reading the service"
+      live={compact ? undefined : live.events}
       progress={
         phase === 'running'
           ? {
