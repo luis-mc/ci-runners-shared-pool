@@ -497,7 +497,7 @@ export function AppearanceSettings() {
             {isTerminalChoice(themeChoice) ? (
               <ChoiceField
                 label="Graphs"
-                help="How the Terminal themes draw graphs. The choice is saved at once."
+                help="How the Terminal themes draw charts; bars keep their blocks. The choice is saved at once."
                 value={graphs}
                 onChange={(v) => {
                   const style = v === 'dotted' ? 'dotted' : 'blocks';

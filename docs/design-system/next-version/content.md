@@ -435,7 +435,7 @@ The words of Settings, Appearance (UX-60).
 | Choice help | The colours of the console. The choice is saved at once. |
 | Theme choices | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
 | Graphs label | Graphs |
-| Graphs help | How the Terminal themes draw graphs. The choice is saved at once. |
+| Graphs help | How the Terminal themes draw charts; bars keep their blocks. The choice is saved at once. |
 | Graphs choices | Blocks, Dots |
 | Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
 | Mode label | Mode |

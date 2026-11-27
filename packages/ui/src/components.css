@@ -3904,8 +3904,8 @@ a.ds-stat:focus-visible {
   font-weight: var(--ds-weight-bold);
 }
 
-/* Segment meter (component 85, UX-91): segments with partial fill; blocks in the Cool Terminal theme, dots when
-   data-graphs=dotted. Outside the theme a LevelBar keeps its bar and hides the segments. */
+/* Segment meter (component 85, UX-91): segments with partial fill; blocks in the Cool Terminal theme, also when
+   data-graphs=dotted (dots are for charts only). Outside the theme a LevelBar keeps its bar and hides the segments. */
 .ds-segs {
   display: inline-flex;
   gap: var(--ds-seg-gap);
@@ -3938,11 +3938,6 @@ a.ds-stat:focus-visible {
 .ds-segmeter__text {
   color: var(--ds-color-text-muted);
 }
-[data-graphs='dotted'] .ds-segs__cell {
-  inline-size: 0.8ch;
-  block-size: 0.8ch;
-  border-radius: 50%;
-}
 .ds-level__bar .ds-segs {
   display: none;
 }
@@ -3963,10 +3958,7 @@ a.ds-stat:focus-visible {
   inline-size: auto;
   min-inline-size: 0;
 }
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-level__bar .ds-segs__cell {
-  flex: 0 0 0.8ch;
-}
-/* Spark: the dotted form swaps the character set. */
+/* Spark: the dotted form swaps the character set. Dots change charts only; bars and meters stay blocks (owner, 27 Nov). */
 .ds-spark__dots,
 [data-graphs='dotted'] .ds-spark__blocks {
   display: none;
