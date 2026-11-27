@@ -1959,3 +1959,22 @@ One line of counts, number first, on Setup > Runners, Setup > Summary and the Ov
 | State words | idle, busy, not ready (warning colour above zero), failed (danger colour above zero) |
 | Setup > Summary, Runners card | {n} runner(s) — {n} persistent · {n} ephemeral |
 | Setup > Summary, Machines card | unchanged sentence: {n} machine(s), {cpu} CPU and {gib} GiB in the pool. |
+
+## Live progress words (CRSP247, UX-88 to UX-90)
+
+| Where | Words |
+|---|---|
+| Terminal pane title | Command log |
+| Terminal toggle | Show log / Hide log |
+| Terminal jump | Jump to latest |
+| Terminal empty | No commands yet. |
+| Machine header | {name}, {controller or agent}, {system} |
+| Role tags | controller, agent |
+| Error line mark | error |
+| Download line | {done} of {total}, {speed}/s, about {time} left |
+| Download, no rate yet | {done} of {total}, measuring speed |
+| Download, no total | {done} so far, {speed}/s |
+| Bar, whole job | {n}% of the whole job |
+| Bar, phase | Step {i} of {n}: {phase} |
+| Bar, no percent | {phase}. {reason} No % is reported. {elapsed} |
+| Elapsed | {time} elapsed |

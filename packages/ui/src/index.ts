@@ -56,3 +56,5 @@ export * from './components/FindingList';
 export * from './components/Steps';
 export * from './components/SideMenu';
 export * from './components/Timeline.types';
+export * from './components/Terminal';
+export * from './components/DownloadProgress';

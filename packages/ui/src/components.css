@@ -3848,3 +3848,58 @@ a.ds-stat:focus-visible {
   color: var(--ds-color-problem);
   font-weight: var(--ds-weight-bold);
 }
+
+/* terminal (component 82): command lines with the machine per block; the body scrolls inside its own box (UX-88) */
+.ds-terminal {
+  display: grid;
+  gap: var(--ds-space-2);
+  min-inline-size: 0;
+  padding: var(--ds-space-3);
+  background: var(--ds-color-surface);
+  border: var(--ds-border-thin) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-2);
+}
+.ds-terminal__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-3);
+}
+.ds-terminal__title {
+  font-weight: var(--ds-weight-bold);
+}
+.ds-terminal__body {
+  display: grid;
+  align-content: start;
+  gap: var(--ds-space-3);
+  max-block-size: 16rem;
+  overflow: auto;
+  min-inline-size: 0;
+  font-family: var(--ds-font-mono);
+}
+.ds-terminal__block {
+  display: grid;
+  gap: var(--ds-space-1);
+  min-inline-size: 0;
+}
+.ds-terminal__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--ds-space-2);
+  margin: 0;
+  color: var(--ds-color-text-muted);
+  font-size: var(--ds-size-2);
+}
+.ds-terminal__cmd,
+.ds-terminal__line {
+  display: block;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.ds-terminal__line[data-error] {
+  color: var(--ds-color-problem);
+}
+.ds-terminal__mark {
+  font-weight: var(--ds-weight-bold);
+}

@@ -62,7 +62,7 @@ func (j *job) base(phase string) *agentv1.DepsEvent {
 	idx := 0
 	for i, p := range j.phases {
 		if p == phase {
-			idx = i + 1
+			idx = i
 		}
 	}
 	return &agentv1.DepsEvent{

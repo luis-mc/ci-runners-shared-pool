@@ -134,7 +134,7 @@ IDs `DEP1` and up. Milestone is a proposal.
 
 **DEP5** (M2) — **Install by the system's own safe method, from a pinned list.** crsp keeps a list of allowed installers per OS (name, source URL, SHA-256 or signature, minimum version). The agent downloads, checks the hash before running, and refuses a mismatch (as `sshwin.go` already does for crsp). No `curl | sh`. See 7.1.
 
-**DEP6** (M2) — **Live feedback.** Progress shows bytes, the step name and time left; the log is folded and copyable (component 39 for the manual steps). A silent wait over 10 seconds names what it waits for (UX-29).
+**DEP6** (M2) — **Live feedback.** A running step shows three things from the `ProgressEvent` stream, all drawn by the shared wizard (component 4): (1) the **Terminal** (component 82, UX-88): each command, its output as it arrives, and per block the machine name, its role (controller or agent) and its system; it opens with the step and stays after it ends, and the copyable log of the manual steps stays component 39; (2) the **Download progress** line (component 83, UX-90): bytes done of the total, the measured speed and the time left worked out from it, "Measuring speed" until a rate exists; (3) the **honest bar** (component 16, UX-88/UX-89): the real percent of the whole job from weighted phases, and for a phase with no percent an indeterminate bar that names the phase, says why no percent is reported and shows the time elapsed, so the bar never sits stuck. The page passes events only. A silent wait over 10 seconds names what it waits for (UX-29). Design-system rules: UX-88, UX-89, UX-90, CORE-1, CORE-3, CORE-5, CORE-6.
 
 **DEP7** (M2) — **Reboot is a step, not an accident.** If an install needs a restart, crsp stops, saves the plan (item list and next step) in the controller, tells the user, and offers Restart now or Later. It never restarts a machine with a running job without an explicit yes, and drains first (scheduling hold). After the agent reconnects, crsp resumes at Verify.
 
@@ -275,7 +275,7 @@ Open. Each has a recommended default; the owner answers.
 - Removing conflicting unofficial Docker packages needs a yes that the protocol does not yet carry; the install is refused and names them.
 - The engine inside the crsp-owned WSL distro `crsp-docker` is found by the setup code; the container backend elsewhere still looks only at `wsl docker`.
 - Resume after a restart is sent when a capable agent reports again, not only after "Restart now".
-- Unknown progress arrives as 0 in the API with a `reason` (generated type); the Terminal, ProgressBar and DownloadProgress parts of CRSP247 are not used yet: the page shows the live line through the wizard and a folded log.
+- Unknown progress arrives as 0 in the API with a `reason` (generated type); `toProgressEvent` maps it to `pct: null`. Since CRSP247 the wizard draws the Terminal, the Download progress line and the weighted bar from the events (DEP6); the folded log is gone from this page.
 - Not run on real Windows, macOS or Linux machines: the silent flags and `wsl --install -d ... --name crsp-docker` were tested against fakes only.
 
 **Built in CRSP270 (step two).** DEP13: the Setup summary shows the "Get this machine ready" door for every online machine of the pool that has no container engine, not only this PC; an offline machine gets none (DEP12). The door keeps the way back (`return=/setup/summary`). DEP4 to DEP8, DEP10 and DEP11 were already built in CRSP248 and CRSP265 (above); CRSP270 changed nothing there.
@@ -307,3 +307,4 @@ Proof: CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, CORE-7, UX-5, UX-6, UX-26, UX-29,
 Proof: UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-13, UX-54 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-88, UX-89, UX-90 `packages/ui/src/components/LiveProgress.test.tsx`

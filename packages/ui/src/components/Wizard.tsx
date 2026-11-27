@@ -1,10 +1,42 @@
 // Component 4: the shared wizard (UX-5, UX-30, UX-54). Current step, locks, Stop, busy and Done live HERE.
 // A page passes data only: the phase it reads from the server, the steps, the primary and the step content.
 // The ten phases are the ten states of the wizard harness (scripts/design/wizard-behaviour.ts).
-import { useId, type ReactNode } from 'react';
+import { useEffect, useId, useState, type ReactNode } from 'react';
 import { ActionBar } from './ActionBar';
 import { Button } from './Button';
-import { Progress } from './Progress';
+import { DownloadProgress } from './DownloadProgress';
+import { PhaseProgress, Progress, type ProgressPhaseData } from './Progress';
+import { Terminal, type TerminalRow } from './Terminal';
+
+/** One progress event (the `ProgressEvent` of @crsp/contract, structurally). The page passes them; the wizard draws. */
+export interface LiveEvent extends TerminalRow {
+  phase: string;
+  phaseIndex: number;
+  phaseCount: number;
+  phaseWeight: number;
+  pct: number | null;
+  reason?: string | undefined;
+  bytes?: number | undefined;
+  total?: number | undefined;
+  rate?: number | undefined;
+  etaSec?: number | undefined;
+}
+
+/** The phases the events so far describe, one per index. */
+export function phasesOf(events: readonly LiveEvent[]): ProgressPhaseData[] {
+  const out: ProgressPhaseData[] = [];
+  for (const e of events) {
+    const count = Math.max(e.phaseCount, e.phaseIndex + 1);
+    while (out.length < count) out.push({ name: '', weight: 1, pct: 0 });
+    out[e.phaseIndex] = {
+      name: e.phase,
+      weight: e.phaseWeight,
+      pct: e.pct,
+      reason: e.reason,
+    };
+  }
+  return out;
+}
 
 export type WizardPhase =
   | 'loading'
@@ -42,6 +74,9 @@ export interface WizardProps {
   /** The work step's live line: the item in hand, n of N, the time left (UX-29). */
   progress?:
     { text: string; value?: number | undefined; max?: number | undefined } | undefined;
+  /** The live events of the work step (UX-88 to UX-90): the wizard draws the terminal, the download line and the
+   * weighted bar from them, and keeps the terminal after the work ends. `progress` is the fallback without events. */
+  live?: readonly LiveEvent[] | undefined;
   canStop?: boolean | undefined;
   /** Stop was pressed and the work has not ended yet. */
   stopping?: boolean | undefined;
@@ -75,8 +110,56 @@ export interface WizardProps {
 
 const END: readonly WizardPhase[] = ['done', 'done-after-reload', 'stopped', 'failed'];
 
+function LivePart({
+  events,
+  running,
+  statusId,
+}: {
+  events: readonly LiveEvent[];
+  running: boolean;
+  statusId: string;
+}) {
+  const [open, setOpen] = useState(true);
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (!running) return;
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [running]);
+  const last = events[events.length - 1];
+  if (!last) return null;
+  const phases = phasesOf(events);
+  const phaseSince = [...events]
+    .reverse()
+    .findIndex((e) => e.phaseIndex !== last.phaseIndex);
+  const started =
+    (phaseSince < 0 ? events[0] : events[events.length - phaseSince])?.ts ?? last.ts;
+  return (
+    <div className="ds-stack" data-layout-group>
+      {running ? (
+        <PhaseProgress
+          phases={phases}
+          current={last.phaseIndex}
+          statusId={statusId}
+          elapsedSec={Math.max(0, Math.round((now - started) / 1000))}
+        />
+      ) : null}
+      {running && last.bytes !== undefined ? (
+        <DownloadProgress
+          bytes={last.bytes}
+          total={last.total}
+          rate={last.rate}
+          etaSec={last.etaSec}
+        />
+      ) : null}
+      <Terminal rows={events} open={open} onToggle={setOpen} />
+    </div>
+  );
+}
+
 export function Wizard(p: WizardProps) {
   const runId = useId();
+  const hasLive = (p.live?.length ?? 0) > 0;
   const last = p.steps.length - 1;
   const locked = p.phase === 'running' || p.phase === 'loading';
   const atEnd = END.includes(p.phase);
@@ -201,7 +284,7 @@ export function Wizard(p: WizardProps) {
       <div className="ds-wizard__body" data-layout-group>
         {p.stateNote ? <p className="ds-text">{p.stateNote}</p> : null}
         {p.phase === 'loading' ? <Progress label={p.reading ?? 'Reading'} /> : null}
-        {p.phase === 'running' ? (
+        {p.phase === 'running' && !hasLive ? (
           <div className="ds-stack" data-gap="tight" data-layout-group>
             <p className="ds-text" role="status" id={`${runId}-line`}>
               {p.progress?.text ?? p.primary.busyLabel ?? 'Working'}
@@ -212,6 +295,14 @@ export function Wizard(p: WizardProps) {
               max={p.progress?.max}
             />
           </div>
+        ) : null}
+        {hasLive &&
+        (p.phase === 'running' || p.phase === 'paused' || END.includes(p.phase)) ? (
+          <LivePart
+            events={p.live ?? []}
+            running={p.phase === 'running'}
+            statusId={`${runId}-line`}
+          />
         ) : null}
         {p.phase !== 'loading' ? (
           <div
