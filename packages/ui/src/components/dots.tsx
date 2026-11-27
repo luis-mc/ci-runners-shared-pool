@@ -6,6 +6,9 @@ import { useEffect, useState, type ReactNode, type RefObject } from 'react';
 /** The radius of a dot, in pixels, and the gap between two dots. */
 export const DOT_R = 3;
 export const DOT_GAP = 10;
+/** The dots that fill a column, an area or a heat cell: the radius and gap are the `--ds-dot-r` and `--ds-dot-gap` tokens. */
+export const GRID_R = 2;
+export const GRID_GAP = 3;
 
 const on = (): boolean =>
   typeof document !== 'undefined' &&
@@ -117,4 +120,45 @@ export function DotLayer({
       {children}
     </svg>
   );
+}
+
+export interface GridDot {
+  cx: number;
+  cy: number;
+  r: number;
+  lit: number;
+}
+
+/**
+ * The dots of a filled box (CRSP374): a grid of round dots of fixed size and gap that covers the box exactly, so the dotted
+ * column has the bounding box of the filled bar. Rows count up from the bottom; the top row is partly lit by the remainder.
+ * A narrow box has at least one dot across; a box thinner than a dot gets a smaller dot.
+ */
+export function boxDots(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number = GRID_R,
+  gap: number = GRID_GAP,
+): GridDot[] {
+  if (!(w > 0) || !(h > 0)) return [];
+  const rr = Math.min(r, w / 2, h / 2);
+  const pitch = 2 * rr + gap;
+  const nx = Math.max(1, Math.floor((w + gap) / pitch));
+  // A sliver under half a pixel is not a row (the box stays within a pixel).
+  const rows = Math.min(400, Math.max(1, Math.ceil((h - 0.5) / pitch)));
+  const out: GridDot[] = [];
+  for (let k = 0; k < rows; k++) {
+    const rem = h - k * pitch;
+    const lit = Math.min(1, rem / (2 * rr));
+    // The top row sits against the top edge, so the box is the bar's.
+    // A box one dot tall holds its dot in the middle (the only case that can be off by more than a pixel: under 7 px tall).
+    const cy = rows === 1 ? y + h / 2 : k === rows - 1 ? y + rr : y + h - rr - k * pitch;
+    for (let i = 0; i < nx; i++) {
+      const cx = nx === 1 ? x + w / 2 : x + rr + (i * (w - 2 * rr)) / (nx - 1);
+      out.push({ cx, cy, r: rr, lit });
+    }
+  }
+  return out;
 }
