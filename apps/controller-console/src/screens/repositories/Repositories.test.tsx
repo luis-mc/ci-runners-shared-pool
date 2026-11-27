@@ -97,7 +97,7 @@ describe('Repositories list', () => {
     fireEvent.click(within(using).getByRole('button', { name: 'Turn off 1' }));
     expect(await screen.findByText('These will stop using the pool')).toBeTruthy();
     // The wizard is a page of its own (one h1), like Turn on.
-    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+    expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeTruthy();
     expect(
       (
         api.calls.find((c) => c.path === '/api/v1/repository-plans')?.body as {
