@@ -12248,7 +12248,8 @@ components:
     CacheHubCard:
       type: object
       description: One kind of the hub (caches R5.77).
-      required: [kind, on, size_bytes, entry_count, hits, misses, served_bytes, status, wipe_id]
+      required:
+        [kind, 'on', size_bytes, entry_count, hits, misses, served_bytes, status, wipe_id]
       properties:
         kind:
           type: string
@@ -12304,7 +12305,18 @@ components:
     CacheHub:
       type: object
       description: The one cache hub in the controller (caches R5.73, R5.77, R5.78).
-      required: [settings, budget_bytes, used_bytes, cards, hits, misses, served_bytes, warm_machines, repos]
+      required:
+        [
+          settings,
+          budget_bytes,
+          used_bytes,
+          cards,
+          hits,
+          misses,
+          served_bytes,
+          warm_machines,
+          repos,
+        ]
       properties:
         settings:
           $ref: '#/components/schemas/CacheHubSettings'
