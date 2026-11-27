@@ -96,9 +96,9 @@ const ConfigApplyPage = later(
   () => import('./screens/settings/ConfigAsCode').then((m) => m.ConfigApplyPage),
   { heading: 'Apply a config file' },
 );
-const ChangePoolPage = later(
-  () => import('./screens/repositories/ChangePool').then((m) => m.ChangePoolWizard),
-  { heading: 'Change the pool' },
+// Nested in Setup, whose h1 is the page's: the fallback draws no heading of its own (one h1).
+const ChangePoolPage = later(() =>
+  import('./screens/repositories/ChangePool').then((m) => m.ChangePoolWizard),
 );
 const TurnOnPoolPage = later(
   () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
