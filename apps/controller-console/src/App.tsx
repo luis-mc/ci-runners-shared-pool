@@ -269,10 +269,10 @@ export function App({
                   <Route path="images" element={<ImagesAndCaches />} />
                   <Route path="size" element={<SizePage />} />
                   <Route path="pool" element={<RepositoriesList />} />
+                  <Route path="pool/change" element={<ChangePoolPage />} />
                 </Route>
                 <Route path="config/apply" element={<ConfigApplyPage />} />
                 <Route path="setup/pool/turn-on" element={<TurnOnPoolPage />} />
-                <Route path="setup/pool/change" element={<ChangePoolPage />} />
                 <Route path="setup/pool/:owner/:name" element={<RepositoryDetail />} />
                 <Route path="setup/machines/add" element={<AddMachinePage />} />
                 <Route path="setup/machines/:id" element={<MachineDetail />} />

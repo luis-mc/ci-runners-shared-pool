@@ -96,7 +96,7 @@ describe('Repositories list', () => {
     fireEvent.click(within(using).getByRole('checkbox', { name: 'octo/live' }));
     fireEvent.click(within(using).getByRole('button', { name: 'Turn off 1' }));
     expect(await screen.findByText('These will stop using the pool')).toBeTruthy();
-    // The wizard is a page of its own (one h1), like Turn on.
+    // The wizard sits under the Setup tabs, with Pool setup the current tab.
     expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeTruthy();
     expect(
       (
