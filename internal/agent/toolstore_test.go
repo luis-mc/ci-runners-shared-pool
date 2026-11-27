@@ -34,6 +34,7 @@ func toolFlow(t *testing.T, goos string, p fakePlans) (*JobToolFlow, *toolstore.
 }
 
 func unsealAll(dir string) {
+	resetACL(dir)
 	_ = filepath.WalkDir(dir, func(p string, d os.DirEntry, err error) error {
 		if err == nil {
 			_ = os.Chmod(p, 0o755)
