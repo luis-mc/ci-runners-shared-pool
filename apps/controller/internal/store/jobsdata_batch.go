@@ -27,6 +27,16 @@ const (
 	runKeyChunk = 200
 )
 
+// samplesFrom names the jobs table of a sample read. A question for one repository reads the newest finished jobs of a
+// key through jobs_sample; without planner statistics SQLite would take (state, completed_at) once a Since bound is set
+// and walk every finished job of the window for one key (audit R3-1).
+func samplesFrom(q jobsdata.SampleQuery) string {
+	if q.RepositoryID != 0 {
+		return "jobs j INDEXED BY jobs_sample"
+	}
+	return "jobs j"
+}
+
 // sampleSQL builds the query of one job-level sample question (no step); the caller wraps it.
 func sampleSQL(q jobsdata.SampleQuery) (string, []any) {
 	conds := []string{"j.state = 'done'", "j.result = 'success'", "j.started_at <> ''", "j.completed_at <> ''"}
@@ -53,7 +63,7 @@ func sampleSQL(q jobsdata.SampleQuery) (string, []any) {
 	if limit <= 0 {
 		limit = 1000
 	}
-	return `SELECT j.id, j.job_ident, j.workflow, j.completed_at, j.started_at, j.machine_id FROM jobs j WHERE ` +
+	return `SELECT j.id, j.job_ident, j.workflow, j.completed_at, j.started_at, j.machine_id FROM ` + samplesFrom(q) + ` WHERE ` +
 		strings.Join(conds, " AND ") + ` ORDER BY j.completed_at DESC, j.id DESC LIMIT ?`, append(args, limit)
 }
 
@@ -225,13 +235,19 @@ func (s *JobsStore) RunsWithJobs(ctx context.Context, rows []jobsdata.RunRow) ([
 	return out, nil
 }
 
+// The window reads of finished jobs; each one is a range of the (state, completed_at) index (audit R3-1).
+const (
+	finishedBetweenSQL = `SELECT ` + jobListCols + ` FROM jobs WHERE completed_at >= ? AND completed_at < ? AND state = 'done'
+		ORDER BY completed_at DESC LIMIT ?`
+	anyFinishedSQL = `SELECT 1 FROM jobs WHERE completed_at >= ? AND completed_at < ? AND state = 'done'`
+)
+
 // FinishedBetween reads the done jobs that completed in [from, to), newest first, on the completed-at index. It reads
 // only the window it is asked for, so the timeline costs the same on a database of any age (audit F3).
 func (s *JobsStore) FinishedBetween(ctx context.Context, from, to time.Time, limit int) ([]jobsdata.Job, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
-	rows, err := s.rdb.QueryContext(ctx, `SELECT `+jobListCols+` FROM jobs WHERE completed_at >= ? AND completed_at < ? AND state = 'done'
-		ORDER BY completed_at DESC LIMIT ?`, fmtTime(from), fmtTime(to), limit)
+	rows, err := s.rdb.QueryContext(ctx, finishedBetweenSQL, fmtTime(from), fmtTime(to), limit)
 	if err != nil {
 		return nil, fmt.Errorf("finished jobs: %w", err)
 	}
@@ -242,7 +258,7 @@ func (s *JobsStore) FinishedBetween(ctx context.Context, from, to time.Time, lim
 func (s *JobsStore) AnyFinishedBetween(ctx context.Context, from, to time.Time, machineID string) (bool, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
-	q := `SELECT 1 FROM jobs WHERE completed_at >= ? AND completed_at < ? AND state = 'done'`
+	q := anyFinishedSQL
 	args := []any{fmtTime(from), fmtTime(to)}
 	if machineID != "" {
 		q += ` AND machine_id = ?`

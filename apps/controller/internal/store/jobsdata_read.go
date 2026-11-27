@@ -491,7 +491,7 @@ func (s *JobsStore) Samples(ctx context.Context, q jobsdata.SampleQuery) ([]jobs
 		query = `SELECT j.id, j.job_ident, j.workflow, st.completed_at, st.started_at, j.machine_id FROM job_steps st
 			JOIN jobs j ON j.id = st.job_id WHERE ` + strings.Join(conds, " AND ") + ` ORDER BY st.completed_at DESC, j.id DESC LIMIT ?`
 	} else {
-		query = `SELECT j.id, j.job_ident, j.workflow, j.completed_at, j.started_at, j.machine_id FROM jobs j
+		query = `SELECT j.id, j.job_ident, j.workflow, j.completed_at, j.started_at, j.machine_id FROM ` + samplesFrom(q) + `
 			WHERE ` + strings.Join(conds, " AND ") + ` ORDER BY j.completed_at DESC, j.id DESC LIMIT ?`
 	}
 	rows, err := s.rdb.QueryContext(ctx, query, append(args, limit)...)
