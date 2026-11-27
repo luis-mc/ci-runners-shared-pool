@@ -63,6 +63,26 @@ describe('release data (website R5.7, R5.8, R5.10)', () => {
     expect(() => buildRelease(c.gh, c.sums)).toThrow(/agent asset/);
   });
 
+  it('skips the Controller-fetched agent packages and offers none of them (R5.7)', () => {
+    const f = fixtureGh();
+    for (const n of [
+      'CrspAgent-1.2.3-win-x64.zip',
+      'CrspAgent-1.2.3-linux-arm64.tar.gz',
+      'CrspAgent-1.2.3-macos-arm64.tar.gz',
+    ]) {
+      f.gh.assets.push({ name: n, size: 1, browser_download_url: 'https://x/y' });
+    }
+    const r = buildRelease(f.gh, f.sums);
+    expect(r.assets.some((a) => /agent/i.test(a.name))).toBe(false);
+    const g = fixtureGh();
+    g.gh.assets.push({
+      name: 'CrspAgent-9.9.9-win-x64.zip',
+      size: 1,
+      browser_download_url: 'https://x/y',
+    });
+    expect(() => buildRelease(g.gh, g.sums)).toThrow(/agent asset/);
+  });
+
   it('links every asset to a GitHub release asset URL and ships no binary (T4)', () => {
     const r = buildRelease(fixtureGh().gh, fixtureGh().sums);
     for (const a of r.assets) {
