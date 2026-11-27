@@ -1991,3 +1991,24 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 | Where | Word |
 |---|---|
 | Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |
+
+## Live run words of the update, restart and add-runners wizards (CRSP336, UX-88 to UX-90)
+
+The rows the console writes into the Terminal and the phases of the weighted bar for the three wizards that have no event stream. Component words stay in Live progress words.
+
+| Where | Words |
+|---|---|
+| Restart (machine), phases | Waiting for running jobs to end; Restarting the service; Connecting again |
+| Restart (machine), command | Restart the service of {machine} |
+| Restart (machine), lines | Accepted. No new jobs are taken.; Waiting for {n} running jobs to end; Restarting the service; The service is connected again.; Waiting for the service to connect again; The service could not restart. |
+| Restart (machine), reasons | {n} running {job or jobs} left; the time it takes is theirs.; The running jobs are ending.; The service reports no percent.; The service has not connected yet.; Asking the console to restart the service. |
+| Update, phases | Waiting for running jobs to end; Downloading the release; Installing; Restarting the service |
+| Restart (service), phases | Waiting for running jobs to end; Restarting the service; Connecting again |
+| Update and restart (service), command | Update to {version}; Restart the service |
+| Update and restart (service), lines | Starting; Waiting for running jobs to end; Downloading and checking the release; Installing; Restarting the service; The service is restarting. Waiting for it to answer.; Version {version} answers.; The service answers again. |
+| Update and restart (service), reasons | Asking the service to begin.; The service reports no percent here.; The service reports no percent while it restarts. |
+| Update and restart (service), State while it works and the service says idle | Starting the update; Restarting the service |
+| Console side of a row | This console, controller; The service, controller |
+| Add runners, phases | one per plan step, in the step's own words |
+| Add runners, lines | Done; Skipped, nothing to do; Waiting for {step}; Failed: {reason}; The step does not report a percent.; Waiting for the step before it |
+

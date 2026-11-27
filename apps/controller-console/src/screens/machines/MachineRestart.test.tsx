@@ -56,6 +56,9 @@ describe('Restart the service (machine)', () => {
     const call = api.calls.find((c) => c.method === 'POST');
     expect((call?.query as URLSearchParams).get('confirmed')).toBe('true');
     expect(screen.getByText('Jobs stopped')).toBeTruthy();
+    // CRSP336 (UX-88): the terminal keeps what the console saw, in order, after the work ends.
+    expect(screen.getByText('$ Restart the service of build-1')).toBeTruthy();
+    expect(screen.getByText('The service is connected again.')).toBeTruthy();
   });
 
   it('says why it cannot start when the machine is offline and tries again', async () => {
