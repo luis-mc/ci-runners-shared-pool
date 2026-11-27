@@ -362,7 +362,7 @@ function Lc33 {
 function Lint { # LC-18: WiX ICE validation and one Apps-list entry
   # The pinned WiX 5.0.2 is a dotnet local tool (installer/controller/dotnet-tools.json), the way installer/controller/build.ps1
   # gets it; it is not on PATH. Call it the same way: restore, then `dotnet wix`. ICEs are never suppressed.
-  $installerDir = Join-Path (Split-Path -Parent (Split-Path -Parent $script:Here)) 'installer'
+  $installerDir = Join-Path (Split-Path -Parent (Split-Path -Parent $script:Here)) 'installer/controller'
   $how = "dotnet tool restore, then dotnet wix msi validate, in $installerDir (manifest installer/controller/dotnet-tools.json)"
   $ice = $false
   $wixOk = $false
