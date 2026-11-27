@@ -334,7 +334,7 @@ describe('Repositories: runner kind (github-integration R5.60)', () => {
 
   it('shows the kind with (default) and the capacity line in the list', async () => {
     renderApp(apiFor({ ...pub, visibility: 'private' }), '/setup/pool');
-    expect(await screen.findByText('Ephemeral only (default)')).toBeTruthy();
+    expect(await screen.findByText(/· Ephemeral only \(default\) ·/)).toBeTruthy();
     expect(
       screen.getByText('No ephemeral runner capacity: jobs would wait.'),
     ).toBeTruthy();
@@ -350,7 +350,7 @@ describe('Repositories: runner kind (github-integration R5.60)', () => {
       },
     });
     renderApp(apiFor(r), '/setup/pool');
-    expect(await screen.findByText('Ephemeral only')).toBeTruthy();
+    expect(await screen.findByText(/· Ephemeral only ·/)).toBeTruthy();
   });
 
   it('links to Add runners from the repository page when there is no capacity', async () => {

@@ -37,63 +37,84 @@ async function repoHeading(name: string) {
 }
 
 describe('Repositories list', () => {
-  it('shows five columns, and limits and variable status as a muted line under the name (LOOK29)', async () => {
+  it('shows one card per repository in its group, with limits and the variable word (LOOK29, CRSP340)', async () => {
     renderApp(withRepos(signedIn()), '/setup/pool');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
+    const needs = await screen.findByRole('region', { name: /^Needs you/ });
+    expect(within(needs).getByRole('link', { name: 'octo/site' })).toBeTruthy();
+    expect(within(needs).getByText('wrong variable')).toBeTruthy();
+    expect(within(needs).getByText(/parallel · priority \d+ ·/)).toBeTruthy();
+    const not = screen.getByRole('region', { name: /^Not using the pool/ });
+    expect(within(not).getByRole('link', { name: 'octo/app' })).toBeTruthy();
     expect(
-      within(table)
-        .getAllByRole('columnheader')
-        .map((h) => (h.textContent ?? '').replace(/[ ▲▼]+$/, '').trim())
-        .filter(Boolean),
-    ).toEqual(['Repository', 'Pool', 'Runner type', 'Fallback label', 'Jobs now']);
-    expect(within(table).getByText('pool on')).toBeTruthy();
-    expect(within(table).getByText('pool off')).toBeTruthy();
-    expect(
-      within(table).getByText(/parallel · priority \d+ · wrong variable/),
-    ).toBeTruthy();
-    expect(within(table).getByText(/parallel · priority \d+ · not used/)).toBeTruthy();
+      screen.queryByRole('region', { name: /^Using the pool/ })?.textContent,
+    ).toContain('Nothing here.');
   });
 
-  it('filters by pool state and by search', async () => {
+  it('searches the cards', async () => {
     renderApp(withRepos(signedIn()), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
-    fireEvent.click(screen.getByRole('button', { name: 'Pool on' }));
-    expect(screen.queryByRole('link', { name: 'app' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'site' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Pool on' }));
+    await screen.findByRole('region', { name: /^Not using the pool/ });
     fireEvent.change(screen.getByRole('textbox', { name: 'Search repositories' }), {
       target: { value: 'app' },
     });
-    expect(screen.queryByRole('link', { name: 'site' })).toBeNull();
+    expect(screen.queryByRole('link', { name: 'octo/site' })).toBeNull();
+    expect(screen.getByRole('link', { name: 'octo/app' })).toBeTruthy();
   });
 
-  it('shows the action bar with the count, and Use pool waits for a selection (UX-4, UX-7, UX-12, UX-71)', async () => {
+  it('starts the Needs you cards ticked, and each group has one action that waits for a tick (UX-4, UX-12)', async () => {
     renderApp(withRepos(signedIn()), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
-    const bar = screen.getByRole('region', { name: 'Actions' });
-    expect(within(bar).getByText('Nothing selected')).toBeTruthy();
-    const use = within(bar).getByRole<HTMLButtonElement>('button', { name: 'Use pool' });
-    expect(use.disabled).toBe(true);
+    const needs = await screen.findByRole('region', { name: /^Needs you/ });
+    await waitFor(() =>
+      expect(
+        within(needs).getByRole<HTMLInputElement>('checkbox', { name: 'Select octo/site' })
+          .checked,
+      ).toBe(true),
+    );
+    expect(within(needs).getByRole('button', { name: 'Repair 1' })).toBeTruthy();
+    const not = screen.getByRole('region', { name: /^Not using the pool/ });
     expect(
-      within(bar).getByText('Tick the repositories that should use the pool.'),
+      within(not).getByRole<HTMLButtonElement>('button', { name: 'Turn on' }).disabled,
+    ).toBe(true);
+    fireEvent.click(within(not).getByRole('checkbox', { name: 'Select octo/app' }));
+    expect(within(not).getByRole('button', { name: 'Turn on 1' })).toBeTruthy();
+  });
+
+  it('opens the change wizard with the ticked repositories (Turn on, Turn off, Repair)', async () => {
+    const api = withRepos(signedIn(), [
+      repository(),
+      repository({ id: 9, full_name: 'octo/live', name: 'live', pool_on: true }),
+    ]).on('POST', '/api/v1/repository-plans', {
+      id: 'p1',
+      area: 'repositories',
+      state: 'planned',
+      created_at: 'x',
+      created_by: 'octo',
+      steps: [
+        {
+          id: 's1',
+          action: 'pool_off',
+          text: 'Turn off octo/live',
+          target: 'octo/live',
+          needs_yes: false,
+          state: 'planned',
+        },
+      ],
+    });
+    renderApp(api, '/setup/pool');
+    const using = await screen.findByRole('region', { name: /^Using the pool/ });
+    fireEvent.click(within(using).getByRole('checkbox', { name: 'Select octo/live' }));
+    fireEvent.click(within(using).getByRole('button', { name: 'Turn off 1' }));
+    expect(await screen.findByText('These will stop using the pool')).toBeTruthy();
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'Turn off the pool' }),
     ).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Select all 2' }));
-    expect(within(bar).getByText('2 selected')).toBeTruthy();
     expect(
-      within(bar).getByRole<HTMLButtonElement>('button', { name: 'Use pool' }).disabled,
-    ).toBe(false);
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
-    expect(within(bar).getByText('Nothing selected')).toBeTruthy();
-  });
-
-  it('turns Use pool into Stop using pool when every selected repository uses the pool', async () => {
-    renderApp(withRepos(signedIn()), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/site' }));
-    const bar = screen.getByRole('region', { name: 'Actions' });
-    expect(within(bar).getByRole('button', { name: 'Stop using pool' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/app' }));
-    expect(within(bar).getByRole('button', { name: 'Use pool' })).toBeTruthy();
+      (
+        api.calls.find((c) => c.path === '/api/v1/repository-plans')?.body as {
+          changes: { pool: string; repository_id: number }[];
+        }
+      ).changes,
+    ).toEqual([{ repository_id: 9, pool: 'off' }]);
+    expect(api.count('POST', '/api/v1/repository-plans/p1/apply')).toBe(0);
   });
 
   it('disables turn-on for a repository without GitHub admin rights and says why (UX-38)', async () => {
@@ -101,11 +122,14 @@ describe('Repositories list', () => {
       withRepos(signedIn(), [repository({ user_is_github_admin: false })]),
       '/setup/pool',
     );
-    await screen.findByRole('table', { name: 'octo repositories' });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/app' }));
-    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Use pool' });
-    expect(button.disabled).toBe(true);
-    expect(screen.getByText(/You need admin rights on octo\/app in GitHub/)).toBeTruthy();
+    const not = await screen.findByRole('region', { name: /^Not using the pool/ });
+    expect(
+      within(not).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]app/ })
+        .disabled,
+    ).toBe(true);
+    expect(
+      within(not).getByText('You need admin rights on this repository in GitHub.'),
+    ).toBeTruthy();
   });
 
   it('does not say "you need admin rights" when the flag was not read (OPS15)', async () => {
@@ -115,62 +139,12 @@ describe('Repositories list', () => {
       ]),
       '/setup/pool',
     );
-    await screen.findByRole('table', { name: 'octo repositories' });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/app' }));
-    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Use pool' });
-    expect(button.disabled).toBe(false);
+    const not = await screen.findByRole('region', { name: /^Not using the pool/ });
+    expect(
+      within(not).getByRole<HTMLInputElement>('checkbox', { name: 'Select octo/app' })
+        .disabled,
+    ).toBe(false);
     expect(screen.queryByText(/You need admin rights/)).toBeNull();
-  });
-
-  it('turns the pool off only after a question that names each repository and variable (UX-62)', async () => {
-    const api = withRepos(signedIn())
-      .on('POST', '/api/v1/repository-plans', {
-        id: 'p1',
-        area: 'repositories',
-        state: 'planned',
-        created_at: 'x',
-        created_by: 'octo',
-        steps: [
-          {
-            id: 's1',
-            action: 'pool_off',
-            text: 'Turn off',
-            needs_yes: false,
-            state: 'planned',
-          },
-        ],
-      })
-      .on('POST', '/api/v1/repository-plans/:id/apply', {
-        id: 'p1',
-        area: 'repositories',
-        state: 'done',
-        created_at: 'x',
-        created_by: 'octo',
-        steps: [],
-      });
-    renderApp(api, '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/site' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Stop using pool' }));
-    const dialog = await screen.findByRole('dialog', {
-      name: 'Turn off these repositories?',
-    });
-    expect(within(dialog).getByText('octo/site: pool off')).toBeTruthy();
-    expect(
-      within(dialog).getByText('octo/site: variable CRSP_RUNS_ON_LINUX'),
-    ).toBeTruthy();
-    expect(api.count('POST', '/api/v1/repository-plans')).toBe(0);
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Turn off' }));
-    await waitFor(() =>
-      expect(api.count('POST', '/api/v1/repository-plans/p1/apply')).toBe(1),
-    );
-    expect(
-      (
-        api.calls.find((c) => c.path === '/api/v1/repository-plans')?.body as {
-          changes: { pool: string }[];
-        }
-      ).changes[0]?.pool,
-    ).toBe('off');
   });
 
   it('says what to do when the App is on no repository', async () => {
@@ -193,7 +167,7 @@ describe('Repositories list', () => {
         /GitHub could not be reached\. The list is the last copy, from 2026-11-14/,
       ),
     ).toBeTruthy();
-    expect(screen.getByRole('table', { name: 'octo repositories' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: /^Not using the pool/ })).toBeTruthy();
   });
 
   it('says the sign-in ended, never that GitHub is down (CRSP148)', async () => {
@@ -277,7 +251,7 @@ describe('Repositories list', () => {
       url: 'https://github.example/apps/x/installations/new',
     });
     renderApp(api, '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
+    await screen.findByRole('region', { name: /^Not using the pool/ });
     fireEvent.click(screen.getByRole('button', { name: 'Add a repository' }));
     await waitFor(() => expect(api.count('GET', '/api/v1/github/install-url')).toBe(1));
   });
@@ -547,7 +521,7 @@ describe('Webhook health (RES14)', () => {
 
   it('says in the GitHub App pane how many repositories missed a delivery', async () => {
     renderApp(withRepos(signedIn(), [polling, healthy, repository()]), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
+    await screen.findByRole('region', { name: /^Not using the pool/ });
     const app = screen.getByRole('region', { name: 'GitHub App' });
     expect(within(app).getByText('1 repository missed a delivery')).toBeTruthy();
   });
@@ -644,8 +618,8 @@ describe('A repository that left the installation (github-integration R5.22)', (
 
   it('says in the list that it left the installation', async () => {
     renderApp(withRepos(signedIn(), [left, repository()]), '/setup/pool');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
-    expect(within(table).getByText('left the installation')).toBeTruthy();
+    const not = await screen.findByRole('region', { name: /^Not using the pool/ });
+    expect(within(not).getByText('left the installation')).toBeTruthy();
   });
 
   it('gives the reason on the repository page', async () => {
@@ -726,7 +700,7 @@ describe('Missing App permission on Repositories (R5.86)', () => {
       stale: { stale: false },
     });
     renderApp(api, '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
+    await screen.findByRole('region', { name: /^Not using the pool/ });
     await waitFor(() =>
       expect(api.count('GET', '/api/v1/github/installations')).toBeGreaterThan(0),
     );

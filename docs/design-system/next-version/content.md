@@ -2012,3 +2012,14 @@ The rows the console writes into the Terminal and the phases of the weighted bar
 | Add runners, phases | one per plan step, in the step's own words |
 | Add runners, lines | Done; Skipped, nothing to do; Waiting for {step}; Failed: {reason}; The step does not report a percent.; Waiting for the step before it |
 
+### Pool setup words (CRSP340)
+
+| Where | Words |
+|---|---|
+| Groups | Needs you; Using the pool; Not using the pool |
+| Group lines | A variable is missing or wrong, so jobs may not reach the pool. Repair writes it again.; These repositories send their jobs to the pool.; These repositories do not use the pool. Turn on starts them.; Nothing here. |
+| Group actions | Repair; Repair {n}; Turn off; Turn off {n}; Turn on; Turn on {n} |
+| Locked reasons | Tick at least one repository.; You need admin rights on this repository in GitHub.; Public repositories are off. Turn them on in Settings first. |
+| Health tiles | Machines; Runners; GitHub App; Repositories; {n} online; {n} ready; Installed; {n} of {m} use the pool; {n} needs you; all well; webhooks delivering |
+| Change wizard | Turn on the pool; Turn off the pool; Repair the pool; These will start using the pool; These will stop using the pool; These will be repaired; Their runners are removed and their settings are kept.; The missing variable is written again.; Technical steps ({n}); Turning on; Turning off; Repairing; Back to Pool setup; No repository was chosen. Go back to Pool setup and tick the repositories first. |
+

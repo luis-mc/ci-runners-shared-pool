@@ -15,30 +15,23 @@ import {
   NumberField,
   Page,
   PageHeader,
-  Pager,
   Pane,
   ListToolbar,
-  Segmented,
   SearchBar,
   Text,
   Stack,
   Loading,
   Status,
   Tag,
-  Table,
   TextAreaField,
   TextField,
   TextLink,
   formatPast,
-  paginate,
   useNow,
-  type Column,
   type StatusKind,
-  ActionBar,
-  selectedStatus,
   EditBar,
 } from '@crsp/ui';
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { signInUrl } from '../../auth/session';
 import { ApiError, unwrap, useClient, type Schemas } from '../../api/api';
@@ -73,6 +66,7 @@ import { InstallAppButton } from './InstallApp';
 import { CiChecksPane, GuardrailsPane, JobSlotsPane } from '../insights/RepositoryPanes';
 import { MissingPermissionsGuide } from '../GrantGuide';
 import { OrgPools } from './OrgPools';
+import { PoolGroup, PoolHealth, groupsOf } from './PoolGroups';
 
 // Job sizes is below the fold: it loads with the page, so the first JavaScript stays within its budget (R6.12).
 const JobSizesPane = lazy(() =>
@@ -90,8 +84,6 @@ import {
   visibilityWord,
 } from './publicRepositories';
 import { DeliveryWhen, PollingNotice, deliveryStatus, learnedBy } from './webhookHealth';
-
-const PAGE = 25;
 
 /** Why the list is the last copy, with what GitHub really said (UX-28). */
 function staleWhy(s: {
@@ -131,20 +123,6 @@ export function variableStatus(r: Repository): { kind: StatusKind; word: string 
   if (r.variables.some((v) => v.status === 'not_managed'))
     return { kind: 'info', word: 'not managed' };
   return { kind: 'ok', word: 'variables ok' };
-}
-
-/** The listed repositories of the page, grouped by owner; totals count the whole group, search aside. */
-function groupByOwner(shown: Repository[], listed: Repository[]) {
-  const owners = [...new Set(shown.map((r) => r.owner))];
-  return owners.map((owner) => {
-    const all = listed.filter((r) => r.owner === owner);
-    return {
-      owner,
-      rows: shown.filter((r) => r.owner === owner),
-      total: all.length,
-      on: all.filter((r) => r.pool_on).length,
-    };
-  });
 }
 
 /** The active types' words for the count: "private " (with the trailing space), empty while unknown. */
@@ -217,8 +195,6 @@ export function RepositoriesList() {
   );
   const [q, setQ] = useState('');
   const showPublic = new URLSearchParams(useLocation().search).get('public') === '1';
-  const [pool, setPool] = useState<'' | 'on' | 'off'>('');
-  const [page, setPage] = useState(1);
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const admin = session.can('admin');
   // GitHub's return from the App's install page carries setup_action (install, update or request).
@@ -234,107 +210,47 @@ export function RepositoriesList() {
     // Read once on arrival: the address is cleaned and the list is read again.
   }, []);
 
-  const offQ = useQuestion(
-    async () => {
-      const plan = await applyChanges(
-        client,
-        [...picked].map((id) => ({ repository_id: id, pool: 'off' as const })),
-      );
-      if (plan.state !== 'done') throw new Error('Not every repository was turned off.');
-    },
-    () => {
-      setPicked(new Set());
-      reload();
-    },
-  );
-
   const items =
     result.state === 'loading'
       ? undefined
       : (result as { data?: Awaited<ReturnType<typeof allRepositories>> }).data;
-  const chosen = (items?.items ?? []).filter((r) => picked.has(r.id));
-  // While the list is the last copy the admin flag is unknown, not "no": the
-  // plan checks it again at the change (CRSP148, R5.19).
-  const noAdmin = items?.stale.stale ? [] : chosen.filter((r) => !mayTry(r));
-  const publicOff = chosen.filter((r) => publicWhileOff(r, enabled));
-  const allUse = chosen.length > 0 && chosen.every((r) => r.pool_on);
-  const blocked = !admin
-    ? session.whyNot('admin')
-    : chosen.length === 0
-      ? 'Tick the repositories that should use the pool.'
-      : !allUse && noAdmin.length > 0
-        ? `You need admin rights on ${noAdmin.map((r) => r.full_name).join(', ')} in GitHub.`
-        : !allUse && publicOff.length > 0
-          ? `Public repositories are off: ${publicOff.map((r) => r.full_name).join(', ')}. Turn them on in Settings first.`
-          : undefined;
-
-  const columns: Column<Repository>[] = [
-    {
-      id: 'name',
-      header: 'Repository',
-      cell: (r) => (
-        <Stack gap="tight">
-          <Text>
-            <TextLink to={`/setup/pool/${r.owner}/${r.name}`}>{r.name}</TextLink>
-            {r.visibility !== 'private' || r.problem ? (
-              <>
-                {' '}
-                <VisibilityCell r={r} inactive={publicWhileOff(r, enabled)} />
-              </>
-            ) : null}
-          </Text>
-          <Text tone="muted">
-            {`${r.policy.max_parallel_jobs} parallel · priority ${r.policy.priority} · ${variableStatus(r).word}`}
-          </Text>
-        </Stack>
-      ),
-      sort: (r) => r.name,
-    },
-    {
-      id: 'pool',
-      header: 'Pool',
-      cell: (r) => (
-        <Status
-          kind={r.pool_on ? 'ok' : 'off'}
-          word={
-            r.pool_on
-              ? 'pool on'
-              : r.pool_off_reason === 'left_installation'
-                ? 'left the installation'
-                : 'pool off'
-          }
-        />
-      ),
-      sort: (r) => String(r.pool_on),
-    },
-    {
-      id: 'runnerKind',
-      header: 'Runner type',
-      cell: (r) => (
-        <Stack gap="tight">
-          <Text>{runnerKindText(r.policy)}</Text>
-          {r.pool_on && r.ephemeral_capacity === false ? (
-            <Text tone="muted">{NO_CAPACITY}</Text>
-          ) : null}
-        </Stack>
-      ),
-      sort: (r) => r.policy.runner_kinds ?? '',
-    },
-    {
-      id: 'fallback',
-      header: 'Fallback label',
-      cell: (r) => fallbackLabel(r),
-    },
-    {
-      id: 'jobsNow',
-      header: 'Jobs now',
-      cell: (r) => jobsNowText(groupByName.get(r.full_name)),
-      sort: (r) => {
-        const g = groupByName.get(r.full_name);
-        return String((g?.running ?? 0) + (g?.queued ?? 0)).padStart(6, '0');
-      },
-    },
-  ];
+  const broken = (r: Repository) => variableStatus(r).kind === 'failed';
+  // The cards of Needs you start ticked: the one action there is Repair.
+  const seeded = useRef(false);
+  useEffect(() => {
+    if (seeded.current || !items) return;
+    seeded.current = true;
+    setPicked(
+      new Set(items.items.filter((r) => r.pool_on && broken(r)).map((r) => r.id)),
+    );
+  }, [items]);
+  const stale = items?.stale.stale === true;
+  const why = (r: Repository): string | undefined => {
+    if (r.pool_on) return undefined;
+    // While the list is the last copy the admin flag is unknown, not "no": the plan checks it again (CRSP148, R5.19).
+    if (!stale && !mayTry(r))
+      return 'You need admin rights on this repository in GitHub.';
+    if (publicWhileOff(r, enabled))
+      return 'Public repositories are off. Turn them on in Settings first.';
+    return undefined;
+  };
+  const blocked = admin ? undefined : session.whyNot('admin');
+  const go = (to: 'on' | 'off' | 'repair', rows: Repository[]) =>
+    void navigate(
+      `/setup/pool/change?to=${to}&${rows.map((r) => `repo=${r.id}`).join('&')}`,
+    );
+  const extra = (r: Repository) => (
+    <>
+      {r.visibility !== 'private' || r.problem ? (
+        <VisibilityCell r={r} inactive={publicWhileOff(r, enabled)} />
+      ) : null}
+      {r.pool_on && r.ephemeral_capacity === false ? (
+        <Text tone="muted">{NO_CAPACITY}</Text>
+      ) : null}
+    </>
+  );
+  const meta = (r: Repository) =>
+    `${r.policy.max_parallel_jobs} parallel · priority ${r.policy.priority} · ${runnerKindText(r.policy)} · ${jobsNowText(groupByName.get(r.full_name))}`;
 
   return (
     <Page>
@@ -343,243 +259,164 @@ export function RepositoriesList() {
           tone={returned === 'request' ? 'needs-you' : 'done'}
           action={
             returned === 'request' ? undefined : (
-              <LinkButton to="/setup/pool">Use pool</LinkButton>
+              <LinkButton to="/setup/pool">Pool setup</LinkButton>
             )
           }
         >
           {returned === 'request'
             ? 'GitHub sent the install request to an owner of the account. The repositories show here when they approve it.'
-            : 'GitHub saved the App installation. The list below is read again. Tick the repositories you want and press Use pool.'}
+            : 'GitHub saved the App installation. The list below is read again. Tick the repositories you want and press Turn on.'}
         </Message>
       ) : null}
-      <Pane title="Repositories">
-        <Load result={result} what="repositories" reload={reload}>
-          {(data) => {
-            // Only repositories of an active type are listed (LOOK D16); the rest are counted in a note.
-            const unlisted = data.items.filter((r) => publicWhileOff(r, enabled));
-            const listed = showPublic
-              ? data.items
-              : data.items.filter((r) => !publicWhileOff(r, enabled));
-            const filtered = listed
-              .filter(
-                (r) =>
-                  (!pool || (pool === 'on') === r.pool_on) &&
-                  r.full_name.toLowerCase().includes(q.trim().toLowerCase()),
-              )
-              .sort((a, b) => a.owner.localeCompare(b.owner));
-            const pages = Math.max(1, Math.ceil(filtered.length / PAGE));
-            const shown = paginate(filtered, Math.min(page, pages), PAGE);
-            const groups = groupByOwner(shown, listed);
-            const selected = new Set([...picked].map(String));
-            if (data.items.length === 0)
-              return (
+      <Load result={result} what="repositories" reload={reload}>
+        {(data) => {
+          // Only repositories of an active type are listed (LOOK D16); the rest are counted in a note.
+          const unlisted = data.items.filter((r) => publicWhileOff(r, enabled));
+          const listed = showPublic
+            ? data.items
+            : data.items.filter((r) => !publicWhileOff(r, enabled));
+          const filtered = listed
+            .filter((r) => r.full_name.toLowerCase().includes(q.trim().toLowerCase()))
+            .sort((a, b) => a.owner.localeCompare(b.owner));
+          const g = groupsOf(filtered, broken);
+          if (data.items.length === 0)
+            return (
+              <Pane title="Repositories">
                 <Empty
                   title="No repositories yet. Install the App on a repository to start."
                   action={<InstallAppButton label="Add a repository" onReturn={reload} />}
                 />
-              );
-            return (
-              <Stack>
-                {data.stale.stale ? (
-                  <Message
-                    tone="needs-you"
-                    action={
-                      data.stale.reason === 'session_expired' ? (
-                        <Button
-                          onPress={() =>
-                            window.location.assign(
-                              signInUrl(`${location.pathname}${location.search}`),
-                            )
-                          }
-                        >
-                          Sign in with GitHub again
-                        </Button>
-                      ) : undefined
-                    }
-                  >
-                    {staleWhy(data.stale)}
-                    {data.stale.as_of
-                      ? ` The list is the last copy, from ${formatPast(data.stale.as_of, now)}.`
-                      : ' The list is the last copy.'}
-                  </Message>
-                ) : null}
-                {unlisted.length > 0 ? (
-                  <Message tone="note">
-                    {showPublic ? (
-                      <>
-                        {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} listed in grey: the pool serves private repositories only. `}
-                        <TextLink to="/setup/pool">Hide them</TextLink>
-                      </>
-                    ) : (
-                      <>
-                        {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} not listed: the pool serves private repositories only. `}
-                        <TextLink to="/setup/pool?public=1">List them too</TextLink>
-                      </>
-                    )}
-                  </Message>
-                ) : null}
-                <ListToolbar
-                  label="Repositories"
-                  search={
-                    <SearchBar
-                      value={q}
-                      onChange={(x) => {
-                        setQ(x);
-                        setPage(1);
-                      }}
-                      label="Search repositories"
-                    />
-                  }
-                  filters={
-                    <>
-                      <Segmented
-                        label="Pool"
-                        options={[
-                          { value: 'on', label: 'Pool on' },
-                          { value: 'off', label: 'Pool off' },
-                        ]}
-                        value={pool}
-                        onChange={(x) => {
-                          setPool(x);
-                          setPage(1);
-                        }}
-                      />
-                      {setting ? (
-                        <Chips
-                          label="Repository types"
-                          options={[
-                            {
-                              value: 'types',
-                              label: `Types: ${activeTypes(setting.enabled)}`,
-                            },
-                          ]}
-                          value=""
-                          onChange={() => void navigate(PUBLIC_SETTING_PATH)}
-                        />
-                      ) : null}
-                    </>
-                  }
-                  selection={
-                    <>
-                      <Button
-                        onPress={() => setPicked(new Set(filtered.map((r) => r.id)))}
-                        disabled={filtered.length === 0}
-                        reason="No repository is shown."
-                      >
-                        {`Select all ${filtered.length}`}
-                      </Button>
-                      <Button
-                        onPress={() => setPicked(new Set())}
-                        disabled={picked.size === 0}
-                        reason="Nothing is selected."
-                      >
-                        Clear
-                      </Button>
-                    </>
-                  }
-                  count={`${filtered.length} ${typeWords(enabled, showPublic)}${filtered.length === 1 ? 'repository' : 'repositories'}`}
-                  actions={
-                    <InstallAppButton label="Add a repository" onReturn={reload} />
-                  }
-                />
-                {filtered.length === 0 ? (
-                  listed.length > 0 ? (
-                    <Message tone="note">
-                      {listed.length} repositories are hidden by the search and the
-                      filter. Clear them to see all.
-                    </Message>
-                  ) : null
-                ) : (
-                  groups.map((g) => {
-                    const rows = filtered.filter((r) => r.owner === g.owner);
-                    return (
-                      <Stack key={g.owner} as="section" gap="tight">
-                        <CheckRow
-                          label={g.owner}
-                          help={`${g.total} ${g.total === 1 ? 'repository' : 'repositories'} · ${g.on} use the pool`}
-                          checked={rows.every((r) => picked.has(r.id))}
-                          onChange={(on) =>
-                            setPicked((p) => {
-                              const n = new Set(p);
-                              for (const r of rows) {
-                                if (on) n.add(r.id);
-                                else n.delete(r.id);
-                              }
-                              return n;
-                            })
-                          }
-                        />
-                        <Table
-                          caption={`${g.owner} repositories`}
-                          columns={columns}
-                          rows={g.rows}
-                          rowKey={(r) => String(r.id)}
-                          selected={selected}
-                          onToggle={(key) =>
-                            setPicked((p) => {
-                              const n = new Set(p);
-                              const id = Number(key);
-                              if (n.has(id)) n.delete(id);
-                              else n.add(id);
-                              return n;
-                            })
-                          }
-                          toggleLabel={(r) => `Select ${r.full_name}`}
-                          inactive={(r) => publicWhileOff(r, enabled)}
-                        />
-                      </Stack>
-                    );
-                  })
-                )}
-                <Pager
-                  page={Math.min(page, pages)}
-                  pages={pages}
-                  onPage={setPage}
-                  label="Repository pages"
-                />
-              </Stack>
+              </Pane>
             );
-          }}
-        </Load>
-      </Pane>
+          return (
+            <Stack>
+              <PoolHealth
+                all={data.items}
+                listed={listed}
+                needsYou={groupsOf(listed, broken).bad.length}
+              />
+              {data.stale.stale ? (
+                <Message
+                  tone="needs-you"
+                  action={
+                    data.stale.reason === 'session_expired' ? (
+                      <Button
+                        onPress={() =>
+                          window.location.assign(
+                            signInUrl(`${location.pathname}${location.search}`),
+                          )
+                        }
+                      >
+                        Sign in with GitHub again
+                      </Button>
+                    ) : undefined
+                  }
+                >
+                  {staleWhy(data.stale)}
+                  {data.stale.as_of
+                    ? ` The list is the last copy, from ${formatPast(data.stale.as_of, now)}.`
+                    : ' The list is the last copy.'}
+                </Message>
+              ) : null}
+              {unlisted.length > 0 ? (
+                <Message tone="note">
+                  {showPublic ? (
+                    <>
+                      {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} listed in grey: the pool serves private repositories only. `}
+                      <TextLink to="/setup/pool">Hide them</TextLink>
+                    </>
+                  ) : (
+                    <>
+                      {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} not listed: the pool serves private repositories only. `}
+                      <TextLink to="/setup/pool?public=1">List them too</TextLink>
+                    </>
+                  )}
+                </Message>
+              ) : null}
+              <ListToolbar
+                label="Repositories"
+                search={
+                  <SearchBar value={q} onChange={setQ} label="Search repositories" />
+                }
+                filters={
+                  setting ? (
+                    <Chips
+                      label="Repository types"
+                      options={[
+                        {
+                          value: 'types',
+                          label: `Types: ${activeTypes(setting.enabled)}`,
+                        },
+                      ]}
+                      value=""
+                      onChange={() => void navigate(PUBLIC_SETTING_PATH)}
+                    />
+                  ) : undefined
+                }
+                count={`${filtered.length} ${typeWords(enabled, showPublic)}${filtered.length === 1 ? 'repository' : 'repositories'}`}
+                actions={<InstallAppButton label="Add a repository" onReturn={reload} />}
+              />
+              {filtered.length === 0 && listed.length > 0 ? (
+                <Message tone="note">
+                  {listed.length} repositories are hidden by the search. Clear it to see
+                  all.
+                </Message>
+              ) : null}
+              {g.bad.length > 0 ? (
+                <PoolGroup
+                  title="Needs you"
+                  lead="A variable is missing or wrong, so jobs may not reach the pool. Repair writes it again."
+                  rows={g.bad}
+                  picked={picked}
+                  setPicked={setPicked}
+                  action={(n) => (n === 0 ? 'Repair' : `Repair ${n}`)}
+                  blocked={blocked}
+                  why={why}
+                  meta={meta}
+                  extra={extra}
+                  note={(r) => ({ status: 'failed', word: variableStatus(r).word })}
+                  onAct={(rows) => go('repair', rows)}
+                />
+              ) : null}
+              <PoolGroup
+                title="Using the pool"
+                lead="These repositories send their jobs to the pool."
+                rows={g.good}
+                picked={picked}
+                setPicked={setPicked}
+                action={(n) => (n === 0 ? 'Turn off' : `Turn off ${n}`)}
+                blocked={blocked}
+                why={why}
+                meta={meta}
+                extra={extra}
+                onAct={(rows) => go('off', rows)}
+              />
+              <PoolGroup
+                title="Not using the pool"
+                lead="These repositories do not use the pool. Turn on starts them."
+                rows={g.not}
+                picked={picked}
+                setPicked={setPicked}
+                action={(n) => (n === 0 ? 'Turn on' : `Turn on ${n}`)}
+                blocked={blocked}
+                why={why}
+                meta={meta}
+                extra={extra}
+                note={(r) =>
+                  r.pool_off_reason === 'left_installation'
+                    ? { status: 'off', word: 'left the installation' }
+                    : undefined
+                }
+                onAct={(rows) => go('on', rows)}
+              />
+            </Stack>
+          );
+        }}
+      </Load>
       {items && items.items.length > 0 ? <GithubAppPane items={items.items} /> : null}
       <MissingPermissionsGuide onReady={reload} />
       <OrgPools version={v} />
       {items?.items.some((r) => r.pool_on) ? <RunsOnPrPane /> : null}
-      <ActionBar
-        status={chosen.length === 0 ? 'Nothing selected' : selectedStatus(chosen.length)}
-        primary={
-          <Button
-            kind="primary"
-            disabled={blocked !== undefined}
-            reason={blocked}
-            onPress={() =>
-              allUse
-                ? offQ.ask(
-                    chosen.flatMap((r) => [
-                      `${r.full_name}: pool off`,
-                      ...r.variables.map((x) => `${r.full_name}: variable ${x.name}`),
-                    ]),
-                  )
-                : void navigate(
-                    `/setup/pool/turn-on?${chosen.map((r) => `repo=${r.id}`).join('&')}`,
-                  )
-            }
-          >
-            {allUse ? 'Stop using pool' : 'Use pool'}
-          </Button>
-        }
-      />
-      <Ask
-        title="Turn off these repositories?"
-        action="Turn off"
-        busyLabel="Turning off"
-        q={offQ.question}
-        busy={offQ.busy}
-        error={offQ.error}
-        onCancel={offQ.cancel}
-        onConfirm={() => void offQ.confirm()}
-      />
     </Page>
   );
 }

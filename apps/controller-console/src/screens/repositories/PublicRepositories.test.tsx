@@ -135,41 +135,44 @@ describe('Repositories: active types, Visibility and greyed public rows', () => 
     ).toBeTruthy();
   });
 
-  it('tags a public row with its visibility; public rows are greyed without a repeated note while it is off', async () => {
-    renderApp(list(setting(signedIn(), false)), '/setup/pool?public=1');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
-    expect(within(table).queryByRole('columnheader', { name: 'Visibility' })).toBeNull();
+  it('tags a public card with its visibility and locks it without a repeated note while it is off', async () => {
+    renderApp(list(setting(signedIn(), false), [priv, pub]), '/setup/pool?public=1');
     await screen.findByRole('button', { name: 'Types: Private (default)' });
-    const rows = within(table).getAllByRole('row');
-    const siteRow = rows.find((r) => within(r).queryByRole('link', { name: 'site' }));
-    const appRow = rows.find((r) => within(r).queryByRole('link', { name: 'app' }));
-    expect(siteRow?.getAttribute('data-inactive')).toBe('true');
-    expect(appRow?.getAttribute('data-inactive')).toBeNull();
-    expect(within(siteRow as HTMLElement).getByText('Public')).toBeTruthy();
-    expect(within(siteRow as HTMLElement).getByText('inactive type')).toBeTruthy();
-    expect(within(appRow as HTMLElement).queryByText('Private')).toBeNull();
-    expect(within(appRow as HTMLElement).queryByText('inactive type')).toBeNull();
-    expect(within(table).queryByText(/Public repositories are off/)).toBeNull();
+    const site = await screen.findByRole('region', { name: /^octo[/]site/ });
+    const app = screen.getByRole('region', { name: /^octo[/]app/ });
+    expect(within(site).getByText('Public')).toBeTruthy();
+    expect(within(site).getByText('inactive type')).toBeTruthy();
+    expect(within(app).queryByText('Private')).toBeNull();
+    expect(within(app).queryByText('inactive type')).toBeNull();
     expect(
-      within(table).queryByRole('link', { name: 'Turn on public repositories' }),
-    ).toBeNull();
+      within(site).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]site/ })
+        .disabled,
+    ).toBe(true);
+    expect(
+      within(app).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]app/ })
+        .disabled,
+    ).toBe(false);
+    expect(screen.queryByRole('link', { name: 'Turn on public repositories' })).toBeNull();
   });
 
-  it('does not grey public rows while the setting is on', async () => {
-    renderApp(list(setting(signedIn(), true)), '/setup/pool');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
+  it('does not lock public cards while the setting is on', async () => {
+    renderApp(list(setting(signedIn(), true), [priv, pub]), '/setup/pool');
     await screen.findByRole('button', { name: 'Types: Private & Public' });
-    for (const row of within(table).getAllByRole('row'))
-      expect(row.getAttribute('data-inactive')).toBeNull();
+    const site = await screen.findByRole('region', { name: /^octo[/]site/ });
+    expect(
+      within(site).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]site/ })
+        .disabled,
+    ).toBe(false);
+    expect(within(site).queryByText('inactive type')).toBeNull();
   });
 
-  it('disables Turn on for a selection that holds a public repository while off, with the reason', async () => {
-    renderApp(list(setting(signedIn(), false)), '/setup/pool?public=1');
+  it('locks a public repository while the setting is off and says why', async () => {
+    renderApp(list(setting(signedIn(), false), [priv, pub]), '/setup/pool?public=1');
     await screen.findByRole('button', { name: 'Types: Private (default)' });
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/site' }));
-    const button = screen.getByRole<HTMLButtonElement>('button', { name: 'Use pool' });
-    expect(button.disabled).toBe(true);
-    expect(screen.getByText(/Public repositories are off: octo\/site/)).toBeTruthy();
+    const site = await screen.findByRole('region', { name: /^octo[/]site/ });
+    expect(
+      within(site).getByText(/Public repositories are off\. Turn them on in Settings first\./),
+    ).toBeTruthy();
   });
 
   it('shows the Problem of a public repository on the pool while off, with its two actions', async () => {
