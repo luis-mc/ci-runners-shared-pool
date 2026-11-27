@@ -9322,6 +9322,35 @@ type SignInAddress struct {
 	Registered bool `json:"registered"`
 }
 
+// SizeLabelList defines model for SizeLabelList.
+type SizeLabelList struct {
+	Example  string             `json:"example"`
+	Labels   []SizeLabelRow     `json:"labels"`
+	Machines []SizeLabelMachine `json:"machines"`
+}
+
+// SizeLabelMachine defines model for SizeLabelMachine.
+type SizeLabelMachine struct {
+	// Cpus Most CPUs a job may ask for on this machine
+	Cpus float32 `json:"cpus"`
+
+	// MemoryGib Most memory in GiB a job may ask for on this machine
+	MemoryGib float32 `json:"memory_gib"`
+	Name      string  `json:"name"`
+
+	// Os linux, windows or macos
+	Os string `json:"os"`
+}
+
+// SizeLabelRow defines model for SizeLabelRow.
+type SizeLabelRow struct {
+	Example string `json:"example"`
+	Key     string `json:"key"`
+	Max     string `json:"max"`
+	Meaning string `json:"meaning"`
+	Min     string `json:"min"`
+}
+
 // Slot defines model for Slot.
 type Slot struct {
 	Job         string    `json:"job"`
@@ -11536,6 +11565,9 @@ type ServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(w http.ResponseWriter, r *http.Request)
+	// ListSizeLabels The size labels the pool understands, with a copy-paste example and the room of each machine
+	// (GET /api/v1/size-labels)
+	ListSizeLabels(w http.ResponseWriter, r *http.Request)
 	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
 	// (GET /api/v1/timeline)
 	GetTimeline(w http.ResponseWriter, r *http.Request, params GetTimelineParams)
@@ -17916,6 +17948,20 @@ func (siw *ServerInterfaceWrapper) RedeemSetupLink(w http.ResponseWriter, r *htt
 	handler.ServeHTTP(w, r)
 }
 
+// ListSizeLabels operation middleware
+func (siw *ServerInterfaceWrapper) ListSizeLabels(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListSizeLabels(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetTimeline operation middleware
 func (siw *ServerInterfaceWrapper) GetTimeline(w http.ResponseWriter, r *http.Request) {
 
@@ -18783,6 +18829,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/env-sets", wrapper.ListEnvSets)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/env-sets/{setName}", wrapper.DeleteEnvSet)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/env-sets/{setName}", wrapper.PutEnvSet)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/size-labels", wrapper.ListSizeLabels)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.DeleteJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.ListJobSizes)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
@@ -27217,6 +27264,44 @@ func (response RedeemSetupLinkdefaultJSONResponse) VisitRedeemSetupLinkResponse(
 	return err
 }
 
+type ListSizeLabelsRequestObject struct {
+}
+
+type ListSizeLabelsResponseObject interface {
+	VisitListSizeLabelsResponse(w http.ResponseWriter) error
+}
+
+type ListSizeLabels200JSONResponse SizeLabelList
+
+func (response ListSizeLabels200JSONResponse) VisitListSizeLabelsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListSizeLabelsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListSizeLabelsdefaultJSONResponse) VisitListSizeLabelsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetTimelineRequestObject struct {
 	Params GetTimelineParams
 }
@@ -28701,6 +28786,9 @@ type StrictServerInterface interface {
 	// RedeemSetupLink Trade a one-time setup code for a setup cookie
 	// (POST /api/v1/setup/redeem)
 	RedeemSetupLink(ctx context.Context, request RedeemSetupLinkRequestObject) (RedeemSetupLinkResponseObject, error)
+	// ListSizeLabels The size labels the pool understands, with a copy-paste example and the room of each machine
+	// (GET /api/v1/size-labels)
+	ListSizeLabels(ctx context.Context, request ListSizeLabelsRequestObject) (ListSizeLabelsResponseObject, error)
 	// GetTimeline Jobs on machine runner slots over time, past, running and forecast
 	// (GET /api/v1/timeline)
 	GetTimeline(ctx context.Context, request GetTimelineRequestObject) (GetTimelineResponseObject, error)
@@ -34467,6 +34555,30 @@ func (sh *strictHandler) RedeemSetupLink(w http.ResponseWriter, r *http.Request)
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(RedeemSetupLinkResponseObject); ok {
 		if err := validResponse.VisitRedeemSetupLinkResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListSizeLabels operation middleware
+func (sh *strictHandler) ListSizeLabels(w http.ResponseWriter, r *http.Request) {
+	var request ListSizeLabelsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListSizeLabels(ctx, request.(ListSizeLabelsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListSizeLabels")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListSizeLabelsResponseObject); ok {
+		if err := validResponse.VisitListSizeLabelsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

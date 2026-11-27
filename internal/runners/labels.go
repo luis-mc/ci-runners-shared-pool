@@ -8,6 +8,8 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+
+	"github.com/luis-mc/ci-runners-shared-pool/internal/sizelabel"
 )
 
 // routingLabelRE is the shape of a per-job routing label, crsp-<slug>-<4 hex>
@@ -68,6 +70,10 @@ func ValidateLabels(labels []string, poolName string, verified map[string]bool) 
 			return nil, &LabelError{Label: raw, Reason: "empty"}
 		case l == poolName && poolName != "":
 		case IsRoutingLabel(l):
+		case sizelabel.IsSizeLabel(l):
+			if _, err := sizelabel.Parse([]string{l}); err != nil {
+				return nil, &LabelError{Label: l, Reason: err.Error()}
+			}
 		case !fixedLabels[l]:
 			return nil, &LabelError{Label: l, Reason: "not a generic label (allowed: self-hosted, OS, architecture, docker, kvm, gpu and the pool name)"}
 		case capabilityLabels[l] && !verified[l]:
