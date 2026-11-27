@@ -85,6 +85,10 @@ type Options struct {
 	// WindowsPackages says where the Windows installer is, for an SSH join to a
 	// Windows machine that has no crsp.exe yet (CRSP123). Nil means it cannot send one.
 	WindowsPackages WindowsPackageSource
+	// AgentInstallers says where the agent installers are (CRSP304). When set,
+	// an SSH join installs the agent on a machine that has no crsp yet, from the
+	// controller's cache or the release, and the owner never sees an installer.
+	AgentInstallers AgentInstallerSource
 	// Packages gives the release packages a downloaded installer file fetches
 	// (R5.65). Nil means the download option is not available.
 	Packages PackageSource
@@ -282,7 +286,28 @@ type InstallCommand struct {
 // InstallCommands builds the command per OS. It carries the controller
 // address, the agent port, the certificate fingerprint and, when given, the
 // join code (R5.3). With no code the placeholder says where to put it.
+//
+// When this controller has agent installers and a console address a machine can
+// reach (CRSP304), the Linux and macOS commands first download the agent
+// installer from that LAN link, check its SHA-256 and install it if crsp is
+// missing, and the Windows command does the same in PowerShell, so one pasted
+// command is enough. The commands of an SSH join are the plain ones.
 func (s *Service) InstallCommands(code string) []InstallCommand {
+	cmds := s.baseCommands(code)
+	if s.o.AgentInstallers == nil || s.o.ConsoleURL == "" {
+		return cmds
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	for i := range cmds {
+		if wrapped, err := s.manualInstall(ctx, cmds[i].OS, cmds[i].Command); err == nil {
+			cmds[i].Command = wrapped
+		}
+	}
+	return cmds
+}
+
+func (s *Service) baseCommands(code string) []InstallCommand {
 	addr := fmt.Sprintf("%s:%d", s.o.ControllerAddress, s.o.AgentPort)
 	if code == "" {
 		code = "<join code>"

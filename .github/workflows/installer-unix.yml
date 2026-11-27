@@ -12,8 +12,8 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'installer/linux/**'
-      - 'installer/macos/**'
+      - 'installer/controller/linux/**'
+      - 'installer/controller/macos/**'
       - 'apps/controller/cmd/crsp/**'
       - 'scripts/delivery/tools.json'
       - '.github/workflows/installer-unix.yml'
@@ -51,8 +51,8 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x bin/crsp
-          bash installer/linux/build.sh amd64 bin/crsp edge-ci 1 pkgs/old
-          bash installer/linux/build.sh amd64 bin/crsp edge-ci 2 pkgs/new
+          bash installer/controller/linux/build.sh amd64 bin/crsp edge-ci 1 pkgs/old
+          bash installer/controller/linux/build.sh amd64 bin/crsp edge-ci 2 pkgs/new
           ls -l pkgs/old pkgs/new
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -76,7 +76,7 @@ jobs:
         run: |
           old=$(sudo dpkg-deb -f pkgs/old/crsp-linux-amd64.deb Version)
           new=$(sudo dpkg-deb -f pkgs/new/crsp-linux-amd64.deb Version)
-          sudo SMOKE_SYSTEMD=1 bash installer/linux/smoke.sh deb \
+          sudo SMOKE_SYSTEMD=1 bash installer/controller/linux/smoke.sh deb \
             pkgs/old/crsp-linux-amd64.deb pkgs/new/crsp-linux-amd64.deb "${old%-*}" "${new%-*}"
 
   smoke-rpm:
@@ -96,7 +96,7 @@ jobs:
             set -euo pipefail
             old=$(rpm -qp --qf "%{VERSION}" pkgs/old/crsp-linux-amd64.rpm)
             new=$(rpm -qp --qf "%{VERSION}" pkgs/new/crsp-linux-amd64.rpm)
-            bash installer/linux/smoke.sh rpm pkgs/old/crsp-linux-amd64.rpm pkgs/new/crsp-linux-amd64.rpm "$old" "$new"
+            bash installer/controller/linux/smoke.sh rpm pkgs/old/crsp-linux-amd64.rpm pkgs/new/crsp-linux-amd64.rpm "$old" "$new"
           '
 
   macos-pkg:
@@ -116,10 +116,10 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x bin/crsp
-          bash installer/macos/build.sh arm64 bin/crsp edge-ci 1 pkgs/old
-          bash installer/macos/build.sh arm64 bin/crsp edge-ci 2 pkgs/new
+          bash installer/controller/macos/build.sh arm64 bin/crsp edge-ci 1 pkgs/old
+          bash installer/controller/macos/build.sh arm64 bin/crsp edge-ci 2 pkgs/new
       - name: Install, upgrade, uninstall
-        run: bash installer/macos/smoke.sh pkgs/old/crsp-darwin-arm64.pkg pkgs/new/crsp-darwin-arm64.pkg
+        run: bash installer/controller/macos/smoke.sh pkgs/old/crsp-darwin-arm64.pkg pkgs/new/crsp-darwin-arm64.pkg
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: installer-darwin-arm64

@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-// UpgradeCode is the UpgradeCode of the crsp MSI (installer/crsp.wxs). Every build has its own ProductCode;
+// UpgradeCode is the UpgradeCode of the crsp MSI (installer/controller/crsp.wxs). Every build has its own ProductCode;
 // the UpgradeCode finds it when the Apps list does not.
 const UpgradeCode = "{C1D62442-6DB4-4FF0-9F28-A1CE3121B332}"
 

@@ -1,7 +1,7 @@
 <#
   Builds crsp-windows-<amd64|arm64>.msi (operations R5.7) with WiX v5.
 
-    pwsh installer/build.ps1 -Arch x64 -Exe out/crsp.exe -Version 0.1.0 -Out installer/out
+    pwsh installer/controller/build.ps1 -Arch x64 -Exe out/crsp.exe -Version 0.1.0 -Out installer/controller/out
 
   -Version is the release version the build workflow knows: "1.2.3" or "v1.2.3-rc1"
   (stamped as 1.2.3.0), or "edge-<sha>" (stamped <EdgeBase>.<Build>, the next
@@ -22,7 +22,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
-$repo = Split-Path $here -Parent
+$repo = Split-Path (Split-Path $here -Parent) -Parent
 
 if (-not $ProductVersion) {
   if ($Version -match '^v?(\d+)\.(\d+)\.(\d+)') {

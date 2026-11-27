@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds crsp-darwin-<arch>.pkg with pkgbuild and productbuild (macOS only).
 #
-#   installer/macos/build.sh <amd64|arm64> <crsp binary> <release version> <run number> <out dir>
+#   installer/controller/macos/build.sh <amd64|arm64> <crsp binary> <release version> <run number> <out dir>
 #
 # Run from the repository root. The package is not signed or notarized yet
 # (operations R5.7: milestone 8).
@@ -12,10 +12,10 @@ release="${3:?release version}"
 run="${4:-0}"
 out="${5:?out dir}"
 here="$(cd "$(dirname "$0")" && pwd)"
-root="$(cd "$here/../.." && pwd)"
+root="$(cd "$here/../../.." && pwd)"
 cd "$root"
 
-version="$("$root/installer/linux/version.sh" "$release" "$run" pkg)"
+version="$("$root/installer/controller/linux/version.sh" "$release" "$run" pkg)"
 mkdir -p "$out"
 out="$(cd "$out" && pwd)"
 work="$(mktemp -d)"

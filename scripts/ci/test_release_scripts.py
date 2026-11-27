@@ -99,7 +99,7 @@ class Workflow(unittest.TestCase):
         text = open(WORKFLOW).read()
         self.assertIn("release-guard.sh", text)
         self.assertIn("needs: guard", text)  # version, which build and msi follow
-        self.assertIn("needs: [guard, version, build, msi, installers-unix]", text)
+        self.assertIn("needs: [guard, version, build, msi, installers-unix, agent-installers]", text)
         self.assertIn("release-notes-fallback.sh", text)
 
     def test_release_assets_are_named_crsp_version_os_arch(self):
@@ -168,6 +168,52 @@ class Workflow(unittest.TestCase):
                 r.stdout.split(),
                 ["Crsp-0.1.22-linux-x64.deb", "Crsp-0.1.22-linux-x64.rpm", "Crsp-0.1.22-macos-arm64.pkg"],
             )
+
+
+class AgentInstallers(unittest.TestCase):
+    """CRSP304: agent installers are CrspAgent-<version>-<os>-<arch>.<ext> release assets."""
+
+    def test_agent_asset_names(self):
+        def run(script):
+            r = subprocess.run(["bash", "-c", 'source "%s"; %s' % (NAMES, script)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            return r.stdout.strip()
+
+        self.assertEqual(run("agent_asset_name v0.1.22 windows amd64"), "CrspAgent-0.1.22-win-x64.zip")
+        self.assertEqual(run("agent_asset_name 0.1.22 linux arm64"), "CrspAgent-0.1.22-linux-arm64.tar.gz")
+        self.assertEqual(run("agent_asset_name 0.1.22 darwin amd64"), "CrspAgent-0.1.22-macos-x64.tar.gz")
+        self.assertEqual(run("agent_stable_to_asset 0.1.22 x/crspagent-darwin-arm64.tar.gz"), "CrspAgent-0.1.22-macos-arm64.tar.gz")
+        self.assertEqual(run("agent_stable_to_asset 0.1.22 crspagent-windows-arm64.zip"), "CrspAgent-0.1.22-win-arm64.zip")
+
+    def test_the_controller_name_stays_the_controller_name(self):
+        r = subprocess.run(["bash", NAMES, "0.1.22", "windows", "amd64", "msi"], capture_output=True, text=True)
+        self.assertEqual(r.stdout.strip(), "Crsp-0.1.22-win-x64.msi")
+
+    def test_release_builds_checksums_and_attests_the_agent_installers(self):
+        text = open(WORKFLOW).read()
+        for want in (
+            "agent-installers:",
+            "bash installer/agent/build.sh",
+            "name: agent-${{ matrix.os }}-${{ matrix.arch }}",
+            'agent_stable_to_asset "$VERSION" "$f"',
+            "sha256sum Crsp-* CrspAgent-* crsp-sbom-*",
+            "dist/CrspAgent-*",
+        ):
+            self.assertIn(want, text)
+
+    def test_manifest_ignores_agent_installers(self):
+        # the update manifest lists the Controller MSIs only (release_manifest.py matches Crsp-*)
+        text = open(os.path.join(HERE, "release_manifest.py")).read()
+        self.assertIn('r"^Crsp-', text)
+
+    def test_agent_build_script_makes_the_stable_names(self):
+        with tempfile.TemporaryDirectory() as d:
+            exe = os.path.join(d, "crsp")
+            open(exe, "w").write("x")
+            r = subprocess.run(["bash", os.path.join(HERE, "..", "..", "installer", "agent", "build.sh"), "linux", "arm64", exe, os.path.join(d, "out")],
+                               capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertTrue(os.path.isfile(os.path.join(d, "out", "crspagent-linux-arm64.tar.gz")))
 
 
 def have_openssl3():

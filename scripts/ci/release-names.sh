@@ -8,6 +8,7 @@
 # (crsp-<goos>-<goarch>.<ext>, DL-22); the publish job renames the files with this function.
 # Usage: source scripts/ci/release-names.sh; asset_name 0.1.22 windows amd64 msi
 #        bash scripts/ci/release-names.sh 0.1.22 windows amd64 msi
+#        agent_asset_name 0.1.22 linux arm64   (CrspAgent-0.1.22-linux-arm64.tar.gz, CRSP304)
 
 asset_os() {
   case "$1" in
@@ -44,6 +45,26 @@ stable_to_asset() {
   os="${rest%%-*}"
   arch="${rest#*-}"
   asset_name "$version" "$os" "$arch" "$ext"
+}
+
+# agent_asset_name VERSION OS ARCH: CRSP304. The agent installer, CrspAgent-<version>-<os>-<arch>.<ext>;
+# zip for Windows, tar.gz for the rest. It is a release asset only: the Controller installer is the
+# one people download (website R5.7); the controller fetches the agent installers itself.
+agent_asset_name() {
+  local version="${1#v}" os arch ext=tar.gz
+  os="$(asset_os "$2")" || return 1
+  arch="$(asset_arch "$3")" || return 1
+  [ "$os" = win ] && ext=zip
+  printf 'CrspAgent-%s-%s-%s.%s\n' "$version" "$os" "$arch" "$ext"
+}
+
+# agent_stable_to_asset VERSION FILE: crspagent-<goos>-<goarch>.<ext> (installer/agent/build.sh) to its release name.
+agent_stable_to_asset() {
+  local base rest
+  base="$(basename "$2")"
+  rest="${base%%.*}"        # crspagent-<goos>-<goarch>
+  rest="${rest#crspagent-}"
+  agent_asset_name "$1" "${rest%%-*}" "${rest#*-}"
 }
 
 if [ "${BASH_SOURCE[0]}" = "$0" ]; then

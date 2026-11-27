@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Builds crsp-linux-<arch>.deb and crsp-linux-<arch>.rpm with nfpm.
 #
-#   installer/linux/build.sh <amd64|arm64> <crsp binary> <release version> <run number> <out dir>
+#   installer/controller/linux/build.sh <amd64|arm64> <crsp binary> <release version> <run number> <out dir>
 #
 # Run from the repository root. nfpm is the version pinned in
 # scripts/delivery/tools.json, fetched (sha256-checked) by scripts/delivery/ci_tool.py;
@@ -13,7 +13,7 @@ release="${3:?release version}"
 run="${4:-0}"
 out="${5:?out dir}"
 here="$(cd "$(dirname "$0")" && pwd)"
-root="$(cd "$here/../.." && pwd)"
+root="$(cd "$here/../../.." && pwd)"
 cd "$root"
 
 if [ -z "${NFPM:-}" ]; then

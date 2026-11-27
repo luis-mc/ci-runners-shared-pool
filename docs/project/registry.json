@@ -6855,7 +6855,7 @@
       "app": "crsp",
       "status": "Live",
       "item": "v0.1.0 test finding: Start Menu entry is 'crsp' with a blank icon",
-      "detail": "Owner test step 1: the Start Menu shows 'crsp' with a generic icon; expected 'CI Runners Shared Pool' with the crsp icon. installer/crsp.wxs Shortcut Name=crsp, and crsp.exe embeds no icon resource. Fix: shortcut name, an Icon element, and an icon resource in the Windows build.",
+      "detail": "Owner test step 1: the Start Menu shows 'crsp' with a generic icon; expected 'CI Runners Shared Pool' with the crsp icon. installer/controller/crsp.wxs Shortcut Name=crsp, and crsp.exe embeds no icon resource. Fix: shortcut name, an Icon element, and an icon resource in the Windows build.",
       "expected": "15 Nov",
       "changed": "2026-11-15T03:58+00:00",
       "rides": "CRSP46",

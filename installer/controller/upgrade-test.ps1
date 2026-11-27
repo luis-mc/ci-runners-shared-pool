@@ -11,7 +11,7 @@
 
   It uninstalls at the end and leaves the machine as it found it.
 
-    pwsh installer/upgrade-test.ps1 -PreviousMsi v0.1.1/crsp-windows-amd64.msi -NewMsi new/crsp-windows-amd64.msi -LogDir installer/out/logs
+    pwsh installer/controller/upgrade-test.ps1 -PreviousMsi v0.1.1/crsp-windows-amd64.msi -NewMsi new/crsp-windows-amd64.msi -LogDir installer/controller/out/logs
 #>
 [CmdletBinding()]
 param(

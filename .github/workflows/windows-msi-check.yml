@@ -61,12 +61,12 @@ jobs:
           path: ~/.cache/msi-build
           key: msi-build-${{ hashFiles('scripts/delivery/windows-build-tools.json') }}
       # CRSP147: one entry in the Windows programs list. The authoring has no second Uninstall key,
-      # no hidden MSI entry, one UpgradeCode and a major upgrade (installer/wxs_test.go has the same rules).
+      # no hidden MSI entry, one UpgradeCode and a major upgrade (installer/controller/wxs_test.go has the same rules).
       - name: One programs-list entry (authoring check)
         run: |
           python3 - <<'PY'
           import re, sys
-          s = re.sub(r"(?s)<!--.*?-->", "", open("installer/crsp.wxs").read())
+          s = re.sub(r"(?s)<!--.*?-->", "", open("installer/controller/crsp.wxs").read())
           bad = []
           if "CurrentVersion\\Uninstall" in s: bad.append("the package writes its own Uninstall key (a second entry)")
           if "ARPSYSTEMCOMPONENT" in s: bad.append("a hidden MSI entry is authored")

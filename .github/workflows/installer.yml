@@ -1,7 +1,7 @@
 name: Installer
 
 # Builds both Windows MSIs when a pull request or a push to main touches the
-# installer (operations R5.7), and on the x64 one runs installer/smoke.ps1: install,
+# installer (operations R5.7), and on the x64 one runs installer/controller/smoke.ps1: install,
 # service, PATH, firewall rule, shortcut and autostart, silent upgrade, refused
 # downgrade, silent uninstall (data kept), uninstall with REMOVEDATA=1, no leftovers.
 # The release workflow builds the published MSIs; this one only checks them.
@@ -62,36 +62,36 @@ jobs:
           GOOS: windows
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: '0'
-        run: go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/out/crsp.exe ./apps/controller/cmd/crsp
+        run: go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/controller/out/crsp.exe ./apps/controller/cmd/crsp
 
       - name: Build the MSI (0.1.0)
-        run: ./installer/build.ps1 -Arch ${{ matrix.arch }} -Exe installer/out/crsp.exe -Version 0.1.0 -Out installer/out/v0.1.0
+        run: ./installer/controller/build.ps1 -Arch ${{ matrix.arch }} -Exe installer/controller/out/crsp.exe -Version 0.1.0 -Out installer/controller/out/v0.1.0
 
       # Only the x64 MSI installs on this x64 runner; the arm64 one is built and its
       # file table is checked by an administrative extract.
       - name: Build the upgrade (0.1.1) and downgrade (0.0.9) MSIs
         if: ${{ matrix.arch == 'x64' }}
         run: |
-          ./installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.1.1 -Out installer/out/v0.1.1
-          ./installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.0.9 -Out installer/out/v0.0.9
+          ./installer/controller/build.ps1 -Arch x64 -Exe installer/controller/out/crsp.exe -Version 0.1.1 -Out installer/controller/out/v0.1.1
+          ./installer/controller/build.ps1 -Arch x64 -Exe installer/controller/out/crsp.exe -Version 0.0.9 -Out installer/controller/out/v0.0.9
           # An upgrade that fails after the files are in, to test the rollback.
-          ./installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.1.2 -Out installer/out/v0.1.2 -FailAfterInstall
+          ./installer/controller/build.ps1 -Arch x64 -Exe installer/controller/out/crsp.exe -Version 0.1.2 -Out installer/controller/out/v0.1.2 -FailAfterInstall
 
       - name: Install, upgrade, downgrade and uninstall
         if: ${{ matrix.arch == 'x64' }}
         run: |
-          ./installer/smoke.ps1 `
-            -Msi installer/out/v0.1.0/crsp-windows-amd64.msi `
-            -UpgradeMsi installer/out/v0.1.1/crsp-windows-amd64.msi `
-            -DowngradeMsi installer/out/v0.0.9/crsp-windows-amd64.msi `
-            -FailingMsi installer/out/v0.1.2/crsp-windows-amd64.msi `
-            -LogDir installer/out/logs
+          ./installer/controller/smoke.ps1 `
+            -Msi installer/controller/out/v0.1.0/crsp-windows-amd64.msi `
+            -UpgradeMsi installer/controller/out/v0.1.1/crsp-windows-amd64.msi `
+            -DowngradeMsi installer/controller/out/v0.0.9/crsp-windows-amd64.msi `
+            -FailingMsi installer/controller/out/v0.1.2/crsp-windows-amd64.msi `
+            -LogDir installer/controller/out/logs
 
       - name: Administrative extract (no install)
         if: ${{ !cancelled() }}
         run: |
-          $msi = (Resolve-Path installer/out/v0.1.0/crsp-windows-${{ matrix.goarch }}.msi).Path
-          $target = Join-Path $PWD 'installer/out/extract'
+          $msi = (Resolve-Path installer/controller/out/v0.1.0/crsp-windows-${{ matrix.goarch }}.msi).Path
+          $target = Join-Path $PWD 'installer/controller/out/extract'
           $p = Start-Process msiexec.exe -ArgumentList '/a', "`"$msi`"", '/qn', "TARGETDIR=`"$target`"" -Wait -PassThru
           if ($p.ExitCode -ne 0) { throw "msiexec /a exit $($p.ExitCode)" }
           $exe = Get-ChildItem $target -Recurse -Filter crsp.exe | Select-Object -First 1
@@ -106,7 +106,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $prev = 'installer/out/previous'
+          $prev = 'installer/controller/out/previous'
           New-Item -ItemType Directory -Force -Path $prev | Out-Null
           # OPS69: the new release name first (Crsp-<version>-win-x64.msi), the old one second, for one transition release.
           foreach ($tag in 'v0.1.1', 'v0.1.2') {
@@ -118,12 +118,12 @@ jobs:
           }
           $prevMsi = Get-ChildItem $prev -Filter '*.msi' | Select-Object -First 1
           if (-not $prevMsi) { throw 'no previous release MSI could be downloaded' }
-          ./installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.9.0 -Out installer/out/v0.9.0
-          ./installer/upgrade-test.ps1 `
+          ./installer/controller/build.ps1 -Arch x64 -Exe installer/controller/out/crsp.exe -Version 0.9.0 -Out installer/controller/out/v0.9.0
+          ./installer/controller/upgrade-test.ps1 `
             -PreviousMsi $prevMsi.FullName `
-            -NewMsi installer/out/v0.9.0/crsp-windows-amd64.msi `
+            -NewMsi installer/controller/out/v0.9.0/crsp-windows-amd64.msi `
             -MaxSeconds 60 `
-            -LogDir installer/out/logs
+            -LogDir installer/controller/out/logs
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ always() }}
@@ -131,6 +131,6 @@ jobs:
           # Stable name, no version or run number (artifact-prune.yml keeps the newest).
           name: installer-windows-${{ matrix.goarch }}
           path: |
-            installer/out/v0.1.0/crsp-windows-${{ matrix.goarch }}.msi
-            installer/out/logs/*.log
+            installer/controller/out/v0.1.0/crsp-windows-${{ matrix.goarch }}.msi
+            installer/controller/out/logs/*.log
           if-no-files-found: ignore
