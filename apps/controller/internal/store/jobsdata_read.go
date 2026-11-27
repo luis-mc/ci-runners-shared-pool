@@ -235,7 +235,7 @@ func (s *JobsStore) GetRun(ctx context.Context, runID int64, attempt int) (jobsd
 		query += ` AND run_attempt = ?`
 		args = append(args, attempt)
 	}
-	r, err := scanRunRow(s.db.QueryRowContext(ctx, query+` ORDER BY run_attempt DESC LIMIT 1`, args...))
+	r, err := scanRunRow(s.rdb.QueryRowContext(ctx, query+` ORDER BY run_attempt DESC LIMIT 1`, args...))
 	if errors.Is(err, sql.ErrNoRows) {
 		return jobsdata.RunDetail{}, false, nil
 	}
@@ -251,7 +251,7 @@ func (s *JobsStore) GetRun(ctx context.Context, runID int64, attempt int) (jobsd
 	for _, a := range attempts {
 		d.Attempts = append(d.Attempts, int(a))
 	}
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM jobs WHERE repository_id = ? AND run_id = ? AND run_attempt = ?
+	rows, err := s.rdb.QueryContext(ctx, `SELECT * FROM jobs WHERE repository_id = ? AND run_id = ? AND run_attempt = ?
 		ORDER BY COALESCE(NULLIF(started_at, ''), created_at), id`, r.RepositoryID, r.RunID, r.RunAttempt)
 	if err != nil {
 		return d, false, fmt.Errorf("run jobs: %w", err)
@@ -429,7 +429,7 @@ func (s *JobsStore) GetJob(ctx context.Context, id int64) (jobsdata.JobDetail, b
 func (s *JobsStore) History(ctx context.Context, repositoryID int64, jobKey string, n int) ([]jobsdata.HistoryPoint, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
-	rows, err := s.db.QueryContext(ctx, `SELECT started_at, completed_at, result, branch, COALESCE(NULLIF(machine_name, ''), machine_id)
+	rows, err := s.rdb.QueryContext(ctx, `SELECT started_at, completed_at, result, branch, COALESCE(NULLIF(machine_name, ''), machine_id)
 		FROM jobs WHERE repository_id = ? AND job_ident = ? AND state = 'done' AND completed_at <> ''
 		ORDER BY completed_at DESC, id DESC LIMIT ?`, repositoryID, jobKey, n)
 	if err != nil {
@@ -558,7 +558,7 @@ func (s *JobsStore) Groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata
 	default:
 		return nil, fmt.Errorf("groups: unknown grouping %q", by)
 	}
-	rows, err := s.db.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, machine_name, state, result, created_at, started_at, completed_at, light
+	rows, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, machine_name, state, result, created_at, started_at, completed_at, light
 		FROM jobs WHERE `+k1+` <> '' AND (state <> 'done' OR completed_at >= ?) ORDER BY completed_at, id`, fmtTime(time.Now().Add(-groupWindow)))
 	if err != nil {
 		return nil, fmt.Errorf("groups: %w", err)
@@ -669,7 +669,7 @@ func (s *JobsStore) Stats(ctx context.Context, days int, f jobsdata.JobFilter) (
 	df.State = jobsdata.Done
 	where, args := jobWhere(df)
 	where += " AND completed_at >= ?"
-	rows, err := s.db.QueryContext(ctx, `SELECT id, result, created_at, started_at, completed_at, fc_lo_ms, fc_mid_ms, fc_hi_ms, fc_basis
+	rows, err := s.rdb.QueryContext(ctx, `SELECT id, result, created_at, started_at, completed_at, fc_lo_ms, fc_mid_ms, fc_hi_ms, fc_basis
 		FROM jobs`+where+` ORDER BY completed_at, id`, append(args, fmtTime(first))...)
 	if err != nil {
 		return st, fmt.Errorf("stats days: %w", err)
@@ -721,7 +721,7 @@ func (s *JobsStore) Stats(ctx context.Context, days int, f jobsdata.JobFilter) (
 	} else {
 		where += " AND created_at >= ?"
 	}
-	rows, err = s.db.QueryContext(ctx, `SELECT created_at FROM jobs`+where, append(args, fmtTime(first))...)
+	rows, err = s.rdb.QueryContext(ctx, `SELECT created_at FROM jobs`+where, append(args, fmtTime(first))...)
 	if err != nil {
 		return st, fmt.Errorf("stats hours: %w", err)
 	}
