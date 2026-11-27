@@ -152,7 +152,7 @@ project_gates() {
 
   if command -v go >/dev/null 2>&1; then
     step "gofmt"
-    unformatted=$(gofmt -l . 2>/dev/null | grep -v '^internal/gen/' || true)
+    unformatted=$(gofmt -l . 2>/dev/null | grep -v '^apps/controller/internal/gen/' || true)
     if [ -n "$unformatted" ]; then
       echo "gofmt: these files are not formatted:" >&2
       echo "$unformatted" | sed 's/^/    /' >&2

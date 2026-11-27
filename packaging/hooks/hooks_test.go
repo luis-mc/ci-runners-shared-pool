@@ -162,7 +162,7 @@ func buildCrsp(t *testing.T) string {
 	if runtime.GOOS == "windows" {
 		bin += ".exe"
 	}
-	cmd := exec.CommandContext(t.Context(), "go", "build", "-o", bin, "../../cmd/crsp")
+	cmd := exec.CommandContext(t.Context(), "go", "build", "-o", bin, "../../apps/controller/cmd/crsp")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("go build: %v\n%s", err, out)
 	}

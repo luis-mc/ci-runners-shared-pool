@@ -1,7 +1,7 @@
 # oapi-codegen config for the Go client the CLI uses (cli R5.2).
 # Run from the repository root: task codegen:api
 package: client
-output: internal/api/client/client.gen.go
+output: apps/controller/internal/api/client/client.gen.go
 generate:
   models: true
   client: true

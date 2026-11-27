@@ -21,7 +21,7 @@ syntax = "proto3";
 // to a log or the database in clear (R6.2). A token travels once, for one step.
 package agent.v1;
 
-option go_package = "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1;agentv1";
+option go_package = "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/gen/agent/v1;agentv1";
 
 // PROTOCOL_VERSION is the minor version of agent.v1 this file describes.
 // Version 1 is milestone 1.

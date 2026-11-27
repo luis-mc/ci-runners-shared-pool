@@ -3,9 +3,9 @@
 docs/_site/
 node_modules/
 dist/
-!/internal/webui/dist/
-/internal/webui/dist/*
-!/internal/webui/dist/placeholder.html
+!/apps/controller/internal/webui/dist/
+/apps/controller/internal/webui/dist/*
+!/apps/controller/internal/webui/dist/placeholder.html
 bin/
 coverage/
 test-results/

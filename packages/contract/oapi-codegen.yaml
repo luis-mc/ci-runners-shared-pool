@@ -1,6 +1,6 @@
 # oapi-codegen config. Run from the repository root: task codegen:api
 package: gen
-output: internal/api/gen/api.gen.go
+output: apps/controller/internal/api/gen/api.gen.go
 generate:
   models: true
   std-http-server: true
