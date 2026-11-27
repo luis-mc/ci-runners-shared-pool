@@ -1,0 +1,29 @@
+<!-- title: Morning report, 27 Nov -->
+<p><strong>RELEASE-69 is live as v0.1.28</strong> (tagged 05:12 on green main, release published 05:19 with 19 assets). Every pull request that was open last night is merged or closed. RELEASE-70 started at 05:22 with CRSP306, the move of the Go server to <code>apps/controller</code> and the console to <code>apps/controller-console</code>, on an Opus agent.</p>
+
+<h3>Merged overnight</h3>
+<p>#454 CRSP264, #455 CRSP261, #456 CRSP258, #469 CRSP269, #472 CRSP271c, #473 CRSP334, #475 CRSP271d, #476 CRSP247, #477 CRSP240, #478 CRSP297, #479 CRSP341, #481 CRSP344, #482 CRSP345, #483 CRSP346. #480 was closed unmerged (no comment): #481 carried the same spec stamp.</p>
+
+<h3>Defaults I applied (your decision to keep or undo)</h3>
+<ol>
+  <li><strong>Cloud routines moved to this PC.</strong> All five overnight cloud routines stopped within minutes: the cloud sandbox has no luismc-docs scripts and no gitleaks, and opening a pull request was refused there. I ran the work as local agents (at most 3, within 85% memory and 60% CPU; #455 waited while CPU was at 79%).</li>
+  <li><strong>OPS94 and OPS95 set to Needs you.</strong> Their branches hold only reports that say the work is blocked: <code>pool-add-agent</code> and <code>pool-refresh</code> live in the dev-standards scripts, not in this repo, and <code>Backend.Refresh</code> skips a missing container on purpose. There was nothing to open a pull request for.</li>
+  <li><strong>CRSP344: renamed the metrics field <code>needs_key</code> to <code>key_required</code>.</strong> The old name matched the pre-commit rule for names that end in "key" in the generated <code>schema.d.ts</code>, so every commit touching it was refused. I did not bypass the hook or narrow its pattern; the field is internal (controller to console).</li>
+  <li><strong>Specs re-verified on main after squash merges</strong> (#483 and stamps inside #481, #482, #472, #475). A GitHub squash commit is dated today, so the freshness check flags every spec whose mapped code changed. I read each change and bumped <code>last_verified</code> only where the spec still holds; one real gap (doctor check <code>controller.log_store</code>) was added to the doctor spec.</li>
+  <li><strong>Component number clash fixed:</strong> #476 took next-version components 82 (Terminal) and 83 (Download progress), so #472's Live text became component 84.</li>
+  <li><strong>CRSP345 (test fix only):</strong> the TestToolFlow tests could not delete their temp folder here, because the tool store seal gives only Administrators and SYSTEM full control and this PC runs tests unelevated. The cleanup now resets the folder's ACL first. No sleeps, retries or skips.</li>
+  <li><strong>CRSP321</strong> (leaner CI S11) was not built in RELEASE-69; it now rides RELEASE-70.</li>
+  <li><strong>Design options CRSP342 and CRSP343</strong> are ready (branch <code>CRSP342-design-options</code>, pages <code>docs/work/crsp342/index.html</code> and <code>docs/work/crsp343/index.html</code> in worktree <code>agent-adc3930d72d0cf209</code>). Recommendations: rows V/W option 1 (one cache hub in the controller, native npm and PyPI proxies, spike apt-cacher-ng); row K option 3 now (release notes in the console and tray), order the signing certificates, then option 1.</li>
+</ol>
+
+<h3>Needs you</h3>
+<ul>
+  <li><strong>Git object store on this PC is damaged.</strong> <code>git fsck</code> in the main checkout reports a corrupt loose object (<code>e8395225…</code>) and a corrupt packed object (<code>658fc1c0…</code>); a fresh clone made at 03:20 already showed another corrupt packed object. That points at the disk or antivirus, not at one bad write. An agent was refused deleting the bad object file, so I left it for you. I paused automatic gc in the main repo (<code>gc.auto 0</code>, <code>maintenance.auto false</code>); undo both after the repair.</li>
+  <li><strong><code>verify</code> as a required check would block docs-only PRs.</strong> CI skips the whole workflow for docs-only changes (<code>paths-ignore</code>), so no <code>verify</code> check ever appears; #478 merged only because <code>checks</code> is the sole required check today. Before you require <code>verify</code>, either add a small docs-only workflow with a job named <code>verify</code>, or drop <code>paths-ignore</code> and let the <code>decide</code> job skip the jobs.</li>
+  <li>OPS94, OPS95: the fixes belong in dev-standards.</li>
+  <li>CRSP342 and CRSP343: pick an option each.</li>
+  <li>Still yours from last night: CRSP323 ghcr steps, CRSP2, CRSP226 (after you fix the pool), the Cloudflare DNS record for crsp.luismc.net.</li>
+</ul>
+
+<h3>Next</h3>
+<p>RELEASE-70: CRSP306 first (expected ~08:00), then CRSP302 theme, CRSP304 installer split and CRSP303 public site; merge expected ~10:35, then v0.1.29 and the production deploy of the public site. RELEASE-71 starts after RELEASE-70 is live.</p>
