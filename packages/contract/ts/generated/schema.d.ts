@@ -6945,9 +6945,14 @@ export interface components {
             total_cap_minutes?: number;
             /**
              * Format: double
-             * @description Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2) does not enforce it.
+             * @description Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2 without a price per minute) does not enforce it.
              */
             budget_usd?: number;
+            /**
+             * Format: double
+             * @description Price in US dollars of one minute at this target (R5.115, CRSP372); 0 or absent means none. A set price is what the budget counts at this target. GitHub-hosted without a price uses the savings rate table; AWS EC2 needs a price for its budget to be enforced.
+             */
+            price_usd_per_minute?: number;
             /** @description The systems this target serves; empty or absent means all. */
             systems?: ("linux" | "windows" | "macos")[];
         };

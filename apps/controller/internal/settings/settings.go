@@ -426,6 +426,9 @@ const (
 // MaxOverflowCapMinutes bounds a target's monthly cap per repository.
 const MaxOverflowCapMinutes = 1000000
 
+// MaxOverflowPriceUSD bounds a target's price per minute.
+const MaxOverflowPriceUSD = 1000
+
 // MaxOverflowBudgetUSD bounds a target's monthly money budget.
 const MaxOverflowBudgetUSD = 1000000
 
@@ -449,6 +452,11 @@ type OverflowTarget struct {
 	// this target may cost; 0 means no budget (R5.115). It is checked beside
 	// the minute caps: a target is used only while all of them have room.
 	BudgetUSD float64
+	// PriceUSDPerMinute is what one minute at this target costs, in US dollars
+	// (R5.115, CRSP372); 0 means no price of its own. A set price counts the
+	// budget at any target; github_hosted without one uses the savings rate
+	// table, aws_ec2 without one has no rate and its budget is not enforced.
+	PriceUSDPerMinute float64
 	// Systems are the operating systems this target serves ("linux", "windows",
 	// "macos"); empty means all.
 	Systems []string
@@ -481,6 +489,9 @@ func validOverflowTargets(v []OverflowTarget) error {
 		}
 		if math.IsNaN(t.BudgetUSD) || t.BudgetUSD < 0 || t.BudgetUSD > MaxOverflowBudgetUSD {
 			return fmt.Errorf("the budget of %s must be from 0 to %d dollars", t.Kind, MaxOverflowBudgetUSD)
+		}
+		if math.IsNaN(t.PriceUSDPerMinute) || t.PriceUSDPerMinute < 0 || t.PriceUSDPerMinute > MaxOverflowPriceUSD {
+			return fmt.Errorf("the price per minute of %s must be from 0 to %d dollars", t.Kind, MaxOverflowPriceUSD)
 		}
 		for _, s := range t.Systems {
 			if !targetSystems[s] {

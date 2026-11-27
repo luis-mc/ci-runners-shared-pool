@@ -326,7 +326,7 @@ func (s *server) RestoreBackup(ctx context.Context, req gen.RestoreBackupRequest
 func toGenTargets(in []settings.OverflowTarget) *[]gen.OverflowTarget {
 	out := make([]gen.OverflowTarget, 0, len(in))
 	for _, t := range in {
-		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes, TotalCapMinutes: &t.TotalCapMinutes, BudgetUsd: &t.BudgetUSD}
+		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes, TotalCapMinutes: &t.TotalCapMinutes, BudgetUsd: &t.BudgetUSD, PriceUsdPerMinute: &t.PriceUSDPerMinute}
 		systems := make([]gen.OverflowTargetSystems, 0, len(t.Systems))
 		for _, s := range t.Systems {
 			systems = append(systems, gen.OverflowTargetSystems(s))
@@ -355,6 +355,9 @@ func fromGenTargets(in *[]gen.OverflowTarget) *[]settings.OverflowTarget {
 		}
 		if g.BudgetUsd != nil {
 			t.BudgetUSD = *g.BudgetUsd
+		}
+		if g.PriceUsdPerMinute != nil {
+			t.PriceUSDPerMinute = *g.PriceUsdPerMinute
 		}
 		if g.Systems != nil {
 			for _, s := range *g.Systems {

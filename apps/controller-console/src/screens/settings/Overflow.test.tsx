@@ -130,6 +130,26 @@ describe('cloud overflow now and minutes used (R5.115)', () => {
     expect(await screen.findByText('$3.36')).toBeTruthy();
     expect(screen.getByText('$20.00')).toBeTruthy();
     expect(screen.getByLabelText(/Monthly budget of GitHub-hosted runners/)).toBeTruthy();
+    expect(
+      screen.getByLabelText('Price per minute of GitHub-hosted runners (USD)'),
+    ).toBeTruthy();
+    expect(
+      screen.getByLabelText('Price per minute of AWS EC2 runners (USD)'),
+    ).toBeTruthy();
+  });
+
+  it('keeps the price per minute and checks its range', () => {
+    const t = completeTargets([
+      { kind: 'aws_ec2', enabled: true, label: 'x', price_usd_per_minute: 0.005 },
+    ]);
+    expect(t[0]?.price_usd_per_minute).toBe(0.005);
+    expect(t[1]?.price_usd_per_minute).toBe(0);
+    expect(overflowProblems(t)).toEqual([]);
+    expect(
+      overflowProblems([
+        { kind: 'aws_ec2', enabled: true, label: 'x', price_usd_per_minute: 2000 },
+      ]),
+    ).toEqual(['Price per minute of AWS EC2 runners must be from 0 to 1000 dollars.']);
   });
 
   it('says a target with no rate does not enforce its budget', () => {

@@ -2,6 +2,7 @@ package repos
 
 import (
 	"context"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github/fake"
 	"testing"
 	"time"
 )
@@ -187,5 +188,113 @@ func TestOverflowBudgetNotEnforcedWithoutRate(t *testing.T) { // R5.115
 	runFallback(t, e, 2)
 	if got := linuxVar(e); got != `["ec2-pool-4x"]` {
 		t.Fatalf("a target with no rate must still be used: %s", got)
+	}
+}
+
+// tableRate is a rate table: windows costs 0.016 and linux 0.008 a minute at GitHub-hosted; aws_ec2 has none.
+func tableRate(_ context.Context, kind, os string) (float64, bool) {
+	if kind != "github_hosted" {
+		return 0, false
+	}
+	if os == "windows" {
+		return 0.016, true
+	}
+	return 0.008, true
+}
+
+func TestOverflowPriceOverridesTable(t *testing.T) { // R5.115, CRSP372
+	cases := []struct {
+		name   string
+		target OverflowTarget
+		kind   string
+		os     string
+		want   float64
+		ok     bool
+	}{
+		{"hosted, no price: the table", OverflowTarget{Kind: "github_hosted"}, "github_hosted", "windows", 0.016, true},
+		{"hosted, price set: the price beats the table", OverflowTarget{Kind: "github_hosted", PriceUSDPerMinute: 0.02}, "github_hosted", "linux", 0.02, true},
+		{"ec2, no price: no rate", OverflowTarget{Kind: "aws_ec2", Label: "e"}, "aws_ec2", "linux", 0, false},
+		{"ec2, price set: priced", OverflowTarget{Kind: "aws_ec2", Label: "e", PriceUSDPerMinute: 0.005}, "aws_ec2", "linux", 0.005, true},
+		{"a price of another target is not used", OverflowTarget{Kind: "aws_ec2", Label: "e", PriceUSDPerMinute: 0.005}, "github_hosted", "linux", 0.008, true},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			e, _ := targetsEnv(t, c.target)
+			e.svc.cfg.Rate = tableRate
+			got, ok := e.svc.rate(context.Background(), c.kind, c.os)
+			if got != c.want || ok != c.ok {
+				t.Fatalf("rate = %v, %v; want %v, %v", got, ok, c.want, c.ok)
+			}
+		})
+	}
+}
+
+func TestOverflowEC2BudgetEnforcedWithPrice(t *testing.T) { // R5.115, CRSP372
+	e, _ := targetsEnv(t,
+		OverflowTarget{Kind: "aws_ec2", Label: "ec2-pool-4x", BudgetUSD: 1, PriceUSDPerMinute: 0.01},
+		OverflowTarget{Kind: "github_hosted"})
+	e.svc.cfg.Rate = tableRate
+	ctx := context.Background()
+	runFallback(t, e, 2)
+	if got := linuxVar(e); got != `["ec2-pool-4x"]` {
+		t.Fatalf("start: %s", got)
+	}
+	// The EC2 money used reaches its budget: with a price the budget is enforced, so the next target takes over.
+	if err := e.svc.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, usdKey(e.svc.cfg.Now(), "aws_ec2"), 1_000_000); err != nil {
+		t.Fatal(err)
+	}
+	runFallback(t, e, 1)
+	if got := linuxVar(e); got != `["ubuntu-latest"]` {
+		t.Fatalf("not retargeted: %s", got)
+	}
+	u, err := e.svc.OverflowUsage(ctx, e.svc.cfg.Now())
+	if err != nil || len(u) != 2 || !u[0].Priced || u[0].UsedUSD != 1 {
+		t.Fatalf("usage %+v %v", u, err)
+	}
+}
+
+// usedUSD runs a hosted job for three minutes and returns the money counted for github_hosted.
+func usedUSD(t *testing.T, e *env, job fake.Job) float64 {
+	t.Helper()
+	e.svc.cfg.Rate = tableRate
+	ctx := context.Background()
+	runFallback(t, e, 2)
+	e.fake.AddJob(job)
+	_ = e.svc.EvaluateFallback(ctx) // first sight of the job: nothing counted yet
+	e.advance(3 * time.Minute)
+	_ = e.svc.EvaluateFallback(ctx)
+	u, err := e.svc.OverflowUsage(ctx, e.svc.cfg.Now())
+	if err != nil || len(u) == 0 {
+		t.Fatalf("usage %+v %v", u, err)
+	}
+	return u[0].UsedUSD
+}
+
+func TestOverflowJobOSFromGitHubBeatsLabel(t *testing.T) { // R5.115, CRSP372
+	e, _ := targetsEnv(t, OverflowTarget{Kind: "github_hosted"})
+	// GitHub lists the job's runner as Windows; the label says nothing about it.
+	e.fake.AddRunner("alice/secret", fake.Runner{Name: "win-runner-1", OS: "Windows", Status: "online"})
+	got := usedUSD(t, e, fake.Job{ID: 7, RunID: 70, Repo: "alice/secret", Name: "build", Status: "in_progress", Event: "push",
+		Labels: []string{"ubuntu-latest"}, RunnerName: "win-runner-1"})
+	if want := 3 * 0.016; got < want-1e-6 || got > want+1e-6 {
+		t.Fatalf("used %v dollars, want %v (the OS GitHub reports, windows)", got, want)
+	}
+}
+
+func TestOverflowJobOSFallsBackToLabel(t *testing.T) { // R5.115, CRSP372
+	// GitHub reports no OS for the runner (a standard hosted runner is not in the list): the label guess is used.
+	for name, job := range map[string]fake.Job{
+		"no runner name":       {Labels: []string{"windows-latest"}},
+		"runner not listed":    {Labels: []string{"windows-latest"}, RunnerName: "GitHub Actions 1000001"},
+		"listed without an OS": {Labels: []string{"windows-latest"}, RunnerName: "no-os"},
+	} {
+		t.Run(name, func(t *testing.T) {
+			e, _ := targetsEnv(t, OverflowTarget{Kind: "github_hosted"})
+			e.fake.AddRunner("alice/secret", fake.Runner{Name: "no-os", Status: "online"})
+			job.ID, job.RunID, job.Repo, job.Name, job.Status, job.Event = 7, 70, "alice/secret", "build", "in_progress", "push"
+			if got, want := usedUSD(t, e, job), 3*0.016; got < want-1e-6 || got > want+1e-6 {
+				t.Fatalf("used %v dollars, want %v (the label guess, windows)", got, want)
+			}
+		})
 	}
 }

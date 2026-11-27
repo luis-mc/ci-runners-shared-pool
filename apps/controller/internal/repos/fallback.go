@@ -382,6 +382,7 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 	}
 	hosted := s.labelKinds(pol)
 	now := s.cfg.Now()
+	var runnerOS runnerOSLookup
 	var add int64
 	perKind := map[string]int64{}
 	micro := map[string]int64{}
@@ -403,7 +404,7 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 		if d := now.Sub(last); d > 0 {
 			add += int64(d.Seconds())
 			perKind[kind] += int64(d.Seconds())
-			if rate, ok := s.rate(ctx, kind, osOfLabels(j.Labels)); ok {
+			if rate, ok := s.rate(ctx, kind, s.jobOS(ctx, r, j, &runnerOS)); ok {
 				micro[kind] += int64(d.Seconds() * rate / 60 * 1e6)
 			}
 		}
@@ -449,15 +450,77 @@ func totalKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind
 // integers, so the money is counted in whole millionths.
 func usdKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind + "#usd" }
 
-// rate is the price of a minute of a target's kind on an OS, from the savings rate table.
+// rate is the price of a minute of a target's kind on an OS: the target's own
+// price per minute when the owner set one (R5.115, CRSP372), else the savings
+// rate table. false means no price, so the target's budget is not enforced.
 func (s *Service) rate(ctx context.Context, kind, os string) (float64, bool) {
+	for _, t := range s.targets() {
+		if t.Kind == kind && t.PriceUSDPerMinute > 0 {
+			return t.PriceUSDPerMinute, true
+		}
+	}
 	if s.cfg.Rate == nil {
 		return 0, false
 	}
 	return s.cfg.Rate(ctx, kind, os)
 }
 
-// osOfLabels reads the OS a hosted job runs on from its labels: windows and macos by name, else linux.
+// runnerLister is the part of the GitHub client that lists the runners GitHub
+// knows of a repository, with the OS each one reports.
+type runnerLister interface {
+	ListRunners(ctx context.Context, installationID int64, scope github.RunnerScope) ([]github.Runner, error)
+}
+
+// runnerOSLookup reads a repository's runner list at most once per pass.
+type runnerOSLookup struct {
+	done bool
+	byID map[string]string
+}
+
+// jobOS is the OS a counted job ran on, for pricing (CRSP372). The OS GitHub
+// reports for the job's runner comes first: the runner list of the repository
+// names the OS of each runner (self-hosted, such as AWS EC2 runners), matched by
+// the runner name on the job. GitHub's job object carries no OS of its own, and
+// a standard GitHub-hosted runner is not in that list, so when GitHub reports
+// none the OS is guessed from the job's labels (osOfLabels). That guess is the
+// fallback only.
+func (s *Service) jobOS(ctx context.Context, r Repository, j github.Job, lk *runnerOSLookup) string {
+	if name := strings.ToLower(strings.TrimSpace(j.RunnerName)); name != "" {
+		if !lk.done {
+			lk.done = true
+			if rl, ok := s.cfg.GitHub.(runnerLister); ok {
+				if runners, err := rl.ListRunners(github.Background(ctx), r.InstallationID, github.RunnerScope{Owner: r.Owner, Repo: r.Name}); err == nil {
+					lk.byID = map[string]string{}
+					for _, rn := range runners {
+						if os := normalizeOS(rn.OS); os != "" {
+							lk.byID[strings.ToLower(rn.Name)] = os
+						}
+					}
+				}
+			}
+		}
+		if os := lk.byID[name]; os != "" {
+			return os
+		}
+	}
+	return osOfLabels(j.Labels)
+}
+
+// normalizeOS maps the OS GitHub reports ("Linux", "Windows", "macOS") to the
+// names used here; empty for one it does not know.
+func normalizeOS(v string) string {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "linux":
+		return "linux"
+	case "windows":
+		return "windows"
+	case "macos", "darwin":
+		return "macos"
+	}
+	return ""
+}
+
+// osOfLabels is the fallback guess of the OS a hosted job runs on, from its labels: windows and macos by name, else linux.
 func osOfLabels(labels []string) string {
 	for _, l := range labels {
 		l = strings.ToLower(l)
@@ -548,7 +611,10 @@ type OverflowTarget struct {
 	TotalCapMinutes int
 	// BudgetUSD is the monthly money across all repositories; 0 is no budget.
 	BudgetUSD float64
-	Systems   []string
+	// PriceUSDPerMinute is the owner's price of a minute at this target; 0 means
+	// none: GitHub-hosted then uses the rate table, AWS EC2 has no rate.
+	PriceUSDPerMinute float64
+	Systems           []string
 }
 
 func (s *Service) targets() []OverflowTarget {

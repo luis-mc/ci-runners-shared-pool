@@ -7892,7 +7892,7 @@ type OrgPoolSet struct {
 
 // OverflowTarget defines model for OverflowTarget.
 type OverflowTarget struct {
-	// BudgetUsd Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2) does not enforce it.
+	// BudgetUsd Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2 without a price per minute) does not enforce it.
 	BudgetUsd *float64 `json:"budget_usd,omitempty"`
 
 	// CapMinutes Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried.
@@ -7902,6 +7902,9 @@ type OverflowTarget struct {
 
 	// Label The runner label jobs run on at this target. Empty is allowed for github_hosted only (the ubuntu-latest, windows-latest and macos-latest defaults); aws_ec2 needs one while it is on.
 	Label *string `json:"label,omitempty"`
+
+	// PriceUsdPerMinute Price in US dollars of one minute at this target (R5.115, CRSP372); 0 or absent means none. A set price is what the budget counts at this target. GitHub-hosted without a price uses the savings rate table; AWS EC2 needs a price for its budget to be enforced.
+	PriceUsdPerMinute *float64 `json:"price_usd_per_minute,omitempty"`
 
 	// Systems The systems this target serves; empty or absent means all.
 	Systems *[]OverflowTargetSystems `json:"systems,omitempty"`

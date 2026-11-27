@@ -293,14 +293,14 @@ func TestOverflowTargets(t *testing.T) { // R5.114
 		t.Fatalf("default %v", got.OverflowTargets)
 	}
 	ok := []OverflowTarget{
-		{Kind: TargetGitHubHosted, Enabled: true, CapMinutes: 2000, TotalCapMinutes: 5000, BudgetUSD: 25.5},
+		{Kind: TargetGitHubHosted, Enabled: true, CapMinutes: 2000, TotalCapMinutes: 5000, BudgetUSD: 25.5, PriceUSDPerMinute: 0.012},
 		{Kind: TargetAWSEC2, Enabled: true, Label: " ec2-pool-4x ", Systems: []string{"linux"}},
 	}
 	if _, err := s.Update(ctx, owner, Patch{OverflowTargets: &ok}); err != nil {
 		t.Fatal(err)
 	}
 	got, _ := s.Get(ctx)
-	if len(got.OverflowTargets) != 2 || got.OverflowTargets[0].Kind != TargetGitHubHosted || got.OverflowTargets[1].Label != "ec2-pool-4x" || got.OverflowTargets[0].TotalCapMinutes != 5000 || got.OverflowTargets[0].BudgetUSD != 25.5 {
+	if len(got.OverflowTargets) != 2 || got.OverflowTargets[0].Kind != TargetGitHubHosted || got.OverflowTargets[1].Label != "ec2-pool-4x" || got.OverflowTargets[0].TotalCapMinutes != 5000 || got.OverflowTargets[0].BudgetUSD != 25.5 || got.OverflowTargets[0].PriceUSDPerMinute != 0.012 {
 		t.Fatalf("saved %+v", got.OverflowTargets)
 	}
 	bad := [][]OverflowTarget{
@@ -311,6 +311,8 @@ func TestOverflowTargets(t *testing.T) { // R5.114
 		{{Kind: TargetGitHubHosted, TotalCapMinutes: -1}},
 		{{Kind: TargetGitHubHosted, TotalCapMinutes: MaxOverflowCapMinutes + 1}},
 		{{Kind: TargetGitHubHosted, BudgetUSD: -1}},
+		{{Kind: TargetGitHubHosted, PriceUSDPerMinute: -0.5}},
+		{{Kind: TargetGitHubHosted, PriceUSDPerMinute: MaxOverflowPriceUSD + 1}},
 		{{Kind: TargetGitHubHosted, BudgetUSD: MaxOverflowBudgetUSD + 1}},
 		{{Kind: TargetAWSEC2, Label: "a b"}},
 		{{Kind: TargetGitHubHosted, Systems: []string{"beos"}}},

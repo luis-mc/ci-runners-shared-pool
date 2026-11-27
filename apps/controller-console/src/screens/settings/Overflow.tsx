@@ -57,6 +57,7 @@ export function completeTargets(saved: readonly Target[] | undefined): Target[] 
     cap_minutes: t.cap_minutes ?? 0,
     total_cap_minutes: t.total_cap_minutes ?? 0,
     budget_usd: t.budget_usd ?? 0,
+    price_usd_per_minute: t.price_usd_per_minute ?? 0,
     systems: t.systems ?? [],
   }));
 }
@@ -84,6 +85,9 @@ export function overflowProblems(targets: readonly Target[]): string[] {
     const budget = t.budget_usd ?? 0;
     if (!Number.isFinite(budget) || budget < 0 || budget > 1000000)
       out.push(`Budget of ${NAME[t.kind]} must be from 0 to 1000000 dollars.`);
+    const price = t.price_usd_per_minute ?? 0;
+    if (!Number.isFinite(price) || price < 0 || price > 1000)
+      out.push(`Price per minute of ${NAME[t.kind]} must be from 0 to 1000 dollars.`);
   }
   return out;
 }
@@ -282,6 +286,7 @@ function OverflowForm({
             'cap_minutes',
             'total_cap_minutes',
             'budget_usd',
+            'price_usd_per_minute',
             'systems',
           ] as const
         ).filter((f) => changedField(t, f)).length,
@@ -382,8 +387,8 @@ function OverflowForm({
                 label={`Monthly budget of ${NAME[t.kind]}`}
                 help={
                   t.kind === 'aws_ec2'
-                    ? 'In dollars. 0 means no budget. AWS EC2 runners have no rate here, so this budget is not enforced.'
-                    : 'In dollars. 0 means no budget. Counted over all repositories together, at the rates of Savings. When it is used, the next target is tried.'
+                    ? 'In dollars. 0 means no budget. The budget is enforced only when you set a price per minute for AWS EC2 runners.'
+                    : 'In dollars. 0 means no budget. Counted over all repositories together, at the price per minute below. When it is used, the next target is tried.'
                 }
                 value={t.budget_usd ?? 0}
                 changed={changedField(t, 'budget_usd')}
@@ -392,6 +397,21 @@ function OverflowForm({
                 max={1000000}
                 decimals={2}
                 onChange={(v) => change(t.kind, { budget_usd: v })}
+              />
+              <NumberField
+                label={`Price per minute of ${NAME[t.kind]} (USD)`}
+                help={
+                  t.kind === 'aws_ec2'
+                    ? 'In dollars. 0 means no price, so the budget is not enforced. Set what a minute of your EC2 runners costs.'
+                    : 'In dollars. 0 means the rate of Savings for the system of the job, at the standard size.'
+                }
+                value={t.price_usd_per_minute ?? 0}
+                changed={changedField(t, 'price_usd_per_minute')}
+                unit=" USD"
+                min={0}
+                max={1000}
+                decimals={4}
+                onChange={(v) => change(t.kind, { price_usd_per_minute: v })}
               />
             </FieldGrid>
             {SYSTEMS.map((s) => (
