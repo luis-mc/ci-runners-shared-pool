@@ -154,7 +154,7 @@ func Register(mux *http.ServeMux, opts Options) {
 	if opts.Logger == nil {
 		opts.Logger = slog.Default()
 	}
-	var httpMW []gen.MiddlewareFunc
+	httpMW := []gen.MiddlewareFunc{transportMW}
 	authn := opts.Authn
 	if opts.GitHub != nil {
 		httpMW = append(httpMW, opts.GitHub.HTTPMiddleware())
