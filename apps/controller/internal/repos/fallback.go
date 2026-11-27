@@ -49,6 +49,9 @@ type Routing struct {
 	OSes []string
 	// UsedMinutes are the fallback minutes counted this month.
 	UsedMinutes int
+	// Target is the overflow target in use now ("github_hosted", "aws_ec2"), empty
+	// when the jobs are not on a listed target (R5.115).
+	Target string
 }
 
 type fallbackState struct {
@@ -418,8 +421,37 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 		if err := s.cfg.Store.AddFallbackSeconds(ctx, r.ID, monthKey(now)+"#"+kind, sec); err != nil {
 			return err
 		}
+		if err := s.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, totalKey(now, kind), sec); err != nil {
+			return err
+		}
 	}
 	return s.cfg.Store.AddFallbackSeconds(ctx, r.ID, monthKey(now), add)
+}
+
+// totalRepoID holds the minutes of a target across all repositories: the same
+// fallback-seconds table, under repository 0 and the key "2026-11#github_hosted#total"
+// (R5.115). No repository has id 0.
+const totalRepoID int64 = 0
+
+func totalKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind + "#total" }
+
+// TargetUsage is the minutes a target took this month, all repositories together.
+type TargetUsage struct {
+	Kind        string
+	UsedMinutes int
+}
+
+// OverflowUsage is the minutes each enabled overflow target took in the month of at.
+func (s *Service) OverflowUsage(ctx context.Context, at time.Time) ([]TargetUsage, error) {
+	var out []TargetUsage
+	for _, t := range s.targets() {
+		sec, err := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, totalKey(at, t.Kind))
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, TargetUsage{Kind: t.Kind, UsedMinutes: int((sec + 59) / 60)})
+	}
+	return out, nil
 }
 
 // kindOther marks minutes on a label that belongs to no overflow target (a
@@ -467,7 +499,9 @@ type OverflowTarget struct {
 	Kind       string
 	Label      string
 	CapMinutes int
-	Systems    []string
+	// TotalCapMinutes is the monthly minutes across all repositories; 0 is no cap.
+	TotalCapMinutes int
+	Systems         []string
 }
 
 func (s *Service) targets() []OverflowTarget {
@@ -508,6 +542,15 @@ func (s *Service) pickTarget(ctx context.Context, r Repository, pol Policy, os s
 				return "", "", false, e
 			}
 			if sec >= int64(t.CapMinutes)*60 {
+				continue
+			}
+		}
+		if t.TotalCapMinutes > 0 {
+			sec, e := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, totalKey(s.cfg.Now(), t.Kind))
+			if e != nil {
+				return "", "", false, e
+			}
+			if sec >= int64(t.TotalCapMinutes)*60 {
 				continue
 			}
 		}
@@ -558,6 +601,7 @@ func (s *Service) routing(ctx context.Context, r Repository, pol Policy) (Routin
 	sort.Strings(hostedOS)
 	if len(hostedOS) > 0 {
 		out.Where, out.Why, out.OSes = WhereHosted, WhyFallbackOn, hostedOS
+		out.Target = s.targetInUse(r, pol, hostedOS)
 		return out, nil
 	}
 	if len(waitOS) == 0 {
@@ -577,6 +621,23 @@ func (s *Service) routing(ctx context.Context, r Repository, pol Policy) (Routin
 		out.Why = WhyGrace
 	}
 	return out, nil
+}
+
+// targetInUse is the kind of the target the first OS on fallback runs on.
+func (s *Service) targetInUse(r Repository, pol Policy, oses []string) string {
+	kinds := s.labelKinds(pol)
+	for _, os := range oses {
+		s.fb.mu.Lock()
+		l := s.fb.label[r.ID][os]
+		s.fb.mu.Unlock()
+		if l == "" {
+			l = s.hostedLabelFor(pol, os)
+		}
+		if k := kinds[strings.ToLower(l)]; k != "" && k != kindOther {
+			return k
+		}
+	}
+	return ""
 }
 
 // targetsUsedUp says whether a repository waits because past the grace time no

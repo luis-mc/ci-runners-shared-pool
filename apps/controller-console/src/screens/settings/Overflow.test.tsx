@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp, signedIn } from '../../testing/mock';
-import { completeTargets, overflowProblems } from './Overflow';
+import { completeTargets, overflowProblems, whereNow } from './Overflow';
 
 afterEach(cleanup);
 
@@ -62,5 +62,67 @@ describe('cloud overflow settings', () => {
       await screen.findByText('AWS EC2 runners need a label while they are on.'),
     ).toBeTruthy();
     expect(a.count('PATCH', '/api/v1/settings')).toBe(0);
+  });
+});
+
+describe('cloud overflow now and minutes used (R5.115)', () => {
+  const repo = (full: string, routing: object) =>
+    ({ id: 1, full_name: full, routing }) as never;
+
+  it('says where each repository on overflow goes', () => {
+    expect(
+      whereNow(repo('a/b', { where: 'crsp', why: 'machine_up', used_minutes: 0 })),
+    ).toBeUndefined();
+    expect(
+      whereNow(
+        repo('a/b', {
+          where: 'hosted',
+          why: 'fallback_on',
+          used_minutes: 1,
+          target: 'aws_ec2',
+        }),
+      )?.word,
+    ).toBe('AWS EC2 runners');
+    expect(
+      whereNow(repo('a/b', { where: 'waiting', why: 'cap_reached', used_minutes: 1 }))
+        ?.word,
+    ).toBe('Waiting, minutes used up');
+  });
+
+  it('shows the repositories on overflow, the minutes used and the total limit', async () => {
+    const a = signedIn()
+      .on('GET', '/api/v1/settings', {
+        overflow_targets: [
+          {
+            kind: 'github_hosted',
+            enabled: true,
+            total_cap_minutes: 500,
+            cap_minutes: 100,
+          },
+        ],
+        overflow_usage: [{ kind: 'github_hosted', used_minutes: 42 }],
+      })
+      .on('GET', '/api/v1/github/repositories', {
+        items: [
+          repo('acme/api', {
+            where: 'hosted',
+            why: 'fallback_on',
+            used_minutes: 3,
+            target: 'github_hosted',
+          }),
+          {
+            id: 2,
+            full_name: 'acme/web',
+            routing: { where: 'crsp', why: 'machine_up', used_minutes: 0 },
+          },
+        ],
+        stale: { stale: false },
+      });
+    renderApp(a, '/settings/repositories');
+    expect(await screen.findByText('acme/api')).toBeTruthy();
+    expect(screen.queryByText('acme/web')).toBeNull();
+    expect(await screen.findByText('42 min')).toBeTruthy();
+    expect(screen.getAllByText('500 min').length).toBeGreaterThan(0);
+    expect(screen.getByLabelText(/Total minutes of GitHub-hosted runners/)).toBeTruthy();
   });
 });

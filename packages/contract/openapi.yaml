@@ -7971,6 +7971,10 @@ components:
         used_minutes:
           type: integer
           description: Fallback minutes counted this month (UTC), best effort.
+        target:
+          type: string
+          enum: [github_hosted, aws_ec2]
+          description: The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
       example:
         where: hosted
         why: fallback_on
@@ -11291,12 +11295,27 @@ components:
           minimum: 0
           maximum: 1000000
           description: Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried.
+        total_cap_minutes:
+          type: integer
+          minimum: 0
+          maximum: 1000000
+          description: Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left.
         systems:
           type: array
           items:
             type: string
             enum: [linux, windows, macos]
           description: The systems this target serves; empty or absent means all.
+    OverflowUsage:
+      type: object
+      required: [kind, used_minutes]
+      properties:
+        kind:
+          type: string
+          enum: [github_hosted, aws_ec2]
+        used_minutes:
+          type: integer
+          description: Minutes this target took this month (UTC) across all repositories, best effort.
     RemoveRunnerLeftoversRequest:
       type: object
       required: [items]
@@ -11514,6 +11533,12 @@ components:
           items:
             $ref: '#/components/schemas/OverflowTarget'
           description: github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule.
+        overflow_usage:
+          type: array
+          readOnly: true
+          items:
+            $ref: '#/components/schemas/OverflowUsage'
+          description: github-integration R5.115. Read only. The minutes each enabled overflow target took this month across all repositories.
         auto_update:
           type: boolean
           description: operations R5.15. On by default. When on, a newer stable release installs by itself after a drain. When off, the console Review step asks first.

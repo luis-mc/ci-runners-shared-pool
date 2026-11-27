@@ -2001,7 +2001,11 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 | Order list | Overflow order; targets GitHub-hosted runners, AWS EC2 runners |
 | Target pane | Title: the target name. Checkbox: Use {target}. Field: Label of {target}. Help for GitHub-hosted runners: Leave it empty for ubuntu-latest, windows-latest and macos-latest. Help for AWS EC2 runners: The label your EC2 runners carry in the workflow. |
 | Minutes field | Minutes of {target} per repository and month ({n} min, 0 to 1000000). Help: 0 means no limit. When a repository has used them, the next target is tried. |
+| Total minutes field | Total minutes of {target} per month ({n} min, 0 to 1000000). Help: 0 means no limit. Counted over all repositories together. When they are used, the next target is tried. |
+| Minutes help, both limits | 0 means no limit. When a repository has used them, the next target is tried. A target is used only while both limits have minutes left. |
+| Where jobs go now | Pane: Where jobs go now. Table: Repository, Jobs go to, Why. Jobs go to: {target}, Cloud runners, Waiting, minutes used up, Waiting for a machine. Why: No crsp machine is up. / Every target has used its minutes. / Overflow has not started for this repository. Empty: No repository is on cloud overflow now. |
+| Minutes used | Pane: Minutes used this month. Table: Target, Used this month ({n} min), Total limit, Limit per repository ({n} min or No limit). Empty: No cloud target is on. |
 | System checkboxes | {target} serve Linux, {target} serve Windows, {target} serve macOS |
 | Saved | Cloud overflow saved. |
 | Save failed | Could not save. {reason} |
-| Refused | AWS EC2 runners need a label while they are on. The label of {target} must be one label of up to 100 characters, without spaces, commas or quotes. Minutes of {target} must be from 0 to 1000000. |
+| Refused | AWS EC2 runners need a label while they are on. The label of {target} must be one label of up to 100 characters, without spaces, commas or quotes. Minutes of {target} must be from 0 to 1000000. Total minutes of {target} must be from 0 to 1000000. |

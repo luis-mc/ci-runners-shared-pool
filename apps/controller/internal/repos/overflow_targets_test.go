@@ -93,3 +93,43 @@ func TestOverflowTargetsSystemFilter(t *testing.T) { // R5.114
 		t.Fatalf("policy label first: %s", l)
 	}
 }
+
+func TestOverflowTotalCapMovesToNextTarget(t *testing.T) { // R5.115
+	e, _ := targetsEnv(t,
+		OverflowTarget{Kind: "github_hosted", TotalCapMinutes: 50},
+		OverflowTarget{Kind: "aws_ec2", Label: "ec2-pool-4x"})
+	ctx := context.Background()
+	runFallback(t, e, 2)
+	if got := linuxVar(e); got != `["ubuntu-latest"]` {
+		t.Fatalf("start: %s", got)
+	}
+	rt, _ := e.svc.RoutingOf(ctx, 101)
+	if rt.Target != "github_hosted" {
+		t.Fatalf("target in use %q", rt.Target)
+	}
+	// Other repositories used up the total: this one moves on though its own cap is free.
+	if err := e.svc.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, totalKey(e.svc.cfg.Now(), "github_hosted"), 50*60); err != nil {
+		t.Fatal(err)
+	}
+	runFallback(t, e, 1)
+	if got := linuxVar(e); got != `["ec2-pool-4x"]` {
+		t.Fatalf("not retargeted: %s", got)
+	}
+	u, err := e.svc.OverflowUsage(ctx, e.svc.cfg.Now())
+	if err != nil || len(u) != 2 || u[0].UsedMinutes != 50 || u[1].UsedMinutes != 0 {
+		t.Fatalf("usage %+v %v", u, err)
+	}
+}
+
+func TestOverflowTotalCapAllUsedWaits(t *testing.T) { // R5.115
+	e, _ := targetsEnv(t, OverflowTarget{Kind: "github_hosted", TotalCapMinutes: 10})
+	ctx := context.Background()
+	if err := e.svc.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, totalKey(e.svc.cfg.Now(), "github_hosted"), 10*60); err != nil {
+		t.Fatal(err)
+	}
+	runFallback(t, e, 2)
+	rt, _ := e.svc.RoutingOf(ctx, 101)
+	if rt.Where != WhereWaits || rt.Why != WhyCap {
+		t.Fatalf("routing %+v", rt)
+	}
+}

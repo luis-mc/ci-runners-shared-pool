@@ -5077,6 +5077,11 @@ export interface components {
             oses?: ("linux" | "windows" | "macos")[];
             /** @description Fallback minutes counted this month (UTC), best effort. */
             used_minutes: number;
+            /**
+             * @description The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+             * @enum {string}
+             */
+            target?: "github_hosted" | "aws_ec2";
         };
         RepositoryVariable: {
             /** @enum {string} */
@@ -6936,8 +6941,16 @@ export interface components {
             label?: string;
             /** @description Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried. */
             cap_minutes?: number;
+            /** @description Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left. */
+            total_cap_minutes?: number;
             /** @description The systems this target serves; empty or absent means all. */
             systems?: ("linux" | "windows" | "macos")[];
+        };
+        OverflowUsage: {
+            /** @enum {string} */
+            kind: "github_hosted" | "aws_ec2";
+            /** @description Minutes this target took this month (UTC) across all repositories, best effort. */
+            used_minutes: number;
         };
         RemoveRunnerLeftoversRequest: {
             items: {
@@ -7065,6 +7078,8 @@ export interface components {
             overflow_label?: string;
             /** @description github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule. */
             overflow_targets?: components["schemas"]["OverflowTarget"][];
+            /** @description github-integration R5.115. Read only. The minutes each enabled overflow target took this month across all repositories. */
+            readonly overflow_usage?: components["schemas"]["OverflowUsage"][];
             /** @description operations R5.15. On by default. When on, a newer stable release installs by itself after a drain. When off, the console Review step asks first. */
             auto_update?: boolean;
         };

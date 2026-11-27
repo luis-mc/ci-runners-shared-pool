@@ -437,6 +437,10 @@ type OverflowTarget struct {
 	// CapMinutes is the minutes per repository and month this target may take;
 	// 0 means no cap. When it is used up the next target is tried.
 	CapMinutes int
+	// TotalCapMinutes is the minutes per month this target may take across all
+	// repositories together; 0 means no cap. A target is used only while both
+	// caps have minutes left.
+	TotalCapMinutes int
 	// Systems are the operating systems this target serves ("linux", "windows",
 	// "macos"); empty means all.
 	Systems []string
@@ -463,6 +467,9 @@ func validOverflowTargets(v []OverflowTarget) error {
 		}
 		if t.CapMinutes < 0 || t.CapMinutes > MaxOverflowCapMinutes {
 			return fmt.Errorf("the cap of %s must be from 0 to %d minutes", t.Kind, MaxOverflowCapMinutes)
+		}
+		if t.TotalCapMinutes < 0 || t.TotalCapMinutes > MaxOverflowCapMinutes {
+			return fmt.Errorf("the total cap of %s must be from 0 to %d minutes", t.Kind, MaxOverflowCapMinutes)
 		}
 		for _, s := range t.Systems {
 			if !targetSystems[s] {

@@ -599,7 +599,7 @@ func overflowTargets(d controllerDeps) func() []repos.OverflowTarget {
 		var out []repos.OverflowTarget
 		for _, t := range st.OverflowTargets {
 			if t.Enabled {
-				out = append(out, repos.OverflowTarget{Kind: t.Kind, Label: t.Label, CapMinutes: t.CapMinutes, Systems: t.Systems})
+				out = append(out, repos.OverflowTarget{Kind: t.Kind, Label: t.Label, CapMinutes: t.CapMinutes, TotalCapMinutes: t.TotalCapMinutes, Systems: t.Systems})
 			}
 		}
 		return out

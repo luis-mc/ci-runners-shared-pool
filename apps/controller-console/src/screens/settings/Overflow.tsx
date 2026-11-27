@@ -1,9 +1,10 @@
 // Settings, Repositories: cloud overflow (github-integration R5.114, CRSP281). The owner puts the targets a queued
 // job may go to in order (GitHub-hosted runners, AWS EC2 runners), turns each on, names its label, and may set
-// the minutes a repository may use there each month. Shared parts only (UX-2, UX-22, UX-71); the words are in
+// the minutes a repository, and all repositories together, may use there each month. Shared parts only (UX-2, UX-22, UX-71); the words are in
 // design system `next-version/content.md` (Cloud overflow words). The tab's one Save saves it.
 import {
   CheckRow,
+  Empty,
   ErrorSummary,
   FieldGrid,
   Message,
@@ -12,14 +13,18 @@ import {
   Pane,
   Section,
   Stack,
+  Status,
+  Table,
   Text,
   TextField,
+  type Column,
 } from '@crsp/ui';
 import { useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useCommand, useLoad } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { Load } from '../common';
+import { allRepositories, type Repository } from '../repositories/plans';
 import { useTabPart } from './TabForm';
 
 type Target = Schemas['OverflowTarget'];
@@ -50,6 +55,7 @@ export function completeTargets(saved: readonly Target[] | undefined): Target[] 
     enabled: t.enabled,
     label: t.label ?? '',
     cap_minutes: t.cap_minutes ?? 0,
+    total_cap_minutes: t.total_cap_minutes ?? 0,
     systems: t.systems ?? [],
   }));
 }
@@ -71,8 +77,119 @@ export function overflowProblems(targets: readonly Target[]): string[] {
     const cap = t.cap_minutes ?? 0;
     if (!Number.isInteger(cap) || cap < 0 || cap > 1000000)
       out.push(`Minutes of ${NAME[t.kind]} must be from 0 to 1000000.`);
+    const total = t.total_cap_minutes ?? 0;
+    if (!Number.isInteger(total) || total < 0 || total > 1000000)
+      out.push(`Total minutes of ${NAME[t.kind]} must be from 0 to 1000000.`);
   }
   return out;
+}
+
+type Usage = Schemas['OverflowUsage'];
+
+/** Where the jobs of a repository on overflow go now, in words (content.md, Cloud overflow words). */
+export function whereNow(
+  r: Repository,
+): { kind: 'waiting' | 'off'; word: string; why: string } | undefined {
+  const rt = r.routing;
+  if (!rt || rt.where === 'crsp') return undefined;
+  if (rt.where === 'hosted')
+    return {
+      kind: 'waiting',
+      word: rt.target ? NAME[rt.target] : 'Cloud runners',
+      why: 'No crsp machine is up.',
+    };
+  return rt.why === 'cap_reached'
+    ? {
+        kind: 'off',
+        word: 'Waiting, minutes used up',
+        why: 'Every target has used its minutes.',
+      }
+    : {
+        kind: 'off',
+        word: 'Waiting for a machine',
+        why: 'Overflow has not started for this repository.',
+      };
+}
+
+const minutes = (n: number | undefined) => (n ? `${n} min` : 'No limit');
+
+const whereColumns: Column<Repository>[] = [
+  {
+    id: 'repo',
+    header: 'Repository',
+    cell: (r) => r.full_name,
+    sort: (r) => r.full_name,
+    kind: 'grow',
+  },
+  {
+    id: 'where',
+    header: 'Jobs go to',
+    cell: (r) => {
+      const w = whereNow(r);
+      return w ? <Status kind={w.kind} word={w.word} /> : null;
+    },
+  },
+  { id: 'why', header: 'Why', cell: (r) => whereNow(r)?.why ?? '', secondary: true },
+];
+
+function WhereJobsGoNow() {
+  const client = useClient();
+  const { result, reload } = useLoad(
+    () => allRepositories(client, { pool: 'on' }),
+    [client],
+  );
+  return (
+    <Load result={result} what="where jobs go" reload={reload}>
+      {(d) => {
+        const rows = d.items.filter((r) => whereNow(r));
+        return rows.length === 0 ? (
+          <Empty title="No repository is on cloud overflow now." />
+        ) : (
+          <Table
+            caption="Where jobs go now"
+            columns={whereColumns}
+            rows={rows}
+            rowKey={(r) => String(r.id)}
+          />
+        );
+      }}
+    </Load>
+  );
+}
+
+function UsageTable({
+  saved,
+  usage,
+}: {
+  saved: readonly Target[];
+  usage: readonly Usage[];
+}) {
+  const rows = saved.filter((t) => t.enabled);
+  const cols: Column<Target>[] = [
+    { id: 'target', header: 'Target', cell: (t) => NAME[t.kind], kind: 'grow' },
+    {
+      id: 'used',
+      header: 'Used this month',
+      cell: (t) => `${usage.find((u) => u.kind === t.kind)?.used_minutes ?? 0} min`,
+    },
+    { id: 'total', header: 'Total limit', cell: (t) => minutes(t.total_cap_minutes) },
+    {
+      id: 'repo',
+      header: 'Limit per repository',
+      cell: (t) => minutes(t.cap_minutes),
+      secondary: true,
+    },
+  ];
+  return rows.length === 0 ? (
+    <Empty title="No cloud target is on." />
+  ) : (
+    <Table
+      caption="Minutes used this month"
+      columns={cols}
+      rows={rows}
+      rowKey={(t) => t.kind}
+    />
+  );
 }
 
 const same = (a: readonly Target[], b: readonly Target[]) =>
@@ -89,6 +206,7 @@ export function OverflowSettings() {
           <OverflowForm
             key={JSON.stringify(s.overflow_targets ?? [])}
             saved={completeTargets(s.overflow_targets)}
+            usage={s.overflow_usage ?? []}
             onSaved={reload}
             canEdit={session.can('owner')}
             why={session.whyNot('owner')}
@@ -101,11 +219,13 @@ export function OverflowSettings() {
 
 function OverflowForm({
   saved,
+  usage,
   onSaved,
   canEdit,
   why,
 }: {
   saved: Target[];
+  usage: readonly Usage[];
   onSaved: () => void;
   canEdit: boolean;
   why: string | undefined;
@@ -125,9 +245,9 @@ function OverflowForm({
     targets.reduce(
       (n, t) =>
         n +
-        (['enabled', 'label', 'cap_minutes', 'systems'] as const).filter((f) =>
-          changedField(t, f),
-        ).length,
+        (
+          ['enabled', 'label', 'cap_minutes', 'total_cap_minutes', 'systems'] as const
+        ).filter((f) => changedField(t, f)).length,
       0,
     ) + (orderChanged ? 1 : 0);
   const save = useCommand(async () => {
@@ -164,6 +284,12 @@ function OverflowForm({
         on, they go to the first target below that is on, serves the system and has
         minutes left. A target with no minutes left is skipped. This can cost money.
       </Text>
+      <Pane title="Where jobs go now" level={3}>
+        <WhereJobsGoNow />
+      </Pane>
+      <Pane title="Minutes used this month" level={3}>
+        <UsageTable saved={saved} usage={usage} />
+      </Pane>
       <OrderList
         label="Overflow order"
         items={KINDS}
@@ -196,13 +322,23 @@ function OverflowForm({
               />
               <NumberField
                 label={`Minutes of ${NAME[t.kind]} per repository and month`}
-                help="0 means no limit. When a repository has used them, the next target is tried."
+                help="0 means no limit. When a repository has used them, the next target is tried. A target is used only while both limits have minutes left."
                 value={t.cap_minutes ?? 0}
                 changed={changedField(t, 'cap_minutes')}
                 unit=" min"
                 min={0}
                 max={1000000}
                 onChange={(v) => change(t.kind, { cap_minutes: v })}
+              />
+              <NumberField
+                label={`Total minutes of ${NAME[t.kind]} per month`}
+                help="0 means no limit. Counted over all repositories together. When they are used, the next target is tried."
+                value={t.total_cap_minutes ?? 0}
+                changed={changedField(t, 'total_cap_minutes')}
+                unit=" min"
+                min={0}
+                max={1000000}
+                onChange={(v) => change(t.kind, { total_cap_minutes: v })}
               />
             </FieldGrid>
             {SYSTEMS.map((s) => (

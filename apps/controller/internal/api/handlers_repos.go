@@ -150,6 +150,10 @@ func toRepository(v repos.RepositoryView) gen.Repository {
 			}
 			rt.Oses = &oses
 		}
+		if v.Routing.Target != "" {
+			t := gen.RepositoryRoutingTarget(v.Routing.Target)
+			rt.Target = &t
+		}
 		out.Routing = &rt
 	}
 	if v.Problem != nil {

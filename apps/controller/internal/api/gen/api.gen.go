@@ -2247,16 +2247,16 @@ func (e OS) Valid() bool {
 
 // Defines values for OverflowTargetKind.
 const (
-	AwsEc2       OverflowTargetKind = "aws_ec2"
-	GithubHosted OverflowTargetKind = "github_hosted"
+	OverflowTargetKindAwsEc2       OverflowTargetKind = "aws_ec2"
+	OverflowTargetKindGithubHosted OverflowTargetKind = "github_hosted"
 )
 
 // Valid indicates whether the value is a known member of the OverflowTargetKind enum.
 func (e OverflowTargetKind) Valid() bool {
 	switch e {
-	case AwsEc2:
+	case OverflowTargetKindAwsEc2:
 		return true
-	case GithubHosted:
+	case OverflowTargetKindGithubHosted:
 		return true
 	default:
 		return false
@@ -2278,6 +2278,24 @@ func (e OverflowTargetSystems) Valid() bool {
 	case OverflowTargetSystemsMacos:
 		return true
 	case OverflowTargetSystemsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowUsageKind.
+const (
+	OverflowUsageKindAwsEc2       OverflowUsageKind = "aws_ec2"
+	OverflowUsageKindGithubHosted OverflowUsageKind = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the OverflowUsageKind enum.
+func (e OverflowUsageKind) Valid() bool {
+	switch e {
+	case OverflowUsageKindAwsEc2:
+		return true
+	case OverflowUsageKindGithubHosted:
 		return true
 	default:
 		return false
@@ -3061,6 +3079,24 @@ func (e RepositoryRoutingOses) Valid() bool {
 	case RepositoryRoutingOsesMacos:
 		return true
 	case RepositoryRoutingOsesWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RepositoryRoutingTarget.
+const (
+	RepositoryRoutingTargetAwsEc2       RepositoryRoutingTarget = "aws_ec2"
+	RepositoryRoutingTargetGithubHosted RepositoryRoutingTarget = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the RepositoryRoutingTarget enum.
+func (e RepositoryRoutingTarget) Valid() bool {
+	switch e {
+	case RepositoryRoutingTargetAwsEc2:
+		return true
+	case RepositoryRoutingTargetGithubHosted:
 		return true
 	default:
 		return false
@@ -7865,6 +7901,9 @@ type OverflowTarget struct {
 
 	// Systems The systems this target serves; empty or absent means all.
 	Systems *[]OverflowTargetSystems `json:"systems,omitempty"`
+
+	// TotalCapMinutes Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left.
+	TotalCapMinutes *int `json:"total_cap_minutes,omitempty"`
 }
 
 // OverflowTargetKind defines model for OverflowTarget.Kind.
@@ -7872,6 +7911,17 @@ type OverflowTargetKind string
 
 // OverflowTargetSystems defines model for OverflowTarget.Systems.
 type OverflowTargetSystems string
+
+// OverflowUsage defines model for OverflowUsage.
+type OverflowUsage struct {
+	Kind OverflowUsageKind `json:"kind"`
+
+	// UsedMinutes Minutes this target took this month (UTC) across all repositories, best effort.
+	UsedMinutes int `json:"used_minutes"`
+}
+
+// OverflowUsageKind defines model for OverflowUsage.Kind.
+type OverflowUsageKind string
 
 // Overview defines model for Overview.
 type Overview struct {
@@ -8839,6 +8889,9 @@ type RepositoryRouting struct {
 	// Oses The operating systems the reason is about.
 	Oses *[]RepositoryRoutingOses `json:"oses,omitempty"`
 
+	// Target The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+	Target *RepositoryRoutingTarget `json:"target,omitempty"`
+
 	// UsedMinutes Fallback minutes counted this month (UTC), best effort.
 	UsedMinutes int                    `json:"used_minutes"`
 	Where       RepositoryRoutingWhere `json:"where"`
@@ -8849,6 +8902,9 @@ type RepositoryRouting struct {
 
 // RepositoryRoutingOses defines model for RepositoryRouting.Oses.
 type RepositoryRoutingOses string
+
+// RepositoryRoutingTarget The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+type RepositoryRoutingTarget string
 
 // RepositoryRoutingWhere defines model for RepositoryRouting.Where.
 type RepositoryRoutingWhere string
@@ -9486,12 +9542,15 @@ type Settings struct {
 	OverflowLabel *string `json:"overflow_label,omitempty"`
 
 	// OverflowTargets github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule.
-	OverflowTargets            *[]OverflowTarget `json:"overflow_targets,omitempty"`
-	RetentionAuditDays         *int              `json:"retention_audit_days,omitempty"`
-	RetentionJobHistoryDays    *int              `json:"retention_job_history_days,omitempty"`
-	RetentionLoadRawHours      *int              `json:"retention_load_raw_hours,omitempty"`
-	RetentionLogsDays          *int              `json:"retention_logs_days,omitempty"`
-	RetentionLogsMibPerMachine *int              `json:"retention_logs_mib_per_machine,omitempty"`
+	OverflowTargets *[]OverflowTarget `json:"overflow_targets,omitempty"`
+
+	// OverflowUsage github-integration R5.115. Read only. The minutes each enabled overflow target took this month across all repositories.
+	OverflowUsage              *[]OverflowUsage `json:"overflow_usage,omitempty"`
+	RetentionAuditDays         *int             `json:"retention_audit_days,omitempty"`
+	RetentionJobHistoryDays    *int             `json:"retention_job_history_days,omitempty"`
+	RetentionLoadRawHours      *int             `json:"retention_load_raw_hours,omitempty"`
+	RetentionLogsDays          *int             `json:"retention_logs_days,omitempty"`
+	RetentionLogsMibPerMachine *int             `json:"retention_logs_mib_per_machine,omitempty"`
 }
 
 // SettingsInsightsUpdatePeriod ci-run-insights R5.44 (owner decisions D18, D19). How often insights are re-analysed. every_run (the default) analyses after each CI run; every_nth_run after every Nth run; hourly once an hour. The cost warning recommends a slower one.

@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backup"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/settings"
 )
 
@@ -103,7 +105,25 @@ func (s *server) GetSettings(ctx context.Context, _ gen.GetSettingsRequestObject
 		f := s.opsError(err)
 		return gen.GetSettingsdefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
 	}
-	return gen.GetSettings200JSONResponse(toGenSettings(st)), nil
+	out := toGenSettings(st)
+	if a := s.ghArea(); a != nil && a.Repos != nil {
+		out.OverflowUsage = s.overflowUsage(ctx, a.Repos)
+	}
+	return gen.GetSettings200JSONResponse(out), nil
+}
+
+// overflowUsage is the minutes each overflow target took this month, all repositories together (R5.115).
+func (s *server) overflowUsage(ctx context.Context, svc *repos.Service) *[]gen.OverflowUsage {
+	us, err := svc.OverflowUsage(ctx, time.Now())
+	if err != nil {
+		s.opts.Logger.Warn("overflow usage failed", "err", err)
+		return nil
+	}
+	out := make([]gen.OverflowUsage, 0, len(us))
+	for _, u := range us {
+		out = append(out, gen.OverflowUsage{Kind: gen.OverflowUsageKind(u.Kind), UsedMinutes: u.UsedMinutes})
+	}
+	return &out
 }
 
 // UpdateSettings implements PATCH /api/v1/settings.
@@ -306,7 +326,7 @@ func (s *server) RestoreBackup(ctx context.Context, req gen.RestoreBackupRequest
 func toGenTargets(in []settings.OverflowTarget) *[]gen.OverflowTarget {
 	out := make([]gen.OverflowTarget, 0, len(in))
 	for _, t := range in {
-		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes}
+		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes, TotalCapMinutes: &t.TotalCapMinutes}
 		systems := make([]gen.OverflowTargetSystems, 0, len(t.Systems))
 		for _, s := range t.Systems {
 			systems = append(systems, gen.OverflowTargetSystems(s))
@@ -329,6 +349,9 @@ func fromGenTargets(in *[]gen.OverflowTarget) *[]settings.OverflowTarget {
 		}
 		if g.CapMinutes != nil {
 			t.CapMinutes = *g.CapMinutes
+		}
+		if g.TotalCapMinutes != nil {
+			t.TotalCapMinutes = *g.TotalCapMinutes
 		}
 		if g.Systems != nil {
 			for _, s := range *g.Systems {
