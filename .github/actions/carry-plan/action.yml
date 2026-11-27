@@ -35,7 +35,7 @@ runs:
     - id: plan
       shell: bash
       env:
-        GH_TOKEN: ${{ github.token }}  # the job's permissions: actions, pull-requests read
+        GH_TOKEN: ${{ github.token }} # the job's permissions: actions, pull-requests read
         WORKFLOW: ${{ inputs.workflow }}
         MAP: ${{ inputs.map }}
         EVENT: ${{ github.event_name }}

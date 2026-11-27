@@ -157,7 +157,7 @@ jobs:
     permissions:
       contents: read
       actions: read
-      pull-requests: read  # R5.95: the merged pull request of a push to the default branch
+      pull-requests: read # R5.95: the merged pull request of a push to the default branch
     outputs:
       plan: ${{ steps.adjust.outputs.plan }}
       carried: ${{ steps.adjust.outputs.carried }}
@@ -1016,7 +1016,8 @@ jobs:
   # plan skipped on purpose is left out. tests, verify and e2e are the required checks and count a carried skip too.
   carry-ok:
     name: carry-ok
-    needs: [decide, carry, lint, types, go-race, web-tests, test-os, build, image, e2e-shards]
+    needs:
+      [decide, carry, lint, types, go-race, web-tests, test-os, build, image, e2e-shards]
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
