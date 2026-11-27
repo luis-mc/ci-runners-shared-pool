@@ -9,7 +9,7 @@ import { enforcedDesignDir, readDesignFile, repoRoot } from './design-system.ts'
 //   3. screens use tokens, not raw colours.
 // Adjust CONFIG to the project. The functions below are pure and tested on examples.
 const CONFIG = {
-  sourceRoots: ['apps/web/src', 'packages/ui/src'], // folders scanned, repo-relative
+  sourceRoots: ['apps/controller-console/src', 'packages/ui/src'], // folders scanned, repo-relative
   extensions: ['.ts', '.tsx', '.js', '.jsx', '.css'],
   skip: /(\.test\.|\.spec\.|\/testing\/|node_modules|\/dist\/)/,
   tokenFiles: [/tokens?\.css$/, /theme\.css$/], // the only files allowed to hold a raw colour
@@ -67,6 +67,18 @@ export const guardPaths = (cell: string): string[] =>
 const MISSING_GUARDS: Record<string, string> = {
   'UX-72': 'e2e/tests/review/review-layout.spec.ts',
 };
+
+/**
+ * Folders that moved after a numbered version froze (a numbered version is read-only).
+ * CRSP306 moved the console from apps/web to apps/controller-console; a guard path a
+ * version names under the old folder is read under the new one.
+ */
+const MOVED_FOLDERS: [string, string][] = [['apps/web/', 'apps/controller-console/']];
+const movedPath = (p: string): string =>
+  MOVED_FOLDERS.reduce(
+    (q, [from, to]) => (q.startsWith(from) ? to + q.slice(from.length) : q),
+    p,
+  );
 
 /** The rule IDs and their guard column, from the rule table. */
 export const ruleTable = (uxRules: string): { id: string; guard: string }[] =>
@@ -132,7 +144,7 @@ describe('the apps follow the enforced design-system version', () => {
     expect(new Set(rules.map((r) => r.id)).size).toBe(rules.length);
     for (const r of rules) {
       expect(r.id, 'rule ID').toMatch(/^UX-\d+$/);
-      for (const guard of guardPaths(r.guard)) {
+      for (const guard of guardPaths(r.guard).map(movedPath)) {
         const missing = !existsSync(join(repoRoot, guard));
         const known = MISSING_GUARDS[r.id] === guard;
         expect(

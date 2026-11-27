@@ -4,5 +4,5 @@
     "card-grid": "CardGrid",
     "form": "FieldGrid"
   },
-  "pages": ["apps/web/src/screens"]
+  "pages": ["apps/controller-console/src/screens"]
 }

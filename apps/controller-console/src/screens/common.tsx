@@ -129,7 +129,7 @@ export function Ask({
   );
 }
 
-const RELOAD_KEY = 'crsp-stale-reload';
+const RELOAD_STORAGE_ITEM = 'crsp-stale-reload';
 const RELOAD_GAP_MS = 60_000;
 
 /** A page opened on an older build asks for a hashed file the new build no longer has. */
@@ -143,9 +143,9 @@ export function isStaleBuildError(e: unknown): boolean {
 /** Reloads once for a stale build. False when it already did a moment ago (no reload loop). */
 export function reloadOnceForNewBuild(now: number = Date.now()): boolean {
   try {
-    const last = Number(window.sessionStorage.getItem(RELOAD_KEY) ?? 0);
+    const last = Number(window.sessionStorage.getItem(RELOAD_STORAGE_ITEM) ?? 0);
     if (now - last < RELOAD_GAP_MS) return false;
-    window.sessionStorage.setItem(RELOAD_KEY, String(now));
+    window.sessionStorage.setItem(RELOAD_STORAGE_ITEM, String(now));
   } catch {
     return false;
   }

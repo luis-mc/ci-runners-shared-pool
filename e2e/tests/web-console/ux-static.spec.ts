@@ -4,7 +4,7 @@ import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { expect, test } from '@playwright/test';
 
-const ROOTS = ['apps/web/src', 'packages/ui/src'];
+const ROOTS = ['apps/controller-console/src', 'packages/ui/src'];
 const CALL =
   /(?<![\w.$])(?:window\s*\.\s*|globalThis\s*\.\s*)?(alert|confirm|prompt)\s*\(/;
 

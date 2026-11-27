@@ -29,7 +29,7 @@ describe('one action bar for the main action', () => {
   });
 
   describe('the scan itself', () => {
-    const file = 'apps/web/src/screens/a.tsx';
+    const file = 'apps/controller-console/src/screens/a.tsx';
     const count = (text: string) => scanText(file, text);
     it('a planted primary outside the bar fails', () => {
       const actual = countBreaches(count('<Button kind="primary">Go</Button>'));
@@ -65,7 +65,9 @@ describe('one action bar for the main action', () => {
       ).toEqual(['outside']);
     });
     it('tests and shared UI are not judged', () => {
-      expect(scanText('apps/web/src/a.test.tsx', '<Button kind="primary"/>')).toEqual([]);
+      expect(
+        scanText('apps/controller-console/src/a.test.tsx', '<Button kind="primary"/>'),
+      ).toEqual([]);
       expect(scanText('packages/ui/src/a.tsx', '<Button kind="primary"/>')).toEqual([]);
     });
     it('a listed breach passes', () => {

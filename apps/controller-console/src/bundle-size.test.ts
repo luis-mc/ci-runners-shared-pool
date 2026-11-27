@@ -1,5 +1,5 @@
 // R6.12: the console's first JavaScript (the entry chunk and everything it imports at start) stays within the gzip
-// budget. It builds the app in memory, so it needs no dist folder. The number is in apps/web/perf-budgets.json.
+// budget. It builds the app in memory, so it needs no dist folder. The number is in apps/controller-console/perf-budgets.json.
 import { readFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

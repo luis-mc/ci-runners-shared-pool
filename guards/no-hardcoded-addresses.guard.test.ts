@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
  * CRSP_GITHUB_URL. A host written into a string here would be a second
  * setting nobody can change.
  *
- * It reads each non-test source file under apps/web/src and packages/<name>/src
+ * It reads each non-test source file under apps/controller-console/src and packages/<name>/src
  * with the TypeScript parser, so comments are never scanned. The words a
  * person reads (help text) may show a documentation host (example.com) or this
  * PC (127.0.0.1, localhost): those never name a host crsp talks to.
@@ -19,7 +19,7 @@ import { describe, expect, it } from 'vitest';
 
 const ROOT = join(__dirname, '..');
 const ROOTS = [
-  'apps/web/src',
+  'apps/controller-console/src',
   ...readdirSync(join(ROOT, 'packages')).map((p) => `packages/${p}/src`),
 ].filter((r) => existsSync(join(ROOT, r)));
 const ADDRESS = /https?:\/\/([A-Za-z0-9](?:[A-Za-z0-9.-]*[A-Za-z0-9])?)/g;

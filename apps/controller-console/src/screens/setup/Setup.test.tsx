@@ -142,13 +142,16 @@ describe('Setup page', () => {
 });
 
 // UX-6 guard: every error code the server can put on /setup?error= shows words on the page.
-// The codes are read from internal/api/errors.go, so a new code is covered without editing this test.
-// Tests run from apps/web (pnpm --filter web) or from the repository root.
-const errorsGo = ['../../internal/api/errors.go', 'internal/api/errors.go']
+// The codes are read from apps/controller/internal/api/errors.go, so a new code is covered without editing this test.
+// Tests run from apps/controller-console (pnpm --filter controller-console) or from the repository root.
+const errorsGo = [
+  '../controller/internal/api/errors.go',
+  'apps/controller/internal/api/errors.go',
+]
   .map((p) => resolve(process.cwd(), p))
   .find((p) => existsSync(p));
 const serverCodes = [
-  ...readFileSync(errorsGo ?? 'internal/api/errors.go', 'utf8').matchAll(
+  ...readFileSync(errorsGo ?? 'apps/controller/internal/api/errors.go', 'utf8').matchAll(
     /^\s*Code\w+\s*=\s*"([a-z_]+)"/gm,
   ),
 ].flatMap((m) => (m[1] ? [m[1]] : []));

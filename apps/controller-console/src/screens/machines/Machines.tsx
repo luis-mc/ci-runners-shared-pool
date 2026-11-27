@@ -62,7 +62,7 @@ type Machine = Schemas['Machine'];
 
 /** The longest the job-started hook holds a job: the cap of scheduling R5.75. The saved value is 1 or 2. */
 const GATE_WAIT_MAX = 2;
-/** The address part the Doctor fix opens the page at (internal/doctor/checks GateMaxWaitAnchor). */
+/** The address part the Doctor fix opens the page at (apps/controller/internal/doctor/checks GateMaxWaitAnchor). */
 const GATE_WAIT_ANCHOR = 'gate-max-wait';
 
 const STATES = [

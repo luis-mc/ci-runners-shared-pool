@@ -9,10 +9,10 @@ import { describe, expect, it } from 'vitest';
 const here = dirname(fileURLToPath(import.meta.url));
 const root = resolve(here, '../../..');
 const ALLOWED = new Set([
-  'apps/web/src/screens/doctor/serverLinks.ts',
-  'apps/web/src/screens/doctor/serverLinks.test.ts',
-  'apps/web/src/oldPaths.test.ts',
-  'apps/web/src/screens/jobs/redirects.test.tsx',
+  'apps/controller-console/src/screens/doctor/serverLinks.ts',
+  'apps/controller-console/src/screens/doctor/serverLinks.test.ts',
+  'apps/controller-console/src/oldPaths.test.ts',
+  'apps/controller-console/src/screens/jobs/redirects.test.tsx',
 ]);
 
 // A string that starts with an old address: /shared-pool, /repositories, /jobs, the old top-level lists, and the old
@@ -37,7 +37,9 @@ function files(dir: string): string[] {
 
 describe('old addresses', () => {
   it('no source file links to /shared-pool, /repositories, /jobs or an old Shared Pool address', () => {
-    const roots = ['apps/web/src', 'packages/ui/src', 'e2e'].map((d) => join(root, d));
+    const roots = ['apps/controller-console/src', 'packages/ui/src', 'e2e'].map((d) =>
+      join(root, d),
+    );
     const hits: string[] = [];
     for (const file of roots.flatMap(files)) {
       const rel = relative(root, file);

@@ -1,6 +1,6 @@
 // R6.12 (proposed, owner question Q14): the first screen is usable within the budget, the first JavaScript is within
 // the budget gzipped, and a live event shows on screen within the budget. The numbers are in
-// apps/web/perf-budgets.json, the only place to change them.
+// apps/controller-console/perf-budgets.json, the only place to change them.
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { gzipSync } from 'node:zlib';
@@ -8,7 +8,7 @@ import { expect, test } from '@playwright/test';
 import { overview, signedIn } from './fixtures';
 
 const budgets = JSON.parse(
-  readFileSync(resolve('apps/web/perf-budgets.json'), 'utf8'),
+  readFileSync(resolve('apps/controller-console/perf-budgets.json'), 'utf8'),
 ) as {
   firstScreenUsableMs: number;
   firstJavaScriptGzipBytes: number;

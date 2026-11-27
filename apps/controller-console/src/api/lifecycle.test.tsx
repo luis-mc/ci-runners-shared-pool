@@ -19,7 +19,7 @@ import {
 
 afterEach(cleanup);
 
-// vitest runs from apps/web or from the repository root: walk up to the contract.
+// vitest runs from apps/controller-console or from the repository root: walk up to the contract.
 function findContract(): string {
   let dir = process.cwd();
   for (;;) {

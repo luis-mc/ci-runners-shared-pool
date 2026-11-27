@@ -1,4 +1,4 @@
-// The console's route table, read from apps/web/src/App.tsx, so a screen added to the table is covered by the
+// The console's route table, read from apps/controller-console/src/App.tsx, so a screen added to the table is covered by the
 // checks that use this list (axe, offline) without anyone editing a list here (R6.6, R6.13).
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -79,14 +79,17 @@ export function parseRoutes(source: string): ConsoleRoute[] {
 
 export function consoleRoutes(): ConsoleRoute[] {
   // The Jobs section keeps its routes in screens/jobs/routes.tsx; App.tsx places them as `{jobsRoutes}`.
-  const jobs = readFileSync(resolve('apps/web/src/screens/jobs/routes.tsx'), 'utf8');
+  const jobs = readFileSync(
+    resolve('apps/controller-console/src/screens/jobs/routes.tsx'),
+    'utf8',
+  );
   const jobsMarkup = /<>([\s\S]*)<\/>/.exec(jobs)?.[1] ?? '';
   if (!jobsMarkup.includes('<Route'))
     throw new Error('screens/jobs/routes.tsx: no routes found; fix routes.ts');
-  const source = readFileSync(resolve('apps/web/src/App.tsx'), 'utf8').replace(
-    '{jobsRoutes}',
-    jobsMarkup,
-  );
+  const source = readFileSync(
+    resolve('apps/controller-console/src/App.tsx'),
+    'utf8',
+  ).replace('{jobsRoutes}', jobsMarkup);
   const routes = parseRoutes(source);
   // A parser that finds nothing would make every check pass on an empty list.
   if (routes.length < 10)

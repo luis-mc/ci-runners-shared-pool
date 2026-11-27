@@ -22,7 +22,7 @@ const toController = {
 };
 
 // CRSP296 (web-console R6.14): ship every compressible hashed asset (.js, .css) next to a gzip and a brotli copy, made once at build time.
-// The controller serves the copy the browser asks for (internal/webui) and never compresses at request time.
+// The controller serves the copy the browser asks for (apps/controller/internal/webui) and never compresses at request time.
 function precompress(): Plugin {
   let outDir = 'dist';
   let write = true;

@@ -43,7 +43,7 @@ describe('no native date, time or number input (UX-56)', () => {
     it('finds each banned type', () => {
       const text =
         '<input type="date"/><input type="time" /><input type=\'datetime-local\'/><input type={"number"} />';
-      expect(scanText('apps/web/a.tsx', text).map((b) => b.type)).toEqual([
+      expect(scanText('apps/controller-console/a.tsx', text).map((b) => b.type)).toEqual([
         'date',
         'time',
         'datetime-local',
@@ -53,7 +53,10 @@ describe('no native date, time or number input (UX-56)', () => {
     it('a planted native input fails', () => {
       for (const t of TYPES) {
         expect(
-          judgeBreaches(count('apps/web/src/a.tsx', `<input type="${t}" />`), []).added,
+          judgeBreaches(
+            count('apps/controller-console/src/a.tsx', `<input type="${t}" />`),
+            [],
+          ).added,
           t,
         ).toHaveLength(1);
       }
@@ -61,31 +64,46 @@ describe('no native date, time or number input (UX-56)', () => {
     it('other input types pass', () => {
       expect(
         scanText(
-          'apps/web/a.tsx',
+          'apps/controller-console/a.tsx',
           '<input type="text" inputMode="numeric"/><input type="email"/><button type="button"/>',
         ),
       ).toEqual([]);
       expect(
-        scanText('apps/web/a.tsx', '<input type="datetime"/><input type="numbers"/>'),
+        scanText(
+          'apps/controller-console/a.tsx',
+          '<input type="datetime"/><input type="numbers"/>',
+        ),
       ).toEqual([]);
     });
     it('a listed breach passes', () => {
-      const entry = { file: 'apps/web/src/a.tsx', type: 'date', count: 1 };
+      const entry = { file: 'apps/controller-console/src/a.tsx', type: 'date', count: 1 };
       expect(
-        judgeBreaches(count('apps/web/src/a.tsx', '<input type="date"/>'), [entry]),
+        judgeBreaches(
+          count('apps/controller-console/src/a.tsx', '<input type="date"/>'),
+          [entry],
+        ),
       ).toEqual({ added: [], stale: [] });
     });
     it('a fixed but listed breach fails', () => {
-      const entry = { file: 'apps/web/src/a.tsx', type: 'date', count: 1 };
+      const entry = { file: 'apps/controller-console/src/a.tsx', type: 'date', count: 1 };
       expect(
-        judgeBreaches(count('apps/web/src/a.tsx', '<DatePicker />'), [entry]).stale,
+        judgeBreaches(count('apps/controller-console/src/a.tsx', '<DatePicker />'), [
+          entry,
+        ]).stale,
       ).toHaveLength(1);
     });
     it('a raised count fails', () => {
-      const entry = { file: 'apps/web/src/a.tsx', type: 'number', count: 1 };
+      const entry = {
+        file: 'apps/controller-console/src/a.tsx',
+        type: 'number',
+        count: 1,
+      };
       expect(
         judgeBreaches(
-          count('apps/web/src/a.tsx', '<input type="number"/><input type="number"/>'),
+          count(
+            'apps/controller-console/src/a.tsx',
+            '<input type="number"/><input type="number"/>',
+          ),
           [entry],
         ).added,
       ).toHaveLength(1);
@@ -96,14 +114,20 @@ describe('no native date, time or number input (UX-56)', () => {
       );
     });
     it('a test file is ignored', () => {
-      expect(scanText('apps/web/src/a.test.tsx', '<input type="date"/>')).toEqual([]);
-      expect(scanText('apps/web/src/__tests__/a.tsx', '<input type="date"/>')).toEqual(
-        [],
-      );
+      expect(
+        scanText('apps/controller-console/src/a.test.tsx', '<input type="date"/>'),
+      ).toEqual([]);
+      expect(
+        scanText('apps/controller-console/src/__tests__/a.tsx', '<input type="date"/>'),
+      ).toEqual([]);
     });
     it('other file types are ignored', () => {
-      expect(scanText('apps/web/a.ts', 'const s = \'type="date"\'')).toEqual([]);
-      expect(scanText('apps/web/a.vue', '<input type="date">')).toHaveLength(1);
+      expect(
+        scanText('apps/controller-console/a.ts', 'const s = \'type="date"\''),
+      ).toEqual([]);
+      expect(
+        scanText('apps/controller-console/a.vue', '<input type="date">'),
+      ).toHaveLength(1);
     });
   });
 });
