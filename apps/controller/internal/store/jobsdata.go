@@ -398,10 +398,15 @@ func (s *JobsStore) GetGraph(ctx context.Context, repositoryID int64, workflow, 
 	if err != nil {
 		return jobsdata.Graph{}, false, fmt.Errorf("get graph: %w", err)
 	}
-	g := jobsdata.Graph{RepositoryID: repositoryID, Workflow: workflow, HeadSHA: headSHA, OK: row.Ok != 0, FetchedAt: parseTimeOpt(row.FetchedAt)}
+	return graphOf(row), true, nil
+}
+
+// graphOf maps a stored workflow graph.
+func graphOf(row sqlcgen.WorkflowGraph) jobsdata.Graph {
+	g := jobsdata.Graph{RepositoryID: row.RepositoryID, Workflow: row.Workflow, HeadSHA: row.HeadSha, OK: row.Ok != 0, FetchedAt: parseTimeOpt(row.FetchedAt)}
 	_ = json.Unmarshal([]byte(row.Needs), &g.Needs)
 	_ = json.Unmarshal([]byte(row.Dynamic), &g.Dynamic)
-	return g, true, nil
+	return g
 }
 
 // PutGraph stores a workflow graph.

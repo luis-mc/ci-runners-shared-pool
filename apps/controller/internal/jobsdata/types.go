@@ -240,8 +240,11 @@ type JobFilter struct {
 	Branch       string
 	RunID        int64
 	From, To     time.Time // on created_at
-	After        int64     // job id of the last job of the previous page
-	Limit        int
+	// CompletedFrom (included) and CompletedTo (excluded) bound completed_at; zero is open.
+	CompletedFrom, CompletedTo time.Time
+	NoCount                    bool  // skip the total (ListJobs answers 0): for a caller that reads a bounded window
+	After                      int64 // job id of the last job of the previous page
+	Limit                      int
 }
 
 // JobDetail is a job with steps, attempts and history.
@@ -371,6 +374,15 @@ type Reader interface {
 	Groups(ctx context.Context, by GroupBy) ([]GroupRow, error)
 	Stats(ctx context.Context, days int, f JobFilter) (Stats, error)
 	Summaries(ctx context.Context, from, to time.Time) ([]DailySummary, error)
+}
+
+// BatchReader is the optional half of a Reader that answers a page in a few queries instead of one per row. The
+// SQLite store implements it; a Reader that does not is read one question at a time.
+type BatchReader interface {
+	// SamplesMany answers each sample query (newest first), in the order given.
+	SamplesMany(ctx context.Context, qs []SampleQuery) ([][]Sample, error)
+	// RunsWithJobs gives each run row its jobs and its workflow graph.
+	RunsWithJobs(ctx context.Context, rows []RunRow) ([]RunDetail, error)
 }
 
 // CommitReader reads the runs of one head commit for the commit view (observability R5.13). The SQLite store

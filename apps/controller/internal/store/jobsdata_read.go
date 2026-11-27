@@ -328,6 +328,12 @@ func jobWhere(f jobsdata.JobFilter) (string, []any) {
 	if !f.To.IsZero() {
 		add("created_at <= ?", fmtTime(f.To))
 	}
+	if !f.CompletedFrom.IsZero() {
+		add("completed_at >= ?", fmtTime(f.CompletedFrom))
+	}
+	if !f.CompletedTo.IsZero() {
+		add("completed_at < ?", fmtTime(f.CompletedTo))
+	}
 	if len(conds) == 0 {
 		return "", nil
 	}
@@ -340,8 +346,10 @@ func (s *JobsStore) ListJobs(ctx context.Context, f jobsdata.JobFilter) ([]jobsd
 	defer cancel()
 	where, args := jobWhere(f)
 	var total int
-	if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
-		return nil, 0, fmt.Errorf("count jobs: %w", err)
+	if !f.NoCount {
+		if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
+			return nil, 0, fmt.Errorf("count jobs: %w", err)
+		}
 	}
 	if f.After != 0 {
 		if where == "" {
@@ -492,7 +500,7 @@ func (s *JobsStore) Samples(ctx context.Context, q jobsdata.SampleQuery) ([]jobs
 		query = `SELECT j.id, j.job_ident, j.workflow, j.completed_at, j.started_at, j.machine_id FROM jobs j
 			WHERE ` + strings.Join(conds, " AND ") + ` ORDER BY j.completed_at DESC, j.id DESC LIMIT ?`
 	}
-	rows, err := s.db.QueryContext(ctx, query, append(args, limit)...)
+	rows, err := s.rdb.QueryContext(ctx, query, append(args, limit)...)
 	if err != nil {
 		return nil, fmt.Errorf("samples: %w", err)
 	}
@@ -521,7 +529,7 @@ func (s *JobsStore) Samples(ctx context.Context, q jobsdata.SampleQuery) ([]jobs
 func (s *JobsStore) OpenJobs(ctx context.Context) ([]jobsdata.Job, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
-	rows, err := s.db.QueryContext(ctx, `SELECT * FROM jobs WHERE state IN ('queued', 'running') ORDER BY id`)
+	rows, err := s.rdb.QueryContext(ctx, `SELECT * FROM jobs WHERE state IN ('queued', 'running') ORDER BY id`)
 	if err != nil {
 		return nil, fmt.Errorf("open jobs: %w", err)
 	}
