@@ -7210,8 +7210,13 @@ components:
       description: debug-access R5.25, R5.26.
       required: [enabled, record, open_sessions]
       properties:
-        enabled: { type: boolean, description: Allow debug sessions on this pool (the kill switch). }
-        record: { type: boolean, description: Keep a redacted transcript of each session. }
+        enabled:
+          {
+            type: boolean,
+            description: Allow debug sessions on this pool (the kill switch).,
+          }
+        record:
+          { type: boolean, description: Keep a redacted transcript of each session. }
         open_sessions: { type: integer }
         ended: { type: integer, description: Sessions this change ended. Only on a save. }
         updated_at: { type: string, format: date-time }
@@ -7222,22 +7227,43 @@ components:
       properties:
         enabled: { type: boolean }
         record: { type: boolean }
-        confirm: { type: boolean, description: Needed to turn sessions off while one is open. }
+        confirm:
+          { type: boolean, description: Needed to turn sessions off while one is open. }
     DebugRepoAccess:
       type: object
       description: debug-access R5.1, R5.2, R5.10, R5.17, R5.18, R5.21.
-      required: [repository_id, enabled, who, limit_min, idle_min, hold_min, persistent_ok, allows, never]
+      required:
+        [
+          repository_id,
+          enabled,
+          who,
+          limit_min,
+          idle_min,
+          hold_min,
+          persistent_ok,
+          allows,
+          never,
+        ]
       properties:
         repository_id: { type: integer, format: int64 }
         enabled: { type: boolean }
         who: { type: string, enum: [admins, owner] }
         limit_min: { type: integer, description: 'Session limit in minutes, 5 to 120.' }
         idle_min: { type: integer, description: 'Idle limit in minutes, 1 to 60.' }
-        hold_min: { type: integer, description: '0 to 30. Saved; holding a failed job is not built yet.' }
+        hold_min:
+          {
+            type: integer,
+            description: '0 to 30. Saved; holding a failed job is not built yet.',
+          }
         persistent_ok: { type: boolean }
         allows: { type: string, description: What a session allows, in words (R5.14). }
-        never: { type: string, description: What a session never allows, in words (R5.14). }
-        disabled_reason: { type: string, description: Why the switch cannot be turned on (a public repository). }
+        never:
+          { type: string, description: What a session never allows, in words (R5.14). }
+        disabled_reason:
+          {
+            type: string,
+            description: Why the switch cannot be turned on (a public repository).,
+          }
         updated_at: { type: string, format: date-time }
         updated_by: { type: string }
     DebugRepoAccessInput:
@@ -7254,11 +7280,30 @@ components:
       type: object
       required: [reason]
       properties:
-        reason: { type: string, minLength: 3, maxLength: 200, description: 'One line, 3 to 200 characters (R5.3).' }
+        reason:
+          {
+            type: string,
+            minLength: 3,
+            maxLength: 200,
+            description: 'One line, 3 to 200 characters (R5.3).',
+          }
     DebugSession:
       type: object
       description: One debug session (debug-access R5.24). No secret and no source address.
-      required: [id, job_id, repository, user, reason, source, state, opened_at, ends_at, extended, recorded]
+      required:
+        [
+          id,
+          job_id,
+          repository,
+          user,
+          reason,
+          source,
+          state,
+          opened_at,
+          ends_at,
+          extended,
+          recorded,
+        ]
       properties:
         id: { type: string }
         job_id: { type: integer, format: int64 }
@@ -7280,7 +7325,8 @@ components:
           enum: [time_limit, idle, job_ended, user, admin, kill_switch, link_lost, error]
         ended_by: { type: string }
         extended: { type: boolean }
-        recorded: { type: boolean, description: False when the pool keeps no transcripts. }
+        recorded:
+          { type: boolean, description: False when the pool keeps no transcripts. }
     DebugSessionList:
       type: object
       required: [items]
@@ -7296,8 +7342,13 @@ components:
       properties:
         job_id: { type: integer, format: int64 }
         allowed: { type: boolean }
-        why_not_code: { type: string, description: The first check that failed; absent when allowed. }
-        why_not: { type: string, description: The reason beside the disabled button; absent when allowed. }
+        why_not_code:
+          { type: string, description: The first check that failed; absent when allowed. }
+        why_not:
+          {
+            type: string,
+            description: The reason beside the disabled button; absent when allowed.,
+          }
         warnings:
           type: array
           items: { type: string }
@@ -7319,7 +7370,11 @@ components:
         text: { type: string }
         truncated: { type: boolean, description: The 5 MB cap was reached. }
         expires_at: { type: string, format: date-time }
-        note: { type: string, description: 'Cleaned as far as possible; redaction cannot promise to catch everything.' }
+        note:
+          {
+            type: string,
+            description: 'Cleaned as far as possible; redaction cannot promise to catch everything.',
+          }
     ErrorEnvelope:
       type: object
       required: [error]
