@@ -113,6 +113,10 @@ $script:VolatileNames = @($script:DbName, "$($script:DbName)-wal", "$($script:Db
 #   agent\hostuse.json  the measured host use, restored at start and saved every 5 min and at stop
 #                     (apps/controller/internal/agent/run.go sampleLoop: usePath = DataDir/hostuse.json).
 $script:RuntimeFiles = @('agent\local-join', 'agent\hostuse.json')
+# Download caches under the data folder, by folder. agent-installers\<version>\ holds the agent packages and
+# SHA256SUMS the controller fetches from the release and checks (apps/controller/internal/agentinstallers, CRSP304):
+# regenerable, and filled in the background after each start, so an upgrade adds files without any user data changing.
+$script:CacheDirs = @('agent-installers')
 function Test-VolatilePath($full) {
   $name = Split-Path -Leaf $full
   if ($script:VolatileNames -contains $name) { return $true }
@@ -120,6 +124,9 @@ function Test-VolatilePath($full) {
     $root = $script:Data.TrimEnd('\') + '\'
     foreach ($r in $script:RuntimeFiles) {
       if ($full.Equals($root + $r, [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
+    }
+    foreach ($c in $script:CacheDirs) {
+      if ($full.StartsWith($root + $c + '\', [System.StringComparison]::OrdinalIgnoreCase)) { return $true }
     }
   }
   if ($script:Logs) {
