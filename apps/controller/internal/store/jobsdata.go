@@ -161,6 +161,7 @@ func (s *Store) inTx(ctx context.Context, fn func(ctx context.Context, tx *sql.T
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit: %w", err)
 	}
+	s.touchJobs()
 	return nil
 }
 
@@ -384,6 +385,7 @@ func (s *JobsStore) SetForecast(ctx context.Context, jobID int64, f jobsdata.For
 	if err != nil {
 		return fmt.Errorf("set forecast: %w", err)
 	}
+	s.touchJobs()
 	return nil
 }
 

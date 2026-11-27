@@ -539,38 +539,43 @@ type groupAcc struct {
 	light                 bool
 }
 
-// Groups is the grouped table of one Jobs sub-section: one query, then counts and percentiles in Go.
-func (s *JobsStore) Groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata.GroupRow, error) {
-	ctx, cancel := withDeadline(ctx)
-	defer cancel()
-	var k1, k2 string
+// groupKeys names the columns a grouping is made of.
+func groupKeys(by jobsdata.GroupBy) (k1, k2 string, err error) {
 	switch by {
 	case jobsdata.ByRepository:
-		k1, k2 = "repository", "''"
+		return "repository", "''", nil
 	case jobsdata.ByMachine:
-		k1, k2 = "machine_id", "''"
+		return "machine_id", "''", nil
 	case jobsdata.ByRunner:
-		k1, k2 = "runner_name", "''"
+		return "runner_name", "''", nil
 	case jobsdata.ByRunnerType:
-		k1, k2 = "runner_kind", "backend"
+		return "runner_kind", "backend", nil
 	case jobsdata.ByJobType:
-		k1, k2 = "job_type", "''"
-	default:
-		return nil, fmt.Errorf("groups: unknown grouping %q", by)
+		return "job_type", "''", nil
 	}
-	rows, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, machine_name, state, result, created_at, started_at, completed_at, light
-		FROM jobs WHERE `+k1+` <> '' AND (state <> 'done' OR completed_at >= ?) ORDER BY completed_at, id`, fmtTime(time.Now().Add(-groupWindow)))
+	return "", "", fmt.Errorf("groups: unknown grouping %q", by)
+}
+
+// flagFailed and flagLight are the facts of a finished job that the grouped reads take as one integer; flagForecast
+// marks a successful job with a forecast (the stats points).
+const (
+	flagFailed   = 1
+	flagLight    = 2
+	flagForecast = 4
+)
+
+// Groups is the grouped table of one Jobs sub-section (audit R3-2). The open jobs are counted by the engine; the
+// finished jobs of the window are read in finish order as a key, one flag integer and three times, with no sort, and the
+// times are cut apart without time.Parse. A machine's name is one lookup per machine, not a column of every row.
+func (s *JobsStore) groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata.GroupRow, error) {
+	ctx, cancel := withDeadline(ctx)
+	defer cancel()
+	k1, k2, err := groupKeys(by)
 	if err != nil {
-		return nil, fmt.Errorf("groups: %w", err)
+		return nil, err
 	}
-	defer func() { _ = rows.Close() }()
 	groups := map[string]*groupAcc{}
-	for rows.Next() {
-		var key1, key2, machineName, state, result, created, started, completed string
-		var light int64
-		if err := rows.Scan(&key1, &key2, &machineName, &state, &result, &created, &started, &completed, &light); err != nil {
-			return nil, fmt.Errorf("groups scan: %w", err)
-		}
+	group := func(key1, key2 string) *groupAcc {
 		id := key1 + "\x00" + key2
 		g := groups[id]
 		if g == nil {
@@ -580,31 +585,71 @@ func (s *JobsStore) Groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata
 			}
 			groups[id] = g
 		}
-		if by == jobsdata.ByMachine && machineName != "" {
-			g.name = machineName
+		return g
+	}
+	open, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, state, count(*), COALESCE(MAX(light), 0) FROM jobs
+		WHERE state IN ('queued', 'running') AND `+k1+` <> '' GROUP BY `+k1+`, `+k2+`, state`)
+	if err != nil {
+		return nil, fmt.Errorf("groups: %w", err)
+	}
+	for open.Next() {
+		var key1, key2, state string
+		var n, light int64
+		if err := open.Scan(&key1, &key2, &state, &n, &light); err != nil {
+			_ = open.Close()
+			return nil, fmt.Errorf("groups scan: %w", err)
+		}
+		g := group(key1, key2)
+		if jobsdata.State(state) == jobsdata.Queued {
+			g.queued += int(n)
+		} else {
+			g.running += int(n)
 		}
 		g.light = g.light || light != 0
-		switch jobsdata.State(state) {
-		case jobsdata.Queued:
-			g.queued++
-		case jobsdata.Running:
-			g.running++
-		default:
-			g.done++
-			if isFailed(result) {
-				g.failed++
-			}
-			if w, ok := seconds(created, started); ok {
-				g.wait = append(g.wait, w)
-			}
-			if r, ok := seconds(started, completed); ok {
-				g.run = append(g.run, r)
-				g.trend = append(g.trend, r)
-			}
+	}
+	err = open.Err()
+	_ = open.Close()
+	if err != nil {
+		return nil, fmt.Errorf("groups: %w", err)
+	}
+	rows, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, (result IN ('failure', 'timed_out', 'lost')) + 2 * (light <> 0), created_at, started_at, completed_at
+		FROM jobs WHERE state = 'done' AND `+k1+` <> '' AND completed_at >= ? ORDER BY completed_at, id`, fmtTime(time.Now().Add(-groupWindow)))
+	if err != nil {
+		return nil, fmt.Errorf("groups: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	var last *groupAcc
+	var lastK1, lastK2 string
+	for rows.Next() {
+		var key1, key2, created, started, completed string
+		var flags int64
+		if err := rows.Scan(&key1, &key2, &flags, &created, &started, &completed); err != nil {
+			return nil, fmt.Errorf("groups scan: %w", err)
+		}
+		if last == nil || key1 != lastK1 || key2 != lastK2 {
+			last, lastK1, lastK2 = group(key1, key2), key1, key2
+		}
+		g := last
+		g.done++
+		if flags&flagFailed != 0 {
+			g.failed++
+		}
+		g.light = g.light || flags&flagLight != 0
+		if w, ok := secondsBetween(created, started); ok {
+			g.wait = append(g.wait, w)
+		}
+		if r, ok := secondsBetween(started, completed); ok {
+			g.run = append(g.run, r)
+			g.trend = append(g.trend, r)
 		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, fmt.Errorf("groups: %w", err)
+	}
+	if by == jobsdata.ByMachine {
+		if err := s.machineNames(ctx, groups); err != nil {
+			return nil, err
+		}
 	}
 	out := make([]jobsdata.GroupRow, 0, len(groups))
 	for _, g := range groups {
@@ -630,6 +675,24 @@ func (s *JobsStore) Groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata
 	return out, nil
 }
 
+// machineNames gives each machine group the newest name a job of the machine carried, one indexed lookup per group.
+func (s *JobsStore) machineNames(ctx context.Context, groups map[string]*groupAcc) error {
+	for id, g := range groups {
+		machineID, _, _ := strings.Cut(id, "\x00")
+		var name string
+		err := s.rdb.QueryRowContext(ctx, `SELECT machine_name FROM jobs WHERE machine_id = ? AND machine_name <> ''
+			ORDER BY completed_at DESC, id DESC LIMIT 1`, machineID).Scan(&name)
+		if errors.Is(err, sql.ErrNoRows) {
+			continue
+		}
+		if err != nil {
+			return fmt.Errorf("groups machine name: %w", err)
+		}
+		g.name = name
+	}
+	return nil
+}
+
 // by2filter is the query that lists a group's jobs: "repository=owner/name", "runner_kind=persistent&backend=docker".
 func by2filter(by jobsdata.GroupBy, k1, k2 string) string {
 	switch by {
@@ -650,7 +713,7 @@ func by2filter(by jobsdata.GroupBy, k1, k2 string) string {
 
 // Stats is the chart data of the last days days (UTC, today included): daily counts and percentiles, the hour
 // grid and the forecast points of finished jobs.
-func (s *JobsStore) Stats(ctx context.Context, days int, f jobsdata.JobFilter) (jobsdata.Stats, error) {
+func (s *JobsStore) stats(ctx context.Context, days int, f jobsdata.JobFilter) (jobsdata.Stats, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
 	if days <= 0 {
@@ -669,35 +732,42 @@ func (s *JobsStore) Stats(ctx context.Context, days int, f jobsdata.JobFilter) (
 	df.State = jobsdata.Done
 	where, args := jobWhere(df)
 	where += " AND completed_at >= ?"
-	rows, err := s.rdb.QueryContext(ctx, `SELECT id, result, created_at, started_at, completed_at, fc_lo_ms, fc_mid_ms, fc_hi_ms, fc_basis
+	// Per finished job: one flag integer, three times, and the forecast of the ones that have one (audit R3-2).
+	rows, err := s.rdb.QueryContext(ctx, `SELECT (result IN ('failure', 'timed_out', 'lost')) + 4 * (result = 'success' AND fc_mid_ms > 0),
+		created_at, started_at, completed_at, id, fc_lo_ms, fc_mid_ms, fc_hi_ms, CASE WHEN fc_mid_ms > 0 THEN fc_basis ELSE '' END
 		FROM jobs`+where+` ORDER BY completed_at, id`, append(args, fmtTime(first))...)
 	if err != nil {
 		return st, fmt.Errorf("stats days: %w", err)
 	}
+	firstMS := first.UnixMilli()
 	for rows.Next() {
-		var id, lo, mid, hi int64
-		var result, created, started, completed, basis string
-		if err := rows.Scan(&id, &result, &created, &started, &completed, &lo, &mid, &hi, &basis); err != nil {
+		var created, started, completed, basis string
+		var flags, id, lo, mid, hi int64
+		if err := rows.Scan(&flags, &created, &started, &completed, &id, &lo, &mid, &hi, &basis); err != nil {
 			_ = rows.Close()
 			return st, fmt.Errorf("stats scan: %w", err)
 		}
-		i := int(parseTime(completed).Sub(first).Hours() / 24)
-		if i < 0 || i >= days {
+		doneMS, ok := unixMillisAny(completed)
+		if !ok || doneMS < firstMS {
+			continue
+		}
+		i := int((doneMS - firstMS) / dayMS)
+		if i >= days {
 			continue
 		}
 		a := &acc[i]
 		a.jobs++
-		if isFailed(result) {
+		if flags&flagFailed != 0 {
 			a.failed++
 		}
-		if w, ok := seconds(created, started); ok {
+		if w, ok := secondsBetween(created, started); ok {
 			a.wait = append(a.wait, w)
 		}
-		run, ok := seconds(started, completed)
+		run, ok := secondsBetween(started, completed)
 		if ok {
 			a.run = append(a.run, run)
 		}
-		if ok && mid > 0 && jobsdata.Result(result) == jobsdata.Success {
+		if ok && flags&flagForecast != 0 {
 			st.ForecastPoints = append(st.ForecastPoints, jobsdata.ForecastPoint{
 				JobID: id, ForecastS: float64(mid) / 1000, ActualS: run, LoS: float64(lo) / 1000, HiS: float64(hi) / 1000, Basis: basis,
 			})
@@ -715,38 +785,29 @@ func (s *JobsStore) Stats(ctx context.Context, days int, f jobsdata.JobFilter) (
 		st.Days = append(st.Days, d)
 	}
 
+	// The hour grid is a count per weekday and hour of the creation time: the engine groups it, on the created_at index.
 	where, args = jobWhere(f)
 	if where == "" {
 		where = " WHERE created_at >= ?"
 	} else {
 		where += " AND created_at >= ?"
 	}
-	rows, err = s.rdb.QueryContext(ctx, `SELECT created_at FROM jobs`+where, append(args, fmtTime(first))...)
+	rows, err = s.rdb.QueryContext(ctx, `SELECT CAST(strftime('%w', created_at) AS INTEGER), CAST(strftime('%H', created_at) AS INTEGER), count(*)
+		FROM jobs`+where+` GROUP BY 1, 2 ORDER BY 1, 2`, append(args, fmtTime(first))...)
 	if err != nil {
 		return st, fmt.Errorf("stats hours: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	grid := map[[2]int]int{}
 	for rows.Next() {
-		var created string
-		if err := rows.Scan(&created); err != nil {
+		var h jobsdata.HourCount
+		if err := rows.Scan(&h.Weekday, &h.Hour, &h.Count); err != nil {
 			return st, fmt.Errorf("stats scan: %w", err)
 		}
-		t := parseTime(created)
-		grid[[2]int{int(t.Weekday()), t.Hour()}]++
+		st.Hours = append(st.Hours, h)
 	}
 	if err := rows.Err(); err != nil {
 		return st, fmt.Errorf("stats hours: %w", err)
 	}
-	for k, n := range grid {
-		st.Hours = append(st.Hours, jobsdata.HourCount{Weekday: k[0], Hour: k[1], Count: n})
-	}
-	sort.Slice(st.Hours, func(i, j int) bool {
-		if st.Hours[i].Weekday != st.Hours[j].Weekday {
-			return st.Hours[i].Weekday < st.Hours[j].Weekday
-		}
-		return st.Hours[i].Hour < st.Hours[j].Hour
-	})
 	return st, nil
 }
 

@@ -39,7 +39,7 @@ func decodeLabels(s string) []string {
 func (j *InsightJobSource) JobsBetween(ctx context.Context, w insights.Window, repositoryID int64) ([]insights.JobFact, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
-	rows, err := j.s.db.QueryContext(ctx, `
+	rows, err := j.s.rdb.QueryContext(ctx, `
 SELECT j.id, j.repository_id, j.repository, j.run_id, j.run_attempt, j.workflow, j.job_ident, j.name, j.branch,
        j.head_sha, j.event, COALESCE(r.pull_request, 0), COALESCE(repo.default_branch, ''), j.labels,
        j.runner_origin, j.runner_name, j.runner_group, j.runner_labels, j.machine_id, j.light, j.result,

@@ -91,3 +91,21 @@ func TestSampleQueryPlanKeepsSampleIndex(t *testing.T) {
 		t.Errorf("sample plan: %s", p)
 	}
 }
+
+// R3-3: the hour grid and the created-at window read jobs_created, not the whole table.
+func TestCreatedWindowQueryPlan(t *testing.T) {
+	if raceOn {
+		t.Skip("seeding is slow under the race detector")
+	}
+	ctx := context.Background()
+	s, err := OpenForTests(ctx, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	seedDone(t, s)
+	p := explain(t, s, `SELECT CAST(strftime('%w', created_at) AS INTEGER), CAST(strftime('%H', created_at) AS INTEGER), count(*) FROM jobs WHERE created_at >= ? GROUP BY 1, 2`, "2023-11-20T00:00:00.000Z")
+	if !strings.Contains(p, "jobs_created") {
+		t.Errorf("hour grid plan: %s", p)
+	}
+}

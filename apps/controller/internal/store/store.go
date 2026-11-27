@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/pressly/goose/v3"
@@ -43,6 +44,10 @@ type Store struct {
 	// rdb is the read pool: query_only connections, so list pages never queue behind the writers (audit P-4).
 	rdb *sql.DB
 	q   *sqlcgen.Queries
+
+	// jobsGen counts the writes of jobs and runs; agg keeps the slow aggregate answers for it (aggcache.go).
+	jobsGen atomic.Int64
+	agg     aggCache
 }
 
 // Open opens (creating if needed) the database in dataDir and applies pending
