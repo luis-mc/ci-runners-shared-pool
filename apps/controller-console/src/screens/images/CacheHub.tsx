@@ -84,6 +84,7 @@ function HubView({ hub, reload }: { hub: Hub; reload: () => void }) {
   const used = hub.used_bytes;
   const budget = hub.budget_bytes;
   const rate = hitRate(hub.hits, hub.misses);
+  const budgetText = `${formatNumber(hub.settings.budget_gib)} GiB`;
   return (
     <Stack>
       <Section
@@ -105,11 +106,7 @@ function HubView({ hub, reload }: { hub: Hub; reload: () => void }) {
               unit={rate === undefined ? undefined : '%'}
             />
             <StatTile label="Served" value={formatSize(hub.served_bytes)} />
-            <StatTile
-              label="Used"
-              value={formatSize(used)}
-              unit={`of ${formatSize(budget)}`}
-            />
+            <StatTile label="Used" value={formatSize(used)} unit={`of ${budgetText}`} />
             <StatTile label="Warm machines" value={formatNumber(hub.warm_machines)} />
           </StatGrid>
         </Stack>
@@ -123,7 +120,7 @@ function HubView({ hub, reload }: { hub: Hub; reload: () => void }) {
             label="Cache budget"
             value={used}
             max={budget}
-            text={`${formatSize(used)} of ${formatSize(budget)} used`}
+            text={`${formatSize(used)} of ${budgetText} used`}
           />
           {admin ? (
             <NumberField
@@ -285,10 +282,13 @@ function HubCardView({
           disabledReason={admin ? undefined : why}
         />
         {card.on && card.status !== 'ok' ? (
-          <Status
-            kind={card.status === 'failed' ? 'failed' : 'waiting'}
-            word={card.note ?? card.status}
-          />
+          <>
+            <Status
+              kind={card.status === 'failed' ? 'failed' : 'waiting'}
+              word={card.status === 'failed' ? 'failed' : 'waiting'}
+            />
+            {card.note ? <Text tone="muted">{card.note}</Text> : null}
+          </>
         ) : null}
         <Facts items={facts(card, now)} />
         {probe.error ? (

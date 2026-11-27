@@ -210,6 +210,9 @@
     "apps/controller/internal/jobsize/**": [
       "docs/features/scheduling/spec.md"
     ],
+    "apps/controller/internal/lancache/**": [
+      "docs/features/caches/spec.md"
+    ],
     "apps/controller/internal/load/**": [
       "docs/features/machines/spec.md"
     ],
