@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -425,6 +426,9 @@ const (
 // MaxOverflowCapMinutes bounds a target's monthly cap per repository.
 const MaxOverflowCapMinutes = 1000000
 
+// MaxOverflowBudgetUSD bounds a target's monthly money budget.
+const MaxOverflowBudgetUSD = 1000000
+
 // OverflowTarget is one rule of the owner's overflow priority list: a cloud a
 // queued job may go to while no crsp machine can take it.
 type OverflowTarget struct {
@@ -441,6 +445,10 @@ type OverflowTarget struct {
 	// repositories together; 0 means no cap. A target is used only while both
 	// caps have minutes left.
 	TotalCapMinutes int
+	// BudgetUSD is the money, in US dollars per month across all repositories,
+	// this target may cost; 0 means no budget (R5.115). It is checked beside
+	// the minute caps: a target is used only while all of them have room.
+	BudgetUSD float64
 	// Systems are the operating systems this target serves ("linux", "windows",
 	// "macos"); empty means all.
 	Systems []string
@@ -470,6 +478,9 @@ func validOverflowTargets(v []OverflowTarget) error {
 		}
 		if t.TotalCapMinutes < 0 || t.TotalCapMinutes > MaxOverflowCapMinutes {
 			return fmt.Errorf("the total cap of %s must be from 0 to %d minutes", t.Kind, MaxOverflowCapMinutes)
+		}
+		if math.IsNaN(t.BudgetUSD) || t.BudgetUSD < 0 || t.BudgetUSD > MaxOverflowBudgetUSD {
+			return fmt.Errorf("the budget of %s must be from 0 to %d dollars", t.Kind, MaxOverflowBudgetUSD)
 		}
 		for _, s := range t.Systems {
 			if !targetSystems[s] {

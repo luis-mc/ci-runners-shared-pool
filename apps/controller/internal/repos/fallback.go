@@ -384,6 +384,7 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 	now := s.cfg.Now()
 	var add int64
 	perKind := map[string]int64{}
+	micro := map[string]int64{}
 	s.fb.mu.Lock()
 	prev := s.fb.seen[r.ID]
 	next := map[int64]time.Time{}
@@ -402,6 +403,9 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 		if d := now.Sub(last); d > 0 {
 			add += int64(d.Seconds())
 			perKind[kind] += int64(d.Seconds())
+			if rate, ok := s.rate(ctx, kind, osOfLabels(j.Labels)); ok {
+				micro[kind] += int64(d.Seconds() * rate / 60 * 1e6)
+			}
 		}
 		next[j.ID] = now
 	}
@@ -424,6 +428,11 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 		if err := s.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, totalKey(now, kind), sec); err != nil {
 			return err
 		}
+		if m := micro[kind]; m > 0 {
+			if err := s.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, usdKey(now, kind), m); err != nil {
+				return err
+			}
+		}
 	}
 	return s.cfg.Store.AddFallbackSeconds(ctx, r.ID, monthKey(now), add)
 }
@@ -435,10 +444,41 @@ const totalRepoID int64 = 0
 
 func totalKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind + "#total" }
 
-// TargetUsage is the minutes a target took this month, all repositories together.
+// usdKey is the money a target cost this month, in millionths of a dollar, in
+// the same table under repository 0 (R5.115, CRSP367). The table stores
+// integers, so the money is counted in whole millionths.
+func usdKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind + "#usd" }
+
+// rate is the price of a minute of a target's kind on an OS, from the savings rate table.
+func (s *Service) rate(ctx context.Context, kind, os string) (float64, bool) {
+	if s.cfg.Rate == nil {
+		return 0, false
+	}
+	return s.cfg.Rate(ctx, kind, os)
+}
+
+// osOfLabels reads the OS a hosted job runs on from its labels: windows and macos by name, else linux.
+func osOfLabels(labels []string) string {
+	for _, l := range labels {
+		l = strings.ToLower(l)
+		switch {
+		case strings.Contains(l, "windows"):
+			return "windows"
+		case strings.Contains(l, "macos"), strings.HasPrefix(l, "mac"):
+			return "macos"
+		}
+	}
+	return "linux"
+}
+
+// TargetUsage is the minutes and the money a target took this month, all repositories together.
 type TargetUsage struct {
 	Kind        string
 	UsedMinutes int
+	// UsedUSD is the money used: minutes times the savings rate of the OS.
+	UsedUSD float64
+	// Priced is false when the target has no rate, so its budget is not enforced.
+	Priced bool
 }
 
 // OverflowUsage is the minutes each enabled overflow target took in the month of at.
@@ -449,7 +489,12 @@ func (s *Service) OverflowUsage(ctx context.Context, at time.Time) ([]TargetUsag
 		if err != nil {
 			return nil, err
 		}
-		out = append(out, TargetUsage{Kind: t.Kind, UsedMinutes: int((sec + 59) / 60)})
+		micro, err := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, usdKey(at, t.Kind))
+		if err != nil {
+			return nil, err
+		}
+		_, priced := s.rate(ctx, t.Kind, "linux")
+		out = append(out, TargetUsage{Kind: t.Kind, UsedMinutes: int((sec + 59) / 60), UsedUSD: float64(micro) / 1e6, Priced: priced})
 	}
 	return out, nil
 }
@@ -501,7 +546,9 @@ type OverflowTarget struct {
 	CapMinutes int
 	// TotalCapMinutes is the monthly minutes across all repositories; 0 is no cap.
 	TotalCapMinutes int
-	Systems         []string
+	// BudgetUSD is the monthly money across all repositories; 0 is no budget.
+	BudgetUSD float64
+	Systems   []string
 }
 
 func (s *Service) targets() []OverflowTarget {
@@ -552,6 +599,17 @@ func (s *Service) pickTarget(ctx context.Context, r Repository, pol Policy, os s
 			}
 			if sec >= int64(t.TotalCapMinutes)*60 {
 				continue
+			}
+		}
+		if t.BudgetUSD > 0 {
+			if _, priced := s.rate(ctx, t.Kind, os); priced {
+				micro, e := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, usdKey(s.cfg.Now(), t.Kind))
+				if e != nil {
+					return "", "", false, e
+				}
+				if float64(micro) >= t.BudgetUSD*1e6 {
+					continue
+				}
 			}
 		}
 		return l, t.Kind, true, nil

@@ -53,7 +53,11 @@ type Config struct {
 	// OverflowTargets are the owner's enabled priority rules, first first
 	// (R5.114, CRSP281); nil or empty means the OverflowLabel rule.
 	OverflowTargets func() []OverflowTarget
-	Now             func() time.Time
+	// Rate is the price in US dollars of one minute of a target's kind on an OS,
+	// the rate savings already keeps (R5.115); false means no rate, so the
+	// target's money budget is not enforced. Nil means no rate for any kind.
+	Rate func(ctx context.Context, kind, os string) (float64, bool)
+	Now  func() time.Time
 	// FactsReported says whether every machine that was online has reported its
 	// facts since this start; nil means unknown, so only the settle period
 	// (CapacitySettle) makes capacity known.

@@ -2,7 +2,7 @@
 import { cleanup, fireEvent, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp, signedIn } from '../../testing/mock';
-import { completeTargets, overflowProblems, whereNow } from './Overflow';
+import { budgetWords, completeTargets, overflowProblems, whereNow } from './Overflow';
 
 afterEach(cleanup);
 
@@ -98,9 +98,12 @@ describe('cloud overflow now and minutes used (R5.115)', () => {
             enabled: true,
             total_cap_minutes: 500,
             cap_minutes: 100,
+            budget_usd: 20,
           },
         ],
-        overflow_usage: [{ kind: 'github_hosted', used_minutes: 42 }],
+        overflow_usage: [
+          { kind: 'github_hosted', used_minutes: 42, used_usd: 3.36, priced: true },
+        ],
       })
       .on('GET', '/api/v1/github/repositories', {
         items: [
@@ -124,5 +127,20 @@ describe('cloud overflow now and minutes used (R5.115)', () => {
     expect(await screen.findByText('42 min')).toBeTruthy();
     expect(screen.getAllByText('500 min').length).toBeGreaterThan(0);
     expect(screen.getByLabelText(/Total minutes of GitHub-hosted runners/)).toBeTruthy();
+    expect(await screen.findByText('$3.36')).toBeTruthy();
+    expect(screen.getByText('$20.00')).toBeTruthy();
+    expect(screen.getByLabelText(/Monthly budget of GitHub-hosted runners/)).toBeTruthy();
+  });
+
+  it('says a target with no rate does not enforce its budget', () => {
+    const t = completeTargets([
+      { kind: 'aws_ec2', enabled: true, label: 'x', budget_usd: 9 },
+    ]);
+    expect(
+      budgetWords(t[0] as never, { kind: 'aws_ec2', used_minutes: 0, priced: false }),
+    ).toBe('$9.00, no rate, budget not enforced');
+    expect(budgetWords({ kind: 'github_hosted', enabled: true }, undefined)).toBe(
+      'No budget',
+    );
   });
 });

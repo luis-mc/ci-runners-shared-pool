@@ -6943,6 +6943,11 @@ export interface components {
             cap_minutes?: number;
             /** @description Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left. */
             total_cap_minutes?: number;
+            /**
+             * Format: double
+             * @description Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2) does not enforce it.
+             */
+            budget_usd?: number;
             /** @description The systems this target serves; empty or absent means all. */
             systems?: ("linux" | "windows" | "macos")[];
         };
@@ -6951,6 +6956,13 @@ export interface components {
             kind: "github_hosted" | "aws_ec2";
             /** @description Minutes this target took this month (UTC) across all repositories, best effort. */
             used_minutes: number;
+            /**
+             * Format: double
+             * @description Money this target cost this month (UTC) across all repositories, in US dollars; minutes times the per-minute rate savings keeps (R5.115).
+             */
+            used_usd?: number;
+            /** @description False when the target has no per-minute rate, so its budget is not enforced. */
+            priced?: boolean;
         };
         RemoveRunnerLeftoversRequest: {
             items: {

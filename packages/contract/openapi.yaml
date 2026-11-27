@@ -11300,6 +11300,12 @@ components:
           minimum: 0
           maximum: 1000000
           description: Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left.
+        budget_usd:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 1000000
+          description: Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2) does not enforce it.
         systems:
           type: array
           items:
@@ -11316,6 +11322,13 @@ components:
         used_minutes:
           type: integer
           description: Minutes this target took this month (UTC) across all repositories, best effort.
+        used_usd:
+          type: number
+          format: double
+          description: Money this target cost this month (UTC) across all repositories, in US dollars; minutes times the per-minute rate savings keeps (R5.115).
+        priced:
+          type: boolean
+          description: False when the target has no per-minute rate, so its budget is not enforced.
     RemoveRunnerLeftoversRequest:
       type: object
       required: [items]

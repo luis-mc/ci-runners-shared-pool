@@ -56,6 +56,7 @@ export function completeTargets(saved: readonly Target[] | undefined): Target[] 
     label: t.label ?? '',
     cap_minutes: t.cap_minutes ?? 0,
     total_cap_minutes: t.total_cap_minutes ?? 0,
+    budget_usd: t.budget_usd ?? 0,
     systems: t.systems ?? [],
   }));
 }
@@ -80,6 +81,9 @@ export function overflowProblems(targets: readonly Target[]): string[] {
     const total = t.total_cap_minutes ?? 0;
     if (!Number.isInteger(total) || total < 0 || total > 1000000)
       out.push(`Total minutes of ${NAME[t.kind]} must be from 0 to 1000000.`);
+    const budget = t.budget_usd ?? 0;
+    if (!Number.isFinite(budget) || budget < 0 || budget > 1000000)
+      out.push(`Budget of ${NAME[t.kind]} must be from 0 to 1000000 dollars.`);
   }
   return out;
 }
@@ -112,6 +116,15 @@ export function whereNow(
 }
 
 const minutes = (n: number | undefined) => (n ? `${n} min` : 'No limit');
+const dollars = (n: number) => `$${n.toFixed(2)}`;
+
+/** The budget of a target in words; a target with no rate says its budget is not enforced. */
+export function budgetWords(t: Target, u: Usage | undefined): string {
+  if (!t.budget_usd) return 'No budget';
+  return u?.priced === false
+    ? `${dollars(t.budget_usd)}, no rate, budget not enforced`
+    : dollars(t.budget_usd);
+}
 
 const whereColumns: Column<Repository>[] = [
   {
@@ -172,6 +185,23 @@ function UsageTable({
       header: 'Used this month',
       cell: (t) => `${usage.find((u) => u.kind === t.kind)?.used_minutes ?? 0} min`,
     },
+    {
+      id: 'money',
+      header: 'Money used this month',
+      cell: (t) => {
+        const u = usage.find((x) => x.kind === t.kind);
+        return u?.priced === false ? 'No rate' : dollars(u?.used_usd ?? 0);
+      },
+    },
+    {
+      id: 'budget',
+      header: 'Monthly budget',
+      cell: (t) =>
+        budgetWords(
+          t,
+          usage.find((x) => x.kind === t.kind),
+        ),
+    },
     { id: 'total', header: 'Total limit', cell: (t) => minutes(t.total_cap_minutes) },
     {
       id: 'repo',
@@ -184,7 +214,7 @@ function UsageTable({
     <Empty title="No cloud target is on." />
   ) : (
     <Table
-      caption="Minutes used this month"
+      caption="Minutes and money used this month"
       columns={cols}
       rows={rows}
       rowKey={(t) => t.kind}
@@ -246,7 +276,14 @@ function OverflowForm({
       (n, t) =>
         n +
         (
-          ['enabled', 'label', 'cap_minutes', 'total_cap_minutes', 'systems'] as const
+          [
+            'enabled',
+            'label',
+            'cap_minutes',
+            'total_cap_minutes',
+            'budget_usd',
+            'systems',
+          ] as const
         ).filter((f) => changedField(t, f)).length,
       0,
     ) + (orderChanged ? 1 : 0);
@@ -282,12 +319,13 @@ function OverflowForm({
       <Text>
         When no crsp machine can take the jobs of a repository that turned its fallback
         on, they go to the first target below that is on, serves the system and has
-        minutes left. A target with no minutes left is skipped. This can cost money.
+        minutes and budget left. A target with no minutes or budget left is skipped. This
+        can cost money.
       </Text>
       <Pane title="Where jobs go now" level={3}>
         <WhereJobsGoNow />
       </Pane>
-      <Pane title="Minutes used this month" level={3}>
+      <Pane title="Minutes and money used this month" level={3}>
         <UsageTable saved={saved} usage={usage} />
       </Pane>
       <OrderList
@@ -339,6 +377,21 @@ function OverflowForm({
                 min={0}
                 max={1000000}
                 onChange={(v) => change(t.kind, { total_cap_minutes: v })}
+              />
+              <NumberField
+                label={`Monthly budget of ${NAME[t.kind]}`}
+                help={
+                  t.kind === 'aws_ec2'
+                    ? 'In dollars. 0 means no budget. AWS EC2 runners have no rate here, so this budget is not enforced.'
+                    : 'In dollars. 0 means no budget. Counted over all repositories together, at the rates of Savings. When it is used, the next target is tried.'
+                }
+                value={t.budget_usd ?? 0}
+                changed={changedField(t, 'budget_usd')}
+                unit=" USD"
+                min={0}
+                max={1000000}
+                decimals={2}
+                onChange={(v) => change(t.kind, { budget_usd: v })}
               />
             </FieldGrid>
             {SYSTEMS.map((s) => (

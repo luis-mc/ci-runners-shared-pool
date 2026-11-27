@@ -163,7 +163,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
 		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
-		FallbackGrace: fallbackGrace(d), OverflowLabel: overflowLabel(d), OverflowTargets: overflowTargets(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
+		FallbackGrace: fallbackGrace(d), OverflowLabel: overflowLabel(d), OverflowTargets: overflowTargets(d), Rate: overflowRate(&history.Rates{DB: d.DB}), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
 	// The runs-on pull request (R5.113): built and opened only by the owner's
 	// explicit call; no loop or webhook of this wiring opens one.
 	rsvc.SetRunsOnPullRequests(&routing.Service{Store: d.DB.Routing(), Files: workflowFileReader{gh: gh}, PRs: gh, Now: d.Now})
@@ -599,10 +599,26 @@ func overflowTargets(d controllerDeps) func() []repos.OverflowTarget {
 		var out []repos.OverflowTarget
 		for _, t := range st.OverflowTargets {
 			if t.Enabled {
-				out = append(out, repos.OverflowTarget{Kind: t.Kind, Label: t.Label, CapMinutes: t.CapMinutes, TotalCapMinutes: t.TotalCapMinutes, Systems: t.Systems})
+				out = append(out, repos.OverflowTarget{Kind: t.Kind, Label: t.Label, CapMinutes: t.CapMinutes, TotalCapMinutes: t.TotalCapMinutes, BudgetUSD: t.BudgetUSD, Systems: t.Systems})
 			}
 		}
 		return out
+	}
+}
+
+// overflowRate gives the repos service the per-minute price savings keeps
+// (R5.115): the GitHub-hosted rate of the OS at the standard size. aws_ec2 has
+// no configured rate, so its budget is not enforced.
+func overflowRate(rates *history.Rates) func(ctx context.Context, kind, os string) (float64, bool) {
+	return func(ctx context.Context, kind, os string) (float64, bool) {
+		if kind != "github_hosted" {
+			return 0, false
+		}
+		t, err := rates.Get(ctx)
+		if err != nil {
+			return 0, false
+		}
+		return t.PerMinute(os, "")
 	}
 }
 

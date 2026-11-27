@@ -121,7 +121,7 @@ func (s *server) overflowUsage(ctx context.Context, svc *repos.Service) *[]gen.O
 	}
 	out := make([]gen.OverflowUsage, 0, len(us))
 	for _, u := range us {
-		out = append(out, gen.OverflowUsage{Kind: gen.OverflowUsageKind(u.Kind), UsedMinutes: u.UsedMinutes})
+		out = append(out, gen.OverflowUsage{Kind: gen.OverflowUsageKind(u.Kind), UsedMinutes: u.UsedMinutes, UsedUsd: &u.UsedUSD, Priced: &u.Priced})
 	}
 	return &out
 }
@@ -326,7 +326,7 @@ func (s *server) RestoreBackup(ctx context.Context, req gen.RestoreBackupRequest
 func toGenTargets(in []settings.OverflowTarget) *[]gen.OverflowTarget {
 	out := make([]gen.OverflowTarget, 0, len(in))
 	for _, t := range in {
-		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes, TotalCapMinutes: &t.TotalCapMinutes}
+		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes, TotalCapMinutes: &t.TotalCapMinutes, BudgetUsd: &t.BudgetUSD}
 		systems := make([]gen.OverflowTargetSystems, 0, len(t.Systems))
 		for _, s := range t.Systems {
 			systems = append(systems, gen.OverflowTargetSystems(s))
@@ -352,6 +352,9 @@ func fromGenTargets(in *[]gen.OverflowTarget) *[]settings.OverflowTarget {
 		}
 		if g.TotalCapMinutes != nil {
 			t.TotalCapMinutes = *g.TotalCapMinutes
+		}
+		if g.BudgetUsd != nil {
+			t.BudgetUSD = *g.BudgetUsd
 		}
 		if g.Systems != nil {
 			for _, s := range *g.Systems {

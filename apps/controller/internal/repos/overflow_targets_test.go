@@ -133,3 +133,59 @@ func TestOverflowTotalCapAllUsedWaits(t *testing.T) { // R5.115
 		t.Fatalf("routing %+v", rt)
 	}
 }
+
+// rates gives github_hosted a rate of 0.01 dollars a minute and aws_ec2 none, as savings does.
+func hostedRate(_ context.Context, kind, _ string) (float64, bool) {
+	return 0.01, kind == "github_hosted"
+}
+
+func TestOverflowBudgetMovesToNextTarget(t *testing.T) { // R5.115, Q24
+	e, _ := targetsEnv(t,
+		OverflowTarget{Kind: "github_hosted", BudgetUSD: 5},
+		OverflowTarget{Kind: "aws_ec2", Label: "ec2-pool-4x"})
+	e.svc.cfg.Rate = hostedRate
+	ctx := context.Background()
+	runFallback(t, e, 2)
+	if got := linuxVar(e); got != `["ubuntu-latest"]` {
+		t.Fatalf("start: %s", got)
+	}
+	// Money used reaches the budget (5 dollars = 5,000,000 millionths): the next target takes over.
+	if err := e.svc.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, usdKey(e.svc.cfg.Now(), "github_hosted"), 5_000_000); err != nil {
+		t.Fatal(err)
+	}
+	runFallback(t, e, 1)
+	if got := linuxVar(e); got != `["ec2-pool-4x"]` {
+		t.Fatalf("not retargeted: %s", got)
+	}
+	u, err := e.svc.OverflowUsage(ctx, e.svc.cfg.Now())
+	if err != nil || len(u) != 2 || u[0].UsedUSD != 5 || !u[0].Priced || u[1].Priced {
+		t.Fatalf("usage %+v %v", u, err)
+	}
+}
+
+func TestOverflowBudgetAllUsedWaits(t *testing.T) { // R5.115
+	e, _ := targetsEnv(t, OverflowTarget{Kind: "github_hosted", BudgetUSD: 1})
+	e.svc.cfg.Rate = hostedRate
+	ctx := context.Background()
+	if err := e.svc.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, usdKey(e.svc.cfg.Now(), "github_hosted"), 1_000_000); err != nil {
+		t.Fatal(err)
+	}
+	runFallback(t, e, 2)
+	rt, _ := e.svc.RoutingOf(ctx, 101)
+	if rt.Where != WhereWaits || rt.Why != WhyCap {
+		t.Fatalf("routing %+v", rt)
+	}
+}
+
+func TestOverflowBudgetNotEnforcedWithoutRate(t *testing.T) { // R5.115
+	e, _ := targetsEnv(t, OverflowTarget{Kind: "aws_ec2", Label: "ec2-pool-4x", BudgetUSD: 1})
+	e.svc.cfg.Rate = hostedRate
+	ctx := context.Background()
+	if err := e.svc.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, usdKey(e.svc.cfg.Now(), "aws_ec2"), 9_000_000); err != nil {
+		t.Fatal(err)
+	}
+	runFallback(t, e, 2)
+	if got := linuxVar(e); got != `["ec2-pool-4x"]` {
+		t.Fatalf("a target with no rate must still be used: %s", got)
+	}
+}

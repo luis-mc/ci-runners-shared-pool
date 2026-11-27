@@ -7891,6 +7891,9 @@ type OrgPoolSet struct {
 
 // OverflowTarget defines model for OverflowTarget.
 type OverflowTarget struct {
+	// BudgetUsd Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2) does not enforce it.
+	BudgetUsd *float64 `json:"budget_usd,omitempty"`
+
 	// CapMinutes Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried.
 	CapMinutes *int               `json:"cap_minutes,omitempty"`
 	Enabled    bool               `json:"enabled"`
@@ -7916,8 +7919,14 @@ type OverflowTargetSystems string
 type OverflowUsage struct {
 	Kind OverflowUsageKind `json:"kind"`
 
+	// Priced False when the target has no per-minute rate, so its budget is not enforced.
+	Priced *bool `json:"priced,omitempty"`
+
 	// UsedMinutes Minutes this target took this month (UTC) across all repositories, best effort.
 	UsedMinutes int `json:"used_minutes"`
+
+	// UsedUsd Money this target cost this month (UTC) across all repositories, in US dollars; minutes times the per-minute rate savings keeps (R5.115).
+	UsedUsd *float64 `json:"used_usd,omitempty"`
 }
 
 // OverflowUsageKind defines model for OverflowUsage.Kind.
