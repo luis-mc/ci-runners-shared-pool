@@ -46,6 +46,10 @@ type Config struct {
 	// FallbackGrace is how long no machine of an OS must have been up before an
 	// opted-in repository falls back; 0 means DefaultFallbackGrace.
 	FallbackGrace func() time.Duration
+	// OverflowLabel is the one cloud label (any provider) an opted-in
+	// repository falls back to when its policy names none for the OS; nil or
+	// empty means DefaultHostedLabels (CRSP261).
+	OverflowLabel func() string
 	Now           func() time.Time
 	// FactsReported says whether every machine that was online has reported its
 	// facts since this start; nil means unknown, so only the settle period

@@ -107,7 +107,7 @@ func (s *Service) hostedVariables(ctx context.Context, r Repository) error {
 				continue
 			}
 		}
-		b, _ := json.Marshal([]string{hostedLabel(pol, os)})
+		b, _ := json.Marshal([]string{s.hostedLabelFor(pol, os)})
 		val := string(b)
 		if sameLabels(v.Value, val) {
 			continue
