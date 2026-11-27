@@ -410,6 +410,8 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	c.Options.Jobs, c.Options.Slots, c.Options.Live = d.DB, d.Queue, live
 	c.Options.JobsData = d.DB.Jobs()
+	// Debug access to a running job (CRSP331): off for every repository until an admin switches it on.
+	wireDebugAccess(ctx, d.DB, logger, c, d.DB.Jobs(), repoStore)
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
 	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}

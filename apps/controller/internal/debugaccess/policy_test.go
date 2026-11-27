@@ -77,7 +77,7 @@ func TestPublicAndForkNeverAllowed(t *testing.T) {
 	e.svc.Repos = fakeRepos{repos: map[int64]Repo{repoID: {Known: true, Visibility: "public"}}}
 	r := DefaultRepoSettings()
 	r.Enabled = true
-	if _, err := e.svc.SetRepo(e.ctx, owner, repoID, "alice/app", r); codeOf(err) != CodePublic {
+	if _, err := e.svc.SetRepo(e.ctx, owner, repoID, r); codeOf(err) != CodePublic {
 		t.Fatalf("switch on a public repository: %v", err)
 	}
 }
@@ -140,21 +140,21 @@ func TestViewerRefusedAdminAllowedOwnerOnlyNarrowing(t *testing.T) {
 	e.mustOpen(owner, 2)
 	r := DefaultRepoSettings()
 	r.Enabled = true
-	if _, err := e.svc.SetRepo(e.ctx, admin, repoID, "alice/app", r); codeOf(err) != CodeOwnerOnly {
+	if _, err := e.svc.SetRepo(e.ctx, admin, repoID, r); codeOf(err) != CodeOwnerOnly {
 		t.Fatalf("admin lifts owner only: %v", err)
 	}
-	if _, err := e.svc.SetRepo(e.ctx, viewer, repoID, "alice/app", r); codeOf(err) != CodeViewer {
+	if _, err := e.svc.SetRepo(e.ctx, viewer, repoID, r); codeOf(err) != CodeViewer {
 		t.Fatalf("viewer sets: %v", err)
 	}
 	for _, bad := range []RepoSettings{{Who: "everyone", LimitMin: 30, IdleMin: 10}, {Who: WhoAdmins, LimitMin: 121, IdleMin: 10},
 		{Who: WhoAdmins, LimitMin: 30, IdleMin: 0}, {Who: WhoAdmins, LimitMin: 30, IdleMin: 10, HoldMin: 31},
 		{Who: WhoAdmins, LimitMin: 10, IdleMin: 20}} {
-		if _, err := e.svc.SetRepo(e.ctx, owner, repoID, "alice/app", bad); codeOf(err) != CodeBadSetting {
+		if _, err := e.svc.SetRepo(e.ctx, owner, repoID, bad); codeOf(err) != CodeBadSetting {
 			t.Errorf("setting %+v: %v", bad, err)
 		}
 	}
 	e.svc.Repos = fakeRepos{repos: map[int64]Repo{}}
-	if _, err := e.svc.SetRepo(e.ctx, owner, repoID, "alice/app", r); codeOf(err) != CodeRepoUnknown {
+	if _, err := e.svc.SetRepo(e.ctx, owner, repoID, r); codeOf(err) != CodeRepoUnknown {
 		t.Fatalf("unknown repository: %v", err)
 	}
 }

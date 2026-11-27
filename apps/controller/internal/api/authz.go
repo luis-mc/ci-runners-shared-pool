@@ -44,6 +44,12 @@ var otherAreaAuth = map[string]string{
 	"getListenerGate": authUser, "putListenerGate": authAdmin, "getTimerSettings": authUser, "checkTimerSettings": authUser, "getJobTimer": authUser, "getRunTimer": authUser,
 	"putTimerSettings": authAdmin, "stopJobNow": authAdmin, "extendJobTimer": authAdmin, "cancelRunNow": authAdmin, "extendRunTimer": authAdmin,
 
+	// Debug access to a running job (CRSP331, docs/features/debug-access R5.2, R5.26, R5.30). The service checks
+	// the role again: Owner only narrowing, the user's own session, the kill switch for the owner.
+	"getDebugPoolSettings": authUser, "putDebugPoolSettings": authOwner, "getRepoDebugAccess": authUser, "setRepoDebugAccess": authAdmin,
+	"getJobDebug": authUser, "openDebugSession": authAdmin, "listDebugSessions": authUser, "getDebugSession": authUser,
+	"extendDebugSession": authAdmin, "endDebugSession": authAdmin, "getDebugTranscript": authAdmin,
+
 	"getCaCertificate": authPublic, "getPackage": authPublic, "getHealth": authPublic,
 
 	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser, "getSavingsReport": authUser, "getSavingsRates": authUser, "updateSavingsRates": authOwner, "resetSavingsRates": authOwner,

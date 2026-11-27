@@ -72,7 +72,7 @@ func newEnv(t *testing.T) *env {
 			Event: "push", MachineID: "m1", MachineName: "build-02", RunnerName: fmt.Sprintf("r%d", i), Backend: "docker",
 			Isolation: "container", OS: "linux"}
 	}
-	e.svc = &Service{DB: db, Jobs: e.jobs, Repos: fakeRepos{repos: map[int64]Repo{repoID: {Known: true, Visibility: "private"}}},
+	e.svc = &Service{DB: db, Jobs: e.jobs, Repos: fakeRepos{repos: map[int64]Repo{repoID: {Known: true, FullName: "alice/app", Visibility: "private"}}},
 		Enter: enterOK{}, Now: func() time.Time { return e.now }, NewID: func() string { e.ids++; return fmt.Sprintf("dbg_%d", e.ids) }}
 	return e
 }
@@ -84,7 +84,7 @@ func (e *env) turnOn(tweak func(*RepoSettings)) {
 	if tweak != nil {
 		tweak(&r)
 	}
-	if _, err := e.svc.SetRepo(e.ctx, owner, repoID, "alice/app", r); err != nil {
+	if _, err := e.svc.SetRepo(e.ctx, owner, repoID, r); err != nil {
 		e.t.Fatal(err)
 	}
 }

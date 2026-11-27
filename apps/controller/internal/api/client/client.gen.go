@@ -467,6 +467,96 @@ func (e CreateJoinFileRequestOs) Valid() bool {
 	}
 }
 
+// Defines values for DebugRepoAccessWho.
+const (
+	DebugRepoAccessWhoAdmins DebugRepoAccessWho = "admins"
+	DebugRepoAccessWhoOwner  DebugRepoAccessWho = "owner"
+)
+
+// Valid indicates whether the value is a known member of the DebugRepoAccessWho enum.
+func (e DebugRepoAccessWho) Valid() bool {
+	switch e {
+	case DebugRepoAccessWhoAdmins:
+		return true
+	case DebugRepoAccessWhoOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugRepoAccessInputWho.
+const (
+	DebugRepoAccessInputWhoAdmins DebugRepoAccessInputWho = "admins"
+	DebugRepoAccessInputWhoOwner  DebugRepoAccessInputWho = "owner"
+)
+
+// Valid indicates whether the value is a known member of the DebugRepoAccessInputWho enum.
+func (e DebugRepoAccessInputWho) Valid() bool {
+	switch e {
+	case DebugRepoAccessInputWhoAdmins:
+		return true
+	case DebugRepoAccessInputWhoOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugSessionEndReason.
+const (
+	DebugSessionEndReasonAdmin      DebugSessionEndReason = "admin"
+	DebugSessionEndReasonError      DebugSessionEndReason = "error"
+	DebugSessionEndReasonIdle       DebugSessionEndReason = "idle"
+	DebugSessionEndReasonJobEnded   DebugSessionEndReason = "job_ended"
+	DebugSessionEndReasonKillSwitch DebugSessionEndReason = "kill_switch"
+	DebugSessionEndReasonLinkLost   DebugSessionEndReason = "link_lost"
+	DebugSessionEndReasonTimeLimit  DebugSessionEndReason = "time_limit"
+	DebugSessionEndReasonUser       DebugSessionEndReason = "user"
+)
+
+// Valid indicates whether the value is a known member of the DebugSessionEndReason enum.
+func (e DebugSessionEndReason) Valid() bool {
+	switch e {
+	case DebugSessionEndReasonAdmin:
+		return true
+	case DebugSessionEndReasonError:
+		return true
+	case DebugSessionEndReasonIdle:
+		return true
+	case DebugSessionEndReasonJobEnded:
+		return true
+	case DebugSessionEndReasonKillSwitch:
+		return true
+	case DebugSessionEndReasonLinkLost:
+		return true
+	case DebugSessionEndReasonTimeLimit:
+		return true
+	case DebugSessionEndReasonUser:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugSessionState.
+const (
+	DebugSessionStateEnded DebugSessionState = "ended"
+	DebugSessionStateOpen  DebugSessionState = "open"
+)
+
+// Valid indicates whether the value is a known member of the DebugSessionState enum.
+func (e DebugSessionState) Valid() bool {
+	switch e {
+	case DebugSessionStateEnded:
+		return true
+	case DebugSessionStateOpen:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DependencyCheckRequestRunnerKind.
 const (
 	DependencyCheckRequestRunnerKindEphemeral  DependencyCheckRequestRunnerKind = "ephemeral"
@@ -5386,6 +5476,127 @@ type DayValue struct {
 	Value float32            `json:"value"`
 }
 
+// DebugPoolSettings debug-access R5.25, R5.26.
+type DebugPoolSettings struct {
+	// Enabled Allow debug sessions on this pool (the kill switch).
+	Enabled bool `json:"enabled"`
+
+	// Ended Sessions this change ended. Only on a save.
+	Ended        *int `json:"ended,omitempty"`
+	OpenSessions int  `json:"open_sessions"`
+
+	// Record Keep a redacted transcript of each session.
+	Record    bool       `json:"record"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UpdatedBy *string    `json:"updated_by,omitempty"`
+}
+
+// DebugPoolSettingsInput defines model for DebugPoolSettingsInput.
+type DebugPoolSettingsInput struct {
+	// Confirm Needed to turn sessions off while one is open.
+	Confirm *bool `json:"confirm,omitempty"`
+	Enabled bool  `json:"enabled"`
+	Record  bool  `json:"record"`
+}
+
+// DebugRepoAccess debug-access R5.1, R5.2, R5.10, R5.17, R5.18, R5.21.
+type DebugRepoAccess struct {
+	// Allows What a session allows
+	Allows string `json:"allows"`
+
+	// DisabledReason Why the switch cannot be turned on (a public repository).
+	DisabledReason *string `json:"disabled_reason,omitempty"`
+	Enabled        bool    `json:"enabled"`
+
+	// HoldMin 0 to 30. Saved; holding a failed job is not built yet.
+	HoldMin int `json:"hold_min"`
+
+	// IdleMin Idle limit in minutes, 1 to 60.
+	IdleMin int `json:"idle_min"`
+
+	// LimitMin Session limit in minutes, 5 to 120.
+	LimitMin int `json:"limit_min"`
+
+	// Never What a session never allows
+	Never        string             `json:"never"`
+	PersistentOk bool               `json:"persistent_ok"`
+	RepositoryId int64              `json:"repository_id"`
+	UpdatedAt    *time.Time         `json:"updated_at,omitempty"`
+	UpdatedBy    *string            `json:"updated_by,omitempty"`
+	Who          DebugRepoAccessWho `json:"who"`
+}
+
+// DebugRepoAccessWho defines model for DebugRepoAccess.Who.
+type DebugRepoAccessWho string
+
+// DebugRepoAccessInput defines model for DebugRepoAccessInput.
+type DebugRepoAccessInput struct {
+	Enabled      bool                    `json:"enabled"`
+	HoldMin      int                     `json:"hold_min"`
+	IdleMin      int                     `json:"idle_min"`
+	LimitMin     int                     `json:"limit_min"`
+	PersistentOk bool                    `json:"persistent_ok"`
+	Who          DebugRepoAccessInputWho `json:"who"`
+}
+
+// DebugRepoAccessInputWho defines model for DebugRepoAccessInput.Who.
+type DebugRepoAccessInputWho string
+
+// DebugSession One debug session (debug-access R5.24). No secret and no source address.
+type DebugSession struct {
+	Backend   *string                `json:"backend,omitempty"`
+	EndReason *DebugSessionEndReason `json:"end_reason,omitempty"`
+	EndedAt   *time.Time             `json:"ended_at,omitempty"`
+	EndedBy   *string                `json:"ended_by,omitempty"`
+	EndsAt    time.Time              `json:"ends_at"`
+	Extended  bool                   `json:"extended"`
+	Id        string                 `json:"id"`
+	Isolation *string                `json:"isolation,omitempty"`
+	JobId     int64                  `json:"job_id"`
+	MachineId *string                `json:"machine_id,omitempty"`
+	OpenedAt  time.Time              `json:"opened_at"`
+	Os        *string                `json:"os,omitempty"`
+	Reason    string                 `json:"reason"`
+
+	// Recorded False when the pool keeps no transcripts.
+	Recorded   bool              `json:"recorded"`
+	Repository string            `json:"repository"`
+	RunnerName *string           `json:"runner_name,omitempty"`
+	Source     string            `json:"source"`
+	State      DebugSessionState `json:"state"`
+	User       string            `json:"user"`
+}
+
+// DebugSessionEndReason defines model for DebugSession.EndReason.
+type DebugSessionEndReason string
+
+// DebugSessionState defines model for DebugSession.State.
+type DebugSessionState string
+
+// DebugSessionList defines model for DebugSessionList.
+type DebugSessionList struct {
+	Items []DebugSession `json:"items"`
+}
+
+// DebugSessionOpenInput defines model for DebugSessionOpenInput.
+type DebugSessionOpenInput struct {
+	// Reason One line, 3 to 200 characters (R5.3).
+	Reason string `json:"reason"`
+}
+
+// DebugTranscript defines model for DebugTranscript.
+type DebugTranscript struct {
+	ExpiresAt time.Time `json:"expires_at"`
+
+	// Note Cleaned as far as possible; redaction cannot promise to catch everything.
+	Note      string `json:"note"`
+	SessionId string `json:"session_id"`
+	Text      string `json:"text"`
+
+	// Truncated The 5 MB cap was reached.
+	Truncated bool `json:"truncated"`
+}
+
 // DependencyAdded defines model for DependencyAdded.
 type DependencyAdded struct {
 	ItemId  string `json:"item_id"`
@@ -6544,6 +6755,29 @@ type JobState string
 
 // JobStepsSource ci-run-insights R5.40. Where the steps came from.
 type JobStepsSource string
+
+// JobDebug The Debug access card of a job (debug-access section 4).
+type JobDebug struct {
+	Allowed  bool  `json:"allowed"`
+	IdleMin  *int  `json:"idle_min,omitempty"`
+	JobId    int64 `json:"job_id"`
+	LimitMin *int  `json:"limit_min,omitempty"`
+
+	// OpenSession One debug session (debug-access R5.24). No secret and no source address.
+	OpenSession       *DebugSession `json:"open_session,omitempty"`
+	RepositoryEnabled bool          `json:"repository_enabled"`
+
+	// Sees What the shell can see (R5.14).
+	Sees     string         `json:"sees"`
+	Sessions []DebugSession `json:"sessions"`
+	Warnings []string       `json:"warnings"`
+
+	// WhyNot The reason beside the disabled button; absent when allowed.
+	WhyNot *string `json:"why_not,omitempty"`
+
+	// WhyNotCode The first check that failed; absent when allowed.
+	WhyNotCode *string `json:"why_not_code,omitempty"`
+}
 
 // JobDetail A job with its steps, the last 30 runs of its key, its attempts and the ETA of its run (OPS34).
 type JobDetail struct {
@@ -10259,6 +10493,9 @@ type Confirmed = bool
 // Cursor defines model for Cursor.
 type Cursor = string
 
+// DebugSessionId defines model for DebugSessionId.
+type DebugSessionId = string
+
 // DependencyJobId defines model for DependencyJobId.
 type DependencyJobId = string
 
@@ -10945,6 +11182,9 @@ type PlanConfigJSONRequestBody = ConfigPlanRequest
 // ApplyConfigPlanJSONRequestBody defines body for ApplyConfigPlan for application/json ContentType.
 type ApplyConfigPlanJSONRequestBody = ConfigApplyRequest
 
+// PutDebugPoolSettingsJSONRequestBody defines body for PutDebugPoolSettings for application/json ContentType.
+type PutDebugPoolSettingsJSONRequestBody = DebugPoolSettingsInput
+
 // RemoveRegistrationJSONRequestBody defines body for RemoveRegistration for application/json ContentType.
 type RemoveRegistrationJSONRequestBody = RemoveRegistrationRequest
 
@@ -10965,6 +11205,9 @@ type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
 
 // PutJobSizeOverrideJSONRequestBody defines body for PutJobSizeOverride for application/json ContentType.
 type PutJobSizeOverrideJSONRequestBody = JobSizeOverrideInput
+
+// OpenDebugSessionJSONRequestBody defines body for OpenDebugSession for application/json ContentType.
+type OpenDebugSessionJSONRequestBody = DebugSessionOpenInput
 
 // CreateJoinCodeJSONRequestBody defines body for CreateJoinCode for application/json ContentType.
 type CreateJoinCodeJSONRequestBody = CreateJoinCodeRequest
@@ -11037,6 +11280,9 @@ type PutRegistryStoreSettingsJSONRequestBody = RegistryStoreSettingsInput
 
 // RemoveCrspJSONRequestBody defines body for RemoveCrsp for application/json ContentType.
 type RemoveCrspJSONRequestBody = RemoveRequest
+
+// SetRepoDebugAccessJSONRequestBody defines body for SetRepoDebugAccess for application/json ContentType.
+type SetRepoDebugAccessJSONRequestBody = DebugRepoAccessInput
 
 // SetRepositoryExtraPackagesJSONRequestBody defines body for SetRepositoryExtraPackages for application/json ContentType.
 type SetRepositoryExtraPackagesJSONRequestBody = ExtraPackagesUpdate
@@ -11418,6 +11664,64 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
 	ApplyConfigPlan(ctx context.Context, configPlanId string, body ApplyConfigPlanJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDebugPoolSettings The pool-wide debug switch and the transcript switch
+	//
+	// debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every open session and refuses new ones. Both are on when unsaved; each repository is still off until an admin switches it on (R5.1).
+	//
+	// Corresponds with GET /api/v1/debug-access (the `GetDebugPoolSettings` operationId).
+	GetDebugPoolSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutDebugPoolSettingsWithBody Save the pool-wide debug switch (the kill switch)
+	//
+	// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+	PutDebugPoolSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutDebugPoolSettings Save the pool-wide debug switch (the kill switch)
+	//
+	// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+	PutDebugPoolSettings(ctx context.Context, body PutDebugPoolSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDebugSessions The debug sessions of the pool, newest first
+	//
+	// debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+	//
+	// Corresponds with GET /api/v1/debug-sessions (the `ListDebugSessions` operationId).
+	ListDebugSessions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDebugSession One debug session
+	//
+	// Corresponds with GET /api/v1/debug-sessions/{sessionId} (the `GetDebugSession` operationId).
+	GetDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// EndDebugSession End a session
+	//
+	// debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+	//
+	// Corresponds with POST /api/v1/debug-sessions/{sessionId}/end (the `EndDebugSession` operationId).
+	EndDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ExtendDebugSession Extend a session once by 15 minutes
+	//
+	// debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+	//
+	// Corresponds with POST /api/v1/debug-sessions/{sessionId}/extend (the `ExtendDebugSession` operationId).
+	ExtendDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetDebugTranscript The redacted transcript of a session
+	//
+	// debug-access R5.25. Admins and owner. Cleaned by the shared redaction before it was stored, which cannot promise to catch everything; kept 30 days, at most 5 MB.
+	//
+	// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
+	GetDebugTranscript(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListDoctorFindings The latest finding per check and subject
 	//
@@ -11817,6 +12121,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/jobs/{jobId} (the `GetJob` operationId).
 	GetJob(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetJobDebug The Debug access card of a job
+	//
+	// debug-access section 4. Whether the signed-in user may open a session on this job now, and if not why (the first check that fails), the warnings to show first, the open session and the past sessions of the job.
+	//
+	// Corresponds with GET /api/v1/jobs/{jobId}/debug (the `GetJobDebug` operationId).
+	GetJobDebug(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpenDebugSessionWithBody Open a debug session on a job
+	//
+	// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+	OpenDebugSessionWithBody(ctx context.Context, jobId JobId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// OpenDebugSession Open a debug session on a job
+	//
+	// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+	OpenDebugSession(ctx context.Context, jobId JobId, body OpenDebugSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetJobResources CPU and memory of one job
 	//
@@ -12627,6 +12956,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/repositories/{repositoryId} (the `GetRepository` operationId).
 	GetRepository(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetRepoDebugAccess A repository's debug access setting
+	//
+	// debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+	//
+	// Corresponds with GET /api/v1/repositories/{repositoryId}/debug-access (the `GetRepoDebugAccess` operationId).
+	GetRepoDebugAccess(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetRepoDebugAccessWithBody Switch debug access on or off for a repository
+	//
+	// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+	SetRepoDebugAccessWithBody(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetRepoDebugAccess Switch debug access on or off for a repository
+	//
+	// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+	SetRepoDebugAccess(ctx context.Context, repositoryId RepositoryId, body SetRepoDebugAccessJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRepositoryExtraPackages The extra distribution packages of a repository's pool
 	//
@@ -13999,6 +14353,144 @@ func (c *Client) ApplyConfigPlan(ctx context.Context, configPlanId string, body 
 	return c.Client.Do(req)
 }
 
+// GetDebugPoolSettings The pool-wide debug switch and the transcript switch
+//
+// debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every open session and refuses new ones. Both are on when unsaved; each repository is still off until an admin switches it on (R5.1).
+//
+// Corresponds with GET /api/v1/debug-access (the `GetDebugPoolSettings` operationId).
+func (c *Client) GetDebugPoolSettings(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDebugPoolSettingsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutDebugPoolSettingsWithBody Save the pool-wide debug switch (the kill switch)
+//
+// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+func (c *Client) PutDebugPoolSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutDebugPoolSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutDebugPoolSettings Save the pool-wide debug switch (the kill switch)
+//
+// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+func (c *Client) PutDebugPoolSettings(ctx context.Context, body PutDebugPoolSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutDebugPoolSettingsRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListDebugSessions The debug sessions of the pool, newest first
+//
+// debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+//
+// Corresponds with GET /api/v1/debug-sessions (the `ListDebugSessions` operationId).
+func (c *Client) ListDebugSessions(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDebugSessionsRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDebugSession One debug session
+//
+// Corresponds with GET /api/v1/debug-sessions/{sessionId} (the `GetDebugSession` operationId).
+func (c *Client) GetDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDebugSessionRequest(c.Server, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// EndDebugSession End a session
+//
+// debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+//
+// Corresponds with POST /api/v1/debug-sessions/{sessionId}/end (the `EndDebugSession` operationId).
+func (c *Client) EndDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewEndDebugSessionRequest(c.Server, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ExtendDebugSession Extend a session once by 15 minutes
+//
+// debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+//
+// Corresponds with POST /api/v1/debug-sessions/{sessionId}/extend (the `ExtendDebugSession` operationId).
+func (c *Client) ExtendDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewExtendDebugSessionRequest(c.Server, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetDebugTranscript The redacted transcript of a session
+//
+// debug-access R5.25. Admins and owner. Cleaned by the shared redaction before it was stored, which cannot promise to catch everything; kept 30 days, at most 5 MB.
+//
+// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
+func (c *Client) GetDebugTranscript(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetDebugTranscriptRequest(c.Server, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListDoctorFindings The latest finding per check and subject
 //
 // Corresponds with GET /api/v1/doctor/findings (the `ListDoctorFindings` operationId).
@@ -14938,6 +15430,61 @@ func (c *Client) ListJobSummaries(ctx context.Context, params *ListJobSummariesP
 // Corresponds with GET /api/v1/jobs/{jobId} (the `GetJob` operationId).
 func (c *Client) GetJob(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetJobRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetJobDebug The Debug access card of a job
+//
+// debug-access section 4. Whether the signed-in user may open a session on this job now, and if not why (the first check that fails), the warnings to show first, the open session and the past sessions of the job.
+//
+// Corresponds with GET /api/v1/jobs/{jobId}/debug (the `GetJobDebug` operationId).
+func (c *Client) GetJobDebug(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetJobDebugRequest(c.Server, jobId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OpenDebugSessionWithBody Open a debug session on a job
+//
+// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+func (c *Client) OpenDebugSessionWithBody(ctx context.Context, jobId JobId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpenDebugSessionRequestWithBody(c.Server, jobId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// OpenDebugSession Open a debug session on a job
+//
+// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+func (c *Client) OpenDebugSession(ctx context.Context, jobId JobId, body OpenDebugSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewOpenDebugSessionRequest(c.Server, jobId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -16788,6 +17335,61 @@ func (c *Client) RemoveCrsp(ctx context.Context, body RemoveCrspJSONRequestBody,
 // Corresponds with GET /api/v1/repositories/{repositoryId} (the `GetRepository` operationId).
 func (c *Client) GetRepository(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetRepositoryRequest(c.Server, repositoryId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetRepoDebugAccess A repository's debug access setting
+//
+// debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+//
+// Corresponds with GET /api/v1/repositories/{repositoryId}/debug-access (the `GetRepoDebugAccess` operationId).
+func (c *Client) GetRepoDebugAccess(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetRepoDebugAccessRequest(c.Server, repositoryId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetRepoDebugAccessWithBody Switch debug access on or off for a repository
+//
+// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+func (c *Client) SetRepoDebugAccessWithBody(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetRepoDebugAccessRequestWithBody(c.Server, repositoryId, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetRepoDebugAccess Switch debug access on or off for a repository
+//
+// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+func (c *Client) SetRepoDebugAccess(ctx context.Context, repositoryId RepositoryId, body SetRepoDebugAccessJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetRepoDebugAccessRequest(c.Server, repositoryId, body)
 	if err != nil {
 		return nil, err
 	}
@@ -19790,6 +20392,236 @@ func NewApplyConfigPlanRequestWithBody(server string, configPlanId string, conte
 	return req, nil
 }
 
+// NewGetDebugPoolSettingsRequest constructs an http.Request for the GetDebugPoolSettings method
+func NewGetDebugPoolSettingsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-access")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutDebugPoolSettingsRequest calls the generic PutDebugPoolSettings builder with application/json body
+func NewPutDebugPoolSettingsRequest(server string, body PutDebugPoolSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutDebugPoolSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutDebugPoolSettingsRequestWithBody constructs an http.Request for the PutDebugPoolSettings method, with any body, and a specified content type
+func NewPutDebugPoolSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-access")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewListDebugSessionsRequest constructs an http.Request for the ListDebugSessions method
+func NewListDebugSessionsRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-sessions")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetDebugSessionRequest constructs an http.Request for the GetDebugSession method
+func NewGetDebugSessionRequest(server string, sessionId DebugSessionId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "sessionId", sessionId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-sessions/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewEndDebugSessionRequest constructs an http.Request for the EndDebugSession method
+func NewEndDebugSessionRequest(server string, sessionId DebugSessionId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "sessionId", sessionId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-sessions/%s/end", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewExtendDebugSessionRequest constructs an http.Request for the ExtendDebugSession method
+func NewExtendDebugSessionRequest(server string, sessionId DebugSessionId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "sessionId", sessionId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-sessions/%s/extend", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewGetDebugTranscriptRequest constructs an http.Request for the GetDebugTranscript method
+func NewGetDebugTranscriptRequest(server string, sessionId DebugSessionId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "sessionId", sessionId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/debug-sessions/%s/transcript", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListDoctorFindingsRequest constructs an http.Request for the ListDoctorFindings method
 func NewListDoctorFindingsRequest(server string, params *ListDoctorFindingsParams) (*http.Request, error) {
 	var err error
@@ -22689,6 +23521,87 @@ func NewGetJobRequest(server string, jobId JobId) (*http.Request, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewGetJobDebugRequest constructs an http.Request for the GetJobDebug method
+func NewGetJobDebugRequest(server string, jobId JobId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/debug", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewOpenDebugSessionRequest calls the generic OpenDebugSession builder with application/json body
+func NewOpenDebugSessionRequest(server string, jobId JobId, body OpenDebugSessionJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewOpenDebugSessionRequestWithBody(server, jobId, "application/json", bodyReader)
+}
+
+// NewOpenDebugSessionRequestWithBody constructs an http.Request for the OpenDebugSession method, with any body, and a specified content type
+func NewOpenDebugSessionRequestWithBody(server string, jobId JobId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "jobId", jobId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/jobs/%s/debug-sessions", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -26100,6 +27013,87 @@ func NewGetRepositoryRequest(server string, repositoryId RepositoryId) (*http.Re
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewGetRepoDebugAccessRequest constructs an http.Request for the GetRepoDebugAccess method
+func NewGetRepoDebugAccessRequest(server string, repositoryId RepositoryId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repositoryId", repositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/repositories/%s/debug-access", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSetRepoDebugAccessRequest calls the generic SetRepoDebugAccess builder with application/json body
+func NewSetRepoDebugAccessRequest(server string, repositoryId RepositoryId, body SetRepoDebugAccessJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetRepoDebugAccessRequestWithBody(server, repositoryId, "application/json", bodyReader)
+}
+
+// NewSetRepoDebugAccessRequestWithBody constructs an http.Request for the SetRepoDebugAccess method, with any body, and a specified content type
+func NewSetRepoDebugAccessRequestWithBody(server string, repositoryId RepositoryId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "repositoryId", repositoryId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "integer", Format: "int64"})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/repositories/%s/debug-access", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -29949,6 +30943,76 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with POST /api/v1/config/plans/{configPlanId}/apply (the `ApplyConfigPlan` operationId).
 	ApplyConfigPlanWithResponse(ctx context.Context, configPlanId string, body ApplyConfigPlanJSONRequestBody, reqEditors ...RequestEditorFn) (*ApplyConfigPlanResponse, error)
 
+	// GetDebugPoolSettingsWithResponse The pool-wide debug switch and the transcript switch
+	//
+	// debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every open session and refuses new ones. Both are on when unsaved; each repository is still off until an admin switches it on (R5.1).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/debug-access (the `GetDebugPoolSettings` operationId).
+	GetDebugPoolSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetDebugPoolSettingsResponse, error)
+
+	// PutDebugPoolSettingsWithBodyWithResponse Save the pool-wide debug switch (the kill switch)
+	//
+	// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+	PutDebugPoolSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDebugPoolSettingsResponse, error)
+
+	// PutDebugPoolSettingsWithResponse Save the pool-wide debug switch (the kill switch)
+	//
+	// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+	PutDebugPoolSettingsWithResponse(ctx context.Context, body PutDebugPoolSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDebugPoolSettingsResponse, error)
+
+	// ListDebugSessionsWithResponse The debug sessions of the pool, newest first
+	//
+	// debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/debug-sessions (the `ListDebugSessions` operationId).
+	ListDebugSessionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListDebugSessionsResponse, error)
+
+	// GetDebugSessionWithResponse One debug session
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/debug-sessions/{sessionId} (the `GetDebugSession` operationId).
+	GetDebugSessionWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*GetDebugSessionResponse, error)
+
+	// EndDebugSessionWithResponse End a session
+	//
+	// debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/debug-sessions/{sessionId}/end (the `EndDebugSession` operationId).
+	EndDebugSessionWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*EndDebugSessionResponse, error)
+
+	// ExtendDebugSessionWithResponse Extend a session once by 15 minutes
+	//
+	// debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/debug-sessions/{sessionId}/extend (the `ExtendDebugSession` operationId).
+	ExtendDebugSessionWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*ExtendDebugSessionResponse, error)
+
+	// GetDebugTranscriptWithResponse The redacted transcript of a session
+	//
+	// debug-access R5.25. Admins and owner. Cleaned by the shared redaction before it was stored, which cannot promise to catch everything; kept 30 days, at most 5 MB.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
+	GetDebugTranscriptWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*GetDebugTranscriptResponse, error)
+
 	// ListDoctorFindingsWithResponse The latest finding per check and subject
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -30429,6 +31493,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/jobs/{jobId} (the `GetJob` operationId).
 	GetJobWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobResponse, error)
+
+	// GetJobDebugWithResponse The Debug access card of a job
+	//
+	// debug-access section 4. Whether the signed-in user may open a session on this job now, and if not why (the first check that fails), the warnings to show first, the open session and the past sessions of the job.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/jobs/{jobId}/debug (the `GetJobDebug` operationId).
+	GetJobDebugWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobDebugResponse, error)
+
+	// OpenDebugSessionWithBodyWithResponse Open a debug session on a job
+	//
+	// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+	OpenDebugSessionWithBodyWithResponse(ctx context.Context, jobId JobId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpenDebugSessionResponse, error)
+
+	// OpenDebugSessionWithResponse Open a debug session on a job
+	//
+	// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+	OpenDebugSessionWithResponse(ctx context.Context, jobId JobId, body OpenDebugSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*OpenDebugSessionResponse, error)
 
 	// GetJobResourcesWithResponse CPU and memory of one job
 	//
@@ -31351,6 +32442,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/repositories/{repositoryId} (the `GetRepository` operationId).
 	GetRepositoryWithResponse(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*GetRepositoryResponse, error)
+
+	// GetRepoDebugAccessWithResponse A repository's debug access setting
+	//
+	// debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/repositories/{repositoryId}/debug-access (the `GetRepoDebugAccess` operationId).
+	GetRepoDebugAccessWithResponse(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*GetRepoDebugAccessResponse, error)
+
+	// SetRepoDebugAccessWithBodyWithResponse Switch debug access on or off for a repository
+	//
+	// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+	SetRepoDebugAccessWithBodyWithResponse(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetRepoDebugAccessResponse, error)
+
+	// SetRepoDebugAccessWithResponse Switch debug access on or off for a repository
+	//
+	// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+	SetRepoDebugAccessWithResponse(ctx context.Context, repositoryId RepositoryId, body SetRepoDebugAccessJSONRequestBody, reqEditors ...RequestEditorFn) (*SetRepoDebugAccessResponse, error)
 
 	// GetRepositoryExtraPackagesWithResponse The extra distribution packages of a repository's pool
 	//
@@ -33448,6 +34566,342 @@ func (r ApplyConfigPlanResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ApplyConfigPlanResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDebugPoolSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugPoolSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDebugPoolSettingsResponse) GetJSON200() *DebugPoolSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetDebugPoolSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDebugPoolSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDebugPoolSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDebugPoolSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDebugPoolSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutDebugPoolSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugPoolSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutDebugPoolSettingsResponse) GetJSON200() *DebugPoolSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutDebugPoolSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutDebugPoolSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutDebugPoolSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutDebugPoolSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutDebugPoolSettingsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListDebugSessionsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugSessionList
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListDebugSessionsResponse) GetJSON200() *DebugSessionList {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListDebugSessionsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListDebugSessionsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDebugSessionsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDebugSessionsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListDebugSessionsResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDebugSessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugSession
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDebugSessionResponse) GetJSON200() *DebugSession {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetDebugSessionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDebugSessionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDebugSessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDebugSessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDebugSessionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type EndDebugSessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugSession
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r EndDebugSessionResponse) GetJSON200() *DebugSession {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r EndDebugSessionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r EndDebugSessionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r EndDebugSessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r EndDebugSessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r EndDebugSessionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ExtendDebugSessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugSession
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ExtendDebugSessionResponse) GetJSON200() *DebugSession {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ExtendDebugSessionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ExtendDebugSessionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ExtendDebugSessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ExtendDebugSessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ExtendDebugSessionResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetDebugTranscriptResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugTranscript
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetDebugTranscriptResponse) GetJSON200() *DebugTranscript {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetDebugTranscriptResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetDebugTranscriptResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetDebugTranscriptResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetDebugTranscriptResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetDebugTranscriptResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -35787,6 +37241,102 @@ func (r GetJobResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetJobResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetJobDebugResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *JobDebug
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetJobDebugResponse) GetJSON200() *JobDebug {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetJobDebugResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetJobDebugResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetJobDebugResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetJobDebugResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetJobDebugResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type OpenDebugSessionResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *DebugSession
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r OpenDebugSessionResponse) GetJSON201() *DebugSession {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r OpenDebugSessionResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r OpenDebugSessionResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r OpenDebugSessionResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r OpenDebugSessionResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r OpenDebugSessionResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -39583,6 +41133,102 @@ func (r GetRepositoryResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetRepositoryResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetRepoDebugAccessResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugRepoAccess
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetRepoDebugAccessResponse) GetJSON200() *DebugRepoAccess {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetRepoDebugAccessResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetRepoDebugAccessResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetRepoDebugAccessResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetRepoDebugAccessResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetRepoDebugAccessResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SetRepoDebugAccessResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DebugRepoAccess
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SetRepoDebugAccessResponse) GetJSON200() *DebugRepoAccess {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SetRepoDebugAccessResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SetRepoDebugAccessResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SetRepoDebugAccessResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetRepoDebugAccessResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SetRepoDebugAccessResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -43910,6 +45556,124 @@ func (c *ClientWithResponses) ApplyConfigPlanWithResponse(ctx context.Context, c
 	return ParseApplyConfigPlanResponse(rsp)
 }
 
+// GetDebugPoolSettingsWithResponse The pool-wide debug switch and the transcript switch
+//
+// debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every open session and refuses new ones. Both are on when unsaved; each repository is still off until an admin switches it on (R5.1).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/debug-access (the `GetDebugPoolSettings` operationId).
+func (c *ClientWithResponses) GetDebugPoolSettingsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetDebugPoolSettingsResponse, error) {
+	rsp, err := c.GetDebugPoolSettings(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDebugPoolSettingsResponse(rsp)
+}
+
+// PutDebugPoolSettingsWithBodyWithResponse Save the pool-wide debug switch (the kill switch)
+//
+// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+func (c *ClientWithResponses) PutDebugPoolSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutDebugPoolSettingsResponse, error) {
+	rsp, err := c.PutDebugPoolSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutDebugPoolSettingsResponse(rsp)
+}
+
+// PutDebugPoolSettingsWithResponse Save the pool-wide debug switch (the kill switch)
+//
+// debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/debug-access (the `PutDebugPoolSettings` operationId).
+func (c *ClientWithResponses) PutDebugPoolSettingsWithResponse(ctx context.Context, body PutDebugPoolSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutDebugPoolSettingsResponse, error) {
+	rsp, err := c.PutDebugPoolSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutDebugPoolSettingsResponse(rsp)
+}
+
+// ListDebugSessionsWithResponse The debug sessions of the pool, newest first
+//
+// debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/debug-sessions (the `ListDebugSessions` operationId).
+func (c *ClientWithResponses) ListDebugSessionsWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListDebugSessionsResponse, error) {
+	rsp, err := c.ListDebugSessions(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDebugSessionsResponse(rsp)
+}
+
+// GetDebugSessionWithResponse One debug session
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/debug-sessions/{sessionId} (the `GetDebugSession` operationId).
+func (c *ClientWithResponses) GetDebugSessionWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*GetDebugSessionResponse, error) {
+	rsp, err := c.GetDebugSession(ctx, sessionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDebugSessionResponse(rsp)
+}
+
+// EndDebugSessionWithResponse End a session
+//
+// debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/debug-sessions/{sessionId}/end (the `EndDebugSession` operationId).
+func (c *ClientWithResponses) EndDebugSessionWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*EndDebugSessionResponse, error) {
+	rsp, err := c.EndDebugSession(ctx, sessionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseEndDebugSessionResponse(rsp)
+}
+
+// ExtendDebugSessionWithResponse Extend a session once by 15 minutes
+//
+// debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/debug-sessions/{sessionId}/extend (the `ExtendDebugSession` operationId).
+func (c *ClientWithResponses) ExtendDebugSessionWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*ExtendDebugSessionResponse, error) {
+	rsp, err := c.ExtendDebugSession(ctx, sessionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseExtendDebugSessionResponse(rsp)
+}
+
+// GetDebugTranscriptWithResponse The redacted transcript of a session
+//
+// debug-access R5.25. Admins and owner. Cleaned by the shared redaction before it was stored, which cannot promise to catch everything; kept 30 days, at most 5 MB.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
+func (c *ClientWithResponses) GetDebugTranscriptWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*GetDebugTranscriptResponse, error) {
+	rsp, err := c.GetDebugTranscript(ctx, sessionId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetDebugTranscriptResponse(rsp)
+}
+
 // ListDoctorFindingsWithResponse The latest finding per check and subject
 //
 // Returns a wrapper object for the known response body format(s).
@@ -44719,6 +46483,51 @@ func (c *ClientWithResponses) GetJobWithResponse(ctx context.Context, jobId JobI
 		return nil, err
 	}
 	return ParseGetJobResponse(rsp)
+}
+
+// GetJobDebugWithResponse The Debug access card of a job
+//
+// debug-access section 4. Whether the signed-in user may open a session on this job now, and if not why (the first check that fails), the warnings to show first, the open session and the past sessions of the job.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/jobs/{jobId}/debug (the `GetJobDebug` operationId).
+func (c *ClientWithResponses) GetJobDebugWithResponse(ctx context.Context, jobId JobId, reqEditors ...RequestEditorFn) (*GetJobDebugResponse, error) {
+	rsp, err := c.GetJobDebug(ctx, jobId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetJobDebugResponse(rsp)
+}
+
+// OpenDebugSessionWithBodyWithResponse Open a debug session on a job
+//
+// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+func (c *ClientWithResponses) OpenDebugSessionWithBodyWithResponse(ctx context.Context, jobId JobId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*OpenDebugSessionResponse, error) {
+	rsp, err := c.OpenDebugSessionWithBody(ctx, jobId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpenDebugSessionResponse(rsp)
+}
+
+// OpenDebugSessionWithResponse Open a debug session on a job
+//
+// debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/jobs/{jobId}/debug-sessions (the `OpenDebugSession` operationId).
+func (c *ClientWithResponses) OpenDebugSessionWithResponse(ctx context.Context, jobId JobId, body OpenDebugSessionJSONRequestBody, reqEditors ...RequestEditorFn) (*OpenDebugSessionResponse, error) {
+	rsp, err := c.OpenDebugSession(ctx, jobId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseOpenDebugSessionResponse(rsp)
 }
 
 // GetJobResourcesWithResponse CPU and memory of one job
@@ -46265,6 +48074,51 @@ func (c *ClientWithResponses) GetRepositoryWithResponse(ctx context.Context, rep
 		return nil, err
 	}
 	return ParseGetRepositoryResponse(rsp)
+}
+
+// GetRepoDebugAccessWithResponse A repository's debug access setting
+//
+// debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/repositories/{repositoryId}/debug-access (the `GetRepoDebugAccess` operationId).
+func (c *ClientWithResponses) GetRepoDebugAccessWithResponse(ctx context.Context, repositoryId RepositoryId, reqEditors ...RequestEditorFn) (*GetRepoDebugAccessResponse, error) {
+	rsp, err := c.GetRepoDebugAccess(ctx, repositoryId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetRepoDebugAccessResponse(rsp)
+}
+
+// SetRepoDebugAccessWithBodyWithResponse Switch debug access on or off for a repository
+//
+// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+func (c *ClientWithResponses) SetRepoDebugAccessWithBodyWithResponse(ctx context.Context, repositoryId RepositoryId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetRepoDebugAccessResponse, error) {
+	rsp, err := c.SetRepoDebugAccessWithBody(ctx, repositoryId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetRepoDebugAccessResponse(rsp)
+}
+
+// SetRepoDebugAccessWithResponse Switch debug access on or off for a repository
+//
+// debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/repositories/{repositoryId}/debug-access (the `SetRepoDebugAccess` operationId).
+func (c *ClientWithResponses) SetRepoDebugAccessWithResponse(ctx context.Context, repositoryId RepositoryId, body SetRepoDebugAccessJSONRequestBody, reqEditors ...RequestEditorFn) (*SetRepoDebugAccessResponse, error) {
+	rsp, err := c.SetRepoDebugAccess(ctx, repositoryId, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetRepoDebugAccessResponse(rsp)
 }
 
 // GetRepositoryExtraPackagesWithResponse The extra distribution packages of a repository's pool
@@ -48680,6 +50534,237 @@ func ParseApplyConfigPlanResponse(rsp *http.Response) (*ApplyConfigPlanResponse,
 	return response, nil
 }
 
+// ParseGetDebugPoolSettingsResponse parses an HTTP response from a GetDebugPoolSettingsWithResponse call
+func ParseGetDebugPoolSettingsResponse(rsp *http.Response) (*GetDebugPoolSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDebugPoolSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugPoolSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutDebugPoolSettingsResponse parses an HTTP response from a PutDebugPoolSettingsWithResponse call
+func ParsePutDebugPoolSettingsResponse(rsp *http.Response) (*PutDebugPoolSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutDebugPoolSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugPoolSettings
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDebugSessionsResponse parses an HTTP response from a ListDebugSessionsWithResponse call
+func ParseListDebugSessionsResponse(rsp *http.Response) (*ListDebugSessionsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDebugSessionsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugSessionList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDebugSessionResponse parses an HTTP response from a GetDebugSessionWithResponse call
+func ParseGetDebugSessionResponse(rsp *http.Response) (*GetDebugSessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDebugSessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugSession
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseEndDebugSessionResponse parses an HTTP response from a EndDebugSessionWithResponse call
+func ParseEndDebugSessionResponse(rsp *http.Response) (*EndDebugSessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &EndDebugSessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugSession
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseExtendDebugSessionResponse parses an HTTP response from a ExtendDebugSessionWithResponse call
+func ParseExtendDebugSessionResponse(rsp *http.Response) (*ExtendDebugSessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ExtendDebugSessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugSession
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetDebugTranscriptResponse parses an HTTP response from a GetDebugTranscriptWithResponse call
+func ParseGetDebugTranscriptResponse(rsp *http.Response) (*GetDebugTranscriptResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetDebugTranscriptResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugTranscript
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
 // ParseListDoctorFindingsResponse parses an HTTP response from a ListDoctorFindingsWithResponse call
 func ParseListDoctorFindingsResponse(rsp *http.Response) (*ListDoctorFindingsResponse, error) {
 	bodyBytes, err := io.ReadAll(rsp.Body)
@@ -50328,6 +52413,72 @@ func ParseGetJobResponse(rsp *http.Response) (*GetJobResponse, error) {
 			return nil, err
 		}
 		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetJobDebugResponse parses an HTTP response from a GetJobDebugWithResponse call
+func ParseGetJobDebugResponse(rsp *http.Response) (*GetJobDebugResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetJobDebugResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest JobDebug
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseOpenDebugSessionResponse parses an HTTP response from a OpenDebugSessionWithResponse call
+func ParseOpenDebugSessionResponse(rsp *http.Response) (*OpenDebugSessionResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &OpenDebugSessionResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest DebugSession
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
@@ -52951,6 +55102,72 @@ func ParseGetRepositoryResponse(rsp *http.Response) (*GetRepositoryResponse, err
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest Repository
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetRepoDebugAccessResponse parses an HTTP response from a GetRepoDebugAccessWithResponse call
+func ParseGetRepoDebugAccessResponse(rsp *http.Response) (*GetRepoDebugAccessResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetRepoDebugAccessResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugRepoAccess
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetRepoDebugAccessResponse parses an HTTP response from a SetRepoDebugAccessWithResponse call
+func ParseSetRepoDebugAccessResponse(rsp *http.Response) (*SetRepoDebugAccessResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetRepoDebugAccessResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DebugRepoAccess
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

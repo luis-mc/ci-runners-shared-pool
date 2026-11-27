@@ -132,6 +132,8 @@ type Options struct {
 	JobRunners JobRunnerReader
 	// Listen serves the listen address routes (handlers_listen.go). Nil answers 501.
 	Listen ListenService
+	// Debug serves debug access to a running job (handlers_debug.go, debug-access R5.1 to R5.30). Nil answers 501.
+	Debug DebugService
 	// Metrics serves the metrics export settings (handlers_metrics.go, observability R5.40). Nil answers 501.
 	Metrics MetricsService
 	// Authn says who a request acts as. Nil uses the GitHub area's sessions and

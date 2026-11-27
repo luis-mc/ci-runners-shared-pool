@@ -26,6 +26,13 @@ const (
 	ActionPoolSet  = "debug.pool.set"
 )
 
+// Session and Transcript are the stored rows, named here so the API can use
+// them without importing the store (STACKSPEC 3.2).
+type (
+	Session    = store.DebugSession
+	Transcript = store.DebugTranscript
+)
+
 // Jobs reads the facts of a job for the policy.
 type Jobs interface {
 	// DebugJob returns one job; ok is false when it is not known.
@@ -176,7 +183,7 @@ func (s *Service) Repo(ctx context.Context, repoID int64) (RepoSettings, error) 
 // SetRepo saves a repository's setting (admins and owner, R5.1, R5.2). A
 // public repository cannot be switched on. Only the owner sets or lifts
 // Owner only, so an admin can never widen what the owner narrowed.
-func (s *Service) SetRepo(ctx context.Context, p auth.Principal, repoID int64, repoName string, next RepoSettings) (RepoSettings, error) {
+func (s *Service) SetRepo(ctx context.Context, p auth.Principal, repoID int64, next RepoSettings) (RepoSettings, error) {
 	if !p.Role.AtLeast(auth.RoleAdmin) {
 		return RepoSettings{}, &Refusal{Code: CodeViewer, Text: "Only admins can change debug access."}
 	}
@@ -190,6 +197,7 @@ func (s *Service) SetRepo(ctx context.Context, p auth.Principal, repoID int64, r
 	if !info.Known {
 		return RepoSettings{}, &Refusal{Code: CodeRepoUnknown, Text: TextRepoUnknown}
 	}
+	repoName := info.FullName
 	if next.Enabled && info.Visibility != "private" && info.Visibility != "internal" {
 		return RepoSettings{}, &Refusal{Code: CodePublic, Text: TextPublic}
 	}
@@ -224,6 +232,14 @@ func onOff(b bool) string {
 		return "on"
 	}
 	return "off"
+}
+
+// RepoInfo reads the repository as the installation knows it.
+func (s *Service) RepoInfo(ctx context.Context, repoID int64) (Repo, error) {
+	if s.Repos == nil {
+		return Repo{}, errors.New("debug access is not wired")
+	}
+	return s.Repos.DebugRepo(ctx, repoID)
 }
 
 // ---------------------------------------------------------------- the job's card
@@ -511,6 +527,15 @@ func (s *Service) Sweep(ctx context.Context) (int, error) {
 	for _, o := range open {
 		how, due := Due(o, now)
 		if !due {
+			// A job that stopped running gives its session the 60-second notice (R5.20).
+			if s.Jobs != nil && o.EndsAt.After(now.Add(JobEndNotice)) {
+				j, ok, err := s.Jobs.DebugJob(ctx, o.JobID)
+				if err == nil && (!ok || !j.Running) {
+					if err := s.JobEnded(ctx, o.JobID); err != nil {
+						return ended, err
+					}
+				}
+			}
 			continue
 		}
 		if _, err := s.end(ctx, audit.System, o, how); err != nil {

@@ -2032,6 +2032,191 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/debug-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The pool-wide debug switch and the transcript switch
+         * @description debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every open session and refuses new ones. Both are on when unsaved; each repository is still off until an admin switches it on (R5.1).
+         */
+        get: operations["getDebugPoolSettings"];
+        /**
+         * Save the pool-wide debug switch (the kill switch)
+         * @description debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+         */
+        put: operations["putDebugPoolSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositories/{repositoryId}/debug-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A repository's debug access setting
+         * @description debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+         */
+        get: operations["getRepoDebugAccess"];
+        /**
+         * Switch debug access on or off for a repository
+         * @description debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+         */
+        put: operations["setRepoDebugAccess"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/debug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The Debug access card of a job
+         * @description debug-access section 4. Whether the signed-in user may open a session on this job now, and if not why (the first check that fails), the warnings to show first, the open session and the past sessions of the job.
+         */
+        get: operations["getJobDebug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/debug-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open a debug session on a job
+         * @description debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+         */
+        post: operations["openDebugSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The debug sessions of the pool, newest first
+         * @description debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+         */
+        get: operations["listDebugSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One debug session */
+        get: operations["getDebugSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend a session once by 15 minutes
+         * @description debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+         */
+        post: operations["extendDebugSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a session
+         * @description debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+         */
+        post: operations["endDebugSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}/transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The redacted transcript of a session
+         * @description debug-access R5.25. Admins and owner. Cleaned by the shared redaction before it was stored, which cannot promise to catch everything; kept 30 days, at most 5 MB.
+         */
+        get: operations["getDebugTranscript"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/jobs/{jobId}/timer": {
         parameters: {
             query?: never;
@@ -4393,6 +4578,122 @@ export interface components {
         RegistrySettings: {
             logins: components["schemas"]["RegistryLogin"][];
             ca_bundle_set: boolean;
+        };
+        /** @description debug-access R5.25, R5.26. */
+        DebugPoolSettings: {
+            /** @description Allow debug sessions on this pool (the kill switch). */
+            enabled: boolean;
+            /** @description Keep a redacted transcript of each session. */
+            record: boolean;
+            open_sessions: number;
+            /** @description Sessions this change ended. Only on a save. */
+            ended?: number;
+            /** Format: date-time */
+            updated_at?: string;
+            updated_by?: string;
+        };
+        DebugPoolSettingsInput: {
+            enabled: boolean;
+            record: boolean;
+            /** @description Needed to turn sessions off while one is open. */
+            confirm?: boolean;
+        };
+        /** @description debug-access R5.1, R5.2, R5.10, R5.17, R5.18, R5.21. */
+        DebugRepoAccess: {
+            /** Format: int64 */
+            repository_id: number;
+            enabled: boolean;
+            /** @enum {string} */
+            who: "admins" | "owner";
+            /** @description Session limit in minutes, 5 to 120. */
+            limit_min: number;
+            /** @description Idle limit in minutes, 1 to 60. */
+            idle_min: number;
+            /** @description 0 to 30. Saved; holding a failed job is not built yet. */
+            hold_min: number;
+            persistent_ok: boolean;
+            /** @description What a session allows */
+            allows: string;
+            /** @description What a session never allows */
+            never: string;
+            /** @description Why the switch cannot be turned on (a public repository). */
+            disabled_reason?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            updated_by?: string;
+        };
+        DebugRepoAccessInput: {
+            enabled: boolean;
+            /** @enum {string} */
+            who: "admins" | "owner";
+            limit_min: number;
+            idle_min: number;
+            hold_min: number;
+            persistent_ok: boolean;
+        };
+        DebugSessionOpenInput: {
+            /** @description One line, 3 to 200 characters (R5.3). */
+            reason: string;
+        };
+        /** @description One debug session (debug-access R5.24). No secret and no source address. */
+        DebugSession: {
+            id: string;
+            /** Format: int64 */
+            job_id: number;
+            repository: string;
+            machine_id?: string;
+            runner_name?: string;
+            backend?: string;
+            isolation?: string;
+            os?: string;
+            user: string;
+            reason: string;
+            source: string;
+            /** @enum {string} */
+            state: "open" | "ended";
+            /** Format: date-time */
+            opened_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            /** Format: date-time */
+            ended_at?: string;
+            /** @enum {string} */
+            end_reason?: "time_limit" | "idle" | "job_ended" | "user" | "admin" | "kill_switch" | "link_lost" | "error";
+            ended_by?: string;
+            extended: boolean;
+            /** @description False when the pool keeps no transcripts. */
+            recorded: boolean;
+        };
+        DebugSessionList: {
+            items: components["schemas"]["DebugSession"][];
+        };
+        /** @description The Debug access card of a job (debug-access section 4). */
+        JobDebug: {
+            /** Format: int64 */
+            job_id: number;
+            allowed: boolean;
+            /** @description The first check that failed; absent when allowed. */
+            why_not_code?: string;
+            /** @description The reason beside the disabled button; absent when allowed. */
+            why_not?: string;
+            warnings: string[];
+            /** @description What the shell can see (R5.14). */
+            sees: string;
+            repository_enabled: boolean;
+            limit_min?: number;
+            idle_min?: number;
+            open_session?: components["schemas"]["DebugSession"];
+            sessions: components["schemas"]["DebugSession"][];
+        };
+        DebugTranscript: {
+            session_id: string;
+            text: string;
+            /** @description The 5 MB cap was reached. */
+            truncated: boolean;
+            /** Format: date-time */
+            expires_at: string;
+            /** @description Cleaned as far as possible; redaction cannot promise to catch everything. */
+            note: string;
         };
         /**
          * @example {
@@ -8820,6 +9121,7 @@ export interface components {
         JoinCodeId: string;
         SetName: string;
         RunnerId: string;
+        DebugSessionId: string;
         JobId: number;
         TimerRunId: number;
         /** @description The attempt; the newest when absent. */
@@ -11794,6 +12096,267 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimerSettingsCheck"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDebugPoolSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting and how many sessions are open. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugPoolSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putDebugPoolSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugPoolSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description Saved; `ended` says how many sessions the change ended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugPoolSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRepoDebugAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The numeric GitHub repository id. */
+                repositoryId: components["parameters"]["RepositoryId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugRepoAccess"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setRepoDebugAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The numeric GitHub repository id. */
+                repositoryId: components["parameters"]["RepositoryId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugRepoAccessInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugRepoAccess"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJobDebug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDebug"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    openDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugSessionOpenInput"];
+            };
+        };
+        responses: {
+            /** @description The session is open. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listDebugSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sessions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSessionList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The session. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    extendDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Extended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    endDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDebugTranscript: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The transcript. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugTranscript"];
                 };
             };
             default: components["responses"]["Error"];

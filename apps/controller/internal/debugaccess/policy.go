@@ -117,6 +117,7 @@ type Repo struct {
 	// Known is true when the repository is one of the pool's installation (the
 	// user can see it in the console).
 	Known      bool
+	FullName   string
 	Visibility string
 }
 
