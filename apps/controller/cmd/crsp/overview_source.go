@@ -21,6 +21,8 @@ type poolOverviewSource struct {
 	MachineSvc interface {
 		List(ctx context.Context) ([]machines.View, error)
 	}
+	// Timers gives the job timers once they are wired (they are built after the live view); it may be nil.
+	Timers func() api.TimerService
 	// open shares one read of the open jobs between the queued and the running question of a snapshot.
 	open singleflight.Group
 }
@@ -29,7 +31,11 @@ type openJobs struct{ queued, running []gen.Job }
 
 func (p *poolOverviewSource) openJobs(ctx context.Context) (openJobs, error) {
 	v, err, _ := p.open.Do("open", func() (any, error) {
-		q, r, err := api.OverviewJobs(context.WithoutCancel(ctx), p.DB.Jobs(), time.Now())
+		var timers api.TimerService
+		if p.Timers != nil {
+			timers = p.Timers()
+		}
+		q, r, err := api.OverviewJobs(context.WithoutCancel(ctx), p.DB.Jobs(), timers, time.Now())
 		return openJobs{q, r}, err
 	})
 	if err != nil {

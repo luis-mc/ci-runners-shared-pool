@@ -237,7 +237,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	c.closers = append(c.closers, func() { stopHealth(); <-healthDone })
 
 	// Live view over the store: machines, queue, running jobs and minutes saved (audit R3-7).
-	hub, live := wire.NewLive(&poolOverviewSource{DB: d.DB, MachineSvc: d.Machines}, events.Options{})
+	hub, live := wire.NewLive(&poolOverviewSource{DB: d.DB, MachineSvc: d.Machines, Timers: func() api.TimerService { return c.Options.Timers }}, events.Options{})
 	c.Hub = hub
 	c.closers = append(c.closers, hub.Stop)
 

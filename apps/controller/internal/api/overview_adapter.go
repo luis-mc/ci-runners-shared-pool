@@ -23,13 +23,14 @@ func OverviewMachines(vs []machines.View, now time.Time) []gen.Machine {
 }
 
 // OverviewJobs reads the queued and running jobs once and gives each with its forecast and, when queued, its place,
-// the way the job list does. Queued jobs come in queue order.
-func OverviewJobs(ctx context.Context, data jobsdata.Reader, now time.Time) (queued, running []gen.Job, err error) {
+// the way the job list does (a running job in its grace carries its timer deadline, so the console asks about the
+// timers of those only). Queued jobs come in queue order. timers may be nil.
+func OverviewJobs(ctx context.Context, data jobsdata.Reader, timers TimerService, now time.Time) (queued, running []gen.Job, err error) {
 	rows, err := data.OpenJobs(ctx)
 	if err != nil {
 		return nil, nil, err
 	}
-	s := &server{opts: Options{JobsData: data, Now: func() time.Time { return now }}}
+	s := &server{opts: Options{JobsData: data, Timers: timers, Now: func() time.Time { return now }}}
 	items, err := s.jobItems(ctx, rows)
 	if err != nil {
 		return nil, nil, err
