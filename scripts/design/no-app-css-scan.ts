@@ -15,7 +15,7 @@ import { join, relative } from 'node:path';
  */
 export const CONFIG = {
   /** App folders, repo-relative. Everything inside is scanned. */
-  appRoots: ['apps/controller-console'],
+  appRoots: ['apps/controller-console', 'apps/web'],
   /** The shared UI package, repo-relative. Its stylesheets and class maps define the classes apps may use. */
   uiRoot: 'packages/ui/src',
   /** File names of class maps inside the shared UI package; their string values count as shared classes. */

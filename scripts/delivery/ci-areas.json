@@ -25,6 +25,10 @@
       "paths": ["apps/controller-console/**", "packages/**", "scripts/design/**"],
       "jobs": ["web_tests", "build", "e2e"]
     },
+    "site": {
+      "paths": ["apps/web/**"],
+      "jobs": ["web_tests"]
+    },
     "e2e": {
       "paths": ["e2e/**", "playwright.config.ts"],
       "jobs": ["build", "e2e"]
