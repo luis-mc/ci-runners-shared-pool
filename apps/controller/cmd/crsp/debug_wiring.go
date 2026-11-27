@@ -26,7 +26,7 @@ func (d debugJobs) DebugJob(ctx context.Context, id int64) (debugaccess.Job, boo
 		return debugaccess.Job{}, ok, err
 	}
 	return debugaccess.Job{ID: j.ID, RepositoryID: j.RepositoryID, Repository: j.Repository, Name: j.Name,
-		Running: j.State == jobsdata.Running, Event: j.Event, MachineID: j.MachineID, MachineName: j.MachineName,
+		Running: j.State == jobsdata.Running, Event: j.Event, HeadRepository: j.HeadRepository, MachineID: j.MachineID, MachineName: j.MachineName,
 		RunnerName: j.RunnerName, Backend: j.Backend, Isolation: j.Isolation}, true, nil
 }
 

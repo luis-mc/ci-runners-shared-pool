@@ -101,11 +101,13 @@ type Job struct {
 	// Running is true while the job runs on a runner of the pool.
 	Running bool
 	// Event is the GitHub event that started the run ("push", "pull_request", ...).
-	Event       string
-	MachineID   string
-	MachineName string
-	RunnerName  string
-	Backend     string
+	Event string
+	// HeadRepository is the repository the run's code came from (owner/name); "" when crsp does not know it.
+	HeadRepository string
+	MachineID      string
+	MachineName    string
+	RunnerName     string
+	Backend        string
 	// Isolation is "container", "VM", "microVM" or "persistent"; "" when crsp
 	// does not know it.
 	Isolation string
@@ -235,7 +237,7 @@ func Decide(f Facts) *Refusal {
 		// Fail closed: an unknown visibility is treated as public.
 		return &Refusal{Code: CodePublic, Text: TextPublic}
 	}
-	if isPullRequestEvent(f.Job.Event) {
+	if isPullRequestEvent(f.Job.Event) && !sameRepository(f.Job) {
 		return &Refusal{Code: CodePullRequest, Text: TextPullRequest}
 	}
 	if !f.Job.Running {
@@ -281,10 +283,15 @@ func environmentRefusal(f Facts) *Refusal {
 }
 
 // isPullRequestEvent is true for every event that runs code of a pull request.
-// crsp does not record the head repository of a pull request, so a fork cannot
-// be told apart and every one is refused (R5.5, fail closed).
 func isPullRequestEvent(ev string) bool {
 	return strings.HasPrefix(ev, "pull_request")
+}
+
+// sameRepository is true when the run's head repository is known and is the
+// job's own repository. A fork has another head repository; an unknown head
+// repository is treated as a fork (R5.5, fail closed).
+func sameRepository(j Job) bool {
+	return j.HeadRepository != "" && strings.EqualFold(j.HeadRepository, j.Repository)
 }
 
 // CheckReason checks the one-line reason (R5.3) and returns it trimmed.

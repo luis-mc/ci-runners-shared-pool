@@ -3327,7 +3327,7 @@ paths:
       x-cli-reason: 'crsp debug extend follows in its own task (debug-access R5.30, CRSP331 follow-up).'
       tags: [debug]
       summary: Extend a session once by 15 minutes
-      description: debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+      description: debug-access R5.19. Only the user who opened it; never past the repository's session limit; an audit row.
       x-auth: admin
       x-rate-limit: 30/minute/user
       parameters:

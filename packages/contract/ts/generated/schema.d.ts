@@ -2168,7 +2168,7 @@ export interface paths {
         put?: never;
         /**
          * Extend a session once by 15 minutes
-         * @description debug-access R5.19. Only the user who opened it; never past 120 minutes; an audit row.
+         * @description debug-access R5.19. Only the user who opened it; never past the repository's session limit; an audit row.
          */
         post: operations["extendDebugSession"];
         delete?: never;

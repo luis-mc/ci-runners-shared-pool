@@ -25,9 +25,6 @@ func fullEnd(s store.DebugSession) time.Time {
 	if s.Extended {
 		end = end.Add(ExtendBy)
 	}
-	if hard := s.OpenedAt.Add(MaxLimitMin * time.Minute); end.After(hard) {
-		end = hard
-	}
 	return end
 }
 
@@ -51,9 +48,9 @@ func Due(s store.DebugSession, now time.Time) (string, bool) {
 }
 
 // ExtendTo is the new end of a session that asks for its one extension
-// (R5.19). It never passes the most a repository may set (120 minutes from
-// the open).
-func ExtendTo(s store.DebugSession, now time.Time) (time.Time, *Refusal) {
+// (R5.19). It never passes the repository's own session limit from the open:
+// repoLimitMin is that limit as the repository sets it now, not a fixed ceiling.
+func ExtendTo(s store.DebugSession, now time.Time, repoLimitMin int) (time.Time, *Refusal) {
 	if !s.EndedAt.IsZero() || !now.Before(s.EndsAt) {
 		return time.Time{}, &Refusal{Code: CodeEnded, Text: "This session has ended."}
 	}
@@ -65,8 +62,12 @@ func ExtendTo(s store.DebugSession, now time.Time) (time.Time, *Refusal) {
 		return time.Time{}, &Refusal{Code: CodeEnded, Text: "The job has ended, so the session cannot be extended."}
 	}
 	next := s.EndsAt.Add(ExtendBy)
-	if hard := s.OpenedAt.Add(MaxLimitMin * time.Minute); next.After(hard) {
-		return time.Time{}, &Refusal{Code: CodePastLimit, Text: "The session is at the longest a session can be (120 minutes)."}
+	if hard := s.OpenedAt.Add(time.Duration(repoLimitMin) * time.Minute); next.After(hard) {
+		// Clamp at the repository's limit; with no room left there is nothing to extend.
+		if !hard.After(s.EndsAt) {
+			return time.Time{}, &Refusal{Code: CodePastLimit, Text: "The session is at this repository's session limit."}
+		}
+		next = hard
 	}
 	return next, nil
 }

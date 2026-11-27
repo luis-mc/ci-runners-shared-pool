@@ -97,6 +97,12 @@ func TestExtendOnceNotPastLimit(t *testing.T) {
 	if _, err := e.svc.Extend(e.ctx, viewer, d.ID); codeOf(err) != CodeViewer {
 		t.Fatalf("viewer extends: %v", err)
 	}
+	// At the repository's limit there is nothing to extend into.
+	if _, err := e.svc.Extend(e.ctx, admin, d.ID); codeOf(err) != CodePastLimit {
+		t.Fatalf("extend at the limit: %v", err)
+	}
+	// The limit is the repository's own, not a fixed 120: raise it and the full 15 minutes fit.
+	e.turnOn(func(r *RepoSettings) { r.LimitMin = 60 })
 	x, err := e.svc.Extend(e.ctx, admin, d.ID)
 	if err != nil || x.EndsAt != d.EndsAt.Add(15*time.Minute) {
 		t.Fatalf("extend = %+v, %v", x, err)
@@ -107,11 +113,29 @@ func TestExtendOnceNotPastLimit(t *testing.T) {
 	if got := e.audits(ActionExtended); len(got) != 1 {
 		t.Fatalf("extended rows = %d", len(got))
 	}
-	// A 120-minute session cannot pass 120 minutes.
+}
+
+// R5.19: an extension is clamped at the repository's limit, never at a fixed ceiling.
+func TestExtendClampsAtRepositoryLimit(t *testing.T) {
+	e := newEnv(t)
+	e.turnOn(nil) // limit 30
+	d := e.mustOpen(admin, 1)
+	e.turnOn(func(r *RepoSettings) { r.LimitMin = 40 }) // 10 minutes of room, 15 asked
+	x, err := e.svc.Extend(e.ctx, admin, d.ID)
+	if err != nil || x.EndsAt != d.OpenedAt.Add(40*time.Minute) {
+		t.Fatalf("clamped extend = %+v, %v", x, err)
+	}
+	// A repository at the highest setting (120) is held to 120 too.
 	e.turnOn(func(r *RepoSettings) { r.LimitMin = 120 })
 	d2 := e.mustOpen(admin, 2)
 	if _, err := e.svc.Extend(e.ctx, admin, d2.ID); codeOf(err) != CodePastLimit {
 		t.Fatalf("extend past 120: %v", err)
+	}
+	// Lowering the limit below the session's end leaves no room.
+	e.turnOn(func(r *RepoSettings) { r.LimitMin = 30 })
+	d3 := e.mustOpen(admin2, 3)
+	if _, err := e.svc.Extend(e.ctx, admin2, d3.ID); codeOf(err) != CodePastLimit {
+		t.Fatalf("extend at the limit: %v", err)
 	}
 }
 
@@ -207,6 +231,7 @@ func TestEveryStepIsOneAuditRowInOneTransaction(t *testing.T) {
 	e.turnOn(nil)
 	d := e.mustOpen(admin, 1)
 	_, _ = e.open(viewer, 2)
+	e.turnOn(func(r *RepoSettings) { r.LimitMin = 60 })
 	if _, err := e.svc.Extend(e.ctx, admin, d.ID); err != nil {
 		t.Fatal(err)
 	}
@@ -216,7 +241,7 @@ func TestEveryStepIsOneAuditRowInOneTransaction(t *testing.T) {
 	if _, err := e.svc.End(e.ctx, admin, d.ID); codeOf(err) != CodeEnded {
 		t.Fatalf("second end: %v", err)
 	}
-	for action, want := range map[string]int{ActionOpened: 1, ActionRefused: 1, ActionExtended: 1, ActionEnded: 1, ActionRepoSet: 1} {
+	for action, want := range map[string]int{ActionOpened: 1, ActionRefused: 1, ActionExtended: 1, ActionEnded: 1, ActionRepoSet: 2} {
 		if got := e.audits(action); len(got) != want {
 			t.Errorf("%s rows = %d, want %d", action, len(got), want)
 		}

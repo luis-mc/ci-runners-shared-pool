@@ -111,7 +111,7 @@ No mocks yet. Screens follow design system v4 and add no rules of their own. Rul
 
 - Running job, repository on, user allowed: button **Open debug session**, the question card asks for a reason (one line, 3 to 200 characters), then the terminal opens in the page.
 - Held failed job: a status word `◷ held, 12 min left` (design system status rule) and the same button.
-- Not allowed: the button is disabled and the reason sits beside it (design system, disabled-with-reason rule): "Debug access is off for this repository.", "Only admins can open a session.", "Another job of this repository is running in the same container.", "This is a pull request from a fork." and so on.
+- Not allowed: the button is disabled and the reason sits beside it (design system, disabled-with-reason rule): "Debug access is off for this repository.", "Only admins can open a session.", "Another job of this repository is running in the same container.", "This job runs for a pull request, which may come from a fork." and so on.
 - Open session: a terminal in a panel, a header with who opened it, the time left as a count, and **Extend** (once, +15 min, never past the repository's limit) and **End** (a question card first, design system ask-first rule). The panel never auto-focuses over text the user is typing elsewhere .
 - Past sessions of this job: a table (who, from, to, reason, how it ended, transcript link). Times follow the design system date and time rule.
 
@@ -143,7 +143,7 @@ No mocks yet. Screens follow design system v4 and add no rules of their own. Rul
 
 ### What can be entered
 
-**R5.5** — A session MUST be refused on a public repository and on a job run for a pull request from a fork. The refusal MUST say why and MUST NOT be settable (github-integration R5.41 and R5.47).
+**R5.5** — A session MUST be refused on a public repository and on a job run for a pull request from a fork. A pull request job MUST be allowed only when crsp has recorded its head repository and that repository is the job's own; a head repository that differs, or that crsp does not know, MUST count as a fork. The refusal MUST say why and MUST NOT be settable (github-integration R5.41 and R5.47).
 
 **R5.6** — A session MUST open only into the environment of one job: a container, a VM, a microVM, or the runner account of a persistent runner. It MUST NOT open a shell on the host OS.
 
@@ -175,7 +175,7 @@ No mocks yet. Screens follow design system v4 and add no rules of their own. Rul
 
 **R5.18** — A session MUST end after an idle limit with no keystroke (default 10 minutes, range 1 to 60).
 
-**R5.19** — The user MUST be able to extend a session once by 15 minutes, never past the repository's limit. An extension MUST be an audit row.
+**R5.19** — The user MUST be able to extend a session once by 15 minutes, never past the repository's own session limit counted from the open, and never past a fixed ceiling of the code. An extension MUST be an audit row.
 
 **R5.20** — A session on a running job MUST end when the job ends, with a 60-second notice in the terminal, unless the repository holds failed jobs (R5.21) and the job failed.
 
@@ -280,10 +280,10 @@ flowchart LR
 
 **New questions from building (CRSP331):**
 
-- **Q10.** crsp does not record a pull request's head repository, so it cannot tell a fork from the same repository. Every `pull_request` and `pull_request_target` job is refused for now. Record the head repository and allow same-repository pull requests?
-- **Q11.** R5.19 extends once by 15 minutes. Read "never past the limit" as at most 120 minutes from the open (built), or as at most the repository's own limit?
-- **Q12.** A repository whose visibility is not known is treated as public (refused). Keep that?
-- **Q13.** At controller start every session still marked open is ended as "connection lost" (R6.4), since no terminal stream survives a restart. Keep that once the agent can hold a session over a short controller restart?
+- **Q10.** Decided 27 Nov: record the head repository of a pull request and allow a pull request job whose head repository is the job's own repository. A fork, a head repository that differs and an unknown one stay refused (R5.5). Built in CRSP363: the head repository is read from GitHub's run and stored per job.
+- **Q11.** Decided 27 Nov: an extension may not pass the repository's own session limit from the open (R5.19), not a fixed 120 minutes. Built in CRSP363: the extension is cut at that limit. A session opened at the limit has no room, so it takes an extension only when the repository's limit was raised after it opened.
+- **Q12.** Decided 27 Nov: keep. A repository whose visibility is not known is treated as public and refused (R5.5).
+- **Q13.** Decided 27 Nov: keep. At controller start every session still marked open is ended as "connection lost" (R6.4).
 
 ## 9. Failure modes
 
@@ -308,7 +308,7 @@ A row that starts with "planned:" is not built yet; its path is where the test w
 | R5.2 | apps/controller/internal/api/handlers_debug_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/controller/internal/debugaccess/policy_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (disabled with reason) |
 | R5.3 | apps/controller/internal/debugaccess/policy_test.go, TestReasonLength3To200; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (asks for a reason first) |
 | R5.4 | apps/controller/internal/debugaccess/session_test.go, TestUserAndJobSessionCaps |
-| R5.5 | apps/controller/internal/debugaccess/policy_test.go, TestPublicAndForkNeverAllowed |
+| R5.5 | apps/controller/internal/debugaccess/policy_test.go, TestPublicAndForkNeverAllowed (fork and unknown head refused, same-repository pull request allowed); apps/controller/internal/store/jobsdata_test.go, TestIntegrationJobHeadRepositoryKeptAndUnknownByDefault |
 | R5.6 | apps/controller/internal/debugaccess/policy_test.go, TestNoEntererRefusesEveryOpen (controller side); planned: apps/controller/internal/backend/enter_test.go, TestNoHostShellEverReturned |
 | R5.7 | apps/controller/internal/debugaccess/policy_test.go, TestSharedContainerRefusedNamesOtherJob |
 | R5.8 | planned: apps/controller/internal/backend/linux/enter_test.go, TestOwnPIDNamespace; real Linux machine |
@@ -322,7 +322,7 @@ A row that starts with "planned:" is not built yet; its path is where the test w
 | R5.16 | planned: apps/controller/internal/agent/debug_test.go, TestEndKillsAllDebugProcesses |
 | R5.17 | planned: apps/controller/internal/agent/debug_test.go, TestHardLimitWithControllerGone |
 | R5.18 | apps/controller/internal/debugaccess/session_test.go, TestIdleLimit |
-| R5.19 | apps/controller/internal/debugaccess/session_test.go, TestExtendOnceNotPastLimit; apps/controller/internal/debugaccess/transcript_test.go, TestLongAt80Percent |
+| R5.19 | apps/controller/internal/debugaccess/session_test.go, TestExtendOnceNotPastLimit, TestExtendClampsAtRepositoryLimit; apps/controller/internal/debugaccess/transcript_test.go, TestLongAt80Percent |
 | R5.20 | apps/controller/internal/debugaccess/session_test.go, TestJobEndClosesAfterNotice |
 | R5.21 | planned: apps/controller/internal/agent/hold_test.go, TestFailedJobHeldSlotReleased |
 | R5.22 | planned: apps/controller/internal/agent/hold_test.go, TestHoldCapAndFloors |

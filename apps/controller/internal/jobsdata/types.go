@@ -90,10 +90,12 @@ type Job struct {
 	Branch       string
 	HeadSHA      string
 	Event        string
-	Labels       []string
-	State        State
-	Result       Result
-	HTMLURL      string
+	// HeadRepository is the repository the run's code came from (owner/name), "" when the source did not say.
+	HeadRepository string
+	Labels         []string
+	State          State
+	Result         Result
+	HTMLURL        string
 
 	// Times, zero when unknown.
 	CreatedAt   time.Time // GitHub created_at

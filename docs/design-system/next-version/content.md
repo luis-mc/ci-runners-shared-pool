@@ -2017,7 +2017,7 @@ The words of the Debug access card on a job page and of the debug session API an
 | Only the owner can open a session on this repository. | Refusal: the repository is set to Owner only. |
 | This repository is not in the pool's GitHub App installation. | Refusal: an unknown or archived repository. |
 | Not available for public repositories. | Refusal and the disabled reason of the repository setting. |
-| This job runs for a pull request, which may come from a fork. | Refusal: any pull request event (a fork cannot be told apart yet). |
+| This job runs for a pull request, which may come from a fork. | Refusal: a pull request whose head repository differs from the repository or is not known; a same-repository pull request is allowed. |
 | crsp does not know this job's environment, so it cannot be entered safely. | Refusal: an isolation crsp cannot enter safely, or a container shared with another running job. |
 | This job runs on a persistent runner. Turn on Allow on persistent runners for this repository first. | Refusal: a persistent runner while the repository does not allow it. |
 | You have 2 sessions open. End one first. | Refusal: the per-user cap. |

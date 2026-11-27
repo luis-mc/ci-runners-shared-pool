@@ -57,12 +57,19 @@ func TestReasonLength3To200(t *testing.T) {
 func TestPublicAndForkNeverAllowed(t *testing.T) {
 	e := newEnv(t)
 	e.turnOn(func(r *RepoSettings) { r.PersistentOK = true })
-	e.jobs.jobs[2] = func(j Job) Job { j.Event = "pull_request"; return j }(e.jobs.jobs[2])
+	// A fork (head repository differs) and an unknown head repository are refused.
+	e.jobs.jobs[2] = func(j Job) Job { j.Event = "pull_request"; j.HeadRepository = "mallory/app"; return j }(e.jobs.jobs[2])
 	e.jobs.jobs[3] = func(j Job) Job { j.Event = "pull_request_target"; return j }(e.jobs.jobs[3])
-	for _, id := range []int64{2, 3} {
+	e.jobs.jobs[4] = func(j Job) Job { j.Event = "pull_request"; j.HeadRepository = "alice/app-fork"; return j }(e.jobs.jobs[4])
+	for _, id := range []int64{2, 3, 4} {
 		if _, err := e.open(owner, id); codeOf(err) != CodePullRequest {
 			t.Fatalf("job %d: %v", id, err)
 		}
+	}
+	// A pull request from the same repository is allowed, whatever the case of the name.
+	e.jobs.jobs[5] = func(j Job) Job { j.Event = "pull_request"; j.HeadRepository = "Alice/App"; return j }(e.jobs.jobs[5])
+	if _, err := e.open(owner, 5); err != nil {
+		t.Fatalf("same-repository pull request: %v", err)
 	}
 	e.svc.Repos = fakeRepos{repos: map[int64]Repo{repoID: {Known: true, Visibility: "public"}}}
 	if _, err := e.open(owner, 1); codeOf(err) != CodePublic {
