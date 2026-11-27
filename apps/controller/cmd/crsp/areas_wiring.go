@@ -236,8 +236,8 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}()
 	c.closers = append(c.closers, func() { stopHealth(); <-healthDone })
 
-	// Live view over an empty source until the store adapter is wired (CRSP23).
-	hub, live := wire.NewLive(poolOverviewSource{DB: d.DB}, events.Options{})
+	// Live view over the store: machines, queue, running jobs and minutes saved (audit R3-7).
+	hub, live := wire.NewLive(&poolOverviewSource{DB: d.DB, MachineSvc: d.Machines}, events.Options{})
 	c.Hub = hub
 	c.closers = append(c.closers, hub.Stop)
 
