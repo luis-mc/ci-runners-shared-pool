@@ -67,6 +67,8 @@
   --ds-row: 56px;
   --ds-row-picture: 88px;
   --ds-hairline: 1px;
+  --ds-dot-r: 2px;
+  --ds-dot-gap: 3px;
   --ds-icon-size: 16px;
   --ds-tone-bar: 12px;
   --ds-focus-width: 3px;

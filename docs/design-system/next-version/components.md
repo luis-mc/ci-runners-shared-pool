@@ -574,7 +574,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** one to four series over time or over categories, as lines or columns, with an optional range band.
 - **Looks:** inline SVG to scale with the top and bottom value and the first and last time named; lines differ by dash as well as colour, and a legend names them. A table under "Show as table" lists every point. A `stacked` mode stacks the parts of one total (component 63).
-- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a line of solid round filled dots, evenly spaced (each series has its own colour; the legend swatch is a short line of dots), a band or an area is a grid of filled dots, a column is a vertical stack of filled dots whose top dot is partly lit by the value and whose empty dots are in the divider colour. The part draws the dots itself (`dots.tsx`; circles in a layer over the plot, so a stretched chart never squashes one), never an outline over a wash and never a page. The grid follows. The words, the legend and the table do not change.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a line of solid round filled dots, evenly spaced (each series has its own colour; the legend swatch is a short line of dots), a band or an area is a grid of filled dots, a column covers the same box as the filled bar (same x, width and top) with a grid of filled dots of fixed size and gap (`--ds-dot-r`, `--ds-dot-gap`; a wide bar has several dots across, a narrow one at least one) whose top row is partly lit by the remainder, with no track and no empty dots. A line follows the path of the standard line and an area fills the standard area. The part draws the dots itself (`dots.tsx`; circles in a layer over the plot, so a stretched chart never squashes one), never an outline over a wash and never a page. The grid follows. The words, the legend and the table do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`TrendChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-11, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -592,7 +592,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a weekday by hour grid of counts or seconds ("busiest hours").
 - **Looks:** seven rows of 24 cells in five steps of one colour; the highest step has an outline. It fits 360 px without scrolling. A table under "Show as table" gives each day's total and busiest hour.
-- **Dotted form:** in the Terminal themes with Graphs set to Dots, each cell shows a round dot whose size is the level (five sizes, the biggest nearly fills the cell) instead of a filled square. The table and the cell hover text do not change.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, each cell keeps its footprint and is filled with a grid of round dots (`--ds-dot-r`, `--ds-dot-gap`) tinted by the level, like the filled square it replaces. The table and the cell hover text do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Heatmap`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-49, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.

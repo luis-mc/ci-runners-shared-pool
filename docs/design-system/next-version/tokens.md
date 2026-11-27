@@ -397,6 +397,8 @@ Starter values. Change to fit.
 | `--ds-row`         | `56px` | a list row without a picture (UX-25)   |
 | `--ds-row-picture` | `88px` | a list row with a picture              |
 | `--ds-hairline`    | `1px`  | a thin quiet edge or rule between rows |
+| `--ds-dot-r`       | `2px`  | the radius of a dot in the dotted form of a column, an area or a heat cell (`dots.tsx` `GRID_R`) |
+| `--ds-dot-gap`     | `3px`  | the gap between two such dots (`dots.tsx` `GRID_GAP`) |
 | `--ds-icon-size`   | `16px` | a small icon beside text               |
 
 ## Tone shapes

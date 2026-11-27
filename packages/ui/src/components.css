@@ -3968,8 +3968,8 @@ a.ds-stat:focus-visible {
 }
 
 /* Dotted charts (UX-91, owner 27 Nov, CRSP370): in the Cool Terminal themes with Graphs set to Dots, the data charts are drawn
-   with solid round filled dots, like the dotted meters of the theme page: a column is a stack of dots, a line a line of dots, an
-   area a grid of dots, a heat cell one dot, a bar list a row of dots. The chart parts draw the dots themselves (dots.tsx), so a
+   with solid round filled dots, like the dotted meters of the theme page: a column is a grid of dots filling the bar's own box, a line a line of dots, an
+   area a grid of dots, a heat cell a grid of dots, a bar list a row of dots. The chart parts draw the dots themselves (dots.tsx), so a
    stretched chart never squashes one. Only the drawing changes; the words, the legend, the table and the text alternative stay.
    Level bars, progress bars and segment meters stay blocks. Components 52 to 55 and 60. Blocks (the default) set no data-graphs. */
 .ds-trend__plot {
@@ -4024,42 +4024,32 @@ a.ds-stat:focus-visible {
   stroke-linecap: round;
   stroke-width: var(--ds-border-medium);
 }
-/* Heatmap: a round dot in each cell, its size is the level. */
+/* Heatmap (CRSP374): each cell keeps its own footprint and is filled with a grid of round dots, tinted by the level like the
+   filled square it replaces; a cell at no value shows divider dots. */
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell {
-  --heat-dot: 12%;
-  background: radial-gradient(
-    circle closest-side,
-    var(--ds-color-divider) var(--heat-dot),
-    transparent calc(var(--heat-dot) + 4%)
+  --heat-ink: var(--ds-color-divider);
+  --heat-tile: calc(var(--ds-dot-r) * 2 + var(--ds-dot-gap));
+  background-color: transparent;
+  background-image: radial-gradient(
+    circle var(--ds-dot-r) at 50% 50%,
+    var(--heat-ink) calc(var(--ds-dot-r) - 0.5px),
+    transparent var(--ds-dot-r)
   );
+  background-size: var(--heat-tile) var(--heat-tile);
+  background-position: center;
   border-color: transparent;
 }
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level] {
-  background: radial-gradient(
-    circle closest-side,
-    var(--ds-color-primary) var(--heat-dot),
-    transparent calc(var(--heat-dot) + 4%)
-  );
-}
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='0'] {
-  --heat-dot: 12%;
-  background: radial-gradient(
-    circle closest-side,
-    var(--ds-color-divider) var(--heat-dot),
-    transparent calc(var(--heat-dot) + 4%)
-  );
-}
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='1'] {
-  --heat-dot: 28%;
+  --heat-ink: color-mix(in srgb, var(--ds-color-primary) 25%, var(--ds-color-surface));
 }
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='2'] {
-  --heat-dot: 44%;
+  --heat-ink: color-mix(in srgb, var(--ds-color-primary) 50%, var(--ds-color-surface));
 }
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='3'] {
-  --heat-dot: 60%;
+  --heat-ink: color-mix(in srgb, var(--ds-color-primary) 75%, var(--ds-color-surface));
 }
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='4'] {
-  --heat-dot: 78%;
+  --heat-ink: var(--ds-color-primary);
 }
 
 /* Bars in the Cool Terminal themes draw the theme's blocks (UX-91, CRSP369): the progress bar and the bar list are rows of

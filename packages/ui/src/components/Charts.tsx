@@ -3,7 +3,7 @@
 // under "Show as table" (UX-41, UX-17, UX-18, UX-11). Colour is never the only carrier (UX-58): lines differ by
 // dash, the forecast range is a bracket with end caps, a heat cell carries its number in the table.
 import { useRef, type ReactNode } from 'react';
-import { Dot, DotLayer, DOT_GAP, along, useBox, useDotted } from './dots';
+import { Dot, DotLayer, GRID_GAP, GRID_R, along, boxDots, useBox, useDotted } from './dots';
 import { formatDateTime, formatDuration, formatNumber, formatPercent } from './format';
 import { Empty } from './State';
 import { VizAlt } from './VizAlt';
@@ -251,25 +251,14 @@ function trendDots(
   const py = (y: number) => (y / H) * h;
   const out: ReactNode[] = [];
   if (s.kind === 'column') {
-    const rows = Math.max(3, Math.min(24, Math.floor(h / DOT_GAP)));
     const col = columns.indexOf(s);
     s.pts.forEach((p, i) => {
-      const x = px(p.x - g.slot / 2 + col * g.barW + g.barW / 2);
-      const n = ((H - p.y) / H) * rows;
-      for (let k = 0; k < rows; k++) {
-        const lit = Math.max(0, Math.min(1, n - k));
-        out.push(
-          <Dot
-            key={`${i}-${k}`}
-            x={x}
-            y={h - (k + 0.5) * (h / rows)}
-            w={w}
-            h={h}
-            lit={lit}
-            kind={lit > 0 ? 'on' : 'off'}
-          />,
-        );
-      }
+      // The same box as the filled bar: its x, its width and its top.
+      const bx = px(p.x - g.slot / 2 + col * g.barW);
+      const by = py(p.y);
+      boxDots(bx, by, px(g.barW), h - by).forEach((d, k) =>
+        out.push(<Dot key={`${i}-${k}`} x={d.cx} y={d.cy} w={w} h={h} lit={d.lit} r={d.r} />),
+      );
     });
     return out;
   }
@@ -277,7 +266,8 @@ function trendDots(
   if (withBand.length > 1) {
     const x0 = px((withBand[0] as Prepared['pts'][number]).x);
     const x1 = px((withBand[withBand.length - 1] as Prepared['pts'][number]).x);
-    for (let x = x0; x <= x1 && out.length < 1500; x += DOT_GAP) {
+    const pitch = 2 * GRID_R + GRID_GAP;
+    for (let x = x0 + GRID_R; x <= x1 - GRID_R && out.length < 1500; x += pitch) {
       const at = (x / (w || 1)) * W;
       let j = withBand.findIndex((p) => p.x >= at);
       if (j < 1) j = 1;
@@ -286,8 +276,8 @@ function trendDots(
       const t = b.x > a.x ? (at - a.x) / (b.x - a.x) : 0;
       const hi = py((a.hi ?? 0) + ((b.hi ?? 0) - (a.hi ?? 0)) * t);
       const lo = py((a.lo ?? 0) + ((b.lo ?? 0) - (a.lo ?? 0)) * t);
-      for (let y = hi; y <= lo && out.length < 1500; y += DOT_GAP)
-        out.push(<Dot key={`b${x}-${y}`} x={x} y={y} w={w} h={h} kind="band" />);
+      for (let y = hi + GRID_R; y <= lo - GRID_R && out.length < 1500; y += pitch)
+        out.push(<Dot key={`b${x}-${y}`} x={x} y={y} w={w} h={h} kind="band" r={GRID_R} />);
     }
   }
   along(s.pts.map((p) => ({ x: px(p.x), y: py(p.y) }))).forEach((d, i) =>
