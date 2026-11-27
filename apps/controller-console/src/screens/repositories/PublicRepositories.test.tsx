@@ -109,78 +109,30 @@ describe('Enable for public repositories (settings)', () => {
   });
 });
 
-describe('Repositories: active types, Visibility and greyed public rows', () => {
-  it('shows the active types as a chip in the toolbar, not a link, and the chip opens the setting (UX-8)', async () => {
+describe('Repositories: public repositories on the Pool setup page', () => {
+  it('does not list a public repository while the setting is off and offers the setting (UX-8)', async () => {
     renderApp(list(setting(signedIn(), false)), '/setup/pool');
-    const chip = await screen.findByRole('button', {
-      name: 'Types: Private (default)',
-    });
-    expect(screen.queryByRole('link', { name: /Private \(default\)/ })).toBeNull();
+    expect(await screen.findByRole('checkbox', { name: 'octo/app' })).toBeTruthy();
+    expect(screen.queryByRole('checkbox', { name: 'octo/site' })).toBeNull();
     expect(
-      within(screen.getByRole('group', { name: 'Repositories toolbar' })).getByRole(
-        'button',
-        { name: /Types/ },
+      screen.getByText(
+        /1 public repository is not listed: the pool serves private repositories only\./,
       ),
-    ).toBe(chip);
-    fireEvent.click(chip);
-    expect(
-      await screen.findByRole('heading', { level: 1, name: 'Settings' }),
     ).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Open the setting' }));
   });
 
-  it('shows Private & Public when the setting is on', async () => {
-    renderApp(list(setting(signedIn(), true)), '/setup/pool');
-    expect(
-      await screen.findByRole('button', { name: 'Types: Private & Public' }),
-    ).toBeTruthy();
-  });
-
-  it('tags a public card with its visibility and locks it without a repeated note while it is off', async () => {
-    renderApp(list(setting(signedIn(), false), [priv, pub]), '/setup/pool?public=1');
-    await screen.findByRole('button', { name: 'Types: Private (default)' });
-    const site = await screen.findByRole('region', { name: /^octo[/]site/ });
-    const app = screen.getByRole('region', { name: /^octo[/]app/ });
-    expect(within(site).getByText('Public')).toBeTruthy();
-    expect(within(site).getByText('inactive type')).toBeTruthy();
-    expect(within(app).queryByText('Private')).toBeNull();
-    expect(within(app).queryByText('inactive type')).toBeNull();
-    expect(
-      within(site).getByRole<HTMLInputElement>('checkbox', {
-        name: /^Select octo[/]site/,
-      }).disabled,
-    ).toBe(true);
-    expect(
-      within(app).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]app/ })
-        .disabled,
-    ).toBe(false);
-    expect(
-      screen.queryByRole('link', { name: 'Turn on public repositories' }),
-    ).toBeNull();
-  });
-
-  it('does not lock public cards while the setting is on', async () => {
+  it('lists a public repository like any other while the setting is on', async () => {
     renderApp(list(setting(signedIn(), true), [priv, pub]), '/setup/pool');
-    await screen.findByRole('button', { name: 'Types: Private & Public' });
-    const site = await screen.findByRole('region', { name: /^octo[/]site/ });
-    expect(
-      within(site).getByRole<HTMLInputElement>('checkbox', {
-        name: /^Select octo[/]site/,
-      }).disabled,
-    ).toBe(false);
-    expect(within(site).queryByText('inactive type')).toBeNull();
+    const site = await screen.findByRole<HTMLInputElement>('checkbox', {
+      name: 'octo/site',
+    });
+    expect(site.disabled).toBe(false);
+    expect(screen.queryByText(/not listed/)).toBeNull();
   });
+});
 
-  it('locks a public repository while the setting is off and says why', async () => {
-    renderApp(list(setting(signedIn(), false), [priv, pub]), '/setup/pool?public=1');
-    await screen.findByRole('button', { name: 'Types: Private (default)' });
-    const site = await screen.findByRole('region', { name: /^octo[/]site/ });
-    expect(
-      within(site).getByText(
-        /Public repositories are off\. Turn them on in Settings first\./,
-      ),
-    ).toBeTruthy();
-  });
-
+describe('Repositories: the problem of a public repository', () => {
   it('shows the Problem of a public repository on the pool while off, with its two actions', async () => {
     const problem = {
       code: 'public_pool_on_while_off' as const,

@@ -37,45 +37,36 @@ async function repoHeading(name: string) {
 }
 
 describe('Repositories list', () => {
-  it('shows one card per repository in its group, with limits and the variable word (LOOK29, CRSP340)', async () => {
+  it('shows one tick row per repository in its group, with the variable word (LOOK29, CRSP359)', async () => {
     renderApp(withRepos(signedIn()), '/setup/pool');
     const needs = await screen.findByRole('region', { name: /^Needs you/ });
-    expect(within(needs).getByRole('link', { name: 'octo/site' })).toBeTruthy();
+    expect(within(needs).getByRole('checkbox', { name: /^octo[/]site/ })).toBeTruthy();
     expect(within(needs).getByText('wrong variable')).toBeTruthy();
-    expect(within(needs).getByText(/parallel · priority \d+ ·/)).toBeTruthy();
     const not = screen.getByRole('region', { name: /^Not using the pool/ });
-    expect(within(not).getByRole('link', { name: 'octo/app' })).toBeTruthy();
+    expect(within(not).getByRole('checkbox', { name: 'octo/app' })).toBeTruthy();
     expect(
       screen.queryByRole('region', { name: /^Using the pool/ })?.textContent,
     ).toContain('Nothing here.');
   });
 
-  it('searches the cards', async () => {
-    renderApp(withRepos(signedIn()), '/setup/pool');
-    await screen.findByRole('region', { name: /^Not using the pool/ });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search repositories' }), {
-      target: { value: 'app' },
-    });
-    expect(screen.queryByRole('link', { name: 'octo/site' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'octo/app' })).toBeTruthy();
-  });
-
-  it('starts the Needs you cards ticked, and each group has one action that waits for a tick (UX-4, UX-12)', async () => {
+  it('starts the Needs you rows ticked; Repair is the one primary in the action bar and Turn on waits for a tick (UX-4, UX-12, UX-71)', async () => {
     renderApp(withRepos(signedIn()), '/setup/pool');
     const needs = await screen.findByRole('region', { name: /^Needs you/ });
     await waitFor(() =>
       expect(
         within(needs).getByRole<HTMLInputElement>('checkbox', {
-          name: 'Select octo/site',
+          name: /^octo[/]site/,
         }).checked,
       ).toBe(true),
     );
-    expect(within(needs).getByRole('button', { name: 'Repair 1' })).toBeTruthy();
+    const bar = screen.getByRole('region', { name: 'Actions' });
+    expect(within(bar).getByRole('button', { name: 'Repair 1' })).toBeTruthy();
+    expect(within(needs).queryByRole('button')).toBeNull();
     const not = screen.getByRole('region', { name: /^Not using the pool/ });
     expect(
       within(not).getByRole<HTMLButtonElement>('button', { name: 'Turn on' }).disabled,
     ).toBe(true);
-    fireEvent.click(within(not).getByRole('checkbox', { name: 'Select octo/app' }));
+    fireEvent.click(within(not).getByRole('checkbox', { name: 'octo/app' }));
     expect(within(not).getByRole('button', { name: 'Turn on 1' })).toBeTruthy();
   });
 
@@ -102,12 +93,11 @@ describe('Repositories list', () => {
     });
     renderApp(api, '/setup/pool');
     const using = await screen.findByRole('region', { name: /^Using the pool/ });
-    fireEvent.click(within(using).getByRole('checkbox', { name: 'Select octo/live' }));
+    fireEvent.click(within(using).getByRole('checkbox', { name: 'octo/live' }));
     fireEvent.click(within(using).getByRole('button', { name: 'Turn off 1' }));
     expect(await screen.findByText('These will stop using the pool')).toBeTruthy();
-    expect(
-      screen.getByRole('heading', { level: 1, name: 'Turn off the pool' }),
-    ).toBeTruthy();
+    // The wizard sits under the Setup tabs, with Pool setup the current tab.
+    expect(screen.getByRole('heading', { level: 1, name: 'Setup' })).toBeTruthy();
     expect(
       (
         api.calls.find((c) => c.path === '/api/v1/repository-plans')?.body as {
@@ -125,7 +115,7 @@ describe('Repositories list', () => {
     );
     const not = await screen.findByRole('region', { name: /^Not using the pool/ });
     expect(
-      within(not).getByRole<HTMLInputElement>('checkbox', { name: /^Select octo[/]app/ })
+      within(not).getByRole<HTMLInputElement>('checkbox', { name: /^octo[/]app/ })
         .disabled,
     ).toBe(true);
     expect(
@@ -142,8 +132,7 @@ describe('Repositories list', () => {
     );
     const not = await screen.findByRole('region', { name: /^Not using the pool/ });
     expect(
-      within(not).getByRole<HTMLInputElement>('checkbox', { name: 'Select octo/app' })
-        .disabled,
+      within(not).getByRole<HTMLInputElement>('checkbox', { name: 'octo/app' }).disabled,
     ).toBe(false);
     expect(screen.queryByText(/You need admin rights/)).toBeNull();
   });

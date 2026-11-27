@@ -28,36 +28,32 @@ async function repoHeading(name: string) {
 }
 
 describe('Repositories list in a pane', () => {
-  it('draws the toolbar and the three groups as panes, one card per repository (CORE-1)', async () => {
+  it('draws the groups as panes, one tick row per repository, and no toolbar (CORE-1)', async () => {
     renderApp(list(signedIn()), '/setup/pool');
     const group = await screen.findByRole('region', { name: /^Not using the pool/ });
     expect(group.closest('.ds-pane')).toBeTruthy();
     expect(
       within(group).getByRole('heading', { level: 2, name: /^Not using the pool/ }),
     ).toBeTruthy();
-    expect(within(group).getByRole('region', { name: /^octo[/]app/ })).toBeTruthy();
-    expect(screen.getByRole('group', { name: 'Repositories toolbar' })).toBeTruthy();
-    expect(screen.getByRole('textbox', { name: 'Search repositories' })).toBeTruthy();
+    expect(within(group).getByRole('checkbox', { name: 'octo/app' })).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Repositories toolbar' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Search repositories' })).toBeNull();
   });
 
-  it('has no primary button outside the action bar, also while cards are ticked (UX-4, UX-71)', async () => {
+  it('has its one primary button in the action bar, locked until a row is ticked (UX-4, UX-71, UX-12)', async () => {
     renderApp(list(signedIn()), '/setup/pool');
     await screen.findByRole('region', { name: /^Not using the pool/ });
-    expect(primaries()).toEqual([]);
-    fireEvent.click(screen.getByRole('checkbox', { name: 'Select octo/app' }));
-    expect(screen.getByRole('button', { name: 'Turn on 1' })).toBeTruthy();
-    expect(primaries()).toEqual([]);
-  });
-
-  it('keeps a locked action with its reason until a card is ticked (UX-12)', async () => {
-    renderApp(list(signedIn()), '/setup/pool');
-    await screen.findByRole('region', { name: /^Not using the pool/ });
+    const bar = screen.getByRole('region', { name: 'Actions' });
+    expect(primaries()).toEqual(['Turn on']);
     expect(
-      screen.getByRole<HTMLButtonElement>('button', { name: 'Turn on' }).disabled,
+      within(bar).getByRole<HTMLButtonElement>('button', { name: 'Turn on' }).disabled,
     ).toBe(true);
     expect(screen.getAllByText('Tick at least one repository.').length).toBeGreaterThan(
       0,
     );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'octo/app' }));
+    expect(within(bar).getByRole('button', { name: 'Turn on 1' })).toBeTruthy();
+    expect(primaries()).toEqual(['Turn on 1']);
   });
 
   it('shows the health tiles above the groups', async () => {

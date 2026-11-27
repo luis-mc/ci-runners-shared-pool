@@ -1,9 +1,9 @@
 // Repositories (web-console 4.3, R5.21): list with search and filters, selection, turn the pool on or off,
 // and the policy of one repository.
 import {
+  ActionBar,
   Button,
   CheckRow,
-  Chips,
   Cluster,
   Breadcrumbs,
   Empty,
@@ -16,13 +16,9 @@ import {
   Page,
   PageHeader,
   Pane,
-  ListToolbar,
-  SearchBar,
-  Text,
   Stack,
   Loading,
   Status,
-  Tag,
   TextAreaField,
   TextField,
   TextLink,
@@ -35,7 +31,6 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { signInUrl } from '../../auth/session';
 import { ApiError, unwrap, useClient, type Schemas } from '../../api/api';
-import { useGroups } from '../jobs/api';
 import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { RunsOnPrPane } from './RunsOnPr';
@@ -76,12 +71,10 @@ import { allRepositories, applyChanges, type Repository } from './plans';
 import {
   PUBLIC_OFF_REASON,
   PUBLIC_SETTING_PATH,
-  activeTypes,
   mayTry,
   publicWhileOff,
   usePublicRepositories,
   usePublicSwitch,
-  visibilityWord,
 } from './publicRepositories';
 import { DeliveryWhen, PollingNotice, deliveryStatus, learnedBy } from './webhookHealth';
 
@@ -123,12 +116,6 @@ export function variableStatus(r: Repository): { kind: StatusKind; word: string 
   if (r.variables.some((v) => v.status === 'not_managed'))
     return { kind: 'info', word: 'not managed' };
   return { kind: 'ok', word: 'variables ok' };
-}
-
-/** The active types' words for the count: "private " (with the trailing space), empty while unknown. */
-function typeWords(enabled: boolean | undefined, showPublic: boolean): string {
-  if (enabled === undefined) return '';
-  return enabled || showPublic ? 'private & public ' : 'private ';
 }
 
 type JobGroupRow = Schemas['JobGroupRow'];
@@ -186,15 +173,7 @@ export function RepositoriesList() {
   const now = useNow();
   const v = useVersion('plans');
   const { result, reload } = useLoad(() => allRepositories(client), [v]);
-  const { setting, enabled } = usePublicRepositories();
-  const groups = useGroups('repository');
-  const groupByName = new Map(
-    (groups.result.state === 'ready' ? groups.result.data.items : []).map(
-      (g) => [g.name, g] as const,
-    ),
-  );
-  const [q, setQ] = useState('');
-  const showPublic = new URLSearchParams(useLocation().search).get('public') === '1';
+  const { enabled } = usePublicRepositories();
   const [picked, setPicked] = useState<Set<number>>(new Set());
   const admin = session.can('admin');
   // GitHub's return from the App's install page carries setup_action (install, update or request).
@@ -239,19 +218,6 @@ export function RepositoriesList() {
     void navigate(
       `/setup/pool/change?to=${to}&${rows.map((r) => `repo=${r.id}`).join('&')}`,
     );
-  const extra = (r: Repository) => (
-    <>
-      {r.visibility !== 'private' || r.problem ? (
-        <VisibilityCell r={r} inactive={publicWhileOff(r, enabled)} />
-      ) : null}
-      {r.pool_on && r.ephemeral_capacity === false ? (
-        <Text tone="muted">{NO_CAPACITY}</Text>
-      ) : null}
-    </>
-  );
-  const meta = (r: Repository) =>
-    `${r.policy.max_parallel_jobs} parallel · priority ${r.policy.priority} · ${runnerKindText(r.policy)} · ${jobsNowText(groupByName.get(r.full_name))}`;
-
   return (
     <Page>
       {returned ? (
@@ -272,13 +238,12 @@ export function RepositoriesList() {
         {(data) => {
           // Only repositories of an active type are listed (LOOK D16); the rest are counted in a note.
           const unlisted = data.items.filter((r) => publicWhileOff(r, enabled));
-          const listed = showPublic
-            ? data.items
-            : data.items.filter((r) => !publicWhileOff(r, enabled));
-          const filtered = listed
-            .filter((r) => r.full_name.toLowerCase().includes(q.trim().toLowerCase()))
-            .sort((a, b) => a.owner.localeCompare(b.owner));
-          const g = groupsOf(filtered, broken);
+          const listed = data.items.filter((r) => !publicWhileOff(r, enabled));
+          const g = groupsOf(listed, broken);
+          const mainBad = g.bad.length > 0;
+          const mainRows = mainBad ? g.bad : g.not;
+          const mainPicked = mainRows.filter((r) => picked.has(r.id));
+          const mainWord = mainBad ? 'Repair' : 'Turn on';
           if (data.items.length === 0)
             return (
               <Pane title="Repositories">
@@ -290,11 +255,7 @@ export function RepositoriesList() {
             );
           return (
             <Stack>
-              <PoolHealth
-                all={data.items}
-                listed={listed}
-                needsYou={groupsOf(listed, broken).bad.length}
-              />
+              <PoolHealth all={data.items} listed={listed} needsYou={g.bad.length} />
               {data.stale.stale ? (
                 <Message
                   tone="needs-you"
@@ -319,95 +280,70 @@ export function RepositoriesList() {
                 </Message>
               ) : null}
               {unlisted.length > 0 ? (
-                <Message tone="note">
-                  {showPublic ? (
-                    <>
-                      {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} listed in grey: the pool serves private repositories only. `}
-                      <TextLink to="/setup/pool">Hide them</TextLink>
-                    </>
-                  ) : (
-                    <>
-                      {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} not listed: the pool serves private repositories only. `}
-                      <TextLink to="/setup/pool?public=1">List them too</TextLink>
-                    </>
-                  )}
-                </Message>
-              ) : null}
-              <ListToolbar
-                label="Repositories"
-                search={
-                  <SearchBar value={q} onChange={setQ} label="Search repositories" />
-                }
-                filters={
-                  setting ? (
-                    <Chips
-                      label="Repository types"
-                      options={[
-                        {
-                          value: 'types',
-                          label: `Types: ${activeTypes(setting.enabled)}`,
-                        },
-                      ]}
-                      value=""
-                      onChange={() => void navigate(PUBLIC_SETTING_PATH)}
-                    />
-                  ) : undefined
-                }
-                count={`${filtered.length} ${typeWords(enabled, showPublic)}${filtered.length === 1 ? 'repository' : 'repositories'}`}
-                actions={<InstallAppButton label="Add a repository" onReturn={reload} />}
-              />
-              {filtered.length === 0 && listed.length > 0 ? (
-                <Message tone="note">
-                  {listed.length} repositories are hidden by the search. Clear it to see
-                  all.
+                <Message
+                  tone="note"
+                  action={
+                    <LinkButton to={PUBLIC_SETTING_PATH}>Open the setting</LinkButton>
+                  }
+                >
+                  {`${unlisted.length} public ${unlisted.length === 1 ? 'repository is' : 'repositories are'} not listed: the pool serves private repositories only.`}
                 </Message>
               ) : null}
               {g.bad.length > 0 ? (
                 <PoolGroup
                   title="Needs you"
-                  lead="A variable is missing or wrong, so jobs may not reach the pool. Repair writes it again."
                   rows={g.bad}
                   picked={picked}
                   setPicked={setPicked}
-                  action={(n) => (n === 0 ? 'Repair' : `Repair ${n}`)}
-                  blocked={blocked}
                   why={why}
-                  meta={meta}
-                  extra={extra}
-                  note={(r) => ({ status: 'failed', word: variableStatus(r).word })}
+                  aside={(r) => ({ word: variableStatus(r).word, needsYou: true })}
                   onAct={(rows) => go('repair', rows)}
                 />
               ) : null}
               <PoolGroup
                 title="Using the pool"
-                lead="These repositories send their jobs to the pool."
                 rows={g.good}
                 picked={picked}
                 setPicked={setPicked}
                 action={(n) => (n === 0 ? 'Turn off' : `Turn off ${n}`)}
                 blocked={blocked}
                 why={why}
-                meta={meta}
-                extra={extra}
                 onAct={(rows) => go('off', rows)}
               />
               <PoolGroup
                 title="Not using the pool"
-                lead="These repositories do not use the pool. Turn on starts them."
                 rows={g.not}
                 picked={picked}
                 setPicked={setPicked}
-                action={(n) => (n === 0 ? 'Turn on' : `Turn on ${n}`)}
+                {...(mainBad
+                  ? { action: (n: number) => (n === 0 ? 'Turn on' : `Turn on ${n}`) }
+                  : {})}
                 blocked={blocked}
                 why={why}
-                meta={meta}
-                extra={extra}
-                note={(r) =>
+                aside={(r) =>
                   r.pool_off_reason === 'left_installation'
-                    ? { status: 'off', word: 'left the installation' }
+                    ? { word: 'left the installation', needsYou: false }
                     : undefined
                 }
                 onAct={(rows) => go('on', rows)}
+              />
+              <ActionBar
+                status={`${mainPicked.length} selected`}
+                secondary={
+                  <InstallAppButton label="Add a repository" onReturn={reload} />
+                }
+                primary={
+                  <Button
+                    kind="primary"
+                    disabled={mainPicked.length === 0 || blocked !== undefined}
+                    reason={blocked ?? 'Tick at least one repository.'}
+                    onPress={() => go(mainBad ? 'repair' : 'on', mainPicked)}
+                  >
+                    {mainPicked.length === 0
+                      ? mainWord
+                      : `${mainWord} ${mainPicked.length}`}
+                  </Button>
+                }
               />
             </Stack>
           );
@@ -904,29 +840,4 @@ export function packageMistakes(text: string): string[] {
       );
     });
   return out;
-}
-
-/** The Visibility cell: the word, and for a repository with a Problem, the Problem and its link. The public-off reason is not repeated per row (LOOK4). */
-function VisibilityCell({ r, inactive }: { r: Repository; inactive: boolean }) {
-  const word = (
-    <>
-      {visibilityWord(r)}
-      {inactive ? (
-        <>
-          {' '}
-          <Tag>inactive type</Tag>
-        </>
-      ) : null}
-    </>
-  );
-  if (!r.problem) return word;
-  return (
-    <Stack gap="tight">
-      <Text>{word}</Text>
-      <Text>
-        {r.problem.text}{' '}
-        <TextLink to={`/setup/pool/${r.owner}/${r.name}`}>Fix it</TextLink>
-      </Text>
-    </Stack>
-  );
 }

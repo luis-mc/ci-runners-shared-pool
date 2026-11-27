@@ -3,7 +3,6 @@
 // step as a command and its result (UX-88). The raw steps stay in a fold. The route is
 // /setup/pool/change?to=on|off|repair&repo=<id>; the plan id is kept in the address (?plan=) so a reload reads the outcome.
 import {
-  Breadcrumbs,
   BulletList,
   Card,
   CardGrid,
@@ -11,7 +10,6 @@ import {
   Facts,
   Message,
   Page,
-  PageHeader,
   Pane,
   Progress,
   Stack,
@@ -308,7 +306,17 @@ export function ChangePoolWizard() {
           <Facts
             items={list.map((r) => {
               const s = repoState(plan, r.full_name);
-              return { name: r.full_name, value: <Status kind={s.kind} word={s.word} /> };
+              // A finished repository says where it stands now, in the words of Pool setup.
+              const now =
+                s.word !== 'done'
+                  ? s
+                  : dir === 'off'
+                    ? { kind: 'off' as StatusKind, word: 'not using the pool' }
+                    : { kind: 'ok' as StatusKind, word: 'using the pool' };
+              return {
+                name: r.full_name,
+                value: <Status kind={now.kind} word={now.word} />,
+              };
             })}
           />
         </Stack>
@@ -318,10 +326,6 @@ export function ChangePoolWizard() {
 
   return (
     <Page>
-      <Breadcrumbs
-        trail={[{ to: '/setup/pool', label: 'Pool setup' }, { label: word.name }]}
-      />
-      <PageHeader title={word.name} />
       <Wizard
         name={word.name}
         steps={['Review', word.work, 'Done']}
@@ -351,7 +355,7 @@ export function ChangePoolWizard() {
         review={step === 0 && phase === 'ready-to-review'}
         onStartAgain={back}
         onTryAgain={back}
-        donePrimary={{ label: 'Back to Pool setup', onPress: back }}
+        donePrimary={{ label: 'Back to the repositories', onPress: back }}
       >
         {body}
       </Wizard>

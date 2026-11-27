@@ -1,26 +1,11 @@
 // Pool setup (CRSP340, the owner's pick of option 5): the health tiles, then the repositories in three groups, Needs
-// you, Using the pool and Not using the pool, one action for each group and one card for each repository. The page
+// you, Using the pool and Not using the pool, one action for each group and one tick row for each repository. The page
 // passes data; the shared parts draw (UX-7, UX-11, UX-16, CORE-1 to CORE-7). The words are in content.md.
-import {
-  Button,
-  Card,
-  CardGrid,
-  CheckRow,
-  Pane,
-  Stack,
-  StatGrid,
-  StatTile,
-  Status,
-  Text,
-  type StatusKind,
-} from '@crsp/ui';
-import { useState, type ReactNode } from 'react';
+import { Button, CheckRow, Pane, Stack, StatGrid, StatTile, Text } from '@crsp/ui';
 import { unwrap, useClient } from '../../api/api';
 import { useLoad } from '../../api/hooks';
 import { deliveryStatus } from './webhookHealth';
 import type { Repository } from './plans';
-
-const SHOWN = 25;
 
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 
@@ -65,7 +50,15 @@ export function PoolHealth({
         label="Machines"
         {...(ms ? { value: String(online), unit: 'online' } : {})}
         change={ms && online < ms.length ? 'worse' : 'same'}
-        changeText={ms ? `${ms.length} in the pool` : ''}
+        changeText={
+          !ms
+            ? ''
+            : online < ms.length
+              ? `${ms.length - online} offline`
+              : ms.length === 2
+                ? 'both ready'
+                : 'all ready'
+        }
         to="/setup/machines"
         linkName="Open Machines"
         loading={!ms}
@@ -100,44 +93,33 @@ export function PoolHealth({
   );
 }
 
-/** One group: its title and count, one action for the ticked cards, and one card per repository. */
+/** One group: its title and count, a button for its ticked rows (unless the bar owns it), and one tick row each. */
 export function PoolGroup({
   title,
-  lead,
   rows,
   picked,
   setPicked,
   action,
   blocked,
   why,
-  meta,
-  extra,
-  note,
+  aside,
   onAct,
 }: {
   title: string;
-  /** One line that says what the group is. */
-  lead: string;
   rows: readonly Repository[];
   picked: ReadonlySet<number>;
   setPicked: (next: Set<number>) => void;
-  /** The button word for n ticked cards. */
-  action: (n: number) => string;
+  /** The button word for n ticked rows. Omitted when the page bar carries this group's action. */
+  action?: ((n: number) => string) | undefined;
   /** The action is locked for everybody (not an admin). */
   blocked?: string | undefined;
   /** Why one repository cannot be ticked. */
   why: (r: Repository) => string | undefined;
-  /** The quiet line under the name. */
-  meta: (r: Repository) => string;
-  /** More under the line: the visibility and a problem with its fix. */
-  extra?: ((r: Repository) => ReactNode) | undefined;
-  /** A word beside the status, for a repository that needs you. */
-  note?:
-    ((r: Repository) => { status: StatusKind; word: string } | undefined) | undefined;
+  /** A word at the end of the row: what needs the owner, or why the pool is off. */
+  aside?:
+    ((r: Repository) => { word: string; needsYou: boolean } | undefined) | undefined;
   onAct: (rows: Repository[]) => void;
 }) {
-  const [all, setAll] = useState(false);
-  const shown = all ? rows : rows.slice(0, SHOWN);
   const sel = rows.filter((r) => picked.has(r.id));
   const toggle = (id: number) => {
     const n = new Set(picked);
@@ -149,45 +131,38 @@ export function PoolGroup({
       title={title}
       count={rows.length}
       actions={
-        <Button
-          disabled={sel.length === 0 || blocked !== undefined}
-          reason={blocked ?? 'Tick at least one repository.'}
-          onPress={() => onAct(sel)}
-        >
-          {action(sel.length)}
-        </Button>
+        action ? (
+          <Button
+            disabled={sel.length === 0 || blocked !== undefined}
+            reason={blocked ?? 'Tick at least one repository.'}
+            onPress={() => onAct(sel)}
+          >
+            {action(sel.length)}
+          </Button>
+        ) : undefined
       }
     >
-      <Stack>
-        <Text tone="muted">{rows.length === 0 ? 'Nothing here.' : lead}</Text>
-        <CardGrid>
-          {shown.map((r) => {
-            const n = note?.(r);
-            const locked = why(r);
-            return (
-              <Card
-                key={r.id}
-                title={r.full_name}
-                to={`/setup/pool/${r.owner}/${r.name}`}
-              >
-                <Stack gap="tight">
-                  <CheckRow
-                    label={`Select ${r.full_name}`}
-                    checked={picked.has(r.id)}
-                    onChange={() => toggle(r.id)}
-                    {...(locked ? { disabledReason: locked } : {})}
-                  />
-                  {n ? <Status kind={n.status} word={n.word} /> : null}
-                  <Text tone="muted">{meta(r)}</Text>
-                  {extra?.(r)}
-                </Stack>
-              </Card>
-            );
-          })}
-        </CardGrid>
-        {rows.length > SHOWN && !all ? (
-          <Button onPress={() => setAll(true)}>{`Show all ${rows.length}`}</Button>
-        ) : null}
+      <Stack gap="tight">
+        {rows.length === 0 ? <Text tone="muted">Nothing here.</Text> : null}
+        {rows.map((r) => {
+          const locked = why(r);
+          const a = aside?.(r);
+          return (
+            <CheckRow
+              key={r.id}
+              label={r.full_name}
+              checked={picked.has(r.id)}
+              onChange={() => toggle(r.id)}
+              {...(locked ? { disabledReason: locked } : {})}
+              {...(a
+                ? {
+                    aside: a.word,
+                    ...(a.needsYou ? { asideTone: 'needs-you' as const } : {}),
+                  }
+                : {})}
+            />
+          );
+        })}
       </Stack>
     </Pane>
   );
