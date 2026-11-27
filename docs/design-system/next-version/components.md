@@ -194,7 +194,7 @@ The body scrolls when the content is taller than the space. The overlay never gr
 ## 16. Progress bar
 
 - **Used for:** a wait. Filled when the total is known, animated when it is not. It always names what is happening. With `phases` (weighted) it shows the real percent of the whole job; a phase with no percent shows an indeterminate bar, the reason and the time elapsed (UX-88).
-- **Looks:** a thin bar that fills from the start, with a line of text that names the work.
+- **Looks:** a thin bar that fills from the start, with a line of text that names the work. In the Terminal themes (Blocks and Dots alike) it is a row of 20 shared segments in the primary colour, filled in steps of 5 %; an unknown total is the same row with its segments pulsing (UX-91, CRSP369). A progress bar never sits inside a Note: where a Note would carry one, the Note is one short line and the bar is drawn by the pane that owns the work (CRSP364).
 - **Source:** `src/ui/progress`
 - **Rules:** UX-29, UX-88, UX-17, UX-19.
 - **Guard:** `packages/ui/src/components/LiveProgress.test.tsx` (weighted phases, indeterminate with reason).
@@ -487,7 +487,7 @@ A `Tag` is the small outlined label that names a kind next to a word, such as `i
 ## 42. Theme choice
 
 - **Used for:** the Theme choice in Settings, Appearance (UX-60): a one-choice list (component 13) of the six themes.
-- **Looks:** each row shows the theme name and, under it, a small row of that theme's colours (surface, primary, Done, Note, Needs you, Problem) in a box in the theme's page colour. The swatches are drawn from the theme's own tokens; the row is decoration and the name carries the meaning. The theme row may show a `ThemePreview` of that theme in dark and one in light (`Choice.preview`) instead of the swatch row; Settings, Appearance does. A choice with previews is drawn as cards in a grid, 3 per row on a desktop, 2 on a tablet and 1 on a phone; each card holds the radio, the theme name and the dark and light previews side by side, the whole card is the choice, and the selected card has a 2 px primary border. The mode (system, dark, light) is a second one-choice list beside it. `ThemePreview` is a small live sample of a theme in dark or light: a pane with its title in the border, a selected row in reverse video and a primary button, all from that theme's tokens. It is a picture with one label, not a control.
+- **Looks:** each row shows the theme name and, under it, a small row of that theme's colours (surface, primary, Done, Note, Needs you, Problem) in a box in the theme's page colour. The swatches are drawn from the theme's own tokens; the row is decoration and the name carries the meaning. The theme row may show a `ThemePreview` of that theme in dark and one in light (`Choice.preview`) instead of the swatch row; Settings, Appearance does. A choice with previews is drawn as cards at any count (never a drop-down, UX-22) in a grid, 3 per row on a desktop, 2 on a tablet and 1 on a phone; each card holds the radio, the theme name and the dark and light previews side by side (every card, a Terminal one too, holds both, CRSP371), the whole card is the choice, and the selected card has a 2 px primary border. The mode (system, dark, light) is a second one-choice list beside it. `ThemePreview` is a small live sample of a theme in dark or light: a pane with its title in the border, a selected row in reverse video and a primary button, all from that theme's tokens. It is a picture with one label, not a control.
 - **Source:** `packages/ui/src/components/Fields.tsx` (`Choice.swatch`), `packages/ui/src/components/ThemePreview.tsx`, `packages/ui/src/themes.ts`
 - **Rules:** UX-22, UX-55, UX-60.
 - **Guard:** `scripts/design/themes.test.ts` (tokens and contrast); `apps/controller-console/src/screens/settings/Settings.test.tsx` (picking and keeping a theme).
@@ -574,6 +574,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** one to four series over time or over categories, as lines or columns, with an optional range band.
 - **Looks:** inline SVG to scale with the top and bottom value and the first and last time named; lines differ by dash as well as colour, and a legend names them. A table under "Show as table" lists every point. A `stacked` mode stacks the parts of one total (component 63).
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a line of solid round filled dots, evenly spaced (each series has its own colour; the legend swatch is a short line of dots), a band or an area is a grid of filled dots, a column is a vertical stack of filled dots whose top dot is partly lit by the value and whose empty dots are in the divider colour. The part draws the dots itself (`dots.tsx`; circles in a layer over the plot, so a stretched chart never squashes one), never an outline over a wash and never a page. The grid follows. The words, the legend and the table do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`TrendChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-11, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -582,6 +583,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a small trend in a table cell or a facts row.
 - **Looks:** one line with no axes; the last value can be marked with a dot. It always has its label and the last, lowest and highest value as text. No values say "no data yet".
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the line is a line of solid round filled dots; the last-value dot stays. The text alternative does not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Sparkline`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-11.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -590,6 +592,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a weekday by hour grid of counts or seconds ("busiest hours").
 - **Looks:** seven rows of 24 cells in five steps of one colour; the highest step has an outline. It fits 360 px without scrolling. A table under "Show as table" gives each day's total and busiest hour.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, each cell shows a round dot whose size is the level (five sizes, the biggest nearly fills the cell) instead of a filled square. The table and the cell hover text do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Heatmap`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-49, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -598,6 +601,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** how good a forecast was: one dot per finished job, forecast across and actual up.
 - **Looks:** a dashed diagonal for "forecast = actual"; a bracket with end caps at the height of each dot for its range. A dot inside its range is round, one outside is a diamond. A table under "Show as table" says each job in words.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the diagonal is a line of solid round filled dots. The dots, brackets and diamonds keep their shapes, so inside and outside stay readable without colour.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`ForecastChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -654,6 +658,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 - **Keyboard and screen reader:** each row is one tab stop; Down and Up move through the rows (UX-57); Enter opens the list. A row reads _repo-a: 212 minutes, 124 jobs. Open the 124 jobs._ The bars are hidden from assistive technology; the table under _Show as table_ is the text equivalent.
 - **Phone (360, 393 px):** the label sits above its bar (the bar fills the row width), the value to the right of the label; the label wraps and never cuts (UX-72); rows are at least `--ds-target-min` high.
 - **Looks:** a card body, never a bordered box inside a box.
+- **Terminal form (CRSP369, owner 27 Nov):** a bar list is a bar, not a chart: in the Terminal themes it is a row of 10 shared segments (`Segments`, steps of 5 %) in the note colour, in Blocks and in Dots alike. Graphs set to Dots never draws a dot here. The value as text does not change.
 - **Source:** `packages/ui/src/components/BarList.tsx` (`BarList`), `packages/ui/src/components.css` (built in LOOK41; one value a row, the two-segment bar and _Show as table_ come with the stacked mode).
 - **Rules:** UX-41, UX-17, UX-52, UX-57, UX-58, UX-72, UX-16, CORE-2, CORE-4.
 - **Guard:** `packages/ui/src/components/overview-parts.test.tsx`.
@@ -904,7 +909,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 ## 85. Segment meter
 
 - **Used for:** a level against a limit (CPU, memory, disk, a pool's busy share) as a row of segments with the level in words beside it. `LevelBar` (component 16) draws the same segments in the Cool Terminal themes.
-- **Looks:** 10 segments by default (`segments`, 3 to 20; a narrow place passes fewer, a wide one more). The level is rounded to a step of 5 %; each segment covers `100 / segments` per cent and is empty, partly filled or full, so at 10 segments a level of 55 % shows five full segments and one half-filled. Blocks in the Cool Terminal theme; round dots in *Cool Terminal (dotted graphs)* (`data-graphs=dotted`). Filled segments are the done colour, from `warnAt` (75 %) the needs-you colour, from `badAt` (90 %) the problem colour. The segments are `aria-hidden`; the element is a `meter` with `aria-valuetext` of the words (CORE-5). A value is clamped between 0 and 100 %. The gap between segments is `--ds-seg-gap`.
+- **Looks:** 10 segments by default (`segments`, 3 to 20; a narrow place passes fewer, a wide one more). The level is rounded to a step of 5 %; each segment covers `100 / segments` per cent and is empty, partly filled or full, so at 10 segments a level of 55 % shows five full segments and one half-filled. Blocks in the Cool Terminal theme, whatever the Graphs setting: Dots changes charts only, never a meter. Filled segments are the done colour, from `warnAt` (75 %) the needs-you colour, from `badAt` (90 %) the problem colour. The segments are `aria-hidden`; the element is a `meter` with `aria-valuetext` of the words (CORE-5). A value is clamped between 0 and 100 %. The gap between segments is `--ds-seg-gap`.
 - **States:** _ok_, _warn_, _bad_ (by level); _empty_ (0 %); _full_ (100 %).
 - **Source:** `packages/ui/src/components/SegMeter.tsx` (`SegMeter`: `label`, `value`, `max`, `segments`, `warnAt`, `badAt`, `text`; `segmentFills`), `packages/ui/src/components.css` (`ds-segs`, `ds-segmeter`).
 - **Rules:** UX-17, UX-58, UX-91, CORE-1, CORE-5.

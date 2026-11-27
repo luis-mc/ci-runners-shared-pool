@@ -87,6 +87,8 @@ describe('dotted graphs', () => {
     );
     expect(screen.getByRole('img').getAttribute('aria-label')).toContain('lowest 1');
     expect(css).toContain("[data-graphs='dotted'] .ds-spark__blocks");
-    expect(css).toContain("[data-graphs='dotted'] .ds-segs__cell");
+    // Dots change charts only: bars and meters keep their blocks (owner, 27 Nov).
+    expect(css).not.toContain("[data-graphs='dotted'] .ds-segs__cell");
+    expect(css).not.toContain("[data-graphs='dotted'] .ds-level__bar");
   });
 });

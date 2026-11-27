@@ -2,6 +2,8 @@
 // inline SVG or HTML to scale, token colours only, a label as the text alternative (role="img") and a real table
 // under "Show as table" (UX-41, UX-17, UX-18, UX-11). Colour is never the only carrier (UX-58): lines differ by
 // dash, the forecast range is a bracket with end caps, a heat cell carries its number in the table.
+import { useRef, type ReactNode } from 'react';
+import { Dot, DotLayer, DOT_GAP, along, useBox, useDotted } from './dots';
 import { formatDateTime, formatDuration, formatNumber, formatPercent } from './format';
 import { Empty } from './State';
 import { VizAlt } from './VizAlt';
@@ -64,6 +66,9 @@ interface Prepared {
 }
 
 export function TrendChart({ label, series, unit, emptyText }: TrendChartProps) {
+  const plotRef = useRef<HTMLDivElement>(null);
+  const dotted = useDotted();
+  const box = useBox(plotRef, dotted);
   const all = series.flatMap((s) => s.points);
   if (all.length === 0) return <Empty title={emptyText} />;
   const categories: string[] = [];
@@ -116,59 +121,74 @@ export function TrendChart({ label, series, unit, emptyText }: TrendChartProps) 
         <span className="ds-trend__y ds-trend__y--bottom" aria-hidden="true">
           {fmt(unit, 0)}
         </span>
-        <svg
-          className="ds-trend__svg"
-          viewBox={`0 0 ${W} ${H}`}
-          preserveAspectRatio="none"
-          aria-hidden="true"
-          focusable="false"
-        >
-          <line className="ds-trend__grid" x1="0" x2={W} y1={H / 2} y2={H / 2} />
-          {prepared.map((s) => (
-            <g
-              key={s.id}
-              className="ds-trend__series"
-              data-series={s.index % DASHES.length}
-            >
-              {s.kind === 'line' &&
-              s.pts.some((p) => p.lo !== undefined && p.hi !== undefined) ? (
-                <path
-                  className="ds-trend__band"
-                  d={`${s.pts
-                    .filter((p) => p.hi !== undefined)
-                    .map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.hi}`)
-                    .join(' ')} ${s.pts
-                    .filter((p) => p.lo !== undefined)
-                    .reverse()
-                    .map((p) => `L ${p.x} ${p.lo}`)
-                    .join(' ')} Z`}
-                />
-              ) : null}
-              {s.kind === 'line' ? (
-                <path
-                  className="ds-trend__line"
-                  strokeDasharray={DASHES[s.index % DASHES.length] || undefined}
-                  d={s.pts.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' ')}
-                />
-              ) : (
-                s.pts.map((p, i) => {
-                  const col = columns.indexOf(s);
-                  const x = p.x - slot / 2 + col * barW;
-                  return (
-                    <rect
-                      key={i}
-                      className="ds-trend__column"
-                      x={x}
-                      y={p.y}
-                      width={barW}
-                      height={Math.max(0, H - p.y)}
-                    />
-                  );
-                })
-              )}
-            </g>
-          ))}
-        </svg>
+        <div className="ds-trend__plot" ref={plotRef}>
+          <svg
+            className="ds-trend__svg"
+            viewBox={`0 0 ${W} ${H}`}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <line className="ds-trend__grid" x1="0" x2={W} y1={H / 2} y2={H / 2} />
+            {prepared.map((s) => (
+              <g
+                key={s.id}
+                className="ds-trend__series"
+                data-series={s.index % DASHES.length}
+              >
+                {s.kind === 'line' &&
+                s.pts.some((p) => p.lo !== undefined && p.hi !== undefined) ? (
+                  <path
+                    className="ds-trend__band"
+                    d={`${s.pts
+                      .filter((p) => p.hi !== undefined)
+                      .map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.hi}`)
+                      .join(' ')} ${s.pts
+                      .filter((p) => p.lo !== undefined)
+                      .reverse()
+                      .map((p) => `L ${p.x} ${p.lo}`)
+                      .join(' ')} Z`}
+                  />
+                ) : null}
+                {s.kind === 'line' ? (
+                  <path
+                    className="ds-trend__line"
+                    strokeDasharray={DASHES[s.index % DASHES.length] || undefined}
+                    d={s.pts.map((p, i) => `${i ? 'L' : 'M'} ${p.x} ${p.y}`).join(' ')}
+                  />
+                ) : (
+                  s.pts.map((p, i) => {
+                    const col = columns.indexOf(s);
+                    const x = p.x - slot / 2 + col * barW;
+                    return (
+                      <rect
+                        key={i}
+                        className="ds-trend__column"
+                        x={x}
+                        y={p.y}
+                        width={barW}
+                        height={Math.max(0, H - p.y)}
+                      />
+                    );
+                  })
+                )}
+              </g>
+            ))}
+          </svg>
+          {dotted ? (
+            <DotLayer className="ds-trend__dots">
+              {prepared.map((s) => (
+                <g
+                  key={s.id}
+                  className="ds-trend__series"
+                  data-series={s.index % DASHES.length}
+                >
+                  {trendDots(s, columns, { slot, barW, box })}
+                </g>
+              ))}
+            </DotLayer>
+          ) : null}
+        </div>
         <span className="ds-trend__x" aria-hidden="true">
           <span>{xText(first.x)}</span>
           <span>{xText(last.x)}</span>
@@ -220,7 +240,66 @@ export function TrendChart({ label, series, unit, emptyText }: TrendChartProps) 
   );
 }
 
+/** The dots of one series: a line of dots, a grid of dots for a band, a stack of dots for a column. */
+function trendDots(
+  s: Prepared,
+  columns: Prepared[],
+  g: { slot: number; barW: number; box: { w: number; h: number } },
+) {
+  const { w, h } = g.box;
+  const px = (x: number) => (x / W) * w;
+  const py = (y: number) => (y / H) * h;
+  const out: ReactNode[] = [];
+  if (s.kind === 'column') {
+    const rows = Math.max(3, Math.min(24, Math.floor(h / DOT_GAP)));
+    const col = columns.indexOf(s);
+    s.pts.forEach((p, i) => {
+      const x = px(p.x - g.slot / 2 + col * g.barW + g.barW / 2);
+      const n = ((H - p.y) / H) * rows;
+      for (let k = 0; k < rows; k++) {
+        const lit = Math.max(0, Math.min(1, n - k));
+        out.push(
+          <Dot
+            key={`${i}-${k}`}
+            x={x}
+            y={h - (k + 0.5) * (h / rows)}
+            w={w}
+            h={h}
+            lit={lit}
+            kind={lit > 0 ? 'on' : 'off'}
+          />,
+        );
+      }
+    });
+    return out;
+  }
+  const withBand = s.pts.filter((p) => p.lo !== undefined && p.hi !== undefined);
+  if (withBand.length > 1) {
+    const x0 = px((withBand[0] as Prepared['pts'][number]).x);
+    const x1 = px((withBand[withBand.length - 1] as Prepared['pts'][number]).x);
+    for (let x = x0; x <= x1 && out.length < 1500; x += DOT_GAP) {
+      const at = (x / (w || 1)) * W;
+      let j = withBand.findIndex((p) => p.x >= at);
+      if (j < 1) j = 1;
+      const a = withBand[j - 1] as Prepared['pts'][number];
+      const b = withBand[j] as Prepared['pts'][number];
+      const t = b.x > a.x ? (at - a.x) / (b.x - a.x) : 0;
+      const hi = py((a.hi ?? 0) + ((b.hi ?? 0) - (a.hi ?? 0)) * t);
+      const lo = py((a.lo ?? 0) + ((b.lo ?? 0) - (a.lo ?? 0)) * t);
+      for (let y = hi; y <= lo && out.length < 1500; y += DOT_GAP)
+        out.push(<Dot key={`b${x}-${y}`} x={x} y={y} w={w} h={h} kind="band" />);
+    }
+  }
+  along(s.pts.map((p) => ({ x: px(p.x), y: py(p.y) }))).forEach((d, i) =>
+    out.push(<Dot key={`l${i}`} x={d.x} y={d.y} w={w} h={h} />),
+  );
+  return out;
+}
+
 export function Sparkline({ label, values, unit, markLast = false }: SparklineProps) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const dotted = useDotted();
+  const box = useBox(ref, dotted);
   if (values.length === 0) {
     return <span className="ds-spark ds-spark--empty">{CHART_WORDS.noData}</span>;
   }
@@ -232,6 +311,7 @@ export function Sparkline({ label, values, unit, markLast = false }: SparklinePr
   return (
     <span
       className="ds-spark"
+      ref={ref}
       role="img"
       aria-label={`${label}: ${values.length} ${CHART_WORDS.values}, ${CHART_WORDS.last} ${fmt(unit, lastValue)}, ${CHART_WORDS.lowest} ${fmt(unit, lo)}, ${CHART_WORDS.highest} ${fmt(unit, hi)}`}
     >
@@ -247,6 +327,19 @@ export function Sparkline({ label, values, unit, markLast = false }: SparklinePr
           d={values.map((v, i) => `${i ? 'L' : 'M'} ${xAt(i)} ${yAt(v)}`).join(' ')}
         />
       </svg>
+      {dotted ? (
+        <DotLayer className="ds-spark__dotlayer">
+          {along(
+            values.map((v, i) => ({
+              x: (xAt(i) / 100) * box.w,
+              y: (yAt(v) / 100) * box.h,
+            })),
+            SPARK_GAP,
+          ).map((d, i) => (
+            <Dot key={i} x={d.x} y={d.y} w={box.w} h={box.h} r={SPARK_R} />
+          ))}
+        </DotLayer>
+      ) : null}
       {markLast ? (
         <span
           className="ds-spark__last"
@@ -262,6 +355,8 @@ export function Sparkline({ label, values, unit, markLast = false }: SparklinePr
 }
 
 const LEVELS = 4;
+const SPARK_GAP = 5;
+const SPARK_R = 1.5;
 
 export function Heatmap({ label, rows, unit }: HeatmapProps) {
   const peak = Math.max(0, ...rows.flatMap((r) => r.values));
@@ -335,6 +430,9 @@ function busiest(values: readonly number[]): { hour: number; value: number } {
 }
 
 export function ForecastChart({ label, points }: ForecastChartProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const dotted = useDotted();
+  const box = useBox(ref, dotted);
   if (points.length === 0) {
     return <span className="ds-spark ds-spark--empty">{CHART_WORDS.noData}</span>;
   }
@@ -362,6 +460,7 @@ export function ForecastChart({ label, points }: ForecastChartProps) {
         role="img"
         aria-label={`${label}: ${points.length} ${CHART_WORDS.values}${nRange ? `, ${nIn} ${CHART_WORDS.within}` : ''}`}
         className="ds-fchart__chart"
+        ref={ref}
       >
         <svg
           className="ds-fchart__svg"
@@ -372,6 +471,16 @@ export function ForecastChart({ label, points }: ForecastChartProps) {
         >
           <line className="ds-fchart__diagonal" x1="0" y1="100" x2="100" y2="0" />
         </svg>
+        {dotted ? (
+          <DotLayer className="ds-fchart__dotlayer">
+            {along([
+              { x: 0, y: box.h },
+              { x: box.w, y: 0 },
+            ]).map((d, i) => (
+              <Dot key={i} x={d.x} y={d.y} w={box.w} h={box.h} kind="off" />
+            ))}
+          </DotLayer>
+        ) : null}
         {points.map((p, i) => (
           <span key={i} aria-hidden="true">
             {p.loSec !== undefined && p.hiSec !== undefined ? (

@@ -457,14 +457,14 @@ A project may offer a compact density. It changes only these tokens. The touch t
 
 ### Cool Terminal (`terminal`, CRSP300, CRSP302)
 
-Owner-approved concept of 2026-11-25 (btop look). A seventh theme that is chosen with the setting **Look** > _Cool Terminal_ or _Cool Terminal (dotted graphs)_ (Settings, Appearance), not from the six colour themes, so the colour-theme choice keeps its previews (UX-22). It is dark in every mode: the dark and the light value set are the same, and a choice of light or system mode leaves it as it is.
+Owner-approved concept of 2026-11-25 (btop look). A seventh theme that is chosen with the setting **Look** > _Cool Terminal_ or _Cool Terminal (dotted graphs)_ (Settings, Appearance), not from the six colour themes, so the colour-theme choice keeps its previews (UX-22). It has a dark and a light form (CRSP371), like the six colour themes: the Mode setting applies to it and System follows the device.
 
 - **Look:** 1 px borders, `--ds-radius-1` to `-3` are 0, no shadow (`--ds-shadow-2` and `-3` are `none`), no glow (`--ds-glow-focus` is a 1 px ring, `--ds-scanline-focus` is `none`). The font is JetBrains Mono for the console and Inter for prose (`--ds-font-prose`); neither is downloaded, a device without them uses its own monospace or sans.
 - **Panel title:** plain text in `--ds-color-text` over the border, no cut-in marks, no coloured letter. A machine name is bold and coloured (component 78).
 - **Selected row:** the `--ds-color-selection` tint with a 2 px `--ds-color-primary` inset on its left edge, instead of the reverse-video fill of the other themes.
 - **New tokens, in every theme:** `--ds-color-accent` (an ephemeral or new thing; the note colour in the six themes) and `--ds-color-warm` (a warm hint; the needs-you colour in the six themes).
-- **Graphs (CRSP302):** the two Looks are one theme and differ only in how graphs are drawn. `data-graphs` on the page root is absent for _Cool Terminal_ (blocks: `■` segments, `▁▂▃▄▅▆▇█` sparks) and `dotted` for _Cool Terminal (dotted graphs)_ (round dot segments, braille sparks `⢀⣀⣄⣤⣦⣶⣷⣿`). It is a presentation choice only and changes no colour (UX-55). The segment gap is the token `--ds-seg-gap` (`2px`, every theme).
-- **Palettes:** `data-pal=green` (default, no attribute), `amber`, `ice` on the page root, picked with the setting **Palette** when the Look is Terminal. A palette is a set of token values and nothing else (UX-55).
+- **Graphs (CRSP302, CRSP358):** the two graph styles differ only in how graphs are drawn. `data-graphs` on the page root is absent for _Blocks_ (blocks: `■` segments, `▁▂▃▄▅▆▇█` sparks) and `dotted` for _Dots_ (round dot segments, braille sparks `⢀⣀⣄⣤⣦⣶⣷⣿`). It is a presentation choice only and changes no colour (UX-55). The segment gap is the token `--ds-seg-gap` (`2px`, every theme).
+- **Palettes:** `data-pal=green` (default, no attribute), `amber`, `ice` on the page root, picked with the cards **Terminal Green**, **Terminal Amber** and **Terminal Ice** of the one Theme choice (CRSP358). A theme preview of a Terminal card carries `data-pal` itself, so the palette rules also match `.ds-theme-preview[data-theme-name=terminal][data-pal]`. A palette is a set of token values and nothing else (UX-55). Each palette has a dark and a light value set; light is paper-like in the hue of the palette (green, amber or ice), with the same flat look, and the segment blocks, dotted charts, divider and empty segments keep their tokens, so they stay clear.
 - **Contrast:** the concept's `--dim` is the border (3:1). The muted text is `--dim` lightened to 4.5:1 on the page, the surface and the selection fill, so UX-17 holds in all three palettes.
 
 | Token (without `--ds-color-`) | green | amber | ice |
@@ -482,7 +482,26 @@ Owner-approved concept of 2026-11-25 (btop look). A seventh theme that is chosen
 | `warm` | `#e8944a` | `#e8944a` | `#f0a060` |
 | `selection` | `#17332a` | `#33260f` | `#112a3d` |
 
-The values live in `scripts/design/themes.data.ts` (`TERMINAL`); `scripts/design/themes.test.ts` proves the CSS and the contrast.
+Light forms (CRSP371):
+
+| Token (without `--ds-color-`) | green light | amber light | ice light |
+| --- | --- | --- | --- |
+| `page` | `#e9efe5` | `#f2eadb` | `#e7edf3` |
+| `surface` | `#f4f8f1` | `#faf5e8` | `#f2f6fa` |
+| `text` | `#14221a` | `#2b200c` | `#0e1e2c` |
+| `text-muted`, `text-inactive` | `#3d5646` | `#5a4620` | `#394f63` |
+| `border` | `#5a7263` | `#7d6535` | `#587086` |
+| `primary`, `focus`, `done` | `#1b6a3d` | `#865400` | `#08666f` |
+| `needs-you` | `#785a00` | `#6a5400` | `#675700` |
+| `problem` | `#a52f2a` | `#a5352a` | `#a3253d` |
+| `note` | `#0d6277` | `#7a5516` | `#1b5ca6` |
+| `accent` | `#74429f` | `#8a4a3a` | `#5a3aaa` |
+| `warm` | `#9c4f10` | `#9c4f10` | `#9a4710` |
+| `selection` | `#cde4d2` | `#ebd8a6` | `#c9dcec` |
+
+Every text pair is 4.5:1 and the border 3:1 on the page and the surface in light too (UX-17).
+
+The values live in `scripts/design/themes.data.ts` (`TERMINAL`, `TERMINAL_LIGHT`); `scripts/design/themes.test.ts` proves the CSS and the contrast.
 
 ## Add a named theme
 

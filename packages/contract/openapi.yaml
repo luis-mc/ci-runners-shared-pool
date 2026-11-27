@@ -12070,6 +12070,20 @@ components:
               type: string
             notes:
               type: string
+        last_check:
+          type: [object, 'null']
+          description: The last time crsp looked for an update (CRSP368), read from the update audit rows; null when it never did. Absent from the answers to a policy change, a check or an install.
+          required: [at, by, kind]
+          properties:
+            at:
+              type: string
+              format: date-time
+            by:
+              type: string
+              description: Who asked for the check; updater when crsp looked by itself.
+            kind:
+              type: string
+              enum: [manual, automatic]
     UpdateWindow:
       type: object
       description: A daily install window, in UTC.

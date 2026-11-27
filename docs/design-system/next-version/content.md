@@ -441,15 +441,13 @@ The words of Settings, Appearance (UX-60).
 
 | Place | Word |
 |---|---|
-| Look label | Look |
-| Look help | Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once. |
-| Look choices | Colour themes, Cool Terminal, Cool Terminal (dotted graphs) |
-| Palette label | Palette |
-| Palette help | The colours of the Cool Terminal themes. The choice is saved at once. |
-| Palette choices | Green, Amber, Ice |
 | Choice label | Theme |
 | Choice help | The colours of the console. The choice is saved at once. |
-| Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord |
+| Theme choices | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
+| Graphs label | Graphs |
+| Graphs help | How the Terminal themes draw charts; bars keep their blocks. The choice is saved at once. |
+| Graphs choices | Blocks, Dots |
+| Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
 | Mode label | Mode |
 | Mode help | System follows your device. The choice is saved at once. |
 | Mode choices | System, Dark, Light |
@@ -934,7 +932,7 @@ The words of the small update page the tray opens (tray R5.43, web-console R5.96
 
 | Words | Used for |
 |---|---|
-| Updates | The Settings tab after Console (LOOK43). It holds the Updates pane; Console no longer does. |
+| Updates | The Settings tab after Networking (LOOK43). It holds the Updates pane. |
 | Update | Title of the page and name of the wizard. |
 | Version {version} is ready. Running jobs finish first; the service restarts (about 1 min). | The Review line. It is also the text of the native fallback box. |
 | Update to {version} | The primary on Review. Busy word: Updating. |
@@ -2083,3 +2081,24 @@ The words of the Debug access card on a job page and of the debug session API an
 | This machine cannot open debug sessions yet. | Refusal while no agent can enter a job's environment. |
 | This runner keeps files between jobs. | Warning on a persistent runner (allowed only when the repository allows it). |
 | Not run on a real Mac yet. | Warning on a macOS target (R5.34). |
+## Settings tab words
+
+The tabs of Settings (CRSP365): Access, Repositories, Themes, Networking, Updates, Data, Audit log. The old Console tab is Themes (Appearance) and Networking (Notification channels, Network, Metrics).
+
+| Words | Used for |
+|---|---|
+| Themes | The Settings tab that holds Appearance (was Console). |
+| Networking | The Settings tab after Themes that holds Notification channels, Network and Metrics. |
+
+## Update progress words
+
+Where an update shows (CRSP364, CRSP368). The progress lives only in the Updates pane; other pages carry one short line.
+
+| Words | Used for |
+|---|---|
+| An update is running. | The one top line on every page except Updates (no bar). |
+| See the update | The link in that line; it goes to Settings > Updates. |
+| Restarting, back in a moment. | The one restart line inside the Updates pane (no Note). |
+| Last checked {time}, by {who} (manual). | The Updates pane line after a check a person asked for. |
+| Last checked {time} (automatic). | The Updates pane line after crsp's own check. |
+| See all in the Audit log | The link under that line; it opens the Audit log. |
