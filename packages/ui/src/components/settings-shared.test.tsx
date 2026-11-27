@@ -39,7 +39,11 @@ describe('theme choice with a preview', () => {
         label="Theme"
         value="terminal-ice"
         onChange={() => undefined}
-        choices={THEME_CHOICES.map((t) => ({ value: t.id, label: t.name, preview: t.id }))}
+        choices={THEME_CHOICES.map((t) => ({
+          value: t.id,
+          label: t.name,
+          preview: t.id,
+        }))}
       />,
     );
     expect(document.querySelectorAll('.ds-theme-preview')).toHaveLength(

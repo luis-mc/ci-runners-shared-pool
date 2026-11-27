@@ -30,7 +30,9 @@ export function ThemePreview({
       className="ds-theme-preview"
       role="img"
       aria-label={label ?? `${name}, ${mode}`}
-      data-theme-name={terminal ? TERMINAL_THEME_ID : isThemeId(theme) ? theme : undefined}
+      data-theme-name={
+        terminal ? TERMINAL_THEME_ID : isThemeId(theme) ? theme : undefined
+      }
       data-pal={terminal && palette !== 'green' ? palette : undefined}
       data-theme={mode}
     >

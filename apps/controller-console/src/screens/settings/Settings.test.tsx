@@ -125,7 +125,9 @@ describe('Colour themes (UX-60)', () => {
     // Six themes show a dark and a light sample; the three Terminal cards show the dark one only.
     expect(group.querySelectorAll('.ds-theme-preview')).toHaveLength(15);
     expect(within(group).getByRole('img', { name: 'Nord, light' })).toBeTruthy();
-    expect(within(group).queryByRole('img', { name: 'Terminal Amber, light' })).toBeNull();
+    expect(
+      within(group).queryByRole('img', { name: 'Terminal Amber, light' }),
+    ).toBeNull();
     const amber = within(group).getByRole('img', { name: 'Terminal Amber, dark' });
     expect(amber.getAttribute('data-theme-name')).toBe('terminal');
     expect(amber.getAttribute('data-pal')).toBe('amber');
