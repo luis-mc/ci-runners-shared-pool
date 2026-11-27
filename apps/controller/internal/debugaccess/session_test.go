@@ -97,12 +97,7 @@ func TestExtendOnceNotPastLimit(t *testing.T) {
 	if _, err := e.svc.Extend(e.ctx, viewer, d.ID); codeOf(err) != CodeViewer {
 		t.Fatalf("viewer extends: %v", err)
 	}
-	// At the repository's limit there is nothing to extend into.
-	if _, err := e.svc.Extend(e.ctx, admin, d.ID); codeOf(err) != CodePastLimit {
-		t.Fatalf("extend at the limit: %v", err)
-	}
-	// The limit is the repository's own, not a fixed 120: raise it and the full 15 minutes fit.
-	e.turnOn(func(r *RepoSettings) { r.LimitMin = 60 })
+	// A session opened at its repository's limit still has room up to the highest limit (120).
 	x, err := e.svc.Extend(e.ctx, admin, d.ID)
 	if err != nil || x.EndsAt != d.EndsAt.Add(15*time.Minute) {
 		t.Fatalf("extend = %+v, %v", x, err)
@@ -115,27 +110,20 @@ func TestExtendOnceNotPastLimit(t *testing.T) {
 	}
 }
 
-// R5.19: an extension is clamped at the repository's limit, never at a fixed ceiling.
-func TestExtendClampsAtRepositoryLimit(t *testing.T) {
+// R5.19: an extension is clamped at the highest allowed limit (120) from the open.
+func TestExtendClampsAtMaxLimit(t *testing.T) {
 	e := newEnv(t)
-	e.turnOn(nil) // limit 30
+	e.turnOn(func(r *RepoSettings) { r.LimitMin = 110 }) // 10 minutes of room, 15 asked
 	d := e.mustOpen(admin, 1)
-	e.turnOn(func(r *RepoSettings) { r.LimitMin = 40 }) // 10 minutes of room, 15 asked
 	x, err := e.svc.Extend(e.ctx, admin, d.ID)
-	if err != nil || x.EndsAt != d.OpenedAt.Add(40*time.Minute) {
+	if err != nil || x.EndsAt != d.OpenedAt.Add(120*time.Minute) {
 		t.Fatalf("clamped extend = %+v, %v", x, err)
 	}
-	// A repository at the highest setting (120) is held to 120 too.
+	// A session opened at the highest setting (120) has no room.
 	e.turnOn(func(r *RepoSettings) { r.LimitMin = 120 })
 	d2 := e.mustOpen(admin, 2)
 	if _, err := e.svc.Extend(e.ctx, admin, d2.ID); codeOf(err) != CodePastLimit {
 		t.Fatalf("extend past 120: %v", err)
-	}
-	// Lowering the limit below the session's end leaves no room.
-	e.turnOn(func(r *RepoSettings) { r.LimitMin = 30 })
-	d3 := e.mustOpen(admin2, 3)
-	if _, err := e.svc.Extend(e.ctx, admin2, d3.ID); codeOf(err) != CodePastLimit {
-		t.Fatalf("extend at the limit: %v", err)
 	}
 }
 

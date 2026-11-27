@@ -11711,7 +11711,7 @@ type ClientInterface interface {
 
 	// ExtendDebugSession Extend a session once by 15 minutes
 	//
-	// debug-access R5.19. Only the user who opened it; never past the repository's session limit; an audit row.
+	// debug-access R5.19. Only the user who opened it; never past the highest session limit a repository may set (120 minutes); an audit row.
 	//
 	// Corresponds with POST /api/v1/debug-sessions/{sessionId}/extend (the `ExtendDebugSession` operationId).
 	ExtendDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -14459,7 +14459,7 @@ func (c *Client) EndDebugSession(ctx context.Context, sessionId DebugSessionId, 
 
 // ExtendDebugSession Extend a session once by 15 minutes
 //
-// debug-access R5.19. Only the user who opened it; never past the repository's session limit; an audit row.
+// debug-access R5.19. Only the user who opened it; never past the highest session limit a repository may set (120 minutes); an audit row.
 //
 // Corresponds with POST /api/v1/debug-sessions/{sessionId}/extend (the `ExtendDebugSession` operationId).
 func (c *Client) ExtendDebugSession(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -30997,7 +30997,7 @@ type ClientWithResponsesInterface interface {
 
 	// ExtendDebugSessionWithResponse Extend a session once by 15 minutes
 	//
-	// debug-access R5.19. Only the user who opened it; never past the repository's session limit; an audit row.
+	// debug-access R5.19. Only the user who opened it; never past the highest session limit a repository may set (120 minutes); an audit row.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -45646,7 +45646,7 @@ func (c *ClientWithResponses) EndDebugSessionWithResponse(ctx context.Context, s
 
 // ExtendDebugSessionWithResponse Extend a session once by 15 minutes
 //
-// debug-access R5.19. Only the user who opened it; never past the repository's session limit; an audit row.
+// debug-access R5.19. Only the user who opened it; never past the highest session limit a repository may set (120 minutes); an audit row.
 //
 // Returns a wrapper object for the known response body format(s).
 //

@@ -438,11 +438,7 @@ func (s *Service) Extend(ctx context.Context, p auth.Principal, id string) (stor
 		return store.DebugSession{}, &Refusal{Code: CodeNotYours, Text: "Only the user who opened a session can extend it."}
 	}
 	now := s.now()
-	repo, err := s.Repo(ctx, d.RepositoryID)
-	if err != nil {
-		return store.DebugSession{}, err
-	}
-	next, r := ExtendTo(d, now, repo.LimitMin)
+	next, r := ExtendTo(d, now)
 	if r != nil {
 		return store.DebugSession{}, r
 	}

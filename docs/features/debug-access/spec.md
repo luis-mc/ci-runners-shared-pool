@@ -175,7 +175,7 @@ No mocks yet. Screens follow design system v4 and add no rules of their own. Rul
 
 **R5.18** — A session MUST end after an idle limit with no keystroke (default 10 minutes, range 1 to 60).
 
-**R5.19** — The user MUST be able to extend a session once by 15 minutes, never past the repository's own session limit counted from the open, and never past a fixed ceiling of the code. An extension MUST be an audit row.
+**R5.19** — The user MUST be able to extend a session once by 15 minutes, never past the highest session limit a repository may set (120 minutes) counted from the open. The repository's own limit does not cap it, because a session opens at that limit. An extension MUST be an audit row.
 
 **R5.20** — A session on a running job MUST end when the job ends, with a 60-second notice in the terminal, unless the repository holds failed jobs (R5.21) and the job failed.
 
@@ -281,7 +281,7 @@ flowchart LR
 **New questions from building (CRSP331):**
 
 - **Q10.** Decided 27 Nov: record the head repository of a pull request and allow a pull request job whose head repository is the job's own repository. A fork, a head repository that differs and an unknown one stay refused (R5.5). Built in CRSP363: the head repository is read from GitHub's run and stored per job.
-- **Q11.** Decided 27 Nov: an extension may not pass the repository's own session limit from the open (R5.19), not a fixed 120 minutes. Built in CRSP363: the extension is cut at that limit. A session opened at the limit has no room, so it takes an extension only when the repository's limit was raised after it opened.
+- **Q11.** Decided 27 Nov, replacing the first answer: the one 15-minute extension may go up to the highest limit a repository may set (120 minutes) from the open, not the repository's own limit, which a session opens at and so leaves no room (R5.19). Built in CRSP366: the extension is cut at 120 minutes; a session already at 120 is refused with `past_limit`.
 - **Q12.** Decided 27 Nov: keep. A repository whose visibility is not known is treated as public and refused (R5.5).
 - **Q13.** Decided 27 Nov: keep. At controller start every session still marked open is ended as "connection lost" (R6.4).
 
@@ -322,7 +322,7 @@ A row that starts with "planned:" is not built yet; its path is where the test w
 | R5.16 | planned: apps/controller/internal/agent/debug_test.go, TestEndKillsAllDebugProcesses |
 | R5.17 | planned: apps/controller/internal/agent/debug_test.go, TestHardLimitWithControllerGone |
 | R5.18 | apps/controller/internal/debugaccess/session_test.go, TestIdleLimit |
-| R5.19 | apps/controller/internal/debugaccess/session_test.go, TestExtendOnceNotPastLimit, TestExtendClampsAtRepositoryLimit; apps/controller/internal/debugaccess/transcript_test.go, TestLongAt80Percent |
+| R5.19 | apps/controller/internal/debugaccess/session_test.go, TestExtendOnceNotPastLimit, TestExtendClampsAtMaxLimit; apps/controller/internal/debugaccess/transcript_test.go, TestLongAt80Percent |
 | R5.20 | apps/controller/internal/debugaccess/session_test.go, TestJobEndClosesAfterNotice |
 | R5.21 | planned: apps/controller/internal/agent/hold_test.go, TestFailedJobHeldSlotReleased |
 | R5.22 | planned: apps/controller/internal/agent/hold_test.go, TestHoldCapAndFloors |
