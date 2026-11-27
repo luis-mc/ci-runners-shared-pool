@@ -1,0 +1,87 @@
+[
+ {
+  "name": "overview",
+  "path": "/",
+  "title": "Overview"
+ },
+ {
+  "name": "an-donext",
+  "path": "/analytics",
+  "title": "Analytics: Do next"
+ },
+ {
+  "name": "an-tests",
+  "path": "/analytics/tests",
+  "title": "Analytics: Tests"
+ },
+ {
+  "name": "an-guardrails",
+  "path": "/analytics/guardrails",
+  "title": "Analytics: Guardrails"
+ },
+ {
+  "name": "an-insights",
+  "path": "/analytics/insights",
+  "title": "Analytics: Insights"
+ },
+ {
+  "name": "an-savings",
+  "path": "/analytics/savings",
+  "title": "Analytics: Savings"
+ },
+ {
+  "name": "an-compare",
+  "path": "/analytics/compare",
+  "title": "Analytics: Compare"
+ },
+ {
+  "name": "an-charts",
+  "path": "/analytics/charts",
+  "title": "Analytics: Charts"
+ },
+ {
+  "name": "an-elsewhere",
+  "path": "/analytics/elsewhere",
+  "title": "Analytics: Elsewhere"
+ },
+ {
+  "name": "job-groups",
+  "path": "/pool/jobs?group=repository",
+  "title": "Pool: Job groups"
+ },
+ {
+  "name": "jobs",
+  "path": "/pool/jobs",
+  "title": "Pool: Jobs"
+ },
+ {
+  "name": "job-page",
+  "path": "/pool/jobs/3",
+  "title": "A job page"
+ },
+ {
+  "name": "queue-plan",
+  "path": "/pool/queue",
+  "title": "Pool: Queue plan"
+ },
+ {
+  "name": "pool-machine",
+  "path": "/pool/machines/m1",
+  "title": "Pool: Machine"
+ },
+ {
+  "name": "pool-machines",
+  "path": "/pool/machines",
+  "title": "Pool: Machines"
+ },
+ {
+  "name": "repo-detail",
+  "path": "/setup/pool/octo/app",
+  "title": "Repository"
+ },
+ {
+  "name": "setup-size",
+  "path": "/setup/size",
+  "title": "Setup: Size"
+ }
+]

@@ -1,0 +1,11 @@
+[
+ {"name":"themes","path":"/settings/themes"},
+ {"name":"networking","path":"/settings/networking"},
+ {"name":"upd-idle","path":"/settings/updates","query":"upd=idle"},
+ {"name":"upd-downloading","path":"/settings/updates","query":"upd=downloading"},
+ {"name":"upd-installing","path":"/settings/updates","query":"upd=installing"},
+ {"name":"upd-restarting","path":"/settings/updates","query":"upd=restarting","wait":6500},
+ {"name":"upd-done","path":"/settings/updates","query":"upd=done"},
+ {"name":"upd-failed","path":"/settings/updates","query":"upd=failed"},
+ {"name":"overview-updating","path":"/","query":"upd=installing"}
+]
