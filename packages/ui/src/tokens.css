@@ -45,6 +45,8 @@
   --ds-pane-inner: 12px;
   --ds-frame-narrow: 40rem;
   --ds-frame-wide: 96rem;
+  --ds-frame-marketing: 72rem;
+  --ds-measure-prose: 72ch;
   --ds-control-height: 44px;
   --ds-control-height-large: 52px;
   --ds-row-action-width: 8rem;

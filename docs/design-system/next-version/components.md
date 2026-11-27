@@ -914,3 +914,75 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `packages/ui/src/components/SegMeter.tsx` (`SegMeter`: `label`, `value`, `max`, `segments`, `warnAt`, `badAt`, `text`; `segmentFills`), `packages/ui/src/components.css` (`ds-segs`, `ds-segmeter`).
 - **Rules:** UX-17, UX-58, UX-91, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/segmeter.test.tsx`.
+
+## 86. Site frame
+
+- **Used for:** the frame of a public, signed-out page: a public website. A page of the console never uses it; the console has its own shell (UX-69).
+- **Anatomy:** a skip link, the top menu, one `main`, a footer. All three sit in one column of `--ds-frame-marketing` with the page gutter at each side.
+- **States:** normal. The skip link shows on focus.
+- **Tokens:** `--ds-page-gutter`, `--ds-page-padding`, `--ds-frame-marketing`, `--ds-space-2`, `--ds-space-5`, `--ds-space-6`.
+- **Keyboard and screen reader:** the skip link is the first stop and leads to `#main`; the menu is a navigation landmark named by the page.
+- **Phone (360, 393 px):** one column; the gutter is `--ds-page-gutter` (16 px); nothing scrolls sideways.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`SiteFrame`: `menu`, `footer`), `packages/ui/src/components.css` (`ds-site`).
+- **Rules:** UX-2, UX-69, CORE-1, CORE-5, CORE-7.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx` and the DOM layout checks of `apps/web/browser/layout.spec.ts` at 360, 393 and 1300 px.
+
+## 87. Hero
+
+- **Used for:** the top of a landing page: what the product is, in one headline and one line, with the page's one primary action and one picture.
+- **Anatomy:** the page's only `h1`, a lead line, the primary action, and an optional picture (a `Shot`). The picture sits beside the text from `--ds-bp-md` and under it on a phone.
+- **States:** with and without a picture.
+- **Tokens:** `--ds-size-6`, `--ds-size-4`, `--ds-space-4`, `--ds-space-6`, `--ds-color-text-muted`.
+- **Keyboard and screen reader:** a region named by its title; the action is the first stop after the menu.
+- **Phone (360, 393 px):** text first, then the picture; the title wraps and never widens the page.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`Hero`: `title`, `lead`, `action`, `media`), `packages/ui/src/components.css` (`ds-hero`).
+- **Rules:** UX-3 (one primary action), CORE-1, CORE-3, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 88. Feature band
+
+- **Used for:** one band of a landing page: a level-2 heading, a line, the content (cards, a list, steps) and, optionally, a picture.
+- **Anatomy:** heading, lead line, body; a picture beside the text from `--ds-bp-md`, under it on a phone.
+- **States:** with and without a picture.
+- **Tokens:** `--ds-size-5`, `--ds-space-3`, `--ds-space-5`, `--ds-color-text-muted`.
+- **Keyboard and screen reader:** a region named by its heading.
+- **Phone (360, 393 px):** one column.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`FeatureBand`: `title`, `lead`, `media`), `packages/ui/src/components.css` (`ds-band-feature`).
+- **Rules:** UX-10, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 89. Screenshot
+
+- **Used for:** a real picture of the product on a public page. Never a mock-up (website R5.4).
+- **Anatomy:** an image with a border, its width and height stated, alt text that says what the picture shows, and an optional caption.
+- **States:** normal.
+- **Tokens:** `--ds-border-thin`, `--ds-color-divider`, `--ds-radius-2`, `--ds-size-2`.
+- **Keyboard and screen reader:** the alt text is required by the part's type (CORE-5).
+- **Phone (360, 393 px):** the picture scales down to the column; the stated size keeps the page from jumping while it loads.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`Shot`: `src`, `alt`, `width`, `height`, `caption`, `priority`), `packages/ui/src/components.css` (`ds-shot`).
+- **Rules:** CORE-5, UX-17.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 90. Prose
+
+- **Used for:** running text written in a document (a doc page): headings, paragraphs, lists, tables, code and links, drawn with the design system's type and colours.
+- **Anatomy:** one column no wider than `--ds-measure-prose`. A table and a diagram scroll inside their own box (a diagram is drawn at build time with the theme's colours, as an image with a text name); a code block scrolls inside its own box and is a tab stop.
+- **States:** normal; a link is normal, visited, hover or focus-visible and takes its colour from a token (UX-85).
+- **Tokens:** `--ds-measure-prose`, `--ds-color-primary`, `--ds-color-text`, `--ds-color-divider`, `--ds-color-focus`, `--ds-font-mono`, `--ds-size-2` to `--ds-size-5`, `--ds-space-1`, `--ds-space-3`.
+- **Keyboard and screen reader:** headings keep the document's order; a code block is focusable so it can be scrolled by keyboard.
+- **Phone (360, 393 px):** one column; wide code, tables and diagrams scroll inside their box, never the page.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`Prose`: `html`), `packages/ui/src/components.css` (`ds-prose`).
+- **Rules:** UX-85, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 91. Doc search
+
+- **Used for:** finding a page in a static list of pages. The box and its status line are drawn by this part; the site's one script fills the status and hides what does not match. Without script the box is hidden and the full list stays.
+- **Anatomy:** a search box, one status line announced politely ("3 pages match"), the list of pages in groups, each a link with its short line.
+- **States:** hidden (no script), empty, filtered, no match.
+- **Tokens:** `--ds-width-field-full`, `--ds-space-3`, `--ds-space-5`, `--ds-color-text-muted`.
+- **Keyboard and screen reader:** a search landmark named by its label; the status line is a polite live region.
+- **Phone (360, 393 px):** the box takes the full width.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`DocSearch`: `label`, `hint`, `groups`), `packages/ui/src/components.css` (`ds-docsearch`).
+- **Rules:** UX-31, UX-57, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx` and `apps/web/browser/docs.spec.ts`.
