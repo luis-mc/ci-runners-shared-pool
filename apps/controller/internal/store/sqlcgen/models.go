@@ -177,6 +177,55 @@ type CtlRunnerPlan struct {
 	Doc string
 }
 
+type DebugRepoSetting struct {
+	RepositoryID int64
+	Repository   string
+	Enabled      int64
+	Who          string
+	LimitMin     int64
+	IdleMin      int64
+	HoldMin      int64
+	PersistentOk int64
+	UpdatedAt    string
+	UpdatedBy    string
+}
+
+type DebugSession struct {
+	ID           string
+	JobID        int64
+	RepositoryID int64
+	Repository   string
+	MachineID    string
+	RunnerName   string
+	Backend      string
+	Isolation    string
+	Os           string
+	UserLogin    string
+	UserID       int64
+	Reason       string
+	Source       string
+	SourceAddr   string
+	OpenedAt     string
+	EndsAt       string
+	LastInputAt  string
+	LimitMin     int64
+	IdleMin      int64
+	Extended     int64
+	Recorded     int64
+	EndedAt      string
+	EndReason    string
+	EndedBy      string
+}
+
+type DebugTranscript struct {
+	SessionID string
+	Text      string
+	Bytes     int64
+	Truncated int64
+	ExpiresAt string
+	UpdatedAt string
+}
+
 type DependencyJob struct {
 	ID            string
 	MachineID     string
