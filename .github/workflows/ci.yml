@@ -34,7 +34,8 @@ on:
     # Drafts are skipped by the job-level `if`; ready_for_review starts the run
     # when a draft is marked ready.
     types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore: ['**/*.md', 'docs/**']
+    # No paths-ignore (CRSP352, DL-116): a docs-only change still gets the required checks; decide and
+    # carry skip the work jobs it does not touch.
   push:
     branches: [main]
     paths-ignore: ['**/*.md', 'docs/**']
