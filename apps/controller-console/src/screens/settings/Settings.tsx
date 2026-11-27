@@ -23,7 +23,7 @@ import {
   Stack,
   Status,
   Table,
-  THEMES,
+  THEME_CHOICES,
   Tabs,
   TextField,
   TimePicker,
@@ -31,10 +31,10 @@ import {
   applyPalette,
   applyGraphs,
   savedGraphs,
-  lastColourTheme,
-  TERMINAL_THEME_ID,
+  applyThemeChoice,
+  isTerminalChoice,
+  savedThemeChoice,
   savedPalette,
-  TERMINAL_PALETTE_CHOICES,
   formatDateTime,
   formatSize,
   rememberThemeMode,
@@ -468,10 +468,8 @@ export function AppearanceSettings() {
     () => unwrap(client.GET('/api/v1/me/preferences')),
     [],
   );
-  const [themeName, setThemeName] = useState(savedThemeName);
-  const [palette, setPalette] = useState(savedPalette);
+  const [themeChoice, setThemeChoice] = useState(savedThemeChoice);
   const [graphs, setGraphs] = useState(savedGraphs);
-  const terminal = themeName === TERMINAL_THEME_ID;
   const save = useCommand(async (theme: Schemas['Theme']) => {
     const p = await unwrap(client.PUT('/api/v1/me/preferences', { body: { theme } }));
     applyTheme(p.theme);
@@ -483,59 +481,33 @@ export function AppearanceSettings() {
         {(p) => (
           <Stack>
             <ChoiceField
-              label="Look"
-              help="Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once."
-              value={
-                terminal
-                  ? graphs === 'dotted'
-                    ? 'terminal-dotted'
-                    : 'terminal'
-                  : 'colours'
-              }
+              label="Theme"
+              help="The colours of the console. The choice is saved at once."
+              value={themeChoice}
               onChange={(v) => {
-                const isTerminal = v !== 'colours';
-                const next = isTerminal ? TERMINAL_THEME_ID : lastColourTheme();
-                const style = v === 'terminal-dotted' ? 'dotted' : 'blocks';
-                setThemeName(next);
-                applyThemeName(next);
-                setGraphs(style);
-                applyGraphs(style);
+                setThemeChoice(v);
+                applyThemeChoice(v);
               }}
-              choices={[
-                { value: 'colours', label: 'Colour themes' },
-                { value: 'terminal', label: 'Cool Terminal' },
-                { value: 'terminal-dotted', label: 'Cool Terminal (dotted graphs)' },
-              ]}
+              choices={THEME_CHOICES.map((t) => ({
+                value: t.id,
+                label: t.name,
+                preview: t.id,
+              }))}
             />
-            {terminal ? null : (
+            {isTerminalChoice(themeChoice) ? (
               <ChoiceField
-                label="Theme"
-                help="The colours of the console. The choice is saved at once."
-                value={themeName}
+                label="Graphs"
+                help="How the Terminal themes draw graphs. The choice is saved at once."
+                value={graphs}
                 onChange={(v) => {
-                  setThemeName(v);
-                  applyThemeName(v);
+                  const style = v === 'dotted' ? 'dotted' : 'blocks';
+                  setGraphs(style);
+                  applyGraphs(style);
                 }}
-                choices={THEMES.map((t) => ({
-                  value: t.id,
-                  label: t.name,
-                  preview: t.id,
-                }))}
-              />
-            )}
-            {terminal ? (
-              <ChoiceField
-                label="Palette"
-                help="The colours of the Cool Terminal themes. The choice is saved at once."
-                value={palette}
-                onChange={(v) => {
-                  setPalette(v);
-                  applyPalette(v);
-                }}
-                choices={TERMINAL_PALETTE_CHOICES.map((t) => ({
-                  value: t.id,
-                  label: t.name,
-                }))}
+                choices={[
+                  { value: 'blocks', label: 'Blocks' },
+                  { value: 'dotted', label: 'Dots' },
+                ]}
               />
             ) : null}
             <ChoiceField

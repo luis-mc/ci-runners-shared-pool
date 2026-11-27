@@ -3,6 +3,7 @@
 // (UX-22). Switches save at once; check boxes wait for Save.
 import { useId, type ReactNode } from 'react';
 import { CaretInput } from './CaretInput';
+import { choiceHasLight } from '../themes';
 import { ThemePreview } from './ThemePreview';
 
 export { FileField } from './FileField';
@@ -147,7 +148,7 @@ export interface Choice {
   label: string;
   /** A theme id: the row shows a small row of that theme's colours, drawn from its tokens (UX-60). */
   swatch?: string | undefined;
-  /** A theme id: the row shows a live ThemePreview of that theme in dark and in light (UX-60, component 42). */
+  /** A theme id: the row shows a live ThemePreview of that theme in dark and in light; a Terminal choice has no light sample (UX-60, component 42). */
   preview?: string | undefined;
   /** Why the choice cannot be taken (UX-38). */
   disabledReason?: string | undefined;
@@ -170,7 +171,7 @@ function Swatches({ theme }: { theme: string }) {
   );
 }
 
-/** A one-choice list (component 13): rows for up to 6 answers, a drop-down for 7 or more (UX-22). */
+/** A one-choice list (component 13): rows for up to 6 answers, a drop-down for 7 or more (UX-22); cards with a preview stay rows at any count (UX-60). */
 export function ChoiceField(
   props: FieldShellProps & {
     value: string;
@@ -181,7 +182,7 @@ export function ChoiceField(
   const id = useId();
   const helpId = `${id}-h`;
   const errorId = `${id}-e`;
-  if (props.choices.length >= 7) {
+  if (props.choices.length >= 7 && !props.choices.some((c) => c.preview)) {
     return (
       <Shell {...props} htmlFor={id} helpId={helpId} errorId={errorId}>
         <select
@@ -256,7 +257,9 @@ export function ChoiceField(
                 {c.preview ? (
                   <span className="ds-choice__previews">
                     <ThemePreview theme={c.preview} mode="dark" />
-                    <ThemePreview theme={c.preview} mode="light" />
+                    {choiceHasLight(c.preview) ? (
+                      <ThemePreview theme={c.preview} mode="light" />
+                    ) : null}
                   </span>
                 ) : null}
                 {c.disabledReason ? (

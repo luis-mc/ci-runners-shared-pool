@@ -173,13 +173,13 @@ export function renderThemeCss(): string {
   return out.join('\n');
 }
 
-/** The terminal theme's amber and ice palettes: `data-pal` on the page root, after every mode rule so it wins. */
+/** The terminal theme's amber and ice palettes: `data-pal` on the page root (and on a theme preview, which is not the root), after every mode rule so it wins. */
 export function renderPaletteCss(): string[] {
   const t = THEME_DATA.find((x) => x.id === 'terminal') as ThemeData;
   return (['amber', 'ice'] as const).map((pal) => {
     const palette = TERMINAL[pal];
     const decl = themeDeclarations({ ...t, dark: palette, light: palette }, 'dark', '  ');
-    return `/* Terminal, ${pal} palette */\n:root[data-theme-name='terminal'][data-pal='${pal}'] {\n${decl}\n}`;
+    return `/* Terminal, ${pal} palette */\n:root[data-theme-name='terminal'][data-pal='${pal}'],\n.ds-theme-preview[data-theme-name='terminal'][data-pal='${pal}'][data-theme] {\n${decl}\n}`;
   });
 }
 

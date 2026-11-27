@@ -2092,7 +2092,8 @@
   --ds-radius-3: 0;
 }
 /* Terminal, amber palette */
-:root[data-theme-name='terminal'][data-pal='amber'] {
+:root[data-theme-name='terminal'][data-pal='amber'],
+.ds-theme-preview[data-theme-name='terminal'][data-pal='amber'][data-theme] {
   --ds-color-page: #0e0b06;
   --ds-color-surface: #140f08;
   --ds-color-text: #e8d9b8;
@@ -2135,7 +2136,8 @@
   --ds-radius-3: 0;
 }
 /* Terminal, ice palette */
-:root[data-theme-name='terminal'][data-pal='ice'] {
+:root[data-theme-name='terminal'][data-pal='ice'],
+.ds-theme-preview[data-theme-name='terminal'][data-pal='ice'][data-theme] {
   --ds-color-page: #070b10;
   --ds-color-surface: #0b1219;
   --ds-color-text: #c9d6e2;

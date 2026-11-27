@@ -431,15 +431,13 @@ The words of Settings, Appearance (UX-60).
 
 | Place | Word |
 |---|---|
-| Look label | Look |
-| Look help | Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once. |
-| Look choices | Colour themes, Cool Terminal, Cool Terminal (dotted graphs) |
-| Palette label | Palette |
-| Palette help | The colours of the Cool Terminal themes. The choice is saved at once. |
-| Palette choices | Green, Amber, Ice |
 | Choice label | Theme |
 | Choice help | The colours of the console. The choice is saved at once. |
-| Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord |
+| Theme choices | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
+| Graphs label | Graphs |
+| Graphs help | How the Terminal themes draw graphs. The choice is saved at once. |
+| Graphs choices | Blocks, Dots |
+| Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
 | Mode label | Mode |
 | Mode help | System follows your device. The choice is saved at once. |
 | Mode choices | System, Dark, Light |
