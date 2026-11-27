@@ -113,8 +113,13 @@ export function buildRelease(gh: GhRelease, sums: string): ReleaseData {
       }
     }
   }
-  // R5.7: no agent download is offered. An asset named for an agent is a mistake in the release.
+  // R5.7: no agent download is offered. The agent packages (CrspAgent-<version>-<os>-<arch>.<ext>,
+  // CRSP304) are fetched by the Controller and are skipped here; any other asset named for an
+  // agent is a mistake in the release.
+  const agentPrefix = `CrspAgent-${version}-`;
+  const agentPackage = /^CrspAgent-[^-]+-(win|macos|linux)-(x64|arm64)\.(zip|tar\.gz)$/;
   for (const a of gh.assets) {
+    if (a.name.startsWith(agentPrefix) && agentPackage.test(a.name)) continue;
     if (/agent/i.test(a.name)) problems.push(`unexpected agent asset ${a.name}`);
   }
 
