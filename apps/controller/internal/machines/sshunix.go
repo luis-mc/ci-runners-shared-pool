@@ -4,7 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
+
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/joinfile"
 )
 
 // Agent push to Linux and macOS over SSH, and the manual command (CRSP304,
@@ -13,6 +16,15 @@ import (
 // controller's own LAN link (or the release), checks its SHA-256 before it opens
 // the archive and runs the installer's install.sh. Over SSH the owner never sees
 // an installer; the audit log holds the step, never a secret.
+
+// baseOf is scheme and host of an address: https://pool.lan:8460.
+func baseOf(raw string) string {
+	u, err := url.Parse(raw)
+	if err != nil {
+		return ""
+	}
+	return u.Scheme + "://" + u.Host
+}
 
 func shQuote(s string) string { return "'" + strings.ReplaceAll(s, "'", `'\''`) + "'" }
 
@@ -36,25 +48,33 @@ func (s *Service) agentRefs(ctx context.Context, osName string) ([2]PackageRef, 
 // unixScript is the shell text that installs crsp when it is missing and then
 // runs cmd. sudo is "sudo -n" over SSH (nobody can type a password) and "sudo" in
 // a command a person pastes.
-func unixScript(picks [2]PackageRef, sudo, cmd string) string {
-	lines := []string{
+func unixScript(picks [2]PackageRef, sudo, fingerprint, cmd string) string {
+	pinned := picks[0].SelfSigned || picks[1].SelfSigned
+	lines := []string{}
+	if pinned {
+		// The controller's own address is reached only with its pinned certificate (CRSP133 rules,
+		// as the join file): the chain must hold the certificate with the fingerprint and the
+		// server certificate must be signed by it; curl then keeps to that server key.
+		lines = append(lines, "FINGERPRINT="+shQuote(fingerprint), `BASE=`+shQuote(baseOf(picks[0].URL)), `die() { echo "$1" >&2; exit 1; }`, strings.TrimRight(joinfile.ShellPin, "\n"))
+	}
+	lines = append(lines,
 		"if ! command -v crsp >/dev/null 2>&1; then",
 		`  case "$(uname -m)" in`,
-	}
+	)
 	for i, pat := range []string{"x86_64|amd64", "aarch64|arm64"} {
 		p := picks[i]
 		k := ""
 		if p.SelfSigned {
-			k = "k" // the SHA-256, taken in the owner's session, decides what is installed
+			k = "1" // fetch with the pinned certificate; the SHA-256 is still checked
 		}
-		lines = append(lines, fmt.Sprintf("    %s) N=%s; U=%s; S=%s; K=%s ;;", pat, shQuote(p.Name), shQuote(p.URL), shQuote(p.SHA256), shQuote(k)))
+		lines = append(lines, fmt.Sprintf("    %s) N=%s; U=%s; S=%s; P=%s ;;", pat, shQuote(p.Name), shQuote(p.URL), shQuote(p.SHA256), shQuote(k)))
 	}
 	lines = append(lines,
 		"    *) echo 'this CPU is not supported by the agent installer' >&2; exit 1 ;;",
 		"  esac",
-		`  d="$(mktemp -d)" || exit 1`,
+		`  d="$(mktemp -d)" || exit 1; TMP="$d"`,
 		`  trap 'rm -rf "$d"' EXIT`,
-		`  ( cd "$d" && curl -fsSL${K} -o "$N" "$U" && `+
+		`  ( cd "$d" && if [ -n "$P" ]; then fetch "$U" "$N"; else curl -fsSL -o "$N" "$U"; fi && `+
 			`if command -v sha256sum >/dev/null 2>&1; then echo "$S  $N" | sha256sum -c - >/dev/null; else echo "$S  $N" | shasum -a 256 -c - >/dev/null; fi && `+
 			`tar xzf "$N" && `+sudo+` sh crsp-agent/install.sh ) || { echo 'the agent installer did not finish' >&2; exit 1; }`,
 		"fi",
@@ -70,7 +90,7 @@ func (s *Service) unixInstallCommand(ctx context.Context, osName, cmd string) (s
 	if err != nil {
 		return "", err
 	}
-	return "sh -c " + shQuote(unixScript(picks, "sudo -n", cmd)), nil
+	return "sh -c " + shQuote(unixScript(picks, "sudo -n", s.o.Fingerprint, cmd)), nil
 }
 
 // manualInstall is the command a person pastes: the same download and check,
@@ -82,7 +102,7 @@ func (s *Service) manualInstall(ctx context.Context, osName, cmd string) (string
 		return "", err
 	}
 	if osName != "windows" {
-		return "sh -c " + shQuote(unixScript(picks, "sudo", cmd)), nil
+		return "sh -c " + shQuote(unixScript(picks, "sudo", s.o.Fingerprint, cmd)), nil
 	}
 	pin := strings.ToLower(strings.ReplaceAll(s.o.Fingerprint, ":", ""))
 	var b strings.Builder

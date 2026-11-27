@@ -3,6 +3,7 @@ package machines_test
 import (
 	"context"
 	"errors"
+	"os/exec"
 	"strings"
 	"testing"
 
@@ -51,7 +52,7 @@ func TestSSHJoinLinuxPushesTheAgentInstallerWhenCrspIsMissing(t *testing.T) { //
 	cmd := unwrapSh(f.runs[0])
 	for _, want := range []string{
 		"command -v crsp", "CrspAgent-1.2.3-linux-x64.tar.gz", "CrspAgent-1.2.3-linux-arm64.tar.gz",
-		goodSum, "sha256sum -c", "sudo -n sh crsp-agent/install.sh", "K='k'", "agent install --controller pool.lan:8461", "--yes",
+		goodSum, "sha256sum -c", "sudo -n sh crsp-agent/install.sh", "P='1'", "--pinnedpubkey", "pin_controller", "openssl verify -CAfile", "BASE='https://pool.lan:8460'", "agent install --controller pool.lan:8461", "--yes",
 	} {
 		if !strings.Contains(cmd, want) {
 			t.Fatalf("the command lacks %q:\n%s", want, cmd)
@@ -78,7 +79,7 @@ func TestSSHJoinMacOSAsksForTheMacInstallerAndKeepsTLSForTheRelease(t *testing.T
 	if _, err := e.Svc.JoinOverSSH(context.Background(), "owner", sshIn("macos", "SHA256:abc")); err != nil {
 		t.Fatal(err)
 	}
-	if ai.calls[0] != "macos/amd64" || !strings.Contains(unwrapSh(f.runs[0]), "CrspAgent-1.2.3-macos-arm64.tar.gz") || !strings.Contains(unwrapSh(f.runs[0]), "K=''") {
+	if ai.calls[0] != "macos/amd64" || !strings.Contains(unwrapSh(f.runs[0]), "CrspAgent-1.2.3-macos-arm64.tar.gz") || !strings.Contains(unwrapSh(f.runs[0]), "P=''") || strings.Contains(unwrapSh(f.runs[0]), "pin_controller") {
 		t.Fatalf("calls %v\n%s", ai.calls, f.runs[0])
 	}
 }
@@ -147,6 +148,9 @@ func TestInstallCommandsShowTheLANLinkWhenAgentInstallersAreThere(t *testing.T) 
 			t.Fatalf("linux command lacks %q:\n%s", want, lin)
 		}
 	}
+	if !strings.Contains(lin, "--pinnedpubkey") || !strings.Contains(lin, "fetch \"$U\" \"$N\"") || strings.Contains(lin, "curl -fsSLk") {
+		t.Fatalf("the controller address must be fetched with the pinned certificate, never with the check skipped: %s", lin)
+	}
 	if strings.Contains(lin, "sudo -n") {
 		t.Fatal("a person is asked for the sudo password, so no -n")
 	}
@@ -174,6 +178,25 @@ func TestInstallCommandsStayPlainWithoutAConsoleAddressOrOnAFailure(t *testing.T
 			if !strings.Contains(c.Command, "agent install --controller pool.lan:8461") || strings.Contains(c.Command, "agent-installers") {
 				t.Fatalf("%s: %s: %q", name, c.OS, c.Command)
 			}
+		}
+	}
+}
+
+func TestPinnedInstallScriptIsValidShell(t *testing.T) { // CRSP304
+	sh, err := exec.LookPath("sh")
+	if err != nil {
+		t.Skip("no sh")
+	}
+	e := newEnv(t, func(o *machines.Options) {
+		o.AgentInstallers = &fakeAgentInstallers{self: true}
+		o.ConsoleURL = "https://pool.lan:8460"
+	})
+	for _, c := range e.Svc.InstallCommands("C") {
+		if c.OS == "windows" {
+			continue
+		}
+		if out, err := exec.CommandContext(t.Context(), sh, "-n", "-c", unwrapSh(c.Command)).CombinedOutput(); err != nil {
+			t.Fatalf("%s: %v\n%s", c.OS, err, out)
 		}
 	}
 }

@@ -86,6 +86,10 @@ try { [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]'T
 // is called with the fingerprint.
 const PowerShellPin = powerShellPin
 
+// ShellPin is shellPin for the agent installer commands of Linux and macOS (CRSP304): it
+// defines pin_controller and fetch, and needs FINGERPRINT, BASE, TMP and die set before it.
+const ShellPin = shellPin
+
 const linuxTemplate = `#!/bin/sh
 # crsp: join this machine to the controller. Made <<.Version>>, valid until <<.Expires>>.
 # The join code below works once and only until then. Delete this file after you use it.
