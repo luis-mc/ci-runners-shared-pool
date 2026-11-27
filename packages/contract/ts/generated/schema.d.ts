@@ -6928,6 +6928,17 @@ export interface components {
             removed: boolean;
             name: string;
         };
+        OverflowTarget: {
+            /** @enum {string} */
+            kind: "github_hosted" | "aws_ec2";
+            enabled: boolean;
+            /** @description The runner label jobs run on at this target. Empty is allowed for github_hosted only (the ubuntu-latest, windows-latest and macos-latest defaults); aws_ec2 needs one while it is on. */
+            label?: string;
+            /** @description Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried. */
+            cap_minutes?: number;
+            /** @description The systems this target serves; empty or absent means all. */
+            systems?: ("linux" | "windows" | "macos")[];
+        };
         RemoveRunnerLeftoversRequest: {
             items: {
                 kind: components["schemas"]["RunnerLeftoverKind"];
@@ -7052,6 +7063,8 @@ export interface components {
             insights_update_every_n_runs?: number;
             /** @description github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest). */
             overflow_label?: string;
+            /** @description github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule. */
+            overflow_targets?: components["schemas"]["OverflowTarget"][];
             /** @description operations R5.15. On by default. When on, a newer stable release installs by itself after a drain. When off, the console Review step asks first. */
             auto_update?: boolean;
         };

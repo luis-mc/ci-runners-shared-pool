@@ -2245,6 +2245,45 @@ func (e OS) Valid() bool {
 	}
 }
 
+// Defines values for OverflowTargetKind.
+const (
+	AwsEc2       OverflowTargetKind = "aws_ec2"
+	GithubHosted OverflowTargetKind = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the OverflowTargetKind enum.
+func (e OverflowTargetKind) Valid() bool {
+	switch e {
+	case AwsEc2:
+		return true
+	case GithubHosted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowTargetSystems.
+const (
+	OverflowTargetSystemsLinux   OverflowTargetSystems = "linux"
+	OverflowTargetSystemsMacos   OverflowTargetSystems = "macos"
+	OverflowTargetSystemsWindows OverflowTargetSystems = "windows"
+)
+
+// Valid indicates whether the value is a known member of the OverflowTargetSystems enum.
+func (e OverflowTargetSystems) Valid() bool {
+	switch e {
+	case OverflowTargetSystemsLinux:
+		return true
+	case OverflowTargetSystemsMacos:
+		return true
+	case OverflowTargetSystemsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PauseReason.
 const (
 	PauseReasonBaseImageMissing PauseReason = "base_image_missing"
@@ -7814,6 +7853,26 @@ type OrgPoolSet struct {
 	Enabled bool `json:"enabled"`
 }
 
+// OverflowTarget defines model for OverflowTarget.
+type OverflowTarget struct {
+	// CapMinutes Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried.
+	CapMinutes *int               `json:"cap_minutes,omitempty"`
+	Enabled    bool               `json:"enabled"`
+	Kind       OverflowTargetKind `json:"kind"`
+
+	// Label The runner label jobs run on at this target. Empty is allowed for github_hosted only (the ubuntu-latest, windows-latest and macos-latest defaults); aws_ec2 needs one while it is on.
+	Label *string `json:"label,omitempty"`
+
+	// Systems The systems this target serves; empty or absent means all.
+	Systems *[]OverflowTargetSystems `json:"systems,omitempty"`
+}
+
+// OverflowTargetKind defines model for OverflowTarget.Kind.
+type OverflowTargetKind string
+
+// OverflowTargetSystems defines model for OverflowTarget.Systems.
+type OverflowTargetSystems string
+
 // Overview defines model for Overview.
 type Overview struct {
 	// LastEventId Open the stream with this as Last-Event-ID.
@@ -9424,12 +9483,15 @@ type Settings struct {
 	MaxEventStreams      *int                          `json:"max_event_streams,omitempty"`
 
 	// OverflowLabel github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest).
-	OverflowLabel              *string `json:"overflow_label,omitempty"`
-	RetentionAuditDays         *int    `json:"retention_audit_days,omitempty"`
-	RetentionJobHistoryDays    *int    `json:"retention_job_history_days,omitempty"`
-	RetentionLoadRawHours      *int    `json:"retention_load_raw_hours,omitempty"`
-	RetentionLogsDays          *int    `json:"retention_logs_days,omitempty"`
-	RetentionLogsMibPerMachine *int    `json:"retention_logs_mib_per_machine,omitempty"`
+	OverflowLabel *string `json:"overflow_label,omitempty"`
+
+	// OverflowTargets github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule.
+	OverflowTargets            *[]OverflowTarget `json:"overflow_targets,omitempty"`
+	RetentionAuditDays         *int              `json:"retention_audit_days,omitempty"`
+	RetentionJobHistoryDays    *int              `json:"retention_job_history_days,omitempty"`
+	RetentionLoadRawHours      *int              `json:"retention_load_raw_hours,omitempty"`
+	RetentionLogsDays          *int              `json:"retention_logs_days,omitempty"`
+	RetentionLogsMibPerMachine *int              `json:"retention_logs_mib_per_machine,omitempty"`
 }
 
 // SettingsInsightsUpdatePeriod ci-run-insights R5.44 (owner decisions D18, D19). How often insights are re-analysed. every_run (the default) analyses after each CI run; every_nth_run after every Nth run; hourly once an hour. The cost warning recommends a slower one.

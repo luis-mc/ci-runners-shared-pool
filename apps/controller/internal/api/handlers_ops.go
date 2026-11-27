@@ -84,6 +84,7 @@ func toGenSettings(st settings.Settings) gen.Settings {
 		MaxEventStreams:            intPtr(st.MaxEventStreams),
 		FallbackGraceMinutes:       intPtr(st.FallbackGraceMinutes),
 		OverflowLabel:              &st.OverflowLabel,
+		OverflowTargets:            toGenTargets(st.OverflowTargets),
 		AutoUpdate:                 &st.AutoUpdate,
 
 		InsightsUpdatePeriod:     (*gen.SettingsInsightsUpdatePeriod)(&st.InsightsUpdatePeriod),
@@ -128,6 +129,7 @@ func (s *server) UpdateSettings(ctx context.Context, req gen.UpdateSettingsReque
 		MaxEventStreams:            b.MaxEventStreams,
 		FallbackGraceMinutes:       b.FallbackGraceMinutes,
 		OverflowLabel:              b.OverflowLabel,
+		OverflowTargets:            fromGenTargets(b.OverflowTargets),
 		AutoUpdate:                 b.AutoUpdate,
 
 		InsightsUpdatePeriod:       (*string)(b.InsightsUpdatePeriod),
@@ -298,4 +300,42 @@ func (s *server) RestoreBackup(ctx context.Context, req gen.RestoreBackupRequest
 		return fail(s.opsError(err))
 	}
 	return gen.RestoreBackup202JSONResponse(toGenBackup(b)), nil
+}
+
+// toGenTargets maps the saved overflow priority list to the API (R5.114).
+func toGenTargets(in []settings.OverflowTarget) *[]gen.OverflowTarget {
+	out := make([]gen.OverflowTarget, 0, len(in))
+	for _, t := range in {
+		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes}
+		systems := make([]gen.OverflowTargetSystems, 0, len(t.Systems))
+		for _, s := range t.Systems {
+			systems = append(systems, gen.OverflowTargetSystems(s))
+		}
+		g.Systems = &systems
+		out = append(out, g)
+	}
+	return &out
+}
+
+func fromGenTargets(in *[]gen.OverflowTarget) *[]settings.OverflowTarget {
+	if in == nil {
+		return nil
+	}
+	out := make([]settings.OverflowTarget, 0, len(*in))
+	for _, g := range *in {
+		t := settings.OverflowTarget{Kind: string(g.Kind), Enabled: g.Enabled}
+		if g.Label != nil {
+			t.Label = *g.Label
+		}
+		if g.CapMinutes != nil {
+			t.CapMinutes = *g.CapMinutes
+		}
+		if g.Systems != nil {
+			for _, s := range *g.Systems {
+				t.Systems = append(t.Systems, string(s))
+			}
+		}
+		out = append(out, t)
+	}
+	return &out
 }

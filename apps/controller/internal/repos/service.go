@@ -50,7 +50,10 @@ type Config struct {
 	// repository falls back to when its policy names none for the OS; nil or
 	// empty means DefaultHostedLabels (CRSP261).
 	OverflowLabel func() string
-	Now           func() time.Time
+	// OverflowTargets are the owner's enabled priority rules, first first
+	// (R5.114, CRSP281); nil or empty means the OverflowLabel rule.
+	OverflowTargets func() []OverflowTarget
+	Now             func() time.Time
 	// FactsReported says whether every machine that was online has reported its
 	// facts since this start; nil means unknown, so only the settle period
 	// (CapacitySettle) makes capacity known.

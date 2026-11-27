@@ -1991,3 +1991,17 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 | Where | Word |
 |---|---|
 | Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |
+
+## Cloud overflow words (CRSP281)
+
+| Where | Words |
+|---|---|
+| Settings, Repositories, section | Cloud overflow |
+| Settings, Repositories, intro | When no crsp machine can take the jobs of a repository that turned its fallback on, they go to the first target below that is on, serves the system and has minutes left. A target with no minutes left is skipped. This can cost money. |
+| Order list | Overflow order; targets GitHub-hosted runners, AWS EC2 runners |
+| Target pane | Title: the target name. Checkbox: Use {target}. Field: Label of {target}. Help for GitHub-hosted runners: Leave it empty for ubuntu-latest, windows-latest and macos-latest. Help for AWS EC2 runners: The label your EC2 runners carry in the workflow. |
+| Minutes field | Minutes of {target} per repository and month ({n} min, 0 to 1000000). Help: 0 means no limit. When a repository has used them, the next target is tried. |
+| System checkboxes | {target} serve Linux, {target} serve Windows, {target} serve macOS |
+| Saved | Cloud overflow saved. |
+| Save failed | Could not save. {reason} |
+| Refused | AWS EC2 runners need a label while they are on. The label of {target} must be one label of up to 100 characters, without spaces, commas or quotes. Minutes of {target} must be from 0 to 1000000. |

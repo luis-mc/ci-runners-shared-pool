@@ -3,6 +3,7 @@ package settings
 import (
 	"context"
 	"errors"
+	"reflect"
 	"strings"
 	"testing"
 	"time"
@@ -49,7 +50,7 @@ func TestUpdateSavesAndAudits(t *testing.T) {
 		t.Fatalf("%+v", got)
 	}
 	again, _ := s.Get(ctx)
-	if again != got {
+	if !reflect.DeepEqual(again, got) {
 		t.Fatalf("not persisted: %+v vs %+v", again, got)
 	}
 	p, _ := l.List(ctx, audit.Filter{})
@@ -81,7 +82,7 @@ func TestOutOfRangeRefusedWithRange(t *testing.T) {
 		}
 	}
 	got, _ := s.Get(ctx)
-	if got != Defaults {
+	if !reflect.DeepEqual(got, Defaults) {
 		t.Fatalf("a refused change was applied: %+v", got)
 	}
 	p, _ := l.List(ctx, audit.Filter{})
@@ -281,5 +282,45 @@ func TestOverflowLabel(t *testing.T) {
 	got, _ = s.Get(ctx)
 	if got.OverflowLabel != "" {
 		t.Fatalf("cleared %q", got.OverflowLabel)
+	}
+}
+
+// CRSP281: the owner's overflow priority list is saved in order and checked.
+func TestOverflowTargets(t *testing.T) { // R5.114
+	ctx := context.Background()
+	s, _ := setup(t)
+	if got, _ := s.Get(ctx); len(got.OverflowTargets) != 0 {
+		t.Fatalf("default %v", got.OverflowTargets)
+	}
+	ok := []OverflowTarget{
+		{Kind: TargetGitHubHosted, Enabled: true, CapMinutes: 2000},
+		{Kind: TargetAWSEC2, Enabled: true, Label: " ec2-pool-4x ", Systems: []string{"linux"}},
+	}
+	if _, err := s.Update(ctx, owner, Patch{OverflowTargets: &ok}); err != nil {
+		t.Fatal(err)
+	}
+	got, _ := s.Get(ctx)
+	if len(got.OverflowTargets) != 2 || got.OverflowTargets[0].Kind != TargetGitHubHosted || got.OverflowTargets[1].Label != "ec2-pool-4x" {
+		t.Fatalf("saved %+v", got.OverflowTargets)
+	}
+	bad := [][]OverflowTarget{
+		{{Kind: "gcp"}},
+		{{Kind: TargetAWSEC2, Enabled: true}},
+		{{Kind: TargetGitHubHosted}, {Kind: TargetGitHubHosted}},
+		{{Kind: TargetGitHubHosted, CapMinutes: -1}},
+		{{Kind: TargetAWSEC2, Label: "a b"}},
+		{{Kind: TargetGitHubHosted, Systems: []string{"beos"}}},
+	}
+	for _, b := range bad {
+		if _, err := s.Update(ctx, owner, Patch{OverflowTargets: &b}); err == nil {
+			t.Fatalf("accepted %+v", b)
+		}
+	}
+	empty := []OverflowTarget{}
+	if _, err := s.Update(ctx, owner, Patch{OverflowTargets: &empty}); err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := s.Get(ctx); len(got.OverflowTargets) != 0 {
+		t.Fatalf("cleared %v", got.OverflowTargets)
 	}
 }

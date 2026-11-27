@@ -52,6 +52,7 @@ import { SECTIONS, settingsPath } from './sections';
 import { AuditLogSettings, ConfigExportSettings } from './AuditLog';
 import { ConfigAsCodeSettings } from './ConfigAsCode';
 import { InsightsUpdateSettings } from './InsightsUpdate';
+import { OverflowSettings } from './Overflow';
 import { BudgetsSettings } from './Budgets';
 import { SavingsRatesSettings } from '../savings/SavingsRates';
 import { NotificationsSettings } from './Notifications';
@@ -140,6 +141,9 @@ export function RepositoriesTab() {
       </At>
       <At id="savings-rates">
         <SavingsRatesSettings />
+      </At>
+      <At id="overflow">
+        <OverflowSettings />
       </At>
     </TabForm>
   );
