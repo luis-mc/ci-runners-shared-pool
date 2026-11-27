@@ -2,7 +2,7 @@
 # Smoke test of the .pkg on a macOS runner: expand, install, upgrade, uninstall.
 # Run as a user that has passwordless sudo.
 #
-#   installer/macos/smoke.sh <old pkg> <new pkg>
+#   installer/controller/macos/smoke.sh <old pkg> <new pkg>
 set -euo pipefail
 old="$(cd "$(dirname "${1:?old pkg}")" && pwd)/$(basename "$1")"
 new="$(cd "$(dirname "${2:?new pkg}")" && pwd)/$(basename "$2")"

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Smoke test of a .deb or .rpm: install, upgrade, remove, (deb) purge. Run as root.
 #
-#   installer/linux/smoke.sh deb|rpm <old package> <new package> <old version> <new version>
+#   installer/controller/linux/smoke.sh deb|rpm <old package> <new package> <old version> <new version>
 #
 # SMOKE_SYSTEMD=1 also checks the running service (needs a real systemd, such as
 # the ubuntu-latest runner itself); without it only the files are checked,

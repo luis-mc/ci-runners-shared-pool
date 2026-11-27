@@ -26,6 +26,7 @@
   --ds-space-6: 32px;
   --ds-space-7: 48px;
   --ds-target-min: 44px;
+  --ds-seg-gap: 2px;
   --ds-radius-round: 999px;
   --ds-shadow-1: 0 0 0 rgba(0, 0, 0, 0);
   --ds-cursor-blink: 1000ms;

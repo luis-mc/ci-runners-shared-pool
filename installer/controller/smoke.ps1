@@ -3,8 +3,8 @@
   elevated shell (it installs a per-machine package). Runs in CI on windows-latest
   (x64) and on a developer PC; it leaves the machine as it found it.
 
-    pwsh installer/smoke.ps1 -Msi v0.1.0/crsp-windows-x64.msi -UpgradeMsi v0.1.1/crsp-windows-x64.msi `
-         -DowngradeMsi v0.0.9/crsp-windows-x64.msi -LogDir installer/out/logs
+    pwsh installer/controller/smoke.ps1 -Msi v0.1.0/crsp-windows-x64.msi -UpgradeMsi v0.1.1/crsp-windows-x64.msi `
+         -DowngradeMsi v0.0.9/crsp-windows-x64.msi -LogDir installer/controller/out/logs
 
 #>
 [CmdletBinding()]

@@ -14,7 +14,7 @@ $script:Lc = Get-Content -Raw $Lifecycle | ConvertFrom-Json
 function Expand-Path($p) { if ($p) { [Environment]::ExpandEnvironmentVariables($p) } }
 $script:W = $script:Lc.paths.windows
 $script:Product = $script:Lc.product.name        # the name in the Apps list is the MSI ProductName below
-$script:AppsName = 'CI Runners Shared Pool'      # WiX Package Name (installer/crsp.wxs)
+$script:AppsName = 'CI Runners Shared Pool'      # WiX Package Name (installer/controller/crsp.wxs)
 $script:Service = if ($script:W.service) { $script:W.service } else { $script:Lc.product.id }
 $script:Install = Expand-Path $script:W.program
 $script:Data = Expand-Path $script:W.data
@@ -360,10 +360,10 @@ function Lc33 {
   Out-Lc 'LC-33' (($n -le 1) -and ($legacy -eq 0)) "$n data folders, $legacy legacy folders"
 }
 function Lint { # LC-18: WiX ICE validation and one Apps-list entry
-  # The pinned WiX 5.0.2 is a dotnet local tool (installer/dotnet-tools.json), the way installer/build.ps1
+  # The pinned WiX 5.0.2 is a dotnet local tool (installer/controller/dotnet-tools.json), the way installer/controller/build.ps1
   # gets it; it is not on PATH. Call it the same way: restore, then `dotnet wix`. ICEs are never suppressed.
-  $installerDir = Join-Path (Split-Path -Parent (Split-Path -Parent $script:Here)) 'installer'
-  $how = "dotnet tool restore, then dotnet wix msi validate, in $installerDir (manifest installer/dotnet-tools.json)"
+  $installerDir = Join-Path (Split-Path -Parent (Split-Path -Parent $script:Here)) 'installer/controller'
+  $how = "dotnet tool restore, then dotnet wix msi validate, in $installerDir (manifest installer/controller/dotnet-tools.json)"
   $ice = $false
   $wixOk = $false
   if ((Test-Path (Join-Path $installerDir 'dotnet-tools.json')) -and (Get-Command dotnet -ErrorAction SilentlyContinue)) {

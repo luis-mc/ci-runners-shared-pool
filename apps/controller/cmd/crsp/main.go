@@ -23,6 +23,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentinstallers"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend/container"
@@ -281,6 +282,10 @@ func runController() error {
 	mux := http.NewServeMux()
 	api.Register(mux, ctl.Options)
 	mux.Handle(mirror.PathPrefix, mirrorProxy.Handler())
+	// The agent installers (CRSP304): public like the GitHub release, each served only after its SHA-256 matched.
+	if mr.AgentInstallers != nil {
+		mux.Handle(agentinstallers.PathPrefix, mr.AgentInstallers.Handler())
+	}
 	// The image registry itself, on the same listener (registry R5.1): only
 	// when a registry core is present; people never talk to /v2/.
 	if ctl.Registry.Core != nil && ctl.Registry.Core.Registry != nil {

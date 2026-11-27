@@ -79,6 +79,9 @@
     "apps/controller/internal/agent/registry.go": [
       "docs/features/registry/spec.md"
     ],
+    "apps/controller/internal/agentinstallers/**": [
+      "docs/features/operations/spec.md"
+    ],
     "apps/controller/internal/agentlink/insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
@@ -351,6 +354,9 @@
       "docs/features/website/spec.md"
     ],
     "installer/**": [
+      "docs/features/operations/spec.md"
+    ],
+    "installer/agent/**": [
       "docs/features/operations/spec.md"
     ],
     "packages/ui/src/**": [

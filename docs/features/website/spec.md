@@ -19,7 +19,7 @@ generator: luismc-docs 2.21.0
 ---
 # Public website
 
-**Status: spec only (CRSP260). No site code exists.** Everything below is **NOT YET IMPLEMENTED** (section 10). Points that need the owner are in section 9.
+**Status: partly built (CRSP303).** `apps/web` holds a static Home page, the Controller Download page and a 404 page. Everything else below is **NOT YET IMPLEMENTED** (section 10). Points that need the owner are in section 9.
 
 ## 1. In one paragraph
 
@@ -101,7 +101,7 @@ Layout, colour and imagery are the owner's call (section 9, Q5).
 
 ## 5. Functional requirements
 
-All requirements are **planned**.
+All requirements are **planned** except those section 10 lists as built (CRSP303).
 
 ### Content
 
@@ -183,7 +183,9 @@ Only the owner can do these. No agent creates the Vercel project.
 
 ## 10. How it is proven and what is not built
 
-No test exists yet. The tests below are planned.
+**Built (CRSP303).** The site is `apps/web`: Vite and React, rendered to static HTML by `apps/web/scripts/build.ts` with the shared `packages/ui` parts (no app CSS). Pages: Home, Download and 404, with `sitemap.xml`, `robots.txt` and `release.json`. Built requirements: R5.1 in part (Home, Download, 404), R5.2, R5.3, R5.6, R5.7 to R5.12 (not signed text, release notes link; the signing text is a short note linking the install guide), R5.13 in part (a link to the releases page), R6.2, R6.5, R6.6 (`apps/web/vercel.json`), R6.9 in part (one `h1`, title, description, canonical, sitemap, `SoftwareApplication` data; no `robots` crawl rules beyond allow). Built tests: T1 to T5, T14, and the JavaScript size part of T15, in `apps/web/src/**/*.test.ts(x)`.
+
+**Not built.** Product and Security pages and the console screenshots (R5.4, R5.5), docs publishing and search (R5.15 to R5.21, T6 to T9), the in-list older versions (R5.13), the deploy hook and nightly rebuild (R5.14, T16), the axe, layout and no-JavaScript browser tests (T10 to T12), LCP (T15), the macOS and Windows build matrix (T17) and the shot script (T13). These are CRSP332. A marketing frame (page gutter, hero, feature band) is not in the design system yet (Q5).
 
 | ID | Test | Layer | Covers |
 |---|---|---|---|
@@ -207,4 +209,4 @@ No test exists yet. The tests below are planned.
 
 **Suggested rows, in order:** (1) scaffold `apps/web` and its workflow; (2) release data and Download; (3) docs publishing; (4) Home, Product, Security with real screenshots; (5) SEO, accessibility, performance gates; (6) the owner's Vercel setup and launch.
 
-**Code map.** Planned only: `apps/web/**`, `.github/workflows/website.yml`, one `release: published` workflow. No existing code changes.
+**Code map.** Built: `apps/web/**`. Planned: `.github/workflows/website.yml`, one `release: published` workflow.

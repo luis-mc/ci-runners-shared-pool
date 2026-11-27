@@ -22,6 +22,8 @@ export const TERMINAL_PALETTE_CHOICES: readonly ThemeInfo[] = [
   { id: 'ice', name: 'Ice' },
 ];
 export const PALETTE_STORAGE = 'crsp.theme-palette';
+/** How the Cool Terminal themes draw graphs: blocks, or dots (`data-graphs=dotted` on the page root; blocks sets none). */
+export const GRAPHS_STORAGE = 'crsp.theme-graphs';
 
 export const DEFAULT_THEME_ID = 'phosphor';
 
@@ -101,4 +103,21 @@ export function lastColourTheme(): string {
     // Storage may be blocked.
   }
   return DEFAULT_THEME_ID;
+}
+
+/** The saved graph style of this browser: blocks (default) or dotted. */
+export function savedGraphs(): 'blocks' | 'dotted' {
+  try {
+    if (window.localStorage.getItem(GRAPHS_STORAGE) === 'dotted') return 'dotted';
+  } catch {
+    // Storage may be blocked.
+  }
+  return 'blocks';
+}
+
+/** Applies a graph style to the page and remembers it for the next first paint. */
+export function applyGraphs(style: 'blocks' | 'dotted'): void {
+  if (style === 'dotted') document.documentElement.setAttribute('data-graphs', 'dotted');
+  else document.documentElement.removeAttribute('data-graphs');
+  remember(GRAPHS_STORAGE, style);
 }

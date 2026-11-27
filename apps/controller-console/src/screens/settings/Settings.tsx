@@ -29,6 +29,8 @@ import {
   TimePicker,
   applyThemeName,
   applyPalette,
+  applyGraphs,
+  savedGraphs,
   lastColourTheme,
   TERMINAL_THEME_ID,
   savedPalette,
@@ -448,6 +450,7 @@ export function ThemeApplier() {
   useEffect(() => {
     applyThemeName(savedThemeName());
     applyPalette(savedPalette());
+    applyGraphs(savedGraphs());
     let on = true;
     unwrap(client.GET('/api/v1/me/preferences'))
       .then((p) => on && applyTheme(p.theme))
@@ -467,6 +470,7 @@ export function AppearanceSettings() {
   );
   const [themeName, setThemeName] = useState(savedThemeName);
   const [palette, setPalette] = useState(savedPalette);
+  const [graphs, setGraphs] = useState(savedGraphs);
   const terminal = themeName === TERMINAL_THEME_ID;
   const save = useCommand(async (theme: Schemas['Theme']) => {
     const p = await unwrap(client.PUT('/api/v1/me/preferences', { body: { theme } }));
@@ -480,16 +484,27 @@ export function AppearanceSettings() {
           <Stack>
             <ChoiceField
               label="Look"
-              help="Colour themes keep the console's own look. Terminal is the dark, flat look of a system monitor. The choice is saved at once."
-              value={terminal ? 'terminal' : 'colours'}
+              help="Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once."
+              value={
+                terminal
+                  ? graphs === 'dotted'
+                    ? 'terminal-dotted'
+                    : 'terminal'
+                  : 'colours'
+              }
               onChange={(v) => {
-                const next = v === 'terminal' ? TERMINAL_THEME_ID : lastColourTheme();
+                const isTerminal = v !== 'colours';
+                const next = isTerminal ? TERMINAL_THEME_ID : lastColourTheme();
+                const style = v === 'terminal-dotted' ? 'dotted' : 'blocks';
                 setThemeName(next);
                 applyThemeName(next);
+                setGraphs(style);
+                applyGraphs(style);
               }}
               choices={[
                 { value: 'colours', label: 'Colour themes' },
-                { value: 'terminal', label: 'Terminal' },
+                { value: 'terminal', label: 'Cool Terminal' },
+                { value: 'terminal-dotted', label: 'Cool Terminal (dotted graphs)' },
               ]}
             />
             {terminal ? null : (
@@ -511,7 +526,7 @@ export function AppearanceSettings() {
             {terminal ? (
               <ChoiceField
                 label="Palette"
-                help="The colours of the Terminal theme. The choice is saved at once."
+                help="The colours of the Cool Terminal themes. The choice is saved at once."
                 value={palette}
                 onChange={(v) => {
                   setPalette(v);

@@ -20,8 +20,8 @@ The UpgradeCode is what lets a newer MSI replace an older one. Changing it makes
 ```powershell
 # a crsp.exe for the target (the release build, or any local `go build`)
 $env:GOOS = 'windows'; $env:GOARCH = 'amd64'; $env:CGO_ENABLED = '0'
-go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/out/crsp.exe ./apps/controller/cmd/crsp
-pwsh installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.1.0 -Out installer/out
+go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/controller/out/crsp.exe ./apps/controller/cmd/crsp
+pwsh installer/controller/build.ps1 -Arch x64 -Exe installer/controller/out/crsp.exe -Version 0.1.0 -Out installer/controller/out
 ```
 
 Needs the .NET SDK (the WiX tool is restored from `dotnet-tools.json`). `-Arch arm64` makes the arm64 MSI from an arm64 `crsp.exe`.
@@ -61,3 +61,7 @@ Settings > Apps > crsp > Uninstall runs the last form (the package adds its own 
 ## Tests
 
 `smoke.ps1` (elevated) installs, checks the service, PATH, firewall rule, shortcut and autostart, upgrades, refuses a downgrade, uninstalls (data kept), reinstalls, uninstalls with `REMOVEDATA=1`, and checks that nothing is left. CI runs it for x64 on every pull request that touches `installer/**` (`.github/workflows/installer.yml`). The remove window is the native window of TRAY12 (`crsp lifecycle-window remove`); the lifecycle lanes (`.github/workflows/lifecycle.yml`, `scripts/lifecycle/`) test install, upgrade, rollback, downgrade, remove, purge and leftovers on windows-latest and windows-11-arm.
+
+## Controller and agent installers (CRSP304)
+
+This folder is the **Controller** installer, the only one a person downloads. The agent installers (no window, release assets that the controller fetches and hands to machines) are in `installer/agent` (operations R5.128 to R5.133).

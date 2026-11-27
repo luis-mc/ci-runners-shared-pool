@@ -1010,10 +1010,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The six options</a><a href="#s3"><b>3</b>How to choose</a><a href="#s4"><b>4</b>Proposed layouts (approved 17 Nov)</a><a href="#s5"><b>5</b>Proposed: what an image holds (for approval)</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.29.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: Console look</h1><p>Pick the console's terminal look.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.29.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: Console look</h1><p>Pick the console's terminal look.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-26T16:39+00:00">26 Nov 16:39</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">26 Nov 18:30</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T11:45+00:00">27 Nov 11:45</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">27 Nov 11:04</a> (Lisbon)</p>
 <p class="lede">Decided: B panes as the frame, all six palettes as themes the user picks in Settings.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -1545,6 +1545,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s6"><h2><span class="section-number">&sect; 6</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D80">
+<h3 class="decision-head"><span class="decision-id">D80</span> <span class="decision-question">Runners page filter bar design (CRSP299)</span></h3>
+<p class="decision-meta">Asked 26 Nov · Decided 26 Nov · Task CRSP299</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop-downs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Search plus Select all and Clear, then four drop-downs (System, Isolation, Kind, Size).</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Joined choices</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Each filter is a row of joined buttons with All first; every answer visible.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Filter sheet</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Search, one Filters (n) button and Select all; choices open in a dialog with Show N runners.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Filters button: desktop expands rows, phone bottom sheet</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 26 Nov</span></div>
+<p class="decision-summary">Option 3&#x27;s first row; on desktop the button expands the option 2 rows inline; on a phone it opens a bottom sheet (owner&#x27;s mix).</p>
+<blockquote class="decision-words">&ldquo;option 3 initial buttons, but when pressing filters on desktop expands to show the filters section of option 2; in mobile when pressing filters shows a modal at the bottom with the filters (mobile best practice)&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D79">
 <h3 class="decision-head"><span class="decision-id">D79</span> <span class="decision-question">When should the fix agents start?</span></h3>
 <p class="decision-meta">Asked 23 Nov · Decided 23 Nov · Task LOOK60</p>

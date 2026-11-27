@@ -17,6 +17,8 @@
     root.setAttribute('data-theme-name', names.indexOf(name) >= 0 ? name : 'phosphor');
     var pal = window.localStorage.getItem('crsp.theme-palette');
     if (pal === 'amber' || pal === 'ice') root.setAttribute('data-pal', pal);
+    if (window.localStorage.getItem('crsp.theme-graphs') === 'dotted')
+      root.setAttribute('data-graphs', 'dotted');
     var mode = window.localStorage.getItem('crsp.theme-mode');
     // Nothing saved yet: a new install is dark (owner decision D4). Only a saved "system" follows the device.
     if (mode === 'dark' || mode === 'light') root.setAttribute('data-theme', mode);

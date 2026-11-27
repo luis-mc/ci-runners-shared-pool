@@ -1845,6 +1845,34 @@
       "decided": "2026-11-23",
       "owner_words": "Now, in parallel (Recommended)",
       "task": "LOOK60"
+    },
+    {
+      "id": "D80",
+      "question": "Runners page filter bar design (CRSP299)",
+      "options": [
+        {
+          "label": "Drop-downs",
+          "summary": "Search plus Select all and Clear, then four drop-downs (System, Isolation, Kind, Size)."
+        },
+        {
+          "label": "Joined choices",
+          "summary": "Each filter is a row of joined buttons with All first; every answer visible."
+        },
+        {
+          "label": "Filter sheet",
+          "summary": "Search, one Filters (n) button and Select all; choices open in a dialog with Show N runners."
+        },
+        {
+          "label": "Filters button: desktop expands rows, phone bottom sheet",
+          "summary": "Option 3's first row; on desktop the button expands the option 2 rows inline; on a phone it opens a bottom sheet (owner's mix)."
+        }
+      ],
+      "chosen": "Filters button: desktop expands rows, phone bottom sheet",
+      "status": "decided",
+      "decided": "2026-11-26",
+      "owner_words": "option 3 initial buttons, but when pressing filters on desktop expands to show the filters section of option 2; in mobile when pressing filters shows a modal at the bottom with the filters (mobile best practice)",
+      "asked": "2026-11-26",
+      "task": "CRSP299"
     }
   ]
 }

@@ -2,7 +2,7 @@
 // tokens (TRAY5 D12, D16, D17). Nothing here holds a hand-picked colour.
 //
 //	genart -tokens packages/ui/src/tokens.css -go internal/updatewindow/tokens_gen.go
-//	genart -tokens packages/ui/src/tokens.css -bmp installer/out/art
+//	genart -tokens packages/ui/src/tokens.css -bmp installer/controller/out/art
 //
 // The installer build runs the second form: it writes WixUIBannerBmp (493x58) and
 // WixUIDialogBmp (493x312) as 24-bit BMP files.

@@ -99,12 +99,22 @@ func (s *Service) JoinOverSSH(ctx context.Context, actor string, in SSHJoinInput
 		return CreatedCode{}, err
 	}
 	var cmd string
-	for _, c := range s.InstallCommands(created.Code) {
+	for _, c := range s.baseCommands(created.Code) {
 		if c.OS == in.OS {
 			cmd = strings.Replace(c.Command, "sudo ", "sudo -n ", 1) // no password: sudo must not ask
 		}
 	}
 	cmd += " --yes" // nobody can type the yes over SSH
+	if in.OS != "windows" && s.o.AgentInstallers != nil {
+		wrapped, perr := s.unixInstallCommand(ctx, in.OS, cmd)
+		if perr != nil {
+			_ = s.o.Repo.Audit(ctx, actor, "join_code.ssh_failed", created.JoinCode.ID, in.User+"@"+in.Host)
+			_, _ = s.o.Repo.RevokeJoinCode(ctx, created.JoinCode.ID, s.now())
+			return CreatedCode{}, fmt.Errorf("%w: %s", ErrInvalid, perr)
+		}
+		cmd = wrapped
+		_ = s.o.Repo.Audit(ctx, actor, "join_code.ssh_step", created.JoinCode.ID, "installing the agent if crsp is missing")
+	}
 	var out string
 	if in.OS == "windows" {
 		out, err = s.joinWindows(ctx, in, strings.TrimPrefix(cmd, "crsp.exe "), func(step string) {

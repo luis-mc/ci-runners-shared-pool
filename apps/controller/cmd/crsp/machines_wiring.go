@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agent"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentinstallers"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentlink"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/audit"
@@ -60,6 +61,8 @@ type machinesRuntime struct {
 	PublicHost string
 	// Packages holds the release packages that downloaded installers fetch; nil for a development build.
 	Packages *packages.Store
+	// AgentInstallers holds the agent installers of the release (CRSP304); nil for a development build.
+	AgentInstallers *agentinstallers.Store
 	// Secrets is the secret store of the controller, read by the config export.
 	Secrets secrets.Store
 	// LogStore is logs.db and LogWriter its fail-open writer (observability R6.9, R6.10); nil when logs.db
@@ -128,6 +131,23 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 		}
 	}
 
+	// The agent installers an SSH push installs and a manual command links to (CRSP304).
+	agentInst := newAgentInstallers(cfg.DataDir, version, cfg.Addresses.GitHubAPIURL)
+	var agentSource machines.AgentInstallerSource
+	if agentInst != nil {
+		agentSource = agentInstallerSource{store: agentInst, console: consoleURL}
+		// Download once, keep: the installers are cached in the background so the controller can hand them out offline later.
+		go func() {
+			pctx, cancel := context.WithTimeout(ctx, 15*time.Minute)
+			defer cancel()
+			if done, err := agentInst.Prefetch(pctx); err != nil {
+				logger.Warn("agent installers: not all cached", "cached", len(done), "err", err)
+			} else {
+				logger.Info("agent installers cached", "count", len(done))
+			}
+		}()
+	}
+
 	// An SSH join to Windows downloads from the controller's own package
 	// endpoint when there is one, else from the GitHub release (CRSP123).
 	var winPackages machines.WindowsPackageSource = releasePackages{version: version, apiBase: cfg.Addresses.GitHubAPIURL}
@@ -143,7 +163,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	svc := machines.New(machines.Options{
 		Repo: repo, ControllerAddress: public, AgentPort: port, Fingerprint: ca.Fingerprint(),
 		OnIdle: idle.call, PoolDefaults: pool, SSH: machines.NewSSHRunner(), MinProtocol: minAgentProtocol,
-		Packages: pkgSource, ConsoleURL: consoleURL, WindowsPackages: winPackages,
+		Packages: pkgSource, ConsoleURL: consoleURL, WindowsPackages: winPackages, AgentInstallers: agentSource,
 	})
 	cs := caches.New(caches.Options{Machines: svc, Audit: rec, Mirrors: newMirrorService(cfg, db, rec, svc, logger), HolderID: cachesHolder})
 	lk := agentlink.New(svc)
@@ -237,7 +257,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 			}
 		}()
 	}
-	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
+	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, AgentInstallers: agentInst, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
 		cancel()
 		_ = link.Close()
 		<-done

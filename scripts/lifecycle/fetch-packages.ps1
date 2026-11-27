@@ -7,7 +7,7 @@
 param([Parameter(Mandatory)][ValidateSet('x64', 'arm64')][string]$Arch)
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
-$out = Join-Path $repo 'installer/out/lifecycle'
+$out = Join-Path $repo 'installer/controller/out/lifecycle'
 New-Item -ItemType Directory -Force -Path $out | Out-Null
 $goarch = if ($Arch -eq 'x64') { 'amd64' } else { 'arm64' }
 
@@ -20,7 +20,7 @@ function Build-Msi([string]$version, [switch]$Fail) {
   $dir = Join-Path $out "v$version"
   $a = @{ Arch = $Arch; Exe = (Join-Path $out 'crsp.exe'); Version = $version; Out = $dir }
   if ($Fail) { $a.FailAfterInstall = $true }
-  & (Join-Path $repo 'installer/build.ps1') @a | Out-Host
+  & (Join-Path $repo 'installer/controller/build.ps1') @a | Out-Host
   $built = Join-Path $dir "crsp-windows-$goarch.msi"
   $named = Join-Path $dir "Crsp-$version-win-$Arch.msi"
   Copy-Item $built $named -Force

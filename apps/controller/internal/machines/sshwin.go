@@ -42,6 +42,14 @@ type WindowsPackageSource interface {
 	WindowsPackage(ctx context.Context, arch string) (PackageRef, error)
 }
 
+// AgentInstallerSource says where the agent installer of a system is (CRSP304,
+// operations R5.130). goos is "windows", "linux" or "macos", goarch "amd64" or
+// "arm64". The installer is an archive: a .zip with install.ps1 (Windows) or a
+// .tar.gz with install.sh, both in a folder named crsp-agent.
+type AgentInstallerSource interface {
+	AgentInstaller(ctx context.Context, goos, goarch string) (PackageRef, error)
+}
+
 // ErrNotAdmin is returned when the SSH user is not an administrator of the
 // Windows machine: the install changes services and system folders.
 var ErrNotAdmin = errors.New("the SSH user is not an administrator on this machine")
@@ -133,6 +141,9 @@ func winDownloadScript(ref PackageRef) string {
 	if ref.SelfSigned {
 		trust = joinfile.PowerShellPin + "[CrspPin]::Enable(" + psQuote(ref.PinSHA256) + ")\n"
 	}
+	if strings.HasSuffix(ref.Name, ".zip") {
+		return trust + winAgentScript(ref)
+	}
 	return trust + fmt.Sprintf(`
 $msi = Join-Path $env:TEMP %s
 Invoke-WebRequest -UseBasicParsing -Uri %s -OutFile $msi
@@ -142,6 +153,29 @@ try {
   $p = Start-Process -FilePath msiexec.exe -ArgumentList @('/i', $msi, '/qn', '/norestart') -Wait -PassThru
   if ($p.ExitCode -ne 0 -and $p.ExitCode -ne 3010) { throw ('msiexec ended with ' + $p.ExitCode) }
 } finally { Remove-Item -LiteralPath $msi -Force -ErrorAction SilentlyContinue }
+$exe = Join-Path $env:ProgramFiles 'crsp\crsp.exe'
+if (-not (Test-Path $exe)) { throw 'crsp.exe is not where the installer puts it' }
+'CRSP_EXE=' + $exe
+`, psQuote(ref.Name), psQuote(ref.URL), psQuote(ref.SHA256))
+}
+
+// winAgentScript downloads an agent installer (a zip), checks its SHA-256 before it
+// opens it, runs its install.ps1 and prints where crsp.exe is (CRSP304).
+func winAgentScript(ref PackageRef) string {
+	return fmt.Sprintf(`
+$zip = Join-Path $env:TEMP %s
+$dir = Join-Path $env:TEMP 'crsp-agent-setup'
+Invoke-WebRequest -UseBasicParsing -Uri %s -OutFile $zip
+try {
+  $h = (Get-FileHash -Algorithm SHA256 -LiteralPath $zip).Hash.ToLower()
+  if ($h -ne %s) { throw 'the downloaded installer does not match its SHA-256; nothing was installed' }
+  if (Test-Path $dir) { Remove-Item -LiteralPath $dir -Recurse -Force }
+  Expand-Archive -LiteralPath $zip -DestinationPath $dir -Force
+  & (Join-Path $dir 'crsp-agent\install.ps1') | Out-Null
+} finally {
+  Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+  Remove-Item -LiteralPath $dir -Recurse -Force -ErrorAction SilentlyContinue
+}
 $exe = Join-Path $env:ProgramFiles 'crsp\crsp.exe'
 if (-not (Test-Path $exe)) { throw 'crsp.exe is not where the installer puts it' }
 'CRSP_EXE=' + $exe
@@ -180,10 +214,18 @@ func (s *Service) joinWindows(ctx context.Context, in SSHJoinInput, installArgs 
 	progress("administrator: yes")
 	exe := probe.Exe
 	if exe == "" {
-		if s.o.WindowsPackages == nil {
+		var ref PackageRef
+		var err error
+		if s.o.AgentInstallers == nil && s.o.WindowsPackages == nil {
 			return "", errors.New("crsp.exe is not on the machine and this controller has no installer to send")
 		}
-		ref, err := s.o.WindowsPackages.WindowsPackage(ctx, probe.Arch)
+		if s.o.AgentInstallers != nil {
+			ref, err = s.o.AgentInstallers.AgentInstaller(ctx, "windows", probe.Arch)
+		}
+		if (s.o.AgentInstallers == nil || err != nil) && s.o.WindowsPackages != nil {
+			// a release without agent installers (before CRSP304) still has its MSI
+			ref, err = s.o.WindowsPackages.WindowsPackage(ctx, probe.Arch)
+		}
 		if err != nil {
 			return "", fmt.Errorf("crsp.exe is not on the machine and its installer could not be found: %w", err)
 		}
