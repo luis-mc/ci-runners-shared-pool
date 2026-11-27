@@ -67,7 +67,7 @@ func (r *Recorder) flushLocked(ctx context.Context, all bool) error {
 	if !all {
 		n = bytes.LastIndexByte(r.pending, '\n') + 1
 		open := bytes.LastIndex(r.pending, []byte(transcriptBeginMarker))
-		if open >= 0 && bytes.Index(r.pending[open:], []byte(transcriptEndMarker)) < 0 {
+		if open >= 0 && !bytes.Contains(r.pending[open:], []byte(transcriptEndMarker)) {
 			// A key block has begun and not ended: hold from its start.
 			n = open
 			if len(r.pending) > transcriptPendingMax {
