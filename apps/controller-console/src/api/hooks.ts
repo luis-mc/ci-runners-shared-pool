@@ -8,31 +8,62 @@ export type Loaded<T> =
   | { state: 'ready'; data: T; loadedAt: number }
   | { state: 'failed'; error: ApiError | Error; data?: T; loadedAt?: number };
 
+/**
+ * `deps` name the data: when one changes, the old answer is dropped and a new request starts. `refreshOn` say the same
+ * data may have changed (a live event, a poll tick): a request already in flight is left to finish and one more runs
+ * after it, however many refreshes came meanwhile, so a burst of events costs at most two requests (CRSP290, F6).
+ */
 export function useLoad<T>(
   load: () => Promise<T>,
   deps: readonly unknown[],
+  refreshOn: readonly unknown[] = [],
 ): { result: Loaded<T>; reload: () => void } {
   const [result, setResult] = useState<Loaded<T>>({ state: 'loading' });
   const [tick, setTick] = useState(0);
   const last = useRef<{ data: T; loadedAt: number } | undefined>(undefined);
   const loadRef = useRef(load);
   loadRef.current = load;
+  const inFlight = useRef(false);
+  const dirty = useRef(false);
+  const seen = useRef<readonly unknown[]>(refreshOn);
+  useEffect(() => {
+    const same =
+      seen.current.length === refreshOn.length &&
+      seen.current.every((v, i) => Object.is(v, refreshOn[i]));
+    seen.current = refreshOn;
+    if (same) return;
+    if (inFlight.current) dirty.current = true;
+    else setTick((t) => t + 1);
+  }, [...refreshOn]);
   useEffect(() => {
     let live = true;
+    inFlight.current = true;
+    dirty.current = false;
+    const done = () => {
+      if (!live) return;
+      inFlight.current = false;
+      if (dirty.current) {
+        dirty.current = false;
+        setTick((t) => t + 1);
+      }
+    };
     loadRef
       .current()
       .then((data) => {
         if (!live) return;
         last.current = { data, loadedAt: Date.now() };
         setResult({ state: 'ready', ...last.current });
+        done();
       })
       .catch((e: unknown) => {
         if (!live) return;
         const error = e instanceof Error ? e : new Error(errorText(e));
         setResult({ state: 'failed', error, ...(last.current ?? {}) });
+        done();
       });
     return () => {
       live = false;
+      inFlight.current = false;
     };
   }, [...deps, tick]);
   const reload = useCallback(() => setTick((t) => t + 1), []);
