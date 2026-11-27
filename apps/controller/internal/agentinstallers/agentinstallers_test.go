@@ -196,7 +196,7 @@ func TestHandler(t *testing.T) {
 	h := s.Handler()
 	get := func(path string) *httptest.ResponseRecorder {
 		rec := httptest.NewRecorder()
-		h.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, path, nil))
+		h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, path, nil))
 		return rec
 	}
 	if rec := get(PathPrefix + winName); rec.Code != 200 || rec.Body.String() != "win" {
@@ -213,7 +213,7 @@ func TestHandler(t *testing.T) {
 		}
 	}
 	rec := httptest.NewRecorder()
-	h.ServeHTTP(rec, httptest.NewRequest(http.MethodPost, PathPrefix+winName, io.NopCloser(strings.NewReader(""))))
+	h.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodPost, PathPrefix+winName, io.NopCloser(strings.NewReader(""))))
 	if rec.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("POST: %d", rec.Code)
 	}
