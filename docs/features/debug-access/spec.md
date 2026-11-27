@@ -3,13 +3,17 @@ id: debug-access
 title: Debug access to a running job
 apps: [controller, agent, web-console, cli]
 topics: [runners, isolation, security, observability, ui]
-status: proposed
+status: building
 version: 0.1.0
 owner: owner
 type: reference
 code:
   - apps/controller/internal/debugaccess/**
-design_system: []
+  - apps/controller/internal/api/handlers_debug.go
+  - apps/controller/internal/store/debugaccess.go
+  - apps/controller/cmd/crsp/debug_wiring.go
+  - apps/controller-console/src/screens/jobs/DebugCard.tsx
+design_system: [CORE-1, CORE-3, CORE-5, UX-4, UX-9, UX-13, UX-17, UX-58, "components 15, 18", content debug-access-words]
 last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
@@ -18,7 +22,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 11) is for engineers.
 
-**PROPOSED (CRSP266). NOT YET IMPLEMENTED.** This is a spec for the owner to review. No code is written. Every requirement below is planned. Source: study `docs/studies/runs-on-vs-crsp/study.md`, gap G4 (runs-on offers controlled SSH and AWS SSM sessions into a job machine; CRSP can only join machines over SSH, CRSP123).
+**BUILDING (CRSP266 approved, CRSP331 built the controller core).** The policy, the session record, the limits, the audit rows, the repository and pool settings, the API and the console Debug access card are built. No agent can enter a job's environment yet (R5.32 has no backend implementation), so the controller refuses every open with "This machine cannot open debug sessions yet." and writes a refused audit row. The terminal, the agent side, hold failed jobs, notifications and `crsp debug` follow (section 11). Rows in section 10 without "planned:" are built and tested. Source: study `docs/studies/runs-on-vs-crsp/study.md`, gap G4 (runs-on offers controlled SSH and AWS SSM sessions into a job machine; CRSP can only join machines over SSH, CRSP123).
 
 **macOS is not run on a real Mac yet.** The macOS rows of this spec are written from Apple's documented behaviour and the macOS backend specs (runners R5.23, R5.29). They are tested with fakes only until a real Mac runs them (section 8, Q6). Windows and Linux rows are proven on real machines when built.
 
@@ -272,6 +276,15 @@ flowchart LR
 - **Q8.** Persistent runners (R5.10): allow at all, or only containers and VMs? Proposed: allow, off by default, with the warning.
 - **Q9.** File copy in and out (like `scp`): not now (proposed). Add as a later version?
 
+**Defaults taken while building (CRSP331), each the safer choice, open for the owner to change:** Q1 admins and owner, with Owner only per repository; only the owner sets or lifts Owner only. Q2 console first; `crsp debug` is not built yet. Q3 hold failed jobs not built yet (off). Q4 transcript on with redaction, 30 days, with a pool switch to turn it off. Q5 refuse while another job runs in the same container. Q6 macOS rows say "Not run on a real Mac yet." Q7 no two-person rule. Q8 persistent runners off by default per repository, with the warning. Q9 no file copy.
+
+**New questions from building (CRSP331):**
+
+- **Q10.** crsp does not record a pull request's head repository, so it cannot tell a fork from the same repository. Every `pull_request` and `pull_request_target` job is refused for now. Record the head repository and allow same-repository pull requests?
+- **Q11.** R5.19 extends once by 15 minutes. Read "never past the limit" as at most 120 minutes from the open (built), or as at most the repository's own limit?
+- **Q12.** A repository whose visibility is not known is treated as public (refused). Keep that?
+- **Q13.** At controller start every session still marked open is ended as "connection lost" (R6.4), since no terminal stream survives a restart. Keep that once the agent can hold a session over a short controller restart?
+
 ## 9. Failure modes
 
 | Dependency | Fails | Behaviour | Why |
@@ -287,36 +300,36 @@ flowchart LR
 
 ## 10. How it is proven
 
-Every row is planned. The path is where the test will live. Each requirement has at least one test; platform rows have a fake-backed test, and a real-machine test where marked.
+A row that starts with "planned:" is not built yet; its path is where the test will live. The other rows are built (CRSP331). Each requirement has at least one test; platform rows have a fake-backed test, and a real-machine test where marked.
 
 | Requirement | Test |
 |---|---|
-| R5.1 | planned: apps/controller/internal/debugaccess/policy_test.go, TestOffByDefaultAndAfterImportAndRestore |
-| R5.2 | planned: apps/controller/internal/api/handlers_debug_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (disabled with reason) |
-| R5.3 | planned: apps/controller/internal/debugaccess/policy_test.go, TestReasonLength3To200 |
-| R5.4 | planned: apps/controller/internal/debugaccess/limits_test.go, TestUserAndJobSessionCaps |
-| R5.5 | planned: apps/controller/internal/debugaccess/policy_test.go, TestPublicAndForkNeverAllowed |
-| R5.6 | planned: apps/controller/internal/backend/enter_test.go, TestNoHostShellEverReturned |
-| R5.7 | planned: apps/controller/internal/debugaccess/policy_test.go, TestSharedContainerRefusedNamesOtherJob |
+| R5.1 | apps/controller/internal/debugaccess/policy_test.go, TestOffByDefaultAndAfterImportAndRestore (off by default; reset to off on config import and restore is planned) |
+| R5.2 | apps/controller/internal/api/handlers_debug_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/controller/internal/debugaccess/policy_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (disabled with reason) |
+| R5.3 | apps/controller/internal/debugaccess/policy_test.go, TestReasonLength3To200; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (asks for a reason first) |
+| R5.4 | apps/controller/internal/debugaccess/session_test.go, TestUserAndJobSessionCaps |
+| R5.5 | apps/controller/internal/debugaccess/policy_test.go, TestPublicAndForkNeverAllowed |
+| R5.6 | apps/controller/internal/debugaccess/policy_test.go, TestNoEntererRefusesEveryOpen (controller side); planned: apps/controller/internal/backend/enter_test.go, TestNoHostShellEverReturned |
+| R5.7 | apps/controller/internal/debugaccess/policy_test.go, TestSharedContainerRefusedNamesOtherJob |
 | R5.8 | planned: apps/controller/internal/backend/linux/enter_test.go, TestOwnPIDNamespace; real Linux machine |
 | R5.9 | planned: apps/controller/internal/agent/debug_test.go, TestWrongEnvironmentFailsClosed |
-| R5.10 | planned: apps/controller/internal/debugaccess/policy_test.go, TestPersistentRefusedUnlessOn |
+| R5.10 | apps/controller/internal/debugaccess/policy_test.go, TestPersistentRefusedUnlessOn |
 | R5.11 | planned: apps/controller/internal/backend/linux/enter_test.go, TestDebugUserNoCapsNoSudo; apps/controller/internal/backend/windows/enter_test.go, TestDebugAccountNotAdmin; apps/controller/internal/backend/macos/enter_test.go (fakes) |
-| R5.12 | planned: apps/controller/internal/debugaccess/env_test.go, TestShellEnvironmentIsAllowListOnly |
+| R5.12 | apps/controller/internal/debugaccess/transcript_test.go, TestShellEnvironmentIsAllowListOnly |
 | R5.13 | planned: apps/controller/internal/backend/linux/enter_test.go, TestCannotReadRunnerEnviron; apps/controller/internal/backend/windows/enter_test.go, TestRunnerFolderAclDeniesDebugAccount |
-| R5.14 | planned: apps/controller-console/src/screens/jobs/DebugCard.test.tsx (words); docs check on the owner note |
+| R5.14 | apps/controller-console/src/screens/jobs/DebugCard.test.tsx (words); apps/controller/internal/api/handlers_debug_test.go, TestRepoDebugAccessWords |
 | R5.15 | planned: apps/controller/internal/agent/debug_test.go, TestNoListenSocketOpened |
 | R5.16 | planned: apps/controller/internal/agent/debug_test.go, TestEndKillsAllDebugProcesses |
 | R5.17 | planned: apps/controller/internal/agent/debug_test.go, TestHardLimitWithControllerGone |
-| R5.18 | planned: apps/controller/internal/debugaccess/limits_test.go, TestIdleLimit |
-| R5.19 | planned: apps/controller/internal/debugaccess/limits_test.go, TestExtendOnceNotPastLimit |
-| R5.20 | planned: apps/controller/internal/debugaccess/session_test.go, TestJobEndClosesAfterNotice |
+| R5.18 | apps/controller/internal/debugaccess/session_test.go, TestIdleLimit |
+| R5.19 | apps/controller/internal/debugaccess/session_test.go, TestExtendOnceNotPastLimit; apps/controller/internal/debugaccess/transcript_test.go, TestLongAt80Percent |
+| R5.20 | apps/controller/internal/debugaccess/session_test.go, TestJobEndClosesAfterNotice |
 | R5.21 | planned: apps/controller/internal/agent/hold_test.go, TestFailedJobHeldSlotReleased |
 | R5.22 | planned: apps/controller/internal/agent/hold_test.go, TestHoldCapAndFloors |
 | R5.23 | planned: apps/controller/internal/agent/hold_test.go, TestHeldEnvironmentHasNoSecrets |
-| R5.24 | planned: apps/controller/internal/debugaccess/audit_test.go, TestEveryStepIsOneAuditRowInOneTransaction |
-| R5.25 | planned: apps/controller/internal/debugaccess/transcript_test.go, TestRedactedAndKept30Days |
-| R5.26 | planned: apps/controller/internal/api/handlers_debug_test.go, TestKillSwitchEndsAll |
+| R5.24 | apps/controller/internal/debugaccess/session_test.go, TestEveryStepIsOneAuditRowInOneTransaction |
+| R5.25 | apps/controller/internal/debugaccess/transcript_test.go, TestRedactedAndKept30Days; apps/controller/internal/debugaccess/session_test.go, TestRecordOffSaysNoTranscript |
+| R5.26 | apps/controller/internal/api/handlers_debug_test.go, TestKillSwitchEndsAll; apps/controller/internal/debugaccess/session_test.go, TestKillSwitchEndsAll |
 | R5.27 | planned: apps/controller/internal/notify/events_test.go, TestDebugSessionEvents |
 | R5.28 | planned: e2e/tests/web-console/debug-access.spec.ts (all screens), guard: every `crsp debug` command has a console screen |
 | R5.29 | planned: guards (no-app-CSS scan, shared terminal part used); axe at 360, 393, 1300 px |
@@ -324,13 +337,13 @@ Every row is planned. The path is where the test will live. Each requirement has
 | R5.31 | planned: apps/controller/cmd/crsp/debug_ssh_test.go, TestProxyCommandOpensNoPort |
 | R5.32 | planned: apps/controller/internal/backend/enter_test.go, TestEveryBackendImplementsEnter |
 | R5.33 | planned: guards (no sshd, WinRM or inbound rule created); real Windows machine |
-| R5.34 | planned: apps/controller-console/src/screens/jobs/DebugCard.test.tsx (macOS wording) |
+| R5.34 | apps/controller/internal/debugaccess/policy_test.go, TestMacOSSaysNotRunOnARealMac; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (macOS wording) |
 | R6.1 | planned: apps/controller/internal/debugaccess/latency_test.go, TestOpenWithin10s |
 | R6.2 | planned: apps/controller/internal/agent/debug_test.go, TestBackPressureAt1MBs |
 | R6.3 | planned: apps/controller/internal/agent/debug_test.go, TestLinkDropClosesAt60s |
-| R6.4 | planned: apps/controller/internal/debugaccess/session_test.go, TestReconcileAtStart |
-| R6.5 | planned: apps/controller/internal/debugaccess/secrets_test.go, TestNoSecretInStoreLogsAuditTranscript |
-| R6.6 | planned: apps/controller/internal/debugaccess/transcript_test.go, TestCaps |
+| R6.4 | apps/controller/internal/debugaccess/session_test.go, TestReconcileAtStart |
+| R6.5 | apps/controller/internal/api/handlers_debug_test.go, TestDebugAnswersCarryNoAddress (no source address in an answer); planned: apps/controller/internal/debugaccess/secrets_test.go, TestNoSecretInStoreLogsAuditTranscript |
+| R6.6 | apps/controller/internal/debugaccess/transcript_test.go, TestCaps |
 | R6.7 | planned: guards (design system retired-words guard over debug text) |
 | R6.8 | planned: guards (no listening socket added by this feature) |
 | R6.9 | planned: e2e/tests/web-console/debug-access-a11y.spec.ts |

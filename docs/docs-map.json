@@ -25,6 +25,9 @@
     "apps/controller-console/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
+    "apps/controller-console/src/screens/jobs/DebugCard.tsx": [
+      "docs/features/debug-access/spec.md"
+    ],
     "apps/controller-console/src/screens/notices/**": [
       "docs/features/notifications/spec.md"
     ],
@@ -45,6 +48,9 @@
     ],
     "apps/controller/cmd/crsp/**": [
       "docs/features/cli/spec.md"
+    ],
+    "apps/controller/cmd/crsp/debug_wiring.go": [
+      "docs/features/debug-access/spec.md"
     ],
     "apps/controller/cmd/crsp/insights*wiring.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -87,6 +93,9 @@
     ],
     "apps/controller/internal/agentlink/registry.go": [
       "docs/features/registry/spec.md"
+    ],
+    "apps/controller/internal/api/handlers_debug.go": [
+      "docs/features/debug-access/spec.md"
     ],
     "apps/controller/internal/api/handlers_insights*.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -280,6 +289,9 @@
     ],
     "apps/controller/internal/secrets/**": [
       "docs/features/github-integration/spec.md"
+    ],
+    "apps/controller/internal/store/debugaccess.go": [
+      "docs/features/debug-access/spec.md"
     ],
     "apps/controller/internal/store/imagebuilds.go": [
       "docs/features/registry/spec.md"
