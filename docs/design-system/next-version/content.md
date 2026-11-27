@@ -2102,3 +2102,22 @@ Where an update shows (CRSP364, CRSP368). The progress lives only in the Updates
 | Last checked {time}, by {who} (manual). | The Updates pane line after a check a person asked for. |
 | Last checked {time} (automatic). | The Updates pane line after crsp's own check. |
 | See all in the Audit log | The link under that line; it opens the Audit log. |
+## Cloud overflow words (CRSP281)
+
+| Where | Words |
+|---|---|
+| Settings, Repositories, section | Cloud overflow |
+| Settings, Repositories, intro | When no crsp machine can take the jobs of a repository that turned its fallback on, they go to the first target below that is on, serves the system and has minutes and budget left. A target with no minutes or budget left is skipped. This can cost money. |
+| Order list | Overflow order; targets GitHub-hosted runners, AWS EC2 runners |
+| Target pane | Title: the target name. Checkbox: Use {target}. Field: Label of {target}. Help for GitHub-hosted runners: Leave it empty for ubuntu-latest, windows-latest and macos-latest. Help for AWS EC2 runners: The label your EC2 runners carry in the workflow. |
+| Minutes field | Minutes of {target} per repository and month ({n} min, 0 to 1000000). Help: 0 means no limit. When a repository has used them, the next target is tried. |
+| Total minutes field | Total minutes of {target} per month ({n} min, 0 to 1000000). Help: 0 means no limit. Counted over all repositories together. When they are used, the next target is tried. |
+| Budget field | Monthly budget of {target} ({n} USD, 0 to 1000000, two decimals). Help for GitHub-hosted runners: In dollars. 0 means no budget. Counted over all repositories together, at the price per minute below. When it is used, the next target is tried. Help for AWS EC2 runners: In dollars. 0 means no budget. The budget is enforced only when you set a price per minute for AWS EC2 runners. |
+| Price field | Price per minute of {target} (USD) ({n} USD, 0 to 1000, four decimals). Help for GitHub-hosted runners: In dollars. 0 means the rate of Savings for the system of the job, at the standard size. Help for AWS EC2 runners: In dollars. 0 means no price, so the budget is not enforced. Set what a minute of your EC2 runners costs. |
+| Minutes help, both limits | 0 means no limit. When a repository has used them, the next target is tried. A target is used only while both limits have minutes left. |
+| Where jobs go now | Pane: Where jobs go now. Table: Repository, Jobs go to, Why. Jobs go to: {target}, Cloud runners, Waiting, minutes used up, Waiting for a machine. Why: No crsp machine is up. / Every target has used its minutes. / Overflow has not started for this repository. Empty: No repository is on cloud overflow now. |
+| Minutes used | Pane: Minutes and money used this month. Table: Target, Used this month ({n} min), Money used this month (${n.nn}, or No rate), Monthly budget (${n.nn}, or No budget, or ${n.nn}, no rate, budget not enforced), Total limit, Limit per repository ({n} min or No limit). Empty: No cloud target is on. |
+| System checkboxes | {target} serve Linux, {target} serve Windows, {target} serve macOS |
+| Saved | Cloud overflow saved. |
+| Save failed | Could not save. {reason} |
+| Refused | AWS EC2 runners need a label while they are on. The label of {target} must be one label of up to 100 characters, without spaces, commas or quotes. Minutes of {target} must be from 0 to 1000000. Total minutes of {target} must be from 0 to 1000000. Budget of {target} must be from 0 to 1000000 dollars. Price per minute of {target} must be from 0 to 1000 dollars. |

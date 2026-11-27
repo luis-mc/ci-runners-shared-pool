@@ -2399,6 +2399,63 @@ func (e OS) Valid() bool {
 	}
 }
 
+// Defines values for OverflowTargetKind.
+const (
+	OverflowTargetKindAwsEc2       OverflowTargetKind = "aws_ec2"
+	OverflowTargetKindGithubHosted OverflowTargetKind = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the OverflowTargetKind enum.
+func (e OverflowTargetKind) Valid() bool {
+	switch e {
+	case OverflowTargetKindAwsEc2:
+		return true
+	case OverflowTargetKindGithubHosted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowTargetSystems.
+const (
+	OverflowTargetSystemsLinux   OverflowTargetSystems = "linux"
+	OverflowTargetSystemsMacos   OverflowTargetSystems = "macos"
+	OverflowTargetSystemsWindows OverflowTargetSystems = "windows"
+)
+
+// Valid indicates whether the value is a known member of the OverflowTargetSystems enum.
+func (e OverflowTargetSystems) Valid() bool {
+	switch e {
+	case OverflowTargetSystemsLinux:
+		return true
+	case OverflowTargetSystemsMacos:
+		return true
+	case OverflowTargetSystemsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowUsageKind.
+const (
+	OverflowUsageKindAwsEc2       OverflowUsageKind = "aws_ec2"
+	OverflowUsageKindGithubHosted OverflowUsageKind = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the OverflowUsageKind enum.
+func (e OverflowUsageKind) Valid() bool {
+	switch e {
+	case OverflowUsageKindAwsEc2:
+		return true
+	case OverflowUsageKindGithubHosted:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PauseReason.
 const (
 	PauseReasonBaseImageMissing PauseReason = "base_image_missing"
@@ -3176,6 +3233,24 @@ func (e RepositoryRoutingOses) Valid() bool {
 	case RepositoryRoutingOsesMacos:
 		return true
 	case RepositoryRoutingOsesWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RepositoryRoutingTarget.
+const (
+	RepositoryRoutingTargetAwsEc2       RepositoryRoutingTarget = "aws_ec2"
+	RepositoryRoutingTargetGithubHosted RepositoryRoutingTarget = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the RepositoryRoutingTarget enum.
+func (e RepositoryRoutingTarget) Valid() bool {
+	switch e {
+	case RepositoryRoutingTargetAwsEc2:
+		return true
+	case RepositoryRoutingTargetGithubHosted:
 		return true
 	default:
 		return false
@@ -8197,6 +8272,52 @@ type OrgPoolSet struct {
 	Enabled bool `json:"enabled"`
 }
 
+// OverflowTarget defines model for OverflowTarget.
+type OverflowTarget struct {
+	// BudgetUsd Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2 without a price per minute) does not enforce it.
+	BudgetUsd *float64 `json:"budget_usd,omitempty"`
+
+	// CapMinutes Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried.
+	CapMinutes *int               `json:"cap_minutes,omitempty"`
+	Enabled    bool               `json:"enabled"`
+	Kind       OverflowTargetKind `json:"kind"`
+
+	// Label The runner label jobs run on at this target. Empty is allowed for github_hosted only (the ubuntu-latest, windows-latest and macos-latest defaults); aws_ec2 needs one while it is on.
+	Label *string `json:"label,omitempty"`
+
+	// PriceUsdPerMinute Price in US dollars of one minute at this target (R5.115, CRSP372); 0 or absent means none. A set price is what the budget counts at this target. GitHub-hosted without a price uses the savings rate table; AWS EC2 needs a price for its budget to be enforced.
+	PriceUsdPerMinute *float64 `json:"price_usd_per_minute,omitempty"`
+
+	// Systems The systems this target serves; empty or absent means all.
+	Systems *[]OverflowTargetSystems `json:"systems,omitempty"`
+
+	// TotalCapMinutes Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left.
+	TotalCapMinutes *int `json:"total_cap_minutes,omitempty"`
+}
+
+// OverflowTargetKind defines model for OverflowTarget.Kind.
+type OverflowTargetKind string
+
+// OverflowTargetSystems defines model for OverflowTarget.Systems.
+type OverflowTargetSystems string
+
+// OverflowUsage defines model for OverflowUsage.
+type OverflowUsage struct {
+	Kind OverflowUsageKind `json:"kind"`
+
+	// Priced False when the target has no per-minute rate, so its budget is not enforced.
+	Priced *bool `json:"priced,omitempty"`
+
+	// UsedMinutes Minutes this target took this month (UTC) across all repositories, best effort.
+	UsedMinutes int `json:"used_minutes"`
+
+	// UsedUsd Money this target cost this month (UTC) across all repositories, in US dollars; minutes times the per-minute rate savings keeps (R5.115).
+	UsedUsd *float64 `json:"used_usd,omitempty"`
+}
+
+// OverflowUsageKind defines model for OverflowUsage.Kind.
+type OverflowUsageKind string
+
 // Overview defines model for Overview.
 type Overview struct {
 	// LastEventId Open the stream with this as Last-Event-ID.
@@ -9163,6 +9284,9 @@ type RepositoryRouting struct {
 	// Oses The operating systems the reason is about.
 	Oses *[]RepositoryRoutingOses `json:"oses,omitempty"`
 
+	// Target The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+	Target *RepositoryRoutingTarget `json:"target,omitempty"`
+
 	// UsedMinutes Fallback minutes counted this month (UTC), best effort.
 	UsedMinutes int                    `json:"used_minutes"`
 	Where       RepositoryRoutingWhere `json:"where"`
@@ -9173,6 +9297,9 @@ type RepositoryRouting struct {
 
 // RepositoryRoutingOses defines model for RepositoryRouting.Oses.
 type RepositoryRoutingOses string
+
+// RepositoryRoutingTarget The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+type RepositoryRoutingTarget string
 
 // RepositoryRoutingWhere defines model for RepositoryRouting.Where.
 type RepositoryRoutingWhere string
@@ -9807,12 +9934,18 @@ type Settings struct {
 	MaxEventStreams      *int                          `json:"max_event_streams,omitempty"`
 
 	// OverflowLabel github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest).
-	OverflowLabel              *string `json:"overflow_label,omitempty"`
-	RetentionAuditDays         *int    `json:"retention_audit_days,omitempty"`
-	RetentionJobHistoryDays    *int    `json:"retention_job_history_days,omitempty"`
-	RetentionLoadRawHours      *int    `json:"retention_load_raw_hours,omitempty"`
-	RetentionLogsDays          *int    `json:"retention_logs_days,omitempty"`
-	RetentionLogsMibPerMachine *int    `json:"retention_logs_mib_per_machine,omitempty"`
+	OverflowLabel *string `json:"overflow_label,omitempty"`
+
+	// OverflowTargets github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule.
+	OverflowTargets *[]OverflowTarget `json:"overflow_targets,omitempty"`
+
+	// OverflowUsage github-integration R5.115. Read only. The minutes each enabled overflow target took this month across all repositories.
+	OverflowUsage              *[]OverflowUsage `json:"overflow_usage,omitempty"`
+	RetentionAuditDays         *int             `json:"retention_audit_days,omitempty"`
+	RetentionJobHistoryDays    *int             `json:"retention_job_history_days,omitempty"`
+	RetentionLoadRawHours      *int             `json:"retention_load_raw_hours,omitempty"`
+	RetentionLogsDays          *int             `json:"retention_logs_days,omitempty"`
+	RetentionLogsMibPerMachine *int             `json:"retention_logs_mib_per_machine,omitempty"`
 }
 
 // SettingsInsightsUpdatePeriod ci-run-insights R5.44 (owner decisions D18, D19). How often insights are re-analysed. every_run (the default) analyses after each CI run; every_nth_run after every Nth run; hourly once an hour. The cost warning recommends a slower one.
