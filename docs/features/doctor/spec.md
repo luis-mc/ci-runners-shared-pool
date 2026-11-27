@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["internal/doctor/**"]
 design_system: [UX-4, UX-6, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-31, UX-52, UX-53, UX-58, UX-61, "components 1, 10, 11, 12, 15, 16, 17, 18, 19, 21"]
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -410,6 +410,7 @@ Controller:
 | `controller.tls` | The console certificate expires within 30 days | warn | Renew the certificate | no | 1 |
 | `cache.*` | The Actions cache, git mirror or registry mirror is down or over its cap | fail, warn | Restart the cache; lower its cap | no | 7 |
 | `controller.backup` | No backup in the last 7 days | warn | Run a backup | no | 8 |
+| `controller.log_store` | Log lines were lost because writing to `logs.db` failed (observability R6.9); jobs are not affected | warn | Free disk space in the data folder, or check that `logs.db` is writable | no | 1 |
 
 ### 7.3 Ported checks and their tests
 

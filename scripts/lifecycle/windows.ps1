@@ -99,7 +99,12 @@ function Get-FileSha256($file) {
 #    folds into controller.db, so they carry no data of their own.
 # Everything else under config and data is compared byte for byte.
 $script:DbName = 'controller.db'
-$script:VolatileNames = @($script:DbName, "$($script:DbName)-wal", "$($script:DbName)-shm")
+# logs.db is the log store (observability R6.10): its own file, opened and migrated by the service on every start and
+# regenerable, so its bytes change without any user data changing. Like the logs folder it is left out by name,
+# with its journal files.
+$script:LogDbName = 'logs.db'
+$script:VolatileNames = @($script:DbName, "$($script:DbName)-wal", "$($script:DbName)-shm",
+  $script:LogDbName, "$($script:LogDbName)-wal", "$($script:LogDbName)-shm")
 # Runtime state of the controller's own agent that the service rewrites on every start, by name. lifecycle.json
 # names as config and data only paths.config and paths.data (keep_on_remove: ["data"]) and has no runtime or cache
 # location, so these two files stay where they are and are left out of the comparison by name:

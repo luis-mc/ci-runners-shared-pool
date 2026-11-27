@@ -1723,6 +1723,30 @@ func (e ListenAddressCandidateId) Valid() bool {
 	}
 }
 
+// Defines values for LogLineLevel.
+const (
+	LogLineLevelDebug LogLineLevel = "debug"
+	LogLineLevelError LogLineLevel = "error"
+	LogLineLevelInfo  LogLineLevel = "info"
+	LogLineLevelWarn  LogLineLevel = "warn"
+)
+
+// Valid indicates whether the value is a known member of the LogLineLevel enum.
+func (e LogLineLevel) Valid() bool {
+	switch e {
+	case LogLineLevelDebug:
+		return true
+	case LogLineLevelError:
+		return true
+	case LogLineLevelInfo:
+		return true
+	case LogLineLevelWarn:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MachineChangeChoices.
 const (
 	MachineChangeChoicesCancel     MachineChangeChoices = "cancel"
@@ -4780,6 +4804,30 @@ func (e GetJobStatsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for SearchLogsParamsLevel.
+const (
+	SearchLogsParamsLevelDebug SearchLogsParamsLevel = "debug"
+	SearchLogsParamsLevelError SearchLogsParamsLevel = "error"
+	SearchLogsParamsLevelInfo  SearchLogsParamsLevel = "info"
+	SearchLogsParamsLevelWarn  SearchLogsParamsLevel = "warn"
+)
+
+// Valid indicates whether the value is a known member of the SearchLogsParamsLevel enum.
+func (e SearchLogsParamsLevel) Valid() bool {
+	switch e {
+	case SearchLogsParamsLevelDebug:
+		return true
+	case SearchLogsParamsLevelError:
+		return true
+	case SearchLogsParamsLevelInfo:
+		return true
+	case SearchLogsParamsLevelWarn:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for GetMachineJobStatsParamsWindow.
 const (
 	GetMachineJobStatsParamsWindowN24h GetMachineJobStatsParamsWindow = "24h"
@@ -7029,6 +7077,32 @@ type LoadHistory struct {
 		CpuPct    *float32  `json:"cpu_pct,omitempty"`
 		MemoryPct *float32  `json:"memory_pct,omitempty"`
 	} `json:"items"`
+}
+
+// LogLine defines model for LogLine.
+type LogLine struct {
+	At time.Time `json:"at"`
+
+	// Attrs Extra attributes as JSON.
+	Attrs     *string      `json:"attrs,omitempty"`
+	Component *string      `json:"component,omitempty"`
+	Id        int64        `json:"id"`
+	Job       *string      `json:"job,omitempty"`
+	Level     LogLineLevel `json:"level"`
+	Machine   *string      `json:"machine,omitempty"`
+	Message   string       `json:"message"`
+	Runner    *string      `json:"runner,omitempty"`
+}
+
+// LogLineLevel defines model for LogLine.Level.
+type LogLineLevel string
+
+// LogPage defines model for LogPage.
+type LogPage struct {
+	Items []LogLine `json:"items"`
+
+	// NextCursor Pass as `cursor` to get the next page; absent on the last page.
+	NextCursor *string `json:"next_cursor,omitempty"`
 }
 
 // Machine defines model for Machine.
@@ -10499,6 +10573,25 @@ type ListJobSummariesParams struct {
 	To   *To   `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// SearchLogsParams defines parameters for SearchLogs.
+type SearchLogsParams struct {
+	// Q Words that must all appear in the message.
+	Q       *string                `form:"q,omitempty" json:"q,omitempty"`
+	Machine *string                `form:"machine,omitempty" json:"machine,omitempty"`
+	Runner  *string                `form:"runner,omitempty" json:"runner,omitempty"`
+	Job     *string                `form:"job,omitempty" json:"job,omitempty"`
+	Level   *SearchLogsParamsLevel `form:"level,omitempty" json:"level,omitempty"`
+	From    *From                  `form:"from,omitempty" json:"from,omitempty"`
+	To      *To                    `form:"to,omitempty" json:"to,omitempty"`
+
+	// Cursor Opaque cursor from the previous page's `next_cursor`.
+	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *Limit  `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// SearchLogsParamsLevel defines parameters for SearchLogs.
+type SearchLogsParamsLevel string
+
 // RemoveMachineParams defines parameters for RemoveMachine.
 type RemoveMachineParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -11193,6 +11286,9 @@ type ServerInterface interface {
 	// PutListenerGate Switch the listener gate between observe and enforce
 	// (PUT /api/v1/listener-gate)
 	PutListenerGate(w http.ResponseWriter, r *http.Request)
+	// SearchLogs Search runner setup and agent logs, newest first
+	// (GET /api/v1/logs)
+	SearchLogs(w http.ResponseWriter, r *http.Request, params SearchLogsParams)
 	// ListMachines Every machine with state, backends, load and slots
 	// (GET /api/v1/machines)
 	ListMachines(w http.ResponseWriter, r *http.Request)
@@ -14617,6 +14713,143 @@ func (siw *ServerInterfaceWrapper) PutListenerGate(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PutListenerGate(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SearchLogs operation middleware
+func (siw *ServerInterfaceWrapper) SearchLogs(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// Parameter object where we will unmarshal all parameters from the context
+	var params SearchLogsParams
+
+	// ------------- Optional query parameter "q" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "q", r.URL.Query(), &params.Q, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "q"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "q", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "machine" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "machine", r.URL.Query(), &params.Machine, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "machine"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "machine", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "runner" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "runner", r.URL.Query(), &params.Runner, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "runner"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runner", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "job" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "job", r.URL.Query(), &params.Job, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "job"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "job", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "level" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "level", r.URL.Query(), &params.Level, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "level"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "level", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "from" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "from", r.URL.Query(), &params.From, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "from"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "from", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "to" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "to", r.URL.Query(), &params.To, runtime.BindQueryParameterOptions{Type: "string", Format: "date-time"})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "to"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "to", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "cursor" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "cursor", r.URL.Query(), &params.Cursor, runtime.BindQueryParameterOptions{Type: "string", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "cursor"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "cursor", Err: err})
+		}
+		return
+	}
+
+	// ------------- Optional query parameter "limit" -------------
+
+	err = runtime.BindQueryParameterWithOptions("form", true, false, "limit", r.URL.Query(), &params.Limit, runtime.BindQueryParameterOptions{Type: "integer", Format: ""})
+	if err != nil {
+		var requiredError *runtime.RequiredParameterError
+		if errors.As(err, &requiredError) {
+			siw.ErrorHandlerFunc(w, r, &RequiredParamError{ParamName: "limit"})
+		} else {
+			siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "limit", Err: err})
+		}
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SearchLogs(w, r, params)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -18886,6 +19119,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/remove", wrapper.RemoveCrsp)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/service/restart", wrapper.RestartService)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/audit", wrapper.ListAuditEvents)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/logs", wrapper.SearchLogs)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/backups", wrapper.ListBackups)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/backups", wrapper.RunBackup)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/backups/drills", wrapper.RunBackupDrill)
@@ -22366,6 +22600,45 @@ type PutListenerGatedefaultJSONResponse struct {
 }
 
 func (response PutListenerGatedefaultJSONResponse) VisitPutListenerGateResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SearchLogsRequestObject struct {
+	Params SearchLogsParams
+}
+
+type SearchLogsResponseObject interface {
+	VisitSearchLogsResponse(w http.ResponseWriter) error
+}
+
+type SearchLogs200JSONResponse LogPage
+
+func (response SearchLogs200JSONResponse) VisitSearchLogsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SearchLogsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response SearchLogsdefaultJSONResponse) VisitSearchLogsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -28414,6 +28687,9 @@ type StrictServerInterface interface {
 	// PutListenerGate Switch the listener gate between observe and enforce
 	// (PUT /api/v1/listener-gate)
 	PutListenerGate(ctx context.Context, request PutListenerGateRequestObject) (PutListenerGateResponseObject, error)
+	// SearchLogs Search runner setup and agent logs, newest first
+	// (GET /api/v1/logs)
+	SearchLogs(ctx context.Context, request SearchLogsRequestObject) (SearchLogsResponseObject, error)
 	// ListMachines Every machine with state, backends, load and slots
 	// (GET /api/v1/machines)
 	ListMachines(ctx context.Context, request ListMachinesRequestObject) (ListMachinesResponseObject, error)
@@ -31085,6 +31361,32 @@ func (sh *strictHandler) PutListenerGate(w http.ResponseWriter, r *http.Request)
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PutListenerGateResponseObject); ok {
 		if err := validResponse.VisitPutListenerGateResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SearchLogs operation middleware
+func (sh *strictHandler) SearchLogs(w http.ResponseWriter, r *http.Request, params SearchLogsParams) {
+	var request SearchLogsRequestObject
+
+	request.Params = params
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SearchLogs(ctx, request.(SearchLogsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SearchLogs")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SearchLogsResponseObject); ok {
+		if err := validResponse.VisitSearchLogsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

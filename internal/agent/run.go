@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/agent/health"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/agentlink"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/logs"
 	"log/slog"
 	"os"
 	"path/filepath"
@@ -45,9 +47,12 @@ type Config struct {
 	DataDir             string
 	Version             string
 	Logger              *slog.Logger
-	Sys                 Sys
-	Sampler             *load.Sampler
-	Gate                *Gate
+	// LogForwarder keeps the agent's setup and own log lines on disk and sends them over the session
+	// (observability R5.20, R5.23); nil sends none.
+	LogForwarder *logs.Forwarder
+	Sys          Sys
+	Sampler      *load.Sampler
+	Gate         *Gate
 	// JobSampling measures the CPU and memory of each job the gate starts (OPS66); nil measures none.
 	JobSampling *JobSampling
 	// Updater follows the controller's version (operations R5.39); nil answers "unsupported".
@@ -490,6 +495,11 @@ func runSession(ctx context.Context, cfg Config, key, id, pin string) error {
 	defer cfg.Registry.detach(rs)
 	if cfg.JobSampling != nil {
 		defer cfg.JobSampling.Sender.Attach(l.send, HelloAckHasJobSamples(ack.GetHelloAck()))()
+	}
+	if cfg.LogForwarder != nil {
+		defer cfg.LogForwarder.Attach(func(_ context.Context, lines []logs.Line, dropped int64) error {
+			return l.send(&agentv1.SessionRequest{Message: &agentv1.SessionRequest_LogBatch{LogBatch: agentlink.LogBatchToProto(lines, dropped)}})
+		})()
 	}
 	cfg.Backoff.Reset() // a successful session resets the backoff (R5.36)
 	cfg.Logger.Info("session open")

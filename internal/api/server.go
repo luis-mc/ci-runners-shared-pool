@@ -42,6 +42,8 @@ type Options struct {
 	Settings *settings.Service
 	Audit    *audit.Log
 	Backup   *backup.Service
+	// Logs searches the runner setup and agent logs (observability R5.21); nil answers 501.
+	Logs LogSearcher
 	// Config writes the configuration export (exportConfig); nil answers 501.
 	Config ConfigExporter
 	// ConfigAsCode is the setup file, its plan and its apply (operations R5.28 to R5.30); nil answers 501.

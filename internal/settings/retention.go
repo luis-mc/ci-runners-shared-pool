@@ -21,6 +21,12 @@ import (
 // logs live in a sub-folder named after it.
 const LogsDir = "logs"
 
+// LogPruner is the log database (internal/logs.Store): it deletes whole days older than cutoff and then,
+// per machine, the oldest days until the machine holds at most maxBytesPerMachine (R6.8).
+type LogPruner interface {
+	Prune(ctx context.Context, cutoff time.Time, maxBytesPerMachine int64) (int64, error)
+}
+
 // Retention deletes data past the limits in Settings (observability R5.32,
 // R6.8): job history, raw load samples, audit rows and log files. It never
 // makes a network call (R6.7).
@@ -37,6 +43,9 @@ type Retention struct {
 	// whatever else the insights keep with their own days (test results, resource samples). Each gets the
 	// limits of the settings; a failure of one does not stop the others.
 	CIData []collect.Retention
+	// Logs, when set, is the log database (logs.db): lines past the log days and the size per machine are
+	// deleted by day (R6.8). A failure joins the other failures and never stops them.
+	Logs LogPruner
 }
 
 // CIDataLimits are the insights limits in st (ci-run-insights R5.5).
@@ -82,6 +91,11 @@ func (r *Retention) RunOnce(ctx context.Context) error {
 	}
 	if err := PruneLogs(filepath.Join(r.DataDir, LogsDir), t.Add(-time.Duration(st.RetentionLogsDays)*day), int64(st.RetentionLogsMiBPerMachine)<<20); err != nil {
 		errs = append(errs, err)
+	}
+	if r.Logs != nil {
+		if _, err := r.Logs.Prune(ctx, t.Add(-time.Duration(st.RetentionLogsDays)*day), int64(st.RetentionLogsMiBPerMachine)<<20); err != nil {
+			errs = append(errs, err)
+		}
 	}
 	for _, p := range r.CIData {
 		if _, _, err := p.Prune(ctx, t, CIDataLimits(st)); err != nil {

@@ -4273,6 +4273,63 @@ paths:
         default:
           $ref: '#/components/responses/Error'
 
+  /api/v1/logs:
+    get:
+      operationId: searchLogs
+      x-cli: none
+      x-cli-reason: 'Later: the logs page and its command come in their own task (observability R5.21).'
+      tags: [settings]
+      summary: Search runner setup and agent logs, newest first
+      description: >-
+        observability R5.21. Full text over the message and filters on machine,
+        runner, job, level and time range. `level` keeps that level and higher.
+        Admins and the owner only: log lines can name repositories and jobs.
+        Lines were redacted before they were stored (R6.5).
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - name: q
+          in: query
+          required: false
+          description: Words that must all appear in the message.
+          schema:
+            type: string
+            maxLength: 500
+        - name: machine
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: runner
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: job
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: level
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [debug, info, warn, error]
+        - $ref: '#/components/parameters/From'
+        - $ref: '#/components/parameters/To'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: One page of log lines.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogPage'
+        default:
+          $ref: '#/components/responses/Error'
+
   # ---------------------------------------------------------------- backups
   /api/v1/backups:
     get:
@@ -11640,6 +11697,44 @@ components:
             $ref: '#/components/schemas/AuditEvent'
         next_cursor:
           type: string
+
+    LogLine:
+      type: object
+      required: [id, at, level, message]
+      properties:
+        id:
+          type: integer
+          format: int64
+        at:
+          type: string
+          format: date-time
+        level:
+          type: string
+          enum: [debug, info, warn, error]
+        machine:
+          type: string
+        runner:
+          type: string
+        job:
+          type: string
+        component:
+          type: string
+        message:
+          type: string
+        attrs:
+          type: string
+          description: Extra attributes as JSON.
+    LogPage:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LogLine'
+        next_cursor:
+          type: string
+          description: Pass as `cursor` to get the next page; absent on the last page.
 
     # ---------- backups
     Backup:

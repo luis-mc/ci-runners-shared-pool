@@ -23,11 +23,13 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/depsetup"
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/internal/gen/agent/v1"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/logs"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/packages"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/secrets"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/settings"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/store"
+	"github.com/luis-mc/ci-runners-shared-pool/internal/store/logsdb"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/tlsca"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/update"
 	"github.com/luis-mc/ci-runners-shared-pool/internal/webui"
@@ -60,7 +62,11 @@ type machinesRuntime struct {
 	Packages *packages.Store
 	// Secrets is the secret store of the controller, read by the config export.
 	Secrets secrets.Store
-	stop    func()
+	// LogStore is logs.db and LogWriter its fail-open writer (observability R6.9, R6.10); nil when logs.db
+	// could not open, in which case agent log lines are dropped and the controller runs on.
+	LogStore  *logsdb.DB
+	LogWriter *logs.FailOpen
+	stop      func()
 }
 
 // Close stops the link, the controller's own agent and the periodic work.
@@ -151,7 +157,17 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	hs := newHealthService(db, svc, version)
 	svc.SetPresenceObserver(hs)
 	svc.SetHostRunner(lk)
-	svc.SetHooks(machines.Hooks{ControllerVersion: version,
+	// logs.db is its own file (R6.10); failing to open it never stops the controller (R6.9).
+	var logStore *logsdb.DB
+	var logWriter *logs.FailOpen
+	var onLogBatch func(context.Context, string, *agentv1.LogBatch)
+	if ls, err := logsdb.Open(ctx, cfg.DataDir); err != nil {
+		logger.Warn("logs.db did not open; agent log lines are not kept", "err", err)
+	} else {
+		logStore, logWriter = ls, logs.NewFailOpen(ls)
+		onLogBatch = agentlink.LogSink{Out: logWriter}.LogBatch
+	}
+	svc.SetHooks(machines.Hooks{ControllerVersion: version, OnLogBatch: onLogBatch,
 		// Protocol version 3, the registry path, is offered only when a registry core can open (REG11).
 		Registry: registryAvailable(),
 		// Protocol version 4: the agents send the CPU and memory of each job (OPS66, ci-run-insights R5.19).
@@ -221,10 +237,14 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 			}
 		}()
 	}
-	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, stop: func() {
+	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
 		cancel()
 		_ = link.Close()
 		<-done
+		if logWriter != nil {
+			logWriter.Close()
+			_ = logStore.Close()
+		}
 	}}, nil
 }
 

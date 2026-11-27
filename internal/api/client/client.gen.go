@@ -1724,6 +1724,30 @@ func (e ListenAddressCandidateId) Valid() bool {
 	}
 }
 
+// Defines values for LogLineLevel.
+const (
+	LogLineLevelDebug LogLineLevel = "debug"
+	LogLineLevelError LogLineLevel = "error"
+	LogLineLevelInfo  LogLineLevel = "info"
+	LogLineLevelWarn  LogLineLevel = "warn"
+)
+
+// Valid indicates whether the value is a known member of the LogLineLevel enum.
+func (e LogLineLevel) Valid() bool {
+	switch e {
+	case LogLineLevelDebug:
+		return true
+	case LogLineLevelError:
+		return true
+	case LogLineLevelInfo:
+		return true
+	case LogLineLevelWarn:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for MachineChangeChoices.
 const (
 	MachineChangeChoicesCancel     MachineChangeChoices = "cancel"
@@ -4781,6 +4805,30 @@ func (e GetJobStatsParamsState) Valid() bool {
 	}
 }
 
+// Defines values for SearchLogsParamsLevel.
+const (
+	SearchLogsParamsLevelDebug SearchLogsParamsLevel = "debug"
+	SearchLogsParamsLevelError SearchLogsParamsLevel = "error"
+	SearchLogsParamsLevelInfo  SearchLogsParamsLevel = "info"
+	SearchLogsParamsLevelWarn  SearchLogsParamsLevel = "warn"
+)
+
+// Valid indicates whether the value is a known member of the SearchLogsParamsLevel enum.
+func (e SearchLogsParamsLevel) Valid() bool {
+	switch e {
+	case SearchLogsParamsLevelDebug:
+		return true
+	case SearchLogsParamsLevelError:
+		return true
+	case SearchLogsParamsLevelInfo:
+		return true
+	case SearchLogsParamsLevelWarn:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for GetMachineJobStatsParamsWindow.
 const (
 	GetMachineJobStatsParamsWindowN24h GetMachineJobStatsParamsWindow = "24h"
@@ -7030,6 +7078,32 @@ type LoadHistory struct {
 		CpuPct    *float32  `json:"cpu_pct,omitempty"`
 		MemoryPct *float32  `json:"memory_pct,omitempty"`
 	} `json:"items"`
+}
+
+// LogLine defines model for LogLine.
+type LogLine struct {
+	At time.Time `json:"at"`
+
+	// Attrs Extra attributes as JSON.
+	Attrs     *string      `json:"attrs,omitempty"`
+	Component *string      `json:"component,omitempty"`
+	Id        int64        `json:"id"`
+	Job       *string      `json:"job,omitempty"`
+	Level     LogLineLevel `json:"level"`
+	Machine   *string      `json:"machine,omitempty"`
+	Message   string       `json:"message"`
+	Runner    *string      `json:"runner,omitempty"`
+}
+
+// LogLineLevel defines model for LogLine.Level.
+type LogLineLevel string
+
+// LogPage defines model for LogPage.
+type LogPage struct {
+	Items []LogLine `json:"items"`
+
+	// NextCursor Pass as `cursor` to get the next page; absent on the last page.
+	NextCursor *string `json:"next_cursor,omitempty"`
 }
 
 // Machine defines model for Machine.
@@ -10500,6 +10574,25 @@ type ListJobSummariesParams struct {
 	To   *To   `form:"to,omitempty" json:"to,omitempty"`
 }
 
+// SearchLogsParams defines parameters for SearchLogs.
+type SearchLogsParams struct {
+	// Q Words that must all appear in the message.
+	Q       *string                `form:"q,omitempty" json:"q,omitempty"`
+	Machine *string                `form:"machine,omitempty" json:"machine,omitempty"`
+	Runner  *string                `form:"runner,omitempty" json:"runner,omitempty"`
+	Job     *string                `form:"job,omitempty" json:"job,omitempty"`
+	Level   *SearchLogsParamsLevel `form:"level,omitempty" json:"level,omitempty"`
+	From    *From                  `form:"from,omitempty" json:"from,omitempty"`
+	To      *To                    `form:"to,omitempty" json:"to,omitempty"`
+
+	// Cursor Opaque cursor from the previous page's `next_cursor`.
+	Cursor *Cursor `form:"cursor,omitempty" json:"cursor,omitempty"`
+	Limit  *Limit  `form:"limit,omitempty" json:"limit,omitempty"`
+}
+
+// SearchLogsParamsLevel defines parameters for SearchLogs.
+type SearchLogsParamsLevel string
+
 // RemoveMachineParams defines parameters for RemoveMachine.
 type RemoveMachineParams struct {
 	// Confirm The yes to a question card that named what goes (UX-62).
@@ -11753,6 +11846,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
 	PutListenerGate(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SearchLogs Search runner setup and agent logs, newest first
+	//
+	// observability R5.21. Full text over the message and filters on machine, runner, job, level and time range. `level` keeps that level and higher. Admins and the owner only: log lines can name repositories and jobs. Lines were redacted before they were stored (R6.5).
+	//
+	// Corresponds with GET /api/v1/logs (the `SearchLogs` operationId).
+	SearchLogs(ctx context.Context, params *SearchLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListMachines Every machine with state, backends, load and slots
 	//
@@ -15000,6 +15100,23 @@ func (c *Client) PutListenerGateWithBody(ctx context.Context, contentType string
 // Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
 func (c *Client) PutListenerGate(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPutListenerGateRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SearchLogs Search runner setup and agent logs, newest first
+//
+// observability R5.21. Full text over the message and filters on machine, runner, job, level and time range. `level` keeps that level and higher. Admins and the owner only: log lines can name repositories and jobs. Lines were redacted before they were stored (R6.5).
+//
+// Corresponds with GET /api/v1/logs (the `SearchLogs` operationId).
+func (c *Client) SearchLogs(ctx context.Context, params *SearchLogsParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSearchLogsRequest(c.Server, params)
 	if err != nil {
 		return nil, err
 	}
@@ -22799,6 +22916,156 @@ func NewPutListenerGateRequestWithBody(server string, contentType string, body i
 	return req, nil
 }
 
+// NewSearchLogsRequest constructs an http.Request for the SearchLogs method
+func NewSearchLogsRequest(server string, params *SearchLogsParams) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/logs")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if params != nil {
+		// queryValues collects non-styled parameters (passthrough, JSON)
+		// that are safe to round-trip through url.Values.Encode().
+		queryValues := queryURL.Query()
+		// rawQueryFragments collects pre-encoded query fragments from
+		// styled parameters, preserving literal commas as delimiters
+		// per the OpenAPI spec (e.g. "color=blue,black,brown").
+		var rawQueryFragments []string
+
+		if params.Q != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "q", *params.Q, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Machine != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "machine", *params.Machine, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Runner != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "runner", *params.Runner, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Job != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "job", *params.Job, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Level != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "level", *params.Level, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.From != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "from", *params.From, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.To != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "to", *params.To, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: "date-time"}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Cursor != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "cursor", *params.Cursor, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "string", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if params.Limit != nil {
+
+			if queryFrag, err := runtime.StyleParamWithOptions("form", true, "limit", *params.Limit, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationQuery, Type: "integer", Format: ""}); err != nil {
+				return nil, err
+			} else {
+				for _, qp := range strings.Split(queryFrag, "&") {
+					rawQueryFragments = append(rawQueryFragments, qp)
+				}
+			}
+
+		}
+
+		if encoded := queryValues.Encode(); encoded != "" {
+			rawQueryFragments = append(rawQueryFragments, encoded)
+		}
+		queryURL.RawQuery = strings.Join(rawQueryFragments, "&")
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListMachinesRequest constructs an http.Request for the ListMachines method
 func NewListMachinesRequest(server string) (*http.Request, error) {
 	var err error
@@ -30119,6 +30386,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PUT /api/v1/listener-gate (the `PutListenerGate` operationId).
 	PutListenerGateWithResponse(ctx context.Context, body PutListenerGateJSONRequestBody, reqEditors ...RequestEditorFn) (*PutListenerGateResponse, error)
 
+	// SearchLogsWithResponse Search runner setup and agent logs, newest first
+	//
+	// observability R5.21. Full text over the message and filters on machine, runner, job, level and time range. `level` keeps that level and higher. Admins and the owner only: log lines can name repositories and jobs. Lines were redacted before they were stored (R6.5).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/logs (the `SearchLogs` operationId).
+	SearchLogsWithResponse(ctx context.Context, params *SearchLogsParams, reqEditors ...RequestEditorFn) (*SearchLogsResponse, error)
+
 	// ListMachinesWithResponse Every machine with state, backends, load and slots
 	//
 	// machines R5.50.
@@ -35808,6 +36084,54 @@ func (r PutListenerGateResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r PutListenerGateResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SearchLogsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *LogPage
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SearchLogsResponse) GetJSON200() *LogPage {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SearchLogsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SearchLogsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SearchLogsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SearchLogsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SearchLogsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -44380,6 +44704,21 @@ func (c *ClientWithResponses) PutListenerGateWithResponse(ctx context.Context, b
 	return ParsePutListenerGateResponse(rsp)
 }
 
+// SearchLogsWithResponse Search runner setup and agent logs, newest first
+//
+// observability R5.21. Full text over the message and filters on machine, runner, job, level and time range. `level` keeps that level and higher. Admins and the owner only: log lines can name repositories and jobs. Lines were redacted before they were stored (R6.5).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/logs (the `SearchLogs` operationId).
+func (c *ClientWithResponses) SearchLogsWithResponse(ctx context.Context, params *SearchLogsParams, reqEditors ...RequestEditorFn) (*SearchLogsResponse, error) {
+	rsp, err := c.SearchLogs(ctx, params, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSearchLogsResponse(rsp)
+}
+
 // ListMachinesWithResponse Every machine with state, backends, load and slots
 //
 // machines R5.50.
@@ -50084,6 +50423,39 @@ func ParsePutListenerGateResponse(rsp *http.Response) (*PutListenerGateResponse,
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest ListenerGate
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSearchLogsResponse parses an HTTP response from a SearchLogsWithResponse call
+func ParseSearchLogsResponse(rsp *http.Response) (*SearchLogsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SearchLogsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest LogPage
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
