@@ -245,6 +245,8 @@ func (b *Backend) want(r backend.RunnerSpec, account string) (persistent.Meta, s
 	if m := b.d.Addresses.VMImageMirror; m != "" {
 		kv[addresses.EnvVMImageMirror] = m // `crsp vm` downloads from the mirror (operations R5.96)
 	}
+	// The package proxy of the runner's repository, when the hub answered at start (caches R5.76).
+	maps.Copy(kv, r.PackageEnv)
 	kv["ACTIONS_RUNNER_HOOK_JOB_STARTED"] = Join(hookDir, "job-started.ps1")
 	kv["ACTIONS_RUNNER_HOOK_JOB_COMPLETED"] = Join(hookDir, "job-completed.ps1")
 	kv["PSExecutionPolicyPreference"] = "RemoteSigned"

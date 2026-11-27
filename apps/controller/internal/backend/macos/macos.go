@@ -192,6 +192,8 @@ func (b *Backend) want(r backend.RunnerSpec, user string) (persistent.Meta, stri
 	if m := b.d.Addresses.VMImageMirror; m != "" {
 		kv[addresses.EnvVMImageMirror] = m // `crsp vm` downloads from the mirror (operations R5.96)
 	}
+	// The package proxy of the runner's repository, when the hub answered at start (caches R5.76).
+	maps.Copy(kv, r.PackageEnv)
 	kv["ACTIONS_RUNNER_HOOK_JOB_STARTED"] = folder + "/hooks/job-started.sh"
 	kv["ACTIONS_RUNNER_HOOK_JOB_COMPLETED"] = folder + "/hooks/job-completed.sh"
 	env := persistent.Env(kv)

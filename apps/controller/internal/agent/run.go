@@ -421,6 +421,11 @@ type link struct {
 	kick  chan struct{}
 	capMu sync.Mutex
 	cap   capState
+
+	// pin is the controller CA fingerprint of this session; hub reaches the
+	// package proxy at start (caches R5.76). A nil hub uses the real one.
+	pin string
+	hub hubAccess
 }
 
 func (l *link) send(m *agentv1.SessionRequest) error {
@@ -445,7 +450,7 @@ func (l *link) spawn(f func()) {
 
 func runSession(ctx context.Context, cfg Config, key, id, pin string) error {
 	ctx, cancel := context.WithCancel(ctx)
-	l := &link{cfg: cfg, kick: make(chan struct{}, 1)}
+	l := &link{cfg: cfg, kick: make(chan struct{}, 1), pin: pin}
 	// Stop and wait for every goroutine of this session before returning: they
 	// write into the data folder (settings, health state, caches), and nothing
 	// may still write there once Run has returned.

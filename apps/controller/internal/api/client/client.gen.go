@@ -326,30 +326,75 @@ func (e CacheState) Valid() bool {
 	}
 }
 
+// Defines values for CacheHubCardKind.
+const (
+	CacheHubCardKindActionsCache   CacheHubCardKind = "actions_cache"
+	CacheHubCardKindGitMirror      CacheHubCardKind = "git_mirror"
+	CacheHubCardKindPackageProxy   CacheHubCardKind = "package_proxy"
+	CacheHubCardKindRegistryMirror CacheHubCardKind = "registry_mirror"
+)
+
+// Valid indicates whether the value is a known member of the CacheHubCardKind enum.
+func (e CacheHubCardKind) Valid() bool {
+	switch e {
+	case CacheHubCardKindActionsCache:
+		return true
+	case CacheHubCardKindGitMirror:
+		return true
+	case CacheHubCardKindPackageProxy:
+		return true
+	case CacheHubCardKindRegistryMirror:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CacheHubCardStatus.
+const (
+	CacheHubCardStatusFailed  CacheHubCardStatus = "failed"
+	CacheHubCardStatusOk      CacheHubCardStatus = "ok"
+	CacheHubCardStatusWaiting CacheHubCardStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the CacheHubCardStatus enum.
+func (e CacheHubCardStatus) Valid() bool {
+	switch e {
+	case CacheHubCardStatusFailed:
+		return true
+	case CacheHubCardStatusOk:
+		return true
+	case CacheHubCardStatusWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CacheKind.
 const (
-	ActionsCache    CacheKind = "actions_cache"
-	DependencyCache CacheKind = "dependency_cache"
-	GitMirror       CacheKind = "git_mirror"
-	RegistryMirror  CacheKind = "registry_mirror"
-	RustCache       CacheKind = "rust_cache"
-	ToolCache       CacheKind = "tool_cache"
+	CacheKindActionsCache    CacheKind = "actions_cache"
+	CacheKindDependencyCache CacheKind = "dependency_cache"
+	CacheKindGitMirror       CacheKind = "git_mirror"
+	CacheKindRegistryMirror  CacheKind = "registry_mirror"
+	CacheKindRustCache       CacheKind = "rust_cache"
+	CacheKindToolCache       CacheKind = "tool_cache"
 )
 
 // Valid indicates whether the value is a known member of the CacheKind enum.
 func (e CacheKind) Valid() bool {
 	switch e {
-	case ActionsCache:
+	case CacheKindActionsCache:
 		return true
-	case DependencyCache:
+	case CacheKindDependencyCache:
 		return true
-	case GitMirror:
+	case CacheKindGitMirror:
 		return true
-	case RegistryMirror:
+	case CacheKindRegistryMirror:
 		return true
-	case RustCache:
+	case CacheKindRustCache:
 		return true
-	case ToolCache:
+	case CacheKindToolCache:
 		return true
 	default:
 		return false
@@ -5189,6 +5234,70 @@ type Cache struct {
 
 // CacheState defines model for Cache.State.
 type CacheState string
+
+// CacheHub The one cache hub in the controller (caches R5.73, R5.77, R5.78).
+type CacheHub struct {
+	BudgetBytes int64          `json:"budget_bytes"`
+	Cards       []CacheHubCard `json:"cards"`
+	Hits        int64          `json:"hits"`
+	Misses      int64          `json:"misses"`
+	Repos       []CacheHubRepo `json:"repos"`
+	ServedBytes int64          `json:"served_bytes"`
+
+	// Settings The hub's switches and its one byte budget (caches R5.66, R5.73).
+	Settings     CacheHubSettings `json:"settings"`
+	UsedBytes    int64            `json:"used_bytes"`
+	WarmMachines int              `json:"warm_machines"`
+}
+
+// CacheHubCard One kind of the hub (caches R5.77).
+type CacheHubCard struct {
+	EntryCount int              `json:"entry_count"`
+	Hits       int64            `json:"hits"`
+	Kind       CacheHubCardKind `json:"kind"`
+	LastUsedAt *time.Time       `json:"last_used_at,omitempty"`
+	Misses     int64            `json:"misses"`
+
+	// Note One plain line, such as why the receiver waits.
+	Note        *string            `json:"note,omitempty"`
+	On          bool               `json:"on"`
+	ServedBytes int64              `json:"served_bytes"`
+	SizeBytes   int64              `json:"size_bytes"`
+	Status      CacheHubCardStatus `json:"status"`
+
+	// WipeId The cache id that POST /api/v1/caches/{cacheId}/wipe takes.
+	WipeId string `json:"wipe_id"`
+}
+
+// CacheHubCardKind defines model for CacheHubCard.Kind.
+type CacheHubCardKind string
+
+// CacheHubCardStatus defines model for CacheHubCard.Status.
+type CacheHubCardStatus string
+
+// CacheHubRepo One row of Warmth by repository (caches R5.78).
+type CacheHubRepo struct {
+	Hits      int64  `json:"hits"`
+	Misses    int64  `json:"misses"`
+	Repo      string `json:"repo"`
+	SizeBytes int64  `json:"size_bytes"`
+	Warmth    int    `json:"warmth"`
+}
+
+// CacheHubSettings The hub's switches and its one byte budget (caches R5.66, R5.73).
+type CacheHubSettings struct {
+	ActionsCache bool `json:"actions_cache"`
+
+	// BudgetGib One budget for every kind; default 60.
+	BudgetGib         int  `json:"budget_gib"`
+	GitMirror         bool `json:"git_mirror"`
+	GitRefreshMinutes *int `json:"git_refresh_minutes,omitempty"`
+
+	// PackageProxy The npm and PyPI proxy (caches R5.74 to R5.76).
+	PackageProxy   bool `json:"package_proxy"`
+	RegistryMirror bool `json:"registry_mirror"`
+	WarmthHours    *int `json:"warmth_hours,omitempty"`
+}
 
 // CacheKind `tool_cache` and `rust_cache` are the per-runner folders of milestone 1 (caches R5.36, R5.39); the others arrive with later milestones.
 type CacheKind string
@@ -10948,6 +11057,9 @@ type SetAppWebhookJSONRequestBody = AppWebhookUpdate
 // ExchangeCliTokenJSONRequestBody defines body for ExchangeCliToken for application/json ContentType.
 type ExchangeCliTokenJSONRequestBody = ExchangeCliTokenRequest
 
+// PutCacheSettingsJSONRequestBody defines body for PutCacheSettings for application/json ContentType.
+type PutCacheSettingsJSONRequestBody = CacheHubSettings
+
 // PlanConfigJSONRequestBody defines body for PlanConfig for application/json ContentType.
 type PlanConfigJSONRequestBody = ConfigPlanRequest
 
@@ -11363,6 +11475,31 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/caches (the `ListCaches` operationId).
 	ListCaches(ctx context.Context, params *ListCachesParams, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetCacheHub The one cache hub of the pool, its budget and its numbers
+	//
+	// caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git mirrors, registry mirror, package proxy), the one byte budget, hits and misses, and warmth by repository.
+	//
+	// Corresponds with GET /api/v1/caches/hub (the `GetCacheHub` operationId).
+	GetCacheHub(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutCacheSettingsWithBody Change the hub's switches and its byte budget
+	//
+	// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+	PutCacheSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PutCacheSettings Change the hub's switches and its byte budget
+	//
+	// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+	PutCacheSettings(ctx context.Context, body PutCacheSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// WipeCache Empty one cache
 	//
@@ -13854,6 +13991,61 @@ func (c *Client) GetCaCertificate(ctx context.Context, reqEditors ...RequestEdit
 // Corresponds with GET /api/v1/caches (the `ListCaches` operationId).
 func (c *Client) ListCaches(ctx context.Context, params *ListCachesParams, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewListCachesRequest(c.Server, params)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetCacheHub The one cache hub of the pool, its budget and its numbers
+//
+// caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git mirrors, registry mirror, package proxy), the one byte budget, hits and misses, and warmth by repository.
+//
+// Corresponds with GET /api/v1/caches/hub (the `GetCacheHub` operationId).
+func (c *Client) GetCacheHub(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetCacheHubRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutCacheSettingsWithBody Change the hub's switches and its byte budget
+//
+// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+func (c *Client) PutCacheSettingsWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutCacheSettingsRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PutCacheSettings Change the hub's switches and its byte budget
+//
+// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+func (c *Client) PutCacheSettings(ctx context.Context, body PutCacheSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPutCacheSettingsRequest(c.Server, body)
 	if err != nil {
 		return nil, err
 	}
@@ -19493,6 +19685,73 @@ func NewListCachesRequest(server string, params *ListCachesParams) (*http.Reques
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewGetCacheHubRequest constructs an http.Request for the GetCacheHub method
+func NewGetCacheHubRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/caches/hub")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewPutCacheSettingsRequest calls the generic PutCacheSettings builder with application/json body
+func NewPutCacheSettingsRequest(server string, body PutCacheSettingsJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPutCacheSettingsRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPutCacheSettingsRequestWithBody constructs an http.Request for the PutCacheSettings method, with any body, and a specified content type
+func NewPutCacheSettingsRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/caches/settings")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -29886,6 +30145,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/caches (the `ListCaches` operationId).
 	ListCachesWithResponse(ctx context.Context, params *ListCachesParams, reqEditors ...RequestEditorFn) (*ListCachesResponse, error)
 
+	// GetCacheHubWithResponse The one cache hub of the pool, its budget and its numbers
+	//
+	// caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git mirrors, registry mirror, package proxy), the one byte budget, hits and misses, and warmth by repository.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/caches/hub (the `GetCacheHub` operationId).
+	GetCacheHubWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCacheHubResponse, error)
+
+	// PutCacheSettingsWithBodyWithResponse Change the hub's switches and its byte budget
+	//
+	// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+	PutCacheSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutCacheSettingsResponse, error)
+
+	// PutCacheSettingsWithResponse Change the hub's switches and its byte budget
+	//
+	// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+	PutCacheSettingsWithResponse(ctx context.Context, body PutCacheSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutCacheSettingsResponse, error)
+
 	// WipeCacheWithResponse Empty one cache
 	//
 	// web-console R5.25 and R5.30. Without `confirm=true` it answers 409 needs_confirmation naming the cache, its size and the jobs that use it. An entry being read or written is not removed.
@@ -33155,6 +33441,102 @@ func (r ListCachesResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r ListCachesResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetCacheHubResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CacheHub
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetCacheHubResponse) GetJSON200() *CacheHub {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetCacheHubResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetCacheHubResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetCacheHubResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetCacheHubResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetCacheHubResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PutCacheSettingsResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *CacheHubSettings
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r PutCacheSettingsResponse) GetJSON200() *CacheHubSettings {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PutCacheSettingsResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PutCacheSettingsResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PutCacheSettingsResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PutCacheSettingsResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PutCacheSettingsResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -43799,6 +44181,51 @@ func (c *ClientWithResponses) ListCachesWithResponse(ctx context.Context, params
 	return ParseListCachesResponse(rsp)
 }
 
+// GetCacheHubWithResponse The one cache hub of the pool, its budget and its numbers
+//
+// caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git mirrors, registry mirror, package proxy), the one byte budget, hits and misses, and warmth by repository.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/caches/hub (the `GetCacheHub` operationId).
+func (c *ClientWithResponses) GetCacheHubWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetCacheHubResponse, error) {
+	rsp, err := c.GetCacheHub(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetCacheHubResponse(rsp)
+}
+
+// PutCacheSettingsWithBodyWithResponse Change the hub's switches and its byte budget
+//
+// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+func (c *ClientWithResponses) PutCacheSettingsWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PutCacheSettingsResponse, error) {
+	rsp, err := c.PutCacheSettingsWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutCacheSettingsResponse(rsp)
+}
+
+// PutCacheSettingsWithResponse Change the hub's switches and its byte budget
+//
+// caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/caches/settings (the `PutCacheSettings` operationId).
+func (c *ClientWithResponses) PutCacheSettingsWithResponse(ctx context.Context, body PutCacheSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*PutCacheSettingsResponse, error) {
+	rsp, err := c.PutCacheSettings(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePutCacheSettingsResponse(rsp)
+}
+
 // WipeCacheWithResponse Empty one cache
 //
 // web-console R5.25 and R5.30. Without `confirm=true` it answers 409 needs_confirmation naming the cache, its size and the jobs that use it. An entry being read or written is not removed.
@@ -48451,6 +48878,72 @@ func ParseListCachesResponse(rsp *http.Response) (*ListCachesResponse, error) {
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest CacheList
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetCacheHubResponse parses an HTTP response from a GetCacheHubWithResponse call
+func ParseGetCacheHubResponse(rsp *http.Response) (*GetCacheHubResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetCacheHubResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CacheHub
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePutCacheSettingsResponse parses an HTTP response from a PutCacheSettingsWithResponse call
+func ParsePutCacheSettingsResponse(rsp *http.Response) (*PutCacheSettingsResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PutCacheSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest CacheHubSettings
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

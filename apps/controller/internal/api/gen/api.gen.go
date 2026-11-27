@@ -325,30 +325,75 @@ func (e CacheState) Valid() bool {
 	}
 }
 
+// Defines values for CacheHubCardKind.
+const (
+	CacheHubCardKindActionsCache   CacheHubCardKind = "actions_cache"
+	CacheHubCardKindGitMirror      CacheHubCardKind = "git_mirror"
+	CacheHubCardKindPackageProxy   CacheHubCardKind = "package_proxy"
+	CacheHubCardKindRegistryMirror CacheHubCardKind = "registry_mirror"
+)
+
+// Valid indicates whether the value is a known member of the CacheHubCardKind enum.
+func (e CacheHubCardKind) Valid() bool {
+	switch e {
+	case CacheHubCardKindActionsCache:
+		return true
+	case CacheHubCardKindGitMirror:
+		return true
+	case CacheHubCardKindPackageProxy:
+		return true
+	case CacheHubCardKindRegistryMirror:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CacheHubCardStatus.
+const (
+	CacheHubCardStatusFailed  CacheHubCardStatus = "failed"
+	CacheHubCardStatusOk      CacheHubCardStatus = "ok"
+	CacheHubCardStatusWaiting CacheHubCardStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the CacheHubCardStatus enum.
+func (e CacheHubCardStatus) Valid() bool {
+	switch e {
+	case CacheHubCardStatusFailed:
+		return true
+	case CacheHubCardStatusOk:
+		return true
+	case CacheHubCardStatusWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CacheKind.
 const (
-	ActionsCache    CacheKind = "actions_cache"
-	DependencyCache CacheKind = "dependency_cache"
-	GitMirror       CacheKind = "git_mirror"
-	RegistryMirror  CacheKind = "registry_mirror"
-	RustCache       CacheKind = "rust_cache"
-	ToolCache       CacheKind = "tool_cache"
+	CacheKindActionsCache    CacheKind = "actions_cache"
+	CacheKindDependencyCache CacheKind = "dependency_cache"
+	CacheKindGitMirror       CacheKind = "git_mirror"
+	CacheKindRegistryMirror  CacheKind = "registry_mirror"
+	CacheKindRustCache       CacheKind = "rust_cache"
+	CacheKindToolCache       CacheKind = "tool_cache"
 )
 
 // Valid indicates whether the value is a known member of the CacheKind enum.
 func (e CacheKind) Valid() bool {
 	switch e {
-	case ActionsCache:
+	case CacheKindActionsCache:
 		return true
-	case DependencyCache:
+	case CacheKindDependencyCache:
 		return true
-	case GitMirror:
+	case CacheKindGitMirror:
 		return true
-	case RegistryMirror:
+	case CacheKindRegistryMirror:
 		return true
-	case RustCache:
+	case CacheKindRustCache:
 		return true
-	case ToolCache:
+	case CacheKindToolCache:
 		return true
 	default:
 		return false
@@ -5188,6 +5233,70 @@ type Cache struct {
 
 // CacheState defines model for Cache.State.
 type CacheState string
+
+// CacheHub The one cache hub in the controller (caches R5.73, R5.77, R5.78).
+type CacheHub struct {
+	BudgetBytes int64          `json:"budget_bytes"`
+	Cards       []CacheHubCard `json:"cards"`
+	Hits        int64          `json:"hits"`
+	Misses      int64          `json:"misses"`
+	Repos       []CacheHubRepo `json:"repos"`
+	ServedBytes int64          `json:"served_bytes"`
+
+	// Settings The hub's switches and its one byte budget (caches R5.66, R5.73).
+	Settings     CacheHubSettings `json:"settings"`
+	UsedBytes    int64            `json:"used_bytes"`
+	WarmMachines int              `json:"warm_machines"`
+}
+
+// CacheHubCard One kind of the hub (caches R5.77).
+type CacheHubCard struct {
+	EntryCount int              `json:"entry_count"`
+	Hits       int64            `json:"hits"`
+	Kind       CacheHubCardKind `json:"kind"`
+	LastUsedAt *time.Time       `json:"last_used_at,omitempty"`
+	Misses     int64            `json:"misses"`
+
+	// Note One plain line, such as why the receiver waits.
+	Note        *string            `json:"note,omitempty"`
+	On          bool               `json:"on"`
+	ServedBytes int64              `json:"served_bytes"`
+	SizeBytes   int64              `json:"size_bytes"`
+	Status      CacheHubCardStatus `json:"status"`
+
+	// WipeId The cache id that POST /api/v1/caches/{cacheId}/wipe takes.
+	WipeId string `json:"wipe_id"`
+}
+
+// CacheHubCardKind defines model for CacheHubCard.Kind.
+type CacheHubCardKind string
+
+// CacheHubCardStatus defines model for CacheHubCard.Status.
+type CacheHubCardStatus string
+
+// CacheHubRepo One row of Warmth by repository (caches R5.78).
+type CacheHubRepo struct {
+	Hits      int64  `json:"hits"`
+	Misses    int64  `json:"misses"`
+	Repo      string `json:"repo"`
+	SizeBytes int64  `json:"size_bytes"`
+	Warmth    int    `json:"warmth"`
+}
+
+// CacheHubSettings The hub's switches and its one byte budget (caches R5.66, R5.73).
+type CacheHubSettings struct {
+	ActionsCache bool `json:"actions_cache"`
+
+	// BudgetGib One budget for every kind; default 60.
+	BudgetGib         int  `json:"budget_gib"`
+	GitMirror         bool `json:"git_mirror"`
+	GitRefreshMinutes *int `json:"git_refresh_minutes,omitempty"`
+
+	// PackageProxy The npm and PyPI proxy (caches R5.74 to R5.76).
+	PackageProxy   bool `json:"package_proxy"`
+	RegistryMirror bool `json:"registry_mirror"`
+	WarmthHours    *int `json:"warmth_hours,omitempty"`
+}
 
 // CacheKind `tool_cache` and `rust_cache` are the per-runner folders of milestone 1 (caches R5.36, R5.39); the others arrive with later milestones.
 type CacheKind string
@@ -10947,6 +11056,9 @@ type SetAppWebhookJSONRequestBody = AppWebhookUpdate
 // ExchangeCliTokenJSONRequestBody defines body for ExchangeCliToken for application/json ContentType.
 type ExchangeCliTokenJSONRequestBody = ExchangeCliTokenRequest
 
+// PutCacheSettingsJSONRequestBody defines body for PutCacheSettings for application/json ContentType.
+type PutCacheSettingsJSONRequestBody = CacheHubSettings
+
 // PlanConfigJSONRequestBody defines body for PlanConfig for application/json ContentType.
 type PlanConfigJSONRequestBody = ConfigPlanRequest
 
@@ -11186,6 +11298,12 @@ type ServerInterface interface {
 	// ListCaches Caches per machine with size against cap
 	// (GET /api/v1/caches)
 	ListCaches(w http.ResponseWriter, r *http.Request, params ListCachesParams)
+	// GetCacheHub The one cache hub of the pool, its budget and its numbers
+	// (GET /api/v1/caches/hub)
+	GetCacheHub(w http.ResponseWriter, r *http.Request)
+	// PutCacheSettings Change the hub's switches and its byte budget
+	// (PUT /api/v1/caches/settings)
+	PutCacheSettings(w http.ResponseWriter, r *http.Request)
 	// WipeCache Empty one cache
 	// (POST /api/v1/caches/{cacheId}/wipe)
 	WipeCache(w http.ResponseWriter, r *http.Request, cacheId CacheId, params WipeCacheParams)
@@ -12286,6 +12404,34 @@ func (siw *ServerInterfaceWrapper) ListCaches(w http.ResponseWriter, r *http.Req
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ListCaches(w, r, params)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetCacheHub operation middleware
+func (siw *ServerInterfaceWrapper) GetCacheHub(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCacheHub(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutCacheSettings operation middleware
+func (siw *ServerInterfaceWrapper) PutCacheSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutCacheSettings(w, r)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -19277,6 +19423,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/images/{imageId}/rebuild", wrapper.RebuildImage)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/caches", wrapper.ListCaches)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/caches/{cacheId}/wipe", wrapper.WipeCache)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/caches/hub", wrapper.GetCacheHub)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/caches/settings", wrapper.PutCacheSettings)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry/overview", wrapper.GetRegistryOverview)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry/images", wrapper.ListRegistryImages)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/registry/images/{registryImageId}", wrapper.DeleteRegistryImage)
@@ -20027,6 +20175,83 @@ type ListCachesdefaultJSONResponse struct {
 }
 
 func (response ListCachesdefaultJSONResponse) VisitListCachesResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCacheHubRequestObject struct {
+}
+
+type GetCacheHubResponseObject interface {
+	VisitGetCacheHubResponse(w http.ResponseWriter) error
+}
+
+type GetCacheHub200JSONResponse CacheHub
+
+func (response GetCacheHub200JSONResponse) VisitGetCacheHubResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCacheHubdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetCacheHubdefaultJSONResponse) VisitGetCacheHubResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutCacheSettingsRequestObject struct {
+	Body *PutCacheSettingsJSONRequestBody
+}
+
+type PutCacheSettingsResponseObject interface {
+	VisitPutCacheSettingsResponse(w http.ResponseWriter) error
+}
+
+type PutCacheSettings200JSONResponse CacheHubSettings
+
+func (response PutCacheSettings200JSONResponse) VisitPutCacheSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutCacheSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutCacheSettingsdefaultJSONResponse) VisitPutCacheSettingsResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -28673,6 +28898,12 @@ type StrictServerInterface interface {
 	// ListCaches Caches per machine with size against cap
 	// (GET /api/v1/caches)
 	ListCaches(ctx context.Context, request ListCachesRequestObject) (ListCachesResponseObject, error)
+	// GetCacheHub The one cache hub of the pool, its budget and its numbers
+	// (GET /api/v1/caches/hub)
+	GetCacheHub(ctx context.Context, request GetCacheHubRequestObject) (GetCacheHubResponseObject, error)
+	// PutCacheSettings Change the hub's switches and its byte budget
+	// (PUT /api/v1/caches/settings)
+	PutCacheSettings(ctx context.Context, request PutCacheSettingsRequestObject) (PutCacheSettingsResponseObject, error)
 	// WipeCache Empty one cache
 	// (POST /api/v1/caches/{cacheId}/wipe)
 	WipeCache(ctx context.Context, request WipeCacheRequestObject) (WipeCacheResponseObject, error)
@@ -29816,6 +30047,61 @@ func (sh *strictHandler) ListCaches(w http.ResponseWriter, r *http.Request, para
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ListCachesResponseObject); ok {
 		if err := validResponse.VisitListCachesResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetCacheHub operation middleware
+func (sh *strictHandler) GetCacheHub(w http.ResponseWriter, r *http.Request) {
+	var request GetCacheHubRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCacheHub(ctx, request.(GetCacheHubRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCacheHub")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCacheHubResponseObject); ok {
+		if err := validResponse.VisitGetCacheHubResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutCacheSettings operation middleware
+func (sh *strictHandler) PutCacheSettings(w http.ResponseWriter, r *http.Request) {
+	var request PutCacheSettingsRequestObject
+
+	var body PutCacheSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutCacheSettings(ctx, request.(PutCacheSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutCacheSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutCacheSettingsResponseObject); ok {
+		if err := validResponse.VisitPutCacheSettingsResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

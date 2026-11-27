@@ -3208,6 +3208,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/caches/hub": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The one cache hub of the pool, its budget and its numbers
+         * @description caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git mirrors, registry mirror, package proxy), the one byte budget, hits and misses, and warmth by repository.
+         */
+        get: operations["getCacheHub"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/caches/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change the hub's switches and its byte budget
+         * @description caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+         */
+        put: operations["putCacheSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/registry/overview": {
         parameters: {
             query?: never;
@@ -7476,6 +7516,80 @@ export interface components {
         };
         CacheList: {
             items: components["schemas"]["Cache"][];
+        };
+        /**
+         * @description The hub's switches and its one byte budget (caches R5.66, R5.73).
+         * @example {
+         *       "actions_cache": true,
+         *       "git_mirror": true,
+         *       "registry_mirror": false,
+         *       "package_proxy": true,
+         *       "budget_gib": 60,
+         *       "git_refresh_minutes": 15,
+         *       "warmth_hours": 24
+         *     }
+         */
+        CacheHubSettings: {
+            actions_cache: boolean;
+            git_mirror: boolean;
+            registry_mirror: boolean;
+            /** @description The npm and PyPI proxy (caches R5.74 to R5.76). */
+            package_proxy: boolean;
+            /** @description One budget for every kind; default 60. */
+            budget_gib: number;
+            git_refresh_minutes?: number;
+            warmth_hours?: number;
+        };
+        /** @description One kind of the hub (caches R5.77). */
+        CacheHubCard: {
+            /** @enum {string} */
+            kind: "actions_cache" | "git_mirror" | "registry_mirror" | "package_proxy";
+            on: boolean;
+            /** Format: int64 */
+            size_bytes: number;
+            entry_count: number;
+            /** Format: int64 */
+            hits: number;
+            /** Format: int64 */
+            misses: number;
+            /** Format: int64 */
+            served_bytes: number;
+            /** Format: date-time */
+            last_used_at?: string;
+            /** @enum {string} */
+            status: "ok" | "waiting" | "failed";
+            /** @description One plain line, such as why the receiver waits. */
+            note?: string;
+            /** @description The cache id that POST /api/v1/caches/{cacheId}/wipe takes. */
+            wipe_id: string;
+        };
+        /** @description One row of Warmth by repository (caches R5.78). */
+        CacheHubRepo: {
+            repo: string;
+            /** Format: int64 */
+            hits: number;
+            /** Format: int64 */
+            misses: number;
+            /** Format: int64 */
+            size_bytes: number;
+            warmth: number;
+        };
+        /** @description The one cache hub in the controller (caches R5.73, R5.77, R5.78). */
+        CacheHub: {
+            settings: components["schemas"]["CacheHubSettings"];
+            /** Format: int64 */
+            budget_bytes: number;
+            /** Format: int64 */
+            used_bytes: number;
+            cards: components["schemas"]["CacheHubCard"][];
+            /** Format: int64 */
+            hits: number;
+            /** Format: int64 */
+            misses: number;
+            /** Format: int64 */
+            served_bytes: number;
+            warm_machines: number;
+            repos: components["schemas"]["CacheHubRepo"][];
         };
         /**
          * @description The stable event types of notifications R5.1.
@@ -13344,6 +13458,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Cache"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCacheHub: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The hub. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheHub"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putCacheSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CacheHubSettings"];
+            };
+        };
+        responses: {
+            /** @description The stored settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheHubSettings"];
                 };
             };
             default: components["responses"]["Error"];
