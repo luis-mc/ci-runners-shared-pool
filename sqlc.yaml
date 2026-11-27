@@ -1,12 +1,12 @@
 version: '2'
 sql:
   - engine: sqlite
-    schema: internal/store/migrations
-    queries: internal/store/queries
+    schema: apps/controller/internal/store/migrations
+    queries: apps/controller/internal/store/queries
     gen:
       go:
         package: sqlcgen
-        out: internal/store/sqlcgen
+        out: apps/controller/internal/store/sqlcgen
         emit_interface: false
         # Prepare() lets a test check every query against the real schema.
         emit_prepared_queries: true

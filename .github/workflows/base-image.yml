@@ -20,7 +20,7 @@ on:
     branches: [main]
     paths:
       - 'images/**'
-      - 'internal/runners/layers.go'
+      - 'apps/controller/internal/runners/layers.go'
       - '.github/workflows/base-image.yml'
   schedule:
     - cron: '17 3 * * 1'

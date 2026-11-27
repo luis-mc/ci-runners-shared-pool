@@ -1,10 +1,10 @@
-# Run from packages/contract/proto: output goes to the repository's internal/gen.
+# Run from packages/contract/proto: output goes to the repository's apps/controller/internal/gen.
 version: v2
 clean: true
 plugins:
   - local: [go, tool, protoc-gen-go]
-    out: ../../../internal/gen
+    out: ../../../apps/controller/internal/gen
     opt: paths=source_relative
   - local: [go, tool, protoc-gen-connect-go]
-    out: ../../../internal/gen
+    out: ../../../apps/controller/internal/gen
     opt: paths=source_relative

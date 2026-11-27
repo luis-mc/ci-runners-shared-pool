@@ -19,7 +19,7 @@ import (
 // Config: files and folders that hold lifecycle UI strings, relative to the repo root.
 var Config = struct {
 	LifecycleFiles []string
-}{LifecycleFiles: []string{"internal/lifecyclewords"}}
+}{LifecycleFiles: []string{"apps/controller/internal/lifecyclewords"}}
 
 var DefaultBanned = []string{"OK", "Yes", "No", "Install now", "Later", "daemon", "binary", "payload"}
 

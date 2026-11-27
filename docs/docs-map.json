@@ -1,357 +1,357 @@
 {
   "schema": 1,
   "map": {
-    "apps/web/**": [
-      "docs/features/website/spec.md"
-    ],
-    "apps/web/src/**": [
+    "apps/controller-console/src/**": [
       "docs/features/web-console/spec.md"
     ],
-    "apps/web/src/features/auth/**": [
+    "apps/controller-console/src/features/auth/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "apps/web/src/features/repositories/**": [
+    "apps/controller-console/src/features/repositories/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "apps/web/src/features/setup/**": [
+    "apps/controller-console/src/features/setup/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "apps/web/src/features/users/**": [
+    "apps/controller-console/src/features/users/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "apps/web/src/screens/analytics/Compare.tsx": [
+    "apps/controller-console/src/screens/analytics/Compare.tsx": [
       "docs/features/observability/spec.md"
     ],
-    "apps/web/src/screens/analytics/Savings.tsx": [
+    "apps/controller-console/src/screens/analytics/Savings.tsx": [
       "docs/features/observability/spec.md"
     ],
-    "apps/web/src/screens/insights/**": [
+    "apps/controller-console/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "apps/web/src/screens/notices/**": [
+    "apps/controller-console/src/screens/notices/**": [
       "docs/features/notifications/spec.md"
     ],
-    "apps/web/src/screens/registry/**": [
+    "apps/controller-console/src/screens/registry/**": [
       "docs/features/registry/spec.md"
     ],
-    "apps/web/src/screens/runners/**": [
+    "apps/controller-console/src/screens/runners/**": [
       "docs/features/dependency-setup/spec.md"
     ],
-    "apps/web/src/screens/savings/**": [
+    "apps/controller-console/src/screens/savings/**": [
       "docs/features/observability/spec.md"
     ],
-    "apps/web/src/screens/settings/InsightsUpdate*": [
+    "apps/controller-console/src/screens/settings/InsightsUpdate*": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "apps/web/src/screens/setup/**": [
+    "apps/controller-console/src/screens/setup/**": [
       "docs/features/dependency-setup/spec.md"
     ],
-    "cmd/crsp/**": [
+    "apps/controller/cmd/crsp/**": [
       "docs/features/cli/spec.md"
     ],
-    "cmd/crsp/insights*wiring.go": [
+    "apps/controller/cmd/crsp/insights*wiring.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "cmd/crsp/notify_wiring.go": [
+    "apps/controller/cmd/crsp/notify_wiring.go": [
       "docs/features/notifications/spec.md"
     ],
-    "cmd/crsp/registry*wiring.go": [
+    "apps/controller/cmd/crsp/registry*wiring.go": [
       "docs/features/registry/spec.md"
     ],
-    "cmd/crsp/service_*.go": [
+    "apps/controller/cmd/crsp/service_*.go": [
       "docs/features/operations/spec.md"
     ],
-    "installer/**": [
+    "apps/controller/internal/addresses/**": [
       "docs/features/operations/spec.md"
     ],
-    "internal/addresses/**": [
-      "docs/features/operations/spec.md"
-    ],
-    "internal/agent/**": [
+    "apps/controller/internal/agent/**": [
       "docs/features/machines/spec.md"
     ],
-    "internal/agent/backends.go": [
+    "apps/controller/internal/agent/backends.go": [
       "docs/features/dependency-setup/spec.md"
     ],
-    "internal/agent/engine.go": [
+    "apps/controller/internal/agent/engine.go": [
       "docs/features/dependency-setup/spec.md"
     ],
-    "internal/agent/jobsample*.go": [
+    "apps/controller/internal/agent/jobsample*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/agent/jobsample/**": [
+    "apps/controller/internal/agent/jobsample/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/agent/registry.go": [
+    "apps/controller/internal/agent/registry.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/agentlink/insights*.go": [
+    "apps/controller/internal/agentlink/insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/agentlink/registry.go": [
+    "apps/controller/internal/agentlink/registry.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/api/handlers_insights*.go": [
+    "apps/controller/internal/api/handlers_insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/api/handlers_jobs.go": [
+    "apps/controller/internal/api/handlers_jobs.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/api/handlers_jobsizes.go": [
+    "apps/controller/internal/api/handlers_jobsizes.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/api/handlers_registry*.go": [
+    "apps/controller/internal/api/handlers_registry*.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/api/handlers_runnerclasses.go": [
+    "apps/controller/internal/api/handlers_runnerclasses.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/api/handlers_timers.go": [
+    "apps/controller/internal/api/handlers_timers.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/api/stubs_registry_*.go": [
+    "apps/controller/internal/api/stubs_registry_*.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/assign/**": [
+    "apps/controller/internal/assign/**": [
       "docs/features/github-integration/spec.md",
       "docs/features/runners/spec.md"
     ],
-    "internal/audit/**": [
+    "apps/controller/internal/audit/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/auth/**": [
+    "apps/controller/internal/auth/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/backend/**": [
+    "apps/controller/internal/backend/**": [
       "docs/features/runners/spec.md"
     ],
-    "internal/backend/container/**": [
+    "apps/controller/internal/backend/container/**": [
       "docs/features/dependency-setup/spec.md"
     ],
-    "internal/backend/container/buildstream.go": [
+    "apps/controller/internal/backend/container/buildstream.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/backend/container/engineca.go": [
+    "apps/controller/internal/backend/container/engineca.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/backend/container/ensure.go": [
+    "apps/controller/internal/backend/container/ensure.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/backup/**": [
+    "apps/controller/internal/backup/**": [
       "docs/features/operations/spec.md"
     ],
-    "internal/cache/**": [
+    "apps/controller/internal/cache/**": [
       "docs/features/caches/spec.md"
     ],
-    "internal/caches/**": [
+    "apps/controller/internal/caches/**": [
       "docs/features/caches/spec.md"
     ],
-    "internal/cli/**": [
+    "apps/controller/internal/cli/**": [
       "docs/features/cli/spec.md"
     ],
-    "internal/cli/auth/**": [
+    "apps/controller/internal/cli/auth/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/compare/**": [
+    "apps/controller/internal/compare/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/configio/**": [
+    "apps/controller/internal/configio/**": [
       "docs/features/operations/spec.md"
     ],
-    "internal/cpucap/**": [
+    "apps/controller/internal/cpucap/**": [
       "docs/features/machines/spec.md"
     ],
-    "internal/debugaccess/**": [
+    "apps/controller/internal/debugaccess/**": [
       "docs/features/debug-access/spec.md"
     ],
-    "internal/dockercompact/**": [
+    "apps/controller/internal/dockercompact/**": [
       "docs/features/caches/spec.md",
       "docs/features/machines/spec.md"
     ],
-    "internal/doctor/**": [
+    "apps/controller/internal/doctor/**": [
       "docs/features/doctor/spec.md"
     ],
-    "internal/doctor/checks/engine.go": [
+    "apps/controller/internal/doctor/checks/engine.go": [
       "docs/features/dependency-setup/spec.md"
     ],
-    "internal/doctor/checks/workflows*.go": [
+    "apps/controller/internal/doctor/checks/workflows*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/envsets/**": [
+    "apps/controller/internal/envsets/**": [
       "docs/features/runners/spec.md"
     ],
-    "internal/events/**": [
+    "apps/controller/internal/events/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/github/**": [
+    "apps/controller/internal/github/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/github/cancel.go": [
+    "apps/controller/internal/github/cancel.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/github/rest_insights*.go": [
+    "apps/controller/internal/github/rest_insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/history/**": [
+    "apps/controller/internal/history/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/hooks/**": [
+    "apps/controller/internal/hooks/**": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/insights/**": [
+    "apps/controller/internal/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/install/**": [
+    "apps/controller/internal/install/**": [
       "docs/features/operations/spec.md"
     ],
-    "internal/jobsdata/followup*.go": [
+    "apps/controller/internal/jobsdata/followup*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/jobsdata/reconcile/**": [
+    "apps/controller/internal/jobsdata/reconcile/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/jobsize/**": [
+    "apps/controller/internal/jobsize/**": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/load/**": [
+    "apps/controller/internal/load/**": [
       "docs/features/machines/spec.md"
     ],
-    "internal/logs/**": [
+    "apps/controller/internal/logs/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/machinehealth/**": [
+    "apps/controller/internal/machinehealth/**": [
       "docs/features/machines/spec.md"
     ],
-    "internal/machines/**": [
+    "apps/controller/internal/machines/**": [
       "docs/features/dependency-setup/spec.md",
       "docs/features/machines/spec.md"
     ],
-    "internal/mail/**": [
+    "apps/controller/internal/mail/**": [
       "docs/features/notifications/spec.md"
     ],
-    "internal/memcap/**": [
+    "apps/controller/internal/memcap/**": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/metrics/**": [
+    "apps/controller/internal/metrics/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/mirror/**": [
+    "apps/controller/internal/mirror/**": [
       "docs/features/caches/spec.md"
     ],
-    "internal/notify/**": [
+    "apps/controller/internal/notify/**": [
       "docs/features/notifications/spec.md"
     ],
-    "internal/overview/**": [
+    "apps/controller/internal/overview/**": [
       "docs/features/observability/spec.md"
     ],
-    "internal/power/**": [
+    "apps/controller/internal/power/**": [
       "docs/features/machines/spec.md"
     ],
-    "internal/recovery/**": [
+    "apps/controller/internal/recovery/**": [
       "docs/features/operations/spec.md"
     ],
-    "internal/regcreds/**": [
+    "apps/controller/internal/regcreds/**": [
       "docs/features/runners/spec.md"
     ],
-    "internal/regcreds/engineca.go": [
+    "apps/controller/internal/regcreds/engineca.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/registry/**": [
+    "apps/controller/internal/registry/**": [
       "docs/features/registry/spec.md"
     ],
-    "internal/repos/**": [
+    "apps/controller/internal/repos/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/routing/**": [
+    "apps/controller/internal/routing/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/runnercache/**": [
+    "apps/controller/internal/runnercache/**": [
       "docs/features/caches/spec.md",
       "docs/features/runners/spec.md"
     ],
-    "internal/runners/**": [
+    "apps/controller/internal/runners/**": [
       "docs/features/runners/spec.md"
     ],
-    "internal/runners/sizeclass*.go": [
+    "apps/controller/internal/runners/sizeclass*.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/scheduler/**": [
+    "apps/controller/internal/scheduler/**": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/scheduler/admit/**": [
+    "apps/controller/internal/scheduler/admit/**": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/secrets/**": [
+    "apps/controller/internal/secrets/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/store/imagebuilds.go": [
+    "apps/controller/internal/store/imagebuilds.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/store/insights*.go": [
+    "apps/controller/internal/store/insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/store/jobsdata_followups*.go": [
+    "apps/controller/internal/store/jobsdata_followups*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/store/jobsizes.go": [
+    "apps/controller/internal/store/jobsizes.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/store/migrations/00019_registry.sql": [
+    "apps/controller/internal/store/migrations/00019_registry.sql": [
       "docs/features/registry/spec.md"
     ],
-    "internal/store/migrations/00030_ci_insights.sql": [
+    "apps/controller/internal/store/migrations/00030_ci_insights.sql": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/store/migrations/00031_insight_dismiss.sql": [
+    "apps/controller/internal/store/migrations/00031_insight_dismiss.sql": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/store/queries/image_builds.sql": [
+    "apps/controller/internal/store/queries/image_builds.sql": [
       "docs/features/registry/spec.md"
     ],
-    "internal/store/queries/insights_*.sql": [
+    "apps/controller/internal/store/queries/insights_*.sql": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/store/queries/registry_*.sql": [
+    "apps/controller/internal/store/queries/registry_*.sql": [
       "docs/features/registry/spec.md"
     ],
-    "internal/store/registry_core.go": [
+    "apps/controller/internal/store/registry_core.go": [
       "docs/features/registry/spec.md"
     ],
-    "internal/store/schedadmit.go": [
+    "apps/controller/internal/store/schedadmit.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/store/schedstore.go": [
+    "apps/controller/internal/store/schedstore.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/store/timers.go": [
+    "apps/controller/internal/store/timers.go": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/timers/**": [
+    "apps/controller/internal/timers/**": [
       "docs/features/scheduling/spec.md"
     ],
-    "internal/tools/**": [
+    "apps/controller/internal/tools/**": [
       "docs/features/caches/spec.md"
     ],
-    "internal/toolstore/**": [
+    "apps/controller/internal/toolstore/**": [
       "docs/features/runners/spec.md"
     ],
-    "internal/tray/**": [
+    "apps/controller/internal/tray/**": [
       "docs/features/tray/spec.md"
     ],
-    "internal/tray/menu*.go": [
+    "apps/controller/internal/tray/menu*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
-    "internal/trial/**": [
+    "apps/controller/internal/trial/**": [
       "docs/features/github-integration/spec.md"
     ],
-    "internal/update/**": [
+    "apps/controller/internal/update/**": [
       "docs/features/operations/spec.md"
     ],
-    "internal/updatewindow/**": [
+    "apps/controller/internal/updatewindow/**": [
       "docs/features/tray/spec.md"
     ],
-    "internal/vmcheck/**": [
+    "apps/controller/internal/vmcheck/**": [
       "docs/features/caches/spec.md"
+    ],
+    "apps/web/**": [
+      "docs/features/website/spec.md"
+    ],
+    "installer/**": [
+      "docs/features/operations/spec.md"
     ],
     "packages/ui/src/**": [
       "docs/features/web-console/spec.md"

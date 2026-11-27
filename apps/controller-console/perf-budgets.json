@@ -1,0 +1,6 @@
+{
+  "_comment": "Proposed budgets of web-console R6.12 (owner question Q14). The only place the numbers live: apps/controller-console/src/bundle-size.test.ts and e2e/tests/web-console/perf.spec.ts read this file. Change a number here, nowhere else.",
+  "firstScreenUsableMs": 2000,
+  "firstJavaScriptGzipBytes": 307200,
+  "liveEventOnScreenMs": 2000
+}

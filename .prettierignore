@@ -19,7 +19,7 @@ docs/
 .claude/
 CLAUDE.md
 AGENTS.md
-internal/
+apps/controller/internal/
 test-results/
 .vitest/
 .github/workflows/dev-standards.yml

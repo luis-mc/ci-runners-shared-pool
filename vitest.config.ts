@@ -5,7 +5,7 @@ import { configDefaults, defineConfig } from 'vitest/config';
  * false everywhere. Projects:
  *   guard  repository-wide guard tests (13.5), run whatever changed
  *   design the design-system guard tests (scripts/design, DOCSPEC 15)
- *   web    the React app (apps/web/vitest.config.ts)
+ *   web    the React app (apps/controller-console/vitest.config.ts)
  * Go has its own suites (go test); scripts/ci/go-test.sh holds its zero-test guard.
  */
 const nestedCheckouts = ['**/.claude/worktrees/**', '**/.worktrees/**'];
@@ -34,7 +34,7 @@ export default defineConfig({
           testTimeout: 10_000,
         },
       },
-      'apps/web',
+      'apps/controller-console',
       'packages/ui',
     ],
   },

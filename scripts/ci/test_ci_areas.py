@@ -24,15 +24,15 @@ class AreaMap(unittest.TestCase):
         self.assertEqual(sorted(a.all_jobs(MAP)), sorted(EVERY))
 
     def test_go_file_runs_go_and_windows(self):
-        r = pick("internal/agent/x.go")
+        r = pick("apps/controller/internal/agent/x.go")
         self.assertEqual(r["areas"], ["go"])
         self.assertEqual(on(r), sorted(EVERY))
 
     def test_windows_only_go_file_keeps_windows_lint(self):
-        self.assertTrue(pick("internal/cpucap/cap_windows.go")["jobs"]["go_win_lint"])
+        self.assertTrue(pick("apps/controller/internal/cpucap/cap_windows.go")["jobs"]["go_win_lint"])
 
     def test_web_change_skips_go_and_os_jobs(self):
-        r = pick("apps/web/src/a.tsx")
+        r = pick("apps/controller-console/src/a.tsx")
         self.assertEqual(on(r), ["build", "e2e", "web_tests"])
         for j in ("go_race", "test_os", "go_win_lint"):
             self.assertFalse(r["jobs"][j])
@@ -42,7 +42,7 @@ class AreaMap(unittest.TestCase):
 
     def test_windows_file_without_go(self):
         self.assertEqual(on(pick("installer/a.ps1")), ["build", "go_race", "go_win_lint", "test_os", "web_tests"])
-        self.assertEqual(on(pick("cmd/crsp/rsrc_windows_amd64.syso")), sorted(EVERY))  # under cmd/: go area too
+        self.assertEqual(on(pick("apps/controller/cmd/crsp/rsrc_windows_amd64.syso")), sorted(EVERY))  # under apps/controller/cmd/: go area too
         self.assertEqual(on(pick("scripts/install/x.ps1")), ["build", "go_win_lint", "test_os"])
 
     def test_shared_files_run_everything(self):
@@ -57,7 +57,7 @@ class AreaMap(unittest.TestCase):
             self.assertEqual(pick(p)["mode"], "all", p)
 
     def test_mixed_change_unites_areas(self):
-        r = pick("apps/web/src/a.tsx", "internal/x/y.go")
+        r = pick("apps/controller-console/src/a.tsx", "apps/controller/internal/x/y.go")
         self.assertEqual(on(r), sorted(EVERY))
 
     def test_docs_only_runs_no_job(self):

@@ -14,15 +14,15 @@
   "docs": ["docs/**", "**/*.md", "LICENSE", ".claude/**", ".delivery/**"],
   "areas": {
     "go": {
-      "paths": ["**/*.go", "cmd/**", "internal/**"],
+      "paths": ["**/*.go", "apps/controller/cmd/**", "apps/controller/internal/**"],
       "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build", "e2e"]
     },
     "windows": {
-      "paths": ["**/*.syso", "cmd/crsp/winres/**", "**/*.ps1", "**/*.wxs"],
+      "paths": ["**/*.syso", "apps/controller/cmd/crsp/winres/**", "**/*.ps1", "**/*.wxs"],
       "jobs": ["test_os", "go_win_lint", "build"]
     },
     "web": {
-      "paths": ["apps/**", "packages/**", "scripts/design/**"],
+      "paths": ["apps/controller-console/**", "packages/**", "scripts/design/**"],
       "jobs": ["web_tests", "build", "e2e"]
     },
     "e2e": {

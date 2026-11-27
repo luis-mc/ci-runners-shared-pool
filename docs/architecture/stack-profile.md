@@ -32,7 +32,7 @@ CI Runners Shared Pool (CRSP) manages shared self-hosted GitHub Actions runners 
 | Hosting — web | Same binary (embedded) | The controller serves the console. |
 | Database engine | SQLite (WAL mode) | |
 | Database host | Embedded in-process (`modernc.org/sqlite`, pure Go) | `CGO_ENABLED=0`. |
-| Data access / ORM | `sqlc` over `database/sql` | Generated code lives in `internal/store/sqlcgen`. |
+| Data access / ORM | `sqlc` over `database/sql` | Generated code lives in `apps/controller/internal/store/sqlcgen`. |
 | Migration tool | `goose`, migrations embedded in the binary | Applied at controller start. |
 | Queue substrate | Datastore-resident (`job_queue` table in the same SQLite database) | See section 11 and the derivation below. |
 | Cache | none | |
@@ -133,7 +133,7 @@ Statuses only. Never record a credential value here.
 
 Location: `docs/reference/data-inventory.md`, created in milestone 1 with the first stored personal data (the GitHub OAuth login). The skeleton stores no personal data.
 
-Personal data the controller database keeps (github-integration R6.10). Guard: `internal/store/retention_test.go` fails when either table gains a column.
+Personal data the controller database keeps (github-integration R6.10). Guard: `apps/controller/internal/store/retention_test.go` fails when either table gains a column.
 
 | Table | Field | What it is | Why | Ends |
 |---|---|---|---|---|
@@ -219,7 +219,7 @@ CI runs `govulncheck` and `pnpm audit --prod` on every pull request, and gitleak
 |---|---|---|---|---|
 | `STACKSPEC 5.6` | Statement timeout (SQLite has none) | Every query runs under a context deadline (`store.DefaultDeadline`, 10 s, when the caller sets none) and the connection sets `busy_timeout` (5 s) and WAL mode | Luis Carvalho | 2026-11-13 |
 | `STACKSPEC 5.5` | Point-in-time recovery | Operator-driven file backups, designed in milestone 8 | Luis Carvalho | 2026-11-13 |
-| `STACKSPEC 8.1` | Mail provider | No mail is sent until milestone 8; then one adapter module (`internal/mail`) | Luis Carvalho | 2026-11-13 |
+| `STACKSPEC 8.1` | Mail provider | No mail is sent until milestone 8; then one adapter module (`apps/controller/internal/mail`) | Luis Carvalho | 2026-11-13 |
 | `STACKSPEC 10.1` | Hosted error tracking | Structured logs, crash files and the `doctor` command; no data leaves the machine | Luis Carvalho | 2026-11-13 |
 | `STACKSPEC 13.2` | Per-pull-request preview deployment | Per-OS CI artifacts for each pull request; `edge` as staging (section 13) | Luis Carvalho | 2026-11-13 |
 

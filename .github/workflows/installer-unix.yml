@@ -14,7 +14,7 @@ on:
     paths:
       - 'installer/linux/**'
       - 'installer/macos/**'
-      - 'cmd/crsp/**'
+      - 'apps/controller/cmd/crsp/**'
       - 'scripts/delivery/tools.json'
       - '.github/workflows/installer-unix.yml'
   workflow_dispatch:

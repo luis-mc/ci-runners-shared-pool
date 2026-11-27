@@ -29,40 +29,40 @@ linters:
         # 3.2: the store package is the only one that imports the database
         # driver, database/sql or the migration tool.
         driver-confinement:
-          files: ['**', '!**/internal/store/**']
+          files: ['**', '!**/apps/controller/internal/store/**']
           deny:
             - pkg: 'database/sql'
-              desc: 'only internal/store may use database/sql (3.2)'
+              desc: 'only apps/controller/internal/store may use database/sql (3.2)'
             - pkg: 'modernc.org/sqlite'
-              desc: 'only internal/store may import the SQLite driver (3.2)'
+              desc: 'only apps/controller/internal/store may import the SQLite driver (3.2)'
             - pkg: 'github.com/pressly/goose'
-              desc: 'only internal/store may run migrations (3.2)'
+              desc: 'only apps/controller/internal/store may run migrations (3.2)'
 
         # 3.2: the API reaches data through interfaces it declares itself.
         api-no-store:
-          files: ['**/internal/api/**']
+          files: ['**/apps/controller/internal/api/**']
           deny:
-            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/internal/store'
-              desc: 'internal/api must depend on an interface, not on internal/store (3.2)'
+            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/store'
+              desc: 'apps/controller/internal/api must depend on an interface, not on apps/controller/internal/store (3.2)'
 
         # 3.3: one adapter module per external service SDK. Add an entry when an
         # SDK is adopted; the adapter package is created then, not before.
         github-confinement:
-          files: ['**', '!**/internal/github/**']
+          files: ['**', '!**/apps/controller/internal/github/**']
           deny:
             - pkg: 'github.com/google/go-github'
-              desc: 'the GitHub SDK belongs only in internal/github (3.3)'
+              desc: 'the GitHub SDK belongs only in apps/controller/internal/github (3.3)'
             - pkg: 'github.com/actions/scaleset'
-              desc: 'the scale set client belongs only in internal/github (3.3)'
+              desc: 'the scale set client belongs only in apps/controller/internal/github (3.3)'
 
         # R6.7 (observability): logs stay local. No logging, history or audit
         # package makes a network call; there is no telemetry and no remote sink.
         logs-stay-local:
           files:
             [
-              '**/internal/logs/**',
-              '**/internal/history/**',
-              '**/internal/audit/**',
+              '**/apps/controller/internal/logs/**',
+              '**/apps/controller/internal/history/**',
+              '**/apps/controller/internal/audit/**',
               '!$test',
             ]
           deny:
@@ -80,9 +80,9 @@ linters:
               desc: 'logs, history and audit stay local (observability R6.7)'
             - pkg: 'google.golang.org/grpc'
               desc: 'logs, history and audit stay local (observability R6.7)'
-            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/internal/github'
+            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github'
               desc: 'logs, history and audit stay local (observability R6.7)'
-            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/internal/agentlink'
+            - pkg: 'github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentlink'
               desc: 'logs, history and audit stay local (observability R6.7)'
 
 issues:

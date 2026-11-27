@@ -20,7 +20,7 @@ The UpgradeCode is what lets a newer MSI replace an older one. Changing it makes
 ```powershell
 # a crsp.exe for the target (the release build, or any local `go build`)
 $env:GOOS = 'windows'; $env:GOARCH = 'amd64'; $env:CGO_ENABLED = '0'
-go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/out/crsp.exe ./cmd/crsp
+go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/out/crsp.exe ./apps/controller/cmd/crsp
 pwsh installer/build.ps1 -Arch x64 -Exe installer/out/crsp.exe -Version 0.1.0 -Out installer/out
 ```
 

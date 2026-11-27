@@ -44,11 +44,11 @@ class ShouldBuild(unittest.TestCase):
         self.assertFalse(s.should_build("pull_request", REPO, "7", "OPS1-release-notes", get)[0])
 
     def test_unrelated_branch_skips(self):
-        get = files_api([named("internal/x.go", "docs/a.md")])
+        get = files_api([named("apps/controller/internal/x.go", "docs/a.md")])
         self.assertFalse(s.should_build("pull_request", REPO, "7", "OPS1-x", get)[0])
 
     def test_images_change_builds(self):
-        get = files_api([named("internal/x.go", "images/layers/kvm/Dockerfile")])
+        get = files_api([named("apps/controller/internal/x.go", "images/layers/kvm/Dockerfile")])
         self.assertTrue(s.should_build("pull_request", REPO, "7", "OPS1-x", get)[0])
 
     def test_workflow_change_builds(self):

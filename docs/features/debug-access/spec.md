@@ -8,9 +8,9 @@ version: 0.1.0
 owner: owner
 type: reference
 code:
-  - internal/debugaccess/**
+  - apps/controller/internal/debugaccess/**
 design_system: []
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -187,7 +187,7 @@ No mocks yet. Screens follow design system v4 and add no rules of their own. Rul
 
 **R5.24** — Every session MUST write one session row and these audit rows: opened (who, job, repository, machine, backend, reason, source console or CLI, source address), extended, ended (how: time limit, idle, job ended, user, admin, kill switch, link lost, error), and refused (who, job, why). An audit row MUST be written in the same transaction as the change (observability R5.24). It MUST be written even if the session never opened.
 
-**R5.25** — The controller MUST keep a transcript of the terminal output of each session, default on, for 30 days, readable by admins and the owner. The transcript MUST be cleaned by the shared redaction (`internal/redact`) before storing; it MUST NOT claim that it caught everything (Q4). The audit rows MUST be kept as long as the audit log. A transcript MUST NOT be turned off for a session; the owner MAY turn recording off pool-wide in Settings, and then the audit row MUST say "no transcript".
+**R5.25** — The controller MUST keep a transcript of the terminal output of each session, default on, for 30 days, readable by admins and the owner. The transcript MUST be cleaned by the shared redaction (`apps/controller/internal/redact`) before storing; it MUST NOT claim that it caught everything (Q4). The audit rows MUST be kept as long as the audit log. A transcript MUST NOT be turned off for a session; the owner MAY turn recording off pool-wide in Settings, and then the audit row MUST say "no transcript".
 
 **R5.26** — The owner MUST have a kill switch (pool-wide switch, section 4) that ends every open session and refuses new ones. An admin MUST be able to end any single session. Both MUST be audit rows.
 
@@ -233,7 +233,7 @@ No mocks yet. Screens follow design system v4 and add no rules of their own. Rul
 
 ## 7. Design
 
-Planned. Package `internal/debugaccess` holds the session state, the policy checks and the transcript store. The agent holds the `Enter` implementations beside each backend.
+Planned. Package `apps/controller/internal/debugaccess` holds the session state, the policy checks and the transcript store. The agent holds the `Enter` implementations beside each backend.
 
 ```mermaid
 flowchart LR
@@ -291,46 +291,46 @@ Every row is planned. The path is where the test will live. Each requirement has
 
 | Requirement | Test |
 |---|---|
-| R5.1 | planned: internal/debugaccess/policy_test.go, TestOffByDefaultAndAfterImportAndRestore |
-| R5.2 | planned: internal/api/handlers_debug_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/web/src/screens/jobs/DebugCard.test.tsx (disabled with reason) |
-| R5.3 | planned: internal/debugaccess/policy_test.go, TestReasonLength3To200 |
-| R5.4 | planned: internal/debugaccess/limits_test.go, TestUserAndJobSessionCaps |
-| R5.5 | planned: internal/debugaccess/policy_test.go, TestPublicAndForkNeverAllowed |
-| R5.6 | planned: internal/backend/enter_test.go, TestNoHostShellEverReturned |
-| R5.7 | planned: internal/debugaccess/policy_test.go, TestSharedContainerRefusedNamesOtherJob |
-| R5.8 | planned: internal/backend/linux/enter_test.go, TestOwnPIDNamespace; real Linux machine |
-| R5.9 | planned: internal/agent/debug_test.go, TestWrongEnvironmentFailsClosed |
-| R5.10 | planned: internal/debugaccess/policy_test.go, TestPersistentRefusedUnlessOn |
-| R5.11 | planned: internal/backend/linux/enter_test.go, TestDebugUserNoCapsNoSudo; internal/backend/windows/enter_test.go, TestDebugAccountNotAdmin; internal/backend/macos/enter_test.go (fakes) |
-| R5.12 | planned: internal/debugaccess/env_test.go, TestShellEnvironmentIsAllowListOnly |
-| R5.13 | planned: internal/backend/linux/enter_test.go, TestCannotReadRunnerEnviron; internal/backend/windows/enter_test.go, TestRunnerFolderAclDeniesDebugAccount |
-| R5.14 | planned: apps/web/src/screens/jobs/DebugCard.test.tsx (words); docs check on the owner note |
-| R5.15 | planned: internal/agent/debug_test.go, TestNoListenSocketOpened |
-| R5.16 | planned: internal/agent/debug_test.go, TestEndKillsAllDebugProcesses |
-| R5.17 | planned: internal/agent/debug_test.go, TestHardLimitWithControllerGone |
-| R5.18 | planned: internal/debugaccess/limits_test.go, TestIdleLimit |
-| R5.19 | planned: internal/debugaccess/limits_test.go, TestExtendOnceNotPastLimit |
-| R5.20 | planned: internal/debugaccess/session_test.go, TestJobEndClosesAfterNotice |
-| R5.21 | planned: internal/agent/hold_test.go, TestFailedJobHeldSlotReleased |
-| R5.22 | planned: internal/agent/hold_test.go, TestHoldCapAndFloors |
-| R5.23 | planned: internal/agent/hold_test.go, TestHeldEnvironmentHasNoSecrets |
-| R5.24 | planned: internal/debugaccess/audit_test.go, TestEveryStepIsOneAuditRowInOneTransaction |
-| R5.25 | planned: internal/debugaccess/transcript_test.go, TestRedactedAndKept30Days |
-| R5.26 | planned: internal/api/handlers_debug_test.go, TestKillSwitchEndsAll |
-| R5.27 | planned: internal/notify/events_test.go, TestDebugSessionEvents |
+| R5.1 | planned: apps/controller/internal/debugaccess/policy_test.go, TestOffByDefaultAndAfterImportAndRestore |
+| R5.2 | planned: apps/controller/internal/api/handlers_debug_test.go, TestViewerRefusedAdminAllowedOwnerOnlyNarrowing; apps/controller-console/src/screens/jobs/DebugCard.test.tsx (disabled with reason) |
+| R5.3 | planned: apps/controller/internal/debugaccess/policy_test.go, TestReasonLength3To200 |
+| R5.4 | planned: apps/controller/internal/debugaccess/limits_test.go, TestUserAndJobSessionCaps |
+| R5.5 | planned: apps/controller/internal/debugaccess/policy_test.go, TestPublicAndForkNeverAllowed |
+| R5.6 | planned: apps/controller/internal/backend/enter_test.go, TestNoHostShellEverReturned |
+| R5.7 | planned: apps/controller/internal/debugaccess/policy_test.go, TestSharedContainerRefusedNamesOtherJob |
+| R5.8 | planned: apps/controller/internal/backend/linux/enter_test.go, TestOwnPIDNamespace; real Linux machine |
+| R5.9 | planned: apps/controller/internal/agent/debug_test.go, TestWrongEnvironmentFailsClosed |
+| R5.10 | planned: apps/controller/internal/debugaccess/policy_test.go, TestPersistentRefusedUnlessOn |
+| R5.11 | planned: apps/controller/internal/backend/linux/enter_test.go, TestDebugUserNoCapsNoSudo; apps/controller/internal/backend/windows/enter_test.go, TestDebugAccountNotAdmin; apps/controller/internal/backend/macos/enter_test.go (fakes) |
+| R5.12 | planned: apps/controller/internal/debugaccess/env_test.go, TestShellEnvironmentIsAllowListOnly |
+| R5.13 | planned: apps/controller/internal/backend/linux/enter_test.go, TestCannotReadRunnerEnviron; apps/controller/internal/backend/windows/enter_test.go, TestRunnerFolderAclDeniesDebugAccount |
+| R5.14 | planned: apps/controller-console/src/screens/jobs/DebugCard.test.tsx (words); docs check on the owner note |
+| R5.15 | planned: apps/controller/internal/agent/debug_test.go, TestNoListenSocketOpened |
+| R5.16 | planned: apps/controller/internal/agent/debug_test.go, TestEndKillsAllDebugProcesses |
+| R5.17 | planned: apps/controller/internal/agent/debug_test.go, TestHardLimitWithControllerGone |
+| R5.18 | planned: apps/controller/internal/debugaccess/limits_test.go, TestIdleLimit |
+| R5.19 | planned: apps/controller/internal/debugaccess/limits_test.go, TestExtendOnceNotPastLimit |
+| R5.20 | planned: apps/controller/internal/debugaccess/session_test.go, TestJobEndClosesAfterNotice |
+| R5.21 | planned: apps/controller/internal/agent/hold_test.go, TestFailedJobHeldSlotReleased |
+| R5.22 | planned: apps/controller/internal/agent/hold_test.go, TestHoldCapAndFloors |
+| R5.23 | planned: apps/controller/internal/agent/hold_test.go, TestHeldEnvironmentHasNoSecrets |
+| R5.24 | planned: apps/controller/internal/debugaccess/audit_test.go, TestEveryStepIsOneAuditRowInOneTransaction |
+| R5.25 | planned: apps/controller/internal/debugaccess/transcript_test.go, TestRedactedAndKept30Days |
+| R5.26 | planned: apps/controller/internal/api/handlers_debug_test.go, TestKillSwitchEndsAll |
+| R5.27 | planned: apps/controller/internal/notify/events_test.go, TestDebugSessionEvents |
 | R5.28 | planned: e2e/tests/web-console/debug-access.spec.ts (all screens), guard: every `crsp debug` command has a console screen |
 | R5.29 | planned: guards (no-app-CSS scan, shared terminal part used); axe at 360, 393, 1300 px |
-| R5.30 | planned: cmd/crsp/debug_test.go, TestCLIMatchesConsole; internal/api/handlers_debug_test.go, TestCSRFOriginRoleOnStream |
-| R5.31 | planned: cmd/crsp/debug_ssh_test.go, TestProxyCommandOpensNoPort |
-| R5.32 | planned: internal/backend/enter_test.go, TestEveryBackendImplementsEnter |
+| R5.30 | planned: apps/controller/cmd/crsp/debug_test.go, TestCLIMatchesConsole; apps/controller/internal/api/handlers_debug_test.go, TestCSRFOriginRoleOnStream |
+| R5.31 | planned: apps/controller/cmd/crsp/debug_ssh_test.go, TestProxyCommandOpensNoPort |
+| R5.32 | planned: apps/controller/internal/backend/enter_test.go, TestEveryBackendImplementsEnter |
 | R5.33 | planned: guards (no sshd, WinRM or inbound rule created); real Windows machine |
-| R5.34 | planned: apps/web/src/screens/jobs/DebugCard.test.tsx (macOS wording) |
-| R6.1 | planned: internal/debugaccess/latency_test.go, TestOpenWithin10s |
-| R6.2 | planned: internal/agent/debug_test.go, TestBackPressureAt1MBs |
-| R6.3 | planned: internal/agent/debug_test.go, TestLinkDropClosesAt60s |
-| R6.4 | planned: internal/debugaccess/session_test.go, TestReconcileAtStart |
-| R6.5 | planned: internal/debugaccess/secrets_test.go, TestNoSecretInStoreLogsAuditTranscript |
-| R6.6 | planned: internal/debugaccess/transcript_test.go, TestCaps |
+| R5.34 | planned: apps/controller-console/src/screens/jobs/DebugCard.test.tsx (macOS wording) |
+| R6.1 | planned: apps/controller/internal/debugaccess/latency_test.go, TestOpenWithin10s |
+| R6.2 | planned: apps/controller/internal/agent/debug_test.go, TestBackPressureAt1MBs |
+| R6.3 | planned: apps/controller/internal/agent/debug_test.go, TestLinkDropClosesAt60s |
+| R6.4 | planned: apps/controller/internal/debugaccess/session_test.go, TestReconcileAtStart |
+| R6.5 | planned: apps/controller/internal/debugaccess/secrets_test.go, TestNoSecretInStoreLogsAuditTranscript |
+| R6.6 | planned: apps/controller/internal/debugaccess/transcript_test.go, TestCaps |
 | R6.7 | planned: guards (design system retired-words guard over debug text) |
 | R6.8 | planned: guards (no listening socket added by this feature) |
 | R6.9 | planned: e2e/tests/web-console/debug-access-a11y.spec.ts |

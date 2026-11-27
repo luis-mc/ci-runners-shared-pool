@@ -7,19 +7,19 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'internal/tray/**'
-      - 'internal/updatewindow/**'
+      - 'apps/controller/internal/tray/**'
+      - 'apps/controller/internal/updatewindow/**'
       - 'packages/ui/src/tokens.css'
-      - 'cmd/crsp/**'
+      - 'apps/controller/cmd/crsp/**'
       - 'packaging/autostart/**'
       - '.github/workflows/tray-smoke.yml'
   push:
     branches: [main]
     paths:
-      - 'internal/tray/**'
-      - 'internal/updatewindow/**'
+      - 'apps/controller/internal/tray/**'
+      - 'apps/controller/internal/updatewindow/**'
       - 'packages/ui/src/tokens.css'
-      - 'cmd/crsp/**'
+      - 'apps/controller/cmd/crsp/**'
       - 'packaging/autostart/**'
       - '.github/workflows/tray-smoke.yml'
   workflow_dispatch:
@@ -58,14 +58,14 @@ jobs:
           exe=""
           if [ "$RUNNER_OS" = "Windows" ]; then exe=".exe"; fi
           mkdir -p out
-          go build -trimpath -o "out/crsp${exe}" ./cmd/crsp
-          if [ "$RUNNER_OS" = "Linux" ]; then go build -o out/snihost ./internal/tray/testdata/snihost; fi
+          go build -trimpath -o "out/crsp${exe}" ./apps/controller/cmd/crsp
+          if [ "$RUNNER_OS" = "Linux" ]; then go build -o out/snihost ./apps/controller/internal/tray/testdata/snihost; fi
       # TRAY7: the web update window and the first-start window are plain Go (a local page, a
       # model, a browser lookup); their unit tests run on every OS, macOS included.
       - name: Window unit tests (TRAY7)
         env:
           CGO_ENABLED: ${{ matrix.os == 'macos-latest' && '1' || '0' }}
-        run: go test -count=1 ./internal/updatewindow ./internal/tray
+        run: go test -count=1 ./apps/controller/internal/updatewindow ./apps/controller/internal/tray
       - name: Install xvfb and dbus (Linux)
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb dbus

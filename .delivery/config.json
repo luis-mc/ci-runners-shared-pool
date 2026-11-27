@@ -51,7 +51,7 @@
   },
   "pending_protection": false,
   "design_system": {
-    "app_paths": ["apps/web/src"],
+    "app_paths": ["apps/controller-console/src"],
     "shared_paths": ["packages/ui/src"]
   },
   "ci": {
