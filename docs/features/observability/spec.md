@@ -396,6 +396,12 @@ The live view flows one way: controller to browser. Commands go through the norm
 
 **R6.19** — (CRSP290) A burst of job events moves the console's `jobs` version once per 400 ms, a list that is already loading is not asked again until it ends (one more request follows, however many events came), and a screen that reads only the stream's status or a version does not render again for every machine load event. The last-seen time of a session is written at most once a minute.
 
+**R6.20** — (CRSP292) The reads of finished jobs in a time window (minutes saved, the overview, the timeline, the event snapshot) are one range of an index on state and completed time, the hour grid and the insights waits read an index on created time, and the follow-ups of a runs page start from the follow-up table; none of them walks the whole jobs table, so each answers in under 20 ms on 150,000 jobs. The savings, overview, waits, follow-up and parent-run reads use the read pool. The grouped table and the stats read the finished jobs of their window once, cut the stored times apart without a date parser, and keep the answer for 10 seconds; any write of a job or run drops it, and callers that ask at the same time share one read. The forecast samples of a page are kept the same way (bounded to 2,048 questions). A caller that holds the tag of the grouped table or of the stats of the same data gets a 304 before the read.
+
+**R6.21** — (CRSP292) The Overview and the first event of the stream list the machines with their load, the queued jobs (at most 200, the count exact) and the running jobs, each with its forecast; a running job in its grace carries its timer deadline, and the console asks for the timer of those jobs only.
+
+**R6.22** — (CRSP292) The console sends one request for the same GET while it is on its way and gives every caller the answer; nothing is kept once the answer has arrived, so a reload after an event reads fresh data, and a change is never shared.
+
 ## 9. How it is proven
 
 Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Planned rows are NOT YET IMPLEMENTED; their paths are where each test will live.
@@ -406,6 +412,9 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Pl
 | R6.17 | apps/controller/internal/api/transport_test.go TestTransportCompressesBigJSONOnly, TestTransportETagAnswers304, TestTransportLeavesStreamsAndErrorsAlone |
 | R6.18 | apps/controller/internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsStreamsJSONAndAbortsWhenALaterPageFails |
 | R6.19 | apps/controller-console/src/live/store.test.ts "moves the jobs version once for a burst"; apps/controller-console/src/api/load.test.tsx; apps/controller/internal/auth/session_test.go TestLastSeenIsWrittenOncePerMinute |
+| R6.20 | apps/controller/internal/store/jobsdata_history_plan_test.go TestFinishedWindowQueryPlans, TestSampleQueryPlanKeepsSampleIndex, TestCreatedWindowQueryPlan, TestFollowUpsQueryPlan; apps/controller/internal/store/aggcache_test.go TestGroupsAndStatsAreCachedUntilAWrite, TestSamplesManyKeepsAnswersUntilAWrite, TestSampleCacheIsBounded; apps/controller/internal/store/fasttime_test.go TestUnixMillisMatchesParse; apps/controller/internal/api/transport_version_test.go TestGroupsNotModifiedSkipsTheRead |
+| R6.21 | apps/controller/cmd/crsp/overview_source_test.go TestPoolOverviewSourceListsOpenJobs; apps/controller-console/src/screens/overview/Overview.test.tsx "shows a timer alert for a job whose timer ran out" |
+| R6.22 | apps/controller-console/src/api/dedupe.test.ts |
 | R5.1 | apps/controller/internal/overview/overview_test.go TestGetBuildsOverview, TestQueueListIsCappedButCountIsExact; apps/controller/internal/api/handlers_live_test.go TestGetOverview (the e2e screen test is planned) |
 | R5.2 | apps/controller/internal/events/hub_test.go TestFirstEventIsSnapshotThenChangesInOrder; apps/controller/internal/api/handlers_live_test.go TestStreamEventsSnapshotThenChanges |
 | R5.3 | apps/controller/internal/events/hub_test.go TestReplayByLastEventID, TestReplayGapSendsMarkedSnapshot, TestReplayAgeLimit; apps/controller/internal/api/handlers_live_test.go TestStreamEventsReplayByLastEventID |
