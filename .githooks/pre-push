@@ -209,7 +209,8 @@ project_gates() {
     fi
     if [ -n "$pfiles" ]; then
       step "prettier --check (changed files)"
-      echo "$pfiles" | xargs pnpm exec prettier --check --ignore-unknown --end-of-line auto --no-error-on-unmatched-pattern || {
+      # -n 50: on Windows pnpm runs through cmd.exe, whose command line stops at 8191 characters (CRSP306).
+      echo "$pfiles" | xargs -n 50 pnpm exec prettier --check --ignore-unknown --end-of-line auto --no-error-on-unmatched-pattern || {
         echo "pre-push: prettier would change the files above; run: pnpm exec prettier --write <file>" >&2
         fail=1
       }
