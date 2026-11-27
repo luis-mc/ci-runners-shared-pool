@@ -131,6 +131,8 @@ export interface UpdateStatusV2 {
   next_check_at: string | null;
   failures: { version: string; count: number; retry_at: string | null } | null;
   waiting_for_jobs: boolean;
+  /** The last time crsp looked for an update, when the controller says (CRSP368). */
+  last_check?: { at: string; by: string; kind: 'manual' | 'automatic' } | undefined;
   /** 0 to 100 while a step runs. */
   percent?: number | undefined;
   /** Where crsp keeps its data and how big it is, when the controller says (for the Remove question). */
@@ -184,6 +186,7 @@ export function makeLifecycleApi(raw: Raw): LifecycleApi {
       >('/api/v1/update/status');
       return {
         ...statusFromWire(w),
+        ...(w.last_check ? { last_check: w.last_check } : {}),
         ...(w.percent === undefined ? {} : { percent: w.percent }),
         ...(w.data_path === undefined ? {} : { data_path: w.data_path }),
         ...(w.data_size_bytes === undefined

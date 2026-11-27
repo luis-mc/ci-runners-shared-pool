@@ -46,7 +46,7 @@ describe('UpdateBanner states', () => {
         <UpdateBanner
           state={state}
           version="1.5.0"
-          percent={40}
+          to="/settings/updates"
           step="verifying"
           reason="x"
           onUpdate={onUpdate}
@@ -63,8 +63,12 @@ describe('UpdateBanner states', () => {
         expect(screen.getByRole('button', { name: 'Not now' })).toBeTruthy();
       }
       if (state === 'running') {
-        expect(screen.getByText(/Checking the download 40%/)).toBeTruthy();
-        expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('40');
+        // One short line with a link, no bar and no step words (CRSP364).
+        expect(screen.getByText('An update is running.')).toBeTruthy();
+        expect(screen.queryByRole('progressbar')).toBeNull();
+        expect(
+          screen.getByRole('button', { name: 'See the update' }).getAttribute('href'),
+        ).toBe('/settings/updates');
       }
       if (state === 'done')
         expect(screen.getByText('Updated to version 1.5.0.')).toBeTruthy();
@@ -73,6 +77,24 @@ describe('UpdateBanner states', () => {
         expect(onRetry).toHaveBeenCalled();
       }
     });
+});
+
+describe('UpdatesCard progress and restart (CRSP364)', () => {
+  it('draws the bar with the step words only inside the pane', () => {
+    wrap(
+      <UpdatesCard policy="ask_first" state="installing" current="1.4.0" percent={60} />,
+    );
+    const bar = screen.getByRole('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).toBe('60');
+    expect(bar.closest('[data-tone]')).toBeNull();
+  });
+  it('says the restart in one line, no bar', () => {
+    wrap(
+      <UpdatesCard policy="ask_first" state="installing" current="1.4.0" restarting />,
+    );
+    expect(screen.getAllByText('Restarting, back in a moment.')).toHaveLength(1);
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
 });
 
 describe('UpdatesCard states', () => {

@@ -32,6 +32,8 @@ import {
   AccessTab,
   AuditTab,
   ConsoleTab,
+  NetworkingTab,
+  ThemesTab,
   UpdatesTab,
   DataTab,
   RepositoriesTab,
@@ -314,6 +316,8 @@ export function App({
                   <Route path="access" element={<AccessTab />} />
                   <Route path="repositories" element={<RepositoriesTab />} />
                   <Route path="console" element={<ConsoleTab />} />
+                  <Route path="themes" element={<ThemesTab />} />
+                  <Route path="networking" element={<NetworkingTab />} />
                   <Route path="updates" element={<UpdatesTab />} />
                   <Route path="data" element={<DataTab />} />
                   <Route path="audit" element={<AuditTab />} />
@@ -328,6 +332,8 @@ export function App({
                     path="notifications"
                     element={<OldSettingsAddress old="notifications" />}
                   />
+                  <Route path="network" element={<OldSettingsAddress old="network" />} />
+                  <Route path="metrics" element={<OldSettingsAddress old="metrics" />} />
                   <Route
                     path="retention"
                     element={<OldSettingsAddress old="retention" />}

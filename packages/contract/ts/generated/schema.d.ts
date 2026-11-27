@@ -7083,6 +7083,15 @@ export interface components {
                 retry_at: string | null;
             } | null;
             waiting_for_jobs: boolean;
+            /** @description The last time crsp looked for an update (CRSP368), read from the update audit rows; null when it never did. Absent from the answers to a policy change, a check or an install. */
+            last_check?: {
+                /** Format: date-time */
+                at: string;
+                /** @description Who asked for the check; updater when crsp looked by itself. */
+                by: string;
+                /** @enum {string} */
+                kind: "manual" | "automatic";
+            } | null;
         };
         /** @description A daily install window, in UTC. */
         UpdateWindow: {

@@ -6,7 +6,6 @@ import {
   FleetRows,
   RemoteUpdate,
   RemoveDialog,
-  UpdateHistory,
   UpdatesCard,
   lw,
   type FleetRow,
@@ -14,7 +13,7 @@ import {
 } from '@crsp/ui/lifecycle';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { errorText } from '../../api/api';
+import { ApiError, errorText } from '../../api/api';
 import { useCommand, useLoad } from '../../api/hooks';
 import { useRefreshTick } from '../../api/machines';
 import { useLifecycle, type FleetItem, type UpdateStatusV2 } from '../../api/lifecycle';
@@ -38,8 +37,12 @@ export function UpdatesSettings() {
   const session = useSession();
   const tick = useRefreshTick(REFRESH_MS);
   const status = useLoad(() => api.status(), [tick]);
-  const history = useLoad(() => api.history(), [tick]);
   const fleet = useLoad(() => api.fleet(), [tick]);
+  // The service is down for the install: the pane says it in one line, no Note (CRSP364).
+  const restarting =
+    status.result.state === 'failed' &&
+    status.result.error instanceof ApiError &&
+    status.result.error.code === 'unavailable';
   const [removing, setRemoving] = useState(false);
   const [removeStarted, setRemoveStarted] = useState(false);
   const [remote, setRemote] = useState<string | undefined>(undefined);
@@ -72,7 +75,12 @@ export function UpdatesSettings() {
           </Message>
         ) : null,
       )}
-      <Load result={status.result} what="the update status" reload={status.reload}>
+      <Load
+        result={status.result}
+        what="the update status"
+        reload={status.reload}
+        quietRestart
+      >
         {(s) => (
           <UpdatesCard
             // A new window or policy from the server is a new card, so the window fields restart from it.
@@ -86,6 +94,18 @@ export function UpdatesSettings() {
             failure={cardFailure(s)}
             nextCheck={fmtTime(s.next_check_at)}
             checking={check.busy}
+            percent={s.percent}
+            lastCheck={
+              s.last_check
+                ? {
+                    time: fmtTime(s.last_check.at),
+                    by: s.last_check.by,
+                    kind: s.last_check.kind,
+                  }
+                : undefined
+            }
+            historyTo="/settings/audit"
+            restarting={restarting}
             onPolicy={(p) => void policy.run(p, s.window)}
             onWindow={(w) => void policy.run(s.policy, w)}
             onCheck={() => void check.run()}
@@ -95,10 +115,7 @@ export function UpdatesSettings() {
           />
         )}
       </Load>
-      <Load result={history.result} what="the update history" reload={history.reload}>
-        {(rows) => <UpdateHistory events={rows} />}
-      </Load>
-      <Load result={fleet.result} what="the machines" reload={fleet.reload}>
+      <Load result={fleet.result} what="the machines" reload={fleet.reload} quietRestart>
         {(rows) => {
           const sel = rows.find((r) => r.machine_id === remote);
           const to =

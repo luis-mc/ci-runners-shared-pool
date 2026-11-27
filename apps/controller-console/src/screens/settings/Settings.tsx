@@ -65,12 +65,13 @@ import { WebhooksSettings } from './Webhooks';
 
 type User = Schemas['User'];
 
-// Six tabs (owner decision D8; Updates after Console, LOOK43). Each old section is a pane inside its tab, in this order; `SECTIONS` says where
+// Seven tabs (owner decision D8; Updates after Networking, LOOK43; Console split into Themes and Networking, CRSP365). Each old section is a pane inside its tab, in this order; `SECTIONS` says where
 // an old address now lives, so a link or bookmark to /settings/<old> lands on the right tab and section.
 const TABS = [
   { id: 'access', label: 'Access' },
   { id: 'repositories', label: 'Repositories' },
-  { id: 'console', label: 'Console' },
+  { id: 'themes', label: 'Themes' },
+  { id: 'networking', label: 'Networking' },
   { id: 'updates', label: 'Updates' },
   { id: 'data', label: 'Data' },
   { id: 'audit', label: 'Audit log' },
@@ -93,7 +94,9 @@ export function SettingsLayout() {
   const segment = pathname.split('/')[2] ?? '';
   const current = TABS.some((t) => t.id === segment)
     ? segment
-    : (SECTIONS[segment]?.tab ?? 'access');
+    : segment === 'console'
+      ? 'themes'
+      : (SECTIONS[segment]?.tab ?? 'access');
   // Scroll to the section named by the address, once its tab is on screen.
   useEffect(() => {
     if (!hash) return;
@@ -145,15 +148,27 @@ export function RepositoriesTab() {
   );
 }
 
+/** The old Console tab address: Themes, or Networking when the anchor names a pane that moved there (CRSP365). */
 export function ConsoleTab() {
   const { hash } = useLocation();
-  // The Updates pane used to be the last section of this tab: its old anchor goes to its own tab.
   if (hash === '#updates') return <Navigate to="/settings/updates" replace />;
+  const moved = ['#notifications', '#network', '#metrics'].includes(hash);
+  return <Navigate to={`/settings/${moved ? 'networking' : 'themes'}${hash}`} replace />;
+}
+
+export function ThemesTab() {
   return (
     <TabForm>
       <At id="appearance">
         <AppearanceSettings />
       </At>
+    </TabForm>
+  );
+}
+
+export function NetworkingTab() {
+  return (
+    <TabForm>
       <At id="notifications">
         <NotificationsSettings />
       </At>

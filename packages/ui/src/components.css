@@ -3967,64 +3967,62 @@ a.ds-stat:focus-visible {
   display: inline;
 }
 
-/* Dotted charts (UX-91, owner 27 Nov): in the Cool Terminal themes with Graphs set to Dots, the data charts are drawn with dots.
-   Only the drawing changes; the words, the legend, the table and the text alternative stay. Level bars and segment meters stay blocks.
-   Components 52 to 55 and 60. Blocks (the default) set no data-graphs and look as before. */
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__line,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__swatch line,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-spark__line {
+/* Dotted charts (UX-91, owner 27 Nov, CRSP370): in the Cool Terminal themes with Graphs set to Dots, the data charts are drawn
+   with solid round filled dots, like the dotted meters of the theme page: a column is a stack of dots, a line a line of dots, an
+   area a grid of dots, a heat cell one dot, a bar list a row of dots. The chart parts draw the dots themselves (dots.tsx), so a
+   stretched chart never squashes one. Only the drawing changes; the words, the legend, the table and the text alternative stay.
+   Level bars, progress bars and segment meters stay blocks. Components 52 to 55 and 60. Blocks (the default) set no data-graphs. */
+.ds-trend__plot {
+  position: relative;
+}
+.ds-trend__dots,
+.ds-spark__dotlayer,
+.ds-fchart__dotlayer {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.ds-dot {
+  fill: var(--ds-color-primary);
+}
+.ds-dot[data-dot='off'] {
+  fill: var(--ds-color-divider);
+}
+.ds-dot[data-dot='band'] {
+  fill-opacity: 0.5;
+}
+.ds-trend__series[data-series='1'] .ds-dot:not([data-dot='off']) {
+  fill: var(--ds-color-note);
+}
+.ds-trend__series[data-series='2'] .ds-dot:not([data-dot='off']) {
+  fill: var(--ds-color-needs-you);
+}
+.ds-trend__series[data-series='3'] .ds-dot:not([data-dot='off']) {
+  fill: var(--ds-color-done);
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  :is(
+    .ds-trend__line,
+    .ds-trend__band,
+    .ds-trend__column,
+    .ds-spark__line,
+    .ds-fchart__diagonal
+  ) {
+  display: none;
+}
+/* The legend swatch is a short line of round dots. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__swatch line {
   stroke-width: var(--ds-border-thick);
   stroke-dasharray: 0 6;
   stroke-linecap: round;
 }
-[data-theme-name='terminal'][data-graphs='dotted']
-  .ds-trend__series[data-series='1']
-  .ds-trend__line,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__key[data-series='1'] line {
-  stroke-dasharray: 0 9;
-}
-[data-theme-name='terminal'][data-graphs='dotted']
-  .ds-trend__series[data-series='2']
-  .ds-trend__line,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__key[data-series='2'] line {
-  stroke-dasharray: 0 12;
-}
-[data-theme-name='terminal'][data-graphs='dotted']
-  .ds-trend__series[data-series='3']
-  .ds-trend__line,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__key[data-series='3'] line {
-  stroke-dasharray: 0 15;
-}
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__grid,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-fchart__diagonal {
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__grid {
   stroke-dasharray: 0 6;
   stroke-linecap: round;
   stroke-width: var(--ds-border-medium);
-}
-/* An area or a column is its outline in dots over a light wash of the same colour. */
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__band,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__column {
-  fill-opacity: 0.18;
-  stroke: var(--ds-color-primary);
-  stroke-width: var(--ds-border-medium);
-  stroke-dasharray: 0 5;
-  stroke-linecap: round;
-  vector-effect: non-scaling-stroke;
-}
-[data-theme-name='terminal'][data-graphs='dotted']
-  .ds-trend__series[data-series='1']
-  :is(.ds-trend__band, .ds-trend__column) {
-  stroke: var(--ds-color-note);
-}
-[data-theme-name='terminal'][data-graphs='dotted']
-  .ds-trend__series[data-series='2']
-  :is(.ds-trend__band, .ds-trend__column) {
-  stroke: var(--ds-color-needs-you);
-}
-[data-theme-name='terminal'][data-graphs='dotted']
-  .ds-trend__series[data-series='3']
-  :is(.ds-trend__band, .ds-trend__column) {
-  stroke: var(--ds-color-done);
 }
 /* Heatmap: a round dot in each cell, its size is the level. */
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell {
@@ -4063,13 +4061,61 @@ a.ds-stat:focus-visible {
 [data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='4'] {
   --heat-dot: 78%;
 }
-/* Bar list: the bar and its track are rows of dots. */
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-bars__track,
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-bars__bar {
-  --bars-dot: var(--ds-color-divider);
-  background: radial-gradient(circle closest-side, var(--bars-dot) 55%, transparent 62%) 0
-    0 / var(--ds-space-2) var(--ds-space-2) repeat-x;
+
+/* Bars in the Cool Terminal themes draw the theme's blocks (UX-91, CRSP369): the progress bar and the bar list are rows of
+   shared segments in the theme's colours; the plain bar and fill hide. In Dots only the charts draw dots, so these stay blocks
+   (the bar list is a bar, not a chart, so it draws blocks in Dots too). Outside the theme nothing changes. */
+.ds-progress .ds-segs,
+.ds-bars__segs {
+  display: none;
 }
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-bars__bar {
-  --bars-dot: var(--ds-color-note);
+[data-theme-name='terminal'] .ds-progress {
+  background: transparent;
+  border-radius: 0;
+  block-size: auto;
+  overflow: visible;
+}
+[data-theme-name='terminal'] .ds-progress__fill {
+  display: none;
+}
+[data-theme-name='terminal'] .ds-progress .ds-segs,
+[data-theme-name='terminal'] .ds-bars__segs .ds-segs {
+  display: flex;
+}
+[data-theme-name='terminal'] .ds-bars__segs {
+  display: block;
+  grid-column: 1 / -1;
+}
+[data-theme-name='terminal'] .ds-progress .ds-segs__cell,
+[data-theme-name='terminal'] .ds-bars__segs .ds-segs__cell {
+  flex: 1 1 0;
+  inline-size: auto;
+  min-inline-size: 0;
+  --ds-seg-on: var(--ds-color-primary);
+}
+[data-theme-name='terminal'] .ds-bars__segs .ds-segs__cell {
+  --ds-seg-on: var(--ds-color-note);
+}
+[data-theme-name='terminal'] .ds-progress:not([data-known]) .ds-segs__cell {
+  animation: ds-seg-chase var(--ds-duration-loop) var(--ds-ease-in-out) infinite alternate;
+}
+[data-theme-name='terminal']
+  .ds-progress:not([data-known])
+  .ds-segs__cell:nth-child(3n + 2) {
+  animation-delay: calc(var(--ds-duration-loop) / 6);
+}
+[data-theme-name='terminal'] .ds-progress:not([data-known]) .ds-segs__cell:nth-child(3n) {
+  animation-delay: calc(var(--ds-duration-loop) / 3);
+}
+@keyframes ds-seg-chase {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+[data-theme-name='terminal'] .ds-bars__track,
+[data-theme-name='terminal'] .ds-bars__bar {
+  display: none;
 }

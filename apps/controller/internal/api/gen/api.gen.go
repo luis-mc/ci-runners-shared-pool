@@ -1651,6 +1651,24 @@ func (e JoinCodeState) Valid() bool {
 	}
 }
 
+// Defines values for LifecycleStatusLastCheckKind.
+const (
+	LifecycleStatusLastCheckKindAutomatic LifecycleStatusLastCheckKind = "automatic"
+	LifecycleStatusLastCheckKindManual    LifecycleStatusLastCheckKind = "manual"
+)
+
+// Valid indicates whether the value is a known member of the LifecycleStatusLastCheckKind enum.
+func (e LifecycleStatusLastCheckKind) Valid() bool {
+	switch e {
+	case LifecycleStatusLastCheckKindAutomatic:
+		return true
+	case LifecycleStatusLastCheckKindManual:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for LifecycleStatusPolicy.
 const (
 	LifecycleStatusPolicyAskFirst          LifecycleStatusPolicy = "ask_first"
@@ -7034,6 +7052,15 @@ type LifecycleStatus struct {
 		RetryAt *time.Time `json:"retry_at"`
 		Version string     `json:"version"`
 	} `json:"failures"`
+
+	// LastCheck The last time crsp looked for an update (CRSP368), read from the update audit rows; null when it never did. Absent from the answers to a policy change, a check or an install.
+	LastCheck *struct {
+		At time.Time `json:"at"`
+
+		// By Who asked for the check; updater when crsp looked by itself.
+		By   string                       `json:"by"`
+		Kind LifecycleStatusLastCheckKind `json:"kind"`
+	} `json:"last_check,omitempty"`
 	NextCheckAt    *time.Time            `json:"next_check_at"`
 	Policy         LifecycleStatusPolicy `json:"policy"`
 	Required       bool                  `json:"required"`
@@ -7046,6 +7073,9 @@ type LifecycleStatus struct {
 		Start string `json:"start"`
 	} `json:"window"`
 }
+
+// LifecycleStatusLastCheckKind defines model for LifecycleStatus.LastCheck.Kind.
+type LifecycleStatusLastCheckKind string
 
 // LifecycleStatusPolicy defines model for LifecycleStatus.Policy.
 type LifecycleStatusPolicy string

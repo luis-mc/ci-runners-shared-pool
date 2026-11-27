@@ -194,7 +194,7 @@ The body scrolls when the content is taller than the space. The overlay never gr
 ## 16. Progress bar
 
 - **Used for:** a wait. Filled when the total is known, animated when it is not. It always names what is happening. With `phases` (weighted) it shows the real percent of the whole job; a phase with no percent shows an indeterminate bar, the reason and the time elapsed (UX-88).
-- **Looks:** a thin bar that fills from the start, with a line of text that names the work.
+- **Looks:** a thin bar that fills from the start, with a line of text that names the work. In the Terminal themes (Blocks and Dots alike) it is a row of 20 shared segments in the primary colour, filled in steps of 5 %; an unknown total is the same row with its segments pulsing (UX-91, CRSP369). A progress bar never sits inside a Note: where a Note would carry one, the Note is one short line and the bar is drawn by the pane that owns the work (CRSP364).
 - **Source:** `src/ui/progress`
 - **Rules:** UX-29, UX-88, UX-17, UX-19.
 - **Guard:** `packages/ui/src/components/LiveProgress.test.tsx` (weighted phases, indeterminate with reason).
@@ -574,7 +574,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** one to four series over time or over categories, as lines or columns, with an optional range band.
 - **Looks:** inline SVG to scale with the top and bottom value and the first and last time named; lines differ by dash as well as colour, and a legend names them. A table under "Show as table" lists every point. A `stacked` mode stacks the parts of one total (component 63).
-- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a row of round dots (each series has its own dot gap besides its colour), a band or a column is its outline in dots over a light wash. The grid and the legend swatches follow. The words, the legend and the table do not change.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a line of solid round filled dots, evenly spaced (each series has its own colour; the legend swatch is a short line of dots), a band or an area is a grid of filled dots, a column is a vertical stack of filled dots whose top dot is partly lit by the value and whose empty dots are in the divider colour. The part draws the dots itself (`dots.tsx`; circles in a layer over the plot, so a stretched chart never squashes one), never an outline over a wash and never a page. The grid follows. The words, the legend and the table do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`TrendChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-11, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -583,7 +583,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a small trend in a table cell or a facts row.
 - **Looks:** one line with no axes; the last value can be marked with a dot. It always has its label and the last, lowest and highest value as text. No values say "no data yet".
-- **Dotted form:** in the Terminal themes with Graphs set to Dots, the line is a row of round dots; the last-value dot stays. The text alternative does not change.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the line is a line of solid round filled dots; the last-value dot stays. The text alternative does not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Sparkline`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-11.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -601,7 +601,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** how good a forecast was: one dot per finished job, forecast across and actual up.
 - **Looks:** a dashed diagonal for "forecast = actual"; a bracket with end caps at the height of each dot for its range. A dot inside its range is round, one outside is a diamond. A table under "Show as table" says each job in words.
-- **Dotted form:** in the Terminal themes with Graphs set to Dots, the diagonal is a row of round dots. The dots, brackets and diamonds keep their shapes, so inside and outside stay readable without colour.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the diagonal is a line of solid round filled dots. The dots, brackets and diamonds keep their shapes, so inside and outside stay readable without colour.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`ForecastChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -658,7 +658,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 - **Keyboard and screen reader:** each row is one tab stop; Down and Up move through the rows (UX-57); Enter opens the list. A row reads _repo-a: 212 minutes, 124 jobs. Open the 124 jobs._ The bars are hidden from assistive technology; the table under _Show as table_ is the text equivalent.
 - **Phone (360, 393 px):** the label sits above its bar (the bar fills the row width), the value to the right of the label; the label wraps and never cuts (UX-72); rows are at least `--ds-target-min` high.
 - **Looks:** a card body, never a bordered box inside a box.
-- **Dotted form:** in the Terminal themes with Graphs set to Dots, the bar and its track are rows of round dots (the bar in the note colour, the track in the divider colour). The value as text does not change.
+- **Terminal form (CRSP369, owner 27 Nov):** a bar list is a bar, not a chart: in the Terminal themes it is a row of 10 shared segments (`Segments`, steps of 5 %) in the note colour, in Blocks and in Dots alike. Graphs set to Dots never draws a dot here. The value as text does not change.
 - **Source:** `packages/ui/src/components/BarList.tsx` (`BarList`), `packages/ui/src/components.css` (built in LOOK41; one value a row, the two-segment bar and _Show as table_ come with the stacked mode).
 - **Rules:** UX-41, UX-17, UX-52, UX-57, UX-58, UX-72, UX-16, CORE-2, CORE-4.
 - **Guard:** `packages/ui/src/components/overview-parts.test.tsx`.

@@ -116,7 +116,7 @@ The screens are the Overview (screen 2), Jobs (screen 6), the Runners and Machin
 
 **Audit log.** Read-only rows: when, who, what, target, result.
 
-**Metrics (Settings, Console, Metrics).** Off until the owner turns it on (CRSP262, R5.70 to R5.77). Two check boxes that wait for the tab's Save (UX-22): *Prometheus page* and *Push to OpenTelemetry*. With the page on: the port, *Let other computers read the page* (off by default), *Ask for a key* and a *Make a key* button that shows the key once in a copy block. With the push on: the collector address and the interval. While the page is on, a copy block holds the Prometheus scrape text. A viewer sees every control off with the reason (UX-38). The tab ends with the shared Cancel and Save bar (UX-24). Nothing here is drawn by the page: it uses the shared parts `Section`, `CheckRow`, `NumberField`, `TextField`, `FieldGrid`, `Button`, `CodeBlock`, `Message` and `ErrorSummary`.
+**Metrics (Settings, Networking, Metrics).** Off until the owner turns it on (CRSP262, R5.70 to R5.77). Two check boxes that wait for the tab's Save (UX-22): *Prometheus page* and *Push to OpenTelemetry*. With the page on: the port, *Let other computers read the page* (off by default), *Ask for a key* and a *Make a key* button that shows the key once in a copy block. With the push on: the collector address and the interval. While the page is on, a copy block holds the Prometheus scrape text. A viewer sees every control off with the reason (UX-38). The tab ends with the shared Cancel and Save bar (UX-24). Nothing here is drawn by the page: it uses the shared parts `Section`, `CheckRow`, `NumberField`, `TextField`, `FieldGrid`, `Button`, `CodeBlock`, `Message` and `ErrorSummary`.
 
 **States.**
 

@@ -1,4 +1,4 @@
-// CRSP362: every chart part has a dotted form under the Cool Terminal Graphs setting (UX-91, components 52 to 55 and 60).
+// CRSP362, CRSP370: every chart part has a dotted form of solid round filled dots under the Cool Terminal Graphs setting (UX-91, components 52 to 55).
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -14,7 +14,6 @@ describe('dotted charts', () => {
     Sparkline: '.ds-spark__line',
     Heatmap: '.ds-heat__cell',
     ForecastChart: '.ds-fchart__diagonal',
-    BarList: '.ds-bars__bar',
   };
   for (const [name, cls] of Object.entries(parts)) {
     it(`${name} has a dotted rule`, () => {
@@ -22,13 +21,28 @@ describe('dotted charts', () => {
       expect(rules.length).toBeGreaterThan(0);
     });
   }
-  it('line charts use round dots', () => {
-    expect(css).toMatch(/stroke-dasharray: 0 \d+;\s*stroke-linecap: round/);
+  it('the dots are filled circles, not an outline over a wash (CRSP370)', () => {
+    expect(css).toMatch(/\.ds-dot \{\s*fill: var\(--ds-color-primary\)/);
+    const dotted = css.split('}').filter((r) => r.includes(DOTTED));
+    for (const r of dotted) {
+      expect(r).not.toMatch(/fill-opacity: 0\.18/);
+      expect(r).not.toMatch(/ds-trend__column[^{]*\{[^}]*stroke-dasharray/);
+    }
+    // The line, area and column are replaced by dots drawn in the part, so the stroke form hides.
+    const hide = css
+      .split('}')
+      .find((r) => r.includes(DOTTED) && r.includes('.ds-trend__column'));
+    expect(hide).toMatch(/display: none/);
   });
-  it('dots never touch level bars or segment meters', () => {
+  it('the chart parts draw circles themselves', () => {
+    const charts = readFileSync(join(import.meta.dirname, 'Charts.tsx'), 'utf8');
+    expect(charts).toContain('DotLayer');
+    expect(charts.match(/<DotLayer/g)?.length).toBeGreaterThanOrEqual(3);
+  });
+  it('dots never touch a bar: level bars, segment meters, progress bars, the bar list', () => {
     const rules = css.split('}').filter((r) => r.includes(DOTTED));
     for (const r of rules) {
-      expect(r).not.toMatch(/ds-level|ds-segs|ds-segmeter/);
+      expect(r).not.toMatch(/ds-level|ds-segs|ds-segmeter|ds-progress|ds-bars/);
     }
   });
 });

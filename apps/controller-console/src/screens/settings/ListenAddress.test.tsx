@@ -58,7 +58,7 @@ describe('Settings > Console > Network', () => {
   it('shows the address and opens the dialog with the three choices, the PC one chosen', async () => {
     renderApp(
       signedIn().on('GET', '/api/v1/settings/listen-address', listen()),
-      '/settings/console',
+      '/settings/networking',
     );
     expect(await screen.findByText('Network')).toBeTruthy();
     expect(await screen.findByText('127.0.0.1:8460')).toBeTruthy();
@@ -89,7 +89,7 @@ describe('Settings > Console > Network', () => {
         address: (c.body as { address: string }).address,
         restarting: true,
       }));
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     await screen.findByText('127.0.0.1:8460');
     open();
     await (await inDialog()).findAllByRole('radio');
@@ -112,7 +112,7 @@ describe('Settings > Console > Network', () => {
         address: (c.body as { address: string }).address,
         restarting: true,
       }));
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     await screen.findByText('127.0.0.1:8460');
     open();
     fireEvent.click(
@@ -140,7 +140,7 @@ describe('Settings > Console > Network', () => {
       .on('PUT', '/api/v1/settings/listen-address', () =>
         apiError(400, 'bad_request', '10.1.1.1 is not an address of this PC'),
       );
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     await screen.findByText('127.0.0.1:8460');
     open();
     await (await inDialog()).findAllByRole('radio');
@@ -166,7 +166,7 @@ describe('Settings > Console > Network', () => {
         address: '192.168.1.20:8460',
         restarting: true,
       });
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     await screen.findByText('127.0.0.1:8460');
     open();
     await (await inDialog()).findAllByRole('radio');
@@ -184,7 +184,7 @@ describe('Settings > Console > Network', () => {
         '/api/v1/settings/listen-address',
         listen({ from_env: true, env_name: 'CRSP_LISTEN_ADDR' }),
       ),
-      '/settings/console',
+      '/settings/networking',
     );
     expect(await screen.findByText(/set by CRSP_LISTEN_ADDR on this PC/)).toBeTruthy();
     const button = screen.getByRole('button', { name: 'Choose an address' });
@@ -196,7 +196,7 @@ describe('Settings > Console > Network', () => {
   it('a viewer cannot choose', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/settings/listen-address', listen()),
-      '/settings/console',
+      '/settings/networking',
     );
     const button = await screen.findByRole('button', { name: 'Choose an address' });
     expect(
@@ -218,7 +218,7 @@ describe('Choose an address dialog', () => {
         address: (c.body as { address: string }).address,
         restarting: true,
       }));
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     await screen.findByText('127.0.0.1:8460');
     open();
     await (await inDialog()).findAllByRole('radio');
@@ -258,7 +258,7 @@ describe('Choose an address dialog', () => {
       .on('POST', '/api/v1/settings/signin-address', () =>
         signinAddress({ registered: false, app_url: 'https://evil.example/x' }),
       );
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     await screen.findByText('127.0.0.1:8460');
     open();
     await (await inDialog()).findAllByRole('radio');
