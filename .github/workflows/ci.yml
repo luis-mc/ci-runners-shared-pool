@@ -189,6 +189,13 @@ jobs:
           node-version: 24
       - uses: ./.github/actions/pnpm-cache
 
+      # CRSP341: the secret scan is never allowlisted; a pull request may not add a line.
+      - name: No additions to .gitleaksignore
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          BASE_REF: ${{ github.base_ref }}
+        run: python3 scripts/ci/gitleaksignore_guard.py --base "origin/${BASE_REF}"
+
       - name: CI scripts unit tests
         run: |
           # CRSP319: a cold module cache (no main entry yet) would download inside the 10 s

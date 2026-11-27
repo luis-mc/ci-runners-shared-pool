@@ -13,6 +13,11 @@ Standing rules for every agent working in this repository. `CLAUDE.md` imports t
 - Before you finish: `python3 <luismc-docs>/scripts/docs_check.py`.
 
 <!-- design-system-checklist:start -->
+## Secret scan
+
+- Planted fake secrets in tests are built at run time (concatenate or generate), never written as literals.
+- An agent that cannot pass the scan changes the code, never `.gitleaksignore` or `.gitleaks.toml`. A pull request that adds a line to `.gitleaksignore` fails `scripts/ci/gitleaksignore_guard.py`.
+
 ## Design system checklist (UI briefs and pull request bodies)
 
 - [ ] Core UX Principles checked: CORE-1 to CORE-7 (name the IDs you checked).

@@ -59,5 +59,12 @@
       "run_full": "{ [ -n \"${E2E_CHROMIUM_PATH:-}\" ] && [ -x \"$E2E_CHROMIUM_PATH\" ]; } || pnpm exec playwright install chromium && pnpm exec playwright test",
       "env": {"CI": "true"}
     }
+  ],
+  "always_on_guards": [
+    {
+      "name": "gitleaksignore-no-additions",
+      "command": "python3 scripts/ci/gitleaksignore_guard.py --base origin/main",
+      "inputs": [".gitleaksignore"]
+    }
   ]
 }

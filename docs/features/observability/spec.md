@@ -324,6 +324,8 @@ Whichever of a time or a size limit is reached first applies. The oldest data go
 
 **R6.14** — (M1) The audit log holds personal data (GitHub login and user id). It is listed in `docs/reference/data-inventory.md` and `docs/reference/data-retention.md` (stack profile, sections 7 and 10) and follows R6.8.
 
+**R6.15** — (CRSP341) The secret scan is never allowlisted. A pull request that adds a line to `.gitleaksignore` fails: the guard `scripts/ci/gitleaksignore_guard.py` runs in the pre-push hook (gate.json `always_on_guards`) and in the CI lint job; removing lines passes. Planted fake secrets in tests are built at run time, never written as literals (AGENTS.md, Secret scan).
+
 ## 7. Design
 
 ### Parts
@@ -450,6 +452,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23). Planned rows
 | R6.12 | internal/store/jobsdata_utc_test.go TestJobTimesStoredUTC; apps/web/src/live/format.test.ts |
 | R6.13 | planned: e2e/overview.spec.ts "live regions announce at most once per 10 s" |
 | R6.14 | internal/audit/inventory_test.go TestAuditFieldsListedInDataInventory (the inventory file is generated, so the test holds the field list) |
+| R6.15 | scripts/ci/test_gitleaksignore_guard.py (an added line fails, a removed line passes) |
 
 **Metrics export (CRSP262).**
 
