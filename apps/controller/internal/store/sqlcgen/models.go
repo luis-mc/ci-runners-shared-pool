@@ -535,6 +535,11 @@ type JobFactsPending struct {
 	UpdatedAt string
 }
 
+type JobHeadRepository struct {
+	JobID          int64
+	HeadRepository string
+}
+
 type JobHistory struct {
 	ID           int64
 	RepositoryID int64
