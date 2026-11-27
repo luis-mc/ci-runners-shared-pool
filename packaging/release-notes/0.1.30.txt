@@ -1,4 +1,5 @@
 Updating is now a guided page with live progress, and Pool setup was redesigned to guide you step by step.
-The runners list has a filter bar, and the new Theme list in Settings holds every look in one place.
-Builds are faster, with a cache hub, and jobs that do not fit the pool now queue by clear priority rules.
+Overflow can send jobs to other runners with minute caps, a monthly money budget and a price per target.
+Settings has new Themes and Networking tabs, the Terminal themes have light versions, and charts can be drawn as dots.
+Pages that read data are much faster, and builds share a cache hub.
 There is also a public website with the install steps.
