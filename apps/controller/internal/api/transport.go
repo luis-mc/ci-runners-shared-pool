@@ -3,12 +3,15 @@ package api
 import (
 	"bytes"
 	"compress/gzip"
+	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
 	"sync"
+	"time"
 )
 
 // The transport of the API answers (CRSP290, audit F5): every GET answer gets `Cache-Control: no-cache` (a browser
@@ -32,7 +35,7 @@ func transportMW(next http.Handler) http.Handler {
 		}
 		tw := &transportWriter{ResponseWriter: w, r: r}
 		defer tw.finish()
-		next.ServeHTTP(tw, r)
+		next.ServeHTTP(tw, r.WithContext(context.WithValue(r.Context(), transportKey{}, tw)))
 	})
 }
 
@@ -50,6 +53,8 @@ type transportWriter struct {
 	mode   writeMode
 	status int
 	buf    bytes.Buffer
+	// versionKey, when a handler set it, names the data version this answer was made from (see notModified).
+	versionKey string
 }
 
 // Unwrap lets http.ResponseController reach the real writer (deadlines, flushing).
@@ -130,6 +135,9 @@ func (t *transportWriter) finish() {
 	}
 	h.Add("Vary", "Accept-Encoding")
 	h.Set("ETag", etag)
+	if t.versionKey != "" && t.status == http.StatusOK {
+		etags.put(t.versionKey+"|"+strconv.FormatBool(gz), etag)
+	}
 	if noneMatch(t.r.Header.Get("If-None-Match"), etag) {
 		h.Del("Content-Length")
 		h.Del("Content-Type")
@@ -175,3 +183,68 @@ func noneMatch(header, etag string) bool {
 	}
 	return false
 }
+
+type transportKey struct{}
+
+// The answers that depend only on the jobs table (grouped table, stats) are tagged with the jobs version they were made
+// from; a caller that holds the tag of the same version gets its 304 before the handler runs (audit R3-8). The
+// version moves on every job or run write and the key carries a ten-second bucket, the age at which the answers
+// themselves are made again. The list routes are left to the body hash: their answers depend on the clock and on
+// runner state that the jobs version does not see.
+type etagMemo struct {
+	mu sync.Mutex
+	m  map[string]string
+}
+
+const etagMemoMax = 512
+
+var etags etagMemo
+
+func (e *etagMemo) get(key string) (string, bool) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	v, ok := e.m[key]
+	return v, ok
+}
+
+func (e *etagMemo) put(key, etag string) {
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	if e.m == nil || len(e.m) >= etagMemoMax {
+		e.m = map[string]string{} // a full memo starts again: a miss only runs the handler
+	}
+	e.m[key] = etag
+}
+
+// notModified is asked by a handler after it has checked the caller may read: it names the answer by route, query and
+// jobs version, and says whether the caller already holds the tag of that same answer. When it says false the answer
+// is made as usual and remembered under the same name.
+func (s *server) notModified(ctx context.Context, now time.Time) (etag string, ok bool) {
+	tw, _ := ctx.Value(transportKey{}).(*transportWriter)
+	v, has := s.opts.JobsData.(interface{ JobsVersion() int64 })
+	if tw == nil || !has {
+		return "", false
+	}
+	tw.versionKey = fmt.Sprintf("%s?%s|%d|%d", tw.r.URL.Path, tw.r.URL.RawQuery, v.JobsVersion(), now.Unix()/10)
+	etag, found := etags.get(tw.versionKey + "|" + strconv.FormatBool(acceptsGzip(tw.r)))
+	if !found || !noneMatch(tw.r.Header.Get("If-None-Match"), etag) {
+		return "", false
+	}
+	return etag, true
+}
+
+// notModifiedResponse is the 304 a handler answers with when notModified said the caller has the answer.
+type notModifiedResponse struct{ etag string }
+
+func (n notModifiedResponse) write(w http.ResponseWriter) error {
+	h := w.Header()
+	h.Add("Vary", "Accept-Encoding")
+	h.Set("ETag", n.etag)
+	w.WriteHeader(http.StatusNotModified)
+	return nil
+}
+
+func (n notModifiedResponse) VisitListJobGroupsResponse(w http.ResponseWriter) error {
+	return n.write(w)
+}
+func (n notModifiedResponse) VisitGetJobStatsResponse(w http.ResponseWriter) error { return n.write(w) }
