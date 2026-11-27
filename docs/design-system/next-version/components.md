@@ -574,6 +574,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** one to four series over time or over categories, as lines or columns, with an optional range band.
 - **Looks:** inline SVG to scale with the top and bottom value and the first and last time named; lines differ by dash as well as colour, and a legend names them. A table under "Show as table" lists every point. A `stacked` mode stacks the parts of one total (component 63).
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a row of round dots (each series has its own dot gap besides its colour), a band or a column is its outline in dots over a light wash. The grid and the legend swatches follow. The words, the legend and the table do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`TrendChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-11, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -582,6 +583,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a small trend in a table cell or a facts row.
 - **Looks:** one line with no axes; the last value can be marked with a dot. It always has its label and the last, lowest and highest value as text. No values say "no data yet".
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the line is a row of round dots; the last-value dot stays. The text alternative does not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Sparkline`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-11.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -590,6 +592,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a weekday by hour grid of counts or seconds ("busiest hours").
 - **Looks:** seven rows of 24 cells in five steps of one colour; the highest step has an outline. It fits 360 px without scrolling. A table under "Show as table" gives each day's total and busiest hour.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, each cell shows a round dot whose size is the level (five sizes, the biggest nearly fills the cell) instead of a filled square. The table and the cell hover text do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Heatmap`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-49, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -598,6 +601,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** how good a forecast was: one dot per finished job, forecast across and actual up.
 - **Looks:** a dashed diagonal for "forecast = actual"; a bracket with end caps at the height of each dot for its range. A dot inside its range is round, one outside is a diamond. A table under "Show as table" says each job in words.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the diagonal is a row of round dots. The dots, brackets and diamonds keep their shapes, so inside and outside stay readable without colour.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`ForecastChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -654,6 +658,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 - **Keyboard and screen reader:** each row is one tab stop; Down and Up move through the rows (UX-57); Enter opens the list. A row reads _repo-a: 212 minutes, 124 jobs. Open the 124 jobs._ The bars are hidden from assistive technology; the table under _Show as table_ is the text equivalent.
 - **Phone (360, 393 px):** the label sits above its bar (the bar fills the row width), the value to the right of the label; the label wraps and never cuts (UX-72); rows are at least `--ds-target-min` high.
 - **Looks:** a card body, never a bordered box inside a box.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the bar and its track are rows of round dots (the bar in the note colour, the track in the divider colour). The value as text does not change.
 - **Source:** `packages/ui/src/components/BarList.tsx` (`BarList`), `packages/ui/src/components.css` (built in LOOK41; one value a row, the two-segment bar and _Show as table_ come with the stacked mode).
 - **Rules:** UX-41, UX-17, UX-52, UX-57, UX-58, UX-72, UX-16, CORE-2, CORE-4.
 - **Guard:** `packages/ui/src/components/overview-parts.test.tsx`.

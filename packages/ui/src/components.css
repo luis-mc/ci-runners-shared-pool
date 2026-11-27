@@ -3966,3 +3966,110 @@ a.ds-stat:focus-visible {
 [data-graphs='dotted'] .ds-spark__dots {
   display: inline;
 }
+
+/* Dotted charts (UX-91, owner 27 Nov): in the Cool Terminal themes with Graphs set to Dots, the data charts are drawn with dots.
+   Only the drawing changes; the words, the legend, the table and the text alternative stay. Level bars and segment meters stay blocks.
+   Components 52 to 55 and 60. Blocks (the default) set no data-graphs and look as before. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__line,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__swatch line,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-spark__line {
+  stroke-width: var(--ds-border-thick);
+  stroke-dasharray: 0 6;
+  stroke-linecap: round;
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  .ds-trend__series[data-series='1']
+  .ds-trend__line,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__key[data-series='1'] line {
+  stroke-dasharray: 0 9;
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  .ds-trend__series[data-series='2']
+  .ds-trend__line,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__key[data-series='2'] line {
+  stroke-dasharray: 0 12;
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  .ds-trend__series[data-series='3']
+  .ds-trend__line,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__key[data-series='3'] line {
+  stroke-dasharray: 0 15;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__grid,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-fchart__diagonal {
+  stroke-dasharray: 0 6;
+  stroke-linecap: round;
+  stroke-width: var(--ds-border-medium);
+}
+/* An area or a column is its outline in dots over a light wash of the same colour. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__band,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__column {
+  fill-opacity: 0.18;
+  stroke: var(--ds-color-primary);
+  stroke-width: var(--ds-border-medium);
+  stroke-dasharray: 0 5;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  .ds-trend__series[data-series='1']
+  :is(.ds-trend__band, .ds-trend__column) {
+  stroke: var(--ds-color-note);
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  .ds-trend__series[data-series='2']
+  :is(.ds-trend__band, .ds-trend__column) {
+  stroke: var(--ds-color-needs-you);
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  .ds-trend__series[data-series='3']
+  :is(.ds-trend__band, .ds-trend__column) {
+  stroke: var(--ds-color-done);
+}
+/* Heatmap: a round dot in each cell, its size is the level. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell {
+  --heat-dot: 12%;
+  background: radial-gradient(
+    circle closest-side,
+    var(--ds-color-divider) var(--heat-dot),
+    transparent calc(var(--heat-dot) + 4%)
+  );
+  border-color: transparent;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level] {
+  background: radial-gradient(
+    circle closest-side,
+    var(--ds-color-primary) var(--heat-dot),
+    transparent calc(var(--heat-dot) + 4%)
+  );
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='0'] {
+  --heat-dot: 12%;
+  background: radial-gradient(
+    circle closest-side,
+    var(--ds-color-divider) var(--heat-dot),
+    transparent calc(var(--heat-dot) + 4%)
+  );
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='1'] {
+  --heat-dot: 28%;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='2'] {
+  --heat-dot: 44%;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='3'] {
+  --heat-dot: 60%;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='4'] {
+  --heat-dot: 78%;
+}
+/* Bar list: the bar and its track are rows of dots. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-bars__track,
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-bars__bar {
+  --bars-dot: var(--ds-color-divider);
+  background: radial-gradient(circle closest-side, var(--bars-dot) 55%, transparent 62%) 0
+    0 / var(--ds-space-2) var(--ds-space-2) repeat-x;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-bars__bar {
+  --bars-dot: var(--ds-color-note);
+}
