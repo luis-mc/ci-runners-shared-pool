@@ -1991,3 +1991,37 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 | Where | Word |
 |---|---|
 | Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |
+
+## Debug access words (CRSP331)
+
+The words of the Debug access card on a job page and of the debug session API answers (debug-access R5.2, R5.3, R5.14, R5.24, R5.34). Disabled-with-reason, ask first (UX-9) and the busy word rule apply.
+
+| Word | Where and meaning |
+|---|---|
+| Debug access | The section title on a job page (not shown for a queued job). |
+| Open debug session | The one action of the card and the title and action of the reason dialog. Admin only (busy word: Opening the session...). Disabled with the server's reason beside it. |
+| Reason | The field of the reason dialog. Help: One line, 3 to 200 characters. It goes into the audit log. Mistake: Write a reason of 3 to 200 characters. |
+| Can see this job's files and its running processes' output, not its secrets. | What the shell sees: on the card, in the reason dialog and on the repository setting. |
+| A session ends after {limit} min, or after {idle} min with no key pressed. | Under the button when the repository allows sessions. |
+| Opened by, Reason, Opened, Time left | The facts of an open session (Time left uses the time-left words). |
+| Extend | Adds 15 min, once (busy word: Extending). Disabled reason: A session can be extended once. |
+| End | Ends the session; asks first (busy word: Ending). |
+| End this debug session? | Question card title. Intro: The terminal of {user} on job {job} closes at once. Item: Every process the session started is stopped. |
+| Past sessions of this job | Table title and caption. Columns: Who, From, To, Reason, How it ended. Long reason button: Full reason. |
+| open, time limit, idle limit, job ended, ended by the user, ended by an admin, debug sessions switched off, connection lost, error | How it ended, a status word. |
+| No debug sessions yet. Open one from a running job. | Empty state of the table. |
+| Could not open the session. {why} / Could not extend the session. {why} | Problem messages. |
+| Debug sessions are off for this pool. | Refusal: the pool switch is off. |
+| Debug access is off for this repository. | Refusal: the repository setting is off (the default). |
+| Only admins can open a session. | Refusal for a viewer. |
+| Only the owner can open a session on this repository. | Refusal: the repository is set to Owner only. |
+| This repository is not in the pool's GitHub App installation. | Refusal: an unknown or archived repository. |
+| Not available for public repositories. | Refusal and the disabled reason of the repository setting. |
+| This job runs for a pull request, which may come from a fork. | Refusal: any pull request event (a fork cannot be told apart yet). |
+| crsp does not know this job's environment, so it cannot be entered safely. | Refusal: an isolation crsp cannot enter safely, or a container shared with another running job. |
+| This job runs on a persistent runner. Turn on Allow on persistent runners for this repository first. | Refusal: a persistent runner while the repository does not allow it. |
+| You have 2 sessions open. End one first. | Refusal: the per-user cap. |
+| The job is not running. | Refusal: queued or finished. |
+| This machine cannot open debug sessions yet. | Refusal while no agent can enter a job's environment. |
+| This runner keeps files between jobs. | Warning on a persistent runner (allowed only when the repository allows it). |
+| Not run on a real Mac yet. | Warning on a macOS target (R5.34). |
