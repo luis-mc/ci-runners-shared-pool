@@ -2,15 +2,11 @@
 // not managed.
 import {
   Button,
-  Chips,
-  Cluster,
   Empty,
   LinkButton,
   Message,
   Page,
   Section,
-  ListToolbar,
-  SearchBar,
   Stack,
   Status,
   Table,
@@ -35,6 +31,7 @@ import { Ask, Load } from '../common';
 import { needsYes } from '../repositories/plans';
 import { KIND_NAMES, OS_WORD, oneStop } from './kinds';
 import { keepsText, uncleanText } from './RunnerPage';
+import { RunnerFilterBar } from './RunnerFilters';
 
 type Runner = Schemas['Runner'];
 type SizeClass = NonNullable<Runner['size_class']>;
@@ -380,67 +377,16 @@ export function RunnersList() {
               ) : null}
               <Section title="Runners" count={rows.length}>
                 <Stack>
-                  <ListToolbar
-                    label="Runners"
-                    search={
-                      <SearchBar value={q} onChange={setQ} label="Search runners" />
-                    }
-                    filters={
-                      <Stack>
-                        <Cluster>
-                          <Text tone="muted">System</Text>
-                          <Chips
-                            label="System"
-                            options={[
-                              { value: 'linux', label: 'Linux' },
-                              { value: 'windows', label: 'Windows' },
-                              { value: 'macos', label: 'macOS' },
-                            ]}
-                            value={os}
-                            onChange={setOs}
-                          />
-                        </Cluster>
-                        <Cluster>
-                          <Text tone="muted">Isolation</Text>
-                          <Chips
-                            label="Isolation"
-                            options={[
-                              { value: 'container', label: 'container' },
-                              { value: 'VM', label: 'VM' },
-                              { value: 'microVM', label: 'microVM' },
-                            ]}
-                            value={iso}
-                            onChange={setIso}
-                          />
-                        </Cluster>
-                        <Cluster>
-                          <Text tone="muted">Kind</Text>
-                          <Chips
-                            label="Kind"
-                            options={[
-                              { value: 'persistent', label: 'persistent' },
-                              { value: 'ephemeral', label: 'ephemeral' },
-                            ]}
-                            value={kind}
-                            onChange={setKind}
-                          />
-                        </Cluster>
-                        <Cluster>
-                          <Text tone="muted">Size</Text>
-                          <Chips
-                            label="Size"
-                            options={[
-                              { value: 'small', label: 'small' },
-                              { value: 'medium', label: 'medium' },
-                              { value: 'large', label: 'large' },
-                              { value: 'xl', label: 'xl' },
-                            ]}
-                            value={size}
-                            onChange={setSize}
-                          />
-                        </Cluster>
-                      </Stack>
-                    }
+                  <RunnerFilterBar
+                    state={{ q, os, iso, kind, size }}
+                    set={(key, value) => {
+                      if (key === 'q') setQ(value);
+                      else if (key === 'os') setOs(value as typeof os);
+                      else if (key === 'iso') setIso(value as typeof iso);
+                      else if (key === 'kind') setKind(value as typeof kind);
+                      else setSize(value as typeof size);
+                    }}
+                    shown={rows.length}
                     selection={
                       <>
                         <Button onPress={() => setPicked(new Set(rows.map((r) => r.id)))}>

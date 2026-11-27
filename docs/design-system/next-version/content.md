@@ -1991,3 +1991,20 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 | Where | Word |
 |---|---|
 | Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |
+
+## Runners filter words (CRSP339, the owner's pick of option 3)
+
+The filter bar of Setup > Runners. One row: search, Filters, the selection words. A wide screen opens the four joined-choice rows in the page; a phone opens a bottom sheet.
+
+| Where | Words |
+|---|---|
+| Toolbar, search | Search runners |
+| Toolbar, filter button | Filters; Filters ({n}) when n are set |
+| Rows, names above the joined choices | System; Isolation; Kind; Size |
+| Rows, first choice of each | All |
+| Active filters, one tag each, when the rows are folded | System: Linux; Isolation: VM; Kind: persistent; Size: xl |
+| Active filters, button | Clear filters |
+| Phone sheet, title | Filter runners |
+| Phone sheet, drop-down first choices | Any system; Any isolation; Any kind; Any size |
+| Phone sheet, buttons | Clear filters; Show {n} runners (Show 1 runner for one) |
+
