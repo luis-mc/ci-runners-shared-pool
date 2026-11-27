@@ -3,7 +3,16 @@
 // under "Show as table" (UX-41, UX-17, UX-18, UX-11). Colour is never the only carrier (UX-58): lines differ by
 // dash, the forecast range is a bracket with end caps, a heat cell carries its number in the table.
 import { useRef, type ReactNode } from 'react';
-import { Dot, DotLayer, GRID_GAP, GRID_R, along, boxDots, useBox, useDotted } from './dots';
+import {
+  Dot,
+  DotLayer,
+  GRID_GAP,
+  GRID_R,
+  along,
+  boxDots,
+  useBox,
+  useDotted,
+} from './dots';
 import { formatDateTime, formatDuration, formatNumber, formatPercent } from './format';
 import { Empty } from './State';
 import { VizAlt } from './VizAlt';
@@ -257,7 +266,9 @@ function trendDots(
       const bx = px(p.x - g.slot / 2 + col * g.barW);
       const by = py(p.y);
       boxDots(bx, by, px(g.barW), h - by).forEach((d, k) =>
-        out.push(<Dot key={`${i}-${k}`} x={d.cx} y={d.cy} w={w} h={h} lit={d.lit} r={d.r} />),
+        out.push(
+          <Dot key={`${i}-${k}`} x={d.cx} y={d.cy} w={w} h={h} lit={d.lit} r={d.r} />,
+        ),
       );
     });
     return out;
@@ -277,7 +288,9 @@ function trendDots(
       const hi = py((a.hi ?? 0) + ((b.hi ?? 0) - (a.hi ?? 0)) * t);
       const lo = py((a.lo ?? 0) + ((b.lo ?? 0) - (a.lo ?? 0)) * t);
       for (let y = hi + GRID_R; y <= lo - GRID_R && out.length < 1500; y += pitch)
-        out.push(<Dot key={`b${x}-${y}`} x={x} y={y} w={w} h={h} kind="band" r={GRID_R} />);
+        out.push(
+          <Dot key={`b${x}-${y}`} x={x} y={y} w={w} h={h} kind="band" r={GRID_R} />,
+        );
     }
   }
   along(s.pts.map((p) => ({ x: px(p.x), y: py(p.y) }))).forEach((d, i) =>

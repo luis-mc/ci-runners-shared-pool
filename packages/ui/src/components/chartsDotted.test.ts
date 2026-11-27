@@ -73,7 +73,14 @@ describe('a dotted column has the box of the standard bar (CRSP374)', () => {
     },
   ];
   const draw = () =>
-    render(createElement(TrendChart, { label: 'Jobs per day', series, unit: 'count', emptyText: 'none' }));
+    render(
+      createElement(TrendChart, {
+        label: 'Jobs per day',
+        series,
+        unit: 'count',
+        emptyText: 'none',
+      }),
+    );
   // The jsdom plot is not measured, so the dot layer uses its 600 by 200 default: one SVG unit is one pixel.
   const num = (v: string | null) => Number.parseFloat(v ?? '0');
 
@@ -97,7 +104,11 @@ describe('a dotted column has the box of the standard bar (CRSP374)', () => {
     expect(bars.length).toBe(4);
     for (const b of bars) {
       const inside = dots.filter(
-        (d) => d.cx >= b.x - 1 && d.cx <= b.x + b.w + 1 && d.cy >= b.y - 1 && d.cy <= b.y + b.h + 1,
+        (d) =>
+          d.cx >= b.x - 1 &&
+          d.cx <= b.x + b.w + 1 &&
+          d.cy >= b.y - 1 &&
+          d.cy <= b.y + b.h + 1,
       );
       expect(inside.length).toBeGreaterThan(0);
       const left = Math.min(...inside.map((d) => d.cx - d.r));
@@ -123,8 +134,12 @@ describe('a dotted column has the box of the standard bar (CRSP374)', () => {
     ] as const) {
       const d = boxDots(10, 20, w, h);
       expect(d.length).toBeGreaterThan(0);
-      expect(Math.abs(Math.min(...d.map((p) => p.cy - p.r)) - 20)).toBeLessThanOrEqual(0.01);
-      expect(Math.abs(Math.max(...d.map((p) => p.cy + p.r)) - (20 + h))).toBeLessThanOrEqual(0.01);
+      expect(Math.abs(Math.min(...d.map((p) => p.cy - p.r)) - 20)).toBeLessThanOrEqual(
+        0.01,
+      );
+      expect(
+        Math.abs(Math.max(...d.map((p) => p.cy + p.r)) - (20 + h)),
+      ).toBeLessThanOrEqual(0.01);
     }
     const across = new Set(boxDots(0, 0, 60, 30).map((p) => p.cx)).size;
     expect(across).toBe(Math.floor((60 + GRID_GAP) / (2 * GRID_R + GRID_GAP)));
