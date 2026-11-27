@@ -13,8 +13,19 @@ const router = createBrowserRouter([
   { path: '*', element: <App />, errorElement: <RouteError /> },
 ]);
 
-createRoot(container).render(
-  <StrictMode>
-    <RouterProvider router={router} />
-  </StrictMode>,
-);
+// TEMPORARY (CRSP342, CRSP343): design option screens for review. Delete with apps/web/src/temp; never merge.
+const q = new URLSearchParams(window.location.search);
+const option = q.get('option');
+const task = q.get('task');
+const root = createRoot(container);
+if (task && option && import.meta.env.DEV) {
+  void import('./temp/DesignOptions').then((m) =>
+    root.render(<m.DesignOptions task={task} option={option} />),
+  );
+} else {
+  root.render(
+    <StrictMode>
+      <RouterProvider router={router} />
+    </StrictMode>,
+  );
+}
