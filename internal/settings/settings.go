@@ -34,6 +34,11 @@ type Settings struct {
 	// up before a repository that opted in falls back to GitHub-hosted runners
 	// (github-integration R5.43).
 	FallbackGraceMinutes int
+	// OverflowLabel is the one cloud runner label, of any provider, that an
+	// opted-in repository runs on while no crsp machine is up and its policy
+	// names no label of its own. Empty means the GitHub-hosted defaults
+	// (github-integration R5.42, CRSP261).
+	OverflowLabel string
 	// AutoUpdate is operations R5.15: on by default; a newer stable release
 	// installs by itself after a drain.
 	AutoUpdate bool
@@ -61,6 +66,7 @@ type Patch struct {
 	BackupKeepDays             *int
 	MaxEventStreams            *int
 	FallbackGraceMinutes       *int
+	OverflowLabel              *string
 	AutoUpdate                 *bool
 
 	InsightsKeepCIData             *bool
@@ -175,6 +181,11 @@ func (s *Service) Get(ctx context.Context) (Settings, error) {
 			var v string
 			if json.Unmarshal([]byte(r.Value), &v) == nil && validUpdatePeriod(v) {
 				out.InsightsUpdatePeriod = v
+			}
+		case "overflow_label":
+			var v string
+			if json.Unmarshal([]byte(r.Value), &v) == nil && validOverflowLabel(v) {
+				out.OverflowLabel = v
 			}
 		case "backup_time_local":
 			var v string
@@ -291,6 +302,18 @@ func (s *Service) Update(ctx context.Context, actor audit.Actor, p Patch) (Setti
 			writes["backup_time_local"] = string(b)
 		}
 	}
+	if p.OverflowLabel != nil {
+		v := strings.TrimSpace(*p.OverflowLabel)
+		switch {
+		case !validOverflowLabel(v):
+			problems = append(problems, fmt.Sprintf("overflow_label must be empty or one runner label of up to %d characters without spaces, commas or quotes", MaxOverflowLabelLen))
+		case v != before.OverflowLabel:
+			after.OverflowLabel = v
+			changes["overflow_label"] = before.OverflowLabel + " -> " + v
+			b, _ := json.Marshal(v)
+			writes["overflow_label"] = string(b)
+		}
+	}
 	if p.AutoUpdate != nil && *p.AutoUpdate != before.AutoUpdate {
 		after.AutoUpdate = *p.AutoUpdate
 		changes["auto_update"] = strconv.FormatBool(before.AutoUpdate) + " -> " + strconv.FormatBool(*p.AutoUpdate)
@@ -362,3 +385,12 @@ func sortedKeys[V any](m map[string]V) []string {
 }
 
 func validGuardrailArtifact(v string) bool { return v != "" && len(v) <= MaxGuardrailArtifactLen }
+
+// MaxOverflowLabelLen is the longest overflow label (openapi maxLength).
+const MaxOverflowLabelLen = 100
+
+// validOverflowLabel accepts empty (the GitHub-hosted defaults) or one label
+// that is safe inside the JSON list written to a runs-on variable.
+func validOverflowLabel(v string) bool {
+	return len(v) <= MaxOverflowLabelLen && !strings.ContainsAny(v, " \t\r\n,\"\\")
+}

@@ -9269,13 +9269,16 @@ type Settings struct {
 	InsightsUpdateEveryNRuns *int `json:"insights_update_every_n_runs,omitempty"`
 
 	// InsightsUpdatePeriod ci-run-insights R5.44 (owner decisions D18, D19). How often insights are re-analysed. every_run (the default) analyses after each CI run; every_nth_run after every Nth run; hourly once an hour. The cost warning recommends a slower one.
-	InsightsUpdatePeriod       *SettingsInsightsUpdatePeriod `json:"insights_update_period,omitempty"`
-	MaxEventStreams            *int                          `json:"max_event_streams,omitempty"`
-	RetentionAuditDays         *int                          `json:"retention_audit_days,omitempty"`
-	RetentionJobHistoryDays    *int                          `json:"retention_job_history_days,omitempty"`
-	RetentionLoadRawHours      *int                          `json:"retention_load_raw_hours,omitempty"`
-	RetentionLogsDays          *int                          `json:"retention_logs_days,omitempty"`
-	RetentionLogsMibPerMachine *int                          `json:"retention_logs_mib_per_machine,omitempty"`
+	InsightsUpdatePeriod *SettingsInsightsUpdatePeriod `json:"insights_update_period,omitempty"`
+	MaxEventStreams      *int                          `json:"max_event_streams,omitempty"`
+
+	// OverflowLabel github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest).
+	OverflowLabel              *string `json:"overflow_label,omitempty"`
+	RetentionAuditDays         *int    `json:"retention_audit_days,omitempty"`
+	RetentionJobHistoryDays    *int    `json:"retention_job_history_days,omitempty"`
+	RetentionLoadRawHours      *int    `json:"retention_load_raw_hours,omitempty"`
+	RetentionLogsDays          *int    `json:"retention_logs_days,omitempty"`
+	RetentionLogsMibPerMachine *int    `json:"retention_logs_mib_per_machine,omitempty"`
 }
 
 // SettingsInsightsUpdatePeriod ci-run-insights R5.44 (owner decisions D18, D19). How often insights are re-analysed. every_run (the default) analyses after each CI run; every_nth_run after every Nth run; hourly once an hour. The cost warning recommends a slower one.

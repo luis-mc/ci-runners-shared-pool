@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: [internal/addresses/**, internal/update/**, internal/recovery/**, internal/backup/**, internal/configio/**, internal/install/**, installer/**, cmd/crsp/service_*.go]
 design_system: [components 4, components 9, components 16, components 18, components 34, UX-5, UX-6, UX-9, UX-13, UX-26, UX-29, UX-30, UX-34, UX-38, UX-62]
-last_verified: 2026-11-21
+last_verified: 2026-11-26
 artifact:
 generator: luismc-docs 2.6.1
 ---

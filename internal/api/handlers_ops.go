@@ -83,6 +83,7 @@ func toGenSettings(st settings.Settings) gen.Settings {
 		BackupKeepDays:             intPtr(st.BackupKeepDays),
 		MaxEventStreams:            intPtr(st.MaxEventStreams),
 		FallbackGraceMinutes:       intPtr(st.FallbackGraceMinutes),
+		OverflowLabel:              &st.OverflowLabel,
 		AutoUpdate:                 &st.AutoUpdate,
 
 		InsightsUpdatePeriod:     (*gen.SettingsInsightsUpdatePeriod)(&st.InsightsUpdatePeriod),
@@ -126,6 +127,7 @@ func (s *server) UpdateSettings(ctx context.Context, req gen.UpdateSettingsReque
 		BackupKeepDays:             b.BackupKeepDays,
 		MaxEventStreams:            b.MaxEventStreams,
 		FallbackGraceMinutes:       b.FallbackGraceMinutes,
+		OverflowLabel:              b.OverflowLabel,
 		AutoUpdate:                 b.AutoUpdate,
 
 		InsightsUpdatePeriod:       (*string)(b.InsightsUpdatePeriod),

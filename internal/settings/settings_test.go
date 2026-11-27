@@ -251,3 +251,35 @@ func TestInsightsUpdatePeriod(t *testing.T) {
 		t.Fatalf("saved = %q, %d", got.InsightsUpdatePeriod, got.InsightsUpdateEveryNthRuns)
 	}
 }
+
+// CRSP261: the overflow label is any one cloud runner label; empty means the GitHub-hosted defaults.
+func TestOverflowLabel(t *testing.T) {
+	ctx := context.Background()
+	s, _ := setup(t)
+	got, _ := s.Get(ctx)
+	if got.OverflowLabel != "" {
+		t.Fatalf("default %q", got.OverflowLabel)
+	}
+	v := " acme-cloud-4x "
+	if _, err := s.Update(ctx, owner, Patch{OverflowLabel: &v}); err != nil {
+		t.Fatal(err)
+	}
+	got, _ = s.Get(ctx)
+	if got.OverflowLabel != "acme-cloud-4x" {
+		t.Fatalf("saved %q", got.OverflowLabel)
+	}
+	for _, bad := range []string{"two words", "a,b", `x"y`, string(make([]byte, 101))} {
+		b := bad
+		if _, err := s.Update(ctx, owner, Patch{OverflowLabel: &b}); err == nil {
+			t.Errorf("%q accepted", bad)
+		}
+	}
+	empty := ""
+	if _, err := s.Update(ctx, owner, Patch{OverflowLabel: &empty}); err != nil {
+		t.Fatal(err)
+	}
+	got, _ = s.Get(ctx)
+	if got.OverflowLabel != "" {
+		t.Fatalf("cleared %q", got.OverflowLabel)
+	}
+}
