@@ -1,7 +1,7 @@
 {
   "_note": "STACKSPEC 13.7. Fill start (the PACKAGED program) and list a readiness line for the program and every worker it starts in expect. An empty start means the product ships no packaged program.",
   "smoke": {
-    "build": "CGO_ENABLED=0 go build -mod=readonly -trimpath -o dist/crsp ./cmd/crsp",
+    "build": "CGO_ENABLED=0 go build -mod=readonly -trimpath -o dist/crsp ./apps/controller/cmd/crsp",
     "start": "CRSP_DATA_DIR=\"$(mktemp -d)\" CRSP_LISTEN_ADDR=127.0.0.1:18460 CRSP_AGENT_ADDR=127.0.0.1:18461 ./dist/crsp controller",
     "expect": [
       "\"msg\":\"controller listening\"",

@@ -19,8 +19,8 @@ on:
       - 'go.sum'
       - 'go.work'
       - 'go.work.sum'
-      - 'cmd/**'
-      - 'internal/**'
+      - 'apps/controller/cmd/**'
+      - 'apps/controller/internal/**'
       - 'Dockerfile'
       - '.github/workflows/package.yml'
       - 'scripts/delivery/smoke.json'
@@ -34,8 +34,8 @@ on:
       - 'go.sum'
       - 'go.work'
       - 'go.work.sum'
-      - 'cmd/**'
-      - 'internal/**'
+      - 'apps/controller/cmd/**'
+      - 'apps/controller/internal/**'
       - 'Dockerfile'
       - '.github/workflows/package.yml'
       - 'scripts/delivery/smoke.json'
@@ -75,7 +75,7 @@ jobs:
       - name: Build the packaged program
         run: |
           mkdir -p dist
-          CGO_ENABLED=0 go build -mod=readonly -trimpath -o dist/crsp ./cmd/crsp
+          CGO_ENABLED=0 go build -mod=readonly -trimpath -o dist/crsp ./apps/controller/cmd/crsp
 
       # §13.7: start the packaged form, not the development server, and wait for
       # a readiness line from the program and from every worker it starts

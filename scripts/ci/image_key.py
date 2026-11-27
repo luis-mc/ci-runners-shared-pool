@@ -15,7 +15,7 @@ that image instead of building it.
 
 The key is a SHA-256 over: every file under images/ (path and content, the
 text line endings folded to LF, so a Windows checkout gives the same key), the
-Playwright pin of internal/runners/layers.go, the architecture and any --extra
+Playwright pin of apps/controller/internal/runners/layers.go, the architecture and any --extra
 pin, plus KEY_VERSION. The crsp binary that CI copies into images/linux-base is
 not an input of the tools stage and is skipped. Order does not matter.
 """
@@ -31,7 +31,7 @@ KEY_VERSION = "1"
 IMAGE_DIR = "images"
 # Built by CI at run time, never in git; the tools stage does not depend on it.
 SKIP = {"images/linux-base/crsp"}
-PLAYWRIGHT_FILE = "internal/runners/layers.go"
+PLAYWRIGHT_FILE = "apps/controller/internal/runners/layers.go"
 PLAYWRIGHT_RE = re.compile(r'PlaywrightPin\s*=\s*"([^"]+)"')
 # Labels the publishing job writes; the guard reads them back.
 LABEL_REF = "org.crsp.built-by-ref"

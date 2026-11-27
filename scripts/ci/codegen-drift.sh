@@ -5,7 +5,7 @@
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
 
-GENERATED_DIRS=(internal/api/gen internal/api/client internal/store/sqlcgen internal/gen packages/contract/ts/generated)
+GENERATED_DIRS=(apps/controller/internal/api/gen apps/controller/internal/api/client apps/controller/internal/store/sqlcgen apps/controller/internal/gen packages/contract/ts/generated)
 
 snapshot() {
   for d in "${GENERATED_DIRS[@]}"; do

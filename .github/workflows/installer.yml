@@ -10,19 +10,19 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - 'installer/**'
-      - 'internal/tray/**'
-      - 'internal/updatewindow/**'
+      - 'apps/controller/internal/tray/**'
+      - 'apps/controller/internal/updatewindow/**'
       - 'packages/ui/src/tokens.css'
-      - 'cmd/crsp/service_*.go'
+      - 'apps/controller/cmd/crsp/service_*.go'
       - '.github/workflows/installer.yml'
   push:
     branches: [main]
     paths:
       - 'installer/**'
-      - 'internal/tray/**'
-      - 'internal/updatewindow/**'
+      - 'apps/controller/internal/tray/**'
+      - 'apps/controller/internal/updatewindow/**'
       - 'packages/ui/src/tokens.css'
-      - 'cmd/crsp/service_*.go'
+      - 'apps/controller/cmd/crsp/service_*.go'
       - '.github/workflows/installer.yml'
   workflow_dispatch:
 
@@ -62,7 +62,7 @@ jobs:
           GOOS: windows
           GOARCH: ${{ matrix.goarch }}
           CGO_ENABLED: '0'
-        run: go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/out/crsp.exe ./cmd/crsp
+        run: go build -trimpath -ldflags "-s -w -X main.version=0.1.0" -o installer/out/crsp.exe ./apps/controller/cmd/crsp
 
       - name: Build the MSI (0.1.0)
         run: ./installer/build.ps1 -Arch ${{ matrix.arch }} -Exe installer/out/crsp.exe -Version 0.1.0 -Out installer/out/v0.1.0

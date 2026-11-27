@@ -3,11 +3,11 @@
 #   (the signing key is in the environment, see below) bash scripts/ci/release-sign.sh dist/manifest.json dist/manifest.json.sig
 # The signature is Ed25519 over the manifest file's bytes (openssl pkeyutl -sign -rawin), written as hex.
 # A missing key fails. The signature is checked with the public key derived from the private key and, when
-# internal/update/keys/release-ed25519.pub is committed, with that file too (a key that does not match fails).
+# apps/controller/internal/update/keys/release-ed25519.pub is committed, with that file too (a key that does not match fails).
 set -euo pipefail
 manifest="${1:?manifest path}"
 sigout="${2:?signature path}"
-pubfile="${CRSP_UPDATE_PUBLIC_KEY_FILE:-internal/update/keys/release-ed25519.pub}"
+pubfile="${CRSP_UPDATE_PUBLIC_KEY_FILE:-apps/controller/internal/update/keys/release-ed25519.pub}"
 
 if [ -z "${CRSP_UPDATE_SIGNING_KEY:-}" ]; then  # secret-scan:ignore (env var name, no value)
   echo "::error::the secret CRSP_UPDATE_SIGNING_KEY is missing; the release cannot be signed" >&2

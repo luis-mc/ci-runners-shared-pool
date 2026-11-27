@@ -20,7 +20,7 @@ $script:Install = Expand-Path $script:W.program
 $script:Data = Expand-Path $script:W.data
 $script:Config = Expand-Path $script:W.config
 $script:Logs = Expand-Path $script:W.logs
-$script:ConsolePort = 8460                        # crsp console, loopback only (internal/config default)
+$script:ConsolePort = 8460                        # crsp console, loopback only (apps/controller/internal/config default)
 $script:DataRoots = @(Expand-Path '%ProgramData%')
 
 function Out-Lc($id, $ok, $detail) {
@@ -109,9 +109,9 @@ $script:VolatileNames = @($script:DbName, "$($script:DbName)-wal", "$($script:Db
 # names as config and data only paths.config and paths.data (keep_on_remove: ["data"]) and has no runtime or cache
 # location, so these two files stay where they are and are left out of the comparison by name:
 #   agent\local-join  a one-time credential, new each start and every 5 min, valid 10 min
-#                     (cmd/crsp/machines_wiring.go writeLocalCredential; internal/machines/service.go LocalCredential).
+#                     (apps/controller/cmd/crsp/machines_wiring.go writeLocalCredential; apps/controller/internal/machines/service.go LocalCredential).
 #   agent\hostuse.json  the measured host use, restored at start and saved every 5 min and at stop
-#                     (internal/agent/run.go sampleLoop: usePath = DataDir/hostuse.json).
+#                     (apps/controller/internal/agent/run.go sampleLoop: usePath = DataDir/hostuse.json).
 $script:RuntimeFiles = @('agent\local-join', 'agent\hostuse.json')
 function Test-VolatilePath($full) {
   $name = Split-Path -Leaf $full
@@ -198,7 +198,7 @@ function Compare-Snapshots($before, $after) {
   elseif ($before.Db -and $after.Db) {
     $r = Invoke-LifecycleTool @('--db-compare', "`"$($before.Db)`"", "`"$($after.Db)`"")
     if ($r.Code -ne 0) { $problems += $r.Text }
-    # Each change a migration declared on purpose (internal/store/declared_changes.go) that the comparison accepted.
+    # Each change a migration declared on purpose (apps/controller/internal/store/declared_changes.go) that the comparison accepted.
     foreach ($l in @("$($r.Out)" -split "\r?\n" | Where-Object { $_ -like 'LC-11 note:*' })) { $script:Notes += $l.Trim() }
   }
   if ($problems.Count -eq 0) { return $null }

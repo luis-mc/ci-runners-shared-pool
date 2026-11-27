@@ -76,7 +76,7 @@ jobs:
         with:
           go-version-file: go.mod
       - name: Words lint (Go)
-        run: go test -timeout 10s ./scripts/design/wordslint ./internal/lifecyclewords
+        run: go test -timeout 10s ./scripts/design/wordslint ./apps/controller/internal/lifecyclewords
       - name: Design guards B to E, layout roles and lifecycle guards (DS234)
         run: |
           G=scripts/design/guards
@@ -84,7 +84,7 @@ jobs:
           node $G/design-guards/citation-test.mjs .
           node $G/design-guards/layout-roles.mjs . --config scripts/design/layout-roles.json
           node $G/design-guards/spacing-tokens.mjs packages/ui/src
-          node $G/design-guards/spacing-tokens.mjs apps/web/src
+          node $G/design-guards/spacing-tokens.mjs apps/controller-console/src
           node $G/lifecycle/tray-modal.mjs internal
           if [ -d packages/ui/src/components/lifecycle ]; then node $G/lifecycle/parts-tokens.mjs packages/ui/src/components/lifecycle; fi
       - name: Rendered layout guard A and lifecycle states (DS234)

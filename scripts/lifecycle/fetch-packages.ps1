@@ -12,7 +12,7 @@ New-Item -ItemType Directory -Force -Path $out | Out-Null
 $goarch = if ($Arch -eq 'x64') { 'amd64' } else { 'arm64' }
 
 $env:GOOS = 'windows'; $env:GOARCH = $goarch; $env:CGO_ENABLED = '0'
-go build -trimpath -ldflags '-s -w -X main.version=0.9.0' -o (Join-Path $out 'crsp.exe') ./cmd/crsp
+go build -trimpath -ldflags '-s -w -X main.version=0.9.0' -o (Join-Path $out 'crsp.exe') ./apps/controller/cmd/crsp
 if ($LASTEXITCODE -ne 0) { throw 'go build failed' }
 Remove-Item Env:GOOS, Env:GOARCH, Env:CGO_ENABLED
 

@@ -26,4 +26,4 @@ jobs:
           go-version-file: go.mod
           cache: false
       - name: Measure one idle agent
-        run: go run ./cmd/crsp-idle-soak -window "${{ inputs.window || '60s' }}"
+        run: go run ./apps/controller/cmd/crsp-idle-soak -window "${{ inputs.window || '60s' }}"

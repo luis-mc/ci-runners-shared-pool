@@ -383,7 +383,7 @@ jobs:
       # The test interface is its own command, built only here and never shipped.
       - name: Lifecycle conformance (updater)
         run: |
-          CGO_ENABLED=0 go build -o "$RUNNER_TEMP/crsp-lifecycle-test" ./cmd/crsp-lifecycle-test
+          CGO_ENABLED=0 go build -o "$RUNNER_TEMP/crsp-lifecycle-test" ./apps/controller/cmd/crsp-lifecycle-test
           "$RUNNER_TEMP/crsp-lifecycle-test" --addr 127.0.0.1:7391 &
           pid=$!
           trap 'kill "$pid"' EXIT
@@ -471,7 +471,7 @@ jobs:
           CRSP_REAL_SYMLINK: '1'
         run: |
           reg add 'HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock' //t REG_DWORD //f //v AllowDevelopmentWithoutDevLicense //d 1
-          go test -timeout 10s -count=1 -v -run '^TestProbeSymlinkReal$' ./internal/agent/
+          go test -timeout 10s -count=1 -v -run '^TestProbeSymlinkReal$' ./apps/controller/internal/agent/
 
   # OPS69: the Windows MSI lifecycle lanes (x64 on windows-latest, arm64 on windows-11-arm) and the
   # release check. A release pull request fails unless every target lane passed.

@@ -62,7 +62,7 @@ jobs:
         run: |
           New-Item -ItemType Directory -Force "$env:RUNNER_TEMP\lc-bin" | Out-Null
           $env:CGO_ENABLED = '0'
-          go build -o "$env:RUNNER_TEMP\lc-bin\crsp-lifecycle-test.exe" ./cmd/crsp-lifecycle-test
+          go build -o "$env:RUNNER_TEMP\lc-bin\crsp-lifecycle-test.exe" ./apps/controller/cmd/crsp-lifecycle-test
           "$env:RUNNER_TEMP\lc-bin" | Out-File -Append -Encoding utf8 $env:GITHUB_PATH
       - name: Lifecycle steps
         run: |

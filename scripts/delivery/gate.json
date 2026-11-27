@@ -14,7 +14,7 @@
   ],
   "lockfile_scope": "per-package",
   "inert_paths": ["docs/**"],
-  "ui_paths": ["apps/web/", "packages/ui/"],
+  "ui_paths": ["apps/controller-console/", "packages/ui/"],
   "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "typecheck", "unit"],
   "steps": [
     {

@@ -29,7 +29,7 @@ tasks:
       - go tool oapi-codegen -config packages/contract/oapi-codegen-client.yaml packages/contract/openapi.yaml
 
   codegen:sql:
-    desc: Go query code from internal/store/queries (sqlc)
+    desc: Go query code from apps/controller/internal/store/queries (sqlc)
     cmds:
       - go tool sqlc generate
 
@@ -50,9 +50,9 @@ tasks:
       - bash scripts/ci/codegen-drift.sh
 
   web:build:
-    desc: Build the web console and copy it into internal/webui/dist
+    desc: Build the web console and copy it into apps/controller/internal/webui/dist
     cmds:
-      - pnpm --filter web build
+      - pnpm --filter controller-console build
       - node scripts/ci/embed-web.mjs
 
   build:
@@ -61,14 +61,14 @@ tasks:
     env:
       CGO_ENABLED: '0'
     cmds:
-      - go build -trimpath -ldflags "-s -w -X main.version={{.VERSION}}" -o {{.BIN}} ./cmd/crsp
+      - go build -trimpath -ldflags "-s -w -X main.version={{.VERSION}}" -o {{.BIN}} ./apps/controller/cmd/crsp
 
   build:go:
     desc: Build the binary without rebuilding the web console
     env:
       CGO_ENABLED: '0'
     cmds:
-      - go build -trimpath -ldflags "-s -w -X main.version={{.VERSION}}" -o {{.BIN}} ./cmd/crsp
+      - go build -trimpath -ldflags "-s -w -X main.version={{.VERSION}}" -o {{.BIN}} ./apps/controller/cmd/crsp
 
   test:
     desc: Go tests (fails when no test ran) and web tests

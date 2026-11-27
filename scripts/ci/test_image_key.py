@@ -14,7 +14,7 @@ def make_tree(files, pin="1.65.1"):
     root = tempfile.mkdtemp()
     files = dict(files)
     files.setdefault(
-        "internal/runners/layers.go", 'const PlaywrightPin = "%s"\n' % pin
+        "apps/controller/internal/runners/layers.go", 'const PlaywrightPin = "%s"\n' % pin
     )
     for rel, data in files.items():
         path = os.path.join(root, *rel.split("/"))
@@ -84,7 +84,7 @@ class KeyTest(unittest.TestCase):
 
     def test_missing_pin_stops(self):
         root = make_tree(BASE, pin="1")
-        with open(os.path.join(root, "internal", "runners", "layers.go"), "w") as fh:
+        with open(os.path.join(root, "apps", "controller", "internal", "runners", "layers.go"), "w") as fh:
             fh.write("package runners\n")
         with self.assertRaises(SystemExit):
             k.compute_key(root, "amd64")

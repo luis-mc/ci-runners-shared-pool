@@ -34,7 +34,7 @@ class ShouldSkip(unittest.TestCase):
         self.assertTrue(c.should_skip("pull_request", REPO, "m", get, pr="7")[0])
 
     def test_code_in_pull_request_runs(self):
-        get = self.pr_get([".nvmrc", "internal/x.go"])
+        get = self.pr_get([".nvmrc", "apps/controller/internal/x.go"])
         self.assertFalse(c.should_skip("pull_request", REPO, "m", get, pr="7")[0])
 
     def test_workflow_and_delivery_scripts_run(self):
