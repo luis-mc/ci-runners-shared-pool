@@ -587,30 +587,8 @@ func (s *JobsStore) groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata
 		}
 		return g
 	}
-	open, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, state, count(*), COALESCE(MAX(light), 0) FROM jobs
-		WHERE state IN ('queued', 'running') AND `+k1+` <> '' GROUP BY `+k1+`, `+k2+`, state`)
-	if err != nil {
-		return nil, fmt.Errorf("groups: %w", err)
-	}
-	for open.Next() {
-		var key1, key2, state string
-		var n, light int64
-		if err := open.Scan(&key1, &key2, &state, &n, &light); err != nil {
-			_ = open.Close()
-			return nil, fmt.Errorf("groups scan: %w", err)
-		}
-		g := group(key1, key2)
-		if jobsdata.State(state) == jobsdata.Queued {
-			g.queued += int(n)
-		} else {
-			g.running += int(n)
-		}
-		g.light = g.light || light != 0
-	}
-	err = open.Err()
-	_ = open.Close()
-	if err != nil {
-		return nil, fmt.Errorf("groups: %w", err)
+	if err := s.openCounts(ctx, k1, k2, group); err != nil {
+		return nil, err
 	}
 	rows, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, (result IN ('failure', 'timed_out', 'lost')) + 2 * (light <> 0), created_at, started_at, completed_at
 		FROM jobs WHERE state = 'done' AND `+k1+` <> '' AND completed_at >= ? ORDER BY completed_at, id`, fmtTime(time.Now().Add(-groupWindow)))
@@ -673,6 +651,31 @@ func (s *JobsStore) groups(ctx context.Context, by jobsdata.GroupBy) ([]jobsdata
 		return out[i].Filter < out[j].Filter
 	})
 	return out, nil
+}
+
+// openCounts adds the queued and running jobs of every group, counted by the engine.
+func (s *JobsStore) openCounts(ctx context.Context, k1, k2 string, group func(key1, key2 string) *groupAcc) error {
+	rows, err := s.rdb.QueryContext(ctx, `SELECT `+k1+`, `+k2+`, state, count(*), COALESCE(MAX(light), 0) FROM jobs
+		WHERE state IN ('queued', 'running') AND `+k1+` <> '' GROUP BY `+k1+`, `+k2+`, state`)
+	if err != nil {
+		return fmt.Errorf("groups: %w", err)
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var key1, key2, state string
+		var n, light int64
+		if err := rows.Scan(&key1, &key2, &state, &n, &light); err != nil {
+			return fmt.Errorf("groups scan: %w", err)
+		}
+		g := group(key1, key2)
+		if jobsdata.State(state) == jobsdata.Queued {
+			g.queued += int(n)
+		} else {
+			g.running += int(n)
+		}
+		g.light = g.light || light != 0
+	}
+	return rows.Err()
 }
 
 // machineNames gives each machine group the newest name a job of the machine carried, one indexed lookup per group.
