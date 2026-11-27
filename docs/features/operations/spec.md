@@ -175,6 +175,8 @@ There are two kinds of installer. The **Controller installer** is the only one a
 
 **R5.133** (CRSP304) — **The folders are `installer/controller` and `installer/agent`.** The Windows and Unix installer sources, the smoke scripts and the WiX authoring live in `installer/controller`; `installer/agent` holds the agent installer. CI paths and the lifecycle scripts use the new folders.
 
+**R5.134** (built, CRSP354; owner decision 27 Nov, CRSP343 option 3) — **Each release has a short note for the owner, signed in the update manifest.** The note is the file `packaging/release-notes/<version>.txt`: plain ASCII words, at most 600 characters, one paragraph per line. `scripts/ci/release_manifest.py` reads it and puts it in the manifest key `notes`; a non-ASCII note or a longer one fails the release, because the updater re-encodes the manifest to check its signature. A release without a note file leaves the key out and nothing else changes, so a manifest without `notes` still parses and an older updater ignores the extra key. The signature covers the note (the updater verifies the body it shows). `GET /api/v1/update/status` gains `notes` (the note of the offered version) and `updated` (`version`, `notes`: the note of the version that now runs, kept in `whats-new.json` of the update work folder from the install until the next one); both are absent for a release without a note.
+
 ### Config file and data folder
 
 **R5.8** (M1) — The controller and the agent read one config file, `config.toml`, checked against one schema. A `CRSP_*` environment variable overrides the matching key. `crsp config check` prints every problem at once and exits non-zero.
@@ -568,6 +570,7 @@ All tests are planned; none exists yet. Paths are where each test will live.
 | R5.131 | apps/controller/internal/machines/sshagent_test.go (TestPinnedInstallScriptIsValidShell, TestInstallCommandsShowTheLANLinkWhenAgentInstallersAreThere, TestInstallCommandsStayPlainWithoutAConsoleAddressOrOnAFailure); apps/controller/internal/agentinstallers/agentinstallers_test.go (TestManualCommand) |
 | R5.132 | apps/controller/internal/agentinstallers/agentinstallers_test.go (TestOfflineServesTheCache, TestNothingCachedAndOffline, TestManualImport) |
 | R5.133 | installer/controller/wxs_test.go; .github/workflows/installer.yml, installer-unix.yml and release.yml at the new paths |
+| R5.134 | apps/controller/internal/update/lifecycle/core_test.go (TestManifestNotesAreSignedAndOptional: signed, optional, cut at 600, changed note fails the signature); apps/controller/internal/update/service_test.go (TestServiceCarriesTheSignedNote, TestServiceWithoutNoteShowsNothing); scripts/ci/test_release_scripts.py (Manifest: note carried, no note leaves the key out, a note that would not verify fails) |
 
 ## 10. Decisions
 

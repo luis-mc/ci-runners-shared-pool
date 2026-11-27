@@ -1608,6 +1608,7 @@ The words of install, update and remove (UX-79 to UX-83, components 70 to 74). T
 | Downloading, Checking the download, Installing, Testing | The step names, in this order. |
 | Waiting for {n} running jobs to finish. The update starts when they end. | Title while the machine waits for its jobs, up to 60 minutes. |
 | Updated to version {version}. What's new | Title and link on Done. |
+| What is new in version {version} | Heading of the release note (CRSP354): above the note in the Updates card while a version is on offer, in the note shown once after an update (console banner slot) and in the update window on Review and Done. A release without a note shows no heading and no box. |
 | The update to {version} failed its test. Version {previous} is running again. We try again at {time}. | Title after a rollback. |
 | The download for {version} did not pass its signature check. Nothing changed. | Title when the signed manifest or the checksum fails. |
 | Crsp is up to date. Version {version}. | Title when nothing newer is out. |

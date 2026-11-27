@@ -1,5 +1,6 @@
 // The update banner, app-wide (UX-27, one banner slot): it reads the update status and shows the UpdateBanner part
 // when an update is ready to start, running, done or failed. Not now hides it until the status changes.
+import { ReleaseNotes } from '@crsp/ui/lifecycle';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
 import { useCommand, useLoad } from '../api/hooks';
 import { useLifecycle } from '../api/lifecycle';
@@ -29,6 +30,17 @@ export function useUpdateBanner(): ReactNode {
   }, [hidden, key]);
   if (!data) return null;
   const state = bannerFor(data, false);
+  // Nothing else needs the slot: the note of the version that now runs shows once (a release without one shows nothing).
+  if (!state && data.updated) {
+    return (
+      <ReleaseNotes
+        key="notes"
+        after
+        version={data.updated.version}
+        notes={data.updated.notes}
+      />
+    );
+  }
   if (!state || hidden === key) return null;
   const version = state === 'done' ? data.current : (data.available ?? data.current);
   return (

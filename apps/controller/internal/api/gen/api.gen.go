@@ -7034,11 +7034,20 @@ type LifecycleStatus struct {
 		RetryAt *time.Time `json:"retry_at"`
 		Version string     `json:"version"`
 	} `json:"failures"`
-	NextCheckAt    *time.Time            `json:"next_check_at"`
-	Policy         LifecycleStatusPolicy `json:"policy"`
-	Required       bool                  `json:"required"`
-	State          LifecycleStatusState  `json:"state"`
-	WaitingForJobs bool                  `json:"waiting_for_jobs"`
+	NextCheckAt *time.Time `json:"next_check_at"`
+
+	// Notes The owner-facing note of the version on offer, signed in the update manifest. Absent when the release has none.
+	Notes    *string               `json:"notes,omitempty"`
+	Policy   LifecycleStatusPolicy `json:"policy"`
+	Required bool                  `json:"required"`
+	State    LifecycleStatusState  `json:"state"`
+
+	// Updated The note of the release this machine now runs, kept until the next update. Absent when that release had none.
+	Updated *struct {
+		Notes   string `json:"notes"`
+		Version string `json:"version"`
+	} `json:"updated,omitempty"`
+	WaitingForJobs bool `json:"waiting_for_jobs"`
 
 	// Window The daily install window in UTC, or null for any time.
 	Window *struct {

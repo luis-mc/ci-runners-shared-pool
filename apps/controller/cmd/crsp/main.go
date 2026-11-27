@@ -264,6 +264,7 @@ func runController() error {
 		Updates: um, Drain: machineDrainer{svc: mr.Service}, Console: console,
 		Links:  setupOrConsole{auth: ctl.Auth, console: console, next: authLinks{svc: ctl.Auth, console: console}},
 		Digest: func() string { return latestDigest(cfg.DataDir) },
+		Notes:  notesOf(lc),
 	})
 
 	// The pull-through mirror of upstream bases, under its own route prefix (registry R5.63).

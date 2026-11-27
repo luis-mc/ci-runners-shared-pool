@@ -13,6 +13,7 @@ export const LIFECYCLE_WORDS = {
   'step.testing': 'Testing',
   'updated.title': 'Updated to version {version}.',
   'updated.action': "What's new",
+  'updated.notes': 'What is new in version {version}',
   'rolled_back.title':
     'The update to {version} failed its test. Version {previous} is running again. We try again at {time}.',
   'rolled_back.skipped':

@@ -16,6 +16,8 @@ const status = (extra: Record<string, unknown> = {}) => ({
   next_check_at: null,
   failures: null,
   waiting_for_jobs: false,
+  notes: null,
+  updated: null,
   ...extra,
 });
 
@@ -184,5 +186,39 @@ describe('the app-wide update banner', () => {
     expect(
       await screen.findByRole('heading', { name: 'Restart the service' }),
     ).toBeTruthy();
+  });
+});
+
+describe('Settings > Updates, release notes', () => {
+  it('shows the note of the offered version, and nothing without one', async () => {
+    window.localStorage.clear();
+    renderApp(
+      api(status({ state: 'available', available: '1.5.0', notes: 'Live progress.' })),
+      '/settings/updates',
+    );
+    expect(await screen.findByText('What is new in version 1.5.0')).toBeTruthy();
+    expect(screen.getByText('Live progress.')).toBeTruthy();
+    cleanup();
+    renderApp(
+      api(status({ state: 'available', available: '1.5.0' })),
+      '/settings/updates',
+    );
+    await screen.findByRole('region', { name: 'Updates' });
+    expect(screen.queryByText(/What is new in version/)).toBeNull();
+  });
+
+  it('shows the note of the new version once after an update', async () => {
+    window.localStorage.clear();
+    const s = status({
+      updated: { version: '1.4.0', notes: 'Runners have a filter bar.' },
+    });
+    renderApp(api(s), '/settings/updates');
+    const note = await screen.findAllByText('Runners have a filter bar.');
+    expect(note.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole('button', { name: /^hide$/i })[0]!);
+    cleanup();
+    renderApp(api(s), '/settings/updates');
+    await screen.findByRole('region', { name: 'Updates' });
+    expect(screen.queryByText('Runners have a filter bar.')).toBeNull();
   });
 });
