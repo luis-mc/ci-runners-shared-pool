@@ -2,6 +2,8 @@ package store
 
 import (
 	"context"
+	"fmt"
+	"slices"
 	"testing"
 	"time"
 
@@ -65,5 +67,47 @@ func TestGroupsAndStatsAreCachedUntilAWrite(t *testing.T) {
 	read := n.Load()
 	if _, err := js.Stats(ctx, 30, jobsdata.JobFilter{}); err != nil || n.Load() != read {
 		t.Fatalf("cached stats ran %d more queries", n.Load()-read)
+	}
+}
+
+// R3-5: the samples of a question are read once until a job is written.
+func TestSamplesManyKeepsAnswersUntilAWrite(t *testing.T) {
+	ctx := context.Background()
+	s, n, err := OpenCounted(ctx, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	js := s.Jobs()
+	qs := []jobsdata.SampleQuery{{RepositoryID: 1, JobKey: "k", Limit: 30}, {RepositoryID: 2, JobKey: "k", Limit: 30}, {RepositoryID: 1, Limit: 30}}
+	if _, err := js.SamplesMany(ctx, qs); err != nil {
+		t.Fatal(err)
+	}
+	n.Reset()
+	if _, err := js.SamplesMany(ctx, qs); err != nil || n.Load() != 0 {
+		t.Fatalf("the second read ran %d queries (%v)", n.Load(), err)
+	}
+	more := append(slices.Clone(qs), jobsdata.SampleQuery{RepositoryID: 3, JobKey: "k", Limit: 30})
+	if _, err := js.SamplesMany(ctx, more); err != nil || n.Load() == 0 {
+		t.Fatalf("a new question must be read (%v, %d)", err, n.Load())
+	}
+	s.touchJobs()
+	n.Reset()
+	if _, err := js.SamplesMany(ctx, qs); err != nil || n.Load() == 0 {
+		t.Fatalf("after a write the samples are read again (%v, %d)", err, n.Load())
+	}
+}
+
+func TestSampleCacheIsBounded(t *testing.T) {
+	var c sampleCache
+	for i := range 3 * sampleCacheMax {
+		c.put(fmt.Sprint(i), 1, nil)
+	}
+	if len(c.m) > sampleCacheMax {
+		t.Fatalf("the cache holds %d entries", len(c.m))
+	}
+	c.put("new", 2, nil)
+	if _, ok := c.get("new", 1); ok {
+		t.Fatal("an entry of another version was served")
 	}
 }

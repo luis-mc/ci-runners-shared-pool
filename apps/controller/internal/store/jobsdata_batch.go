@@ -72,6 +72,46 @@ func sampleSQL(q jobsdata.SampleQuery) (string, []any) {
 // (repository, key, completed_at) index and stops early); a question with a step is asked on its own. The answers
 // come back in the order of qs, each newest first like Samples.
 func (s *JobsStore) SamplesMany(ctx context.Context, qs []jobsdata.SampleQuery) ([][]jobsdata.Sample, error) {
+	// The newest samples of a key change only when a job is written, so the answers of a page that was just listed are
+	// kept for the next one (audit R3-5). A step question is not kept: step rows are written elsewhere. The slices are
+	// shared between callers; the forecast reads them and never changes them.
+	gen := s.JobsVersion()
+	out := make([][]jobsdata.Sample, len(qs))
+	var miss []jobsdata.SampleQuery
+	var at []int
+	for i, q := range qs {
+		if q.StepName == "" {
+			if got, ok := s.samples.get(sampleCacheKey(q), gen); ok {
+				out[i] = got
+				continue
+			}
+		}
+		miss = append(miss, q)
+		at = append(at, i)
+	}
+	if len(miss) == 0 {
+		return out, nil
+	}
+	got, err := s.samplesMany(ctx, miss)
+	if err != nil {
+		return nil, err
+	}
+	for j, i := range at {
+		out[i] = got[j]
+		if miss[j].StepName == "" {
+			s.samples.put(sampleCacheKey(miss[j]), gen, got[j])
+		}
+	}
+	return out, nil
+}
+
+// sampleCacheKey names a sample question without its Since bound, which moves with the clock: an answer a few seconds
+// old reaches back a few seconds less, which changes nothing the forecast shows.
+func sampleCacheKey(q jobsdata.SampleQuery) string {
+	return fmt.Sprintf("%d|%s|%s|%s|%d", q.RepositoryID, q.JobKey, q.Workflow, q.JobType, q.Limit)
+}
+
+func (s *JobsStore) samplesMany(ctx context.Context, qs []jobsdata.SampleQuery) ([][]jobsdata.Sample, error) {
 	ctx, cancel := withDeadline(ctx)
 	defer cancel()
 	out := make([][]jobsdata.Sample, len(qs))

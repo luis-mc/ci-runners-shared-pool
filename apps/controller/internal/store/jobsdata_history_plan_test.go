@@ -109,3 +109,24 @@ func TestCreatedWindowQueryPlan(t *testing.T) {
 		t.Errorf("hour grid plan: %s", p)
 	}
 }
+
+// R3-4: the follow-up read starts from run_follow_ups by its parent index and looks each run up by key.
+func TestFollowUpsQueryPlan(t *testing.T) {
+	ctx := context.Background()
+	s, err := OpenForTests(ctx, t.TempDir())
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = s.Close() })
+	var args []any
+	vals := make([]string, 0, 50)
+	for i := range 50 {
+		vals = append(vals, "(?, ?)")
+		args = append(args, i%40, 100+i)
+	}
+	p := explain(t, s, followUpsSQL(vals), args...)
+	first, _, _ := strings.Cut(p, "\n")
+	if !strings.Contains(first, "SEARCH f USING INDEX run_follow_ups_parent") || strings.Contains(p, "runs_repository") {
+		t.Errorf("follow-ups plan: %s", p)
+	}
+}

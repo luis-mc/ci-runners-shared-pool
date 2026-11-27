@@ -30,7 +30,7 @@ const finishedPoolJobsSQL = `SELECT j.repository, COALESCE(r.visibility, 'privat
 // and a real start and end. The system is the machine's, the repository is public when GitHub says so
 // (observability R5.15, R5.18).
 func (s *Store) FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]PoolJobRow, error) {
-	rows, err := s.db.QueryContext(ctx, finishedPoolJobsSQL, fmtTime(from), fmtTime(to))
+	rows, err := s.rdb.QueryContext(ctx, finishedPoolJobsSQL, fmtTime(from), fmtTime(to))
 	if err != nil {
 		return nil, fmt.Errorf("finished pool jobs: %w", err)
 	}

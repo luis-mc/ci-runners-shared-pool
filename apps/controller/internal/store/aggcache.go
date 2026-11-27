@@ -122,3 +122,50 @@ func cloneGroups(rows []jobsdata.GroupRow) []jobsdata.GroupRow {
 	}
 	return out
 }
+
+// sampleCache keeps the forecast samples of recent questions for a short time, bounded and evicted by age, then at
+// random once it is full of fresh ones; an entry made at an older jobs version is never served.
+type sampleCache struct {
+	mu sync.Mutex
+	m  map[string]sampleEntry
+}
+
+type sampleEntry struct {
+	gen int64
+	at  time.Time
+	v   []jobsdata.Sample
+}
+
+const sampleCacheMax = 2048
+
+func (c *sampleCache) get(key string, gen int64) ([]jobsdata.Sample, bool) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	e, ok := c.m[key]
+	if !ok || e.gen != gen || time.Since(e.at) > aggTTL {
+		return nil, false
+	}
+	return e.v, true
+}
+
+func (c *sampleCache) put(key string, gen int64, v []jobsdata.Sample) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	if c.m == nil {
+		c.m = map[string]sampleEntry{}
+	}
+	if len(c.m) >= sampleCacheMax {
+		for k, e := range c.m {
+			if time.Since(e.at) > aggTTL || e.gen != gen {
+				delete(c.m, k)
+			}
+		}
+		for k := range c.m {
+			if len(c.m) < sampleCacheMax {
+				break
+			}
+			delete(c.m, k)
+		}
+	}
+	c.m[key] = sampleEntry{gen: gen, at: time.Now(), v: v}
+}

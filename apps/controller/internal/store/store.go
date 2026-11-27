@@ -48,6 +48,7 @@ type Store struct {
 	// jobsGen counts the writes of jobs and runs; agg keeps the slow aggregate answers for it (aggcache.go).
 	jobsGen atomic.Int64
 	agg     aggCache
+	samples sampleCache
 }
 
 // Open opens (creating if needed) the database in dataDir and applies pending
