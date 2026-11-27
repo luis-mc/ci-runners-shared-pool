@@ -1,5 +1,6 @@
 // The shell of every signed-in screen (web-console 4.0, R5.3): header, top menu, banner slot, activity strip,
 // command palette, shortcut list and the session-ended dialog.
+import { useNarrow } from './useNarrow';
 import {
   ActivityStrip,
   BannerSlot,
@@ -49,23 +50,6 @@ export function withFirstRepository(
 ): Schemas['SetupState'] {
   if (!anyPoolOn || setup.steps.first_repository === 'done') return setup;
   return { ...setup, steps: { ...setup.steps, first_repository: 'done' } };
-}
-
-/** True on a phone-width screen (below 601 px, the design system's phone break). No matchMedia: wide. */
-export function useNarrow(): boolean {
-  const query = '(max-width: 600px)';
-  const [narrow, setNarrow] = useState(
-    () => typeof window.matchMedia === 'function' && window.matchMedia(query).matches,
-  );
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    const m = window.matchMedia(query);
-    const on = () => setNarrow(m.matches);
-    on();
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, []);
-  return narrow;
 }
 
 /** The areas: a row on a wide screen; on a phone one Menu button that opens the list (UX-15, UX-16). */

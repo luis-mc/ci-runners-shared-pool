@@ -1,7 +1,7 @@
 // R5.23: runners listed live with their isolation word (UX-61), added only where the OS fits, and deleted
 // after a question that names the runner and its job.
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   apiError,
   FakeEventSource,
@@ -158,18 +158,21 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
+    // CRSP339: the rows are folded until Filters is pressed.
+    expect(screen.queryByRole('group', { name: 'System' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     const system = screen.getByRole('group', { name: 'System' });
     expect(
       within(system)
         .getAllByRole('button')
         .map((b) => b.textContent),
-    ).toEqual(['Linux', 'Windows', 'macOS']);
+    ).toEqual(['All', 'Linux', 'Windows', 'macOS']);
     const iso = screen.getByRole('group', { name: 'Isolation' });
     expect(
       within(iso)
         .getAllByRole('button')
         .map((b) => b.textContent),
-    ).toEqual(['container', 'VM', 'microVM']);
+    ).toEqual(['All', 'container', 'VM', 'microVM']);
     expect(screen.getByRole('group', { name: 'Kind' })).toBeTruthy();
     fireEvent.click(within(system).getByRole('button', { name: 'Linux' }));
     expect(screen.queryByText('win-ephem')).toBeNull();
@@ -180,6 +183,46 @@ describe('Runners list', () => {
     );
     expect(screen.getByText('lx-ephem')).toBeTruthy();
     expect(screen.queryByText('lx-persist')).toBeNull();
+    // Folded again, the button says how many are set and the tags name them.
+    expect(screen.getByRole('button', { name: 'Filters (2)' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Filters (2)' }));
+    expect(screen.queryByRole('group', { name: 'System' })).toBeNull();
+    expect(screen.getByText('System: Linux')).toBeTruthy();
+    expect(screen.getByText('Kind: ephemeral')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(screen.getByText('lx-persist')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Filters' })).toBeTruthy();
+  });
+
+  it('opens the filters as a bottom sheet on a phone and shows the count (CRSP339)', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('max-width: 600px'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    try {
+      const api = signedIn().on('GET', '/api/v1/runners', {
+        items: [
+          runner({ id: 'a', name: 'lx-persist', os: 'linux' }),
+          runner({ id: 'c', name: 'win-persist', os: 'windows' }),
+        ],
+      });
+      renderApp(api, '/setup/runners');
+      await screen.findByRole('table', { name: /^Runners on/ });
+      fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+      const sheet = screen.getByRole('dialog', { name: 'Filter runners' });
+      expect(within(sheet).getByRole('button', { name: 'Show 2 runners' })).toBeTruthy();
+      fireEvent.change(within(sheet).getByRole('combobox', { name: 'System' }), {
+        target: { value: 'windows' },
+      });
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Show 1 runner' }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByText('lx-persist')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Filters (1)' })).toBeTruthy();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('reloads when a runner event arrives (live)', async () => {
@@ -217,6 +260,7 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     fireEvent.click(screen.getByRole('button', { name: 'container' }));
     expect(screen.queryByText('crsp-linux-1')).toBeNull();
     expect(screen.getByText('crsp-lx-2')).toBeTruthy();
