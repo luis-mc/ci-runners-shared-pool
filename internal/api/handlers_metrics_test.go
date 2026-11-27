@@ -43,7 +43,7 @@ func metricsPut(mux *http.ServeMux, body string) *httptest.ResponseRecorder {
 	return rec
 }
 
-const metricsOff = `{"enabled":false,"port":9464,"expose":false,"needs_key":false,"push_enabled":false,"push_endpoint":"","push_seconds":60}`
+const metricsOff = `{"enabled":false,"port":9464,"expose":false,"key_required":false,"push_enabled":false,"push_endpoint":"","push_seconds":60}`
 
 func TestMetricsSettingsAdminOnly(t *testing.T) {
 	mux, _ := metricsMux(t, auth.RoleViewer)
@@ -73,7 +73,7 @@ func TestMetricsSettingsPutChecksAndKeeps(t *testing.T) {
 	if rec := metricsPut(mux, strings.Replace(metricsOff, `"port":9464`, `"port":22`, 1)); rec.Code != 400 {
 		t.Fatalf("bad port: %d %s", rec.Code, rec.Body.String())
 	}
-	needsToken := strings.Replace(strings.Replace(metricsOff, `"enabled":false`, `"enabled":true`, 1), `"needs_key":false`, `"needs_key":true`, 1)
+	needsToken := strings.Replace(strings.Replace(metricsOff, `"enabled":false`, `"enabled":true`, 1), `"key_required":false`, `"key_required":true`, 1)
 	if rec := metricsPut(mux, needsToken); rec.Code != 409 {
 		t.Fatalf("no token yet: %d %s", rec.Code, rec.Body.String())
 	}

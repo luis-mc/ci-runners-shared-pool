@@ -15,7 +15,7 @@ design_system:
   - v1 components 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 24 26 27 28 29 31 33 34 36 37
   - v1 content action vocabulary, wizard step names, wizard state words, message wording, empty failed and waiting states, dates times and numbers
   - v1 tokens themes, breakpoints, motion, focus
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact:
 generator: luismc-docs 2.6.0
 ---

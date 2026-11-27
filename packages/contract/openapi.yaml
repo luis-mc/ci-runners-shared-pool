@@ -7609,7 +7609,7 @@ components:
     MetricsSettingsSet:
       type: object
       required:
-        [enabled, port, expose, needs_key, push_enabled, push_endpoint, push_seconds]
+        [enabled, port, expose, key_required, push_enabled, push_endpoint, push_seconds]
       properties:
         enabled:
           type: boolean
@@ -7621,7 +7621,7 @@ components:
         expose:
           type: boolean
           description: False listens on 127.0.0.1 only; true listens on every address of this PC.
-        needs_key:
+        key_required:
           type: boolean
         push_enabled:
           type: boolean

@@ -30,7 +30,7 @@ const toSet = (m: Metrics): Set => ({
   enabled: m.enabled,
   port: m.port,
   expose: m.expose,
-  needs_key: m.needs_key,
+  key_required: m.key_required,
   push_enabled: m.push_enabled,
   push_endpoint: m.push_endpoint,
   push_seconds: m.push_seconds,
@@ -45,7 +45,7 @@ export function metricsProblems(s: Set, keyMade: boolean): string[] {
     out.push('The push interval must be from 10 to 3600 seconds.');
   if (s.push_enabled && !/^https?:\/\/[^/\s]+/.test(s.push_endpoint.trim()))
     out.push('The collector address must start with http:// or https://.');
-  if (s.enabled && s.needs_key && !keyMade)
+  if (s.enabled && s.key_required && !keyMade)
     out.push('Make a key first, or turn the key off.');
   return out;
 }
@@ -137,12 +137,12 @@ function MetricsForm({ saved, onSaved }: { saved: Metrics; onSaved: () => void }
           <CheckRow
             label="Ask for a key"
             help="The reader must send the key as a bearer token."
-            checked={s.needs_key}
-            changed={changed('needs_key')}
+            checked={s.key_required}
+            changed={changed('key_required')}
             disabledReason={reason}
-            onChange={(v) => setS({ ...s, needs_key: v })}
+            onChange={(v) => setS({ ...s, key_required: v })}
           />
-          {s.expose && !s.needs_key ? (
+          {s.expose && !s.key_required ? (
             <Message tone="note">
               Anyone who can reach this PC will see the pool&apos;s numbers. Ask for a key
               to keep them private.
@@ -209,7 +209,7 @@ function MetricsForm({ saved, onSaved }: { saved: Metrics; onSaved: () => void }
         <Stack>
           <Text>Paste this into prometheus.yml:</Text>
           <CodeBlock text={saved.scrape_config} label="Prometheus scrape configuration" />
-          {saved.needs_key ? (
+          {saved.key_required ? (
             <Text>Replace YOUR-TOKEN with the key you made.</Text>
           ) : null}
         </Stack>

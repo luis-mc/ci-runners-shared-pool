@@ -22,7 +22,7 @@ var _ MetricsService = (*metrics.Service)(nil)
 
 func toGenMetrics(st metrics.State) gen.MetricsSettings {
 	out := gen.MetricsSettings{
-		Enabled: st.Config.Enabled, Port: st.Config.Port, Expose: st.Config.Expose, NeedsKey: st.Config.RequireToken,
+		Enabled: st.Config.Enabled, Port: st.Config.Port, Expose: st.Config.Expose, KeyRequired: st.Config.RequireToken,
 		PushEnabled: st.Config.PushEnabled, PushEndpoint: st.Config.PushEndpoint, PushSeconds: st.Config.PushSeconds,
 		KeyMade: st.TokenSet, Running: st.Running, Pushing: st.Pushing, ScrapeConfig: st.ScrapeConfig,
 	}
@@ -83,7 +83,7 @@ func (s *server) PutMetricsSettings(ctx context.Context, req gen.PutMetricsSetti
 	}
 	b := req.Body
 	st, err := s.opts.Metrics.Update(ctx, publicActor(ctx, s.principal(ctx)), metrics.Config{
-		Enabled: b.Enabled, Port: b.Port, Expose: b.Expose, RequireToken: b.NeedsKey,
+		Enabled: b.Enabled, Port: b.Port, Expose: b.Expose, RequireToken: b.KeyRequired,
 		PushEnabled: b.PushEnabled, PushEndpoint: b.PushEndpoint, PushSeconds: b.PushSeconds,
 	})
 	if err != nil {
