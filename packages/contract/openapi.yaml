@@ -50,6 +50,8 @@ tags:
     description: Notification channels (notifications R5.7 to R5.9)
   - name: update
     description: Self-update and service restart with drain (operations R5.11 to R5.18, tray R5.15 to R5.18)
+  - name: debug
+    description: Debug access to a running job (debug-access R5.1 to R5.34)
   - name: webhooks
     description: GitHub webhook intake (github-integration R5.36)
 paths:
@@ -3124,6 +3126,264 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/TimerSettingsCheck'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/debug-access:
+    get:
+      operationId: getDebugPoolSettings
+      x-cli: none
+      x-cli-reason: 'crsp debug follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: The pool-wide debug switch and the transcript switch
+      description: >-
+        debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every
+        open session and refuses new ones. Both are on when unsaved; each
+        repository is still off until an admin switches it on (R5.1).
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The setting and how many sessions are open.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugPoolSettings'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: putDebugPoolSettings
+      x-cli: none
+      x-cli-reason: 'crsp debug follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: Save the pool-wide debug switch (the kill switch)
+      description: >-
+        debug-access R5.26. Owner only. Turning sessions off while one is open
+        needs `confirm`; without it the answer is 409 needs_confirmation with
+        the count. Every change is an audit row.
+      x-auth: owner
+      x-rate-limit: 30/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebugPoolSettingsInput'
+      responses:
+        '200':
+          description: Saved; `ended` says how many sessions the change ended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugPoolSettings'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/repositories/{repositoryId}/debug-access:
+    get:
+      operationId: getRepoDebugAccess
+      x-cli: none
+      x-cli-reason: 'crsp debug repo follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: A repository's debug access setting
+      description: debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RepositoryId'
+      responses:
+        '200':
+          description: The setting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugRepoAccess'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: setRepoDebugAccess
+      x-cli: none
+      x-cli-reason: 'crsp debug repo follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: Switch debug access on or off for a repository
+      description: >-
+        debug-access R5.1, R5.2. Admins and owner. A public repository cannot be
+        switched on. Only the owner sets or lifts Owner only. Every change is an
+        audit row.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RepositoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebugRepoAccessInput'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugRepoAccess'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/debug:
+    get:
+      operationId: getJobDebug
+      x-cli: none
+      x-cli-reason: 'crsp debug follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: The Debug access card of a job
+      description: >-
+        debug-access section 4. Whether the signed-in user may open a session on
+        this job now, and if not why (the first check that fails), the warnings
+        to show first, the open session and the past sessions of the job.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      responses:
+        '200':
+          description: The card.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobDebug'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/jobs/{jobId}/debug-sessions:
+    post:
+      operationId: openDebugSession
+      x-cli: none
+      x-cli-reason: 'crsp debug open follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: Open a debug session on a job
+      description: >-
+        debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers
+        403 with the reason the console shows and writes a refused audit row; an
+        open writes the session row and its audit row in one transaction.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/JobId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DebugSessionOpenInput'
+      responses:
+        '201':
+          description: The session is open.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugSession'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/debug-sessions:
+    get:
+      operationId: listDebugSessions
+      x-cli: none
+      x-cli-reason: 'crsp debug list follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: The debug sessions of the pool, newest first
+      description: debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The sessions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugSessionList'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/debug-sessions/{sessionId}:
+    get:
+      operationId: getDebugSession
+      x-cli: none
+      x-cli-reason: 'crsp debug follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: One debug session
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DebugSessionId'
+      responses:
+        '200':
+          description: The session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugSession'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/debug-sessions/{sessionId}/extend:
+    post:
+      operationId: extendDebugSession
+      x-cli: none
+      x-cli-reason: 'crsp debug extend follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: Extend a session once by 15 minutes
+      description: debug-access R5.19. Only the user who opened it; never past the highest session limit a repository may set (120 minutes); an audit row.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DebugSessionId'
+      responses:
+        '200':
+          description: Extended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugSession'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/debug-sessions/{sessionId}/end:
+    post:
+      operationId: endDebugSession
+      x-cli: none
+      x-cli-reason: 'crsp debug end follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: End a session
+      description: debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DebugSessionId'
+      responses:
+        '200':
+          description: Ended.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugSession'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/debug-sessions/{sessionId}/transcript:
+    get:
+      operationId: getDebugTranscript
+      x-cli: none
+      x-cli-reason: 'crsp debug follows in its own task (debug-access R5.30, CRSP331 follow-up).'
+      tags: [debug]
+      summary: The redacted transcript of a session
+      description: >-
+        debug-access R5.25. Admins and owner. Cleaned by the shared redaction
+        before it was stored, which cannot promise to catch everything; kept 30
+        days, at most 5 MB.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DebugSessionId'
+      responses:
+        '200':
+          description: The transcript.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DebugTranscript'
         default:
           $ref: '#/components/responses/Error'
   /api/v1/jobs/{jobId}/timer:
@@ -6265,6 +6525,13 @@ components:
       required: true
       schema:
         type: string
+    DebugSessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 64
     JobId:
       name: jobId
       in: path
@@ -6988,6 +7255,176 @@ components:
           type: array
           items: { $ref: '#/components/schemas/RegistryLogin' }
         ca_bundle_set: { type: boolean }
+    DebugPoolSettings:
+      type: object
+      description: debug-access R5.25, R5.26.
+      required: [enabled, record, open_sessions]
+      properties:
+        enabled:
+          {
+            type: boolean,
+            description: Allow debug sessions on this pool (the kill switch).,
+          }
+        record:
+          { type: boolean, description: Keep a redacted transcript of each session. }
+        open_sessions: { type: integer }
+        ended: { type: integer, description: Sessions this change ended. Only on a save. }
+        updated_at: { type: string, format: date-time }
+        updated_by: { type: string }
+    DebugPoolSettingsInput:
+      type: object
+      required: [enabled, record]
+      properties:
+        enabled: { type: boolean }
+        record: { type: boolean }
+        confirm:
+          { type: boolean, description: Needed to turn sessions off while one is open. }
+    DebugRepoAccess:
+      type: object
+      description: debug-access R5.1, R5.2, R5.10, R5.17, R5.18, R5.21.
+      required:
+        [
+          repository_id,
+          enabled,
+          who,
+          limit_min,
+          idle_min,
+          hold_min,
+          persistent_ok,
+          allows,
+          never,
+        ]
+      properties:
+        repository_id: { type: integer, format: int64 }
+        enabled: { type: boolean }
+        who: { type: string, enum: [admins, owner] }
+        limit_min: { type: integer, description: 'Session limit in minutes, 5 to 120.' }
+        idle_min: { type: integer, description: 'Idle limit in minutes, 1 to 60.' }
+        hold_min:
+          {
+            type: integer,
+            description: '0 to 30. Saved; holding a failed job is not built yet.',
+          }
+        persistent_ok: { type: boolean }
+        allows: { type: string, description: What a session allows, in words (R5.14). }
+        never:
+          { type: string, description: What a session never allows, in words (R5.14). }
+        disabled_reason:
+          {
+            type: string,
+            description: Why the switch cannot be turned on (a public repository).,
+          }
+        updated_at: { type: string, format: date-time }
+        updated_by: { type: string }
+    DebugRepoAccessInput:
+      type: object
+      required: [enabled, who, limit_min, idle_min, hold_min, persistent_ok]
+      properties:
+        enabled: { type: boolean }
+        who: { type: string, enum: [admins, owner] }
+        limit_min: { type: integer, minimum: 5, maximum: 120 }
+        idle_min: { type: integer, minimum: 1, maximum: 60 }
+        hold_min: { type: integer, minimum: 0, maximum: 30 }
+        persistent_ok: { type: boolean }
+    DebugSessionOpenInput:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          {
+            type: string,
+            minLength: 3,
+            maxLength: 200,
+            description: 'One line, 3 to 200 characters (R5.3).',
+          }
+    DebugSession:
+      type: object
+      description: One debug session (debug-access R5.24). No secret and no source address.
+      required:
+        [
+          id,
+          job_id,
+          repository,
+          user,
+          reason,
+          source,
+          state,
+          opened_at,
+          ends_at,
+          extended,
+          recorded,
+        ]
+      properties:
+        id: { type: string }
+        job_id: { type: integer, format: int64 }
+        repository: { type: string }
+        machine_id: { type: string }
+        runner_name: { type: string }
+        backend: { type: string }
+        isolation: { type: string }
+        os: { type: string }
+        user: { type: string }
+        reason: { type: string }
+        source: { type: string }
+        state: { type: string, enum: [open, ended] }
+        opened_at: { type: string, format: date-time }
+        ends_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+        end_reason:
+          type: string
+          enum: [time_limit, idle, job_ended, user, admin, kill_switch, link_lost, error]
+        ended_by: { type: string }
+        extended: { type: boolean }
+        recorded:
+          { type: boolean, description: False when the pool keeps no transcripts. }
+    DebugSessionList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DebugSession'
+    JobDebug:
+      type: object
+      description: The Debug access card of a job (debug-access section 4).
+      required: [job_id, allowed, warnings, sees, sessions, repository_enabled]
+      properties:
+        job_id: { type: integer, format: int64 }
+        allowed: { type: boolean }
+        why_not_code:
+          { type: string, description: The first check that failed; absent when allowed. }
+        why_not:
+          {
+            type: string,
+            description: The reason beside the disabled button; absent when allowed.,
+          }
+        warnings:
+          type: array
+          items: { type: string }
+        sees: { type: string, description: What the shell can see (R5.14). }
+        repository_enabled: { type: boolean }
+        limit_min: { type: integer }
+        idle_min: { type: integer }
+        open_session:
+          $ref: '#/components/schemas/DebugSession'
+        sessions:
+          type: array
+          items:
+            $ref: '#/components/schemas/DebugSession'
+    DebugTranscript:
+      type: object
+      required: [session_id, text, truncated, expires_at, note]
+      properties:
+        session_id: { type: string }
+        text: { type: string }
+        truncated: { type: boolean, description: The 5 MB cap was reached. }
+        expires_at: { type: string, format: date-time }
+        note:
+          {
+            type: string,
+            description: 'Cleaned as far as possible; redaction cannot promise to catch everything.',
+          }
     ErrorEnvelope:
       type: object
       required: [error]

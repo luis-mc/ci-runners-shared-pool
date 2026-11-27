@@ -403,6 +403,11 @@ func (s *JobsStore) GetJob(ctx context.Context, id int64) (jobsdata.JobDetail, b
 		return jobsdata.JobDetail{}, false, fmt.Errorf("get job: %w", err)
 	}
 	d := jobsdata.JobDetail{Job: jobFromRow(row)}
+	switch err := s.db.QueryRowContext(ctx, `SELECT head_repository FROM job_head_repository WHERE job_id = ?`, id).Scan(&d.HeadRepository); {
+	case errors.Is(err, sql.ErrNoRows):
+	case err != nil:
+		return d, false, fmt.Errorf("job head repository: %w", err)
+	}
 	steps, err := s.q.ListJobSteps(ctx, id)
 	if err != nil {
 		return d, false, fmt.Errorf("job steps: %w", err)

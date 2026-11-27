@@ -243,6 +243,13 @@ func (s *JobsStore) UpsertJob(ctx context.Context, j jobsdata.Job) error {
 		if err := q.UpsertJobsRow(ctx, sqlcgen.UpsertJobsRowParams(out)); err != nil {
 			return fmt.Errorf("upsert job: %w", err)
 		}
+		if j.HeadRepository != "" {
+			// Only a source that named the head repository writes it; later updates that do not leave it alone.
+			if _, err := tx.ExecContext(ctx, `INSERT INTO job_head_repository (job_id, head_repository) VALUES (?, ?)
+				ON CONFLICT (job_id) DO UPDATE SET head_repository = excluded.head_repository`, j.ID, j.HeadRepository); err != nil {
+				return fmt.Errorf("job head repository: %w", err)
+			}
+		}
 		if out.State == string(jobsdata.Done) {
 			// a finished job can finish its run, and with it the parent of a follow-up that arrived first
 			return relink(ctx, tx, q, out.RepositoryID, out.HeadSha, now)
