@@ -35,4 +35,4 @@ scripts/delivery/windows-real.example.json
 scripts/delivery/
 
 # WiX sources: XML that Prettier has no parser for.
-installer/*.wxs
+installer/**/*.wxs
