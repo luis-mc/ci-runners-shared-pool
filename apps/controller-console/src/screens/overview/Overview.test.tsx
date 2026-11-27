@@ -224,8 +224,11 @@ describe('Overview (R5.20)', () => {
       labels: [],
       state: 'running' as const,
     };
+    const inGrace = { ...job, timer_deadline: '2026-11-27T10:00:20Z' };
+    // A running job that is not in its grace has no deadline, and its timer is not asked for (audit R3-10).
+    const other = { ...job, id: 8, job_name: 'lint' };
     const api = signedIn()
-      .on('GET', '/api/v1/overview', overview({ running: [job] }))
+      .on('GET', '/api/v1/overview', overview({ running: [inGrace, other] }))
       .on('GET', '/api/v1/jobs/7/timer', {
         job_id: 7,
         state: 'grace',

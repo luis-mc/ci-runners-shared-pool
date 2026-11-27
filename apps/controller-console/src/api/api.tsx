@@ -2,6 +2,7 @@
 // an ApiError with the contract's code, and tells the session when a call finds the session ended.
 import { createApiClient, type ApiClient, type components } from '@crsp/contract';
 import { createContext, useContext, useMemo, useRef, type ReactNode } from 'react';
+import { dedupeFetch } from './dedupe';
 
 export type Schemas = components['schemas'];
 
@@ -42,7 +43,7 @@ export function ApiProvider({
   const csrf = useRef<string | undefined>(undefined);
   const ended = useRef<(() => void) | undefined>(undefined);
   const value = useMemo<ApiContextValue>(() => {
-    const client = given ?? createApiClient();
+    const client = given ?? createApiClient('', dedupeFetch());
     client.use({
       onRequest({ request }) {
         if (csrf.current && request.method !== 'GET' && request.method !== 'HEAD') {

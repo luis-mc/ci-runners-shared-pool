@@ -29,7 +29,7 @@ import { unwrap, useClient, type Schemas } from '../api/api';
 import { signInUrl, useSession } from '../auth/session';
 import { useMachines, useRefreshTick } from '../api/machines';
 import { useUpdateBanner } from './UpdateBannerHost';
-import { useLiveState, useVersion } from '../live/LiveProvider';
+import { useLiveSelect, useLiveState, useVersion } from '../live/LiveProvider';
 import { wipingLabel } from '../screens/images/labels';
 import { allRepositories } from '../screens/repositories/plans';
 import { RunnerProblemBanner, runnerProblems } from './RunnerProblems';
@@ -110,7 +110,11 @@ function PoolStatus() {
 }
 
 function LiveState() {
-  const live = useLiveState();
+  // Only a paused stream shows its age, so a live one does not render again for every event (CRSP290).
+  const live = useLiveSelect((s) => ({
+    status: s.status,
+    lastEventAt: s.status === 'paused' ? s.lastEventAt : undefined,
+  }));
   const now = useNow();
   if (live.status === 'live') return <Status kind="ok" word="live updates" />;
   if (live.status === 'connecting') return <Status kind="waiting" word="connecting" />;
@@ -233,7 +237,7 @@ function Palette({ onClose }: { onClose: () => void }) {
 
 export function AppShell({ children }: { children?: ReactNode }) {
   const session = useSession();
-  const live = useLiveState();
+  const live = useLiveSelect((s) => ({ progress: s.progress, status: s.status }));
   const navigate = useNavigate();
   const location = useLocation();
   const [palette, setPalette] = useState(false);

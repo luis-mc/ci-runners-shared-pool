@@ -158,7 +158,7 @@ func Register(mux *http.ServeMux, opts Options) {
 	if opts.Logger == nil {
 		opts.Logger = slog.Default()
 	}
-	var httpMW []gen.MiddlewareFunc
+	httpMW := []gen.MiddlewareFunc{transportMW}
 	authn := opts.Authn
 	if opts.GitHub != nil {
 		httpMW = append(httpMW, opts.GitHub.HTTPMiddleware())
@@ -197,6 +197,9 @@ func Recover(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if v := recover(); v != nil {
+				if v == http.ErrAbortHandler {
+					panic(v) // a stream that must end the connection (an export that failed half way)
+				}
 				logger.Error("panic in handler", "panic", v, "path", r.URL.Path)
 				WriteError(w, http.StatusInternalServerError, CodeInternal, "internal error")
 			}

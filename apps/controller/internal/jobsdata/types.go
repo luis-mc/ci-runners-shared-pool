@@ -244,6 +244,7 @@ type JobFilter struct {
 	From, To     time.Time // on created_at
 	After        int64     // job id of the last job of the previous page
 	Limit        int
+	NoCount      bool // skip the total (ListJobs answers 0): for a caller that walks every page and never shows it
 }
 
 // JobDetail is a job with steps, attempts and history.
@@ -373,6 +374,24 @@ type Reader interface {
 	Groups(ctx context.Context, by GroupBy) ([]GroupRow, error)
 	Stats(ctx context.Context, days int, f JobFilter) (Stats, error)
 	Summaries(ctx context.Context, from, to time.Time) ([]DailySummary, error)
+}
+
+// BatchReader is the optional half of a Reader that answers a page in a few queries instead of one per row. The
+// SQLite store implements it; a Reader that does not is read one question at a time.
+type BatchReader interface {
+	// SamplesMany answers each sample query (newest first), in the order given.
+	SamplesMany(ctx context.Context, qs []SampleQuery) ([][]Sample, error)
+	// RunsWithJobs gives each run row its jobs and its workflow graph.
+	RunsWithJobs(ctx context.Context, rows []RunRow) ([]RunDetail, error)
+}
+
+// TimelineReader is the optional half of a Reader that reads the finished jobs of a time window straight from the
+// completed-at index, with no total and no paging (the timeline shows a few hours of the last day).
+type TimelineReader interface {
+	// FinishedBetween gives the done jobs that completed in [from, to), newest first, at most limit.
+	FinishedBetween(ctx context.Context, from, to time.Time, limit int) ([]Job, error)
+	// AnyFinishedBetween says whether a done job (of machineID, when set) completed in [from, to).
+	AnyFinishedBetween(ctx context.Context, from, to time.Time, machineID string) (bool, error)
 }
 
 // CommitReader reads the runs of one head commit for the commit view (observability R5.13). The SQLite store

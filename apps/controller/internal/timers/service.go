@@ -59,6 +59,9 @@ func (s *Service) Save(ctx context.Context, in Input, by string) (Settings, []Pr
 // Job returns the timer of a job.
 func (s *Service) Job(ctx context.Context, id int64) (JobView, bool) { return s.E.JobByID(ctx, id) }
 
+// JobsByID returns the timers of many jobs held in memory in one read (the running jobs of a list).
+func (s *Service) JobsByID(ids []int64) map[int64]JobView { return s.E.JobsByID(ids) }
+
 // Run returns the timer of a run.
 func (s *Service) Run(ctx context.Context, runID int64, attempt int) (RunView, bool) {
 	return s.E.RunByID(ctx, runID, attempt)
