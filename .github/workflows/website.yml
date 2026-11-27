@@ -44,7 +44,7 @@ jobs:
       - name: Playwright browser
         run: pnpm --filter web exec playwright install --with-deps chromium
       - name: Browser tests (layout, axe, no JavaScript, network, headers, search, LCP)
-        run: pnpm --filter web e2e
+        run: pnpm --filter web browser
       - name: Keep the failure report
         if: ${{ failure() }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

@@ -920,7 +920,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Phone (360, 393 px):** one column; the gutter is `--ds-page-gutter` (16 px); nothing scrolls sideways.
 - **Source:** `packages/ui/src/components/Marketing.tsx` (`SiteFrame`: `menu`, `footer`), `packages/ui/src/components.css` (`ds-site`).
 - **Rules:** UX-2, UX-69, CORE-1, CORE-5, CORE-7.
-- **Guard:** `packages/ui/src/components/marketing.test.tsx` and the DOM layout checks of `apps/web/e2e/layout.spec.ts` at 360, 393 and 1300 px.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx` and the DOM layout checks of `apps/web/browser/layout.spec.ts` at 360, 393 and 1300 px.
 
 ## 87. Hero
 
@@ -980,4 +980,4 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Phone (360, 393 px):** the box takes the full width.
 - **Source:** `packages/ui/src/components/Marketing.tsx` (`DocSearch`: `label`, `hint`, `groups`), `packages/ui/src/components.css` (`ds-docsearch`).
 - **Rules:** UX-31, UX-57, CORE-1, CORE-5.
-- **Guard:** `packages/ui/src/components/marketing.test.tsx` and `apps/web/e2e/docs.spec.ts`.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx` and `apps/web/browser/docs.spec.ts`.

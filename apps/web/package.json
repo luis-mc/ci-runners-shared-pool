@@ -9,7 +9,7 @@
     "lint": "eslint src",
     "test": "vitest run",
     "shots": "pnpm --filter controller-console exec vite build && playwright test -c playwright.shots.config.ts",
-    "e2e": "playwright test"
+    "browser": "playwright test"
   },
   "dependencies": {
     "@crsp/ui": "workspace:*",
