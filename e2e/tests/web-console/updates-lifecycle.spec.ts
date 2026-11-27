@@ -98,7 +98,9 @@ async function layoutAtAllWidths(page: Page, screen: string): Promise<void> {
   expect([...unknown, ...stale]).toEqual([]);
 }
 
-test('Updates: policy, window and Look for updates (no history table, CRSP368)', async ({ page }) => {
+test('Updates: policy, window and Look for updates (no history table, CRSP368)', async ({
+  page,
+}) => {
   await signedIn().install(page);
   const st = await lifecycleApi(page);
   await page.goto('/settings/updates');
@@ -106,7 +108,9 @@ test('Updates: policy, window and Look for updates (no history table, CRSP368)',
   await expect(card).toBeVisible();
   await expect(card.getByText('Up to date. Version 1.4.0 is the newest.')).toBeVisible();
   await expect(page.getByRole('table', { name: 'Update history' })).toHaveCount(0);
-  await expect(card.getByRole('link', { name: 'See all in the Audit log' })).toBeVisible();
+  await expect(
+    card.getByRole('link', { name: 'See all in the Audit log' }),
+  ).toBeVisible();
 
   await card.getByRole('radio', { name: /Ask first/ }).click();
   await expect(card.getByRole('radio', { name: /Ask first/ })).toBeChecked();

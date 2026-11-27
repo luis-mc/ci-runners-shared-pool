@@ -312,7 +312,9 @@ export function UpdatesCard(p: UpdatesCardProps) {
           <Facts
             items={[
               { name: lw('updates.current'), value: p.current },
-              ...(p.nextCheck ? [{ name: lw('updates.next_check'), value: p.nextCheck }] : []),
+              ...(p.nextCheck
+                ? [{ name: lw('updates.next_check'), value: p.nextCheck }]
+                : []),
             ]}
           />
           <ChoiceField
