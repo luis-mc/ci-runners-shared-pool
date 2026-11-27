@@ -101,7 +101,7 @@ func (r *rig) url(kind, rest string) string {
 
 func get(t *testing.T, u, accept string) (int, string) {
 	t.Helper()
-	req, _ := http.NewRequest(http.MethodGet, u, nil)
+	req, _ := http.NewRequestWithContext(t.Context(), http.MethodGet, u, nil)
 	if accept != "" {
 		req.Header.Set("Accept", accept)
 	}
@@ -114,7 +114,10 @@ func get(t *testing.T, u, accept string) (int, string) {
 	return resp.StatusCode, string(b)
 }
 
-func sri(b []byte) string { s := sha512.Sum512(b); return "sha512-" + base64.StdEncoding.EncodeToString(s[:]) }
+func sri(b []byte) string {
+	s := sha512.Sum512(b)
+	return "sha512-" + base64.StdEncoding.EncodeToString(s[:])
+}
 
 // npmPackage puts a package document and its tarball on the upstream.
 func (r *rig) npmPackage(name, version string, tgz []byte, integrity string) {
