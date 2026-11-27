@@ -328,12 +328,6 @@ func jobWhere(f jobsdata.JobFilter) (string, []any) {
 	if !f.To.IsZero() {
 		add("created_at <= ?", fmtTime(f.To))
 	}
-	if !f.CompletedFrom.IsZero() {
-		add("completed_at >= ?", fmtTime(f.CompletedFrom))
-	}
-	if !f.CompletedTo.IsZero() {
-		add("completed_at < ?", fmtTime(f.CompletedTo))
-	}
 	if len(conds) == 0 {
 		return "", nil
 	}
@@ -346,10 +340,8 @@ func (s *JobsStore) ListJobs(ctx context.Context, f jobsdata.JobFilter) ([]jobsd
 	defer cancel()
 	where, args := jobWhere(f)
 	var total int
-	if !f.NoCount {
-		if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
-			return nil, 0, fmt.Errorf("count jobs: %w", err)
-		}
+	if err := s.rdb.QueryRowContext(ctx, `SELECT count(*) FROM jobs`+where, args...).Scan(&total); err != nil {
+		return nil, 0, fmt.Errorf("count jobs: %w", err)
 	}
 	if f.After != 0 {
 		if where == "" {

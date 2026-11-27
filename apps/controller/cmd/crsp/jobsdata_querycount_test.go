@@ -70,6 +70,9 @@ func seedOpenWork(t *testing.T, js jobsdata.Store) {
 			}
 		}
 	}
+	// One finished job inside the 6-hour window and one older, still within the last day.
+	job(1, 6000, "build", jobsdata.Done, jobsdata.Result("success"), testNow.Add(-90*time.Minute), testNow.Add(-80*time.Minute))
+	job(1, 6001, "build", jobsdata.Done, jobsdata.Result("success"), testNow.Add(-9*time.Hour), testNow.Add(-8*time.Hour))
 	for i := int64(0); i < openRunsSeeded; i++ {
 		repo, run := i%8+1, 5000+i
 		if err := js.UpsertRun(ctx, jobsdata.Run{RepositoryID: repo, Repository: fmt.Sprintf("o/r%d", repo), RunID: run, Attempt: 1, Workflow: wf,
@@ -127,6 +130,28 @@ func TestListAndDetailQueryCountsDoNotGrowWithOpenWork(t *testing.T) {
 			t.Errorf("%s ran %d queries, want at most %d", c.target, got, c.max)
 		}
 	}
+	// The timeline reads its window only, and knows an older finished job exists without reading it.
+	if got := queriesOf(t, mux, qc, "/api/v1/timeline"); got > 8 {
+		t.Errorf("timeline ran %d queries, want at most 8", got)
+	} else {
+		t.Logf("timeline: %d queries", got)
+	}
+	rec0 := httptest.NewRecorder()
+	mux.ServeHTTP(rec0, httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/timeline", nil))
+	var tl gen.Timeline
+	if err := json.Unmarshal(rec0.Body.Bytes(), &tl); err != nil {
+		t.Fatal(err)
+	}
+	done := 0
+	for _, b := range tl.Bars {
+		if b.State == "done" {
+			done++
+		}
+	}
+	if !tl.MoreBefore || done != openRunsSeeded+1 {
+		t.Errorf("timeline: more_before %v, %d finished bars (want true and %d, the 9-hour-old job is left out)", tl.MoreBefore, done, openRunsSeeded+1)
+	}
+
 	// The detail of a queued job: its forecast and the queue place share the same reads.
 	rec := httptest.NewRecorder()
 	mux.ServeHTTP(rec, httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/api/v1/jobs?state=queued&limit=1", nil))

@@ -2,9 +2,12 @@ package store
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"sort"
 	"strings"
+	"time"
 
 	"golang.org/x/sync/errgroup"
 
@@ -220,4 +223,38 @@ func (s *JobsStore) RunsWithJobs(ctx context.Context, rows []jobsdata.RunRow) ([
 		}
 	}
 	return out, nil
+}
+
+// FinishedBetween reads the done jobs that completed in [from, to), newest first, on the completed-at index. It reads
+// only the window it is asked for, so the timeline costs the same on a database of any age (audit F3).
+func (s *JobsStore) FinishedBetween(ctx context.Context, from, to time.Time, limit int) ([]jobsdata.Job, error) {
+	ctx, cancel := withDeadline(ctx)
+	defer cancel()
+	rows, err := s.rdb.QueryContext(ctx, `SELECT `+jobListCols+` FROM jobs WHERE completed_at >= ? AND completed_at < ? AND state = 'done'
+		ORDER BY completed_at DESC LIMIT ?`, fmtTime(from), fmtTime(to), limit)
+	if err != nil {
+		return nil, fmt.Errorf("finished jobs: %w", err)
+	}
+	return collectJobs(rows, scanJobListRow)
+}
+
+// AnyFinishedBetween says whether some done job completed in [from, to), of machineID when it is set.
+func (s *JobsStore) AnyFinishedBetween(ctx context.Context, from, to time.Time, machineID string) (bool, error) {
+	ctx, cancel := withDeadline(ctx)
+	defer cancel()
+	q := `SELECT 1 FROM jobs WHERE completed_at >= ? AND completed_at < ? AND state = 'done'`
+	args := []any{fmtTime(from), fmtTime(to)}
+	if machineID != "" {
+		q += ` AND machine_id = ?`
+		args = append(args, machineID)
+	}
+	var one int
+	err := s.rdb.QueryRowContext(ctx, q+` LIMIT 1`, args...).Scan(&one)
+	if errors.Is(err, sql.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, fmt.Errorf("older finished jobs: %w", err)
+	}
+	return true, nil
 }

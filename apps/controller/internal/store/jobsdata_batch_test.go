@@ -76,3 +76,35 @@ func TestIntegrationRunsWithJobsMatchesGetRun(t *testing.T) {
 		}
 	}
 }
+
+func TestIntegrationFinishedBetweenReadsOnlyTheWindow(t *testing.T) {
+	s := jobsDB(t)
+	ctx := context.Background()
+	now := time.Now().UTC().Truncate(time.Second)
+	for i := 1; i <= 6; i++ { // job i completed i hours ago
+		j := mkJob(int64(i), "test", jobsdata.Done, jobsdata.Success, now.Add(-time.Duration(i)*time.Hour-time.Minute), 1, 20)
+		j.MachineID = "m1"
+		if i == 5 {
+			j.MachineID = "m2"
+		}
+		must(t, s.UpsertJob(ctx, j))
+	}
+	must(t, s.UpsertJob(ctx, mkJob(9, "test", jobsdata.Running, "", now.Add(-time.Hour), 1, 0)))
+	got, err := s.FinishedBetween(ctx, now.Add(-4*time.Hour), now, 10)
+	must(t, err)
+	if len(got) != 3 || got[0].ID != 1 || got[2].ID != 3 {
+		t.Errorf("window: %+v", got)
+	}
+	if got, _ = s.FinishedBetween(ctx, now.Add(-6*time.Hour), now, 2); len(got) != 2 {
+		t.Errorf("limit: %d", len(got))
+	}
+	any, err := s.AnyFinishedBetween(ctx, now.Add(-24*time.Hour), now.Add(-4*time.Hour), "")
+	must(t, err)
+	onM2, _ := s.AnyFinishedBetween(ctx, now.Add(-24*time.Hour), now.Add(-4*time.Hour), "m2")
+	m2Later, _ := s.AnyFinishedBetween(ctx, now.Add(-24*time.Hour), now.Add(-6*time.Hour+30*time.Minute), "m2")
+	noneOnM3, _ := s.AnyFinishedBetween(ctx, now.Add(-24*time.Hour), now.Add(-4*time.Hour), "m3")
+	empty, _ := s.AnyFinishedBetween(ctx, now.Add(-24*time.Hour), now.Add(-7*time.Hour), "")
+	if !any || !onM2 || m2Later || noneOnM3 || empty {
+		t.Errorf("any %v onM2 %v m2Later %v noneOnM3 %v empty %v", any, onM2, m2Later, noneOnM3, empty)
+	}
+}
