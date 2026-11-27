@@ -116,11 +116,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -249,11 +245,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -384,11 +376,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -472,11 +460,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -519,11 +503,7 @@
   --ds-color-problem-tint: #3a2b37;
   --ds-color-on-problem-tint: #ff8aa0;
   --ds-glow-focus: 0 0 0 1px #7aa2f7, 0 0 8px rgba(122, 162, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(122, 162, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(122, 162, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -654,11 +634,7 @@
   --ds-color-problem-tint: #3a2b37;
   --ds-color-on-problem-tint: #ff8aa0;
   --ds-glow-focus: 0 0 0 1px #7aa2f7, 0 0 8px rgba(122, 162, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(122, 162, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(122, 162, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -742,11 +718,7 @@
   --ds-color-problem-tint: #3a2b37;
   --ds-color-on-problem-tint: #ff8aa0;
   --ds-glow-focus: 0 0 0 1px #7aa2f7, 0 0 8px rgba(122, 162, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(122, 162, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(122, 162, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -789,11 +761,7 @@
   --ds-color-problem-tint: #3c2d3f;
   --ds-color-on-problem-tint: #f38ba8;
   --ds-glow-focus: 0 0 0 1px #cba6f7, 0 0 8px rgba(203, 166, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(203, 166, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(203, 166, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 8px;
@@ -924,11 +892,7 @@
   --ds-color-problem-tint: #3c2d3f;
   --ds-color-on-problem-tint: #f38ba8;
   --ds-glow-focus: 0 0 0 1px #cba6f7, 0 0 8px rgba(203, 166, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(203, 166, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(203, 166, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 8px;
@@ -1012,11 +976,7 @@
   --ds-color-problem-tint: #3c2d3f;
   --ds-color-on-problem-tint: #f38ba8;
   --ds-glow-focus: 0 0 0 1px #cba6f7, 0 0 8px rgba(203, 166, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(203, 166, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(203, 166, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 8px;
@@ -1059,11 +1019,7 @@
   --ds-color-problem-tint: #3e2f2d;
   --ds-color-on-problem-tint: #ff6b5a;
   --ds-glow-focus: 0 0 0 1px #fabd2f, 0 0 8px rgba(250, 189, 47, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(250, 189, 47, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(250, 189, 47, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1194,11 +1150,7 @@
   --ds-color-problem-tint: #3e2f2d;
   --ds-color-on-problem-tint: #ff6b5a;
   --ds-glow-focus: 0 0 0 1px #fabd2f, 0 0 8px rgba(250, 189, 47, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(250, 189, 47, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(250, 189, 47, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1282,11 +1234,7 @@
   --ds-color-problem-tint: #3e2f2d;
   --ds-color-on-problem-tint: #ff6b5a;
   --ds-glow-focus: 0 0 0 1px #fabd2f, 0 0 8px rgba(250, 189, 47, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(250, 189, 47, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(250, 189, 47, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1329,11 +1277,7 @@
   --ds-color-problem-tint: #2a444e;
   --ds-color-on-problem-tint: #ff9a95;
   --ds-glow-focus: 0 0 0 1px #6cbcf5, 0 0 8px rgba(108, 188, 245, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(108, 188, 245, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(108, 188, 245, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1464,11 +1408,7 @@
   --ds-color-problem-tint: #2a444e;
   --ds-color-on-problem-tint: #ff9a95;
   --ds-glow-focus: 0 0 0 1px #6cbcf5, 0 0 8px rgba(108, 188, 245, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(108, 188, 245, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(108, 188, 245, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1552,11 +1492,7 @@
   --ds-color-problem-tint: #2a444e;
   --ds-color-on-problem-tint: #ff9a95;
   --ds-glow-focus: 0 0 0 1px #6cbcf5, 0 0 8px rgba(108, 188, 245, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(108, 188, 245, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(108, 188, 245, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1599,11 +1535,7 @@
   --ds-color-problem-tint: #49424e;
   --ds-color-on-problem-tint: #ef9aa1;
   --ds-glow-focus: 0 0 0 1px #88c0d0, 0 0 8px rgba(136, 192, 208, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(136, 192, 208, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(136, 192, 208, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 6px;
@@ -1734,11 +1666,7 @@
   --ds-color-problem-tint: #49424e;
   --ds-color-on-problem-tint: #ef9aa1;
   --ds-glow-focus: 0 0 0 1px #88c0d0, 0 0 8px rgba(136, 192, 208, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(136, 192, 208, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(136, 192, 208, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 6px;
@@ -1822,11 +1750,7 @@
   --ds-color-problem-tint: #49424e;
   --ds-color-on-problem-tint: #ef9aa1;
   --ds-glow-focus: 0 0 0 1px #88c0d0, 0 0 8px rgba(136, 192, 208, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(136, 192, 208, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(136, 192, 208, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 6px;
@@ -1879,40 +1803,40 @@
 @media (prefers-color-scheme: light) {
   :root:not([data-theme='dark']) [data-theme-name='terminal'],
   :root:not([data-theme='dark'])[data-theme-name='terminal'] {
-    --ds-color-page: #0b0e0d;
-    --ds-color-surface: #0f1413;
-    --ds-color-text: #cfd8d3;
-    --ds-color-text-muted: #8b9892;
-    --ds-color-text-inactive: #8b9892;
-    --ds-color-border: #6b7a73;
-    --ds-color-divider: #2b3330;
-    --ds-color-primary: #4fd18b;
-    --ds-color-on-primary: #0b0e0d;
-    --ds-color-focus: #4fd18b;
-    --ds-color-selection: #17332a;
-    --ds-color-accent: #b48ae0;
-    --ds-color-warm: #e8944a;
-    --ds-color-done: #4fd18b;
-    --ds-color-done-bg: #172b21;
-    --ds-color-on-done: #0b0e0d;
-    --ds-color-done-tint: #172b21;
-    --ds-color-on-done-tint: #4fd18b;
-    --ds-color-note: #4fc3d9;
-    --ds-color-note-bg: #17292b;
-    --ds-color-on-note: #0b0e0d;
-    --ds-color-note-tint: #17292b;
-    --ds-color-on-note-tint: #4fc3d9;
-    --ds-color-needs-you: #d9c04a;
-    --ds-color-needs-you-bg: #27291a;
-    --ds-color-on-needs-you: #0b0e0d;
-    --ds-color-needs-you-tint: #27291a;
-    --ds-color-on-needs-you-tint: #d9c04a;
-    --ds-color-problem: #e0605a;
-    --ds-color-problem-bg: #281d1c;
-    --ds-color-on-problem: #0b0e0d;
-    --ds-color-problem-tint: #281d1c;
-    --ds-color-on-problem-tint: #e0605a;
-    --ds-glow-focus: 0 0 0 1px #4fd18b;
+    --ds-color-page: #e9efe5;
+    --ds-color-surface: #f4f8f1;
+    --ds-color-text: #14221a;
+    --ds-color-text-muted: #3d5646;
+    --ds-color-text-inactive: #3d5646;
+    --ds-color-border: #5a7263;
+    --ds-color-divider: #c6d0c6;
+    --ds-color-primary: #1b6a3d;
+    --ds-color-on-primary: #e9efe5;
+    --ds-color-focus: #1b6a3d;
+    --ds-color-selection: #cde4d2;
+    --ds-color-accent: #74429f;
+    --ds-color-warm: #9c4f10;
+    --ds-color-done: #1b6a3d;
+    --ds-color-done-bg: #dae7db;
+    --ds-color-on-done: #e9efe5;
+    --ds-color-done-tint: #dae7db;
+    --ds-color-on-done-tint: #1b6a3d;
+    --ds-color-note: #0d6277;
+    --ds-color-note-bg: #d8e6e2;
+    --ds-color-on-note: #e9efe5;
+    --ds-color-note-tint: #d8e6e2;
+    --ds-color-on-note-tint: #0d6277;
+    --ds-color-needs-you: #785a00;
+    --ds-color-needs-you-bg: #e5e5d4;
+    --ds-color-on-needs-you: #e9efe5;
+    --ds-color-needs-you-tint: #e5e5d4;
+    --ds-color-on-needs-you-tint: #785a00;
+    --ds-color-problem: #a52f2a;
+    --ds-color-problem-bg: #ebe0d9;
+    --ds-color-on-problem: #e9efe5;
+    --ds-color-problem-tint: #ebe0d9;
+    --ds-color-on-problem-tint: #a52f2a;
+    --ds-glow-focus: 0 0 0 1px #1b6a3d;
     --ds-scanline-focus: none;
     --ds-shadow-2: none;
     --ds-shadow-3: none;
@@ -1923,40 +1847,40 @@
 }
 [data-theme='light'] [data-theme-name='terminal'],
 [data-theme='light'][data-theme-name='terminal'] {
-  --ds-color-page: #0b0e0d;
-  --ds-color-surface: #0f1413;
-  --ds-color-text: #cfd8d3;
-  --ds-color-text-muted: #8b9892;
-  --ds-color-text-inactive: #8b9892;
-  --ds-color-border: #6b7a73;
-  --ds-color-divider: #2b3330;
-  --ds-color-primary: #4fd18b;
-  --ds-color-on-primary: #0b0e0d;
-  --ds-color-focus: #4fd18b;
-  --ds-color-selection: #17332a;
-  --ds-color-accent: #b48ae0;
-  --ds-color-warm: #e8944a;
-  --ds-color-done: #4fd18b;
-  --ds-color-done-bg: #172b21;
-  --ds-color-on-done: #0b0e0d;
-  --ds-color-done-tint: #172b21;
-  --ds-color-on-done-tint: #4fd18b;
-  --ds-color-note: #4fc3d9;
-  --ds-color-note-bg: #17292b;
-  --ds-color-on-note: #0b0e0d;
-  --ds-color-note-tint: #17292b;
-  --ds-color-on-note-tint: #4fc3d9;
-  --ds-color-needs-you: #d9c04a;
-  --ds-color-needs-you-bg: #27291a;
-  --ds-color-on-needs-you: #0b0e0d;
-  --ds-color-needs-you-tint: #27291a;
-  --ds-color-on-needs-you-tint: #d9c04a;
-  --ds-color-problem: #e0605a;
-  --ds-color-problem-bg: #281d1c;
-  --ds-color-on-problem: #0b0e0d;
-  --ds-color-problem-tint: #281d1c;
-  --ds-color-on-problem-tint: #e0605a;
-  --ds-glow-focus: 0 0 0 1px #4fd18b;
+  --ds-color-page: #e9efe5;
+  --ds-color-surface: #f4f8f1;
+  --ds-color-text: #14221a;
+  --ds-color-text-muted: #3d5646;
+  --ds-color-text-inactive: #3d5646;
+  --ds-color-border: #5a7263;
+  --ds-color-divider: #c6d0c6;
+  --ds-color-primary: #1b6a3d;
+  --ds-color-on-primary: #e9efe5;
+  --ds-color-focus: #1b6a3d;
+  --ds-color-selection: #cde4d2;
+  --ds-color-accent: #74429f;
+  --ds-color-warm: #9c4f10;
+  --ds-color-done: #1b6a3d;
+  --ds-color-done-bg: #dae7db;
+  --ds-color-on-done: #e9efe5;
+  --ds-color-done-tint: #dae7db;
+  --ds-color-on-done-tint: #1b6a3d;
+  --ds-color-note: #0d6277;
+  --ds-color-note-bg: #d8e6e2;
+  --ds-color-on-note: #e9efe5;
+  --ds-color-note-tint: #d8e6e2;
+  --ds-color-on-note-tint: #0d6277;
+  --ds-color-needs-you: #785a00;
+  --ds-color-needs-you-bg: #e5e5d4;
+  --ds-color-on-needs-you: #e9efe5;
+  --ds-color-needs-you-tint: #e5e5d4;
+  --ds-color-on-needs-you-tint: #785a00;
+  --ds-color-problem: #a52f2a;
+  --ds-color-problem-bg: #ebe0d9;
+  --ds-color-on-problem: #e9efe5;
+  --ds-color-problem-tint: #ebe0d9;
+  --ds-color-on-problem-tint: #a52f2a;
+  --ds-glow-focus: 0 0 0 1px #1b6a3d;
   --ds-scanline-focus: none;
   --ds-shadow-2: none;
   --ds-shadow-3: none;
@@ -2008,40 +1932,40 @@
   --ds-radius-3: 0;
 }
 :root [data-theme='light'][data-theme-name='terminal'] {
-  --ds-color-page: #0b0e0d;
-  --ds-color-surface: #0f1413;
-  --ds-color-text: #cfd8d3;
-  --ds-color-text-muted: #8b9892;
-  --ds-color-text-inactive: #8b9892;
-  --ds-color-border: #6b7a73;
-  --ds-color-divider: #2b3330;
-  --ds-color-primary: #4fd18b;
-  --ds-color-on-primary: #0b0e0d;
-  --ds-color-focus: #4fd18b;
-  --ds-color-selection: #17332a;
-  --ds-color-accent: #b48ae0;
-  --ds-color-warm: #e8944a;
-  --ds-color-done: #4fd18b;
-  --ds-color-done-bg: #172b21;
-  --ds-color-on-done: #0b0e0d;
-  --ds-color-done-tint: #172b21;
-  --ds-color-on-done-tint: #4fd18b;
-  --ds-color-note: #4fc3d9;
-  --ds-color-note-bg: #17292b;
-  --ds-color-on-note: #0b0e0d;
-  --ds-color-note-tint: #17292b;
-  --ds-color-on-note-tint: #4fc3d9;
-  --ds-color-needs-you: #d9c04a;
-  --ds-color-needs-you-bg: #27291a;
-  --ds-color-on-needs-you: #0b0e0d;
-  --ds-color-needs-you-tint: #27291a;
-  --ds-color-on-needs-you-tint: #d9c04a;
-  --ds-color-problem: #e0605a;
-  --ds-color-problem-bg: #281d1c;
-  --ds-color-on-problem: #0b0e0d;
-  --ds-color-problem-tint: #281d1c;
-  --ds-color-on-problem-tint: #e0605a;
-  --ds-glow-focus: 0 0 0 1px #4fd18b;
+  --ds-color-page: #e9efe5;
+  --ds-color-surface: #f4f8f1;
+  --ds-color-text: #14221a;
+  --ds-color-text-muted: #3d5646;
+  --ds-color-text-inactive: #3d5646;
+  --ds-color-border: #5a7263;
+  --ds-color-divider: #c6d0c6;
+  --ds-color-primary: #1b6a3d;
+  --ds-color-on-primary: #e9efe5;
+  --ds-color-focus: #1b6a3d;
+  --ds-color-selection: #cde4d2;
+  --ds-color-accent: #74429f;
+  --ds-color-warm: #9c4f10;
+  --ds-color-done: #1b6a3d;
+  --ds-color-done-bg: #dae7db;
+  --ds-color-on-done: #e9efe5;
+  --ds-color-done-tint: #dae7db;
+  --ds-color-on-done-tint: #1b6a3d;
+  --ds-color-note: #0d6277;
+  --ds-color-note-bg: #d8e6e2;
+  --ds-color-on-note: #e9efe5;
+  --ds-color-note-tint: #d8e6e2;
+  --ds-color-on-note-tint: #0d6277;
+  --ds-color-needs-you: #785a00;
+  --ds-color-needs-you-bg: #e5e5d4;
+  --ds-color-on-needs-you: #e9efe5;
+  --ds-color-needs-you-tint: #e5e5d4;
+  --ds-color-on-needs-you-tint: #785a00;
+  --ds-color-problem: #a52f2a;
+  --ds-color-problem-bg: #ebe0d9;
+  --ds-color-on-problem: #e9efe5;
+  --ds-color-problem-tint: #ebe0d9;
+  --ds-color-on-problem-tint: #a52f2a;
+  --ds-glow-focus: 0 0 0 1px #1b6a3d;
   --ds-scanline-focus: none;
   --ds-shadow-2: none;
   --ds-shadow-3: none;
@@ -2091,9 +2015,9 @@
   --ds-radius-2: 0;
   --ds-radius-3: 0;
 }
-/* Terminal, amber palette */
+/* Terminal, amber palette: dark, then light under the system setting, then light and dark by choice. */
 :root[data-theme-name='terminal'][data-pal='amber'],
-.ds-theme-preview[data-theme-name='terminal'][data-pal='amber'][data-theme] {
+.ds-theme-preview[data-theme-name='terminal'][data-pal='amber'][data-theme='dark'] {
   --ds-color-page: #0e0b06;
   --ds-color-surface: #140f08;
   --ds-color-text: #e8d9b8;
@@ -2135,9 +2059,267 @@
   --ds-radius-2: 0;
   --ds-radius-3: 0;
 }
-/* Terminal, ice palette */
+@media (prefers-color-scheme: light) {
+  :root[data-theme-name='terminal'][data-pal='amber']:not([data-theme='dark']) {
+    --ds-color-page: #f2eadb;
+    --ds-color-surface: #faf5e8;
+    --ds-color-text: #2b200c;
+    --ds-color-text-muted: #5a4620;
+    --ds-color-text-inactive: #5a4620;
+    --ds-color-border: #7d6535;
+    --ds-color-divider: #d5cab2;
+    --ds-color-primary: #865400;
+    --ds-color-on-primary: #f2eadb;
+    --ds-color-focus: #865400;
+    --ds-color-selection: #ebd8a6;
+    --ds-color-accent: #8a4a3a;
+    --ds-color-warm: #9c4f10;
+    --ds-color-done: #865400;
+    --ds-color-done-bg: #ece2cc;
+    --ds-color-on-done: #f2eadb;
+    --ds-color-done-tint: #ece2cc;
+    --ds-color-on-done-tint: #865400;
+    --ds-color-note: #7a5516;
+    --ds-color-note-bg: #ebe2cf;
+    --ds-color-on-note: #f2eadb;
+    --ds-color-note-tint: #ebe2cf;
+    --ds-color-on-note-tint: #7a5516;
+    --ds-color-needs-you: #6a5400;
+    --ds-color-needs-you-bg: #e9e2cc;
+    --ds-color-on-needs-you: #f2eadb;
+    --ds-color-needs-you-tint: #e9e2cc;
+    --ds-color-on-needs-you-tint: #6a5400;
+    --ds-color-problem: #a5352a;
+    --ds-color-problem-bg: #f0ded1;
+    --ds-color-on-problem: #f2eadb;
+    --ds-color-problem-tint: #f0ded1;
+    --ds-color-on-problem-tint: #a5352a;
+    --ds-glow-focus: 0 0 0 1px #865400;
+    --ds-scanline-focus: none;
+    --ds-shadow-2: none;
+    --ds-shadow-3: none;
+    --ds-radius-1: 0;
+    --ds-radius-2: 0;
+    --ds-radius-3: 0;
+  }
+}
+:root[data-theme-name='terminal'][data-pal='amber'][data-theme='light'],
+.ds-theme-preview[data-theme-name='terminal'][data-pal='amber'][data-theme='light'] {
+  --ds-color-page: #f2eadb;
+  --ds-color-surface: #faf5e8;
+  --ds-color-text: #2b200c;
+  --ds-color-text-muted: #5a4620;
+  --ds-color-text-inactive: #5a4620;
+  --ds-color-border: #7d6535;
+  --ds-color-divider: #d5cab2;
+  --ds-color-primary: #865400;
+  --ds-color-on-primary: #f2eadb;
+  --ds-color-focus: #865400;
+  --ds-color-selection: #ebd8a6;
+  --ds-color-accent: #8a4a3a;
+  --ds-color-warm: #9c4f10;
+  --ds-color-done: #865400;
+  --ds-color-done-bg: #ece2cc;
+  --ds-color-on-done: #f2eadb;
+  --ds-color-done-tint: #ece2cc;
+  --ds-color-on-done-tint: #865400;
+  --ds-color-note: #7a5516;
+  --ds-color-note-bg: #ebe2cf;
+  --ds-color-on-note: #f2eadb;
+  --ds-color-note-tint: #ebe2cf;
+  --ds-color-on-note-tint: #7a5516;
+  --ds-color-needs-you: #6a5400;
+  --ds-color-needs-you-bg: #e9e2cc;
+  --ds-color-on-needs-you: #f2eadb;
+  --ds-color-needs-you-tint: #e9e2cc;
+  --ds-color-on-needs-you-tint: #6a5400;
+  --ds-color-problem: #a5352a;
+  --ds-color-problem-bg: #f0ded1;
+  --ds-color-on-problem: #f2eadb;
+  --ds-color-problem-tint: #f0ded1;
+  --ds-color-on-problem-tint: #a5352a;
+  --ds-glow-focus: 0 0 0 1px #865400;
+  --ds-scanline-focus: none;
+  --ds-shadow-2: none;
+  --ds-shadow-3: none;
+  --ds-radius-1: 0;
+  --ds-radius-2: 0;
+  --ds-radius-3: 0;
+}
+:root[data-theme-name='terminal'][data-pal='amber'][data-theme='dark'] {
+  --ds-color-page: #0e0b06;
+  --ds-color-surface: #140f08;
+  --ds-color-text: #e8d9b8;
+  --ds-color-text-muted: #9f8c67;
+  --ds-color-text-inactive: #9f8c67;
+  --ds-color-border: #8a7650;
+  --ds-color-divider: #372e1e;
+  --ds-color-primary: #e8b44a;
+  --ds-color-on-primary: #0e0b06;
+  --ds-color-focus: #e8b44a;
+  --ds-color-selection: #33260f;
+  --ds-color-accent: #c8907a;
+  --ds-color-warm: #e8944a;
+  --ds-color-done: #e8b44a;
+  --ds-color-done-bg: #322611;
+  --ds-color-on-done: #0e0b06;
+  --ds-color-done-tint: #322611;
+  --ds-color-on-done-tint: #e8b44a;
+  --ds-color-note: #d9a24f;
+  --ds-color-note-bg: #302412;
+  --ds-color-on-note: #0e0b06;
+  --ds-color-note-tint: #302412;
+  --ds-color-on-note-tint: #d9a24f;
+  --ds-color-needs-you: #f0d060;
+  --ds-color-needs-you-bg: #332a14;
+  --ds-color-on-needs-you: #0e0b06;
+  --ds-color-needs-you-tint: #332a14;
+  --ds-color-on-needs-you-tint: #f0d060;
+  --ds-color-problem: #e0705a;
+  --ds-color-problem-bg: #311d13;
+  --ds-color-on-problem: #0e0b06;
+  --ds-color-problem-tint: #311d13;
+  --ds-color-on-problem-tint: #e0705a;
+  --ds-glow-focus: 0 0 0 1px #e8b44a;
+  --ds-scanline-focus: none;
+  --ds-shadow-2: none;
+  --ds-shadow-3: none;
+  --ds-radius-1: 0;
+  --ds-radius-2: 0;
+  --ds-radius-3: 0;
+}
+/* Terminal, ice palette: dark, then light under the system setting, then light and dark by choice. */
 :root[data-theme-name='terminal'][data-pal='ice'],
-.ds-theme-preview[data-theme-name='terminal'][data-pal='ice'][data-theme] {
+.ds-theme-preview[data-theme-name='terminal'][data-pal='ice'][data-theme='dark'] {
+  --ds-color-page: #070b10;
+  --ds-color-surface: #0b1219;
+  --ds-color-text: #c9d6e2;
+  --ds-color-text-muted: #7f92a3;
+  --ds-color-text-inactive: #7f92a3;
+  --ds-color-border: #62778a;
+  --ds-color-divider: #25303b;
+  --ds-color-primary: #5fd0c4;
+  --ds-color-on-primary: #070b10;
+  --ds-color-focus: #5fd0c4;
+  --ds-color-selection: #112a3d;
+  --ds-color-accent: #a98ae8;
+  --ds-color-warm: #f0a060;
+  --ds-color-done: #5fd0c4;
+  --ds-color-done-bg: #172d31;
+  --ds-color-on-done: #070b10;
+  --ds-color-done-tint: #172d31;
+  --ds-color-on-done-tint: #5fd0c4;
+  --ds-color-note: #5aa9f0;
+  --ds-color-note-bg: #162737;
+  --ds-color-on-note: #070b10;
+  --ds-color-note-tint: #162737;
+  --ds-color-on-note-tint: #5aa9f0;
+  --ds-color-needs-you: #e0c868;
+  --ds-color-needs-you-bg: #292b24;
+  --ds-color-on-needs-you: #070b10;
+  --ds-color-needs-you-tint: #292b24;
+  --ds-color-on-needs-you-tint: #e0c868;
+  --ds-color-problem: #e86a7a;
+  --ds-color-problem-bg: #2a1e27;
+  --ds-color-on-problem: #070b10;
+  --ds-color-problem-tint: #2a1e27;
+  --ds-color-on-problem-tint: #e86a7a;
+  --ds-glow-focus: 0 0 0 1px #5fd0c4;
+  --ds-scanline-focus: none;
+  --ds-shadow-2: none;
+  --ds-shadow-3: none;
+  --ds-radius-1: 0;
+  --ds-radius-2: 0;
+  --ds-radius-3: 0;
+}
+@media (prefers-color-scheme: light) {
+  :root[data-theme-name='terminal'][data-pal='ice']:not([data-theme='dark']) {
+    --ds-color-page: #e7edf3;
+    --ds-color-surface: #f2f6fa;
+    --ds-color-text: #0e1e2c;
+    --ds-color-text-muted: #394f63;
+    --ds-color-text-inactive: #394f63;
+    --ds-color-border: #587086;
+    --ds-color-divider: #c4ced7;
+    --ds-color-primary: #08666f;
+    --ds-color-on-primary: #e7edf3;
+    --ds-color-focus: #08666f;
+    --ds-color-selection: #c9dcec;
+    --ds-color-accent: #5a3aaa;
+    --ds-color-warm: #9a4710;
+    --ds-color-done: #08666f;
+    --ds-color-done-bg: #d6e5e9;
+    --ds-color-on-done: #e7edf3;
+    --ds-color-done-tint: #d6e5e9;
+    --ds-color-on-done-tint: #08666f;
+    --ds-color-note: #1b5ca6;
+    --ds-color-note-bg: #d8e4f0;
+    --ds-color-on-note: #e7edf3;
+    --ds-color-note-tint: #d8e4f0;
+    --ds-color-on-note-tint: #1b5ca6;
+    --ds-color-needs-you: #675700;
+    --ds-color-needs-you-bg: #e1e3dc;
+    --ds-color-on-needs-you: #e7edf3;
+    --ds-color-needs-you-tint: #e1e3dc;
+    --ds-color-on-needs-you-tint: #675700;
+    --ds-color-problem: #a3253d;
+    --ds-color-problem-bg: #e9dde3;
+    --ds-color-on-problem: #e7edf3;
+    --ds-color-problem-tint: #e9dde3;
+    --ds-color-on-problem-tint: #a3253d;
+    --ds-glow-focus: 0 0 0 1px #08666f;
+    --ds-scanline-focus: none;
+    --ds-shadow-2: none;
+    --ds-shadow-3: none;
+    --ds-radius-1: 0;
+    --ds-radius-2: 0;
+    --ds-radius-3: 0;
+  }
+}
+:root[data-theme-name='terminal'][data-pal='ice'][data-theme='light'],
+.ds-theme-preview[data-theme-name='terminal'][data-pal='ice'][data-theme='light'] {
+  --ds-color-page: #e7edf3;
+  --ds-color-surface: #f2f6fa;
+  --ds-color-text: #0e1e2c;
+  --ds-color-text-muted: #394f63;
+  --ds-color-text-inactive: #394f63;
+  --ds-color-border: #587086;
+  --ds-color-divider: #c4ced7;
+  --ds-color-primary: #08666f;
+  --ds-color-on-primary: #e7edf3;
+  --ds-color-focus: #08666f;
+  --ds-color-selection: #c9dcec;
+  --ds-color-accent: #5a3aaa;
+  --ds-color-warm: #9a4710;
+  --ds-color-done: #08666f;
+  --ds-color-done-bg: #d6e5e9;
+  --ds-color-on-done: #e7edf3;
+  --ds-color-done-tint: #d6e5e9;
+  --ds-color-on-done-tint: #08666f;
+  --ds-color-note: #1b5ca6;
+  --ds-color-note-bg: #d8e4f0;
+  --ds-color-on-note: #e7edf3;
+  --ds-color-note-tint: #d8e4f0;
+  --ds-color-on-note-tint: #1b5ca6;
+  --ds-color-needs-you: #675700;
+  --ds-color-needs-you-bg: #e1e3dc;
+  --ds-color-on-needs-you: #e7edf3;
+  --ds-color-needs-you-tint: #e1e3dc;
+  --ds-color-on-needs-you-tint: #675700;
+  --ds-color-problem: #a3253d;
+  --ds-color-problem-bg: #e9dde3;
+  --ds-color-on-problem: #e7edf3;
+  --ds-color-problem-tint: #e9dde3;
+  --ds-color-on-problem-tint: #a3253d;
+  --ds-glow-focus: 0 0 0 1px #08666f;
+  --ds-scanline-focus: none;
+  --ds-shadow-2: none;
+  --ds-shadow-3: none;
+  --ds-radius-1: 0;
+  --ds-radius-2: 0;
+  --ds-radius-3: 0;
+}
+:root[data-theme-name='terminal'][data-pal='ice'][data-theme='dark'] {
   --ds-color-page: #070b10;
   --ds-color-surface: #0b1219;
   --ds-color-text: #c9d6e2;

@@ -33,7 +33,7 @@ describe('theme choice with a preview', () => {
     expect(screen.getByRole('img', { name: 'Tokyo Night, light' })).toBeTruthy();
   });
 
-  it('shows a Terminal choice in dark only, in the Terminal look with its palette', () => {
+  it('shows a Terminal choice in dark and light, in the Terminal look with its palette', () => {
     render(
       <ChoiceField
         label="Theme"
@@ -47,9 +47,11 @@ describe('theme choice with a preview', () => {
       />,
     );
     expect(document.querySelectorAll('.ds-theme-preview')).toHaveLength(
-      THEMES.length * 2 + 3,
+      THEMES.length * 2 + 6,
     );
-    expect(screen.queryByRole('img', { name: 'Terminal Ice, light' })).toBeNull();
+    const iceLight = screen.getByRole('img', { name: 'Terminal Ice, light' });
+    expect(iceLight.getAttribute('data-pal')).toBe('ice');
+    expect(iceLight.getAttribute('data-theme')).toBe('light');
     const ice = screen.getByRole('img', { name: 'Terminal Ice, dark' });
     expect(ice.getAttribute('data-theme-name')).toBe('terminal');
     expect(ice.getAttribute('data-pal')).toBe('ice');

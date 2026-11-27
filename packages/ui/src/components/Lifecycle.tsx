@@ -8,6 +8,7 @@ import { lw } from '../lifecycleWords';
 import { Button, LinkButton, TextLink } from './Button';
 import { Dialog } from './Dialog';
 import { ChoiceField, TextField } from './Fields';
+import { Facts } from './Card';
 import { Stack, Text } from './layout';
 import { Message } from './Message';
 import { Pane } from './Pane';
@@ -270,7 +271,12 @@ export function UpdatesCard(p: UpdatesCardProps) {
               <TextLink to={p.historyTo}>{lw('updates.audit_link')}</TextLink>
             </Text>
           ) : null}
-          <Text>{`${lw('updates.current')}: ${p.current}${p.nextCheck ? `. ${lw('updates.next_check')}: ${p.nextCheck}` : ''}`}</Text>
+          <Facts
+            items={[
+              { name: lw('updates.current'), value: p.current },
+              ...(p.nextCheck ? [{ name: lw('updates.next_check'), value: p.nextCheck }] : []),
+            ]}
+          />
           <ChoiceField
             label={lw('policy.title')}
             value={p.policy}

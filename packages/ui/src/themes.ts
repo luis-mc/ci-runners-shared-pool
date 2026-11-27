@@ -146,11 +146,6 @@ export function terminalChoicePalette(id: string): string {
   return isTerminalChoice(id) ? id.slice(TERMINAL_CHOICE_PREFIX.length) : 'green';
 }
 
-/** Terminal is dark in every mode, so its choice has no light sample. */
-export function choiceHasLight(id: string): boolean {
-  return !isTerminalChoice(id);
-}
-
 /**
  * The one Theme choice of a saved name and palette. This is the migration of the old Look and Palette settings:
  * name `terminal` with palette X is the choice `terminal-X`; any colour theme keeps its own id. The storage keys

@@ -3,7 +3,6 @@
 // (UX-22). Switches save at once; check boxes wait for Save.
 import { useId, type ReactNode } from 'react';
 import { CaretInput } from './CaretInput';
-import { choiceHasLight } from '../themes';
 import { ThemePreview } from './ThemePreview';
 
 export { FileField } from './FileField';
@@ -257,9 +256,7 @@ export function ChoiceField(
                 {c.preview ? (
                   <span className="ds-choice__previews">
                     <ThemePreview theme={c.preview} mode="dark" />
-                    {choiceHasLight(c.preview) ? (
-                      <ThemePreview theme={c.preview} mode="light" />
-                    ) : null}
+                    <ThemePreview theme={c.preview} mode="light" />
                   </span>
                 ) : null}
                 {c.disabledReason ? (

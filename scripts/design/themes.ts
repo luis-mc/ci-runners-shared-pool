@@ -5,6 +5,7 @@
 import {
   DEFAULT_THEME,
   TERMINAL,
+  TERMINAL_LIGHT,
   THEME_DATA,
   type Palette,
   type ThemeData,
@@ -173,13 +174,39 @@ export function renderThemeCss(): string {
   return out.join('\n');
 }
 
-/** The terminal theme's amber and ice palettes: `data-pal` on the page root (and on a theme preview, which is not the root), after every mode rule so it wins. */
+/**
+ * The terminal theme's amber and ice palettes: `data-pal` on the page root (and on a theme preview, which is not the
+ * root), after every mode rule so it wins. Each palette has a dark and a light form (CRSP371): dark is the default,
+ * light follows the device under the system mode and applies by choice.
+ */
 export function renderPaletteCss(): string[] {
   const t = THEME_DATA.find((x) => x.id === 'terminal') as ThemeData;
   return (['amber', 'ice'] as const).map((pal) => {
-    const palette = TERMINAL[pal];
-    const decl = themeDeclarations({ ...t, dark: palette, light: palette }, 'dark', '  ');
-    return `/* Terminal, ${pal} palette */\n:root[data-theme-name='terminal'][data-pal='${pal}'],\n.ds-theme-preview[data-theme-name='terminal'][data-pal='${pal}'][data-theme] {\n${decl}\n}`;
+    const base = `[data-theme-name='terminal'][data-pal='${pal}']`;
+    const preview = `.ds-theme-preview${base}`;
+    const both = { ...t, dark: TERMINAL[pal], light: TERMINAL_LIGHT[pal] };
+    const dark = themeDeclarations(both, 'dark', '  ');
+    const light = themeDeclarations(both, 'light', '  ');
+    const lightIn = themeDeclarations(both, 'light', '    ');
+    return [
+      `/* Terminal, ${pal} palette: dark, then light under the system setting, then light and dark by choice. */`,
+      `:root${base},
+${preview}[data-theme='dark'] {
+${dark}
+}`,
+      `@media (prefers-color-scheme: light) {
+  :root${base}:not([data-theme='dark']) {
+${lightIn}
+  }
+}`,
+      `:root${base}[data-theme='light'],
+${preview}[data-theme='light'] {
+${light}
+}`,
+      `:root${base}[data-theme='dark'] {
+${dark}
+}`,
+    ].join('\n');
   });
 }
 
