@@ -7083,6 +7083,13 @@ export interface components {
                 retry_at: string | null;
             } | null;
             waiting_for_jobs: boolean;
+            /** @description The owner-facing note of the version on offer, signed in the update manifest. Absent when the release has none. */
+            notes?: string | null;
+            /** @description The note of the release this machine now runs, kept until the next update. Absent when that release had none. */
+            updated?: {
+                version: string;
+                notes: string;
+            } | null;
         };
         /** @description A daily install window, in UTC. */
         UpdateWindow: {

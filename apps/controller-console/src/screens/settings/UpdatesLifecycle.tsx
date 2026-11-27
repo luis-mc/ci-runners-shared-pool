@@ -83,6 +83,7 @@ export function UpdatesSettings() {
             current={s.current}
             available={s.available ?? undefined}
             required={s.required}
+            notes={s.notes}
             failure={cardFailure(s)}
             nextCheck={fmtTime(s.next_check_at)}
             checking={check.busy}

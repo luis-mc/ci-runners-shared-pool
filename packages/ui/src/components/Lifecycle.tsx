@@ -8,7 +8,7 @@ import { lw, type LifecycleWord } from '../lifecycleWords';
 import { Button } from './Button';
 import { Dialog } from './Dialog';
 import { ChoiceField, TextField } from './Fields';
-import { Stack, Text } from './layout';
+import { Stack, Strong, Text } from './layout';
 import { Message } from './Message';
 import { Pane } from './Pane';
 import { Progress } from './Progress';
@@ -89,6 +89,39 @@ export function UpdateBanner(p: UpdateBannerProps) {
   );
 }
 
+// ---------------------------------------------------------------- ReleaseNotes
+
+export interface ReleaseNotesProps {
+  /** The version the note is for. */
+  version: string;
+  /** The owner-facing note, already plain words. A release without a note passes nothing, and nothing is drawn. */
+  notes?: string | null | undefined;
+  /** The note of the version that now runs: a note the person can dismiss once. Otherwise it stays with the offer. */
+  after?: boolean | undefined;
+}
+
+/** The note of a release: shown with the offer before an update, and once after it. Empty note, no box. */
+export function ReleaseNotes(p: ReleaseNotesProps) {
+  const note = p.notes?.trim() ?? '';
+  if (note === '') return null;
+  return (
+    <div data-lifecycle="release-notes" data-when={p.after ? 'after' : 'before'}>
+      <Message
+        tone="note"
+        dismissible={p.after === true}
+        id={`release-notes-${p.version}`}
+      >
+        <Stack gap="tight">
+          <Strong>{lw('updated.notes', { version: p.version })}</Strong>
+          {note.split(/\n+/).map((line, i) => (
+            <Text key={i}>{line}</Text>
+          ))}
+        </Stack>
+      </Message>
+    </div>
+  );
+}
+
 // ---------------------------------------------------------------- UpdatesCard
 
 export type UpdatePolicy = 'automatic_when_idle' | 'ask_first';
@@ -134,6 +167,8 @@ export interface UpdatesCardProps {
   onWindow?: ((window: { start: string; end: string } | null) => void) | undefined;
   onCheck?: (() => void) | undefined;
   onInstall?: (() => void) | undefined;
+  /** The owner-facing note of the offered version, from the signed manifest. Nothing is drawn without one. */
+  notes?: string | null | undefined;
 }
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -228,6 +263,9 @@ export function UpdatesCard(p: UpdatesCardProps) {
             <Text>{updateStateLine(p)}</Text>
           )}
           {p.required ? <Text>{lw('required')}</Text> : null}
+          {p.available === undefined ? null : (
+            <ReleaseNotes version={p.available} notes={p.notes} />
+          )}
           {p.state === 'available' && p.onInstall ? (
             <Button kind="primary" onPress={p.onInstall}>
               {lw('available.primary', { version: p.available ?? p.current })}

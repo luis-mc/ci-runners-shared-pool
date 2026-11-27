@@ -52,6 +52,16 @@ func toGenLifecycle(st update.LifecycleStatus) gen.LifecycleStatus {
 		v := st.Available
 		out.Available = &v
 	}
+	if st.Notes != "" {
+		n := st.Notes
+		out.Notes = &n
+	}
+	if u := st.Updated; u != nil {
+		out.Updated = &struct {
+			Notes   string `json:"notes"`
+			Version string `json:"version"`
+		}{Notes: u.Notes, Version: u.Version}
+	}
 	if w := st.Window; w != nil {
 		out.Window = &struct {
 			End   string `json:"end"`
