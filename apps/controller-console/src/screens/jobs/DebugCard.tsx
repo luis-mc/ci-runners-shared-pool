@@ -80,7 +80,8 @@ const COLUMNS: Column<DebugSession>[] = [
   {
     id: 'reason',
     header: 'Reason',
-    cell: (s) => s.reason,
+    cell: () => null,
+    kind: 'grow',
     long: (s) => ({ full: s.reason }),
   },
   {
@@ -184,7 +185,6 @@ function DebugBody({ d, reload }: { d: JobDebug; reload: () => void }) {
         <Stack>
           <Cluster>
             <Button
-              kind="primary"
               onPress={() => {
                 open.clear();
                 setAsking(true);
