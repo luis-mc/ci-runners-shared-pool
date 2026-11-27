@@ -59,7 +59,9 @@ test('takes the console screenshots', async ({ page }) => {
     for (const s of SCREENS) {
       await page.goto(`http://127.0.0.1:${port}${s.path}`);
       await page.waitForLoadState('networkidle');
-      await page.waitForTimeout(500);
+      await page.evaluate(
+        () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))),
+      );
       const text = await page.evaluate(() => document.body.innerText);
       expect(findPrivate(text, who), `${s.name} shows private data`).toEqual([]);
       const png = await page.screenshot();
