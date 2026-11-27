@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/addresses"
 	"io"
 	"net"
 	"net/http"
@@ -35,9 +36,9 @@ const ProxyPrefix = "/pkg/"
 
 // Upstreams of the proxy. Only these hosts are fetched.
 const (
-	DefaultNpmUpstream   = "https://registry.npmjs.org"
-	DefaultPypiUpstream  = "https://pypi.org"
-	DefaultFilesUpstream = "https://files.pythonhosted.org"
+	DefaultNpmUpstream   = addresses.DefaultNpmUpstream
+	DefaultPypiUpstream  = addresses.DefaultPypiUpstream
+	DefaultFilesUpstream = addresses.DefaultFilesUpstream
 	// PublicPypiIndex is the fallback index a runner keeps (R5.76).
 	PublicPypiIndex = DefaultPypiUpstream + "/simple"
 )

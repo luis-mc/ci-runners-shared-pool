@@ -43,6 +43,11 @@ const (
 	// DefaultNodeDistURL holds one folder per Node version (v22.1.0/) with the archives and SHASUMS256.txt.
 	DefaultNodeDistURL = "https://nodejs.org/dist"
 
+	// The upstreams of the npm and PyPI package proxy (caches R5.74 to R5.76, R5.80). Only these hosts are fetched.
+	DefaultNpmUpstream   = "https://registry.npmjs.org"
+	DefaultPypiUpstream  = "https://pypi.org"
+	DefaultFilesUpstream = "https://files.pythonhosted.org"
+
 	// DockerAptURL is the base of Docker's signed apt repository and its signing keys (dependency-setup DEP5);
 	// the family (ubuntu, debian) is appended.
 	DockerAptURL = "https://download.docker.com/linux"
