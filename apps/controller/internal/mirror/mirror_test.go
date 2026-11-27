@@ -17,6 +17,31 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 )
 
+// TestMain drops every GIT_* variable before any test runs. A git hook (pre-push) runs `go test` with GIT_DIR and
+// friends set; git started here, by the helper below or by the mirror's own runner, would then act on the
+// repository that is being pushed instead of the test's temp folders (CRSP306).
+func TestMain(m *testing.M) {
+	for _, kv := range os.Environ() {
+		if name, _, ok := strings.Cut(kv, "="); ok && strings.HasPrefix(strings.ToUpper(name), "GIT_") {
+			_ = os.Unsetenv(name)
+		}
+	}
+	os.Exit(m.Run())
+}
+
+// hermeticEnv is the environment without any GIT_* variable, plus GIT_CONFIG_NOSYSTEM, so the test's git reads
+// no system config and never reaches a repository other than the one in its folder.
+func hermeticEnv() []string {
+	env := []string{"GIT_CONFIG_NOSYSTEM=1"}
+	for _, kv := range os.Environ() {
+		if name, _, ok := strings.Cut(kv, "="); ok && strings.HasPrefix(strings.ToUpper(name), "GIT_") {
+			continue
+		}
+		env = append(env, kv)
+	}
+	return env
+}
+
 func needGit(t *testing.T) {
 	t.Helper()
 	if _, err := exec.LookPath("git"); err != nil {
@@ -28,6 +53,7 @@ func git(t *testing.T, dir string, args ...string) string {
 	t.Helper()
 	cmd := exec.CommandContext(context.Background(), "git", append([]string{"-c", "user.name=t", "-c", "user.email=t@example.com", "-c", "commit.gpgsign=false"}, args...)...)
 	cmd.Dir = dir
+	cmd.Env = hermeticEnv()
 	b, err := cmd.CombinedOutput()
 	if err != nil {
 		t.Fatalf("git %v: %v\n%s", args, err, b)

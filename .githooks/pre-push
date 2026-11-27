@@ -159,8 +159,16 @@ project_gates() {
       fail=1
     fi
 
+    # CRSP306: git sets GIT_DIR and friends for a hook. A test that starts git in its own temp folder would
+    # otherwise act on the repository being pushed (a mirror test once committed to the branch and set
+    # core.bare). go vet and go test run without them.
+    go_clean() {
+      env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE -u GIT_OBJECT_DIRECTORY \
+        -u GIT_ALTERNATE_OBJECT_DIRECTORIES -u GIT_PREFIX go "$@"
+    }
+
     step "go vet"
-    go vet ./... || fail=1
+    go_clean vet ./... || fail=1
 
     if command -v golangci-lint >/dev/null 2>&1; then
       step "golangci-lint"
@@ -179,11 +187,12 @@ project_gates() {
       if [ "$changed" = "all" ] || echo "$changed" | grep -qE '^go\.(mod|sum)$'; then
         pkgs='./...'
       else
-        pkgs=$(echo "$changed" | xargs -n1 dirname | sort -u | sed 's#^#./#' | tr '\n' ' ')
+        # A testdata folder is not a package of the module (`./...` leaves it out), so it is left out here too.
+        pkgs=$(echo "$changed" | xargs -n1 dirname | sort -u | grep -vE '(^|/)testdata(/|$)' | sed 's#^#./#' | tr '\n' ' ')
       fi
       step "go test $pkgs"
       # shellcheck disable=SC2086
-      go test $pkgs || fail=1
+      go_clean test $pkgs || fail=1
     fi
   else
     echo "pre-push: go not found; Go gates skipped." >&2

@@ -18,7 +18,11 @@ func newStore(t *testing.T) *Store {
 	t.Helper()
 	s := NewStore(filepath.Join(t.TempDir(), "store"), Darwin, "arm64")
 	s.Now = func() time.Time { return t0 }
-	t.Cleanup(func() { _ = unsealDir(s.Root) })
+	// The agent unseals as SYSTEM, which the seal leaves with full control. A test runs as a user who may not be
+	// elevated, so on Windows its unseal first gives the folder its inherited rights back (CRSP345); elsewhere
+	// resetACL does nothing and this is unsealDir.
+	s.Unseal = func(dir string) error { resetACL(dir); return unsealDir(dir) }
+	t.Cleanup(func() { resetACL(s.Root); _ = unsealDir(s.Root) })
 	return s
 }
 

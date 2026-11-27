@@ -150,7 +150,7 @@ func TestCacheSaveRestore(t *testing.T) {
 		t.Fatal(err)
 	}
 	c := Cache{Root: filepath.Join(root, "cache"), Clone: &FakeCloner{Real: true}, Seal: sealDir}
-	t.Cleanup(func() { _ = unsealDir(c.Root) })
+	t.Cleanup(func() { resetACL(c.Root); _ = unsealDir(c.Root) })
 	key := CacheKey(Darwin, Plan{rust185}, "h1")
 	trusted := Trust{Repository: "o/r", HeadRepository: "o/r", Ref: "main", DefaultBranch: "main", Green: true}
 	dst := filepath.Join(t.TempDir(), "caches")
@@ -169,6 +169,9 @@ func TestCacheSaveRestore(t *testing.T) {
 	if saved, err := c.Save(context.Background(), key, src, trusted); saved || err != nil {
 		t.Fatalf("overwrite: %v %v", saved, err)
 	}
+	// Restore links from the sealed entry as the agent does, as SYSTEM with full control. On Windows a test user
+	// who is not elevated gets those rights back first (CRSP345); elsewhere resetACL does nothing.
+	resetACL(c.Root)
 	if hit, err := c.Restore(context.Background(), key, dst); !hit || err != nil {
 		t.Fatalf("restore = %v %v", hit, err)
 	}
