@@ -171,6 +171,19 @@ export function UpdatesSettings() {
           Restart the service
         </Button>
       </Stack>
+      <Stack gap="tight">
+        <Text>
+          This controller cannot reach the release? Carry the agent installers over by
+          hand and import them here.
+        </Text>
+        <Button
+          onPress={() => void navigate('/settings/updates/agent-installers/import')}
+          disabled={!session.can('admin')}
+          reason={session.can('admin') ? undefined : session.whyNot('admin')}
+        >
+          Import agent installers
+        </Button>
+      </Stack>
       {removeStarted ? (
         <Message tone="note" dismissible={false}>
           {lw('remove.started', { product: PRODUCT })}

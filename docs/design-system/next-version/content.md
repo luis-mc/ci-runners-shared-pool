@@ -2147,3 +2147,33 @@ Where an update shows (CRSP364, CRSP368). The progress lives only in the Updates
 | Saved | Cloud overflow saved. |
 | Save failed | Could not save. {reason} |
 | Refused | AWS EC2 runners need a label while they are on. The label of {target} must be one label of up to 100 characters, without spaces, commas or quotes. Minutes of {target} must be from 0 to 1000000. Total minutes of {target} must be from 0 to 1000000. Budget of {target} must be from 0 to 1000000 dollars. Price per minute of {target} must be from 0 to 1000 dollars. |
+
+## Import agent installers words (CRSP347; operations R5.132, web-console R5.177)
+
+The Import agent installers wizard (Settings, Updates) and its entry point. Built from the shared Wizard, FileListField (component 14c), Message, BulletList, Facts and Button parts.
+
+| Word | Where and meaning |
+|---|---|
+| Import agent installers | Button on Settings, Updates, the breadcrumb, the page title and the wizard name. |
+| This controller cannot reach the release? Carry the agent installers over by hand and import them here. | The line above the button on Settings, Updates. |
+| Files, Review, Importing, Done | The steps. |
+| Release files | The name of the file list field. Help: SHA256SUMS and the CrspAgent files of the release. The controller checks each file against SHA256SUMS. |
+| Drop the files here, or | The empty drop zone of the file list field. |
+| Choose files, Add more files | The button of the drop zone, empty and with files. |
+| Remove {name} | Button of a row (the visible word is Remove). |
+| Next | The primary of Files. Disabled with: Choose the release files first. |
+| Reading SHA256SUMS. | The planning note while the page reads SHA256SUMS. |
+| This controller read SHA256SUMS from the release itself. Import installers only if it cannot download them. | Note on Files when the controller has its own SHA256SUMS. |
+| Send {n} files to the controller (version {version}). SHA256SUMS goes first. A file that does not match SHA256SUMS is refused and nothing of it is kept. | The Review text. |
+| SHA256SUMS does not list {names}. The controller will refuse it or them. | Needs-you message on Review. |
+| The controller has no SHA256SUMS yet. Add it, or every installer is refused. | Needs-you message on Review. |
+| Import {n} files | The primary of Review (busy word: Importing). Disabled for a viewer with the admin reason. |
+| Sending {n} of {N}: {name} | The live line of Importing. |
+| Stored so far: {n}. | The text of Importing. |
+| Paused. The page closed while the files were sent. The controller keeps the {n} it stored. Start again and choose the files that are left. | Paused after a reload. |
+| Stopped. {n} of {N} files were stored; the rest were not sent. Nothing stored is removed. | Stopped. |
+| {n} of {N} files were not stored. The files that matched are kept. Choose the refused files again. | Failed; each refused file is a line `{name}: {reason}`. |
+| {n} files stored and checked against SHA256SUMS. | Done. |
+| The agent installers are stored. | Done after reload. |
+| Version, Installers stored | The facts of Done. |
+| Open Updates | The action of Done. |

@@ -10,7 +10,15 @@ import {
   type WizardState,
 } from '../../../../scripts/design/wizard-behaviour';
 import { TIMING } from '../timing';
-import { MockApi, machine, renderApp, repository, signedIn } from '../testing/mock';
+import { File as NodeFile } from 'node:buffer';
+import {
+  MockApi,
+  apiError,
+  machine,
+  renderApp,
+  repository,
+  signedIn,
+} from '../testing/mock';
 import { createApiClient } from '@crsp/contract';
 import { render } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -590,6 +598,86 @@ const restartDriver: WizardDriver = {
   },
 };
 
+// ------------------------------------------------------------------------------------ Import agent installers
+const AI_NAME = 'CrspAgent-1.4.0-linux-x64.tar.gz';
+const aiList = (stored: boolean, have = true) => ({
+  version: '1.4.0',
+  have_sums: have,
+  from_release: false,
+  installers: [
+    {
+      name: AI_NAME,
+      os: 'linux',
+      arch: 'amd64',
+      format: 'tar.gz',
+      sha256: 'a'.repeat(64),
+      stored,
+    },
+  ],
+});
+
+const installersDriver: WizardDriver = {
+  id: 'import-agent-installers',
+  async open(state) {
+    const api = signedIn().on('GET', '/api/v1/agent-installers', aiList(false, false));
+    let path = '/settings/updates/agent-installers/import';
+    if (state === 'loading') api.on('GET', '/api/v1/agent-installers', never);
+    if (state === 'paused') path += '?started=1';
+    if (state === 'done-after-reload') {
+      path += '?started=1';
+      api.on('GET', '/api/v1/agent-installers', aiList(true));
+    }
+    if (state === 'running' || state === 'stopped') {
+      api.on('PUT', '/api/v1/agent-installers/:name', never);
+    } else if (state === 'failed') {
+      api.on('PUT', '/api/v1/agent-installers/:name', () =>
+        apiError(400, 'invalid', 'The file does not match its SHA256SUMS line.'),
+      );
+    } else api.on('PUT', '/api/v1/agent-installers/:name', aiList(true));
+    renderApp(api, path);
+    await step('Import agent installers');
+    const snap = () => read(state, 'Import agent installers', state === 'running');
+    if (state === 'loading') return snap();
+    if (['paused', 'done-after-reload'].includes(state)) {
+      await screen.findAllByRole('button', { name: /Start again|Open Updates/ });
+      return snap();
+    }
+    const input = await screen.findByLabelText<HTMLInputElement>('Release files');
+    if (state === 'first-run') return snap();
+    const sums = new NodeFile(
+      [
+        `${'a'.repeat(64)}  ${AI_NAME}
+`,
+      ],
+      'SHA256SUMS',
+    );
+    if (state === 'planning') {
+      // A SHA256SUMS that is still being read keeps the page on its reading step.
+      (sums as { text: () => Promise<string> }).text = () =>
+        new Promise<string>(() => undefined);
+    }
+    fireEvent.change(input, { target: { files: [sums, new NodeFile(['x'], AI_NAME)] } });
+    await press('Next');
+    if (state === 'planning') return snap();
+    await screen.findByText(/Nothing has changed yet/);
+    if (state === 'ready-to-review') return snap();
+    await press(/^Import 2 files$/);
+    if (state === 'running') {
+      await screen.findByText(/Sending 1 of 2/, { selector: 'p' });
+      return snap();
+    }
+    if (state === 'stopped') {
+      fireEvent.click(await screen.findByRole('button', { name: 'Stop' }));
+      await screen.findByText(/^Stopped\./);
+      return snap();
+    }
+    await screen.findByRole('button', {
+      name: state === 'failed' ? 'Try again' : 'Open Updates',
+    });
+    return snap();
+  },
+};
+
 describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
   const drivers = [
     connectDriver,
@@ -599,6 +687,7 @@ describe('wizard harness (UX-5, UX-30, UX-54, R5.19)', () => {
     updateDriver,
     updatePageDriver,
     restartDriver,
+    installersDriver,
   ];
   for (const d of drivers) {
     it(`${d.id} passes the ten states and keeps its known list empty`, async () => {

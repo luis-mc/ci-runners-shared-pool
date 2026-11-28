@@ -180,7 +180,8 @@ The body scrolls when the content is taller than the space. The overlay never gr
 - **Looks:** a name above a box, a help line below it and an error line in the Problem tone when needed. A switch is a button with On or Off and its name always beside it; pressing the name works the switch. A check box and a radio are drawn 16 px inside a 44 px hit area (UX-16).
 - **Source:** `src/ui/field`; `packages/ui/src/components/FileField.tsx`, `packages/ui/src/components/Fields.tsx`
 - **Rules:** UX-20, UX-21, UX-22, UX-23, UX-24, UX-10, UX-16.
-- **Guard:** `packages/ui/src/components/look6-8.test.tsx` (file field states, drop and accept).
+- **Guard:** `packages/ui/src/components/look6-8.test.tsx` (file field states, drop and accept; file list field).
+- **File list field (component 14c, CRSP347):** the file field for many files. One dashed drop zone takes several files at once (drop, or *Choose files*, then *Add more files*); each file is one row with its name, its size (`formatSize`) and *Remove {name}*; a file with the same name replaces the earlier one. It keeps the name, help and error places of the field family, never shows the content of a file, and takes `initial` for a wizard that comes back to its Files step. Source: `packages/ui/src/components/FileListField.tsx`, `packages/ui/src/components/Fields.tsx`, rows in `components.css` (`.ds-file__list`, `.ds-file__row`). Rules: UX-10, UX-20, UX-21, UX-23. Guard: `packages/ui/src/components/look6-8.test.tsx` (FileListField).
 
 ## 15. Tables and list rows
 
