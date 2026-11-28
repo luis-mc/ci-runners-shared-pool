@@ -57,7 +57,12 @@ describe('open job lists follow job events (observability R5.4)', () => {
     expect(screen.getByText('v0')).toBeTruthy();
     act(() => {
       for (let i = 0; i < 40; i++)
-        es.emit({ id: String(10 + i), type: 'job.queued', at: 'x', job: job(i, 'queued') });
+        es.emit({
+          id: String(10 + i),
+          type: 'job.queued',
+          at: 'x',
+          job: job(i, 'queued'),
+        });
     });
     expect(screen.getByText('v0')).toBeTruthy(); // not yet: the burst is being gathered
     act(() => {
