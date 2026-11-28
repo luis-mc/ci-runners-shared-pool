@@ -1542,7 +1542,6 @@ paths:
   /api/v1/dependencies/store:
     get:
       operationId: listDependencyStore
-      x-cli: dependencies
       tags: [machines]
       summary: What the controller keeps for machines without internet
       description: >-
@@ -1569,7 +1568,6 @@ paths:
   /api/v1/dependencies/store/{dependencyId}/fetch:
     post:
       operationId: fetchDependency
-      x-cli: dependencies fetch
       tags: [machines]
       summary: Download one dependency to the controller and check it
       description: >-
@@ -1593,7 +1591,6 @@ paths:
   /api/v1/dependencies/store/{dependencyId}/file:
     put:
       operationId: importDependency
-      x-cli: dependencies import
       tags: [machines]
       summary: Give the controller a file you downloaded yourself
       description: >-
