@@ -138,7 +138,7 @@ try {
     if ($ev) { $why += ' Windows says: ' + $ev.Message }
     throw "the service did not start: $why"
 }
-`
+` + stayedUp
 
 	// scriptListeners prints the process id of every Runner.Listener that runs
 	// from CRSP_FOLDER, one per line. The service wrapper is not counted: the
@@ -197,6 +197,29 @@ foreach ($id in ($env:CRSP_PIDS -split ',')) {
 exit 0
 `
 
+	// stayedUp is appended after a Start-Service: the service must still run a
+	// few seconds later. A runner service whose listener cannot start (a folder
+	// it cannot read, a deleted registration) is "started" for a moment and
+	// then stops; without this check the start looks good and nothing runs
+	// (runners R5.156). The failure carries the runner service's own message
+	// from the Application log. Needs CRSP_SERVICE.
+	stayedUp = `
+for ($n = 0; $n -lt 3; $n++) {
+    Start-Sleep -Seconds 1
+    $up = Get-Service -Name $env:CRSP_SERVICE
+    if ($up.Status -ne 'Running') {
+        $dir = ''
+        $w = Get-CimInstance -ClassName Win32_Service -Filter ("Name='" + $env:CRSP_SERVICE.Replace("'", "''") + "'") -ErrorAction SilentlyContinue
+        if ($w -and $w.PathName) { $dir = Split-Path -Parent (Split-Path -Parent ($w.PathName.Trim('"'))) }
+        $ev = Get-WinEvent -FilterHashtable @{ LogName = 'Application'; ProviderName = 'ActionsRunnerService'; StartTime = (Get-Date).AddMinutes(-2) } -ErrorAction SilentlyContinue |
+            Where-Object { $_.Message -like '*An error occurred*' -and ((-not $dir) -or $_.Message -like ('*' + $dir + '*')) } | Select-Object -First 1
+        $why = ''
+        if ($ev) { $why = ' The runner service says: ' + ($ev.Message -replace '\s+', ' ') }
+        throw ('the service started and stopped again at once.' + $why)
+    }
+}
+`
+
 	// scriptStartService starts the service. A failure names the Windows error
 	// of every inner exception, so the logon failure (1069) can be told apart
 	// and retried (runners R5.89). Needs CRSP_SERVICE.
@@ -213,7 +236,7 @@ try {
     }
     throw $m
 }
-`
+` + stayedUp
 
 	scriptStopService = scriptHeader + `
 $svc = Get-Service -Name $env:CRSP_SERVICE -ErrorAction SilentlyContinue
