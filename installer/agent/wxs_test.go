@@ -17,6 +17,19 @@ func wxs(t *testing.T, path string) string {
 	return regexp.MustCompile(`(?s)<!--.*?-->`).ReplaceAllString(string(b), "")
 }
 
+// An XML comment cannot contain "--" (WiX refuses the file, WIX0104); wxs() drops comments, so check them here.
+func TestAgentMSIComments(t *testing.T) {
+	b, err := os.ReadFile("windows/crspagent.wxs")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range regexp.MustCompile(`(?s)<!--(.*?)-->`).FindAllStringSubmatch(string(b), -1) {
+		if strings.Contains(m[1], "--") || strings.HasSuffix(m[1], "-") {
+			t.Errorf("invalid XML comment: %.60q", m[1])
+		}
+	}
+}
+
 func TestAgentMSIIsItsOwnProduct(t *testing.T) {
 	s := wxs(t, "windows/crspagent.wxs")
 	c := wxs(t, "../controller/crsp.wxs")
