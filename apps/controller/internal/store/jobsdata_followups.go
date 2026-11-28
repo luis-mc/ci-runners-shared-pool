@@ -151,6 +151,16 @@ func relink(ctx context.Context, tx *sql.Tx, q *sqlcgen.Queries, repoID int64, s
 	return nil
 }
 
+// followUpsSQL reads the follow-ups of the listed parents. CROSS JOIN fixes the order of the join: the follow-up table,
+// reached by its parent index, drives and each run is one lookup. Left to itself the planner walked the runs of every
+// repository on the page (audit R3-4: 30 ms of a runs page, on a table with no row).
+func followUpsSQL(vals []string) string {
+	return `SELECT f.parent_run_id, ` + aggCols + ` FROM run_follow_ups f
+		CROSS JOIN runs r ON r.repository_id = f.repository_id AND r.run_id = f.run_id
+		WHERE (f.repository_id, f.parent_run_id) IN (VALUES ` + strings.Join(vals, ", ") + `) AND ` + latestAttempt + `
+		ORDER BY r.created_at, r.run_id`
+}
+
 // followUpsOf returns the follow-ups of the given runs, oldest first, keyed by "repositoryID/runID" of the parent.
 func (s *JobsStore) followUpsOf(ctx context.Context, db queryer, parents map[[2]int64]bool) (map[[2]int64][]jobsdata.FollowUp, error) {
 	out := map[[2]int64][]jobsdata.FollowUp{}
@@ -163,10 +173,7 @@ func (s *JobsStore) followUpsOf(ctx context.Context, db queryer, parents map[[2]
 		vals = append(vals, "(?, ?)")
 		args = append(args, k[0], k[1])
 	}
-	rows, err := db.QueryContext(ctx, `SELECT f.parent_run_id, `+aggCols+` FROM run_follow_ups f
-		JOIN runs r ON r.repository_id = f.repository_id AND r.run_id = f.run_id
-		WHERE (f.repository_id, f.parent_run_id) IN (VALUES `+strings.Join(vals, ", ")+`) AND `+latestAttempt+`
-		ORDER BY r.created_at, r.run_id`, args...)
+	rows, err := db.QueryContext(ctx, followUpsSQL(vals), args...)
 	if err != nil {
 		return nil, fmt.Errorf("follow-ups: %w", err)
 	}
@@ -182,7 +189,7 @@ func (s *JobsStore) fillFollowUps(ctx context.Context, rows []jobsdata.RunRow) e
 	for _, r := range rows {
 		parents[[2]int64{r.RepositoryID, r.RunID}] = true
 	}
-	fus, err := s.followUpsOf(ctx, s.db, parents)
+	fus, err := s.followUpsOf(ctx, s.rdb, parents)
 	if err != nil {
 		return err
 	}
@@ -223,7 +230,7 @@ func (s *JobsStore) parentRunsOf(ctx context.Context, rows []jobsdata.RunRow) (m
 	if len(vals) == 0 {
 		return out, nil
 	}
-	res, err := s.db.QueryContext(ctx, `SELECT repository_id, run_id, parent_run_id FROM run_follow_ups
+	res, err := s.rdb.QueryContext(ctx, `SELECT repository_id, run_id, parent_run_id FROM run_follow_ups
 		WHERE (repository_id, run_id) IN (VALUES `+strings.Join(vals, ", ")+`)`, args...)
 	if err != nil {
 		return nil, fmt.Errorf("parent runs: %w", err)

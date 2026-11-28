@@ -118,7 +118,11 @@ export function OverviewMachineCard({
 export function TimerAlert({ running }: { running: readonly Job[] }) {
   const client = useClient();
   const [timers, setTimers] = useState<Schemas['JobTimer'][]>([]);
-  const key = running.map((j) => j.id).join(',');
+  // Only a job in its grace carries a timer deadline: ask about those, not about every running job (audit R3-10).
+  const key = running
+    .filter((j) => j.timer_deadline)
+    .map((j) => j.id)
+    .join(',');
   useEffect(() => {
     let on = true;
     const ids = key ? key.split(',').map(Number) : [];

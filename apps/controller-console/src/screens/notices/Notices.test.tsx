@@ -107,7 +107,7 @@ describe('Notices page', () => {
     expect(screen.queryByRole('checkbox')).toBeNull();
     expect(screen.queryByRole('textbox')).toBeNull();
     const link = screen.getByRole('button', { name: 'Open notification settings' });
-    expect(link.getAttribute('href')).toContain('/settings/console');
+    expect(link.getAttribute('href')).toContain('/settings/networking');
   });
 
   it('is reached from the Notifications settings', async () => {

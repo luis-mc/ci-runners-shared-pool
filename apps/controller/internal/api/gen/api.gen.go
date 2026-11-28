@@ -325,30 +325,75 @@ func (e CacheState) Valid() bool {
 	}
 }
 
+// Defines values for CacheHubCardKind.
+const (
+	CacheHubCardKindActionsCache   CacheHubCardKind = "actions_cache"
+	CacheHubCardKindGitMirror      CacheHubCardKind = "git_mirror"
+	CacheHubCardKindPackageProxy   CacheHubCardKind = "package_proxy"
+	CacheHubCardKindRegistryMirror CacheHubCardKind = "registry_mirror"
+)
+
+// Valid indicates whether the value is a known member of the CacheHubCardKind enum.
+func (e CacheHubCardKind) Valid() bool {
+	switch e {
+	case CacheHubCardKindActionsCache:
+		return true
+	case CacheHubCardKindGitMirror:
+		return true
+	case CacheHubCardKindPackageProxy:
+		return true
+	case CacheHubCardKindRegistryMirror:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for CacheHubCardStatus.
+const (
+	CacheHubCardStatusFailed  CacheHubCardStatus = "failed"
+	CacheHubCardStatusOk      CacheHubCardStatus = "ok"
+	CacheHubCardStatusWaiting CacheHubCardStatus = "waiting"
+)
+
+// Valid indicates whether the value is a known member of the CacheHubCardStatus enum.
+func (e CacheHubCardStatus) Valid() bool {
+	switch e {
+	case CacheHubCardStatusFailed:
+		return true
+	case CacheHubCardStatusOk:
+		return true
+	case CacheHubCardStatusWaiting:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for CacheKind.
 const (
-	ActionsCache    CacheKind = "actions_cache"
-	DependencyCache CacheKind = "dependency_cache"
-	GitMirror       CacheKind = "git_mirror"
-	RegistryMirror  CacheKind = "registry_mirror"
-	RustCache       CacheKind = "rust_cache"
-	ToolCache       CacheKind = "tool_cache"
+	CacheKindActionsCache    CacheKind = "actions_cache"
+	CacheKindDependencyCache CacheKind = "dependency_cache"
+	CacheKindGitMirror       CacheKind = "git_mirror"
+	CacheKindRegistryMirror  CacheKind = "registry_mirror"
+	CacheKindRustCache       CacheKind = "rust_cache"
+	CacheKindToolCache       CacheKind = "tool_cache"
 )
 
 // Valid indicates whether the value is a known member of the CacheKind enum.
 func (e CacheKind) Valid() bool {
 	switch e {
-	case ActionsCache:
+	case CacheKindActionsCache:
 		return true
-	case DependencyCache:
+	case CacheKindDependencyCache:
 		return true
-	case GitMirror:
+	case CacheKindGitMirror:
 		return true
-	case RegistryMirror:
+	case CacheKindRegistryMirror:
 		return true
-	case RustCache:
+	case CacheKindRustCache:
 		return true
-	case ToolCache:
+	case CacheKindToolCache:
 		return true
 	default:
 		return false
@@ -460,6 +505,96 @@ func (e CreateJoinFileRequestOs) Valid() bool {
 	case CreateJoinFileRequestOsMacos:
 		return true
 	case CreateJoinFileRequestOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugRepoAccessWho.
+const (
+	DebugRepoAccessWhoAdmins DebugRepoAccessWho = "admins"
+	DebugRepoAccessWhoOwner  DebugRepoAccessWho = "owner"
+)
+
+// Valid indicates whether the value is a known member of the DebugRepoAccessWho enum.
+func (e DebugRepoAccessWho) Valid() bool {
+	switch e {
+	case DebugRepoAccessWhoAdmins:
+		return true
+	case DebugRepoAccessWhoOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugRepoAccessInputWho.
+const (
+	DebugRepoAccessInputWhoAdmins DebugRepoAccessInputWho = "admins"
+	DebugRepoAccessInputWhoOwner  DebugRepoAccessInputWho = "owner"
+)
+
+// Valid indicates whether the value is a known member of the DebugRepoAccessInputWho enum.
+func (e DebugRepoAccessInputWho) Valid() bool {
+	switch e {
+	case DebugRepoAccessInputWhoAdmins:
+		return true
+	case DebugRepoAccessInputWhoOwner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugSessionEndReason.
+const (
+	DebugSessionEndReasonAdmin      DebugSessionEndReason = "admin"
+	DebugSessionEndReasonError      DebugSessionEndReason = "error"
+	DebugSessionEndReasonIdle       DebugSessionEndReason = "idle"
+	DebugSessionEndReasonJobEnded   DebugSessionEndReason = "job_ended"
+	DebugSessionEndReasonKillSwitch DebugSessionEndReason = "kill_switch"
+	DebugSessionEndReasonLinkLost   DebugSessionEndReason = "link_lost"
+	DebugSessionEndReasonTimeLimit  DebugSessionEndReason = "time_limit"
+	DebugSessionEndReasonUser       DebugSessionEndReason = "user"
+)
+
+// Valid indicates whether the value is a known member of the DebugSessionEndReason enum.
+func (e DebugSessionEndReason) Valid() bool {
+	switch e {
+	case DebugSessionEndReasonAdmin:
+		return true
+	case DebugSessionEndReasonError:
+		return true
+	case DebugSessionEndReasonIdle:
+		return true
+	case DebugSessionEndReasonJobEnded:
+		return true
+	case DebugSessionEndReasonKillSwitch:
+		return true
+	case DebugSessionEndReasonLinkLost:
+		return true
+	case DebugSessionEndReasonTimeLimit:
+		return true
+	case DebugSessionEndReasonUser:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DebugSessionState.
+const (
+	DebugSessionStateEnded DebugSessionState = "ended"
+	DebugSessionStateOpen  DebugSessionState = "open"
+)
+
+// Valid indicates whether the value is a known member of the DebugSessionState enum.
+func (e DebugSessionState) Valid() bool {
+	switch e {
+	case DebugSessionStateEnded:
+		return true
+	case DebugSessionStateOpen:
 		return true
 	default:
 		return false
@@ -1651,6 +1786,24 @@ func (e JoinCodeState) Valid() bool {
 	}
 }
 
+// Defines values for LifecycleStatusLastCheckKind.
+const (
+	LifecycleStatusLastCheckKindAutomatic LifecycleStatusLastCheckKind = "automatic"
+	LifecycleStatusLastCheckKindManual    LifecycleStatusLastCheckKind = "manual"
+)
+
+// Valid indicates whether the value is a known member of the LifecycleStatusLastCheckKind enum.
+func (e LifecycleStatusLastCheckKind) Valid() bool {
+	switch e {
+	case LifecycleStatusLastCheckKindAutomatic:
+		return true
+	case LifecycleStatusLastCheckKindManual:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for LifecycleStatusPolicy.
 const (
 	LifecycleStatusPolicyAskFirst          LifecycleStatusPolicy = "ask_first"
@@ -2239,6 +2392,63 @@ func (e OS) Valid() bool {
 	case OSMacos:
 		return true
 	case OSWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowTargetKind.
+const (
+	OverflowTargetKindAwsEc2       OverflowTargetKind = "aws_ec2"
+	OverflowTargetKindGithubHosted OverflowTargetKind = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the OverflowTargetKind enum.
+func (e OverflowTargetKind) Valid() bool {
+	switch e {
+	case OverflowTargetKindAwsEc2:
+		return true
+	case OverflowTargetKindGithubHosted:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowTargetSystems.
+const (
+	OverflowTargetSystemsLinux   OverflowTargetSystems = "linux"
+	OverflowTargetSystemsMacos   OverflowTargetSystems = "macos"
+	OverflowTargetSystemsWindows OverflowTargetSystems = "windows"
+)
+
+// Valid indicates whether the value is a known member of the OverflowTargetSystems enum.
+func (e OverflowTargetSystems) Valid() bool {
+	switch e {
+	case OverflowTargetSystemsLinux:
+		return true
+	case OverflowTargetSystemsMacos:
+		return true
+	case OverflowTargetSystemsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for OverflowUsageKind.
+const (
+	OverflowUsageKindAwsEc2       OverflowUsageKind = "aws_ec2"
+	OverflowUsageKindGithubHosted OverflowUsageKind = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the OverflowUsageKind enum.
+func (e OverflowUsageKind) Valid() bool {
+	switch e {
+	case OverflowUsageKindAwsEc2:
+		return true
+	case OverflowUsageKindGithubHosted:
 		return true
 	default:
 		return false
@@ -3022,6 +3232,24 @@ func (e RepositoryRoutingOses) Valid() bool {
 	case RepositoryRoutingOsesMacos:
 		return true
 	case RepositoryRoutingOsesWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for RepositoryRoutingTarget.
+const (
+	RepositoryRoutingTargetAwsEc2       RepositoryRoutingTarget = "aws_ec2"
+	RepositoryRoutingTargetGithubHosted RepositoryRoutingTarget = "github_hosted"
+)
+
+// Valid indicates whether the value is a known member of the RepositoryRoutingTarget enum.
+func (e RepositoryRoutingTarget) Valid() bool {
+	switch e {
+	case RepositoryRoutingTargetAwsEc2:
+		return true
+	case RepositoryRoutingTargetGithubHosted:
 		return true
 	default:
 		return false
@@ -5189,6 +5417,70 @@ type Cache struct {
 // CacheState defines model for Cache.State.
 type CacheState string
 
+// CacheHub The one cache hub in the controller (caches R5.73, R5.77, R5.78).
+type CacheHub struct {
+	BudgetBytes int64          `json:"budget_bytes"`
+	Cards       []CacheHubCard `json:"cards"`
+	Hits        int64          `json:"hits"`
+	Misses      int64          `json:"misses"`
+	Repos       []CacheHubRepo `json:"repos"`
+	ServedBytes int64          `json:"served_bytes"`
+
+	// Settings The hub's switches and its one byte budget (caches R5.66, R5.73).
+	Settings     CacheHubSettings `json:"settings"`
+	UsedBytes    int64            `json:"used_bytes"`
+	WarmMachines int              `json:"warm_machines"`
+}
+
+// CacheHubCard One kind of the hub (caches R5.77).
+type CacheHubCard struct {
+	EntryCount int              `json:"entry_count"`
+	Hits       int64            `json:"hits"`
+	Kind       CacheHubCardKind `json:"kind"`
+	LastUsedAt *time.Time       `json:"last_used_at,omitempty"`
+	Misses     int64            `json:"misses"`
+
+	// Note One plain line, such as why the receiver waits.
+	Note        *string            `json:"note,omitempty"`
+	On          bool               `json:"on"`
+	ServedBytes int64              `json:"served_bytes"`
+	SizeBytes   int64              `json:"size_bytes"`
+	Status      CacheHubCardStatus `json:"status"`
+
+	// WipeId The cache id that POST /api/v1/caches/{cacheId}/wipe takes.
+	WipeId string `json:"wipe_id"`
+}
+
+// CacheHubCardKind defines model for CacheHubCard.Kind.
+type CacheHubCardKind string
+
+// CacheHubCardStatus defines model for CacheHubCard.Status.
+type CacheHubCardStatus string
+
+// CacheHubRepo One row of Warmth by repository (caches R5.78).
+type CacheHubRepo struct {
+	Hits      int64  `json:"hits"`
+	Misses    int64  `json:"misses"`
+	Repo      string `json:"repo"`
+	SizeBytes int64  `json:"size_bytes"`
+	Warmth    int    `json:"warmth"`
+}
+
+// CacheHubSettings The hub's switches and its one byte budget (caches R5.66, R5.73).
+type CacheHubSettings struct {
+	ActionsCache bool `json:"actions_cache"`
+
+	// BudgetGib One budget for every kind; default 60.
+	BudgetGib         int  `json:"budget_gib"`
+	GitMirror         bool `json:"git_mirror"`
+	GitRefreshMinutes *int `json:"git_refresh_minutes,omitempty"`
+
+	// PackageProxy The npm and PyPI proxy (caches R5.74 to R5.76).
+	PackageProxy   bool `json:"package_proxy"`
+	RegistryMirror bool `json:"registry_mirror"`
+	WarmthHours    *int `json:"warmth_hours,omitempty"`
+}
+
 // CacheKind `tool_cache` and `rust_cache` are the per-runner folders of milestone 1 (caches R5.36, R5.39); the others arrive with later milestones.
 type CacheKind string
 
@@ -5383,6 +5675,127 @@ type DayStat struct {
 type DayValue struct {
 	Day   openapi_types.Date `json:"day"`
 	Value float32            `json:"value"`
+}
+
+// DebugPoolSettings debug-access R5.25, R5.26.
+type DebugPoolSettings struct {
+	// Enabled Allow debug sessions on this pool (the kill switch).
+	Enabled bool `json:"enabled"`
+
+	// Ended Sessions this change ended. Only on a save.
+	Ended        *int `json:"ended,omitempty"`
+	OpenSessions int  `json:"open_sessions"`
+
+	// Record Keep a redacted transcript of each session.
+	Record    bool       `json:"record"`
+	UpdatedAt *time.Time `json:"updated_at,omitempty"`
+	UpdatedBy *string    `json:"updated_by,omitempty"`
+}
+
+// DebugPoolSettingsInput defines model for DebugPoolSettingsInput.
+type DebugPoolSettingsInput struct {
+	// Confirm Needed to turn sessions off while one is open.
+	Confirm *bool `json:"confirm,omitempty"`
+	Enabled bool  `json:"enabled"`
+	Record  bool  `json:"record"`
+}
+
+// DebugRepoAccess debug-access R5.1, R5.2, R5.10, R5.17, R5.18, R5.21.
+type DebugRepoAccess struct {
+	// Allows What a session allows
+	Allows string `json:"allows"`
+
+	// DisabledReason Why the switch cannot be turned on (a public repository).
+	DisabledReason *string `json:"disabled_reason,omitempty"`
+	Enabled        bool    `json:"enabled"`
+
+	// HoldMin 0 to 30. Saved; holding a failed job is not built yet.
+	HoldMin int `json:"hold_min"`
+
+	// IdleMin Idle limit in minutes, 1 to 60.
+	IdleMin int `json:"idle_min"`
+
+	// LimitMin Session limit in minutes, 5 to 120.
+	LimitMin int `json:"limit_min"`
+
+	// Never What a session never allows
+	Never        string             `json:"never"`
+	PersistentOk bool               `json:"persistent_ok"`
+	RepositoryId int64              `json:"repository_id"`
+	UpdatedAt    *time.Time         `json:"updated_at,omitempty"`
+	UpdatedBy    *string            `json:"updated_by,omitempty"`
+	Who          DebugRepoAccessWho `json:"who"`
+}
+
+// DebugRepoAccessWho defines model for DebugRepoAccess.Who.
+type DebugRepoAccessWho string
+
+// DebugRepoAccessInput defines model for DebugRepoAccessInput.
+type DebugRepoAccessInput struct {
+	Enabled      bool                    `json:"enabled"`
+	HoldMin      int                     `json:"hold_min"`
+	IdleMin      int                     `json:"idle_min"`
+	LimitMin     int                     `json:"limit_min"`
+	PersistentOk bool                    `json:"persistent_ok"`
+	Who          DebugRepoAccessInputWho `json:"who"`
+}
+
+// DebugRepoAccessInputWho defines model for DebugRepoAccessInput.Who.
+type DebugRepoAccessInputWho string
+
+// DebugSession One debug session (debug-access R5.24). No secret and no source address.
+type DebugSession struct {
+	Backend   *string                `json:"backend,omitempty"`
+	EndReason *DebugSessionEndReason `json:"end_reason,omitempty"`
+	EndedAt   *time.Time             `json:"ended_at,omitempty"`
+	EndedBy   *string                `json:"ended_by,omitempty"`
+	EndsAt    time.Time              `json:"ends_at"`
+	Extended  bool                   `json:"extended"`
+	Id        string                 `json:"id"`
+	Isolation *string                `json:"isolation,omitempty"`
+	JobId     int64                  `json:"job_id"`
+	MachineId *string                `json:"machine_id,omitempty"`
+	OpenedAt  time.Time              `json:"opened_at"`
+	Os        *string                `json:"os,omitempty"`
+	Reason    string                 `json:"reason"`
+
+	// Recorded False when the pool keeps no transcripts.
+	Recorded   bool              `json:"recorded"`
+	Repository string            `json:"repository"`
+	RunnerName *string           `json:"runner_name,omitempty"`
+	Source     string            `json:"source"`
+	State      DebugSessionState `json:"state"`
+	User       string            `json:"user"`
+}
+
+// DebugSessionEndReason defines model for DebugSession.EndReason.
+type DebugSessionEndReason string
+
+// DebugSessionState defines model for DebugSession.State.
+type DebugSessionState string
+
+// DebugSessionList defines model for DebugSessionList.
+type DebugSessionList struct {
+	Items []DebugSession `json:"items"`
+}
+
+// DebugSessionOpenInput defines model for DebugSessionOpenInput.
+type DebugSessionOpenInput struct {
+	// Reason One line, 3 to 200 characters (R5.3).
+	Reason string `json:"reason"`
+}
+
+// DebugTranscript defines model for DebugTranscript.
+type DebugTranscript struct {
+	ExpiresAt time.Time `json:"expires_at"`
+
+	// Note Cleaned as far as possible; redaction cannot promise to catch everything.
+	Note      string `json:"note"`
+	SessionId string `json:"session_id"`
+	Text      string `json:"text"`
+
+	// Truncated The 5 MB cap was reached.
+	Truncated bool `json:"truncated"`
 }
 
 // DependencyAdded defines model for DependencyAdded.
@@ -6544,6 +6957,29 @@ type JobState string
 // JobStepsSource ci-run-insights R5.40. Where the steps came from.
 type JobStepsSource string
 
+// JobDebug The Debug access card of a job (debug-access section 4).
+type JobDebug struct {
+	Allowed  bool  `json:"allowed"`
+	IdleMin  *int  `json:"idle_min,omitempty"`
+	JobId    int64 `json:"job_id"`
+	LimitMin *int  `json:"limit_min,omitempty"`
+
+	// OpenSession One debug session (debug-access R5.24). No secret and no source address.
+	OpenSession       *DebugSession `json:"open_session,omitempty"`
+	RepositoryEnabled bool          `json:"repository_enabled"`
+
+	// Sees What the shell can see (R5.14).
+	Sees     string         `json:"sees"`
+	Sessions []DebugSession `json:"sessions"`
+	Warnings []string       `json:"warnings"`
+
+	// WhyNot The reason beside the disabled button; absent when allowed.
+	WhyNot *string `json:"why_not,omitempty"`
+
+	// WhyNotCode The first check that failed; absent when allowed.
+	WhyNotCode *string `json:"why_not_code,omitempty"`
+}
+
 // JobDetail A job with its steps, the last 30 runs of its key, its attempts and the ETA of its run (OPS34).
 type JobDetail struct {
 	Attempts []AttemptRef `json:"attempts"`
@@ -7034,11 +7470,29 @@ type LifecycleStatus struct {
 		RetryAt *time.Time `json:"retry_at"`
 		Version string     `json:"version"`
 	} `json:"failures"`
-	NextCheckAt    *time.Time            `json:"next_check_at"`
-	Policy         LifecycleStatusPolicy `json:"policy"`
-	Required       bool                  `json:"required"`
-	State          LifecycleStatusState  `json:"state"`
-	WaitingForJobs bool                  `json:"waiting_for_jobs"`
+
+	// LastCheck The last time crsp looked for an update (CRSP368), read from the update audit rows; null when it never did. Absent from the answers to a policy change, a check or an install.
+	LastCheck *struct {
+		At time.Time `json:"at"`
+
+		// By Who asked for the check; updater when crsp looked by itself.
+		By   string                       `json:"by"`
+		Kind LifecycleStatusLastCheckKind `json:"kind"`
+	} `json:"last_check,omitempty"`
+	NextCheckAt *time.Time `json:"next_check_at"`
+
+	// Notes The owner-facing note of the version on offer, signed in the update manifest. Absent when the release has none.
+	Notes    *string               `json:"notes,omitempty"`
+	Policy   LifecycleStatusPolicy `json:"policy"`
+	Required bool                  `json:"required"`
+	State    LifecycleStatusState  `json:"state"`
+
+	// Updated The note of the release this machine now runs, kept until the next update. Absent when that release had none.
+	Updated *struct {
+		Notes   string `json:"notes"`
+		Version string `json:"version"`
+	} `json:"updated,omitempty"`
+	WaitingForJobs bool `json:"waiting_for_jobs"`
 
 	// Window The daily install window in UTC, or null for any time.
 	Window *struct {
@@ -7046,6 +7500,9 @@ type LifecycleStatus struct {
 		Start string `json:"start"`
 	} `json:"window"`
 }
+
+// LifecycleStatusLastCheckKind defines model for LifecycleStatus.LastCheck.Kind.
+type LifecycleStatusLastCheckKind string
 
 // LifecycleStatusPolicy defines model for LifecycleStatus.Policy.
 type LifecycleStatusPolicy string
@@ -7813,6 +8270,52 @@ type OrgPoolList struct {
 type OrgPoolSet struct {
 	Enabled bool `json:"enabled"`
 }
+
+// OverflowTarget defines model for OverflowTarget.
+type OverflowTarget struct {
+	// BudgetUsd Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2 without a price per minute) does not enforce it.
+	BudgetUsd *float64 `json:"budget_usd,omitempty"`
+
+	// CapMinutes Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried.
+	CapMinutes *int               `json:"cap_minutes,omitempty"`
+	Enabled    bool               `json:"enabled"`
+	Kind       OverflowTargetKind `json:"kind"`
+
+	// Label The runner label jobs run on at this target. Empty is allowed for github_hosted only (the ubuntu-latest, windows-latest and macos-latest defaults); aws_ec2 needs one while it is on.
+	Label *string `json:"label,omitempty"`
+
+	// PriceUsdPerMinute Price in US dollars of one minute at this target (R5.115, CRSP372); 0 or absent means none. A set price is what the budget counts at this target. GitHub-hosted without a price uses the savings rate table; AWS EC2 needs a price for its budget to be enforced.
+	PriceUsdPerMinute *float64 `json:"price_usd_per_minute,omitempty"`
+
+	// Systems The systems this target serves; empty or absent means all.
+	Systems *[]OverflowTargetSystems `json:"systems,omitempty"`
+
+	// TotalCapMinutes Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left.
+	TotalCapMinutes *int `json:"total_cap_minutes,omitempty"`
+}
+
+// OverflowTargetKind defines model for OverflowTarget.Kind.
+type OverflowTargetKind string
+
+// OverflowTargetSystems defines model for OverflowTarget.Systems.
+type OverflowTargetSystems string
+
+// OverflowUsage defines model for OverflowUsage.
+type OverflowUsage struct {
+	Kind OverflowUsageKind `json:"kind"`
+
+	// Priced False when the target has no per-minute rate, so its budget is not enforced.
+	Priced *bool `json:"priced,omitempty"`
+
+	// UsedMinutes Minutes this target took this month (UTC) across all repositories, best effort.
+	UsedMinutes int `json:"used_minutes"`
+
+	// UsedUsd Money this target cost this month (UTC) across all repositories, in US dollars; minutes times the per-minute rate savings keeps (R5.115).
+	UsedUsd *float64 `json:"used_usd,omitempty"`
+}
+
+// OverflowUsageKind defines model for OverflowUsage.Kind.
+type OverflowUsageKind string
 
 // Overview defines model for Overview.
 type Overview struct {
@@ -8780,6 +9283,9 @@ type RepositoryRouting struct {
 	// Oses The operating systems the reason is about.
 	Oses *[]RepositoryRoutingOses `json:"oses,omitempty"`
 
+	// Target The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+	Target *RepositoryRoutingTarget `json:"target,omitempty"`
+
 	// UsedMinutes Fallback minutes counted this month (UTC), best effort.
 	UsedMinutes int                    `json:"used_minutes"`
 	Where       RepositoryRoutingWhere `json:"where"`
@@ -8790,6 +9296,9 @@ type RepositoryRouting struct {
 
 // RepositoryRoutingOses defines model for RepositoryRouting.Oses.
 type RepositoryRoutingOses string
+
+// RepositoryRoutingTarget The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+type RepositoryRoutingTarget string
 
 // RepositoryRoutingWhere defines model for RepositoryRouting.Where.
 type RepositoryRoutingWhere string
@@ -9424,12 +9933,18 @@ type Settings struct {
 	MaxEventStreams      *int                          `json:"max_event_streams,omitempty"`
 
 	// OverflowLabel github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest).
-	OverflowLabel              *string `json:"overflow_label,omitempty"`
-	RetentionAuditDays         *int    `json:"retention_audit_days,omitempty"`
-	RetentionJobHistoryDays    *int    `json:"retention_job_history_days,omitempty"`
-	RetentionLoadRawHours      *int    `json:"retention_load_raw_hours,omitempty"`
-	RetentionLogsDays          *int    `json:"retention_logs_days,omitempty"`
-	RetentionLogsMibPerMachine *int    `json:"retention_logs_mib_per_machine,omitempty"`
+	OverflowLabel *string `json:"overflow_label,omitempty"`
+
+	// OverflowTargets github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule.
+	OverflowTargets *[]OverflowTarget `json:"overflow_targets,omitempty"`
+
+	// OverflowUsage github-integration R5.115. Read only. The minutes each enabled overflow target took this month across all repositories.
+	OverflowUsage              *[]OverflowUsage `json:"overflow_usage,omitempty"`
+	RetentionAuditDays         *int             `json:"retention_audit_days,omitempty"`
+	RetentionJobHistoryDays    *int             `json:"retention_job_history_days,omitempty"`
+	RetentionLoadRawHours      *int             `json:"retention_load_raw_hours,omitempty"`
+	RetentionLogsDays          *int             `json:"retention_logs_days,omitempty"`
+	RetentionLogsMibPerMachine *int             `json:"retention_logs_mib_per_machine,omitempty"`
 }
 
 // SettingsInsightsUpdatePeriod ci-run-insights R5.44 (owner decisions D18, D19). How often insights are re-analysed. every_run (the default) analyses after each CI run; every_nth_run after every Nth run; hourly once an hour. The cost warning recommends a slower one.
@@ -10258,6 +10773,9 @@ type Confirmed = bool
 // Cursor defines model for Cursor.
 type Cursor = string
 
+// DebugSessionId defines model for DebugSessionId.
+type DebugSessionId = string
+
 // DependencyJobId defines model for DependencyJobId.
 type DependencyJobId = string
 
@@ -10938,11 +11456,17 @@ type SetAppWebhookJSONRequestBody = AppWebhookUpdate
 // ExchangeCliTokenJSONRequestBody defines body for ExchangeCliToken for application/json ContentType.
 type ExchangeCliTokenJSONRequestBody = ExchangeCliTokenRequest
 
+// PutCacheSettingsJSONRequestBody defines body for PutCacheSettings for application/json ContentType.
+type PutCacheSettingsJSONRequestBody = CacheHubSettings
+
 // PlanConfigJSONRequestBody defines body for PlanConfig for application/json ContentType.
 type PlanConfigJSONRequestBody = ConfigPlanRequest
 
 // ApplyConfigPlanJSONRequestBody defines body for ApplyConfigPlan for application/json ContentType.
 type ApplyConfigPlanJSONRequestBody = ConfigApplyRequest
+
+// PutDebugPoolSettingsJSONRequestBody defines body for PutDebugPoolSettings for application/json ContentType.
+type PutDebugPoolSettingsJSONRequestBody = DebugPoolSettingsInput
 
 // RemoveRegistrationJSONRequestBody defines body for RemoveRegistration for application/json ContentType.
 type RemoveRegistrationJSONRequestBody = RemoveRegistrationRequest
@@ -10964,6 +11488,9 @@ type UpdateImageLayersJSONRequestBody = UpdateImageLayersRequest
 
 // PutJobSizeOverrideJSONRequestBody defines body for PutJobSizeOverride for application/json ContentType.
 type PutJobSizeOverrideJSONRequestBody = JobSizeOverrideInput
+
+// OpenDebugSessionJSONRequestBody defines body for OpenDebugSession for application/json ContentType.
+type OpenDebugSessionJSONRequestBody = DebugSessionOpenInput
 
 // CreateJoinCodeJSONRequestBody defines body for CreateJoinCode for application/json ContentType.
 type CreateJoinCodeJSONRequestBody = CreateJoinCodeRequest
@@ -11036,6 +11563,9 @@ type PutRegistryStoreSettingsJSONRequestBody = RegistryStoreSettingsInput
 
 // RemoveCrspJSONRequestBody defines body for RemoveCrsp for application/json ContentType.
 type RemoveCrspJSONRequestBody = RemoveRequest
+
+// SetRepoDebugAccessJSONRequestBody defines body for SetRepoDebugAccess for application/json ContentType.
+type SetRepoDebugAccessJSONRequestBody = DebugRepoAccessInput
 
 // SetRepositoryExtraPackagesJSONRequestBody defines body for SetRepositoryExtraPackages for application/json ContentType.
 type SetRepositoryExtraPackagesJSONRequestBody = ExtraPackagesUpdate
@@ -11177,6 +11707,12 @@ type ServerInterface interface {
 	// ListCaches Caches per machine with size against cap
 	// (GET /api/v1/caches)
 	ListCaches(w http.ResponseWriter, r *http.Request, params ListCachesParams)
+	// GetCacheHub The one cache hub of the pool, its budget and its numbers
+	// (GET /api/v1/caches/hub)
+	GetCacheHub(w http.ResponseWriter, r *http.Request)
+	// PutCacheSettings Change the hub's switches and its byte budget
+	// (PUT /api/v1/caches/settings)
+	PutCacheSettings(w http.ResponseWriter, r *http.Request)
 	// WipeCache Empty one cache
 	// (POST /api/v1/caches/{cacheId}/wipe)
 	WipeCache(w http.ResponseWriter, r *http.Request, cacheId CacheId, params WipeCacheParams)
@@ -11195,6 +11731,27 @@ type ServerInterface interface {
 	// ApplyConfigPlan Apply a config plan
 	// (POST /api/v1/config/plans/{configPlanId}/apply)
 	ApplyConfigPlan(w http.ResponseWriter, r *http.Request, configPlanId string)
+	// GetDebugPoolSettings The pool-wide debug switch and the transcript switch
+	// (GET /api/v1/debug-access)
+	GetDebugPoolSettings(w http.ResponseWriter, r *http.Request)
+	// PutDebugPoolSettings Save the pool-wide debug switch (the kill switch)
+	// (PUT /api/v1/debug-access)
+	PutDebugPoolSettings(w http.ResponseWriter, r *http.Request)
+	// ListDebugSessions The debug sessions of the pool, newest first
+	// (GET /api/v1/debug-sessions)
+	ListDebugSessions(w http.ResponseWriter, r *http.Request)
+	// GetDebugSession One debug session
+	// (GET /api/v1/debug-sessions/{sessionId})
+	GetDebugSession(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId)
+	// EndDebugSession End a session
+	// (POST /api/v1/debug-sessions/{sessionId}/end)
+	EndDebugSession(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId)
+	// ExtendDebugSession Extend a session once by 15 minutes
+	// (POST /api/v1/debug-sessions/{sessionId}/extend)
+	ExtendDebugSession(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId)
+	// GetDebugTranscript The redacted transcript of a session
+	// (GET /api/v1/debug-sessions/{sessionId}/transcript)
+	GetDebugTranscript(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(w http.ResponseWriter, r *http.Request, params ListDoctorFindingsParams)
@@ -11339,6 +11896,12 @@ type ServerInterface interface {
 	// GetJob One job attempt with its timing
 	// (GET /api/v1/jobs/{jobId})
 	GetJob(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// GetJobDebug The Debug access card of a job
+	// (GET /api/v1/jobs/{jobId}/debug)
+	GetJobDebug(w http.ResponseWriter, r *http.Request, jobId JobId)
+	// OpenDebugSession Open a debug session on a job
+	// (POST /api/v1/jobs/{jobId}/debug-sessions)
+	OpenDebugSession(w http.ResponseWriter, r *http.Request, jobId JobId)
 	// GetJobResources CPU and memory of one job
 	// (GET /api/v1/jobs/{jobId}/resources)
 	GetJobResources(w http.ResponseWriter, r *http.Request, jobId JobId)
@@ -11579,6 +12142,12 @@ type ServerInterface interface {
 	// GetRepository One repository with its policy and variable status
 	// (GET /api/v1/repositories/{repositoryId})
 	GetRepository(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId)
+	// GetRepoDebugAccess A repository's debug access setting
+	// (GET /api/v1/repositories/{repositoryId}/debug-access)
+	GetRepoDebugAccess(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId)
+	// SetRepoDebugAccess Switch debug access on or off for a repository
+	// (PUT /api/v1/repositories/{repositoryId}/debug-access)
+	SetRepoDebugAccess(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId)
 	// GetRepositoryExtraPackages The extra distribution packages of a repository's pool
 	// (GET /api/v1/repositories/{repositoryId}/extra-packages)
 	GetRepositoryExtraPackages(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId)
@@ -12286,6 +12855,34 @@ func (siw *ServerInterfaceWrapper) ListCaches(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// GetCacheHub operation middleware
+func (siw *ServerInterfaceWrapper) GetCacheHub(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetCacheHub(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutCacheSettings operation middleware
+func (siw *ServerInterfaceWrapper) PutCacheSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutCacheSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // WipeCache operation middleware
 func (siw *ServerInterfaceWrapper) WipeCache(w http.ResponseWriter, r *http.Request) {
 
@@ -12461,6 +13058,152 @@ func (siw *ServerInterfaceWrapper) ApplyConfigPlan(w http.ResponseWriter, r *htt
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.ApplyConfigPlan(w, r, configPlanId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetDebugPoolSettings operation middleware
+func (siw *ServerInterfaceWrapper) GetDebugPoolSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetDebugPoolSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PutDebugPoolSettings operation middleware
+func (siw *ServerInterfaceWrapper) PutDebugPoolSettings(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PutDebugPoolSettings(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListDebugSessions operation middleware
+func (siw *ServerInterfaceWrapper) ListDebugSessions(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListDebugSessions(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetDebugSession operation middleware
+func (siw *ServerInterfaceWrapper) GetDebugSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "sessionId" -------------
+	var sessionId DebugSessionId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sessionId", r.PathValue("sessionId"), &sessionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sessionId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetDebugSession(w, r, sessionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// EndDebugSession operation middleware
+func (siw *ServerInterfaceWrapper) EndDebugSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "sessionId" -------------
+	var sessionId DebugSessionId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sessionId", r.PathValue("sessionId"), &sessionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sessionId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.EndDebugSession(w, r, sessionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ExtendDebugSession operation middleware
+func (siw *ServerInterfaceWrapper) ExtendDebugSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "sessionId" -------------
+	var sessionId DebugSessionId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sessionId", r.PathValue("sessionId"), &sessionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sessionId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ExtendDebugSession(w, r, sessionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetDebugTranscript operation middleware
+func (siw *ServerInterfaceWrapper) GetDebugTranscript(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "sessionId" -------------
+	var sessionId DebugSessionId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "sessionId", r.PathValue("sessionId"), &sessionId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "sessionId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetDebugTranscript(w, r, sessionId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -14615,6 +15358,58 @@ func (siw *ServerInterfaceWrapper) GetJob(w http.ResponseWriter, r *http.Request
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetJob(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetJobDebug operation middleware
+func (siw *ServerInterfaceWrapper) GetJobDebug(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetJobDebug(w, r, jobId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// OpenDebugSession operation middleware
+func (siw *ServerInterfaceWrapper) OpenDebugSession(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "jobId" -------------
+	var jobId JobId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "jobId", r.PathValue("jobId"), &jobId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "jobId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.OpenDebugSession(w, r, jobId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -16786,6 +17581,58 @@ func (siw *ServerInterfaceWrapper) GetRepository(w http.ResponseWriter, r *http.
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetRepository(w, r, repositoryId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetRepoDebugAccess operation middleware
+func (siw *ServerInterfaceWrapper) GetRepoDebugAccess(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repositoryId" -------------
+	var repositoryId RepositoryId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repositoryId", r.PathValue("repositoryId"), &repositoryId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repositoryId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetRepoDebugAccess(w, r, repositoryId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetRepoDebugAccess operation middleware
+func (siw *ServerInterfaceWrapper) SetRepoDebugAccess(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "repositoryId" -------------
+	var repositoryId RepositoryId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "repositoryId", r.PathValue("repositoryId"), &repositoryId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "integer", Format: "int64", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "repositoryId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetRepoDebugAccess(w, r, repositoryId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -19204,6 +20051,17 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.GetTimerSettings)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.PutTimerSettings)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/timer-settings/check", wrapper.CheckTimerSettings)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/debug-access", wrapper.GetDebugPoolSettings)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/debug-access", wrapper.PutDebugPoolSettings)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/repositories/{repositoryId}/debug-access", wrapper.GetRepoDebugAccess)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/repositories/{repositoryId}/debug-access", wrapper.SetRepoDebugAccess)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/{jobId}/debug", wrapper.GetJobDebug)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/debug-sessions", wrapper.OpenDebugSession)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/debug-sessions", wrapper.ListDebugSessions)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/debug-sessions/{sessionId}", wrapper.GetDebugSession)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/debug-sessions/{sessionId}/extend", wrapper.ExtendDebugSession)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/debug-sessions/{sessionId}/end", wrapper.EndDebugSession)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/debug-sessions/{sessionId}/transcript", wrapper.GetDebugTranscript)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer", wrapper.GetJobTimer)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer/stop-now", wrapper.StopJobNow)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/jobs/{jobId}/timer/extend", wrapper.ExtendJobTimer)
@@ -19268,6 +20126,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/images/{imageId}/rebuild", wrapper.RebuildImage)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/caches", wrapper.ListCaches)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/caches/{cacheId}/wipe", wrapper.WipeCache)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/caches/hub", wrapper.GetCacheHub)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/caches/settings", wrapper.PutCacheSettings)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry/overview", wrapper.GetRegistryOverview)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/registry/images", wrapper.ListRegistryImages)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/registry/images/{registryImageId}", wrapper.DeleteRegistryImage)
@@ -20029,6 +20889,83 @@ func (response ListCachesdefaultJSONResponse) VisitListCachesResponse(w http.Res
 	return err
 }
 
+type GetCacheHubRequestObject struct {
+}
+
+type GetCacheHubResponseObject interface {
+	VisitGetCacheHubResponse(w http.ResponseWriter) error
+}
+
+type GetCacheHub200JSONResponse CacheHub
+
+func (response GetCacheHub200JSONResponse) VisitGetCacheHubResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetCacheHubdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetCacheHubdefaultJSONResponse) VisitGetCacheHubResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutCacheSettingsRequestObject struct {
+	Body *PutCacheSettingsJSONRequestBody
+}
+
+type PutCacheSettingsResponseObject interface {
+	VisitPutCacheSettingsResponse(w http.ResponseWriter) error
+}
+
+type PutCacheSettings200JSONResponse CacheHubSettings
+
+func (response PutCacheSettings200JSONResponse) VisitPutCacheSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutCacheSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutCacheSettingsdefaultJSONResponse) VisitPutCacheSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type WipeCacheRequestObject struct {
 	CacheId CacheId `json:"cacheId"`
 	Params  WipeCacheParams
@@ -20293,6 +21230,277 @@ type ApplyConfigPlandefaultJSONResponse struct {
 }
 
 func (response ApplyConfigPlandefaultJSONResponse) VisitApplyConfigPlanResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetDebugPoolSettingsRequestObject struct {
+}
+
+type GetDebugPoolSettingsResponseObject interface {
+	VisitGetDebugPoolSettingsResponse(w http.ResponseWriter) error
+}
+
+type GetDebugPoolSettings200JSONResponse DebugPoolSettings
+
+func (response GetDebugPoolSettings200JSONResponse) VisitGetDebugPoolSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetDebugPoolSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetDebugPoolSettingsdefaultJSONResponse) VisitGetDebugPoolSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutDebugPoolSettingsRequestObject struct {
+	Body *PutDebugPoolSettingsJSONRequestBody
+}
+
+type PutDebugPoolSettingsResponseObject interface {
+	VisitPutDebugPoolSettingsResponse(w http.ResponseWriter) error
+}
+
+type PutDebugPoolSettings200JSONResponse DebugPoolSettings
+
+func (response PutDebugPoolSettings200JSONResponse) VisitPutDebugPoolSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PutDebugPoolSettingsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PutDebugPoolSettingsdefaultJSONResponse) VisitPutDebugPoolSettingsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListDebugSessionsRequestObject struct {
+}
+
+type ListDebugSessionsResponseObject interface {
+	VisitListDebugSessionsResponse(w http.ResponseWriter) error
+}
+
+type ListDebugSessions200JSONResponse DebugSessionList
+
+func (response ListDebugSessions200JSONResponse) VisitListDebugSessionsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListDebugSessionsdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListDebugSessionsdefaultJSONResponse) VisitListDebugSessionsResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetDebugSessionRequestObject struct {
+	SessionId DebugSessionId `json:"sessionId"`
+}
+
+type GetDebugSessionResponseObject interface {
+	VisitGetDebugSessionResponse(w http.ResponseWriter) error
+}
+
+type GetDebugSession200JSONResponse DebugSession
+
+func (response GetDebugSession200JSONResponse) VisitGetDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetDebugSessiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetDebugSessiondefaultJSONResponse) VisitGetDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EndDebugSessionRequestObject struct {
+	SessionId DebugSessionId `json:"sessionId"`
+}
+
+type EndDebugSessionResponseObject interface {
+	VisitEndDebugSessionResponse(w http.ResponseWriter) error
+}
+
+type EndDebugSession200JSONResponse DebugSession
+
+func (response EndDebugSession200JSONResponse) VisitEndDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type EndDebugSessiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response EndDebugSessiondefaultJSONResponse) VisitEndDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendDebugSessionRequestObject struct {
+	SessionId DebugSessionId `json:"sessionId"`
+}
+
+type ExtendDebugSessionResponseObject interface {
+	VisitExtendDebugSessionResponse(w http.ResponseWriter) error
+}
+
+type ExtendDebugSession200JSONResponse DebugSession
+
+func (response ExtendDebugSession200JSONResponse) VisitExtendDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ExtendDebugSessiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ExtendDebugSessiondefaultJSONResponse) VisitExtendDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetDebugTranscriptRequestObject struct {
+	SessionId DebugSessionId `json:"sessionId"`
+}
+
+type GetDebugTranscriptResponseObject interface {
+	VisitGetDebugTranscriptResponse(w http.ResponseWriter) error
+}
+
+type GetDebugTranscript200JSONResponse DebugTranscript
+
+func (response GetDebugTranscript200JSONResponse) VisitGetDebugTranscriptResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetDebugTranscriptdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetDebugTranscriptdefaultJSONResponse) VisitGetDebugTranscriptResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -22333,6 +23541,85 @@ type GetJobdefaultJSONResponse struct {
 }
 
 func (response GetJobdefaultJSONResponse) VisitGetJobResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobDebugRequestObject struct {
+	JobId JobId `json:"jobId"`
+}
+
+type GetJobDebugResponseObject interface {
+	VisitGetJobDebugResponse(w http.ResponseWriter) error
+}
+
+type GetJobDebug200JSONResponse JobDebug
+
+func (response GetJobDebug200JSONResponse) VisitGetJobDebugResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetJobDebugdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetJobDebugdefaultJSONResponse) VisitGetJobDebugResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type OpenDebugSessionRequestObject struct {
+	JobId JobId `json:"jobId"`
+	Body  *OpenDebugSessionJSONRequestBody
+}
+
+type OpenDebugSessionResponseObject interface {
+	VisitOpenDebugSessionResponse(w http.ResponseWriter) error
+}
+
+type OpenDebugSession201JSONResponse DebugSession
+
+func (response OpenDebugSession201JSONResponse) VisitOpenDebugSessionResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type OpenDebugSessiondefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response OpenDebugSessiondefaultJSONResponse) VisitOpenDebugSessionResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -25460,6 +26747,85 @@ type GetRepositorydefaultJSONResponse struct {
 }
 
 func (response GetRepositorydefaultJSONResponse) VisitGetRepositoryResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRepoDebugAccessRequestObject struct {
+	RepositoryId RepositoryId `json:"repositoryId"`
+}
+
+type GetRepoDebugAccessResponseObject interface {
+	VisitGetRepoDebugAccessResponse(w http.ResponseWriter) error
+}
+
+type GetRepoDebugAccess200JSONResponse DebugRepoAccess
+
+func (response GetRepoDebugAccess200JSONResponse) VisitGetRepoDebugAccessResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetRepoDebugAccessdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetRepoDebugAccessdefaultJSONResponse) VisitGetRepoDebugAccessResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetRepoDebugAccessRequestObject struct {
+	RepositoryId RepositoryId `json:"repositoryId"`
+	Body         *SetRepoDebugAccessJSONRequestBody
+}
+
+type SetRepoDebugAccessResponseObject interface {
+	VisitSetRepoDebugAccessResponse(w http.ResponseWriter) error
+}
+
+type SetRepoDebugAccess200JSONResponse DebugRepoAccess
+
+func (response SetRepoDebugAccess200JSONResponse) VisitSetRepoDebugAccessResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetRepoDebugAccessdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response SetRepoDebugAccessdefaultJSONResponse) VisitSetRepoDebugAccessResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -28664,6 +30030,12 @@ type StrictServerInterface interface {
 	// ListCaches Caches per machine with size against cap
 	// (GET /api/v1/caches)
 	ListCaches(ctx context.Context, request ListCachesRequestObject) (ListCachesResponseObject, error)
+	// GetCacheHub The one cache hub of the pool, its budget and its numbers
+	// (GET /api/v1/caches/hub)
+	GetCacheHub(ctx context.Context, request GetCacheHubRequestObject) (GetCacheHubResponseObject, error)
+	// PutCacheSettings Change the hub's switches and its byte budget
+	// (PUT /api/v1/caches/settings)
+	PutCacheSettings(ctx context.Context, request PutCacheSettingsRequestObject) (PutCacheSettingsResponseObject, error)
 	// WipeCache Empty one cache
 	// (POST /api/v1/caches/{cacheId}/wipe)
 	WipeCache(ctx context.Context, request WipeCacheRequestObject) (WipeCacheResponseObject, error)
@@ -28682,6 +30054,27 @@ type StrictServerInterface interface {
 	// ApplyConfigPlan Apply a config plan
 	// (POST /api/v1/config/plans/{configPlanId}/apply)
 	ApplyConfigPlan(ctx context.Context, request ApplyConfigPlanRequestObject) (ApplyConfigPlanResponseObject, error)
+	// GetDebugPoolSettings The pool-wide debug switch and the transcript switch
+	// (GET /api/v1/debug-access)
+	GetDebugPoolSettings(ctx context.Context, request GetDebugPoolSettingsRequestObject) (GetDebugPoolSettingsResponseObject, error)
+	// PutDebugPoolSettings Save the pool-wide debug switch (the kill switch)
+	// (PUT /api/v1/debug-access)
+	PutDebugPoolSettings(ctx context.Context, request PutDebugPoolSettingsRequestObject) (PutDebugPoolSettingsResponseObject, error)
+	// ListDebugSessions The debug sessions of the pool, newest first
+	// (GET /api/v1/debug-sessions)
+	ListDebugSessions(ctx context.Context, request ListDebugSessionsRequestObject) (ListDebugSessionsResponseObject, error)
+	// GetDebugSession One debug session
+	// (GET /api/v1/debug-sessions/{sessionId})
+	GetDebugSession(ctx context.Context, request GetDebugSessionRequestObject) (GetDebugSessionResponseObject, error)
+	// EndDebugSession End a session
+	// (POST /api/v1/debug-sessions/{sessionId}/end)
+	EndDebugSession(ctx context.Context, request EndDebugSessionRequestObject) (EndDebugSessionResponseObject, error)
+	// ExtendDebugSession Extend a session once by 15 minutes
+	// (POST /api/v1/debug-sessions/{sessionId}/extend)
+	ExtendDebugSession(ctx context.Context, request ExtendDebugSessionRequestObject) (ExtendDebugSessionResponseObject, error)
+	// GetDebugTranscript The redacted transcript of a session
+	// (GET /api/v1/debug-sessions/{sessionId}/transcript)
+	GetDebugTranscript(ctx context.Context, request GetDebugTranscriptRequestObject) (GetDebugTranscriptResponseObject, error)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(ctx context.Context, request ListDoctorFindingsRequestObject) (ListDoctorFindingsResponseObject, error)
@@ -28826,6 +30219,12 @@ type StrictServerInterface interface {
 	// GetJob One job attempt with its timing
 	// (GET /api/v1/jobs/{jobId})
 	GetJob(ctx context.Context, request GetJobRequestObject) (GetJobResponseObject, error)
+	// GetJobDebug The Debug access card of a job
+	// (GET /api/v1/jobs/{jobId}/debug)
+	GetJobDebug(ctx context.Context, request GetJobDebugRequestObject) (GetJobDebugResponseObject, error)
+	// OpenDebugSession Open a debug session on a job
+	// (POST /api/v1/jobs/{jobId}/debug-sessions)
+	OpenDebugSession(ctx context.Context, request OpenDebugSessionRequestObject) (OpenDebugSessionResponseObject, error)
 	// GetJobResources CPU and memory of one job
 	// (GET /api/v1/jobs/{jobId}/resources)
 	GetJobResources(ctx context.Context, request GetJobResourcesRequestObject) (GetJobResourcesResponseObject, error)
@@ -29066,6 +30465,12 @@ type StrictServerInterface interface {
 	// GetRepository One repository with its policy and variable status
 	// (GET /api/v1/repositories/{repositoryId})
 	GetRepository(ctx context.Context, request GetRepositoryRequestObject) (GetRepositoryResponseObject, error)
+	// GetRepoDebugAccess A repository's debug access setting
+	// (GET /api/v1/repositories/{repositoryId}/debug-access)
+	GetRepoDebugAccess(ctx context.Context, request GetRepoDebugAccessRequestObject) (GetRepoDebugAccessResponseObject, error)
+	// SetRepoDebugAccess Switch debug access on or off for a repository
+	// (PUT /api/v1/repositories/{repositoryId}/debug-access)
+	SetRepoDebugAccess(ctx context.Context, request SetRepoDebugAccessRequestObject) (SetRepoDebugAccessResponseObject, error)
 	// GetRepositoryExtraPackages The extra distribution packages of a repository's pool
 	// (GET /api/v1/repositories/{repositoryId}/extra-packages)
 	GetRepositoryExtraPackages(ctx context.Context, request GetRepositoryExtraPackagesRequestObject) (GetRepositoryExtraPackagesResponseObject, error)
@@ -29814,6 +31219,61 @@ func (sh *strictHandler) ListCaches(w http.ResponseWriter, r *http.Request, para
 	}
 }
 
+// GetCacheHub operation middleware
+func (sh *strictHandler) GetCacheHub(w http.ResponseWriter, r *http.Request) {
+	var request GetCacheHubRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetCacheHub(ctx, request.(GetCacheHubRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetCacheHub")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetCacheHubResponseObject); ok {
+		if err := validResponse.VisitGetCacheHubResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutCacheSettings operation middleware
+func (sh *strictHandler) PutCacheSettings(w http.ResponseWriter, r *http.Request) {
+	var request PutCacheSettingsRequestObject
+
+	var body PutCacheSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutCacheSettings(ctx, request.(PutCacheSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutCacheSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutCacheSettingsResponseObject); ok {
+		if err := validResponse.VisitPutCacheSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
 // WipeCache operation middleware
 func (sh *strictHandler) WipeCache(w http.ResponseWriter, r *http.Request, cacheId CacheId, params WipeCacheParams) {
 	var request WipeCacheRequestObject
@@ -29978,6 +31438,189 @@ func (sh *strictHandler) ApplyConfigPlan(w http.ResponseWriter, r *http.Request,
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(ApplyConfigPlanResponseObject); ok {
 		if err := validResponse.VisitApplyConfigPlanResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetDebugPoolSettings operation middleware
+func (sh *strictHandler) GetDebugPoolSettings(w http.ResponseWriter, r *http.Request) {
+	var request GetDebugPoolSettingsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetDebugPoolSettings(ctx, request.(GetDebugPoolSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetDebugPoolSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetDebugPoolSettingsResponseObject); ok {
+		if err := validResponse.VisitGetDebugPoolSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PutDebugPoolSettings operation middleware
+func (sh *strictHandler) PutDebugPoolSettings(w http.ResponseWriter, r *http.Request) {
+	var request PutDebugPoolSettingsRequestObject
+
+	var body PutDebugPoolSettingsJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PutDebugPoolSettings(ctx, request.(PutDebugPoolSettingsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PutDebugPoolSettings")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PutDebugPoolSettingsResponseObject); ok {
+		if err := validResponse.VisitPutDebugPoolSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListDebugSessions operation middleware
+func (sh *strictHandler) ListDebugSessions(w http.ResponseWriter, r *http.Request) {
+	var request ListDebugSessionsRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListDebugSessions(ctx, request.(ListDebugSessionsRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListDebugSessions")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListDebugSessionsResponseObject); ok {
+		if err := validResponse.VisitListDebugSessionsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetDebugSession operation middleware
+func (sh *strictHandler) GetDebugSession(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId) {
+	var request GetDebugSessionRequestObject
+
+	request.SessionId = sessionId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetDebugSession(ctx, request.(GetDebugSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetDebugSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetDebugSessionResponseObject); ok {
+		if err := validResponse.VisitGetDebugSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// EndDebugSession operation middleware
+func (sh *strictHandler) EndDebugSession(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId) {
+	var request EndDebugSessionRequestObject
+
+	request.SessionId = sessionId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.EndDebugSession(ctx, request.(EndDebugSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "EndDebugSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(EndDebugSessionResponseObject); ok {
+		if err := validResponse.VisitEndDebugSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ExtendDebugSession operation middleware
+func (sh *strictHandler) ExtendDebugSession(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId) {
+	var request ExtendDebugSessionRequestObject
+
+	request.SessionId = sessionId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ExtendDebugSession(ctx, request.(ExtendDebugSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ExtendDebugSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ExtendDebugSessionResponseObject); ok {
+		if err := validResponse.VisitExtendDebugSessionResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetDebugTranscript operation middleware
+func (sh *strictHandler) GetDebugTranscript(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId) {
+	var request GetDebugTranscriptRequestObject
+
+	request.SessionId = sessionId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetDebugTranscript(ctx, request.(GetDebugTranscriptRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetDebugTranscript")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetDebugTranscriptResponseObject); ok {
+		if err := validResponse.VisitGetDebugTranscriptResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -31253,6 +32896,65 @@ func (sh *strictHandler) GetJob(w http.ResponseWriter, r *http.Request, jobId Jo
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetJobResponseObject); ok {
 		if err := validResponse.VisitGetJobResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetJobDebug operation middleware
+func (sh *strictHandler) GetJobDebug(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request GetJobDebugRequestObject
+
+	request.JobId = jobId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetJobDebug(ctx, request.(GetJobDebugRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetJobDebug")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetJobDebugResponseObject); ok {
+		if err := validResponse.VisitGetJobDebugResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// OpenDebugSession operation middleware
+func (sh *strictHandler) OpenDebugSession(w http.ResponseWriter, r *http.Request, jobId JobId) {
+	var request OpenDebugSessionRequestObject
+
+	request.JobId = jobId
+
+	var body OpenDebugSessionJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.OpenDebugSession(ctx, request.(OpenDebugSessionRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "OpenDebugSession")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(OpenDebugSessionResponseObject); ok {
+		if err := validResponse.VisitOpenDebugSessionResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -33471,6 +35173,65 @@ func (sh *strictHandler) GetRepository(w http.ResponseWriter, r *http.Request, r
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetRepositoryResponseObject); ok {
 		if err := validResponse.VisitGetRepositoryResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetRepoDebugAccess operation middleware
+func (sh *strictHandler) GetRepoDebugAccess(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId) {
+	var request GetRepoDebugAccessRequestObject
+
+	request.RepositoryId = repositoryId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetRepoDebugAccess(ctx, request.(GetRepoDebugAccessRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetRepoDebugAccess")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetRepoDebugAccessResponseObject); ok {
+		if err := validResponse.VisitGetRepoDebugAccessResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetRepoDebugAccess operation middleware
+func (sh *strictHandler) SetRepoDebugAccess(w http.ResponseWriter, r *http.Request, repositoryId RepositoryId) {
+	var request SetRepoDebugAccessRequestObject
+
+	request.RepositoryId = repositoryId
+
+	var body SetRepoDebugAccessJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetRepoDebugAccess(ctx, request.(SetRepoDebugAccessRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetRepoDebugAccess")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetRepoDebugAccessResponseObject); ok {
+		if err := validResponse.VisitSetRepoDebugAccessResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

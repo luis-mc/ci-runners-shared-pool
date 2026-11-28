@@ -7,7 +7,7 @@ status: building
 version: 0.1.0
 owner: owner
 type: reference
-code: ["apps/controller/internal/cache/**", "apps/controller/internal/mirror/**", "apps/controller/internal/tools/**", "apps/controller/internal/runnercache/**", "apps/controller/internal/caches/**", "apps/controller/internal/vmcheck/**", "apps/controller/internal/dockercompact/**"]
+code: ["apps/controller/internal/cache/**", "apps/controller/internal/mirror/**", "apps/controller/internal/lancache/**", "apps/controller/internal/tools/**", "apps/controller/internal/runnercache/**", "apps/controller/internal/caches/**", "apps/controller/internal/vmcheck/**", "apps/controller/internal/dockercompact/**"]
 design_system: [UX-4, UX-6, UX-9, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-34, UX-38, UX-41, UX-58, UX-62]
 last_verified: 2026-11-27
 artifact:
@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-**PARTLY BUILT (CRSP21, CRSP26, CRSP36, CRSP48).** Milestone 1 builds the per-runner cache quotas with eviction, the Rust cache cap with its per-key cap (R5.45), the pool-wide disk budget and size alert (R5.48, R5.49), the disk guard, the per-runner `CI_TOOLS_DIR`, the `vm_check` port (R5.36 to R5.40, built) and the list and wipe of those per-runner caches on the Images and caches screen (R5.42, built). Milestone 2 has the shared per-machine tool cache as library code (CRSP255, R5.14, R5.61 to R5.64), the VM cache (CRSP61, CRSP65, CRSP71) and the Docker disk compact (OPS52, CRSP136). Milestone 7 is built in part (CRSP272): the Actions cache receiver (`apps/controller/internal/lancache`), the git mirror (`apps/controller/internal/mirror`), cache warmth and wipe with a plan, and the cache switches; the registry mirror is built in the registry feature (REG9). Not built: the agent start that prepares the tool cache folder, the `tool_cache_cap_gib` setting, the doctor tool-cache check, the registry mirror re-check interval (R5.66) and the package proxy, which has no milestone yet. Every requirement not named here is planned.
+**PARTLY BUILT (CRSP21, CRSP26, CRSP36, CRSP48).** Milestone 1 builds the per-runner cache quotas with eviction, the Rust cache cap with its per-key cap (R5.45), the pool-wide disk budget and size alert (R5.48, R5.49), the disk guard, the per-runner `CI_TOOLS_DIR`, the `vm_check` port (R5.36 to R5.40, built) and the list and wipe of those per-runner caches on the Images and caches screen (R5.42, built). Milestone 2 has the shared per-machine tool cache as library code (CRSP255, R5.14, R5.61 to R5.64), the VM cache (CRSP61, CRSP65, CRSP71) and the Docker disk compact (OPS52, CRSP136). Milestone 7 is built in part (CRSP272): the Actions cache receiver (`apps/controller/internal/lancache`), the git mirror (`apps/controller/internal/mirror`), cache warmth and wipe with a plan, and the cache switches; the registry mirror is built in the registry feature (REG9). The owner chose one hub in the controller with one budget (D5, CRSP342 option 1): the pool-wide budget, the native npm and PyPI proxy, the runner start that points npm and pip at it, the hub settings and numbers in the API and the hub on the Caches tab are built (R5.73 to R5.78, R5.80). Not built: the agent start that prepares the tool cache folder, the `tool_cache_cap_gib` setting, the doctor tool-cache check, the registry mirror re-check interval (R5.66), the receiver's LAN listener and the items of section 7.5, and apt and crates (R5.79, spike first). Every requirement not named here is planned.
 
 ## 1. In one paragraph
 
@@ -43,7 +43,7 @@ Jobs on the pool spend much of their time downloading the same things again: `ac
 - Managing GitHub's own hosted cache.
 - Caching between different pools, or sharing a cache between repositories.
 - A general CDN or proxy for any URL.
-- A package proxy for npm, PyPI, crates and apt in milestones 2 and 7 (see section 11).
+- A package proxy for crates and apt before their spike (R5.79). npm and PyPI are in milestone 7 (R5.74, R5.75).
 - Build-system caches (Bazel remote cache, sccache, Turborepo). Workflows may run their own.
 
 ## 3. How it works
@@ -161,7 +161,7 @@ Ported from dev-standards `claude/plugins/delivery/templates/shared/scripts/deli
 
 **R5.64** (M2, Built CRSP255: `apps/controller/internal/caches/toolcache/check.go`) — **The doctor reads the cache through one interface.** `toolcache.Checker` has one method, `CheckToolCache(ctx) Result`. The result has a state (`ok`, `warn`, `fail`), one plain sentence, the size, the cap, the entry count and the number of leftover stage or trash folders. It fails when the root is missing, cannot be written, or on Linux and macOS is not mode 1777. It warns at 90% of the cap and when leftovers wait for a sweep. The check changes nothing. The doctor package owns the finding and its wording; it takes a `Checker` and shows the result. **NOT YET IMPLEMENTED:** the doctor check that calls it (doctor feature).
 
-**R5.65** (M2, Built CRSP268: `.github/workflows/ci.yml`) — **This repository's own CI runs on the pool, and falls back to GitHub-hosted.** The jobs `lint`, `types`, `tests` and `e2e-shards` of `ci.yml` read `runs-on` as `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"')`. With `CRSP_RUNS_ON_LINUX` set to the `crsp-home` labels they run on the pool and use the shared tool cache (R5.63). With the variable unset (the owner removes it when the pool is offline) they run on GitHub-hosted runners. Job names, `verify`, `decide`, the Windows and macOS jobs and the release workflows are unchanged, so no required check changes.
+**R5.65** (M2, Built CRSP268: `.github/workflows/ci.yml`) — **This repository's own CI runs on the pool, and falls back to GitHub-hosted.** The jobs `lint`, `types`, `go-race`, `web-tests` and `e2e-shards` of `ci.yml` read `runs-on` as `fromJSON(vars.CRSP_<JOB> || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"')`. With `CRSP_RUNS_ON_LINUX` set to the `crsp-home` labels they run on the pool and use the shared tool cache (R5.63). With the variable unset (the owner removes it when the pool is offline) they run on GitHub-hosted runners. Job names, `verify`, `decide`, the Windows and macOS jobs and the release workflows are unchanged, so no required check changes. A pull request's later heads carry forward (CRSP349): the `carry` job plans which jobs an earlier head already proved and no change since reaches (`scripts/delivery/carry_plan.py`, `scripts/delivery/ci-areas.json`), those jobs are skipped, and `tests`, `verify`, `e2e (Playwright)` and `carry-ok` count a carried skip as passed (`scripts/delivery/carry_verify.py`); the first run, a dispatch run and a failed plan run everything.
 
 **Systems.** The logic is the same on Windows, Linux and macOS. What differs sits behind `Platform` (mode 1777 on Linux and macOS, `icacls` access list on Windows, R5.18, R5.19) and `FS`, with fakes in the tests. Verified here: Linux, by running the tests, and the Windows and macOS builds and vet by cross-compiling; the Windows `icacls` call is checked as a plan through a fake runner and is **not run on a real Windows machine in this change**. **macOS is compiled and unit-tested in CI only and has not been run on a real Mac.**
 
@@ -190,6 +190,26 @@ Ported from dev-standards `claude/plugins/delivery/templates/shared/scripts/deli
 **R5.71** (M7, CRSP272, Built in part: rows and wipe) — **Controls in the web app.** The Caches tab of Images and caches shows, per cache holder, one row each for the Actions cache, the git mirrors, the registry mirror and the tool cache (the `Cache` rows of R5.29 with the kinds `actions_cache`, `git_mirror`, `registry_mirror`, `tool_cache`), a settings card with the switches and numbers of R5.66, and **Wipe** on each row with the question card of R5.31. **Built:** the holder rows reach the existing `GET /api/v1/caches` list and `POST /api/v1/caches/{id}/wipe` (row ids start with `mirror:`; a git mirror's repository is the row's `runner_name`), through `caches.Service` and `apps/controller/internal/caches/mirrors.go`, so the existing Caches tab lists and wipes them with its question card. **NOT YET IMPLEMENTED:** the settings card, the status, last-refresh and hit fields in the `Cache` schema, and the CLI group `caches`; same blocker as R5.66.
 
 **R5.72** (M7, CRSP272, Built) — **macOS.** The code compiles and its unit tests run for `darwin` in CI. It has not been run on a real Mac; the status says so.
+
+### One hub in the controller, one budget (milestone 7, CRSP272, owner decision D5)
+
+The owner chose option 1 of the CRSP342 study on 27 Nov 2026: the controller process is the one cache hub of the pool. It serves the Actions receiver, the repository mirrors, the registry mirror and a native npm and PyPI proxy, and all of them share one byte budget. Each part is marked below: **receiver** (R5.50 step 3), **mirrors** (R5.67), **registry mirror** (R5.24), **npm and PyPI proxy** (R5.74 to R5.76). Apt and crates are **later**: a spike of apt-cacher-ng and of a small native sparse-index proxy for crates comes first (R5.79).
+
+**R5.73** (M7, CRSP272, Built: `apps/controller/internal/mirror/budget.go`) — **One pool-wide byte budget.** Every cache kind the hub keeps in its base folder (R5.65) counts against one budget, `budget_gib` (default 60 GiB, 1 to 4096): the Actions receiver entries and the package proxy entries (the content store, `<base>/actions`, namespaces `actions` and `packages`) and the git mirrors (`<base>/git`). When the total passes the budget, the least recently used item of any kind goes first, until the total fits: a store entry by its last read, a git mirror by its last refresh or use. A git mirror used in the last 30 minutes is never evicted, so the hub may stay over the budget while jobs fetch. The pass runs after each package write, every 10 minutes and when the budget changes. The content store's own cap follows the budget, so one entry larger than the budget is refused (413). The existing Wipe (R5.69) covers every kind, now also `packages` (all package proxy entries) and `git_all` (every git mirror). The registry mirror keeps its own folder (`<data>/registry-mirror`, registry R5.64) outside the base and is not evicted by this pass; its size shows on its card (section 11).
+
+**R5.74** (M7, CRSP272, Built: `apps/controller/internal/lancache/npm.go`) — **npm proxy.** The controller listener answers `/pkg/npm/<repository>/<token>/` as an npm registry for one repository. A package document (`/<name>`, scoped names as `@scope/name` or `@scope%2fname`) is fetched from the upstream registry (`https://registry.npmjs.org`), stored, and served with every `dist.tarball` address rewritten to the hub; the hub asks for the short install document when the client does. A document younger than 5 minutes is served from the store; an older one is fetched again, and when the upstream cannot be reached the stored one is served (stale-serve). A tarball (`/<name>/-/<file>.tgz`) is served from the store; on a miss the hub finds the version's `dist.integrity` (SHA-512, else `dist.shasum`) in the package document, downloads the tarball, and stores it only when the bytes match that hash; a mismatch is answered 502 and nothing is stored. A package with no hash is never stored.
+
+**R5.75** (M7, CRSP272, Built: `apps/controller/internal/lancache/pypi.go`) — **PyPI proxy.** The controller listener answers `/pkg/pypi/<repository>/<token>/simple/<project>/` as a PyPI simple index (HTML and the JSON form of PEP 691, as the client asks). The index is fetched from `https://pypi.org/simple/`, stored and refreshed like an npm document (5 minutes, stale-serve). Each file link that carries a SHA-256 is rewritten to `/pkg/pypi/<repository>/<token>/files/<sha256>/<path>`; a link without one keeps its upstream address and is never stored. A file is fetched from `https://files.pythonhosted.org/<path>` and stored only when its SHA-256 matches; a mismatch is answered 502 and nothing is stored.
+
+**R5.76** (M7, CRSP272, Built: `apps/controller/internal/lancache/runnerenv.go`, `apps/controller/internal/agent/pkgproxy.go`) — **Runners pointed at the hub at start, with a fallback.** When the package proxy is on and a persistent runner belongs to one repository, the controller gives the runner spec the repository key and its token (agent link `RunnerSpec.package_proxy`). At runner start the agent asks the hub `GET /pkg/ping`. When the hub answers, the runner's environment gets `npm_config_registry` (the npm address), `PIP_INDEX_URL` (the PyPI address) with `PIP_EXTRA_INDEX_URL=https://pypi.org/simple` as the fallback list, `NODE_EXTRA_CA_CERTS` (the controller CA, which the agent reads from the pinned connection) and `PIP_CERT` (the host's public bundle plus the controller CA). When the hub does not answer, the runner gets none of these and uses the real registries; a hub that failed is not asked again for 30 s (the client rule of R5.50). A host with no public bundle file (Windows) gets the npm values only. A change reaches only runners started after it (R5.35). Container runners and org-wide runners get no package proxy yet (section 11).
+
+**R5.77** (M7, CRSP272, Built: `apps/controller/internal/mirror/hub.go`, `apps/controller/internal/api/handlers_caches_hub.go`) — **Hub settings and numbers in the API.** `mirror.Settings` gains `package_proxy` (off until turned on) and `budget_gib` (R5.73). `GET /api/v1/caches/hub` (any signed-in user) answers the settings, the budget and the bytes used, one card per kind (`actions_cache`, `git_mirror`, `registry_mirror`, `package_proxy`) with on or off, size, entry count, hits, misses and bytes served, the hit rate of the receiver and the proxy, the machines with any warmth, and one row per repository with hits, misses, size and its highest warmth (R5.68). `PUT /api/v1/caches/settings` (admin) validates, stores and audits the settings (R5.66) and applies the budget at once. The CLI command `crsp caches settings` is not built (section 11).
+
+**R5.78** (M7, CRSP272, Built: `apps/controller-console/src/screens/images/CacheHub.tsx`) — **The Caches tab shows the hub.** The Caches tab of Images and caches opens with the hub, as the CRSP342 option 1 screens show: a lead line, a summary line of the caches on and off, four stat tiles (hit rate, served, used of the budget, warm machines), a **One budget** section with one meter, four cards (Actions cache, Repository mirrors, Registry mirror, Package proxy), each with its switch and **Wipe** (the question card of R5.31), and the table **Warmth by repository**. A viewer sees the switches and Wipe turned off with the reason. The per-machine caches follow below as before; the hub's own rows (`mirror:` ids) are not listed twice. Shared parts only (PageHeader, SummaryLine, StatGrid, StatTile, Section, Meter, CardGrid, Card, Switch, Facts, Table, Button); no page stylesheet. Rules: CORE-1 to CORE-5, CORE-7, UX-4, UX-6, UX-13, UX-18, UX-19, UX-25, UX-28, UX-29, UX-41, UX-62.
+
+**R5.79** (M7, later) — **Apt and crates: spike first.** Not built. A spike runs apt-cacher-ng (option 3 of CRSP342) for apt and a small native sparse-index proxy for crates, then the owner decides. The Package proxy card says "Apt and crates: not yet".
+
+**R5.80** (M7, CRSP272, Built: `apps/controller/internal/lancache/pkgproxy.go`) — **Package proxy safety.** A proxy call is answered only from a private, link-local or loopback address (else 403), only with the token of its repository (an HMAC of the repository key with a secret the controller keeps in `<base>/packages.key`, mode 0600; else 401), and only while `package_proxy` is on (else 404). Every stored name carries the repository key, so one repository never reads another's entries. Only the two upstream hosts are fetched; a path that would leave them is refused. Tokens never reach a log line or the audit log (R6.5).
 
 ### Runner cache quotas and disk guard (milestone 1)
 
@@ -380,6 +400,37 @@ flowchart TB
 - **Fail open.** Each call has a time limit; a failure makes the row `failed` and the job goes to GitHub (R6.7).
 - **Not in this task.** The refresh timer and the push webhook that call `Refresh`, the agent step that sets the git rewrite pairs (R5.12) in a runner, the LAN listener of the receiver (its row says "waiting"), the registry mirror's size and stale tags in its row (only the folder size shows), Put Block and protobuf bodies for the receiver, the real `@actions/cache` contract test, and the agent start that points a runner at the receiver (R5.7) stay open; section 11 lists them.
 
+### 7.5 Design of the hub (CRSP272, option 1)
+
+```mermaid
+flowchart LR
+  subgraph runner[Persistent runner]
+    npm[npm / pnpm]
+    pip[pip]
+  end
+  subgraph ctl[Controller listener]
+    ping[/pkg/ping]
+    pn[/pkg/npm/repo/token/]
+    pp[/pkg/pypi/repo/token/]
+    st[(Content store: actions + packages)]
+    git[(Git mirrors)]
+    bud[Budget pass, 60 GiB]
+  end
+  up1[(registry.npmjs.org)]
+  up2[(pypi.org, files.pythonhosted.org)]
+  npm --> pn --> st
+  pip --> pp --> st
+  pn -- miss, integrity checked --> up1
+  pp -- miss, sha256 checked --> up2
+  pip -. hub down: extra index .-> up2
+  bud --> st & git
+```
+
+- **Where it lives.** The proxy is `lancache.Proxy`, a handler on the controller's own listener next to the registry mirror (`/pkg/`), using the receiver's content store. The budget pass is `mirror.Budget`. The hub numbers are `mirror.Service.Hub`.
+- **Token.** `token = hex(HMAC-SHA256(secret, "pkg\n" + repository))[:32]`. The secret is made once and kept in `<base>/packages.key`; tokens stay valid across restarts and a runner holds only its own repository's token.
+- **Fallback.** pip gets the real index as an extra index, so a hub that dies during a job still resolves. npm has no list, so the agent sets the npm address only when the hub answered at start.
+- **Not in this task.** The receiver's LAN listener, Put Block, protobuf and the `@actions/cache` contract test (R5.1, R5.50); the refresh timer and webhook; the scheduler reading warmth; the git rewrite at runner start (R5.12); the doctor lines; the CLI; container runners; the registry mirror inside the budget; apt and crates. Section 11 lists them.
+
 ## 8. Failure modes
 
 | Dependency | When it fails | Open or closed | Why |
@@ -394,6 +445,10 @@ flowchart TB
 | Registry blob digest | Blob refused | Closed | Never serve content that does not match its digest. |
 | Identity of a request | Request refused | Closed | Never leak one repository's cache to another. |
 | Wipe drain | Past the timeout the wipe keeps waiting and warns, nothing deleted | Closed | Never cut a running job (learning 1). |
+| Cache hub down at runner start | The runner gets no proxy values and uses the real registries; the hub is skipped for 30 s | Open | The cache only speeds jobs up. |
+| Package upstream down | A stored document is served as it is (stale); a file not stored is a 502 | Open for what is stored | Jobs keep running offline on what the pool already has. |
+| Package hash | The file is refused and not stored | Closed | Never serve or keep a package that does not match its published hash. |
+| Proxy token or address | Request refused (401, 403) | Closed | Never leak one repository's packages to another or to a public address. |
 
 ## 9. How it is proven
 
@@ -457,6 +512,13 @@ Rows for R5.36 to R5.40, R5.42, R5.43, R5.44, R5.45, R5.48, R5.49 and R5.51 to R
 | R5.48 | apps/controller/internal/runnercache/budget_test.go TestBudgetEvictsOldestAcrossRunnersAndSkipsBusy, TestBudgetStaysOverWhenOnlyBusyCachesRemain, TestBudgetUnderOrOffRemovesNothing; apps/controller/internal/agent/cachebudget_test.go TestBudgetPassWithoutBudgetOrOverDoesNothing, TestBudgetPassAlertsOnceAndKeepsBusyRunner |
 | R5.49 | apps/controller/internal/runnercache/budget_test.go TestSizeAlertPastThresholdForFileAndFolder; apps/controller/internal/agent/cachebudget_test.go TestBudgetPassAlertsOnceAndKeepsBusyRunner |
 | R5.50 | apps/controller/internal/lancache/lancache_test.go TestToolCacheHitAndMiss, TestDigestMismatchRefused, TestChangedBlobBecomesMiss, TestEvictionAtCap, TestUnknownMachineRefused, TestFallbackWhenDown, TestKeysNeverCrossRepositories, TestActionsCacheTwirpRoundTrip, TestListenRefusesWildcardAndPublic; planned: e2e/caches/actions-cache-lan-contract.test.ts (real @actions/cache against the receiver) |
+| R5.73 | Built (CRSP272): apps/controller/internal/mirror/budget_test.go TestBudgetEvictsLeastRecentlyUsedAcrossKinds, TestBudgetUnderCapRemovesNothing, TestBudgetKeepsARecentGitMirror, TestBudgetSettingDefaultAndRange, TestWipePackagesAndAllGitMirrors |
+| R5.74 | Built (CRSP272): apps/controller/internal/lancache/pkgproxy_test.go TestNpmDocumentIsRewrittenToTheHub, TestNpmTarballIsCheckedAgainstTheUpstreamIntegrity, TestNpmTarballWithAWrongHashIsRefusedAndNotStored, TestNpmScopedNames, TestStaleDocumentServedWhenUpstreamIsDown |
+| R5.75 | Built (CRSP272): apps/controller/internal/lancache/pkgproxy_test.go TestPypiHTMLIndexRewritesOnlyHashedLinks, TestPypiJSONIndexIsRewritten, TestPypiFileIsCheckedAgainstItsSha256 |
+| R5.76 | Built (CRSP272): apps/controller/internal/lancache/runnerenv_test.go TestRunnerEnvPointsNpmAndPipAtTheHubWithAFallback, TestRunnerEnvWithoutABundleIsNpmOnly, TestProbeSkipsADownHubFor30Seconds; apps/controller/internal/agent/pkgproxy_test.go TestPackageEnvOnlyWhenTheHubAnswers; apps/controller/internal/backend/linux/linux_test.go TestEnvCarriesThePackageProxy; apps/controller/internal/runners/service_test.go TestAddPassesThePackageProxyGrant |
+| R5.77 | Built (CRSP272): apps/controller/internal/mirror/hub_test.go TestHubCardsBudgetAndWarmth; apps/controller/internal/api/handlers_caches_hub_test.go TestCacheHubRoute, TestPutCacheSettingsValidatesAndAudits |
+| R5.78 | Built (CRSP272): apps/controller-console/src/screens/images/CacheHub.test.tsx (cards, budget, warmth table, switch saves, wipe asks first, viewer) |
+| R5.80 | Built (CRSP272): apps/controller/internal/lancache/pkgproxy_test.go TestProxyRefusesABadTokenAPublicAddressAndOff, TestProxyKeysNeverCrossRepositories, TestTokenSecretIsKeptAndPrivate |
 | R6.1 | apps/controller/internal/cache/bench_test.go (lookup p95 with 100,000 entries; 1 GiB download speed) |
 | R6.2 | apps/controller/internal/cache/evict_test.go (default 20 GiB, ceiling, refuse under 10% free) |
 | R6.3 | apps/controller/internal/cache/integrity_test.go (changed blob becomes a miss and is deleted) |
@@ -485,11 +547,12 @@ Rows for R5.36 to R5.40, R5.42, R5.43, R5.44, R5.45, R5.48, R5.49 and R5.51 to R
 | D2 | How to send `actions/cache` to the pool | A runner patched at install for the pinned runner version (section 7.2); owner to confirm (Q1) | 2026-11-14 (proposed) |
 | D3 | Tool cache language | A Go port of `ci_tool.py` inside the one binary, with its tests ported | 2026-11-14 (proposed) |
 | D4 | Wipe at drain timeout | Delete nothing and say so; never cut a job | 2026-11-14 (proposed) |
+| D5 | Where the caches and the package proxy live (CRSP342) | Option 1: one hub in the controller, one byte budget (default 60 GiB), native npm and PyPI proxies; apt and crates after a spike. Answers Q2 (the controller's machine) | 2026-11-27 (owner) |
 
 Open questions for the owner:
 
 - **Q1** — Is patching the runner at install acceptable for the cache redirect, or should the cache server wait until GitHub supports a supported override?
-- **Q2** — Where does the cache store live: on the controller's machine, or on a machine the owner picks as the cache machine?
+- **Q2** — Where does the cache store live: on the controller's machine, or on a machine the owner picks as the cache machine? Answered by D5: on the controller's machine.
 - **Q3** — Is tying a request to a job by the runner's network address plus the runtime token's claims enough, given GitHub's runtime token signature cannot be checked locally?
 - **Q4** — Default size cap: 20 GiB per pool, and should there also be a cap per repository (GitHub uses 10 GB)?
 - **Q5** — Should persistent runners also get the git URL rewrite, or only ephemeral ones?
@@ -515,7 +578,8 @@ Open questions for the owner:
 
 Built in milestone 2 (CRSP53): R5.43 and R5.44 as library code and mounts; CRSP68: the pool start takes the lane when it makes the pool container. Built in milestone 1: R5.36 to R5.40, R5.45, R5.48 and R5.49. Not built there: the folders are made by the runner's first job, not by the agent at install; the alert of the disk guard is the job log line and the doctor finding (no notification yet); the quotas are the same for every runner (a per-machine value waits for the machine settings, whose `cache_cap_bytes` is stored but not yet read by the quota); the VM boot of `vm_check`. Later milestones are built in part, see the status line at the top. In addition:
 
-- **Package proxy** (npm, PyPI, crates, apt): no milestone. The seam is the registry mirror's upstream list and the agent's engine settings (R5.25); a package proxy would add per-ecosystem settings (`npm_config_registry`, `PIP_INDEX_URL`, Cargo `source.replacement`, apt proxy) the same way.
+- **Package proxy, the rest** (CRSP272 follow-ups): apt and crates after their spike (R5.79, Cargo `source.replacement`, apt proxy file); container runners (the CA file must be mounted into the pool container); org-wide runners (no single repository to scope by); the doctor line per cache that turned itself off; `crsp caches settings`; the registry mirror's folder inside the one budget; hit and served numbers kept across a controller restart (they are in memory today).
+- **Hub, row V** (CRSP272 follow-ups, unchanged): the receiver's LAN listener, Put Block and protobuf bodies and the real `@actions/cache` contract test; the refresh timer and push webhook; the scheduler reading warmth; the git rewrite at runner start (R5.12).
 - **Cache sharing between pools**: not planned. The seam is the pool column in `cache_entries`.
 - **Remote cache machines outside the local network**: waits for cloud machines (decision 0004).
 
@@ -527,6 +591,7 @@ Built (milestone 1):
 - apps/controller/internal/runnercache/ also holds the Rust cap (`rustcap.go`), the pool-wide budget (`budget.go`) and the size alert (`alert.go`); apps/controller/internal/agent/cachebudget.go runs them on a timer
 - apps/controller/internal/vmcheck/ (port of `vm_check.py` logic and `vm-images.json` data); `cache.go` (shared cache, base disk, leases, prune), `memory.go` (memory warning), `lock_unix.go` and `lock_other.go` (the lock)
 - apps/controller/internal/mirror/ (CRSP272: git mirror, warmth, wipe, settings, rows), apps/controller/internal/lancache/stats.go (receiver counters and scoped wipe), apps/controller/internal/caches/mirrors.go (rows and wipe in the caches list), apps/controller/cmd/crsp/mirror_wiring.go
+- apps/controller/internal/lancache/pkgproxy.go, npm.go, pypi.go, runnerenv.go (CRSP272: the npm and PyPI proxy, its token, the runner environment and the hub probe), apps/controller/internal/mirror/budget.go and hub.go (the one budget and the hub numbers), apps/controller/internal/api/handlers_caches_hub.go, apps/controller/internal/agent/pkgproxy.go, apps/controller-console/src/screens/images/CacheHub.tsx
 - apps/controller/internal/caches/toolcache/ (CRSP255: the shared per-machine tool cache: store with atomic install, cap and eviction, platforms behind interfaces, the `Checker` for the doctor) and apps/controller/internal/backend/container/toolcache.go (the mount)
 - apps/controller/internal/jobcmd/vmprune.go (`crsp vm prune`, the cache trim and the warning print)
 - apps/controller/internal/hooks/gate.go `diskHold` and apps/controller/internal/hooks/jobdone.go `sweepCaches` call them; apps/controller/internal/config/config.go has the keys; apps/controller/internal/backend/{windows,linux,macos} write the `.env`.
@@ -555,3 +620,4 @@ Proof: UX-4, UX-10, UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
 Proof: UX-57 `e2e/tests/web-console/ux-keyboard.spec.ts`
+Proof: CORE-5 `e2e/tests/web-console/ux-routes.spec.ts`

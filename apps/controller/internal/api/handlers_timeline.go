@@ -42,9 +42,10 @@ func (s *server) GetTimeline(ctx context.Context, req gen.GetTimelineRequestObje
 		err   error
 	)
 	g, gctx := errgroup.WithContext(ctx)
-	g.SetLimit(3)
+	g.SetLimit(4)
 	g.Go(func() (e error) { views, e = s.opts.Machines.List(gctx); return e })
-	g.Go(func() (e error) { in.Finished, e = s.finishedJobs(gctx, now); return e })
+	q := in // finishedJobs reads a copy: the other reads write into in at the same time
+	g.Go(func() (e error) { in.Finished, in.OlderFinished, e = s.finishedJobs(gctx, q); return e })
 	g.Go(func() (e error) { in.Open, e = s.opts.JobsData.OpenJobs(gctx); return e })
 	if err = g.Wait(); err != nil {
 		return fail(err)
@@ -57,21 +58,54 @@ func (s *server) GetTimeline(ctx context.Context, req gen.GetTimelineRequestObje
 		in.Machines = append(in.Machines, timelineMachine{ID: v.Machine.ID, Name: name, Slots: v.Settings.JobSlots})
 	}
 	in.Flags = s.flagsFor(ctx, in.Open)
-	if in.Forecasts, err = newForecaster(s.opts.JobsData, now).forJobs(ctx, in.Open); err != nil {
+	fc := newForecaster(s.opts.JobsData, now)
+	fc.open, fc.openRead = in.Open, true
+	if err = fc.prepare(ctx, in.Open); err != nil {
+		return fail(err)
+	}
+	if in.Forecasts, err = fc.forJobs(ctx, in.Open); err != nil {
 		return fail(err)
 	}
 	return gen.GetTimeline200JSONResponse(buildTimeline(in)), nil
 }
 
-// finishedJobs reads the done jobs that may have ended in the last 24 hours, newest first by id. The store filters on
-// created_at, so jobs created up to 24 hours before the window are read too, and the builder keeps those that ended inside it.
-func (s *server) finishedJobs(ctx context.Context, now time.Time) ([]jobsdata.Job, error) {
+// finishedJobs reads the done jobs the view needs. A reader that can read a time window (jobsdata.TimelineReader) gives
+// only the jobs that ended inside the window being shown, and says whether older ones exist within 24 hours; the
+// window is hours long, ends at the "before" mark or now, and never reaches past the 24-hour horizon. Other readers
+// are read the long way: every done job of 48 hours, a page at a time.
+func (s *server) finishedJobs(ctx context.Context, in timelineInput) (jobs []jobsdata.Job, older bool, err error) {
+	if tr, ok := s.opts.JobsData.(jobsdata.TimelineReader); ok {
+		floor := in.Now.Add(-timelineHorizon)
+		upper := in.Now
+		if in.Before != nil && in.Before.Before(upper) {
+			upper = in.Before.UTC()
+		}
+		hours := min(max(in.Hours, 1), 24)
+		lower := upper.Add(-time.Duration(hours) * time.Hour)
+		if lower.Before(floor) {
+			lower = floor
+		}
+		g, gctx := errgroup.WithContext(ctx)
+		g.Go(func() (e error) {
+			// A little past the window's end, so a job that ended at the mark itself is not cut.
+			jobs, e = tr.FinishedBetween(gctx, lower, upper.Add(time.Second), timelinePage*timelineCalls)
+			return e
+		})
+		g.Go(func() (e error) {
+			if !lower.After(floor) {
+				return nil
+			}
+			older, e = tr.AnyFinishedBetween(gctx, floor, lower, in.MachineID)
+			return e
+		})
+		return jobs, older, g.Wait()
+	}
 	var out []jobsdata.Job
-	f := jobsdata.JobFilter{State: jobsdata.Done, From: now.Add(-2 * timelineHorizon), Limit: timelinePage}
+	f := jobsdata.JobFilter{State: jobsdata.Done, From: in.Now.Add(-2 * timelineHorizon), Limit: timelinePage}
 	for range timelineCalls {
 		rows, _, err := s.opts.JobsData.ListJobs(ctx, f)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		page := rows[:min(len(rows), timelinePage)]
 		out = append(out, page...)
@@ -80,5 +114,5 @@ func (s *server) finishedJobs(ctx context.Context, now time.Time) ([]jobsdata.Jo
 		}
 		f.After = page[len(page)-1].ID
 	}
-	return out, nil
+	return out, false, nil
 }

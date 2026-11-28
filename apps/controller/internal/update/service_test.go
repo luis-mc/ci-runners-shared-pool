@@ -9,6 +9,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -236,5 +237,40 @@ func TestServiceTimerStillInstallsAutomaticAfterLook(t *testing.T) {
 	f.advance(11 * time.Minute)
 	if len(f.eng.applied) != 1 || f.eng.applied[0] != "auto-update" {
 		t.Fatalf("applied %v", f.eng.applied)
+	}
+}
+
+func TestServiceCarriesTheSignedNote(t *testing.T) {
+	f := newSvc(t, true, true)
+	f.eng.manifest["notes"] = "Updates show live progress."
+	f.advance(11 * time.Minute)
+	st := f.svc.Status(context.Background())
+	if st.Notes != "Updates show live progress." {
+		t.Fatalf("notes %q", st.Notes)
+	}
+	b, err := os.ReadFile(filepath.Join(f.dir, whatsNewFile))
+	if err != nil || !strings.Contains(string(b), "live progress") {
+		t.Fatalf("whats-new: %v %s", err, b)
+	}
+	// The running version is still 1.0.0, so the saved note (for 1.1.0) is not shown yet.
+	if st.Updated != nil {
+		t.Fatalf("updated before the update: %+v", st.Updated)
+	}
+	f.svc.o.Current = "1.1.0"
+	if u := f.svc.Notes().Updated; u == nil || u.Version != "1.1.0" {
+		t.Fatalf("updated after the update: %+v", u)
+	}
+}
+
+func TestServiceWithoutNoteShowsNothing(t *testing.T) {
+	f := newSvc(t, true, true)
+	_ = os.WriteFile(filepath.Join(f.dir, whatsNewFile), []byte(`{"version":"0.9.0","notes":"old"}`), 0o600)
+	f.advance(11 * time.Minute)
+	st := f.svc.Status(context.Background())
+	if st.Notes != "" || st.Updated != nil {
+		t.Fatalf("notes %q updated %+v", st.Notes, st.Updated)
+	}
+	if _, err := os.Stat(filepath.Join(f.dir, whatsNewFile)); !os.IsNotExist(err) {
+		t.Fatalf("the old note stays: %v", err)
 	}
 }

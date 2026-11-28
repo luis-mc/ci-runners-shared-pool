@@ -32,6 +32,7 @@ import {
   type Repository,
 } from '../repositories/plans';
 import { PullingStep, ReadyMadeLine } from '../registry/PullingStep';
+import { planNotes, planPhases, useLiveLog } from '../liveLog';
 import { ReadyDoor, needsEngine } from '../dependencies/ReadyDoor';
 import { chooseKind, KIND_HELP, KIND_NAMES, sentence, type Kind } from './kinds';
 
@@ -123,8 +124,26 @@ export function AddRunnersWizard() {
   const [stopError, setStopError] = useState<string | undefined>(undefined);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  // The live run (UX-88): the terminal, the download line and the weighted bar read what the plan's steps do.
+  const seenSteps = useRef(new Map<string, string>());
+  const live = useLiveLog(planPhases(plan));
+  const record = (p: Plan, where?: Schemas['Machine']) => {
+    const side = where
+      ? {
+          name: where.name,
+          role: where.is_controller ? ('controller' as const) : ('agent' as const),
+          os: where.os,
+        }
+      : undefined;
+    for (const n of planNotes(p, seenSteps.current, side)) live.say(n, planPhases(p));
+  };
+
   const settle = (p: Plan, afterReload: boolean) => {
     setPlan(p);
+    record(
+      p,
+      machines.find((m) => m.id === machineId),
+    );
     setStopping(false);
     setStep(4);
     if (p.state === 'done') setPhase(afterReload ? 'done-after-reload' : 'done');
@@ -272,6 +291,7 @@ export function AddRunnersWizard() {
       next.set('plan', p.id);
       setParams(next, { replace: true });
       setPlan(p);
+      record(p, picked);
       while (p.state === 'applying' || p.state === 'planned') {
         if (!(await sleep(TIMING.planPollMs))) {
           return;
@@ -285,6 +305,7 @@ export function AddRunnersWizard() {
           return;
         }
         setPlan(p);
+        record(p, picked);
       }
       settle(p, false);
     } catch (err) {
@@ -324,6 +345,8 @@ export function AddRunnersWizard() {
   };
 
   const startAgain = () => {
+    seenSteps.current.clear();
+    live.clear();
     setParams(new URLSearchParams(), { replace: true });
     setPlan(undefined);
     setProblem(undefined);
@@ -552,6 +575,7 @@ export function AddRunnersWizard() {
       firstStep={0}
       phase={phase}
       reading="Reading machines"
+      live={live.events}
       progress={
         phase === 'running'
           ? {

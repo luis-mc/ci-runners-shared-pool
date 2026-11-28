@@ -23,7 +23,7 @@ export default function UpdateBannerView(p: {
       state={p.state}
       version={p.version}
       step={p.step}
-      percent={d.percent}
+      to={p.state === 'running' ? '/settings/updates' : undefined}
       reason={
         p.state === 'failed'
           ? updateStateLine({

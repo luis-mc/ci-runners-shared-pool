@@ -23,7 +23,7 @@ import {
   Stack,
   Status,
   Table,
-  THEMES,
+  THEME_CHOICES,
   Tabs,
   TextField,
   TimePicker,
@@ -31,10 +31,10 @@ import {
   applyPalette,
   applyGraphs,
   savedGraphs,
-  lastColourTheme,
-  TERMINAL_THEME_ID,
+  applyThemeChoice,
+  isTerminalChoice,
+  savedThemeChoice,
   savedPalette,
-  TERMINAL_PALETTE_CHOICES,
   formatDateTime,
   formatSize,
   rememberThemeMode,
@@ -52,6 +52,7 @@ import { SECTIONS, settingsPath } from './sections';
 import { AuditLogSettings, ConfigExportSettings } from './AuditLog';
 import { ConfigAsCodeSettings } from './ConfigAsCode';
 import { InsightsUpdateSettings } from './InsightsUpdate';
+import { OverflowSettings } from './Overflow';
 import { BudgetsSettings } from './Budgets';
 import { SavingsRatesSettings } from '../savings/SavingsRates';
 import { NotificationsSettings } from './Notifications';
@@ -65,12 +66,13 @@ import { WebhooksSettings } from './Webhooks';
 
 type User = Schemas['User'];
 
-// Six tabs (owner decision D8; Updates after Console, LOOK43). Each old section is a pane inside its tab, in this order; `SECTIONS` says where
+// Seven tabs (owner decision D8; Updates after Networking, LOOK43; Console split into Themes and Networking, CRSP365). Each old section is a pane inside its tab, in this order; `SECTIONS` says where
 // an old address now lives, so a link or bookmark to /settings/<old> lands on the right tab and section.
 const TABS = [
   { id: 'access', label: 'Access' },
   { id: 'repositories', label: 'Repositories' },
-  { id: 'console', label: 'Console' },
+  { id: 'themes', label: 'Themes' },
+  { id: 'networking', label: 'Networking' },
   { id: 'updates', label: 'Updates' },
   { id: 'data', label: 'Data' },
   { id: 'audit', label: 'Audit log' },
@@ -93,7 +95,9 @@ export function SettingsLayout() {
   const segment = pathname.split('/')[2] ?? '';
   const current = TABS.some((t) => t.id === segment)
     ? segment
-    : (SECTIONS[segment]?.tab ?? 'access');
+    : segment === 'console'
+      ? 'themes'
+      : (SECTIONS[segment]?.tab ?? 'access');
   // Scroll to the section named by the address, once its tab is on screen.
   useEffect(() => {
     if (!hash) return;
@@ -141,19 +145,34 @@ export function RepositoriesTab() {
       <At id="savings-rates">
         <SavingsRatesSettings />
       </At>
+      <At id="overflow">
+        <OverflowSettings />
+      </At>
     </TabForm>
   );
 }
 
+/** The old Console tab address: Themes, or Networking when the anchor names a pane that moved there (CRSP365). */
 export function ConsoleTab() {
   const { hash } = useLocation();
-  // The Updates pane used to be the last section of this tab: its old anchor goes to its own tab.
   if (hash === '#updates') return <Navigate to="/settings/updates" replace />;
+  const moved = ['#notifications', '#network', '#metrics'].includes(hash);
+  return <Navigate to={`/settings/${moved ? 'networking' : 'themes'}${hash}`} replace />;
+}
+
+export function ThemesTab() {
   return (
     <TabForm>
       <At id="appearance">
         <AppearanceSettings />
       </At>
+    </TabForm>
+  );
+}
+
+export function NetworkingTab() {
+  return (
+    <TabForm>
       <At id="notifications">
         <NotificationsSettings />
       </At>
@@ -468,10 +487,8 @@ export function AppearanceSettings() {
     () => unwrap(client.GET('/api/v1/me/preferences')),
     [],
   );
-  const [themeName, setThemeName] = useState(savedThemeName);
-  const [palette, setPalette] = useState(savedPalette);
+  const [themeChoice, setThemeChoice] = useState(savedThemeChoice);
   const [graphs, setGraphs] = useState(savedGraphs);
-  const terminal = themeName === TERMINAL_THEME_ID;
   const save = useCommand(async (theme: Schemas['Theme']) => {
     const p = await unwrap(client.PUT('/api/v1/me/preferences', { body: { theme } }));
     applyTheme(p.theme);
@@ -483,59 +500,33 @@ export function AppearanceSettings() {
         {(p) => (
           <Stack>
             <ChoiceField
-              label="Look"
-              help="Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once."
-              value={
-                terminal
-                  ? graphs === 'dotted'
-                    ? 'terminal-dotted'
-                    : 'terminal'
-                  : 'colours'
-              }
+              label="Theme"
+              help="The colours of the console. The choice is saved at once."
+              value={themeChoice}
               onChange={(v) => {
-                const isTerminal = v !== 'colours';
-                const next = isTerminal ? TERMINAL_THEME_ID : lastColourTheme();
-                const style = v === 'terminal-dotted' ? 'dotted' : 'blocks';
-                setThemeName(next);
-                applyThemeName(next);
-                setGraphs(style);
-                applyGraphs(style);
+                setThemeChoice(v);
+                applyThemeChoice(v);
               }}
-              choices={[
-                { value: 'colours', label: 'Colour themes' },
-                { value: 'terminal', label: 'Cool Terminal' },
-                { value: 'terminal-dotted', label: 'Cool Terminal (dotted graphs)' },
-              ]}
+              choices={THEME_CHOICES.map((t) => ({
+                value: t.id,
+                label: t.name,
+                preview: t.id,
+              }))}
             />
-            {terminal ? null : (
+            {isTerminalChoice(themeChoice) ? (
               <ChoiceField
-                label="Theme"
-                help="The colours of the console. The choice is saved at once."
-                value={themeName}
+                label="Graphs"
+                help="How the Terminal themes draw charts; bars keep their blocks. The choice is saved at once."
+                value={graphs}
                 onChange={(v) => {
-                  setThemeName(v);
-                  applyThemeName(v);
+                  const style = v === 'dotted' ? 'dotted' : 'blocks';
+                  setGraphs(style);
+                  applyGraphs(style);
                 }}
-                choices={THEMES.map((t) => ({
-                  value: t.id,
-                  label: t.name,
-                  preview: t.id,
-                }))}
-              />
-            )}
-            {terminal ? (
-              <ChoiceField
-                label="Palette"
-                help="The colours of the Cool Terminal themes. The choice is saved at once."
-                value={palette}
-                onChange={(v) => {
-                  setPalette(v);
-                  applyPalette(v);
-                }}
-                choices={TERMINAL_PALETTE_CHOICES.map((t) => ({
-                  value: t.id,
-                  label: t.name,
-                }))}
+                choices={[
+                  { value: 'blocks', label: 'Blocks' },
+                  { value: 'dotted', label: 'Dots' },
+                ]}
               />
             ) : null}
             <ChoiceField

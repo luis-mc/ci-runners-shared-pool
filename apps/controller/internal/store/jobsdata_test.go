@@ -461,3 +461,27 @@ func TestIntegrationPruneBoundaries(t *testing.T) {
 		t.Errorf("summaries changed on second prune")
 	}
 }
+
+// CRSP363: the head repository is kept once a source names it, a later update without it leaves it alone, and
+// a job whose source never named it reads as unknown.
+func TestIntegrationJobHeadRepositoryKeptAndUnknownByDefault(t *testing.T) {
+	s := jobsDB(t)
+	ctx := context.Background()
+	named := mkJob(1, "test", jobsdata.Queued, "", at(0), 0, 0)
+	named.HeadRepository = "alice/app"
+	must(t, s.UpsertJob(ctx, named))
+	unnamed := mkJob(2, "test", jobsdata.Queued, "", at(0), 0, 0)
+	must(t, s.UpsertJob(ctx, unnamed))
+	later := mkJob(1, "test", jobsdata.Running, "", at(0), 5, 0)
+	must(t, s.UpsertJob(ctx, later)) // carries no head repository
+	d, ok, err := s.GetJob(ctx, 1)
+	must(t, err)
+	if !ok || d.HeadRepository != "alice/app" {
+		t.Fatalf("head repository = %q, ok %v", d.HeadRepository, ok)
+	}
+	d, ok, err = s.GetJob(ctx, 2)
+	must(t, err)
+	if !ok || d.HeadRepository != "" {
+		t.Fatalf("unknown head repository = %q, ok %v", d.HeadRepository, ok)
+	}
+}

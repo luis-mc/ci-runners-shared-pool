@@ -1,4 +1,4 @@
-// Settings in five tabs (owner decision D8): the tab row, the panes in order, old addresses, 24-hour backup time,
+// Settings in seven tabs (owner decision D8): the tab row, the panes in order, old addresses, 24-hour backup time,
 // the update state words, the mode default.
 import { cleanup, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -14,13 +14,14 @@ const titles = (el: HTMLElement) =>
     .map((h) => h.textContent ?? '');
 
 describe('Settings tabs (D8)', () => {
-  it('has the six tabs in order', async () => {
+  it('has the seven tabs in order', async () => {
     renderApp(signedIn(), '/settings');
     const tabs = await screen.findAllByRole('tab');
     expect(tabs.map((t) => t.textContent)).toEqual([
       'Access',
       'Repositories',
-      'Console',
+      'Themes',
+      'Networking',
       'Updates',
       'Data',
       'Audit log',
@@ -33,7 +34,8 @@ describe('Settings tabs (D8)', () => {
   it.each([
     ['access', ['users', 'github-app', 'webhooks']],
     ['repositories', ['public-repositories', 'budgets']],
-    ['console', ['appearance', 'notifications', 'network']],
+    ['themes', ['appearance']],
+    ['networking', ['notifications', 'network', 'metrics']],
     ['updates', ['updates']],
     ['data', ['retention', 'backups', 'config-export']],
   ])('the %s tab holds its sections in order', async (tab, ids) => {
@@ -52,8 +54,10 @@ describe('Settings tabs (D8)', () => {
     ['users', 'access', 'users'],
     ['app', 'access', 'github-app'],
     ['budgets', 'repositories', 'budgets'],
-    ['appearance', 'console', 'appearance'],
-    ['notifications', 'console', 'notifications'],
+    ['appearance', 'themes', 'appearance'],
+    ['notifications', 'networking', 'notifications'],
+    ['network', 'networking', 'network'],
+    ['metrics', 'networking', 'metrics'],
     ['retention', 'data', 'retention'],
     ['backups', 'data', 'backups'],
     ['export', 'data', 'config-export'],
@@ -74,6 +78,19 @@ describe('Settings tabs (D8)', () => {
     );
     expect(OLD_SETTINGS).not.toContain('updates');
     expect(settingsPath('updates')).toBe('/settings/updates');
+  });
+
+  it.each([
+    ['/settings/console', 'Themes', 'appearance'],
+    ['/settings/console#notifications', 'Networking', 'notifications'],
+    ['/settings/console#network', 'Networking', 'network'],
+    ['/settings/console#metrics', 'Networking', 'metrics'],
+  ])('the old %s lands on the %s tab (CRSP365)', async (url, tab, id) => {
+    renderApp(signedIn(), url);
+    await waitFor(() =>
+      expect(screen.getByRole('tab', { selected: true }).textContent).toBe(tab),
+    );
+    await waitFor(() => expect(section(id)).toBeTruthy());
   });
 
   it('shows the backup time on a 24-hour clock', async () => {

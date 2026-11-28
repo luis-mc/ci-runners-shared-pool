@@ -22,6 +22,9 @@ type runView struct {
 
 // buildRun forecasts the jobs of a run, places the queued ones, draws the needs graph and finds the critical path.
 func (s *server) buildRun(ctx context.Context, fc *forecaster, d jobsdata.RunDetail) (runView, error) {
+	if err := fc.prepare(ctx, d.Jobs); err != nil {
+		return runView{}, err
+	}
 	fcs, err := fc.forJobs(ctx, d.Jobs)
 	if err != nil {
 		return runView{}, err
@@ -135,29 +138,65 @@ func (s *server) ListRuns(ctx context.Context, req gen.ListRunsRequestObject) (g
 		rows = rows[:limit]
 		page.NextCursor = ptr("r" + strconv.FormatInt(rows[len(rows)-1].SortKey, 10))
 	}
-	fc := newForecaster(s.opts.JobsData, s.now())
+	etas, err := s.openRunEtas(ctx, newForecaster(s.opts.JobsData, s.now()), rows)
+	if err != nil {
+		s.opts.Logger.Error("list runs", "err", err)
+		return fail(http.StatusInternalServerError, CodeInternal, "internal error")
+	}
 	for _, r := range rows {
 		item := toRunSummary(r, func() int64 { return s.now().Unix() })
-		if r.State != jobsdata.Done {
-			eta, err := s.openRunEta(ctx, fc, r)
-			if err != nil {
-				s.opts.Logger.Error("list runs", "err", err)
-				return fail(http.StatusInternalServerError, CodeInternal, "internal error")
-			}
-			item.Eta = eta
-		}
+		item.Eta = etas[r.SortKey]
 		page.Items = append(page.Items, item)
 	}
 	return gen.ListRuns200JSONResponse(page), nil
 }
 
-func (s *server) openRunEta(ctx context.Context, fc *forecaster, r jobsdata.RunRow) (*gen.Eta, error) {
-	d, ok, err := s.opts.JobsData.GetRun(ctx, r.RunID, r.Attempt)
-	if err != nil || !ok {
+// openRunEtas gives the ETA of each open run of the page, by sort key. The jobs and graphs of all the open runs are
+// read together when the reader can (RunsWithJobs), and the samples of all their jobs and of the open jobs in a few
+// batch reads, so the page costs a handful of queries however many runs are open.
+func (s *server) openRunEtas(ctx context.Context, fc *forecaster, rows []jobsdata.RunRow) (map[int64]*gen.Eta, error) {
+	var open []jobsdata.RunRow
+	for _, r := range rows {
+		if r.State != jobsdata.Done {
+			open = append(open, r)
+		}
+	}
+	out := map[int64]*gen.Eta{}
+	if len(open) == 0 {
+		return out, nil
+	}
+	var details []jobsdata.RunDetail
+	if br, ok := s.opts.JobsData.(jobsdata.BatchReader); ok {
+		var err error
+		if details, err = br.RunsWithJobs(ctx, open); err != nil {
+			return nil, err
+		}
+	} else {
+		for _, r := range open {
+			d, ok, err := s.opts.JobsData.GetRun(ctx, r.RunID, r.Attempt)
+			if err != nil {
+				return nil, err
+			}
+			if ok {
+				details = append(details, d)
+			}
+		}
+	}
+	lists := make([][]jobsdata.Job, len(details))
+	for i, d := range details {
+		lists[i] = d.Jobs
+	}
+	if err := fc.prepare(ctx, lists...); err != nil {
 		return nil, err
 	}
-	v, err := s.buildRun(ctx, fc, d)
-	return v.Eta, err
+	for _, d := range details {
+		v, err := s.buildRun(ctx, fc, d)
+		if err != nil {
+			return nil, err
+		}
+		out[d.SortKey] = v.Eta
+	}
+	return out, nil
 }
 
 // GetRun implements GET /api/v1/runs/{runId}. Without attempt the newest attempt is read (attempt 0 to the store).
