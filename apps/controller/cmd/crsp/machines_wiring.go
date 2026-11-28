@@ -27,6 +27,7 @@ import (
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/gen/agent/v1"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/logs"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/mirror"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/packages"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/secrets"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/settings"
@@ -51,6 +52,8 @@ const compactEvery = 5 * time.Minute
 type machinesRuntime struct {
 	Service *machines.Service
 	Caches  *caches.Service
+	// Hub is the one cache hub of the pool (caches R5.73 to R5.80).
+	Hub *mirror.Service
 	// Link carries runner commands to remote agents and holds their machine reports.
 	Link *agentlink.Link
 	// Deps runs the dependency setup jobs (CRSP248).
@@ -168,7 +171,8 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 		OnIdle: idle.call, PoolDefaults: pool, SSH: machines.NewSSHRunner(), MinProtocol: minAgentProtocol,
 		Packages: pkgSource, ConsoleURL: consoleURL, WindowsPackages: winPackages, AgentInstallers: agentSource,
 	})
-	cs := caches.New(caches.Options{Machines: svc, Audit: rec, Mirrors: newMirrorService(cfg, db, rec, svc, logger), HolderID: cachesHolder})
+	hub := newMirrorService(cfg, db, rec, svc, logger)
+	cs := caches.New(caches.Options{Machines: svc, Audit: rec, Mirrors: hub, HolderID: cachesHolder})
 	lk := agentlink.New(svc)
 	pinned, err := depsetup.Load()
 	if err != nil {
@@ -265,7 +269,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 			}
 		}()
 	}
-	return &machinesRuntime{Service: svc, Caches: cs, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, AgentInstallers: agentInst, DepStore: depStore, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
+	return &machinesRuntime{Service: svc, Caches: cs, Hub: hub, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, AgentInstallers: agentInst, DepStore: depStore, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
 		cancel()
 		_ = link.Close()
 		<-done

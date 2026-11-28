@@ -69,6 +69,11 @@ const classExpr = `CASE WHEN r.reason = 'timeout' THEN 'timed_out' WHEN r.reason
  WHEN j.result = 'success' THEN 'succeeded' WHEN j.result = 'failure' THEN 'failed' WHEN j.result = 'cancelled' THEN 'cancelled'
  WHEN j.result = 'timed_out' THEN 'timed_out' ELSE 'other' END`
 
+// statsDoneWindow is the done-jobs-in-a-window condition of the per-machine and per-runner stats. The unary plus keeps
+// the planner off jobs_state_completed (migration 00050): without it the (state, completed_at) index looks as good as
+// (machine_id, completed_at) and the stats would walk every done job of the window of all machines (audit R3-1).
+const statsDoneWindow = "+j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?"
+
 // failureClasses are the classes the last failure and the top failing jobs count.
 const failureClasses = `('failed', 'timed_out', 'over_memory', 'stopped')`
 
@@ -99,7 +104,7 @@ func (s *Store) JobStats(ctx context.Context, sc JobStatsScope, from, to time.Ti
 
 	top, err := s.db.QueryContext(ctx, `SELECT j.repository, j.name, COUNT(*) AS n, MAX(j.completed_at)
  FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
- WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ? AND `+classExpr+` IN `+failureClasses+`
+ WHERE `+where+` AND `+statsDoneWindow+` AND `+classExpr+` IN `+failureClasses+`
  GROUP BY j.repository, j.name ORDER BY n DESC, MAX(j.completed_at) DESC, j.repository, j.name LIMIT 5`, arg, f, t)
 	if err != nil {
 		return out, fmt.Errorf("job stats top failing: %w", err)
@@ -147,7 +152,7 @@ func (s *Store) statsCounts(ctx context.Context, where, arg, f, t string, out *J
   CASE WHEN j.started_at != '' AND COALESCE(NULLIF(j.queued_at, ''), NULLIF(j.created_at, '')) IS NOT NULL
    THEN (CAST(strftime('%s', j.started_at) AS REAL) - CAST(strftime('%s', COALESCE(NULLIF(j.queued_at, ''), j.created_at)) AS REAL)) END AS wait_s
  FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
- WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?) GROUP BY class`, arg, f, t)
+ WHERE `+where+` AND `+statsDoneWindow+`) GROUP BY class`, arg, f, t)
 	if err != nil {
 		return fmt.Errorf("job stats counts: %w", err)
 	}
@@ -195,7 +200,7 @@ func (s *Store) statsLastFailure(ctx context.Context, where, arg, f, t string) (
 	fail, err := s.db.QueryContext(ctx, `SELECT j.id, j.repository, j.name, j.run_id, `+classExpr+` AS class, j.completed_at, j.html_url, COALESCE(u.html_url, '')
  FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
  LEFT JOIN runs u ON u.repository_id = j.repository_id AND u.run_id = j.run_id AND u.run_attempt = j.run_attempt
- WHERE `+where+` AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ? AND `+classExpr+` IN `+failureClasses+`
+ WHERE `+where+` AND `+statsDoneWindow+` AND `+classExpr+` IN `+failureClasses+`
  ORDER BY j.completed_at DESC LIMIT 1`, arg, f, t)
 	if err != nil {
 		return nil, fmt.Errorf("job stats last failure: %w", err)

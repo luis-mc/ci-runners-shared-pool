@@ -403,8 +403,6 @@ type link struct {
 	facts  *agentv1.Facts
 	factMu sync.Mutex
 	bg     sync.WaitGroup // the goroutines of one session
-	// pin is the controller CA fingerprint of this session (the dependency files are fetched with it).
-	pin string
 
 	drainMu sync.Mutex
 	drainID string // command id of the drain in progress; empty when none
@@ -423,6 +421,11 @@ type link struct {
 	kick  chan struct{}
 	capMu sync.Mutex
 	cap   capState
+
+	// pin is the controller CA fingerprint of this session (the dependency files and the
+	// package proxy use it); hub reaches the package proxy at start (caches R5.76). A nil hub uses the real one.
+	pin string
+	hub hubAccess
 }
 
 func (l *link) send(m *agentv1.SessionRequest) error {

@@ -1,5 +1,6 @@
 // The shell of every signed-in screen (web-console 4.0, R5.3): header, top menu, banner slot, activity strip,
 // command palette, shortcut list and the session-ended dialog.
+import { useNarrow } from './useNarrow';
 import {
   ActivityStrip,
   BannerSlot,
@@ -28,7 +29,7 @@ import { unwrap, useClient, type Schemas } from '../api/api';
 import { signInUrl, useSession } from '../auth/session';
 import { useMachines, useRefreshTick } from '../api/machines';
 import { useUpdateBanner } from './UpdateBannerHost';
-import { useLiveState, useVersion } from '../live/LiveProvider';
+import { useLiveSelect, useLiveState, useVersion } from '../live/LiveProvider';
 import { wipingLabel } from '../screens/images/labels';
 import { allRepositories } from '../screens/repositories/plans';
 import { RunnerProblemBanner, runnerProblems } from './RunnerProblems';
@@ -49,23 +50,6 @@ export function withFirstRepository(
 ): Schemas['SetupState'] {
   if (!anyPoolOn || setup.steps.first_repository === 'done') return setup;
   return { ...setup, steps: { ...setup.steps, first_repository: 'done' } };
-}
-
-/** True on a phone-width screen (below 601 px, the design system's phone break). No matchMedia: wide. */
-export function useNarrow(): boolean {
-  const query = '(max-width: 600px)';
-  const [narrow, setNarrow] = useState(
-    () => typeof window.matchMedia === 'function' && window.matchMedia(query).matches,
-  );
-  useEffect(() => {
-    if (typeof window.matchMedia !== 'function') return;
-    const m = window.matchMedia(query);
-    const on = () => setNarrow(m.matches);
-    on();
-    m.addEventListener('change', on);
-    return () => m.removeEventListener('change', on);
-  }, []);
-  return narrow;
 }
 
 /** The areas: a row on a wide screen; on a phone one Menu button that opens the list (UX-15, UX-16). */
@@ -126,7 +110,11 @@ function PoolStatus() {
 }
 
 function LiveState() {
-  const live = useLiveState();
+  // Only a paused stream shows its age, so a live one does not render again for every event (CRSP290).
+  const live = useLiveSelect((s) => ({
+    status: s.status,
+    lastEventAt: s.status === 'paused' ? s.lastEventAt : undefined,
+  }));
   const now = useNow();
   if (live.status === 'live') return <Status kind="ok" word="live updates" />;
   if (live.status === 'connecting') return <Status kind="waiting" word="connecting" />;
@@ -249,7 +237,7 @@ function Palette({ onClose }: { onClose: () => void }) {
 
 export function AppShell({ children }: { children?: ReactNode }) {
   const session = useSession();
-  const live = useLiveState();
+  const live = useLiveSelect((s) => ({ progress: s.progress, status: s.status }));
   const navigate = useNavigate();
   const location = useLocation();
   const [palette, setPalette] = useState(false);

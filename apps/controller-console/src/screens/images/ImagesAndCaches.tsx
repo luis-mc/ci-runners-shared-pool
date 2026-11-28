@@ -29,14 +29,16 @@ import {
 } from '@crsp/ui';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ApiError, unwrap, useClient, type Schemas } from '../../api/api';
-import { useCommand, useLoad, useQuestion } from '../../api/hooks';
+import { unwrap, useClient, type Schemas } from '../../api/api';
+import { useLoad } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { useLiveStore, useVersion } from '../../live/LiveProvider';
 import { TIMING } from '../../timing';
 import { Ask, Load } from '../common';
 import { DownloadsTab } from '../dependencies/Downloads';
 import { RegistryTab } from '../registry/RegistryTab';
+import { useAskFirst } from './askFirst';
+import { CacheHub } from './CacheHub';
 import { cacheName, imageTitle, missingOf, wipingLabel } from './labels';
 
 type Cache = Schemas['Cache'];
@@ -95,44 +97,7 @@ export function ImagesAndCaches() {
   );
 }
 
-/** What a 409 `needs_confirmation` names: what goes, and the jobs the drain waits for (UX-62). */
-function split(e: ApiError): { goes: string[]; waits: string[] } {
-  const text = (d: { text?: string; id?: string }) => d.text ?? d.id ?? '';
-  return {
-    goes: e.details
-      .filter((d) => d.kind !== 'job')
-      .map(text)
-      .filter(Boolean),
-    waits: e.details
-      .filter((d) => d.kind === 'job')
-      .map(text)
-      .filter(Boolean),
-  };
-}
-
-/** Ask the server what a step touches (it answers 409 without `confirm`), then open the question card. */
-export function useAskFirst(opts: {
-  probe: () => Promise<unknown>;
-  commit: () => Promise<unknown>;
-  fallback: () => string[];
-  onDone: () => void;
-}) {
-  const ask = useQuestion(opts.commit, opts.onDone);
-  const probe = useCommand(async () => {
-    try {
-      await opts.probe();
-      opts.onDone();
-    } catch (e) {
-      if (e instanceof ApiError && e.code === 'needs_confirmation') {
-        const { goes, waits } = split(e);
-        ask.ask(goes.length > 0 ? goes : opts.fallback(), waits);
-        return;
-      }
-      throw e;
-    }
-  });
-  return { ask, probe };
-}
+export { useAskFirst };
 
 // ---------------------------------------------------------------------------------------------- images
 
@@ -212,46 +177,60 @@ function CachesTab({ nameOf }: { nameOf: (id: string) => string }) {
   }, [anyWiping, reload]);
 
   return (
-    <Load result={result} what="caches" reload={reload}>
-      {(data) => {
-        if (data.items.length === 0)
+    <Stack>
+      <CacheHub />
+      <Load result={result} what="caches" reload={reload}>
+        {(data) => {
+          // The hub's kinds show on its cards above (caches R5.77), not again per machine.
+          const own = data.items.filter(
+            (c) => !HUB_KINDS.has(c.kind) || !c.id.startsWith('mirror:'),
+          );
+          if (own.length === 0)
+            return (
+              <Section title="Caches per machine" count={0}>
+                <Empty title="No caches yet. Caches show here when a runner has been added." />
+              </Section>
+            );
+          const byMachine = new Map<string, Cache[]>();
+          const found = own.filter((c) =>
+            `${cacheName(c)} ${nameOf(c.machine_id)}`
+              .toLowerCase()
+              .includes(q.trim().toLowerCase()),
+          );
+          for (const c of found)
+            byMachine.set(c.machine_id, [...(byMachine.get(c.machine_id) ?? []), c]);
           return (
-            <Section title="Caches" count={0}>
-              <Empty title="No caches yet. Caches show here when a runner has been added." />
+            <Section title="Caches per machine" count={found.length}>
+              <Stack>
+                <ListToolbar
+                  label="Caches"
+                  search={<SearchBar value={q} onChange={setQ} label="Search caches" />}
+                  count={`${found.length} ${found.length === 1 ? 'cache' : 'caches'}`}
+                />
+                {[...byMachine.entries()].map(([machineId, rows]) => (
+                  <Pane key={machineId} title={nameOf(machineId)} level={3}>
+                    <CardGrid>
+                      {rows.map((c) => (
+                        <CacheCard key={c.id} cache={c} onChanged={reload} />
+                      ))}
+                    </CardGrid>
+                  </Pane>
+                ))}
+              </Stack>
             </Section>
           );
-        const byMachine = new Map<string, Cache[]>();
-        const found = data.items.filter((c) =>
-          `${cacheName(c)} ${nameOf(c.machine_id)}`
-            .toLowerCase()
-            .includes(q.trim().toLowerCase()),
-        );
-        for (const c of found)
-          byMachine.set(c.machine_id, [...(byMachine.get(c.machine_id) ?? []), c]);
-        return (
-          <Section title="Caches" count={found.length}>
-            <Stack>
-              <ListToolbar
-                label="Caches"
-                search={<SearchBar value={q} onChange={setQ} label="Search caches" />}
-                count={`${found.length} ${found.length === 1 ? 'cache' : 'caches'}`}
-              />
-              {[...byMachine.entries()].map(([machineId, rows]) => (
-                <Pane key={machineId} title={nameOf(machineId)} level={3}>
-                  <CardGrid>
-                    {rows.map((c) => (
-                      <CacheCard key={c.id} cache={c} onChanged={reload} />
-                    ))}
-                  </CardGrid>
-                </Pane>
-              ))}
-            </Stack>
-          </Section>
-        );
-      }}
-    </Load>
+        }}
+      </Load>
+    </Stack>
   );
 }
+
+/** The kinds the one hub holds; their controller rows show as hub cards. */
+const HUB_KINDS: ReadonlySet<string> = new Set([
+  'actions_cache',
+  'git_mirror',
+  'registry_mirror',
+]);
 
 function CacheCard({ cache, onChanged }: { cache: Cache; onChanged: () => void }) {
   const client = useClient();

@@ -4,6 +4,7 @@ import {
   Card,
   CardGrid,
   Empty,
+  ExternalButton,
   LevelBar,
   Loading,
   Message,
@@ -103,6 +104,24 @@ export function MachineCard({ m }: { m: Machine }) {
   );
 }
 
+/** One setting of the GitHub App is off: "Enable Device Flow". `crsp login` cannot sign anyone in until the owner of the
+ * App turns it on, so the page names the setting and links to the App's settings page (github-integration R5.14). */
+function DeviceFlowOffNote({ url }: { url?: string | undefined }) {
+  return (
+    <Message
+      tone="needs-you"
+      action={
+        url ? (
+          <ExternalButton href={url}>Open the App settings</ExternalButton>
+        ) : undefined
+      }
+    >
+      Device Flow is off for the GitHub App, so crsp login cannot sign anyone in. Turn on
+      &quot;Enable Device Flow&quot; in the App settings on GitHub.
+    </Message>
+  );
+}
+
 /** The App-gone banner (github-integration R5.6): GitHub work is stopped, jobs that run keep running, and the
  * setup wizard is offered again. Nothing is drawn while the App answers or while the answer is not known. */
 export function AppGoneBanner() {
@@ -112,6 +131,8 @@ export function AppGoneBanner() {
     [client],
   );
   const health = result.state === 'ready' ? result.data : undefined;
+  if (health && !health.gone && health.device_flow_off)
+    return <DeviceFlowOffNote url={health.settings_url} />;
   if (!health?.gone) return null;
   return (
     <Message

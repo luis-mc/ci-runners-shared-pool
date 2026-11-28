@@ -32,16 +32,35 @@ type trayBackend struct {
 	Links   LinkIssuer
 	// Digest returns the newest weekly insights digest file, "" when none (ci-run-insights R5.38); nil is none.
 	Digest func() string
+	// Notes returns the release notes of the offered and the installed version; nil is none.
+	Notes func() update.NotesView
 }
 
 func (b trayBackend) response(ctx context.Context, st update.Status) tray.Response {
 	on := st.AutoUpdate
+	offered, updated := b.notes(st)
 	return tray.Response{
+		Notes: offered, UpdatedNotes: updated,
 		State: tray.StateHealthy, Running: len(st.RunningJobs), Version: st.Current, AutoUpdate: &on,
 		LatestVersion: st.Latest, ReleaseURL: st.ReleaseURL, UpdateAvailable: st.Available, UpdateState: string(st.State),
 		LogDir: tray.LogDir(), Stage: stageInfo(st.Stage),
 		Policy: b.policy(ctx), RunnerProblems: b.runnerProblems(ctx), DigestPath: b.digestPath(),
 	}
+}
+
+// notes are the notes to show: the offered one only when it belongs to the newest release the manager found.
+func (b trayBackend) notes(st update.Status) (offered, updated string) {
+	if b.Notes == nil {
+		return "", ""
+	}
+	v := b.Notes()
+	if v.Offered != "" && strings.TrimPrefix(v.OfferedVersion, "v") == strings.TrimPrefix(st.Latest, "v") {
+		offered = v.Offered
+	}
+	if v.Updated != nil {
+		updated = v.Updated.Notes
+	}
+	return offered, updated
 }
 
 func (b trayBackend) digestPath() string {
@@ -237,4 +256,12 @@ func loopbackConsoleURL(console string) string {
 		port = "8460"
 	}
 	return "http://" + net.JoinHostPort("127.0.0.1", port)
+}
+
+// notesOf gives the tray the release notes of the lifecycle service; nil when it is not wired.
+func notesOf(lc *update.Service) func() update.NotesView {
+	if lc == nil {
+		return nil
+	}
+	return lc.Notes
 }

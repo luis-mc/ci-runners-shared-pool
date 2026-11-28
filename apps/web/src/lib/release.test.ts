@@ -8,6 +8,7 @@ import {
   fetchRelease,
   parseAssetName,
   parseSums,
+  type GhRelease,
 } from './release.ts';
 
 describe('release data (website R5.7, R5.8, R5.10)', () => {
@@ -47,20 +48,46 @@ describe('release data (website R5.7, R5.8, R5.10)', () => {
     );
   });
 
-  it('fails on a pre-release, a missing SBOM or an agent asset', () => {
+  it('fails on a pre-release or a missing SBOM', () => {
     const a = fixtureGh();
     a.gh.prerelease = true;
     expect(() => buildRelease(a.gh, a.sums)).toThrow(/pre-release/);
     const b = fixtureGh();
     b.gh.assets = b.gh.assets.filter((x) => x.name !== 'crsp-sbom-go.spdx.json');
     expect(() => buildRelease(b.gh, b.sums)).toThrow(/crsp-sbom-go/);
+  });
+
+  it('never lists the agent installers the release also holds (R5.7)', () => {
     const c = fixtureGh();
     c.gh.assets.push({
-      name: 'Crsp-agent-1.2.3.msi',
+      name: 'CrspAgent-1.2.3-win-x64.zip',
       size: 1,
       browser_download_url: 'https://x/y',
     });
-    expect(() => buildRelease(c.gh, c.sums)).toThrow(/agent asset/);
+    const r = buildRelease(c.gh, c.sums);
+    expect(r.assets.some((a) => /agent/i.test(a.name))).toBe(false);
+  });
+
+  it('lists the earlier stable releases newest first and never edge (R5.13)', () => {
+    const { gh, sums } = fixtureGh();
+    const rel = (tag: string, at: string, over: Partial<GhRelease> = {}): GhRelease => ({
+      tag_name: tag,
+      html_url: `https://github.com/luis-mc/ci-runners-shared-pool/releases/tag/${tag}`,
+      published_at: at,
+      assets: [],
+      ...over,
+    });
+    const feed = [
+      gh,
+      rel('edge', '2026-11-28T00:00:00Z', { prerelease: true }),
+      rel('v1.2.1', '2026-11-20T00:00:00Z'),
+      rel('v1.2.2', '2026-11-25T00:00:00Z'),
+      rel('v1.3.0', '2026-11-29T00:00:00Z', { draft: true }),
+    ];
+    expect(buildRelease(gh, sums, feed).older.map((o) => o.version)).toEqual([
+      '1.2.2',
+      '1.2.1',
+    ]);
   });
 
   it('skips the Controller-fetched agent packages and offers none of them (R5.7)', () => {
@@ -112,14 +139,17 @@ describe('release data (website R5.7, R5.8, R5.10)', () => {
     const fake = ((url: string) => {
       calls.push(url);
       return Promise.resolve(
-        url.includes('api.github.com')
-          ? new Response(JSON.stringify(gh))
-          : new Response(sums),
+        url.includes('/releases?')
+          ? new Response(JSON.stringify([gh]))
+          : url.includes('api.github.com')
+            ? new Response(JSON.stringify(gh))
+            : new Response(sums),
       );
     }) as unknown as typeof fetch;
     const r = await fetchRelease(fake, undefined);
     expect(r.tag).toBe('v1.2.3');
     expect(calls[0]).toContain('/releases/latest');
+    expect(calls.some((c) => c.includes('/releases?per_page=100'))).toBe(true);
     const bad = (() =>
       Promise.resolve(new Response('no', { status: 403 }))) as unknown as typeof fetch;
     await expect(fetchRelease(bad, undefined)).rejects.toThrow(/403/);

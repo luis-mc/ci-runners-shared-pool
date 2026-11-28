@@ -1,0 +1,20 @@
+[
+  {
+    "name": "console-overview",
+    "alt": "The console overview of a demo pool: its machine, the jobs that run and wait, and what needs attention.",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "name": "console-machines",
+    "alt": "The Pool machines page of a demo pool: one machine card with its load, health and runners.",
+    "width": 1280,
+    "height": 800
+  },
+  {
+    "name": "console-repositories",
+    "alt": "The Setup page of a demo pool, with its list of repositories and the choice of which ones use the pool.",
+    "width": 1280,
+    "height": 800
+  }
+]

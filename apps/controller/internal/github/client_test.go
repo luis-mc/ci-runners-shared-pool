@@ -403,6 +403,9 @@ func TestOpenJobsAndFork(t *testing.T) { // R5.37
 	if byID[1].FromFork || !byID[2].FromFork || byID[2].Event != "pull_request" || !contains(byID[1].Labels, "Linux") {
 		t.Fatalf("job details: %+v", byID)
 	}
+	if byID[2].HeadRepository != "mallory/demo" {
+		t.Fatalf("head repository = %q", byID[2].HeadRepository)
+	}
 	one, err := e.client.GetJob(ctx, 10, "alice", "demo", 1)
 	if err != nil || one.Name != "build" || one.Repository != "alice/demo" {
 		t.Fatalf("get job %+v %v", one, err)

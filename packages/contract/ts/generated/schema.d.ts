@@ -1877,6 +1877,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runners/{runnerId}/reregister": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register a runner again when GitHub deleted its registration
+         * @description runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
+         */
+        post: operations["reregisterRunner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runners/{runnerId}/registration": {
         parameters: {
             query?: never;
@@ -2086,6 +2106,191 @@ export interface paths {
          * @description scheduling R5.104. The same check as the save, for check-while-typing, like the pool size check. Nothing changes.
          */
         post: operations["checkTimerSettings"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The pool-wide debug switch and the transcript switch
+         * @description debug-access R5.25, R5.26. `enabled` is the kill switch: off ends every open session and refuses new ones. Both are on when unsaved; each repository is still off until an admin switches it on (R5.1).
+         */
+        get: operations["getDebugPoolSettings"];
+        /**
+         * Save the pool-wide debug switch (the kill switch)
+         * @description debug-access R5.26. Owner only. Turning sessions off while one is open needs `confirm`; without it the answer is 409 needs_confirmation with the count. Every change is an audit row.
+         */
+        put: operations["putDebugPoolSettings"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/repositories/{repositoryId}/debug-access": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A repository's debug access setting
+         * @description debug-access R5.1, R5.2, R5.10, R5.17, R5.18. Off for every repository until an admin switches it on.
+         */
+        get: operations["getRepoDebugAccess"];
+        /**
+         * Switch debug access on or off for a repository
+         * @description debug-access R5.1, R5.2. Admins and owner. A public repository cannot be switched on. Only the owner sets or lifts Owner only. Every change is an audit row.
+         */
+        put: operations["setRepoDebugAccess"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/debug": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The Debug access card of a job
+         * @description debug-access section 4. Whether the signed-in user may open a session on this job now, and if not why (the first check that fails), the warnings to show first, the open session and the past sessions of the job.
+         */
+        get: operations["getJobDebug"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/jobs/{jobId}/debug-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Open a debug session on a job
+         * @description debug-access R5.2 to R5.10, R5.24. Admins and owner. A refusal answers 403 with the reason the console shows and writes a refused audit row; an open writes the session row and its audit row in one transaction.
+         */
+        post: operations["openDebugSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The debug sessions of the pool, newest first
+         * @description debug-access section 4, Debug sessions list. Viewers see the rows; only admins read a transcript.
+         */
+        get: operations["listDebugSessions"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** One debug session */
+        get: operations["getDebugSession"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}/extend": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Extend a session once by 15 minutes
+         * @description debug-access R5.19. Only the user who opened it; never past the highest session limit a repository may set (120 minutes); an audit row.
+         */
+        post: operations["extendDebugSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End a session
+         * @description debug-access R5.26. The user ends their own; an admin or the owner ends anyone's. An audit row.
+         */
+        post: operations["endDebugSession"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/debug-sessions/{sessionId}/transcript": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The redacted transcript of a session
+         * @description debug-access R5.25. Admins and owner. Cleaned by the shared redaction before it was stored, which cannot promise to catch everything; kept 30 days, at most 5 MB.
+         */
+        get: operations["getDebugTranscript"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -3262,6 +3467,46 @@ export interface paths {
          * @description web-console R5.25 and R5.30. Without `confirm=true` it answers 409 needs_confirmation naming the cache, its size and the jobs that use it. An entry being read or written is not removed.
          */
         post: operations["wipeCache"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/caches/hub": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The one cache hub of the pool, its budget and its numbers
+         * @description caches R5.73, R5.77, R5.78. One card per kind (Actions cache, git mirrors, registry mirror, package proxy), the one byte budget, hits and misses, and warmth by repository.
+         */
+        get: operations["getCacheHub"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/caches/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Change the hub's switches and its byte budget
+         * @description caches R5.66, R5.73, R5.77. The whole settings object; a smaller budget applies at once and evicts the least recently used items. Audited as cache.settings.
+         */
+        put: operations["putCacheSettings"];
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -4454,6 +4699,122 @@ export interface components {
             logins: components["schemas"]["RegistryLogin"][];
             ca_bundle_set: boolean;
         };
+        /** @description debug-access R5.25, R5.26. */
+        DebugPoolSettings: {
+            /** @description Allow debug sessions on this pool (the kill switch). */
+            enabled: boolean;
+            /** @description Keep a redacted transcript of each session. */
+            record: boolean;
+            open_sessions: number;
+            /** @description Sessions this change ended. Only on a save. */
+            ended?: number;
+            /** Format: date-time */
+            updated_at?: string;
+            updated_by?: string;
+        };
+        DebugPoolSettingsInput: {
+            enabled: boolean;
+            record: boolean;
+            /** @description Needed to turn sessions off while one is open. */
+            confirm?: boolean;
+        };
+        /** @description debug-access R5.1, R5.2, R5.10, R5.17, R5.18, R5.21. */
+        DebugRepoAccess: {
+            /** Format: int64 */
+            repository_id: number;
+            enabled: boolean;
+            /** @enum {string} */
+            who: "admins" | "owner";
+            /** @description Session limit in minutes, 5 to 120. */
+            limit_min: number;
+            /** @description Idle limit in minutes, 1 to 60. */
+            idle_min: number;
+            /** @description 0 to 30. Saved; holding a failed job is not built yet. */
+            hold_min: number;
+            persistent_ok: boolean;
+            /** @description What a session allows */
+            allows: string;
+            /** @description What a session never allows */
+            never: string;
+            /** @description Why the switch cannot be turned on (a public repository). */
+            disabled_reason?: string;
+            /** Format: date-time */
+            updated_at?: string;
+            updated_by?: string;
+        };
+        DebugRepoAccessInput: {
+            enabled: boolean;
+            /** @enum {string} */
+            who: "admins" | "owner";
+            limit_min: number;
+            idle_min: number;
+            hold_min: number;
+            persistent_ok: boolean;
+        };
+        DebugSessionOpenInput: {
+            /** @description One line, 3 to 200 characters (R5.3). */
+            reason: string;
+        };
+        /** @description One debug session (debug-access R5.24). No secret and no source address. */
+        DebugSession: {
+            id: string;
+            /** Format: int64 */
+            job_id: number;
+            repository: string;
+            machine_id?: string;
+            runner_name?: string;
+            backend?: string;
+            isolation?: string;
+            os?: string;
+            user: string;
+            reason: string;
+            source: string;
+            /** @enum {string} */
+            state: "open" | "ended";
+            /** Format: date-time */
+            opened_at: string;
+            /** Format: date-time */
+            ends_at: string;
+            /** Format: date-time */
+            ended_at?: string;
+            /** @enum {string} */
+            end_reason?: "time_limit" | "idle" | "job_ended" | "user" | "admin" | "kill_switch" | "link_lost" | "error";
+            ended_by?: string;
+            extended: boolean;
+            /** @description False when the pool keeps no transcripts. */
+            recorded: boolean;
+        };
+        DebugSessionList: {
+            items: components["schemas"]["DebugSession"][];
+        };
+        /** @description The Debug access card of a job (debug-access section 4). */
+        JobDebug: {
+            /** Format: int64 */
+            job_id: number;
+            allowed: boolean;
+            /** @description The first check that failed; absent when allowed. */
+            why_not_code?: string;
+            /** @description The reason beside the disabled button; absent when allowed. */
+            why_not?: string;
+            warnings: string[];
+            /** @description What the shell can see (R5.14). */
+            sees: string;
+            repository_enabled: boolean;
+            limit_min?: number;
+            idle_min?: number;
+            open_session?: components["schemas"]["DebugSession"];
+            sessions: components["schemas"]["DebugSession"][];
+        };
+        DebugTranscript: {
+            session_id: string;
+            text: string;
+            /** @description The 5 MB cap was reached. */
+            truncated: boolean;
+            /** Format: date-time */
+            expires_at: string;
+            /** @description Cleaned as far as possible; redaction cannot promise to catch everything. */
+            note: string;
+        };
         /**
          * @example {
          *       "error": {
@@ -4602,6 +4963,11 @@ export interface components {
             device_code_url: string;
             /** @example https://github.com/login/device */
             verification_url: string;
+            /**
+             * @description The App's settings page on GitHub, where "Enable Device Flow" is turned on. The CLI names it when GitHub says Device Flow is off.
+             * @example https://github.com/settings/apps/crsp-home
+             */
+            settings_url?: string;
         };
         ExchangeCliTokenRequest: {
             /** @description The device-flow user token. Checked once and dropped. */
@@ -4883,6 +5249,10 @@ export interface components {
              * @description When GitHub last answered. Absent before the first answer.
              */
             checked_at?: string;
+            /** @description True when GitHub answered that "Enable Device Flow" is off for the App, so `crsp login` cannot sign anyone in (R5.14). */
+            device_flow_off?: boolean;
+            /** @description The App's settings page on GitHub. Present when device_flow_off is true. */
+            settings_url?: string;
         };
         AppInstallUrl: {
             /** @example https://github.com/apps/crsp-home/installations/new */
@@ -5137,6 +5507,11 @@ export interface components {
             oses?: ("linux" | "windows" | "macos")[];
             /** @description Fallback minutes counted this month (UTC), best effort. */
             used_minutes: number;
+            /**
+             * @description The overflow target the jobs run on now (R5.115). Absent when they are not on a listed target.
+             * @enum {string}
+             */
+            target?: "github_hosted" | "aws_ec2";
         };
         RepositoryVariable: {
             /** @enum {string} */
@@ -6175,6 +6550,8 @@ export interface components {
             machine_name: string;
             /** @description Why the runner is in a state that is not idle or busy (UX-19). Absent when there is nothing to say. */
             reason?: string;
+            /** @description True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153). */
+            can_reregister?: boolean;
             os: components["schemas"]["OS"];
             arch: components["schemas"]["Arch"];
             kind: components["schemas"]["RunnerKind"];
@@ -7013,6 +7390,42 @@ export interface components {
             removed: boolean;
             name: string;
         };
+        OverflowTarget: {
+            /** @enum {string} */
+            kind: "github_hosted" | "aws_ec2";
+            enabled: boolean;
+            /** @description The runner label jobs run on at this target. Empty is allowed for github_hosted only (the ubuntu-latest, windows-latest and macos-latest defaults); aws_ec2 needs one while it is on. */
+            label?: string;
+            /** @description Minutes per repository and month this target may take; 0 or absent means no cap. When used up the next target is tried. */
+            cap_minutes?: number;
+            /** @description Minutes per month this target may take across all repositories together (R5.115); 0 or absent means no cap. A target is used only while both caps have minutes left. */
+            total_cap_minutes?: number;
+            /**
+             * Format: double
+             * @description Money in US dollars per month this target may cost across all repositories together (R5.115); 0 or absent means no budget. Money used is the minutes used times the per-minute rate savings keeps. A target is used only while its minute caps and its budget have room; a target with no rate (AWS EC2 without a price per minute) does not enforce it.
+             */
+            budget_usd?: number;
+            /**
+             * Format: double
+             * @description Price in US dollars of one minute at this target (R5.115, CRSP372); 0 or absent means none. A set price is what the budget counts at this target. GitHub-hosted without a price uses the savings rate table; AWS EC2 needs a price for its budget to be enforced.
+             */
+            price_usd_per_minute?: number;
+            /** @description The systems this target serves; empty or absent means all. */
+            systems?: ("linux" | "windows" | "macos")[];
+        };
+        OverflowUsage: {
+            /** @enum {string} */
+            kind: "github_hosted" | "aws_ec2";
+            /** @description Minutes this target took this month (UTC) across all repositories, best effort. */
+            used_minutes: number;
+            /**
+             * Format: double
+             * @description Money this target cost this month (UTC) across all repositories, in US dollars; minutes times the per-minute rate savings keeps (R5.115).
+             */
+            used_usd?: number;
+            /** @description False when the target has no per-minute rate, so its budget is not enforced. */
+            priced?: boolean;
+        };
         RemoveRunnerLeftoversRequest: {
             items: {
                 kind: components["schemas"]["RunnerLeftoverKind"];
@@ -7137,6 +7550,10 @@ export interface components {
             insights_update_every_n_runs?: number;
             /** @description github-integration R5.42 (CRSP261). One runner label of any cloud, such as a GitHub-hosted label or a third-party one, that a repository with the fallback on runs on while no crsp machine is up and its own policy names no label for the system. Empty means the GitHub-hosted defaults (ubuntu-latest, windows-latest, macos-latest). */
             overflow_label?: string;
+            /** @description github-integration R5.114 (CRSP281). The owner's priority rules for cloud overflow, first target first. Each of github_hosted and aws_ec2 may appear once. When a repository with the fallback on has no crsp machine up, its jobs go to the first target that is on, serves the system and has not used its monthly cap for that repository. An empty list keeps the single overflow_label rule. */
+            overflow_targets?: components["schemas"]["OverflowTarget"][];
+            /** @description github-integration R5.115. Read only. The minutes each enabled overflow target took this month across all repositories. */
+            readonly overflow_usage?: components["schemas"]["OverflowUsage"][];
             /** @description operations R5.15. On by default. When on, a newer stable release installs by itself after a drain. When off, the console Review step asks first. */
             auto_update?: boolean;
         };
@@ -7168,6 +7585,22 @@ export interface components {
                 retry_at: string | null;
             } | null;
             waiting_for_jobs: boolean;
+            /** @description The owner-facing note of the version on offer, signed in the update manifest. Absent when the release has none. */
+            notes?: string | null;
+            /** @description The note of the release this machine now runs, kept until the next update. Absent when that release had none. */
+            updated?: {
+                version: string;
+                notes: string;
+            } | null;
+            /** @description The last time crsp looked for an update (CRSP368), read from the update audit rows; null when it never did. Absent from the answers to a policy change, a check or an install. */
+            last_check?: {
+                /** Format: date-time */
+                at: string;
+                /** @description Who asked for the check; updater when crsp looked by itself. */
+                by: string;
+                /** @enum {string} */
+                kind: "manual" | "automatic";
+            } | null;
         };
         /** @description A daily install window, in UTC. */
         UpdateWindow: {
@@ -7554,6 +7987,80 @@ export interface components {
         };
         CacheList: {
             items: components["schemas"]["Cache"][];
+        };
+        /**
+         * @description The hub's switches and its one byte budget (caches R5.66, R5.73).
+         * @example {
+         *       "actions_cache": true,
+         *       "git_mirror": true,
+         *       "registry_mirror": false,
+         *       "package_proxy": true,
+         *       "budget_gib": 60,
+         *       "git_refresh_minutes": 15,
+         *       "warmth_hours": 24
+         *     }
+         */
+        CacheHubSettings: {
+            actions_cache: boolean;
+            git_mirror: boolean;
+            registry_mirror: boolean;
+            /** @description The npm and PyPI proxy (caches R5.74 to R5.76). */
+            package_proxy: boolean;
+            /** @description One budget for every kind; default 60. */
+            budget_gib: number;
+            git_refresh_minutes?: number;
+            warmth_hours?: number;
+        };
+        /** @description One kind of the hub (caches R5.77). */
+        CacheHubCard: {
+            /** @enum {string} */
+            kind: "actions_cache" | "git_mirror" | "registry_mirror" | "package_proxy";
+            on: boolean;
+            /** Format: int64 */
+            size_bytes: number;
+            entry_count: number;
+            /** Format: int64 */
+            hits: number;
+            /** Format: int64 */
+            misses: number;
+            /** Format: int64 */
+            served_bytes: number;
+            /** Format: date-time */
+            last_used_at?: string;
+            /** @enum {string} */
+            status: "ok" | "waiting" | "failed";
+            /** @description One plain line, such as why the receiver waits. */
+            note?: string;
+            /** @description The cache id that POST /api/v1/caches/{cacheId}/wipe takes. */
+            wipe_id: string;
+        };
+        /** @description One row of Warmth by repository (caches R5.78). */
+        CacheHubRepo: {
+            repo: string;
+            /** Format: int64 */
+            hits: number;
+            /** Format: int64 */
+            misses: number;
+            /** Format: int64 */
+            size_bytes: number;
+            warmth: number;
+        };
+        /** @description The one cache hub in the controller (caches R5.73, R5.77, R5.78). */
+        CacheHub: {
+            settings: components["schemas"]["CacheHubSettings"];
+            /** Format: int64 */
+            budget_bytes: number;
+            /** Format: int64 */
+            used_bytes: number;
+            cards: components["schemas"]["CacheHubCard"][];
+            /** Format: int64 */
+            hits: number;
+            /** Format: int64 */
+            misses: number;
+            /** Format: int64 */
+            served_bytes: number;
+            warm_machines: number;
+            repos: components["schemas"]["CacheHubRepo"][];
         };
         /**
          * @description The stable event types of notifications R5.1.
@@ -8906,6 +9413,7 @@ export interface components {
         JoinCodeId: string;
         SetName: string;
         RunnerId: string;
+        DebugSessionId: string;
         JobId: number;
         TimerRunId: number;
         /** @description The attempt; the newest when absent. */
@@ -11585,6 +12093,29 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    reregisterRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runnerId: components["parameters"]["RunnerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Registered again; the runner as it is now. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Runner"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     deleteRunnerRegistration: {
         parameters: {
             query?: {
@@ -11953,6 +12484,267 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["TimerSettingsCheck"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDebugPoolSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting and how many sessions are open. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugPoolSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putDebugPoolSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugPoolSettingsInput"];
+            };
+        };
+        responses: {
+            /** @description Saved; `ended` says how many sessions the change ended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugPoolSettings"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getRepoDebugAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The numeric GitHub repository id. */
+                repositoryId: components["parameters"]["RepositoryId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The setting. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugRepoAccess"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setRepoDebugAccess: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description The numeric GitHub repository id. */
+                repositoryId: components["parameters"]["RepositoryId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugRepoAccessInput"];
+            };
+        };
+        responses: {
+            /** @description Saved. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugRepoAccess"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getJobDebug: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The card. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JobDebug"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    openDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DebugSessionOpenInput"];
+            };
+        };
+        responses: {
+            /** @description The session is open. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listDebugSessions: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The sessions. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSessionList"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The session. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    extendDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Extended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    endDebugSession: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Ended. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugSession"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getDebugTranscript: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                sessionId: components["parameters"]["DebugSessionId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The transcript. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DebugTranscript"];
                 };
             };
             default: components["responses"]["Error"];
@@ -13496,6 +14288,52 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Cache"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getCacheHub: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The hub. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheHub"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    putCacheSettings: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CacheHubSettings"];
+            };
+        };
+        responses: {
+            /** @description The stored settings. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CacheHubSettings"];
                 };
             };
             default: components["responses"]["Error"];

@@ -28,54 +28,40 @@ async function repoHeading(name: string) {
 }
 
 describe('Repositories list in a pane', () => {
-  it('draws the toolbar, table and pager inside the Repositories pane (CORE-1)', async () => {
+  it('draws the groups as panes, one tick row per repository, and no toolbar (CORE-1)', async () => {
     renderApp(list(signedIn()), '/setup/pool');
-    const table = await screen.findByRole('table', { name: 'octo repositories' });
-    const pane = table.closest('.ds-pane') as HTMLElement;
-    expect(pane).toBeTruthy();
+    const group = await screen.findByRole('region', { name: /^Not using the pool/ });
+    expect(group.closest('.ds-pane')).toBeTruthy();
     expect(
-      within(pane).getByRole('heading', { level: 2, name: 'Repositories' }),
+      within(group).getByRole('heading', { level: 2, name: /^Not using the pool/ }),
     ).toBeTruthy();
-    expect(
-      within(pane).getByRole('group', { name: 'Repositories toolbar' }),
-    ).toBeTruthy();
-    expect(
-      within(pane).getByRole('textbox', { name: 'Search repositories' }),
-    ).toBeTruthy();
+    expect(within(group).getByRole('checkbox', { name: 'octo/app' })).toBeTruthy();
+    expect(screen.queryByRole('group', { name: 'Repositories toolbar' })).toBeNull();
+    expect(screen.queryByRole('textbox', { name: 'Search repositories' })).toBeNull();
   });
 
-  it('has one primary, also while rows are ticked (UX-4)', async () => {
+  it('has its one primary button in the action bar, locked until a row is ticked (UX-4, UX-71, UX-12)', async () => {
     renderApp(list(signedIn()), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
-    expect(primaries()).toEqual(['Use pool']);
-    fireEvent.click(screen.getByRole('button', { name: 'Select all 1' }));
-    expect(screen.getByRole('button', { name: 'Use pool' })).toBeTruthy();
-    expect(primaries()).toEqual(['Use pool']);
-  });
-
-  it('shows Select all N, and Clear that waits for a ticked row, in one toolbar line (UX-12)', async () => {
-    renderApp(list(signedIn()), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
+    await screen.findByRole('region', { name: /^Not using the pool/ });
+    const bar = screen.getByRole('region', { name: 'Actions' });
+    expect(primaries()).toEqual(['Turn on']);
     expect(
-      screen.getByRole<HTMLButtonElement>('button', { name: 'Clear' }).disabled,
+      within(bar).getByRole<HTMLButtonElement>('button', { name: 'Turn on' }).disabled,
     ).toBe(true);
-    fireEvent.click(screen.getByRole('button', { name: 'Select all 1' }));
-    expect(screen.getByText('1 selected')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
-    expect(screen.queryByText('1 selected')).toBeNull();
+    expect(screen.getAllByText('Tick at least one repository.').length).toBeGreaterThan(
+      0,
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: 'octo/app' }));
+    expect(within(bar).getByRole('button', { name: 'Turn on 1' })).toBeTruthy();
+    expect(primaries()).toEqual(['Turn on 1']);
   });
 
-  it('keeps Select all N equal to the rows the filter leaves (UX-7)', async () => {
-    renderApp(
-      list(signedIn(), [
-        repository(),
-        repository({ id: 8, full_name: 'octo/site', name: 'site', pool_on: true }),
-      ]),
-      '/setup/pool',
-    );
-    await screen.findByRole('table', { name: 'octo repositories' });
-    fireEvent.click(screen.getByRole('button', { name: 'Pool on' }));
-    expect(screen.getByRole('button', { name: 'Select all 1' })).toBeTruthy();
+  it('shows the health tiles above the groups', async () => {
+    renderApp(list(signedIn()), '/setup/pool');
+    await screen.findByRole('region', { name: /^Not using the pool/ });
+    for (const t of ['Machines', 'Runners', 'GitHub App', 'Repositories'])
+      expect(screen.getAllByText(t).length).toBeGreaterThan(0);
+    expect(screen.getByText('0 of 1')).toBeTruthy();
   });
 
   it('keeps the pane when the controller fails (UX-28)', async () => {

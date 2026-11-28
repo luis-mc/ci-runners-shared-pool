@@ -12,8 +12,8 @@ const SCREENS = [
   {
     name: 'list',
     path: '/setup/pool',
-    panes: ['Repositories'],
-    primaries: ['Use pool'],
+    panes: ['Using the pool', 'Not using the pool'],
+    primaries: ['Turn on'],
   },
   {
     name: 'detail',

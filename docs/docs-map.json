@@ -4,6 +4,9 @@
     "apps/controller-console/src/**": [
       "docs/features/web-console/spec.md"
     ],
+    "apps/controller-console/src/api/hooks.ts": [
+      "docs/features/observability/spec.md"
+    ],
     "apps/controller-console/src/features/auth/**": [
       "docs/features/github-integration/spec.md"
     ],
@@ -16,6 +19,9 @@
     "apps/controller-console/src/features/users/**": [
       "docs/features/github-integration/spec.md"
     ],
+    "apps/controller-console/src/live/store.ts": [
+      "docs/features/observability/spec.md"
+    ],
     "apps/controller-console/src/screens/analytics/Compare.tsx": [
       "docs/features/observability/spec.md"
     ],
@@ -27,6 +33,9 @@
     ],
     "apps/controller-console/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
+    ],
+    "apps/controller-console/src/screens/jobs/DebugCard.tsx": [
+      "docs/features/debug-access/spec.md"
     ],
     "apps/controller-console/src/screens/notices/**": [
       "docs/features/notifications/spec.md"
@@ -48,6 +57,9 @@
     ],
     "apps/controller/cmd/crsp/**": [
       "docs/features/cli/spec.md"
+    ],
+    "apps/controller/cmd/crsp/debug_wiring.go": [
+      "docs/features/debug-access/spec.md"
     ],
     "apps/controller/cmd/crsp/insights*wiring.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -91,11 +103,17 @@
     "apps/controller/internal/agentlink/registry.go": [
       "docs/features/registry/spec.md"
     ],
+    "apps/controller/internal/api/handlers_debug.go": [
+      "docs/features/debug-access/spec.md"
+    ],
     "apps/controller/internal/api/handlers_insights*.go": [
       "docs/features/ci-run-insights/spec.md"
     ],
     "apps/controller/internal/api/handlers_jobs.go": [
       "docs/features/scheduling/spec.md"
+    ],
+    "apps/controller/internal/api/handlers_jobs_export.go": [
+      "docs/features/observability/spec.md"
     ],
     "apps/controller/internal/api/handlers_jobsizes.go": [
       "docs/features/scheduling/spec.md"
@@ -106,11 +124,23 @@
     "apps/controller/internal/api/handlers_runnerclasses.go": [
       "docs/features/scheduling/spec.md"
     ],
+    "apps/controller/internal/api/handlers_runs.go": [
+      "docs/features/observability/spec.md"
+    ],
+    "apps/controller/internal/api/handlers_timeline.go": [
+      "docs/features/observability/spec.md"
+    ],
     "apps/controller/internal/api/handlers_timers.go": [
       "docs/features/scheduling/spec.md"
     ],
+    "apps/controller/internal/api/jobs_forecast.go": [
+      "docs/features/observability/spec.md"
+    ],
     "apps/controller/internal/api/stubs_registry_*.go": [
       "docs/features/registry/spec.md"
+    ],
+    "apps/controller/internal/api/transport.go": [
+      "docs/features/observability/spec.md"
     ],
     "apps/controller/internal/assign/**": [
       "docs/features/github-integration/spec.md",
@@ -219,6 +249,9 @@
     "apps/controller/internal/jobsize/**": [
       "docs/features/scheduling/spec.md"
     ],
+    "apps/controller/internal/lancache/**": [
+      "docs/features/caches/spec.md"
+    ],
     "apps/controller/internal/load/**": [
       "docs/features/machines/spec.md"
     ],
@@ -290,11 +323,17 @@
     "apps/controller/internal/secrets/**": [
       "docs/features/github-integration/spec.md"
     ],
+    "apps/controller/internal/store/debugaccess.go": [
+      "docs/features/debug-access/spec.md"
+    ],
     "apps/controller/internal/store/imagebuilds.go": [
       "docs/features/registry/spec.md"
     ],
     "apps/controller/internal/store/insights*.go": [
       "docs/features/ci-run-insights/spec.md"
+    ],
+    "apps/controller/internal/store/jobsdata_batch.go": [
+      "docs/features/observability/spec.md"
     ],
     "apps/controller/internal/store/jobsdata_followups*.go": [
       "docs/features/ci-run-insights/spec.md"
@@ -319,6 +358,9 @@
     ],
     "apps/controller/internal/store/queries/registry_*.sql": [
       "docs/features/registry/spec.md"
+    ],
+    "apps/controller/internal/store/querycount.go": [
+      "docs/features/observability/spec.md"
     ],
     "apps/controller/internal/store/registry_core.go": [
       "docs/features/registry/spec.md"

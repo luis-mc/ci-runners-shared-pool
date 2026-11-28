@@ -277,7 +277,11 @@ export const WHERE_AREAS: readonly { name: string; line: string; to: string }[] 
     line: 'Suggestions, Insights, Charts, Run elsewhere. Could be better.',
     to: '/analytics',
   },
-  { name: 'Settings', line: 'Access, repositories, console.', to: '/settings' },
+  {
+    name: 'Settings',
+    line: 'Access, repositories, themes, networking.',
+    to: '/settings',
+  },
   { name: 'Help', line: 'This guide.', to: '/help' },
 ];
 

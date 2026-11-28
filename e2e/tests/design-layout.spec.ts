@@ -201,7 +201,8 @@ const SCREENS: {
     ready: 'Settings',
     loads: ['/api/v1/settings/pool', '/api/v1/settings/queue'],
   },
-  { name: 'settings console', path: '/settings/console', ready: 'Settings' },
+  { name: 'settings themes', path: '/settings/themes', ready: 'Settings' },
+  { name: 'settings networking', path: '/settings/networking', ready: 'Settings' },
   { name: 'settings updates', path: '/settings/updates', ready: 'Settings' },
   { name: 'settings data', path: '/settings/data', ready: 'Settings' },
   { name: 'settings audit log', path: '/settings/audit', ready: 'Settings' },
@@ -383,14 +384,9 @@ for (const path of ['/setup/pool/turn-on', '/setup/runners/add', '/setup/machine
 
 // CRSP132, UX-11: on a wide screen the toolbar above a list is one row (search, filters, selection, count, actions).
 // Pool > Jobs has no toolbar above its list since LOOK62: its search and filters sit in the Filters pane, judged by
-// e2e/tests/web-console/pool-jobs.spec.ts at 360, 393 and 1300 px.
-for (const path of ['/setup/pool', '/setup/machines', '/setup/runners']) {
+// e2e/tests/web-console/pool-jobs.spec.ts at 360, 393 and 1300 px. Pool setup has no toolbar since CRSP359 (tick rows in groups).
+for (const path of ['/setup/machines', '/setup/runners']) {
   test(`list toolbar is one row at 1300 px: ${path}`, async ({ page }) => {
-    // The Repositories toolbar (search, Pool, Active types, Select all, count, Add) no longer fits one row inside its pane.
-    test.fixme(
-      path === '/setup/pool',
-      'CRSP162 toolbar wraps inside the pane at 1300 px',
-    );
     const mock = jobsAndDoctor(signedIn());
     await mock.install(page);
     await page.setViewportSize({ width: 1300, height: 900 });

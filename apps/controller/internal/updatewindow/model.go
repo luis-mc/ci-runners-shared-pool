@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lifecyclewords"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/tray"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/update"
 )
@@ -134,6 +135,9 @@ type Snapshot struct {
 	ServiceUp      bool   // the service answered
 	ServiceVersion string // the version it runs
 	Jobs           int    // jobs running now
+	// Notes is the release note of the offered version and UpdatedNotes the one of the version that runs
+	// now (the service reads both from the signed manifest); "" when a release has none.
+	Notes, UpdatedNotes string
 }
 
 // SnapshotOf turns the answer of the local channel into a Snapshot; err means no answer.
@@ -141,7 +145,8 @@ func SnapshotOf(st tray.Status, err error) Snapshot {
 	if err != nil {
 		return Snapshot{}
 	}
-	return Snapshot{Stage: st.Update.Stage, ServiceUp: true, ServiceVersion: st.Version, Jobs: st.Running}
+	return Snapshot{Stage: st.Update.Stage, ServiceUp: true, ServiceVersion: st.Version, Jobs: st.Running,
+		Notes: st.Update.Notes, UpdatedNotes: st.Update.UpdatedNotes}
 }
 
 // Model is the state machine of the window: stage and answers in, one View out. It has no
@@ -329,6 +334,9 @@ func (m *Model) View() View {
 		}
 		v.Heading = tray.Fill(tray.WordAvailableTitle, "version", to)
 		v.Body = []string{fmt.Sprintf("You run version %s. Running jobs finish first, then the service restarts (about 1 min). Jobs are never stopped by an update.", m.From)}
+		if n := m.last.Notes; n != "" {
+			v.Body = append([]string{tray.Fill(lifecyclewords.UpdatedNotes, "version", to), n}, v.Body...)
+		}
 		v.Buttons = []Button{{ID: BtnNotNow, Label: WordNotNow}, {ID: BtnUpdate, Label: tray.Fill(tray.WordAvailablePrimary, "version", to), Primary: true}}
 		v.Default, v.EscapeIs = BtnUpdate, BtnNotNow
 	case StateDownloading:
@@ -367,6 +375,11 @@ func (m *Model) View() View {
 	case StateDone:
 		v.Heading, v.Tone = tray.Fill(tray.WordUpdatedTitle, "version", m.doneVersion()), ToneDone
 		v.Buttons = []Button{{ID: BtnWhatsNew, Label: tray.WordWhatsNew}, {ID: BtnClose, Label: WordClose, Primary: true}}
+		if n := m.last.UpdatedNotes; n != "" {
+			// The note is shown here, so the button that opened the release page is not needed.
+			v.Body = []string{tray.Fill(lifecyclewords.UpdatedNotes, "version", m.doneVersion()), n}
+			v.Buttons = closeOnly
+		}
 		v.Default, v.EscapeIs = BtnClose, BtnClose
 	case StateRolledBack:
 		ended(ToneProblem, m.rolledBackTitle())

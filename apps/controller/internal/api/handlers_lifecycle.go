@@ -52,6 +52,16 @@ func toGenLifecycle(st update.LifecycleStatus) gen.LifecycleStatus {
 		v := st.Available
 		out.Available = &v
 	}
+	if st.Notes != "" {
+		n := st.Notes
+		out.Notes = &n
+	}
+	if u := st.Updated; u != nil {
+		out.Updated = &struct {
+			Notes   string `json:"notes"`
+			Version string `json:"version"`
+		}{Notes: u.Notes, Version: u.Version}
+	}
 	if w := st.Window; w != nil {
 		out.Window = &struct {
 			End   string `json:"end"`
@@ -82,7 +92,28 @@ func (s *server) GetLifecycleStatus(ctx context.Context, _ gen.GetLifecycleStatu
 		f := unavailable()
 		return gen.GetLifecycleStatusdefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
 	}
-	return gen.GetLifecycleStatus200JSONResponse(toGenLifecycle(s.opts.Lifecycle.Status(ctx))), nil
+	out := toGenLifecycle(s.opts.Lifecycle.Status(ctx))
+	// The last check, from the update audit rows (newest first): a user's check is manual, the updater's own is automatic (CRSP368).
+	if rows, err := s.opts.Lifecycle.History(ctx); err == nil {
+		for _, r := range rows {
+			if r.Action != "check" {
+				continue
+			}
+			kind := gen.LifecycleStatusLastCheckKindManual
+			if r.Actor == "updater" {
+				kind = gen.LifecycleStatusLastCheckKindAutomatic
+			}
+			out.LastCheck = &struct {
+				At time.Time `json:"at"`
+
+				// By Who asked for the check; updater when crsp looked by itself.
+				By   string                           `json:"by"`
+				Kind gen.LifecycleStatusLastCheckKind `json:"kind"`
+			}{At: r.At, By: r.Actor, Kind: kind}
+			break
+		}
+	}
+	return gen.GetLifecycleStatus200JSONResponse(out), nil
 }
 
 // SetUpdatePolicy implements POST /api/v1/update/policy.

@@ -169,6 +169,20 @@ func cmdLogin() *command {
 	}
 }
 
+// deviceFlowDisabled is the error GitHub answers when "Enable Device Flow" is
+// off for the App (github-integration R5.14).
+const deviceFlowDisabled = "device_flow_disabled"
+
+// deviceFlowOffError says what is wrong and where to turn it on. settingsURL is
+// the App's settings page when the controller knows the App's slug.
+func deviceFlowOffError(settingsURL *string) error {
+	where := "in the App's settings on GitHub (Settings, Developer settings, GitHub Apps)"
+	if settingsURL != nil && *settingsURL != "" {
+		where = "at " + *settingsURL
+	}
+	return fail(ExitFailed, "Device Flow is off for this controller's GitHub App. Turn on \"Enable Device Flow\" %s, then run crsp login again.", where)
+}
+
 // deviceFlow runs GitHub's device flow (decision 0002) and returns the GitHub
 // user token. The token is passed to the controller once and never stored.
 func (c *call) deviceFlow(cfg client.CliLoginConfig) (string, error) {
@@ -193,8 +207,13 @@ func (c *call) deviceFlow(cfg client.CliLoginConfig) (string, error) {
 		VerificationURI string `json:"verification_uri"`
 		ExpiresIn       int    `json:"expires_in"`
 		Interval        int    `json:"interval"`
+		Error           string `json:"error"`
 	}
-	if err := post(cfg.DeviceCodeUrl, url.Values{"client_id": {cfg.ClientId}}, &dc); err != nil || dc.DeviceCode == "" {
+	err := post(cfg.DeviceCodeUrl, url.Values{"client_id": {cfg.ClientId}}, &dc)
+	if err == nil && dc.Error == deviceFlowDisabled {
+		return "", deviceFlowOffError(cfg.SettingsUrl)
+	}
+	if err != nil || dc.DeviceCode == "" {
 		return "", fail(ExitUnreachable, "Could not start GitHub's device sign-in. Try again in a minute.")
 	}
 	link := dc.VerificationURI

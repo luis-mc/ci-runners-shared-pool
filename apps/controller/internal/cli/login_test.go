@@ -289,3 +289,42 @@ func TestLoginOverPlainHTTPOnLoopback(t *testing.T) {
 		t.Fatalf("plain http off loopback: %d %q", code, errOut)
 	}
 }
+
+// CRSP384, github-integration R5.14: GitHub answers device_flow_disabled when
+// "Enable Device Flow" is off; the CLI says so and names the settings page.
+func TestLoginDeviceFlowOffNamesTheSetting(t *testing.T) {
+	cases := []struct {
+		name, settings, want string
+	}{
+		{"with the app page", "https://github.com/settings/apps/crsp-home", "https://github.com/settings/apps/crsp-home"},
+		{"without a slug", "", "Developer settings"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			f := newFixture(t)
+			f.dir = t.TempDir()
+			f.secrets = &memSecrets{}
+			mux := http.NewServeMux()
+			mux.HandleFunc("/login/device/code", func(w http.ResponseWriter, r *http.Request) {
+				writeJSON(w, 200, map[string]any{"error": "device_flow_disabled", "error_description": "Device flow must be explicitly enabled for this App"})
+			})
+			gh := httptest.NewServer(mux)
+			t.Cleanup(gh.Close)
+			cfg := map[string]any{"client_id": "Iv23liTest", "device_code_url": gh.URL + "/login/device/code", "verification_url": "https://github.com/login/device"}
+			if tc.settings != "" {
+				cfg["settings_url"] = tc.settings
+			}
+			f.reply("GET /api/v1/auth/cli/config", 200, cfg)
+			code, _, e := f.run("login", f.srv.URL, "--fingerprint", f.fingerprint(), "--name", "home")
+			if code != ExitFailed {
+				t.Fatalf("exit %d, want %d: %q", code, ExitFailed, e)
+			}
+			if !strings.Contains(e, "Device Flow is off") || !strings.Contains(e, "Enable Device Flow") || !strings.Contains(e, tc.want) {
+				t.Fatalf("message %q", e)
+			}
+			if strings.Contains(e, "Try again in a minute") {
+				t.Fatalf("the old words are back: %q", e)
+			}
+		})
+	}
+}
