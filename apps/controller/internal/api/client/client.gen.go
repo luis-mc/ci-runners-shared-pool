@@ -9563,8 +9563,11 @@ type Runner struct {
 	Backend BackendName `json:"backend"`
 
 	// CanReregister True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153).
-	CanReregister *bool      `json:"can_reregister,omitempty"`
-	CreatedAt     *time.Time `json:"created_at,omitempty"`
+	CanReregister *bool `json:"can_reregister,omitempty"`
+
+	// CanStart True when the Runners page offers Start: the service of a persistent runner is stopped (runners R5.157).
+	CanStart  *bool      `json:"can_start,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// CurrentJob One job attempt (observability R5.7, R5.8).
 	CurrentJob *Job `json:"current_job,omitempty"`
@@ -13604,6 +13607,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with PATCH /api/v1/runners/{runnerId}/settings (the `UpdateRunnerSettings` operationId).
 	UpdateRunnerSettings(ctx context.Context, runnerId RunnerId, body UpdateRunnerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StartRunner Start the service of a stopped runner
+	//
+	// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+	//
+	// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+	StartRunner(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListRuns Workflow runs, newest first
 	//
@@ -18455,6 +18465,23 @@ func (c *Client) UpdateRunnerSettingsWithBody(ctx context.Context, runnerId Runn
 // Corresponds with PATCH /api/v1/runners/{runnerId}/settings (the `UpdateRunnerSettings` operationId).
 func (c *Client) UpdateRunnerSettings(ctx context.Context, runnerId RunnerId, body UpdateRunnerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewUpdateRunnerSettingsRequest(c.Server, runnerId, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StartRunner Start the service of a stopped runner
+//
+// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+//
+// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+func (c *Client) StartRunner(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartRunnerRequest(c.Server, runnerId)
 	if err != nil {
 		return nil, err
 	}
@@ -28783,6 +28810,40 @@ func NewUpdateRunnerSettingsRequestWithBody(server string, runnerId RunnerId, co
 	return req, nil
 }
 
+// NewStartRunnerRequest constructs an http.Request for the StartRunner method
+func NewStartRunnerRequest(server string, runnerId RunnerId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runnerId", runnerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runners/%s/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListRunsRequest constructs an http.Request for the ListRuns method
 func NewListRunsRequest(server string, params *ListRunsParams) (*http.Request, error) {
 	var err error
@@ -33335,6 +33396,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with PATCH /api/v1/runners/{runnerId}/settings (the `UpdateRunnerSettings` operationId).
 	UpdateRunnerSettingsWithResponse(ctx context.Context, runnerId RunnerId, body UpdateRunnerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRunnerSettingsResponse, error)
+
+	// StartRunnerWithResponse Start the service of a stopped runner
+	//
+	// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+	StartRunnerWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*StartRunnerResponse, error)
 
 	// ListRunsWithResponse Workflow runs, newest first
 	//
@@ -43212,6 +43282,54 @@ func (r UpdateRunnerSettingsResponse) ContentType() string {
 	return ""
 }
 
+type StartRunnerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Runner
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r StartRunnerResponse) GetJSON200() *Runner {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StartRunnerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StartRunnerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StartRunnerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartRunnerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StartRunnerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListRunsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -49411,6 +49529,21 @@ func (c *ClientWithResponses) UpdateRunnerSettingsWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseUpdateRunnerSettingsResponse(rsp)
+}
+
+// StartRunnerWithResponse Start the service of a stopped runner
+//
+// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+func (c *ClientWithResponses) StartRunnerWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*StartRunnerResponse, error) {
+	rsp, err := c.StartRunner(ctx, runnerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartRunnerResponse(rsp)
 }
 
 // ListRunsWithResponse Workflow runs, newest first
@@ -56892,6 +57025,39 @@ func ParseUpdateRunnerSettingsResponse(rsp *http.Response) (*UpdateRunnerSetting
 	}
 
 	response := &UpdateRunnerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Runner
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartRunnerResponse parses an HTTP response from a StartRunnerWithResponse call
+func ParseStartRunnerResponse(rsp *http.Response) (*StartRunnerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartRunnerResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

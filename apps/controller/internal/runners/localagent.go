@@ -93,6 +93,13 @@ func (l *LocalAgent) StopService(ctx context.Context, _ string, service string) 
 	return b.Stop(ctx, backend.Handle{Ref: service})
 }
 
+// StartService starts the service of a persistent runner on this machine and
+// does nothing when its listener already runs (runners R5.157).
+func (l *LocalAgent) StartService(ctx context.Context, _ string, service string) error {
+	_, err := l.ControlListener(ctx, "start", service, false, true)
+	return err
+}
+
 // RemoveRunner deregisters with the remove token and checks the result; unless
 // KeepFiles is set it then cleans up. A failed deregistration stops here and
 // leaves the runner as it was (runners R5.19).

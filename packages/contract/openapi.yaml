@@ -2767,6 +2767,32 @@ paths:
                 $ref: '#/components/schemas/Runner'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/runners/{runnerId}/start:
+    post:
+      operationId: startRunner
+      tags: [runners]
+      summary: Start the service of a stopped runner
+      description: >-
+        runners R5.157. The Start button and `crsp runner start NAME`. For a
+        persistent runner CRSP made whose service is stopped: the machine starts
+        the service of the runner, or of each registration of a pool runner, and
+        does nothing for one that already runs. A service that starts and stops
+        again at once is answered with 409 and the reason the runner service gave
+        (runners R5.156). A runner CRSP did not make and an ephemeral runner are
+        refused with 409.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RunnerId'
+      responses:
+        '200':
+          description: Started; the runner as it is now.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runner'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/runners/{runnerId}/registration:
     delete:
       operationId: deleteRunnerRegistration
@@ -10271,6 +10297,11 @@ components:
             True when the Runners page offers Register again: GitHub deleted the
             registration and it was not made again, or GitHub does not list the
             runner (runners R5.153).
+        can_start:
+          type: boolean
+          description: >-
+            True when the Runners page offers Start: the service of a persistent
+            runner is stopped (runners R5.157).
         os:
           $ref: '#/components/schemas/OS'
         arch:

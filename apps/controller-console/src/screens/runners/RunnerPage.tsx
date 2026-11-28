@@ -124,6 +124,14 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
     );
     onChanged();
   });
+  const start = useCommand(async () => {
+    await unwrap(
+      client.POST('/api/v1/runners/{runnerId}/start', {
+        params: { path: { runnerId: r.id } },
+      }),
+    );
+    onChanged();
+  });
   const clear = useCommand(async () => {
     await unwrap(
       client.POST('/api/v1/runners/{runnerId}/clear-cache', {
@@ -159,6 +167,27 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
       ) : null}
       {again.error ? (
         <Message tone="problem">{`Could not register again. ${again.error}`}</Message>
+      ) : null}
+      {r.can_start && !r.can_reregister ? (
+        <Message
+          tone="needs-you"
+          action={
+            <Button
+              onPress={() => void start.run()}
+              busy={start.busy}
+              busyLabel="Starting"
+              disabled={!admin}
+              reason={why}
+            >
+              Start
+            </Button>
+          }
+        >
+          {r.reason ?? 'The service of this runner is stopped.'}
+        </Message>
+      ) : null}
+      {start.error ? (
+        <Message tone="problem">{`Could not start. ${start.error}`}</Message>
       ) : null}
       <Section title="Runner">
         <Facts

@@ -451,6 +451,32 @@ describe('Runners list', () => {
     );
   });
 
+  // runners R5.157: a stopped runner offers Start; the press asks the controller and says why a start failed.
+  it('offers Start on a stopped runner and says why a start failed (R5.157)', async () => {
+    const api = signedIn()
+      .on('GET', '/api/v1/runners', {
+        items: [
+          runner({
+            id: 'r5',
+            name: 'gameroompc-win-1',
+            state: 'stopped',
+            managed: true,
+            can_start: true,
+            reason: 'its service is stopped',
+          }),
+        ],
+      })
+      .on('POST', '/api/v1/runners/:id/start', () =>
+        apiError(409, 'conflict', 'the service started and stopped again at once'),
+      );
+    renderApp(api, '/setup/runners');
+    await screen.findByRole('table', { name: /^Runners on/ });
+    expect(api.count('POST', '/api/v1/runners/r5/start')).toBe(0);
+    fireEvent.click(screen.getByRole('button', { name: /^Start/ }));
+    await waitFor(() => expect(api.count('POST', '/api/v1/runners/r5/start')).toBe(1));
+    await screen.findByText(/Could not start\./);
+  });
+
   it('says why a Register again press failed (R5.141)', async () => {
     const api = signedIn()
       .on('GET', '/api/v1/runners', {

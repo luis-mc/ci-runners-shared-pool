@@ -262,6 +262,13 @@ func (a *Agent) ControlListener(ctx context.Context, machineID, action, service 
 	return r.GetListener(), nil
 }
 
+// StartService starts the service of a persistent runner on the machine; it
+// does nothing when the listener already runs (runners R5.157).
+func (a *Agent) StartService(ctx context.Context, machineID, service string) error {
+	_, err := a.ControlListener(ctx, machineID, "start", service, false, true)
+	return err
+}
+
 // CleanUp deletes the service entry, the account and the folder of a runner.
 func (a *Agent) CleanUp(ctx context.Context, machineID, service string) error {
 	return a.stop(ctx, machineID, service, true)

@@ -1837,6 +1837,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runners/{runnerId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start the service of a stopped runner
+         * @description runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+         */
+        post: operations["startRunner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runners/{runnerId}/registration": {
         parameters: {
             query?: never;
@@ -6467,6 +6487,8 @@ export interface components {
             reason?: string;
             /** @description True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153). */
             can_reregister?: boolean;
+            /** @description True when the Runners page offers Start: the service of a persistent runner is stopped (runners R5.157). */
+            can_start?: boolean;
             os: components["schemas"]["OS"];
             arch: components["schemas"]["Arch"];
             kind: components["schemas"]["RunnerKind"];
@@ -11946,6 +11968,29 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Registered again; the runner as it is now. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Runner"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    startRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runnerId: components["parameters"]["RunnerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started; the runner as it is now. */
             200: {
                 headers: {
                     [name: string]: unknown;

@@ -199,6 +199,8 @@ type fakeAgent struct {
 	cfgs     []backend.StartConfig
 	removed  []RemoveRequest
 	stopped  []string
+	started  []string
+	startErr error // StartService fails with it
 	folders  []string
 	addErr   error
 	cleanErr error  // CleanUp fails with it
@@ -215,6 +217,13 @@ func (a *fakeAgent) AddRunner(_ context.Context, _ string, spec backend.RunnerSp
 }
 func (a *fakeAgent) StopService(_ context.Context, _ string, svc string) error {
 	a.stopped = append(a.stopped, svc)
+	return nil
+}
+func (a *fakeAgent) StartService(_ context.Context, _ string, svc string) error {
+	if a.startErr != nil {
+		return a.startErr
+	}
+	a.started = append(a.started, svc)
 	return nil
 }
 func (a *fakeAgent) RemoveRunner(_ context.Context, _ string, req RemoveRequest) error {

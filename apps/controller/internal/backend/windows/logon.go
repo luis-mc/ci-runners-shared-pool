@@ -119,6 +119,7 @@ func (b *Backend) HealServices(ctx context.Context) ([]backend.ServiceHealth, er
 	}
 	var out []backend.ServiceHealth
 	var errs []error
+	listed := false
 	for _, f := range found {
 		acct := accountName(f.Account)
 		if !f.Managed || !strings.HasPrefix(acct, runners.AccountPrefix) {
@@ -139,6 +140,14 @@ func (b *Backend) HealServices(ctx context.Context) ([]backend.ServiceHealth, er
 			}
 		}
 		if !f.Running {
+			// A listener that cannot list the folders above its own stops at once
+			// (R5.156): give the group the right before the start, once a pass.
+			if !listed {
+				listed = true
+				if lerr := b.ensureListRight(ctx); lerr != nil {
+					b.log("acl", lerr.Error())
+				}
+			}
 			env := map[string]string{"CRSP_SERVICE": f.ServiceName, "CRSP_RUNNER": f.Name}
 			if serr := b.startServiceAfter(ctx, env, acct, gerr == nil); serr != nil {
 				h.Problem = b.redact(serr.Error())
