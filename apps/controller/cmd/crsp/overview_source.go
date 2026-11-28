@@ -24,7 +24,7 @@ func (p poolOverviewSource) MinutesSavedSince(ctx context.Context, since time.Ti
 	}
 	by := map[string]int{}
 	for _, j := range jobs {
-		by[j.OS] += history.RoundUpMinutes(j.Run)
+		by[j.OS] += history.RoundUpMinutes(j.Run) * max(j.Count, 1)
 	}
 	out := make([]overview.OSMinutes, 0, len(by))
 	for os, m := range by {
