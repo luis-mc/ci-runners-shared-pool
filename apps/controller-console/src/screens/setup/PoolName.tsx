@@ -138,7 +138,6 @@ export function PoolNameWizard({
     return () => {
       on = false;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [client]);
 
   const toReview = async () => {
