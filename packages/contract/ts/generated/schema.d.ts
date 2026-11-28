@@ -2113,12 +2113,12 @@ export interface paths {
         };
         /**
          * The pool name and a rename that is not finished
-         * @description runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+         * @description runners R5.178, github-integration R5.117. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
          */
         get: operations["getPoolName"];
         /**
          * Name the pool at the first setup
-         * @description runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+         * @description runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
          */
         put: operations["setPoolName"];
         post?: never;
@@ -2139,7 +2139,7 @@ export interface paths {
         put?: never;
         /**
          * Plan renaming the pool
-         * @description runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+         * @description runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
          */
         post: operations["planPoolRename"];
         delete?: never;
@@ -2157,7 +2157,7 @@ export interface paths {
         };
         /**
          * A rename with what was done and what is left
-         * @description runners R5.144 (done after reload shows the stored outcome).
+         * @description runners R5.180 (done after reload shows the stored outcome).
          */
         get: operations["getPoolRename"];
         put?: never;
@@ -2179,7 +2179,7 @@ export interface paths {
         put?: never;
         /**
          * Run a rename, or run it again after a stop or a failure
-         * @description runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+         * @description runners R5.180. Steps that are done are not repeated. A rename that is running answers 409 conflict.
          */
         post: operations["applyPoolRename"];
         delete?: never;
@@ -2199,7 +2199,7 @@ export interface paths {
         put?: never;
         /**
          * Stop a rename that is running
-         * @description runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+         * @description runners R5.180, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
          */
         post: operations["stopPoolRename"];
         delete?: never;

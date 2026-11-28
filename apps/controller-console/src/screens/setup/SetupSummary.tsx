@@ -132,7 +132,7 @@ export function SetupSteps({ f, app }: { f: PoolFigures; app: boolean | undefine
   );
 }
 
-/** The pool name and the way to rename it (runners R5.141). */
+/** The pool name and the way to rename it (runners R5.178). */
 export function PoolNameSection() {
   const client = useClient();
   const session = useSession();

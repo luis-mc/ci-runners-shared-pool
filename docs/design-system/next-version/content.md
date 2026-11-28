@@ -2214,3 +2214,39 @@ The Import agent installers wizard (Settings, Updates) and its entry point. Buil
 | The agent installers are stored. | Done after reload. |
 | Version, Installers stored | The facts of Done. |
 | Open Updates | The action of Done. |
+
+## Pool name words
+
+The words of the first-run step that names the pool and of the wizard that renames it (web-console R5.178, runners R5.178 to R5.181, CRSP400). The pool name is the runner label every crsp runner carries.
+
+| Word | Where and meaning |
+|---|---|
+| Name the pool | The first-run step and the wizard name at the first setup. Primary on Review: Name the pool. Busy word: Saving. |
+| Rename the pool | The wizard name, the Setup, Summary button and the page title. Primary on Review: Rename the pool. Busy word: Renaming. |
+| Name, Review, Saving, Renaming, Done | The steps of the two wizards (Saving for the first setup, Renaming for a rename). |
+| Pool name | The text field and the Setup, Summary section title. Help: Small letters, digits and hyphens, starting with crsp-, like crsp-home. |
+| The pool name is the runner label every crsp runner carries. crsp writes it into each repository's CRSP_RUNS_ON variables. | First line of the Name step. |
+| Give the pool a name. | Mistake: the field is empty. |
+| A pool name has at most 40 characters. | Mistake: the name is too long. |
+| A pool name starts with crsp- and then small letters, digits and hyphens, like crsp-home. | Mistake: the name is not a label crsp can use. |
+| The pool is called {name} already. | Mistake: the new name is the one in force. |
+| The service sets the pool name with CRSP_POOL_NAME, which wins over this page. Remove that value from the service, then name the pool here. | Needs-you message when the environment value sets the name. Next is disabled and says: The service sets the name. |
+| The pool will be called {name}. Nothing carries the label yet. | Review of the first setup. |
+| Old name, New name, Runners, Repositories, Scale set | The facts of Review. The scale set line: started again under the new name. |
+| A job queued with {old} still finds a runner until the last step takes that label off. Runners made for one job get the new label when they are made. | Note on Review of a rename. |
+| Add the label {new} to runner {name} (it keeps {old} for now) | A technical step: the runner gets the new label first. |
+| Store the new name {new}; new runners and the console use it from here | A technical step. |
+| Write the CRSP_RUNS_ON variables of {repository} with {new} | A technical step for each repository that uses the pool. |
+| Remove the label {old} from runner {name} | A technical step after the variables are written. |
+| Start the scale set again under the name {new} | A technical step when scale-set demand is on. |
+| Finish: a job queued with {old} no longer finds a runner | The last technical step. |
+| Renaming {n} of {N}: {step} | The live line of the work step. Stop is offered. |
+| Paused. The page closed while the rename ran. Run it again to go on where it ended. | Paused message. |
+| Stopped. {n} steps were done and {m} are left. Jobs queued with {old} still find a runner. Run again goes on where it ended. | Stopped message (one step: step was, is). |
+| {n} steps failed. {reason} {done} done, {left} left. Run again repeats the failed step and goes on. | Failed message (one step: step). |
+| Run again | The primary of a stopped or failed rename. |
+| The pool is called {name}. | Done and Done after reload. |
+| Open Setup | The action of Done. |
+| The pool was not named. {reason} Try again. | Failed before a rename was made. |
+| Reading the pool name | The wait line while the wizard reads the controller. |
+| Pool name, Rename | The facts of the Setup, Summary section. The value of Name is the pool name; Rename holds the button. |

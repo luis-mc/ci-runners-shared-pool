@@ -9,7 +9,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
 )
 
-// renameRunners gives the pool rename the runners service (runners R5.141 to R5.145).
+// renameRunners gives the pool rename the runners service (runners R5.178 to R5.181).
 type renameRunners struct{ svc *runners.Service }
 
 func (p renameRunners) WithLabel(ctx context.Context, label string) ([]poolname.RunnerRef, error) {

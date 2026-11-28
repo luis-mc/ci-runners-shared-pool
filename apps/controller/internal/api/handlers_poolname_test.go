@@ -36,7 +36,7 @@ func (p *poolStub) Stop(context.Context, string, string) (poolname.Job, error) {
 	return p.job, poolname.ErrNotApplying
 }
 
-// runners R5.141 to R5.144: name, plan, run, stop; an admin writes, a viewer reads.
+// runners R5.178 to R5.181: name, plan, run, stop; an admin writes, a viewer reads.
 func TestPoolNameRoutes(t *testing.T) {
 	mux := http.NewServeMux()
 	Register(mux, Options{Version: "t", DB: fakeDB{}, PoolName: &poolStub{}, Authn: asRole(auth.RoleOwner)})

@@ -111,7 +111,7 @@ type Options struct {
 	Health HealthService
 	// ListenerGate serves the listener gate setting and its runners (handlers_listenergate.go, runners R5.134). Nil answers 501.
 	ListenerGate ListenerGateService
-	// PoolName serves the pool name and its rename (handlers_poolname.go, runners R5.141). Nil answers 501.
+	// PoolName serves the pool name and its rename (handlers_poolname.go, runners R5.178). Nil answers 501.
 	PoolName PoolNameService
 	// RegistryReplace serves compare, replace plans and rollback of pool registry images
 	// (handlers_registry_reg7.go). Nil answers 501.

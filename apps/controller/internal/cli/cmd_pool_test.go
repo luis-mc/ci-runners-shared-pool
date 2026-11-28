@@ -13,7 +13,7 @@ func renameJSON(state string) map[string]any {
 		"created_at": "2026-11-28T10:00:00Z", "updated_at": "2026-11-28T10:00:00Z"}
 }
 
-func TestPoolNameAndRename(t *testing.T) { // runners R5.141 to R5.143
+func TestPoolNameAndRename(t *testing.T) { // runners R5.178 to R5.180
 	f := newFixture(t)
 	f.handle("GET /api/v1/pool/name", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]any{"name": "crsp-home", "source": "default", "env_override": false})

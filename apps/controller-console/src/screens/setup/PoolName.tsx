@@ -1,4 +1,4 @@
-// The pool name wizard (runners R5.141 to R5.145, web-console 4.1). The name is the runner label every crsp runner
+// The pool name wizard (runners R5.178 to R5.181, web-console 4.1). The name is the runner label every crsp runner
 // carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. At the first setup it names the pool
 // (mode `first`); later it renames it (mode `rename`): runners get the new label first, then the variables, then the
 // old label goes. Steps: Name, Review, Renaming, Done. The stored rename id is in the address (?rename=), so Done

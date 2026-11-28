@@ -13433,14 +13433,14 @@ type ClientInterface interface {
 
 	// GetPoolName The pool name and a rename that is not finished
 	//
-	// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+	// runners R5.178, github-integration R5.117. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
 	//
 	// Corresponds with GET /api/v1/pool/name (the `GetPoolName` operationId).
 	GetPoolName(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// SetPoolNameWithBody Name the pool at the first setup
 	//
-	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -13449,7 +13449,7 @@ type ClientInterface interface {
 
 	// SetPoolName Name the pool at the first setup
 	//
-	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -13458,7 +13458,7 @@ type ClientInterface interface {
 
 	// PlanPoolRenameWithBody Plan renaming the pool
 	//
-	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -13467,7 +13467,7 @@ type ClientInterface interface {
 
 	// PlanPoolRename Plan renaming the pool
 	//
-	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 	//
 	// Takes a body of the `application/json` content type.
 	//
@@ -13476,21 +13476,21 @@ type ClientInterface interface {
 
 	// GetPoolRename A rename with what was done and what is left
 	//
-	// runners R5.144 (done after reload shows the stored outcome).
+	// runners R5.180 (done after reload shows the stored outcome).
 	//
 	// Corresponds with GET /api/v1/pool/renames/{renameId} (the `GetPoolRename` operationId).
 	GetPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ApplyPoolRename Run a rename, or run it again after a stop or a failure
 	//
-	// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+	// runners R5.180. Steps that are done are not repeated. A rename that is running answers 409 conflict.
 	//
 	// Corresponds with POST /api/v1/pool/renames/{renameId}/apply (the `ApplyPoolRename` operationId).
 	ApplyPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// StopPoolRename Stop a rename that is running
 	//
-	// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+	// runners R5.180, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
 	//
 	// Corresponds with POST /api/v1/pool/renames/{renameId}/stop (the `StopPoolRename` operationId).
 	StopPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error)
@@ -17703,7 +17703,7 @@ func (c *Client) GetPackage(ctx context.Context, name string, reqEditors ...Requ
 
 // GetPoolName The pool name and a rename that is not finished
 //
-// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+// runners R5.178, github-integration R5.117. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
 //
 // Corresponds with GET /api/v1/pool/name (the `GetPoolName` operationId).
 func (c *Client) GetPoolName(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -17720,7 +17720,7 @@ func (c *Client) GetPoolName(ctx context.Context, reqEditors ...RequestEditorFn)
 
 // SetPoolNameWithBody Name the pool at the first setup
 //
-// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 //
 // Takes any type of body and a specified content type.
 //
@@ -17739,7 +17739,7 @@ func (c *Client) SetPoolNameWithBody(ctx context.Context, contentType string, bo
 
 // SetPoolName Name the pool at the first setup
 //
-// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -17758,7 +17758,7 @@ func (c *Client) SetPoolName(ctx context.Context, body SetPoolNameJSONRequestBod
 
 // PlanPoolRenameWithBody Plan renaming the pool
 //
-// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 //
 // Takes any type of body and a specified content type.
 //
@@ -17777,7 +17777,7 @@ func (c *Client) PlanPoolRenameWithBody(ctx context.Context, contentType string,
 
 // PlanPoolRename Plan renaming the pool
 //
-// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 //
 // Takes a body of the `application/json` content type.
 //
@@ -17796,7 +17796,7 @@ func (c *Client) PlanPoolRename(ctx context.Context, body PlanPoolRenameJSONRequ
 
 // GetPoolRename A rename with what was done and what is left
 //
-// runners R5.144 (done after reload shows the stored outcome).
+// runners R5.180 (done after reload shows the stored outcome).
 //
 // Corresponds with GET /api/v1/pool/renames/{renameId} (the `GetPoolRename` operationId).
 func (c *Client) GetPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -17813,7 +17813,7 @@ func (c *Client) GetPoolRename(ctx context.Context, renameId RenameId, reqEditor
 
 // ApplyPoolRename Run a rename, or run it again after a stop or a failure
 //
-// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+// runners R5.180. Steps that are done are not repeated. A rename that is running answers 409 conflict.
 //
 // Corresponds with POST /api/v1/pool/renames/{renameId}/apply (the `ApplyPoolRename` operationId).
 func (c *Client) ApplyPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -17830,7 +17830,7 @@ func (c *Client) ApplyPoolRename(ctx context.Context, renameId RenameId, reqEdit
 
 // StopPoolRename Stop a rename that is running
 //
-// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+// runners R5.180, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
 //
 // Corresponds with POST /api/v1/pool/renames/{renameId}/stop (the `StopPoolRename` operationId).
 func (c *Client) StopPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error) {
@@ -33855,7 +33855,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetPoolNameWithResponse The pool name and a rename that is not finished
 	//
-	// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+	// runners R5.178, github-integration R5.117. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -33864,7 +33864,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetPoolNameWithBodyWithResponse Name the pool at the first setup
 	//
-	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -33873,7 +33873,7 @@ type ClientWithResponsesInterface interface {
 
 	// SetPoolNameWithResponse Name the pool at the first setup
 	//
-	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -33882,7 +33882,7 @@ type ClientWithResponsesInterface interface {
 
 	// PlanPoolRenameWithBodyWithResponse Plan renaming the pool
 	//
-	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -33891,7 +33891,7 @@ type ClientWithResponsesInterface interface {
 
 	// PlanPoolRenameWithResponse Plan renaming the pool
 	//
-	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 	//
 	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -33900,7 +33900,7 @@ type ClientWithResponsesInterface interface {
 
 	// GetPoolRenameWithResponse A rename with what was done and what is left
 	//
-	// runners R5.144 (done after reload shows the stored outcome).
+	// runners R5.180 (done after reload shows the stored outcome).
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -33909,7 +33909,7 @@ type ClientWithResponsesInterface interface {
 
 	// ApplyPoolRenameWithResponse Run a rename, or run it again after a stop or a failure
 	//
-	// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+	// runners R5.180. Steps that are done are not repeated. A rename that is running answers 409 conflict.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -33918,7 +33918,7 @@ type ClientWithResponsesInterface interface {
 
 	// StopPoolRenameWithResponse Stop a rename that is running
 	//
-	// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+	// runners R5.180, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
 	//
 	// Returns a wrapper object for the known response body format(s).
 	//
@@ -50218,7 +50218,7 @@ func (c *ClientWithResponses) GetPackageWithResponse(ctx context.Context, name s
 
 // GetPoolNameWithResponse The pool name and a rename that is not finished
 //
-// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+// runners R5.178, github-integration R5.117. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -50233,7 +50233,7 @@ func (c *ClientWithResponses) GetPoolNameWithResponse(ctx context.Context, reqEd
 
 // SetPoolNameWithBodyWithResponse Name the pool at the first setup
 //
-// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -50248,7 +50248,7 @@ func (c *ClientWithResponses) SetPoolNameWithBodyWithResponse(ctx context.Contex
 
 // SetPoolNameWithResponse Name the pool at the first setup
 //
-// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+// runners R5.178. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -50263,7 +50263,7 @@ func (c *ClientWithResponses) SetPoolNameWithResponse(ctx context.Context, body 
 
 // PlanPoolRenameWithBodyWithResponse Plan renaming the pool
 //
-// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
@@ -50278,7 +50278,7 @@ func (c *ClientWithResponses) PlanPoolRenameWithBodyWithResponse(ctx context.Con
 
 // PlanPoolRenameWithResponse Plan renaming the pool
 //
-// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+// runners R5.179. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
 //
 // Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
 //
@@ -50293,7 +50293,7 @@ func (c *ClientWithResponses) PlanPoolRenameWithResponse(ctx context.Context, bo
 
 // GetPoolRenameWithResponse A rename with what was done and what is left
 //
-// runners R5.144 (done after reload shows the stored outcome).
+// runners R5.180 (done after reload shows the stored outcome).
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -50308,7 +50308,7 @@ func (c *ClientWithResponses) GetPoolRenameWithResponse(ctx context.Context, ren
 
 // ApplyPoolRenameWithResponse Run a rename, or run it again after a stop or a failure
 //
-// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+// runners R5.180. Steps that are done are not repeated. A rename that is running answers 409 conflict.
 //
 // Returns a wrapper object for the known response body format(s).
 //
@@ -50323,7 +50323,7 @@ func (c *ClientWithResponses) ApplyPoolRenameWithResponse(ctx context.Context, r
 
 // StopPoolRenameWithResponse Stop a rename that is running
 //
-// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+// runners R5.180, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
 //
 // Returns a wrapper object for the known response body format(s).
 //

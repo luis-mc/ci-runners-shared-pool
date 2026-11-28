@@ -9,7 +9,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/cli/output"
 )
 
-// cmdPool is `crsp pool` (runners R5.141 to R5.145): show the pool name and
+// cmdPool is `crsp pool` (runners R5.178 to R5.181): show the pool name and
 // rename it. It calls the same service as the console's Rename the pool wizard.
 func cmdPool() *command {
 	return &command{

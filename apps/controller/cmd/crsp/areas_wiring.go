@@ -467,7 +467,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	if d.Hub != nil {
 		c.Options.CacheHub = d.Hub
 	}
-	// The pool name: the console names the pool at the first setup and renames it later (runners R5.141 to R5.145).
+	// The pool name: the console names the pool at the first setup and renames it later (runners R5.178 to R5.181).
 	c.Options.PoolName = poolname.New(poolname.Config{Name: poolName, KV: d.DB, Runners: renameRunners{svc: runnerSvc}, Repos: renameRepos{svc: rsvc},
 		ScaleSet: renameScaleSet{dr: demandRun}, Audit: renameAudit{auth: asvc}, Now: d.Now})
 	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: poolNow}

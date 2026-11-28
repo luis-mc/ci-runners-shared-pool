@@ -11,7 +11,7 @@ import (
 
 // The pool rename moves every runner from one pool label to another with the
 // runner label API of GitHub, so no runner is registered again and no job is
-// cut (runners R5.141 to R5.145). A runner record keeps the labels it was made
+// cut (runners R5.178 to R5.181). A runner record keeps the labels it was made
 // with; the rename keeps the record and GitHub the same.
 
 // LabelHolder is a runner record that carries a label.

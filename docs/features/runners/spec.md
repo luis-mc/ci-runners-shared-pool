@@ -637,6 +637,14 @@ flowchart TD
 
 **R5.177** (M6, CRSP277; R6.5) — **Start budget.** From a snapshot, a runner is online in GitHub within 5 s of the job being assigned (R6.5, median over 20 starts); a cold boot within 10 s. A job that needs Docker (R5.66) may run in a microVM: it has its own kernel and its own engine.
 
+**R5.178** (CRSP400) — **The pool name.** The pool's name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. It is a GitHub runner label that starts with `crsp-` and then small letters, digits and hyphens (at most 40 characters), the same rule as `repos/labels.go`. The name in force is, in this order: the environment value `CRSP_POOL_NAME` on the controller service when it is set and valid (the service wins; the console says so and cannot change it), else the name stored from the console, else `crsp-home`. The first setup asks for the name with `crsp-home` filled in (`PUT /api/v1/pool/name`, `crsp pool rename` on a pool that is not in use yet); it is refused once a runner or a repository uses the old label, because the rename is the way then. Every part reads the name on each use, so a rename needs no restart.
+
+**R5.179** (CRSP400) — **Rename the pool, in an order that strands no job.** `POST /api/v1/pool/renames` plans the rename and changes nothing: it counts the runner records that carry the old label, the repositories with the pool on and whether the scale set is on. Running it does, in this order: (1) every runner gets the new label, a persistent registration with GitHub's runner label API (add), a pool runner or a container runner in its record only; (2) the new name is stored; (3) each pool repository's variables are written with the same writer as the restore and Repair; (4) the old label is removed from each runner; (5) the scale set is started again under the new name when scale-set demand is on; (6) the old name stops meaning the pool. Until step 6 both names mean the pool: a job queued with the old label still finds a runner, and demand still starts a container for it. Runners made for one job get the new label when they are made. Nothing registers a runner again.
+
+**R5.180** (CRSP400) — **Stop, resume, reload.** A running rename can be stopped between steps: the step that runs finishes and no later step starts. A stopped or failed rename shows what was done and what is left; planning the same name again returns the same rename and running it again repeats no step that is done, so a rename can be run again any number of times. The rename is stored: after a reload or a restart the page reads the outcome from the controller, and after a restart the old name keeps meaning the pool until the rename ends.
+
+**R5.181** (CRSP400) — **One service, an audit entry for each change.** The console wizard, the API (`GET` and `PUT /api/v1/pool/name`, `/api/v1/pool/renames`) and the CLI (`crsp pool name`, `crsp pool rename NEW [--yes]`) use the same service. It writes an audit entry for the start, each label added or removed, the stored name, each repository written, a stop, a failure and the end.
+
 Open questions for the owner (CRSP277), with options, trade-offs and the recommendation:
 
 | # | Question | Options and trade-offs | Recommendation |
@@ -899,6 +907,10 @@ Rows that name a test file are built and run in CI; rows that say `planned:` are
 | R5.175 | planned: apps/controller/internal/backend/microvm/lanes_test.go TestLaneDiskOneVM |
 | R5.176 | planned: apps/controller/internal/agent/vmsetup_test.go TestMonitorPinnedDownload |
 | R5.177 | planned: apps/controller/internal/backend/microvm/perf_test.go (M6) |
+| R5.178 | Go | `apps/controller/internal/poolname/service_test.go` (validation, precedence env over stored over default, first setup) |
+| R5.179 | Go | `apps/controller/internal/poolname/service_test.go` (order labels, name, variables, remove, scale set; the old name means the pool until the end); `apps/controller/internal/runners/poollabel_test.go`; `apps/controller/internal/repos/poolrename_test.go` (variables carry the new label) |
+| R5.180 | Go | `apps/controller/internal/poolname/service_test.go` (stop then resume, failure mid-way, idempotent rerun, restart keeps the old name) |
+| R5.181 | Go | `apps/controller/internal/api/handlers_poolname_test.go`; `apps/controller/internal/cli/cmd_pool_test.go` |
 | R6.1 | apps/controller/internal/backend/container/container_test.go TestNoPrivilegedNoSocketKvmDevice (CRSP52) |
 | R6.2 | apps/controller/internal/runners/service_test.go TestNoTokenOrPasswordStoredOrLogged; apps/controller/internal/backend/linux/linux_test.go TestTokenOnlyInEnvAndUpdateOff |
 | R6.3 | apps/controller/internal/backend/windows/windows_test.go TestAccountRights (never in Administrators); apps/controller/internal/backend/linux/linux_test.go TestUnitUserAndGroup; apps/controller/internal/backend/macos/macos_test.go TestHiddenUser |

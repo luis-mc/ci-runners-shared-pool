@@ -441,7 +441,7 @@ function Checklist({
     );
   const s = state.steps;
   // The pool takes its name once GitHub is connected and before the first machine: crsp-home is prefilled. A pool
-  // that has a machine already, or a name chosen, has no such step (runners R5.141).
+  // that has a machine already, or a name chosen, has no such step (runners R5.178).
   const naming = useLoad(
     () =>
       signedIn ? unwrap(client.GET('/api/v1/pool/name')) : Promise.resolve(undefined),

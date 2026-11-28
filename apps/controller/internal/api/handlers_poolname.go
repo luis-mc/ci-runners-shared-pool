@@ -9,7 +9,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/poolname"
 )
 
-// PoolNameService is what the pool name routes need (runners R5.141 to R5.145).
+// PoolNameService is what the pool name routes need (runners R5.178 to R5.181).
 // *poolname.Service implements it.
 type PoolNameService interface {
 	Info(ctx context.Context) poolname.Info
