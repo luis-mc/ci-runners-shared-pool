@@ -14,6 +14,24 @@
 # chunks of their tests, each with the 60 s limit. All runs share one JSON file and one summary.
 set -euo pipefail
 cd "$(git rev-parse --show-toplevel)"
+# CRSP377 (S9, DS264, DL-121): the Go flake quarantine, .delivery/quarantine.json ({"tests": [{"test": "TestX",
+# "task": "CRSP999", "review": "YYYY-MM-DD"}]}, checked by scripts/delivery/quarantine_check.py). The blocking run
+# leaves the listed tests out with `go test -skip`; GO_TEST_QUARANTINE=only runs just those tests (the
+# non-blocking CI step, which reports and never fails the run). A quarantined test is never retried until it passes
+# (DL-99 G3). Top-level test names only: a name that is not a plain Go identifier is ignored.
+qnames=$(python3 scripts/delivery/quarantine_check.py names 2>/dev/null | grep -E '^[A-Za-z0-9_]+$' | paste -sd'|' - || true)
+if [ "${GO_TEST_QUARANTINE:-}" = only ]; then
+  if [ -z "$qnames" ]; then
+    echo "quarantine: no quarantined Go test"
+    exit 0
+  fi
+  echo "quarantine: running ${qnames//|/, } (non-blocking)"
+  exec go test -count=1 -timeout 60s "$@" -run "^($qnames)\$" ./...
+fi
+if [ -n "$qnames" ]; then
+  echo "quarantine: leaving out ${qnames//|/, } (they run in the non-blocking step)"
+  set -- "$@" -skip "^($qnames)\$"
+fi
 json="${GO_TEST_JSON:-test-results/go-test.json}"
 # CRSP313: GO_TEST_SHARD=K/N runs one share of the packages and chunks (the tests job runs N
 # shards in parallel); unset, it runs everything (Windows, macOS, the local gate).

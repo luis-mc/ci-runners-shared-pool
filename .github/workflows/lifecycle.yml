@@ -13,6 +13,10 @@ on:
         description: 'true on a release pull request: every target lane must pass'
         type: boolean
         default: false
+      use_records:
+        description: 'true: skip the MSI lanes when main holds a pass record with the same inputs (DL-118)'
+        type: boolean
+        default: false
   workflow_dispatch:
     inputs:
       release:
@@ -31,8 +35,45 @@ env:
   LIFECYCLE_JSON: docs/design-system/next-version/lifecycle.json
 
 jobs:
+  # CRSP376 (S2, DL-118): when main holds a pass record of shard `msi` (scripts/delivery/ci-shards.json) with the
+  # same inputs key, the lanes below do not run; this job writes a lane result for each target from that record
+  # (status pass, source record), and the release check accepts it only when the record is main's and its key
+  # equals the key computed now (DL-112). A miss, no key, a manual run or any error: the lanes run.
+  records:
+    name: pass record
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      hit: ${{ steps.records.outputs.hit }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: records
+        env:
+          USE_RECORDS: ${{ inputs.use_records }}
+        run: |
+          hit=false
+          if [ "$USE_RECORDS" = "true" ] &&
+             python3 scripts/delivery/pass_records.py to-result --shard msi --lane windows --arch x64 --package msi --out lifecycle-result-windows-x64.json &&
+             python3 scripts/delivery/pass_records.py to-result --shard msi --lane windows --arch arm64 --package msi --out lifecycle-result-windows-arm64.json; then
+            hit=true
+          fi
+          echo "hit=$hit" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ steps.records.outputs.hit == 'true' }}
+        with:
+          # The same stable names as the lanes' results (artifact-prune.yml keeps the newest).
+          name: lifecycle-result-windows-x64
+          path: lifecycle-result-windows-x64.json
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: ${{ steps.records.outputs.hit == 'true' }}
+        with:
+          name: lifecycle-result-windows-arm64
+          path: lifecycle-result-windows-arm64.json
+
   windows:
     name: windows ${{ matrix.arch }}
+    needs: records
+    if: ${{ always() && needs.records.outputs.hit != 'true' }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
@@ -94,7 +135,7 @@ jobs:
   # lane passed. lifecycle.off in .delivery/config.json stays empty (scripts/delivery/lifecycle_optout.py).
   release-check:
     name: release check
-    needs: windows
+    needs: [records, windows]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 10

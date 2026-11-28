@@ -1,5 +1,6 @@
 .delivery/*
 !.delivery/config.json
+!.delivery/quarantine.json
 docs/_site/
 node_modules/
 dist/

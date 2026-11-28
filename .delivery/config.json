@@ -39,7 +39,9 @@
     "open_prs": true,
     "merge_on_green": true,
     "manage_runners": false,
-    "ci_workflows": ["ci.yml"]
+    "ci_workflows": ["ci.yml"],
+    "merge_result": "update",
+    "infra_retry": true
   },
   "runner_plan": {
     "retry_seconds": 300,
