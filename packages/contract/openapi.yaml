@@ -3193,6 +3193,146 @@ paths:
                 $ref: '#/components/schemas/RunnerClasses'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/pool/name:
+    get:
+      operationId: getPoolName
+      tags: [runners]
+      summary: The pool name and a rename that is not finished
+      description: >-
+        runners R5.141, github-integration R5.109. The pool name is the runner
+        label every crsp runner carries and crsp writes into each repository's
+        CRSP_RUNS_ON_* variables. `source` says where the name in force came
+        from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the
+        console) or `default` (crsp-home).
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      responses:
+        '200':
+          description: The name in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolName'
+        default:
+          $ref: '#/components/responses/Error'
+    put:
+      operationId: setPoolName
+      tags: [runners]
+      summary: Name the pool at the first setup
+      description: >-
+        runners R5.141. Stores the name while no runner and no repository carries
+        the label yet. A pool that is in use is renamed with a rename plan, so each
+        runner and repository gets the new label. The name is a GitHub runner
+        label that starts with `crsp-`.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoolNameInput'
+      responses:
+        '200':
+          description: The name in force.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolName'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/pool/renames:
+    post:
+      operationId: planPoolRename
+      tags: [runners]
+      summary: Plan renaming the pool
+      description: >-
+        runners R5.142. Nothing changes. The plan lists, in order, the runners
+        that get the new label, the stored name, the repositories whose variables
+        are written, and the runners that lose the old label. A rename that
+        stopped or failed and is planned again with the same name is the same
+        rename: Run again resumes it.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PoolNameInput'
+      responses:
+        '201':
+          description: The rename plan.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolRename'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/pool/renames/{renameId}:
+    get:
+      operationId: getPoolRename
+      tags: [runners]
+      summary: A rename with what was done and what is left
+      description: runners R5.144 (done after reload shows the stored outcome).
+      x-auth: user
+      x-rate-limit: 600/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RenameId'
+      responses:
+        '200':
+          description: The rename.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolRename'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/pool/renames/{renameId}/apply:
+    post:
+      operationId: applyPoolRename
+      tags: [runners]
+      summary: Run a rename, or run it again after a stop or a failure
+      description: >-
+        runners R5.143 and R5.144. Steps that are done are not repeated. A rename
+        that is running answers 409 conflict.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RenameId'
+      responses:
+        '202':
+          description: Running; read getPoolRename for progress.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolRename'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/pool/renames/{renameId}/stop:
+    post:
+      operationId: stopPoolRename
+      x-cli: none
+      x-cli-reason: 'The console owns Stop; a command waits for its own task (cli open question 7).'
+      tags: [runners]
+      summary: Stop a rename that is running
+      description: >-
+        runners R5.144, web-console section 11. The step that runs finishes; no
+        later step starts; the rename ends `stopped`. One that is not running
+        answers 409 conflict.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RenameId'
+      responses:
+        '202':
+          description: Stopping; the rename after the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PoolRename'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/listener-gate:
     get:
       operationId: getListenerGate
@@ -6660,6 +6800,12 @@ components:
       schema:
         type: integer
         format: int64
+    RenameId:
+      name: renameId
+      in: path
+      required: true
+      schema:
+        type: string
     PlanId:
       name: planId
       in: path
@@ -7178,6 +7324,84 @@ components:
         confirm_lowering:
           type: boolean
           description: Needed when a size that runners use gets smaller.
+    PoolNameInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          description: The new pool name, a runner label such as crsp-home (small letters, digits and hyphens, starting with crsp-).
+    PoolName:
+      type: object
+      required: [name, source, env_override]
+      properties:
+        name:
+          type: string
+        source:
+          type: string
+          enum: [default, stored, env]
+        env_override:
+          type: boolean
+          description: True when CRSP_POOL_NAME on the service sets the name; the console cannot change it then.
+        pending:
+          $ref: '#/components/schemas/PoolRename'
+    PoolRenameCounts:
+      type: object
+      required: [runners, registered, ephemeral, repositories, scale_set]
+      properties:
+        runners:
+          type: integer
+        registered:
+          type: integer
+        ephemeral:
+          type: integer
+        repositories:
+          type: integer
+        scale_set:
+          type: boolean
+    PoolRenameStep:
+      type: object
+      required: [id, kind, text, state]
+      properties:
+        id:
+          type: string
+        kind:
+          type: string
+          enum: [add_label, store_name, write_variables, remove_label, scale_set, finish]
+        text:
+          type: string
+        state:
+          type: string
+          enum: [pending, running, done, failed, skipped]
+        error:
+          type: string
+    PoolRename:
+      type: object
+      required: [id, old, new, state, steps, counts, created_at, updated_at]
+      properties:
+        id:
+          type: string
+        old:
+          type: string
+        new:
+          type: string
+        state:
+          type: string
+          enum: [planned, applying, done, stopped, failed]
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/PoolRenameStep'
+        counts:
+          $ref: '#/components/schemas/PoolRenameCounts'
+        created_by:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
     ListenerGateInput:
       type: object
       required: [enforce]

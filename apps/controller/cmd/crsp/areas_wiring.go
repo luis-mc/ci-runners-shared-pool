@@ -36,6 +36,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/mirror"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/notify"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/poolname"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/scheduler"
@@ -48,8 +49,6 @@ import (
 )
 
 const (
-	envPoolName     = "CRSP_POOL_NAME"
-	defaultPoolName = "crsp-home"
 	// runsOnRestoreEvery is how often the CRSP_RUNS_ON variables are put back to
 	// what the policy wants (github-integration R5.28).
 	runsOnRestoreEvery = 10 * time.Minute
@@ -135,10 +134,14 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	logger := d.Logger
 	console := consoleURL(d.Cfg.ListenAddr)
-	pool := os.Getenv(envPoolName)
-	if pool == "" {
-		pool = defaultPoolName
+	// The pool name: the environment value when set, else the one stored from the
+	// console, else crsp-home. It is read on each use, so a rename needs no restart.
+	poolName, ignored := poolname.Resolve(ctx, d.DB)
+	if ignored != "" {
+		logger.Warn(ignored)
 	}
+	pool := poolName.Get()
+	poolNow := poolName.Get
 	c := &controller{}
 
 	// GitHub: client, sign-in, repositories, webhook.
@@ -174,7 +177,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		gh.UseApp(st.App.ID, st.App.ClientID)
 	}
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
-		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
+		Capacity: machineCapacity{svc: d.Machines, pool: poolNow}, Sizes: machineCapacity{svc: d.Machines, pool: poolNow}, Up: machineUp{svc: d.Machines},
 		FallbackGrace: fallbackGrace(d), OverflowLabel: overflowLabel(d), OverflowTargets: overflowTargets(d), Rate: overflowRate(&history.Rates{DB: d.DB}), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
 	// The runs-on pull request (R5.113): built and opened only by the owner's
 	// explicit call; no loop or webhook of this wiring opens one.
@@ -279,7 +282,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	runnerSvc := &runners.Service{
 		Store: rstore, Machines: machineLookup{svc: d.Machines}, Resolver: scopeResolver{repos: repoStore, auth: asvc, addr: d.Cfg.Addresses},
 		GitHub: gh, Agent: agent, Audit: runnerAudit{auth: asvc},
-		PoolName: pool, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services, Release: version,
+		PoolName: pool, PoolNames: poolName.Accepted, Labeler: gh, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services, Release: version,
 		// Shared tool folders with group access, one build folder per runner (caches R5.57).
 		SharedToolsRoot: os.Getenv("CRSP_SHARED_TOOLS_ROOT"), NoSharedTools: os.Getenv("CRSP_NO_SHARED_TOOLS") != "",
 		// The package proxy key and token of the runner's repository (caches R5.76).
@@ -389,7 +392,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	// Demand: poll queued jobs of the repositories with the pool on and start one
 	// ephemeral container runner per job on a machine whose allow list names
 	// the container backend (github-integration R5.37, runners R5.27, R5.31).
-	stopDemand, quietDemand := startDemand(ctx, logger, gh, demandEnv{repos: repoStore, machines: d.Machines, appGone: appHealth.Gone}, runnerSvc, pool, d.Cfg.DemandQuiet, d.Cfg.ScaleSetDemand, health.PollSawQueued, jobsIngest.Job)
+	stopDemand, quietDemand, demandRun := startDemand(ctx, logger, gh, demandEnv{repos: repoStore, machines: d.Machines, appGone: appHealth.Gone}, runnerSvc, poolName, d.Cfg.DemandQuiet, d.Cfg.ScaleSetDemand, health.PollSawQueued, jobsIngest.Job)
 	// crsp's own facts about each job: wait reason, slot, machine, runner (observability R5.7).
 	jobsIngest.attach(d.Queue, runnerSvc, d.Machines)
 	startSweep(ctx, logger, runnerSvc, d.Cfg.RunnerSweepDays)
@@ -421,7 +424,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			}
 			return gh, nil
 		},
-		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
+		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool, PoolNameFn: poolNow,
 		KVM:           reportSources{fleet: fleet, link: d.Link},
 		Engines:       reportSources{fleet: fleet, link: d.Link},
 		Extra:         append(checks.KVMReportedChecks(), checks.HealthChecks()...),
@@ -464,8 +467,11 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	if d.Hub != nil {
 		c.Options.CacheHub = d.Hub
 	}
-	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}
-	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
+	// The pool name: the console names the pool at the first setup and renames it later (runners R5.141 to R5.145).
+	c.Options.PoolName = poolname.New(poolname.Config{Name: poolName, KV: d.DB, Runners: renameRunners{svc: runnerSvc}, Repos: renameRepos{svc: rsvc},
+		ScaleSet: renameScaleSet{dr: demandRun}, Audit: renameAudit{auth: asvc}, Now: d.Now})
+	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: poolNow}
+	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: poolNow})
 	nsvc := notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger, Now: d.Now, ConsoleURL: console})
 	c.Options.Notify = nsvc
 	// Real notices (notifications R5.1): the sources read the machines, the queue, the health reports, the

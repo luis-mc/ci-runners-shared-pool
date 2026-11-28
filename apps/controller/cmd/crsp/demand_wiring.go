@@ -12,6 +12,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/poolname"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
 )
@@ -105,6 +106,8 @@ type demandRunner struct {
 	gh     *github.REST
 	env    demandEnv
 	loop   *demand.Loop
+	// pool is the pool name in force; the scale set is named after it.
+	pool *poolname.Name
 
 	// scaleSet turns on the scale-set source with polling as the fallback
 	// (github-integration R5.40).
@@ -163,7 +166,7 @@ func (d *demandRunner) start() {
 	var src github.Demand = poller
 	d.scale = nil
 	if d.scaleSet {
-		scale := &github.ScaleSetDemand{Tokens: d.gh, Name: d.loop.PoolName, APIBase: d.gh.APIBase(), WebBase: d.gh.WebBase(),
+		scale := &github.ScaleSetDemand{Tokens: d.gh, Name: d.pool.Get(), APIBase: d.gh.APIBase(), WebBase: d.gh.WebBase(),
 			Targets: func(ctx context.Context) ([]github.ScaleSetTarget, error) {
 				ts, err := d.targets(ctx)
 				out := make([]github.ScaleSetTarget, 0, len(ts))
@@ -189,7 +192,7 @@ func (d *demandRunner) start() {
 					d.logger.Warn("reconcile jobs", "err", err)
 				}
 			}}
-		d.logger.Info("scale-set demand is on; polling is the fallback", "scale_set", d.loop.PoolName)
+		d.logger.Info("scale-set demand is on; polling is the fallback", "scale_set", d.pool.Get())
 	}
 	jobs, err := src.Jobs(ctx)
 	if err != nil {
@@ -227,6 +230,10 @@ func (d *demandRunner) Restart() {
 	d.start()
 }
 
+// ScaleSetOn says whether scale-set demand is switched on (the pool rename
+// starts the scale set again under the new name).
+func (d *demandRunner) ScaleSetOn() bool { return d.scaleSet }
+
 // LastDemand implements demand.DemandSeen over the current poller.
 func (d *demandRunner) LastDemand(fullName string) time.Time {
 	d.mu.Lock()
@@ -254,21 +261,21 @@ func (d *demandRunner) Stop() {
 // startDemand runs the poller, the demand loop and the quiet-demand watchdog
 // until the returned stop is called. The watchdog's state is what the doctor
 // check `demand.quiet` reads.
-func startDemand(ctx context.Context, logger *slog.Logger, gh *github.REST, env demandEnv, svc *runners.Service, pool string, quiet time.Duration, scaleSet bool, onQueued func(string, int64), onJob func(github.Job)) (stop func(), wd *demand.Watchdog) {
+func startDemand(ctx context.Context, logger *slog.Logger, gh *github.REST, env demandEnv, svc *runners.Service, pool *poolname.Name, quiet time.Duration, scaleSet bool, onQueued func(string, int64), onJob func(github.Job)) (stop func(), wd *demand.Watchdog, dr *demandRunner) {
 	ctx, cancel := context.WithCancel(ctx)
-	dr := &demandRunner{logger: logger, gh: gh, env: env, ctx: ctx, scaleSet: scaleSet, onQueued: onQueued, onJob: onJob,
-		loop: &demand.Loop{Env: env, Runners: svc, PoolName: pool, Logger: logger, ReadJob: gh.GetJob}}
+	dr = &demandRunner{logger: logger, gh: gh, env: env, pool: pool, ctx: ctx, scaleSet: scaleSet, onQueued: onQueued, onJob: onJob,
+		loop: &demand.Loop{Env: env, Runners: svc, PoolName: pool.Get(), Pools: pool.Accepted, Logger: logger, ReadJob: gh.GetJob}}
 	dr.mu.Lock()
 	dr.start()
 	dr.mu.Unlock()
 	wd = &demand.Watchdog{Lister: gh, Targets: dr.targets, Source: dr, Restart: dr.Restart,
-		PoolName: pool, Quiet: quiet, Logger: logger}
+		PoolName: pool.Get(), Pools: pool.Accepted, Quiet: quiet, Logger: logger}
 	wdDone := make(chan struct{})
 	go func() {
 		defer close(wdDone)
 		wd.Run(ctx, time.Minute)
 	}()
-	return func() { cancel(); <-wdDone; dr.Stop() }, wd
+	return func() { cancel(); <-wdDone; dr.Stop() }, wd, dr
 }
 
 // quietSource gives the doctor what the quiet-demand watchdog found.

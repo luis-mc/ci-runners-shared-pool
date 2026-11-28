@@ -51,6 +51,8 @@ type Watchdog struct {
 	// Restart restarts the demand loop. It is called at most once per quiet episode.
 	Restart  func()
 	PoolName string
+	// Pools is Loop.Pools for the watchdog.
+	Pools func() []string
 	// Quiet is the allowed silence (default 10 minutes).
 	Quiet  time.Duration
 	Now    func() time.Time
@@ -106,7 +108,7 @@ func (w *Watchdog) Tick(ctx context.Context) error {
 		listed[key] = true
 		queued := 0
 		for _, j := range jobs {
-			if j.Status == "queued" && forPool(j.Labels, w.PoolName) {
+			if j.Status == "queued" && forPool(j.Labels, w.PoolName, w.Pools) {
 				queued++
 			}
 		}
@@ -191,9 +193,9 @@ func (w *Watchdog) Run(ctx context.Context, every time.Duration) {
 
 // forPool is true when a job's labels resolve to a container runner of this
 // pool on some architecture.
-func forPool(labels []string, pool string) bool {
+func forPool(labels []string, pool string, pools func() []string) bool {
 	for _, arch := range []string{"x64", "arm64"} {
-		if _, why := Match(labels, arch, pool); why == "" {
+		if _, why := matchPools(labels, arch, pool, pools); why == "" {
 			return true
 		}
 	}

@@ -2104,6 +2104,110 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pool/name": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The pool name and a rename that is not finished
+         * @description runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+         */
+        get: operations["getPoolName"];
+        /**
+         * Name the pool at the first setup
+         * @description runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+         */
+        put: operations["setPoolName"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pool/renames": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Plan renaming the pool
+         * @description runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+         */
+        post: operations["planPoolRename"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pool/renames/{renameId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * A rename with what was done and what is left
+         * @description runners R5.144 (done after reload shows the stored outcome).
+         */
+        get: operations["getPoolRename"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pool/renames/{renameId}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Run a rename, or run it again after a stop or a failure
+         * @description runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+         */
+        post: operations["applyPoolRename"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/pool/renames/{renameId}/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Stop a rename that is running
+         * @description runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+         */
+        post: operations["stopPoolRename"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/listener-gate": {
         parameters: {
             query?: never;
@@ -4585,6 +4689,48 @@ export interface components {
             reserve_after_minutes?: number;
             /** @description Needed when a size that runners use gets smaller. */
             confirm_lowering?: boolean;
+        };
+        PoolNameInput: {
+            /** @description The new pool name, a runner label such as crsp-home (small letters, digits and hyphens, starting with crsp-). */
+            name: string;
+        };
+        PoolName: {
+            name: string;
+            /** @enum {string} */
+            source: "default" | "stored" | "env";
+            /** @description True when CRSP_POOL_NAME on the service sets the name; the console cannot change it then. */
+            env_override: boolean;
+            pending?: components["schemas"]["PoolRename"];
+        };
+        PoolRenameCounts: {
+            runners: number;
+            registered: number;
+            ephemeral: number;
+            repositories: number;
+            scale_set: boolean;
+        };
+        PoolRenameStep: {
+            id: string;
+            /** @enum {string} */
+            kind: "add_label" | "store_name" | "write_variables" | "remove_label" | "scale_set" | "finish";
+            text: string;
+            /** @enum {string} */
+            state: "pending" | "running" | "done" | "failed" | "skipped";
+            error?: string;
+        };
+        PoolRename: {
+            id: string;
+            old: string;
+            new: string;
+            /** @enum {string} */
+            state: "planned" | "applying" | "done" | "stopped" | "failed";
+            steps: components["schemas"]["PoolRenameStep"][];
+            counts: components["schemas"]["PoolRenameCounts"];
+            created_by?: string;
+            /** Format: date-time */
+            created_at: string;
+            /** Format: date-time */
+            updated_at: string;
         };
         ListenerGateInput: {
             /** @description True switches the gate on; false is observe mode. */
@@ -9491,6 +9637,7 @@ export interface components {
         TokenId: string;
         /** @description The numeric GitHub repository id. */
         RepositoryId: number;
+        RenameId: string;
         PlanId: string;
         /** @description The window of the stats, 24h (default) or 7d. */
         StatsWindow: "24h" | "7d";
@@ -12526,6 +12673,146 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["RunnerClasses"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPoolName: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The name in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolName"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    setPoolName: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PoolNameInput"];
+            };
+        };
+        responses: {
+            /** @description The name in force. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolName"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    planPoolRename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PoolNameInput"];
+            };
+        };
+        responses: {
+            /** @description The rename plan. */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolRename"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    getPoolRename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                renameId: components["parameters"]["RenameId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The rename. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolRename"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    applyPoolRename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                renameId: components["parameters"]["RenameId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Running; read getPoolRename for progress. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolRename"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    stopPoolRename: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                renameId: components["parameters"]["RenameId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Stopping; the rename after the request. */
+            202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PoolRename"];
                 };
             };
             default: components["responses"]["Error"];

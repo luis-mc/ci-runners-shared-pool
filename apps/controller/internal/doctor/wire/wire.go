@@ -33,6 +33,8 @@ type DoctorDeps struct {
 	Events   events.Publisher
 	Logger   *slog.Logger
 	PoolName string
+	// PoolNameFn, when set, gives the pool name in force on each run.
+	PoolNameFn func() string
 	// Extra registers the checks of other areas (cache, backend, ...).
 	Extra []doctor.Check
 	// KVM and Engines are what agents reported; nil makes those checks skip.
@@ -64,7 +66,7 @@ func NewDoctor(d DoctorDeps) (*doctor.Engine, *doctor.Service) {
 	eng := &doctor.Engine{
 		Registry: reg, Store: d.Store, Events: d.Events, Logger: d.Logger,
 		Env: func(ctx context.Context) (doctor.Env, error) {
-			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate, RunnerPin: d.RunnerPin, AgentPackages: d.AgentPackages}
+			env := doctor.Env{Fleet: d.Fleet, PoolName: poolOf(d), KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate, RunnerPin: d.RunnerPin, AgentPackages: d.AgentPackages}
 			if d.GitHub != nil {
 				g, err := d.GitHub(ctx)
 				if err != nil {
@@ -76,4 +78,11 @@ func NewDoctor(d DoctorDeps) (*doctor.Engine, *doctor.Service) {
 		},
 	}
 	return eng, &doctor.Service{Engine: eng}
+}
+
+func poolOf(d DoctorDeps) string {
+	if d.PoolNameFn != nil {
+		return d.PoolNameFn()
+	}
+	return d.PoolName
 }

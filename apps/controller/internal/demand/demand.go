@@ -87,6 +87,9 @@ type Loop struct {
 	Env      Env
 	Runners  Runners
 	PoolName string
+	// Pools, when set, gives every name that means the pool now (the one in force
+	// first, the old one while a rename runs). It wins over PoolName.
+	Pools func() []string
 	Logger   *slog.Logger
 	// Every is how often waiting jobs are tried again (default 5 s). Now is a
 	// seam for tests.
@@ -402,7 +405,7 @@ func (l *Loop) try(ctx context.Context, j github.Job, w *waiting, hosts []Host, 
 	}
 	var labelWhy string
 	for _, h := range hosts {
-		labels, why := Match(j.Labels, h.Arch, l.PoolName)
+		labels, why := matchPools(j.Labels, h.Arch, l.PoolName, l.Pools)
 		if why != "" {
 			labelWhy = why
 			continue
@@ -551,4 +554,26 @@ func Match(jobLabels []string, arch, pool string) ([]string, string) {
 	}
 	sort.Strings(out)
 	return out, ""
+}
+
+// matchPools is Match under every name that means the pool: while a rename
+// runs a job queued with the old label is still served.
+func matchPools(jobLabels []string, arch, pool string, pools func() []string) ([]string, string) {
+	names := []string{pool}
+	if pools != nil {
+		if n := pools(); len(n) > 0 {
+			names = n
+		}
+	}
+	var first string
+	for _, n := range names {
+		out, why := Match(jobLabels, arch, n)
+		if why == "" {
+			return out, ""
+		}
+		if first == "" {
+			first = why
+		}
+	}
+	return nil, first
 }

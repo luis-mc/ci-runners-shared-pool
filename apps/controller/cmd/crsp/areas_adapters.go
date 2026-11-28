@@ -24,7 +24,7 @@ import (
 // its machines carry (github-integration R5.28).
 type machineCapacity struct {
 	svc  *machines.Service
-	pool string
+	pool func() string // the pool name in force: a rename changes it without a restart
 }
 
 func (c machineCapacity) OSLabels(ctx context.Context) (map[string][]string, error) {
@@ -43,7 +43,7 @@ func (c machineCapacity) OSLabels(ctx context.Context) (map[string][]string, err
 			for _, l := range out[os] {
 				have[strings.ToLower(l)] = true
 			}
-			for _, l := range []string{archLabel(m.Arch), c.pool} {
+			for _, l := range []string{archLabel(m.Arch), c.pool()} {
 				if l != "" && !have[strings.ToLower(l)] {
 					out[os] = append(out[os], l)
 					have[strings.ToLower(l)] = true
@@ -102,7 +102,7 @@ func (c machineCapacity) MachineSizes(ctx context.Context) ([]repos.MachineSize,
 			mem = float64(m.Facts.MemoryBytes) / (1 << 30)
 		}
 		var labels []string
-		for _, l := range []string{archLabel(m.Arch), c.pool} {
+		for _, l := range []string{archLabel(m.Arch), c.pool()} {
 			if l != "" {
 				labels = append(labels, l)
 			}

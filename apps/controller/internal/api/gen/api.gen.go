@@ -2743,6 +2743,111 @@ func (e PlanStepState) Valid() bool {
 	}
 }
 
+// Defines values for PoolNameSource.
+const (
+	PoolNameSourceDefault PoolNameSource = "default"
+	PoolNameSourceEnv     PoolNameSource = "env"
+	PoolNameSourceStored  PoolNameSource = "stored"
+)
+
+// Valid indicates whether the value is a known member of the PoolNameSource enum.
+func (e PoolNameSource) Valid() bool {
+	switch e {
+	case PoolNameSourceDefault:
+		return true
+	case PoolNameSourceEnv:
+		return true
+	case PoolNameSourceStored:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolRenameState.
+const (
+	PoolRenameStateApplying PoolRenameState = "applying"
+	PoolRenameStateDone     PoolRenameState = "done"
+	PoolRenameStateFailed   PoolRenameState = "failed"
+	PoolRenameStatePlanned  PoolRenameState = "planned"
+	PoolRenameStateStopped  PoolRenameState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the PoolRenameState enum.
+func (e PoolRenameState) Valid() bool {
+	switch e {
+	case PoolRenameStateApplying:
+		return true
+	case PoolRenameStateDone:
+		return true
+	case PoolRenameStateFailed:
+		return true
+	case PoolRenameStatePlanned:
+		return true
+	case PoolRenameStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolRenameStepKind.
+const (
+	AddLabel       PoolRenameStepKind = "add_label"
+	Finish         PoolRenameStepKind = "finish"
+	RemoveLabel    PoolRenameStepKind = "remove_label"
+	ScaleSet       PoolRenameStepKind = "scale_set"
+	StoreName      PoolRenameStepKind = "store_name"
+	WriteVariables PoolRenameStepKind = "write_variables"
+)
+
+// Valid indicates whether the value is a known member of the PoolRenameStepKind enum.
+func (e PoolRenameStepKind) Valid() bool {
+	switch e {
+	case AddLabel:
+		return true
+	case Finish:
+		return true
+	case RemoveLabel:
+		return true
+	case ScaleSet:
+		return true
+	case StoreName:
+		return true
+	case WriteVariables:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolRenameStepState.
+const (
+	PoolRenameStepStateDone    PoolRenameStepState = "done"
+	PoolRenameStepStateFailed  PoolRenameStepState = "failed"
+	PoolRenameStepStatePending PoolRenameStepState = "pending"
+	PoolRenameStepStateRunning PoolRenameStepState = "running"
+	PoolRenameStepStateSkipped PoolRenameStepState = "skipped"
+)
+
+// Valid indicates whether the value is a known member of the PoolRenameStepState enum.
+func (e PoolRenameStepState) Valid() bool {
+	switch e {
+	case PoolRenameStepStateDone:
+		return true
+	case PoolRenameStepStateFailed:
+		return true
+	case PoolRenameStepStatePending:
+		return true
+	case PoolRenameStepStateRunning:
+		return true
+	case PoolRenameStepStateSkipped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PoolSizeCheckBasis.
 const (
 	PoolSizeCheckBasisMeasured  PoolSizeCheckBasis = "measured"
@@ -8608,6 +8713,64 @@ type PlanStepAction string
 // PlanStepState defines model for PlanStep.State.
 type PlanStepState string
 
+// PoolName defines model for PoolName.
+type PoolName struct {
+	// EnvOverride True when CRSP_POOL_NAME on the service sets the name; the console cannot change it then.
+	EnvOverride bool           `json:"env_override"`
+	Name        string         `json:"name"`
+	Pending     *PoolRename    `json:"pending,omitempty"`
+	Source      PoolNameSource `json:"source"`
+}
+
+// PoolNameSource defines model for PoolName.Source.
+type PoolNameSource string
+
+// PoolNameInput defines model for PoolNameInput.
+type PoolNameInput struct {
+	// Name The new pool name, a runner label such as crsp-home (small letters, digits and hyphens, starting with crsp-).
+	Name string `json:"name"`
+}
+
+// PoolRename defines model for PoolRename.
+type PoolRename struct {
+	Counts    PoolRenameCounts `json:"counts"`
+	CreatedAt time.Time        `json:"created_at"`
+	CreatedBy *string          `json:"created_by,omitempty"`
+	Id        string           `json:"id"`
+	New       string           `json:"new"`
+	Old       string           `json:"old"`
+	State     PoolRenameState  `json:"state"`
+	Steps     []PoolRenameStep `json:"steps"`
+	UpdatedAt time.Time        `json:"updated_at"`
+}
+
+// PoolRenameState defines model for PoolRename.State.
+type PoolRenameState string
+
+// PoolRenameCounts defines model for PoolRenameCounts.
+type PoolRenameCounts struct {
+	Ephemeral    int  `json:"ephemeral"`
+	Registered   int  `json:"registered"`
+	Repositories int  `json:"repositories"`
+	Runners      int  `json:"runners"`
+	ScaleSet     bool `json:"scale_set"`
+}
+
+// PoolRenameStep defines model for PoolRenameStep.
+type PoolRenameStep struct {
+	Error *string             `json:"error,omitempty"`
+	Id    string              `json:"id"`
+	Kind  PoolRenameStepKind  `json:"kind"`
+	State PoolRenameStepState `json:"state"`
+	Text  string              `json:"text"`
+}
+
+// PoolRenameStepKind defines model for PoolRenameStep.Kind.
+type PoolRenameStepKind string
+
+// PoolRenameStepState defines model for PoolRenameStep.State.
+type PoolRenameStepState string
+
 // PoolSettings defines model for PoolSettings.
 type PoolSettings struct {
 	BudgetCpuPct        int `json:"budget_cpu_pct"`
@@ -11049,6 +11212,9 @@ type PlanId = string
 // RegistryImageId defines model for RegistryImageId.
 type RegistryImageId = string
 
+// RenameId defines model for RenameId.
+type RenameId = string
+
 // RepositoryId defines model for RepositoryId.
 type RepositoryId = int64
 
@@ -11759,6 +11925,12 @@ type UpdateNotificationChannelJSONRequestBody = NotificationChannelUpdate
 // SetNotificationThresholdsJSONRequestBody defines body for SetNotificationThresholds for application/json ContentType.
 type SetNotificationThresholdsJSONRequestBody = NotificationThresholds
 
+// SetPoolNameJSONRequestBody defines body for SetPoolName for application/json ContentType.
+type SetPoolNameJSONRequestBody = PoolNameInput
+
+// PlanPoolRenameJSONRequestBody defines body for PlanPoolRename for application/json ContentType.
+type PlanPoolRenameJSONRequestBody = PoolNameInput
+
 // PutRegistryBudgetsJSONRequestBody defines body for PutRegistryBudgets for application/json ContentType.
 type PutRegistryBudgetsJSONRequestBody = RegistryBudgetsInput
 
@@ -12292,6 +12464,24 @@ type ServerInterface interface {
 	// GetPackage A release package, or SHA256SUMS
 	// (GET /api/v1/packages/{name})
 	GetPackage(w http.ResponseWriter, r *http.Request, name string)
+	// GetPoolName The pool name and a rename that is not finished
+	// (GET /api/v1/pool/name)
+	GetPoolName(w http.ResponseWriter, r *http.Request)
+	// SetPoolName Name the pool at the first setup
+	// (PUT /api/v1/pool/name)
+	SetPoolName(w http.ResponseWriter, r *http.Request)
+	// PlanPoolRename Plan renaming the pool
+	// (POST /api/v1/pool/renames)
+	PlanPoolRename(w http.ResponseWriter, r *http.Request)
+	// GetPoolRename A rename with what was done and what is left
+	// (GET /api/v1/pool/renames/{renameId})
+	GetPoolRename(w http.ResponseWriter, r *http.Request, renameId RenameId)
+	// ApplyPoolRename Run a rename, or run it again after a stop or a failure
+	// (POST /api/v1/pool/renames/{renameId}/apply)
+	ApplyPoolRename(w http.ResponseWriter, r *http.Request, renameId RenameId)
+	// StopPoolRename Stop a rename that is running
+	// (POST /api/v1/pool/renames/{renameId}/stop)
+	StopPoolRename(w http.ResponseWriter, r *http.Request, renameId RenameId)
 	// GetRegistrySettings Registry logins per backend and whether a private CA bundle is set
 	// (GET /api/v1/registry)
 	GetRegistrySettings(w http.ResponseWriter, r *http.Request)
@@ -17301,6 +17491,126 @@ func (siw *ServerInterfaceWrapper) GetPackage(w http.ResponseWriter, r *http.Req
 	handler.ServeHTTP(w, r)
 }
 
+// GetPoolName operation middleware
+func (siw *ServerInterfaceWrapper) GetPoolName(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPoolName(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// SetPoolName operation middleware
+func (siw *ServerInterfaceWrapper) SetPoolName(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.SetPoolName(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// PlanPoolRename operation middleware
+func (siw *ServerInterfaceWrapper) PlanPoolRename(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.PlanPoolRename(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// GetPoolRename operation middleware
+func (siw *ServerInterfaceWrapper) GetPoolRename(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "renameId" -------------
+	var renameId RenameId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "renameId", r.PathValue("renameId"), &renameId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "renameId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.GetPoolRename(w, r, renameId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ApplyPoolRename operation middleware
+func (siw *ServerInterfaceWrapper) ApplyPoolRename(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "renameId" -------------
+	var renameId RenameId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "renameId", r.PathValue("renameId"), &renameId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "renameId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ApplyPoolRename(w, r, renameId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// StopPoolRename operation middleware
+func (siw *ServerInterfaceWrapper) StopPoolRename(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "renameId" -------------
+	var renameId RenameId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "renameId", r.PathValue("renameId"), &renameId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "renameId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StopPoolRename(w, r, renameId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // GetRegistrySettings operation middleware
 func (siw *ServerInterfaceWrapper) GetRegistrySettings(w http.ResponseWriter, r *http.Request) {
 
@@ -20448,6 +20758,12 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/job-sizes", wrapper.PutJobSizeOverride)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.GetRunnerClasses)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/runner-classes", wrapper.PutRunnerClasses)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/pool/name", wrapper.GetPoolName)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/pool/name", wrapper.SetPoolName)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/pool/renames", wrapper.PlanPoolRename)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/pool/renames/{renameId}", wrapper.GetPoolRename)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/pool/renames/{renameId}/apply", wrapper.ApplyPoolRename)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/pool/renames/{renameId}/stop", wrapper.StopPoolRename)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/listener-gate", wrapper.GetListenerGate)
 	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/listener-gate", wrapper.PutListenerGate)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/timer-settings", wrapper.GetTimerSettings)
@@ -26327,6 +26643,239 @@ func (response GetPackagedefaultJSONResponse) VisitGetPackageResponse(w http.Res
 	return err
 }
 
+type GetPoolNameRequestObject struct {
+}
+
+type GetPoolNameResponseObject interface {
+	VisitGetPoolNameResponse(w http.ResponseWriter) error
+}
+
+type GetPoolName200JSONResponse PoolName
+
+func (response GetPoolName200JSONResponse) VisitGetPoolNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPoolNamedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetPoolNamedefaultJSONResponse) VisitGetPoolNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetPoolNameRequestObject struct {
+	Body *SetPoolNameJSONRequestBody
+}
+
+type SetPoolNameResponseObject interface {
+	VisitSetPoolNameResponse(w http.ResponseWriter) error
+}
+
+type SetPoolName200JSONResponse PoolName
+
+func (response SetPoolName200JSONResponse) VisitSetPoolNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type SetPoolNamedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response SetPoolNamedefaultJSONResponse) VisitSetPoolNameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PlanPoolRenameRequestObject struct {
+	Body *PlanPoolRenameJSONRequestBody
+}
+
+type PlanPoolRenameResponseObject interface {
+	VisitPlanPoolRenameResponse(w http.ResponseWriter) error
+}
+
+type PlanPoolRename201JSONResponse PoolRename
+
+func (response PlanPoolRename201JSONResponse) VisitPlanPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(201)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type PlanPoolRenamedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response PlanPoolRenamedefaultJSONResponse) VisitPlanPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPoolRenameRequestObject struct {
+	RenameId RenameId `json:"renameId"`
+}
+
+type GetPoolRenameResponseObject interface {
+	VisitGetPoolRenameResponse(w http.ResponseWriter) error
+}
+
+type GetPoolRename200JSONResponse PoolRename
+
+func (response GetPoolRename200JSONResponse) VisitGetPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type GetPoolRenamedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response GetPoolRenamedefaultJSONResponse) VisitGetPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyPoolRenameRequestObject struct {
+	RenameId RenameId `json:"renameId"`
+}
+
+type ApplyPoolRenameResponseObject interface {
+	VisitApplyPoolRenameResponse(w http.ResponseWriter) error
+}
+
+type ApplyPoolRename202JSONResponse PoolRename
+
+func (response ApplyPoolRename202JSONResponse) VisitApplyPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ApplyPoolRenamedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ApplyPoolRenamedefaultJSONResponse) VisitApplyPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopPoolRenameRequestObject struct {
+	RenameId RenameId `json:"renameId"`
+}
+
+type StopPoolRenameResponseObject interface {
+	VisitStopPoolRenameResponse(w http.ResponseWriter) error
+}
+
+type StopPoolRename202JSONResponse PoolRename
+
+func (response StopPoolRename202JSONResponse) VisitStopPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(202)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StopPoolRenamedefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StopPoolRenamedefaultJSONResponse) VisitStopPoolRenameResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type GetRegistrySettingsRequestObject struct {
 }
 
@@ -31076,6 +31625,24 @@ type StrictServerInterface interface {
 	// GetPackage A release package, or SHA256SUMS
 	// (GET /api/v1/packages/{name})
 	GetPackage(ctx context.Context, request GetPackageRequestObject) (GetPackageResponseObject, error)
+	// GetPoolName The pool name and a rename that is not finished
+	// (GET /api/v1/pool/name)
+	GetPoolName(ctx context.Context, request GetPoolNameRequestObject) (GetPoolNameResponseObject, error)
+	// SetPoolName Name the pool at the first setup
+	// (PUT /api/v1/pool/name)
+	SetPoolName(ctx context.Context, request SetPoolNameRequestObject) (SetPoolNameResponseObject, error)
+	// PlanPoolRename Plan renaming the pool
+	// (POST /api/v1/pool/renames)
+	PlanPoolRename(ctx context.Context, request PlanPoolRenameRequestObject) (PlanPoolRenameResponseObject, error)
+	// GetPoolRename A rename with what was done and what is left
+	// (GET /api/v1/pool/renames/{renameId})
+	GetPoolRename(ctx context.Context, request GetPoolRenameRequestObject) (GetPoolRenameResponseObject, error)
+	// ApplyPoolRename Run a rename, or run it again after a stop or a failure
+	// (POST /api/v1/pool/renames/{renameId}/apply)
+	ApplyPoolRename(ctx context.Context, request ApplyPoolRenameRequestObject) (ApplyPoolRenameResponseObject, error)
+	// StopPoolRename Stop a rename that is running
+	// (POST /api/v1/pool/renames/{renameId}/stop)
+	StopPoolRename(ctx context.Context, request StopPoolRenameRequestObject) (StopPoolRenameResponseObject, error)
 	// GetRegistrySettings Registry logins per backend and whether a private CA bundle is set
 	// (GET /api/v1/registry)
 	GetRegistrySettings(ctx context.Context, request GetRegistrySettingsRequestObject) (GetRegistrySettingsResponseObject, error)
@@ -35276,6 +35843,170 @@ func (sh *strictHandler) GetPackage(w http.ResponseWriter, r *http.Request, name
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetPackageResponseObject); ok {
 		if err := validResponse.VisitGetPackageResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPoolName operation middleware
+func (sh *strictHandler) GetPoolName(w http.ResponseWriter, r *http.Request) {
+	var request GetPoolNameRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPoolName(ctx, request.(GetPoolNameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPoolName")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetPoolNameResponseObject); ok {
+		if err := validResponse.VisitGetPoolNameResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// SetPoolName operation middleware
+func (sh *strictHandler) SetPoolName(w http.ResponseWriter, r *http.Request) {
+	var request SetPoolNameRequestObject
+
+	var body SetPoolNameJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.SetPoolName(ctx, request.(SetPoolNameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "SetPoolName")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(SetPoolNameResponseObject); ok {
+		if err := validResponse.VisitSetPoolNameResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// PlanPoolRename operation middleware
+func (sh *strictHandler) PlanPoolRename(w http.ResponseWriter, r *http.Request) {
+	var request PlanPoolRenameRequestObject
+
+	var body PlanPoolRenameJSONRequestBody
+	if err := runtime.BindJSONBody(r, &body); err != nil {
+		sh.options.RequestErrorHandlerFunc(w, r, fmt.Errorf("can't decode JSON body: %w", err))
+		return
+	}
+	request.Body = &body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.PlanPoolRename(ctx, request.(PlanPoolRenameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "PlanPoolRename")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(PlanPoolRenameResponseObject); ok {
+		if err := validResponse.VisitPlanPoolRenameResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// GetPoolRename operation middleware
+func (sh *strictHandler) GetPoolRename(w http.ResponseWriter, r *http.Request, renameId RenameId) {
+	var request GetPoolRenameRequestObject
+
+	request.RenameId = renameId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.GetPoolRename(ctx, request.(GetPoolRenameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "GetPoolRename")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(GetPoolRenameResponseObject); ok {
+		if err := validResponse.VisitGetPoolRenameResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ApplyPoolRename operation middleware
+func (sh *strictHandler) ApplyPoolRename(w http.ResponseWriter, r *http.Request, renameId RenameId) {
+	var request ApplyPoolRenameRequestObject
+
+	request.RenameId = renameId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ApplyPoolRename(ctx, request.(ApplyPoolRenameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ApplyPoolRename")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ApplyPoolRenameResponseObject); ok {
+		if err := validResponse.VisitApplyPoolRenameResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StopPoolRename operation middleware
+func (sh *strictHandler) StopPoolRename(w http.ResponseWriter, r *http.Request, renameId RenameId) {
+	var request StopPoolRenameRequestObject
+
+	request.RenameId = renameId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StopPoolRename(ctx, request.(StopPoolRenameRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StopPoolRename")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StopPoolRenameResponseObject); ok {
+		if err := validResponse.VisitStopPoolRenameResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

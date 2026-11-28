@@ -2744,6 +2744,111 @@ func (e PlanStepState) Valid() bool {
 	}
 }
 
+// Defines values for PoolNameSource.
+const (
+	PoolNameSourceDefault PoolNameSource = "default"
+	PoolNameSourceEnv     PoolNameSource = "env"
+	PoolNameSourceStored  PoolNameSource = "stored"
+)
+
+// Valid indicates whether the value is a known member of the PoolNameSource enum.
+func (e PoolNameSource) Valid() bool {
+	switch e {
+	case PoolNameSourceDefault:
+		return true
+	case PoolNameSourceEnv:
+		return true
+	case PoolNameSourceStored:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolRenameState.
+const (
+	PoolRenameStateApplying PoolRenameState = "applying"
+	PoolRenameStateDone     PoolRenameState = "done"
+	PoolRenameStateFailed   PoolRenameState = "failed"
+	PoolRenameStatePlanned  PoolRenameState = "planned"
+	PoolRenameStateStopped  PoolRenameState = "stopped"
+)
+
+// Valid indicates whether the value is a known member of the PoolRenameState enum.
+func (e PoolRenameState) Valid() bool {
+	switch e {
+	case PoolRenameStateApplying:
+		return true
+	case PoolRenameStateDone:
+		return true
+	case PoolRenameStateFailed:
+		return true
+	case PoolRenameStatePlanned:
+		return true
+	case PoolRenameStateStopped:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolRenameStepKind.
+const (
+	AddLabel       PoolRenameStepKind = "add_label"
+	Finish         PoolRenameStepKind = "finish"
+	RemoveLabel    PoolRenameStepKind = "remove_label"
+	ScaleSet       PoolRenameStepKind = "scale_set"
+	StoreName      PoolRenameStepKind = "store_name"
+	WriteVariables PoolRenameStepKind = "write_variables"
+)
+
+// Valid indicates whether the value is a known member of the PoolRenameStepKind enum.
+func (e PoolRenameStepKind) Valid() bool {
+	switch e {
+	case AddLabel:
+		return true
+	case Finish:
+		return true
+	case RemoveLabel:
+		return true
+	case ScaleSet:
+		return true
+	case StoreName:
+		return true
+	case WriteVariables:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for PoolRenameStepState.
+const (
+	PoolRenameStepStateDone    PoolRenameStepState = "done"
+	PoolRenameStepStateFailed  PoolRenameStepState = "failed"
+	PoolRenameStepStatePending PoolRenameStepState = "pending"
+	PoolRenameStepStateRunning PoolRenameStepState = "running"
+	PoolRenameStepStateSkipped PoolRenameStepState = "skipped"
+)
+
+// Valid indicates whether the value is a known member of the PoolRenameStepState enum.
+func (e PoolRenameStepState) Valid() bool {
+	switch e {
+	case PoolRenameStepStateDone:
+		return true
+	case PoolRenameStepStateFailed:
+		return true
+	case PoolRenameStepStatePending:
+		return true
+	case PoolRenameStepStateRunning:
+		return true
+	case PoolRenameStepStateSkipped:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for PoolSizeCheckBasis.
 const (
 	PoolSizeCheckBasisMeasured  PoolSizeCheckBasis = "measured"
@@ -8609,6 +8714,64 @@ type PlanStepAction string
 // PlanStepState defines model for PlanStep.State.
 type PlanStepState string
 
+// PoolName defines model for PoolName.
+type PoolName struct {
+	// EnvOverride True when CRSP_POOL_NAME on the service sets the name; the console cannot change it then.
+	EnvOverride bool           `json:"env_override"`
+	Name        string         `json:"name"`
+	Pending     *PoolRename    `json:"pending,omitempty"`
+	Source      PoolNameSource `json:"source"`
+}
+
+// PoolNameSource defines model for PoolName.Source.
+type PoolNameSource string
+
+// PoolNameInput defines model for PoolNameInput.
+type PoolNameInput struct {
+	// Name The new pool name, a runner label such as crsp-home (small letters, digits and hyphens, starting with crsp-).
+	Name string `json:"name"`
+}
+
+// PoolRename defines model for PoolRename.
+type PoolRename struct {
+	Counts    PoolRenameCounts `json:"counts"`
+	CreatedAt time.Time        `json:"created_at"`
+	CreatedBy *string          `json:"created_by,omitempty"`
+	Id        string           `json:"id"`
+	New       string           `json:"new"`
+	Old       string           `json:"old"`
+	State     PoolRenameState  `json:"state"`
+	Steps     []PoolRenameStep `json:"steps"`
+	UpdatedAt time.Time        `json:"updated_at"`
+}
+
+// PoolRenameState defines model for PoolRename.State.
+type PoolRenameState string
+
+// PoolRenameCounts defines model for PoolRenameCounts.
+type PoolRenameCounts struct {
+	Ephemeral    int  `json:"ephemeral"`
+	Registered   int  `json:"registered"`
+	Repositories int  `json:"repositories"`
+	Runners      int  `json:"runners"`
+	ScaleSet     bool `json:"scale_set"`
+}
+
+// PoolRenameStep defines model for PoolRenameStep.
+type PoolRenameStep struct {
+	Error *string             `json:"error,omitempty"`
+	Id    string              `json:"id"`
+	Kind  PoolRenameStepKind  `json:"kind"`
+	State PoolRenameStepState `json:"state"`
+	Text  string              `json:"text"`
+}
+
+// PoolRenameStepKind defines model for PoolRenameStep.Kind.
+type PoolRenameStepKind string
+
+// PoolRenameStepState defines model for PoolRenameStep.State.
+type PoolRenameStepState string
+
 // PoolSettings defines model for PoolSettings.
 type PoolSettings struct {
 	BudgetCpuPct        int `json:"budget_cpu_pct"`
@@ -11050,6 +11213,9 @@ type PlanId = string
 // RegistryImageId defines model for RegistryImageId.
 type RegistryImageId = string
 
+// RenameId defines model for RenameId.
+type RenameId = string
+
 // RepositoryId defines model for RepositoryId.
 type RepositoryId = int64
 
@@ -11759,6 +11925,12 @@ type UpdateNotificationChannelJSONRequestBody = NotificationChannelUpdate
 
 // SetNotificationThresholdsJSONRequestBody defines body for SetNotificationThresholds for application/json ContentType.
 type SetNotificationThresholdsJSONRequestBody = NotificationThresholds
+
+// SetPoolNameJSONRequestBody defines body for SetPoolName for application/json ContentType.
+type SetPoolNameJSONRequestBody = PoolNameInput
+
+// PlanPoolRenameJSONRequestBody defines body for PlanPoolRename for application/json ContentType.
+type PlanPoolRenameJSONRequestBody = PoolNameInput
 
 // PutRegistryBudgetsJSONRequestBody defines body for PutRegistryBudgets for application/json ContentType.
 type PutRegistryBudgetsJSONRequestBody = RegistryBudgetsInput
@@ -13258,6 +13430,70 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 	GetPackage(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPoolName The pool name and a rename that is not finished
+	//
+	// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+	//
+	// Corresponds with GET /api/v1/pool/name (the `GetPoolName` operationId).
+	GetPoolName(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetPoolNameWithBody Name the pool at the first setup
+	//
+	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+	SetPoolNameWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// SetPoolName Name the pool at the first setup
+	//
+	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+	SetPoolName(ctx context.Context, body SetPoolNameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PlanPoolRenameWithBody Plan renaming the pool
+	//
+	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+	PlanPoolRenameWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// PlanPoolRename Plan renaming the pool
+	//
+	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	//
+	// Takes a body of the `application/json` content type.
+	//
+	// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+	PlanPoolRename(ctx context.Context, body PlanPoolRenameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// GetPoolRename A rename with what was done and what is left
+	//
+	// runners R5.144 (done after reload shows the stored outcome).
+	//
+	// Corresponds with GET /api/v1/pool/renames/{renameId} (the `GetPoolRename` operationId).
+	GetPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ApplyPoolRename Run a rename, or run it again after a stop or a failure
+	//
+	// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+	//
+	// Corresponds with POST /api/v1/pool/renames/{renameId}/apply (the `ApplyPoolRename` operationId).
+	ApplyPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// StopPoolRename Stop a rename that is running
+	//
+	// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+	//
+	// Corresponds with POST /api/v1/pool/renames/{renameId}/stop (the `StopPoolRename` operationId).
+	StopPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// GetRegistrySettings Registry logins per backend and whether a private CA bundle is set
 	//
@@ -17455,6 +17691,150 @@ func (c *Client) GetOverview(ctx context.Context, reqEditors ...RequestEditorFn)
 // Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 func (c *Client) GetPackage(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetPackageRequest(c.Server, name)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPoolName The pool name and a rename that is not finished
+//
+// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+//
+// Corresponds with GET /api/v1/pool/name (the `GetPoolName` operationId).
+func (c *Client) GetPoolName(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPoolNameRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetPoolNameWithBody Name the pool at the first setup
+//
+// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+func (c *Client) SetPoolNameWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetPoolNameRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// SetPoolName Name the pool at the first setup
+//
+// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+func (c *Client) SetPoolName(ctx context.Context, body SetPoolNameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewSetPoolNameRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PlanPoolRenameWithBody Plan renaming the pool
+//
+// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+func (c *Client) PlanPoolRenameWithBody(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPlanPoolRenameRequestWithBody(c.Server, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// PlanPoolRename Plan renaming the pool
+//
+// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+//
+// Takes a body of the `application/json` content type.
+//
+// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+func (c *Client) PlanPoolRename(ctx context.Context, body PlanPoolRenameJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewPlanPoolRenameRequest(c.Server, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// GetPoolRename A rename with what was done and what is left
+//
+// runners R5.144 (done after reload shows the stored outcome).
+//
+// Corresponds with GET /api/v1/pool/renames/{renameId} (the `GetPoolRename` operationId).
+func (c *Client) GetPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewGetPoolRenameRequest(c.Server, renameId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ApplyPoolRename Run a rename, or run it again after a stop or a failure
+//
+// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+//
+// Corresponds with POST /api/v1/pool/renames/{renameId}/apply (the `ApplyPoolRename` operationId).
+func (c *Client) ApplyPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewApplyPoolRenameRequest(c.Server, renameId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// StopPoolRename Stop a rename that is running
+//
+// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+//
+// Corresponds with POST /api/v1/pool/renames/{renameId}/stop (the `StopPoolRename` operationId).
+func (c *Client) StopPoolRename(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStopPoolRenameRequest(c.Server, renameId)
 	if err != nil {
 		return nil, err
 	}
@@ -26947,6 +27327,215 @@ func NewGetPackageRequest(server string, name string) (*http.Request, error) {
 	return req, nil
 }
 
+// NewGetPoolNameRequest constructs an http.Request for the GetPoolName method
+func NewGetPoolNameRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/pool/name")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewSetPoolNameRequest calls the generic SetPoolName builder with application/json body
+func NewSetPoolNameRequest(server string, body SetPoolNameJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewSetPoolNameRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewSetPoolNameRequestWithBody constructs an http.Request for the SetPoolName method, with any body, and a specified content type
+func NewSetPoolNameRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/pool/name")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewPlanPoolRenameRequest calls the generic PlanPoolRename builder with application/json body
+func NewPlanPoolRenameRequest(server string, body PlanPoolRenameJSONRequestBody) (*http.Request, error) {
+	var bodyReader io.Reader
+	buf, err := json.Marshal(body)
+	if err != nil {
+		return nil, err
+	}
+	bodyReader = bytes.NewReader(buf)
+	return NewPlanPoolRenameRequestWithBody(server, "application/json", bodyReader)
+}
+
+// NewPlanPoolRenameRequestWithBody constructs an http.Request for the PlanPoolRename method, with any body, and a specified content type
+func NewPlanPoolRenameRequestWithBody(server string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/pool/renames")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
+}
+
+// NewGetPoolRenameRequest constructs an http.Request for the GetPoolRename method
+func NewGetPoolRenameRequest(server string, renameId RenameId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "renameId", renameId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/pool/renames/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewApplyPoolRenameRequest constructs an http.Request for the ApplyPoolRename method
+func NewApplyPoolRenameRequest(server string, renameId RenameId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "renameId", renameId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/pool/renames/%s/apply", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewStopPoolRenameRequest constructs an http.Request for the StopPoolRename method
+func NewStopPoolRenameRequest(server string, renameId RenameId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "renameId", renameId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/pool/renames/%s/stop", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewGetRegistrySettingsRequest constructs an http.Request for the GetRegistrySettings method
 func NewGetRegistrySettingsRequest(server string) (*http.Request, error) {
 	var err error
@@ -33263,6 +33852,78 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/packages/{name} (the `GetPackage` operationId).
 	GetPackageWithResponse(ctx context.Context, name string, reqEditors ...RequestEditorFn) (*GetPackageResponse, error)
+
+	// GetPoolNameWithResponse The pool name and a rename that is not finished
+	//
+	// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/pool/name (the `GetPoolName` operationId).
+	GetPoolNameWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetPoolNameResponse, error)
+
+	// SetPoolNameWithBodyWithResponse Name the pool at the first setup
+	//
+	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+	SetPoolNameWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetPoolNameResponse, error)
+
+	// SetPoolNameWithResponse Name the pool at the first setup
+	//
+	// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+	SetPoolNameWithResponse(ctx context.Context, body SetPoolNameJSONRequestBody, reqEditors ...RequestEditorFn) (*SetPoolNameResponse, error)
+
+	// PlanPoolRenameWithBodyWithResponse Plan renaming the pool
+	//
+	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+	PlanPoolRenameWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PlanPoolRenameResponse, error)
+
+	// PlanPoolRenameWithResponse Plan renaming the pool
+	//
+	// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+	//
+	// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+	PlanPoolRenameWithResponse(ctx context.Context, body PlanPoolRenameJSONRequestBody, reqEditors ...RequestEditorFn) (*PlanPoolRenameResponse, error)
+
+	// GetPoolRenameWithResponse A rename with what was done and what is left
+	//
+	// runners R5.144 (done after reload shows the stored outcome).
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/pool/renames/{renameId} (the `GetPoolRename` operationId).
+	GetPoolRenameWithResponse(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*GetPoolRenameResponse, error)
+
+	// ApplyPoolRenameWithResponse Run a rename, or run it again after a stop or a failure
+	//
+	// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/pool/renames/{renameId}/apply (the `ApplyPoolRename` operationId).
+	ApplyPoolRenameWithResponse(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*ApplyPoolRenameResponse, error)
+
+	// StopPoolRenameWithResponse Stop a rename that is running
+	//
+	// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/pool/renames/{renameId}/stop (the `StopPoolRename` operationId).
+	StopPoolRenameWithResponse(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*StopPoolRenameResponse, error)
 
 	// GetRegistrySettingsWithResponse Registry logins per backend and whether a private CA bundle is set
 	//
@@ -41345,6 +42006,294 @@ func (r GetPackageResponse) ContentType() string {
 	return ""
 }
 
+type GetPoolNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PoolName
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPoolNameResponse) GetJSON200() *PoolName {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPoolNameResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPoolNameResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPoolNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPoolNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPoolNameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type SetPoolNameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PoolName
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r SetPoolNameResponse) GetJSON200() *PoolName {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r SetPoolNameResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r SetPoolNameResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r SetPoolNameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r SetPoolNameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r SetPoolNameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type PlanPoolRenameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON201 the response for an HTTP 201 `application/json` response
+	JSON201 *PoolRename
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON201 returns the response for an HTTP 201 `application/json` response
+func (r PlanPoolRenameResponse) GetJSON201() *PoolRename {
+	return r.JSON201
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r PlanPoolRenameResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r PlanPoolRenameResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r PlanPoolRenameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r PlanPoolRenameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r PlanPoolRenameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type GetPoolRenameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *PoolRename
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r GetPoolRenameResponse) GetJSON200() *PoolRename {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r GetPoolRenameResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r GetPoolRenameResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r GetPoolRenameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r GetPoolRenameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r GetPoolRenameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ApplyPoolRenameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *PoolRename
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r ApplyPoolRenameResponse) GetJSON202() *PoolRename {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ApplyPoolRenameResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ApplyPoolRenameResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ApplyPoolRenameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ApplyPoolRenameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ApplyPoolRenameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type StopPoolRenameResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON202 the response for an HTTP 202 `application/json` response
+	JSON202 *PoolRename
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON202 returns the response for an HTTP 202 `application/json` response
+func (r StopPoolRenameResponse) GetJSON202() *PoolRename {
+	return r.JSON202
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StopPoolRenameResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StopPoolRenameResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StopPoolRenameResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StopPoolRenameResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StopPoolRenameResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type GetRegistrySettingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -49267,6 +50216,126 @@ func (c *ClientWithResponses) GetPackageWithResponse(ctx context.Context, name s
 	return ParseGetPackageResponse(rsp)
 }
 
+// GetPoolNameWithResponse The pool name and a rename that is not finished
+//
+// runners R5.141, github-integration R5.109. The pool name is the runner label every crsp runner carries and crsp writes into each repository's CRSP_RUNS_ON_* variables. `source` says where the name in force came from: `env` (CRSP_POOL_NAME on the service wins), `stored` (chosen in the console) or `default` (crsp-home).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/pool/name (the `GetPoolName` operationId).
+func (c *ClientWithResponses) GetPoolNameWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*GetPoolNameResponse, error) {
+	rsp, err := c.GetPoolName(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPoolNameResponse(rsp)
+}
+
+// SetPoolNameWithBodyWithResponse Name the pool at the first setup
+//
+// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+func (c *ClientWithResponses) SetPoolNameWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*SetPoolNameResponse, error) {
+	rsp, err := c.SetPoolNameWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetPoolNameResponse(rsp)
+}
+
+// SetPoolNameWithResponse Name the pool at the first setup
+//
+// runners R5.141. Stores the name while no runner and no repository carries the label yet. A pool that is in use is renamed with a rename plan, so each runner and repository gets the new label. The name is a GitHub runner label that starts with `crsp-`.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/pool/name (the `SetPoolName` operationId).
+func (c *ClientWithResponses) SetPoolNameWithResponse(ctx context.Context, body SetPoolNameJSONRequestBody, reqEditors ...RequestEditorFn) (*SetPoolNameResponse, error) {
+	rsp, err := c.SetPoolName(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseSetPoolNameResponse(rsp)
+}
+
+// PlanPoolRenameWithBodyWithResponse Plan renaming the pool
+//
+// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+func (c *ClientWithResponses) PlanPoolRenameWithBodyWithResponse(ctx context.Context, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*PlanPoolRenameResponse, error) {
+	rsp, err := c.PlanPoolRenameWithBody(ctx, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePlanPoolRenameResponse(rsp)
+}
+
+// PlanPoolRenameWithResponse Plan renaming the pool
+//
+// runners R5.142. Nothing changes. The plan lists, in order, the runners that get the new label, the stored name, the repositories whose variables are written, and the runners that lose the old label. A rename that stopped or failed and is planned again with the same name is the same rename: Run again resumes it.
+//
+// Takes a body of the `application/json` content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/pool/renames (the `PlanPoolRename` operationId).
+func (c *ClientWithResponses) PlanPoolRenameWithResponse(ctx context.Context, body PlanPoolRenameJSONRequestBody, reqEditors ...RequestEditorFn) (*PlanPoolRenameResponse, error) {
+	rsp, err := c.PlanPoolRename(ctx, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParsePlanPoolRenameResponse(rsp)
+}
+
+// GetPoolRenameWithResponse A rename with what was done and what is left
+//
+// runners R5.144 (done after reload shows the stored outcome).
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/pool/renames/{renameId} (the `GetPoolRename` operationId).
+func (c *ClientWithResponses) GetPoolRenameWithResponse(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*GetPoolRenameResponse, error) {
+	rsp, err := c.GetPoolRename(ctx, renameId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseGetPoolRenameResponse(rsp)
+}
+
+// ApplyPoolRenameWithResponse Run a rename, or run it again after a stop or a failure
+//
+// runners R5.143 and R5.144. Steps that are done are not repeated. A rename that is running answers 409 conflict.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/pool/renames/{renameId}/apply (the `ApplyPoolRename` operationId).
+func (c *ClientWithResponses) ApplyPoolRenameWithResponse(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*ApplyPoolRenameResponse, error) {
+	rsp, err := c.ApplyPoolRename(ctx, renameId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseApplyPoolRenameResponse(rsp)
+}
+
+// StopPoolRenameWithResponse Stop a rename that is running
+//
+// runners R5.144, web-console section 11. The step that runs finishes; no later step starts; the rename ends `stopped`. One that is not running answers 409 conflict.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/pool/renames/{renameId}/stop (the `StopPoolRename` operationId).
+func (c *ClientWithResponses) StopPoolRenameWithResponse(ctx context.Context, renameId RenameId, reqEditors ...RequestEditorFn) (*StopPoolRenameResponse, error) {
+	rsp, err := c.StopPoolRename(ctx, renameId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStopPoolRenameResponse(rsp)
+}
+
 // GetRegistrySettingsWithResponse Registry logins per backend and whether a private CA bundle is set
 //
 // runners R5.77, R5.78. No password is ever returned.
@@ -56188,6 +57257,204 @@ func ParseGetPackageResponse(rsp *http.Response) (*GetPackageResponse, error) {
 	}
 
 	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPoolNameResponse parses an HTTP response from a GetPoolNameWithResponse call
+func ParseGetPoolNameResponse(rsp *http.Response) (*GetPoolNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPoolNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PoolName
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseSetPoolNameResponse parses an HTTP response from a SetPoolNameWithResponse call
+func ParseSetPoolNameResponse(rsp *http.Response) (*SetPoolNameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &SetPoolNameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PoolName
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParsePlanPoolRenameResponse parses an HTTP response from a PlanPoolRenameWithResponse call
+func ParsePlanPoolRenameResponse(rsp *http.Response) (*PlanPoolRenameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &PlanPoolRenameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 201:
+		var dest PoolRename
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseGetPoolRenameResponse parses an HTTP response from a GetPoolRenameWithResponse call
+func ParseGetPoolRenameResponse(rsp *http.Response) (*GetPoolRenameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &GetPoolRenameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest PoolRename
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseApplyPoolRenameResponse parses an HTTP response from a ApplyPoolRenameWithResponse call
+func ParseApplyPoolRenameResponse(rsp *http.Response) (*ApplyPoolRenameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ApplyPoolRenameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest PoolRename
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStopPoolRenameResponse parses an HTTP response from a StopPoolRenameWithResponse call
+func ParseStopPoolRenameResponse(rsp *http.Response) (*StopPoolRenameResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StopPoolRenameResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 202:
+		var dest PoolRename
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON202 = &dest
+
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
