@@ -37,6 +37,72 @@ func (e AddUserRequestRole) Valid() bool {
 	}
 }
 
+// Defines values for AgentInstallerArch.
+const (
+	AgentInstallerArchAmd64 AgentInstallerArch = "amd64"
+	AgentInstallerArchArm64 AgentInstallerArch = "arm64"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerArch enum.
+func (e AgentInstallerArch) Valid() bool {
+	switch e {
+	case AgentInstallerArchAmd64:
+		return true
+	case AgentInstallerArchArm64:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerFormat.
+const (
+	Deb   AgentInstallerFormat = "deb"
+	Msi   AgentInstallerFormat = "msi"
+	Pkg   AgentInstallerFormat = "pkg"
+	TarGz AgentInstallerFormat = "tar.gz"
+	Zip   AgentInstallerFormat = "zip"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerFormat enum.
+func (e AgentInstallerFormat) Valid() bool {
+	switch e {
+	case Deb:
+		return true
+	case Msi:
+		return true
+	case Pkg:
+		return true
+	case TarGz:
+		return true
+	case Zip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerOs.
+const (
+	AgentInstallerOsLinux   AgentInstallerOs = "linux"
+	AgentInstallerOsMacos   AgentInstallerOs = "macos"
+	AgentInstallerOsWindows AgentInstallerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerOs enum.
+func (e AgentInstallerOs) Valid() bool {
+	switch e {
+	case AgentInstallerOsLinux:
+		return true
+	case AgentInstallerOsMacos:
+		return true
+	case AgentInstallerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AppWebhookLastResult.
 const (
 	AppWebhookLastResultFailed AppWebhookLastResult = "failed"
@@ -4959,6 +5025,37 @@ type AddUserRequest struct {
 
 // AddUserRequestRole defines model for AddUserRequest.Role.
 type AddUserRequestRole string
+
+// AgentInstaller One agent installer that SHA256SUMS lists.
+type AgentInstaller struct {
+	Arch   AgentInstallerArch   `json:"arch"`
+	Format AgentInstallerFormat `json:"format"`
+	Name   string               `json:"name"`
+	Os     AgentInstallerOs     `json:"os"`
+
+	// Sha256 The SHA-256 SHA256SUMS lists.
+	Sha256 string `json:"sha256"`
+
+	// Stored The file is on this controller and has that SHA-256.
+	Stored bool `json:"stored"`
+}
+
+// AgentInstallerArch defines model for AgentInstaller.Arch.
+type AgentInstallerArch string
+
+// AgentInstallerFormat defines model for AgentInstaller.Format.
+type AgentInstallerFormat string
+
+// AgentInstallerOs defines model for AgentInstaller.Os.
+type AgentInstallerOs string
+
+// AgentInstallers operations R5.132 (CRSP347).
+type AgentInstallers struct {
+	FromRelease bool             `json:"from_release"`
+	HaveSums    bool             `json:"have_sums"`
+	Installers  []AgentInstaller `json:"installers"`
+	Version     string           `json:"version"`
+}
 
 // AppHealth defines model for AppHealth.
 type AppHealth struct {
@@ -11123,6 +11220,12 @@ type ReceiveGithubWebhookJSONRequestBody ReceiveGithubWebhookJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ListAgentInstallers The agent installers of this release, and which ones this controller has
+	// (GET /api/v1/agent-installers)
+	ListAgentInstallers(w http.ResponseWriter, r *http.Request)
+	// ImportAgentInstaller Store an agent installer, or SHA256SUMS, that the owner carried over
+	// (PUT /api/v1/agent-installers/{name})
+	ImportAgentInstaller(w http.ResponseWriter, r *http.Request, name string)
 	// ReplaceAppPrivateKey Replace the GitHub App private key
 	// (PUT /api/v1/app/private-key)
 	ReplaceAppPrivateKey(w http.ResponseWriter, r *http.Request)
@@ -11832,6 +11935,46 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListAgentInstallers operation middleware
+func (siw *ServerInterfaceWrapper) ListAgentInstallers(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAgentInstallers(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ImportAgentInstaller operation middleware
+func (siw *ServerInterfaceWrapper) ImportAgentInstaller(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", r.PathValue("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ImportAgentInstaller(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ReplaceAppPrivateKey operation middleware
 func (siw *ServerInterfaceWrapper) ReplaceAppPrivateKey(w http.ResponseWriter, r *http.Request) {
@@ -19165,6 +19308,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/join-codes", wrapper.CreateJoinCode)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/join-files", wrapper.CreateJoinFile)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/packages/{name}", wrapper.GetPackage)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/agent-installers", wrapper.ListAgentInstallers)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/agent-installers/{name}", wrapper.ImportAgentInstaller)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/join-codes/ssh", wrapper.JoinMachineOverSsh)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/join-codes/{joinCodeId}", wrapper.RevokeJoinCode)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/join-codes/{joinCodeId}", wrapper.GetJoinCode)
@@ -19346,6 +19491,84 @@ type RedirectResponseHeaders struct {
 }
 type RedirectResponse struct {
 	Headers RedirectResponseHeaders
+}
+
+type ListAgentInstallersRequestObject struct {
+}
+
+type ListAgentInstallersResponseObject interface {
+	VisitListAgentInstallersResponse(w http.ResponseWriter) error
+}
+
+type ListAgentInstallers200JSONResponse AgentInstallers
+
+func (response ListAgentInstallers200JSONResponse) VisitListAgentInstallersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAgentInstallersdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListAgentInstallersdefaultJSONResponse) VisitListAgentInstallersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportAgentInstallerRequestObject struct {
+	Name string `json:"name"`
+	Body io.Reader
+}
+
+type ImportAgentInstallerResponseObject interface {
+	VisitImportAgentInstallerResponse(w http.ResponseWriter) error
+}
+
+type ImportAgentInstaller200JSONResponse AgentInstallers
+
+func (response ImportAgentInstaller200JSONResponse) VisitImportAgentInstallerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportAgentInstallerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ImportAgentInstallerdefaultJSONResponse) VisitImportAgentInstallerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
 }
 
 type ReplaceAppPrivateKeyRequestObject struct {
@@ -28610,6 +28833,12 @@ func (response ReceiveGithubWebhookdefaultJSONResponse) VisitReceiveGithubWebhoo
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// ListAgentInstallers The agent installers of this release, and which ones this controller has
+	// (GET /api/v1/agent-installers)
+	ListAgentInstallers(ctx context.Context, request ListAgentInstallersRequestObject) (ListAgentInstallersResponseObject, error)
+	// ImportAgentInstaller Store an agent installer, or SHA256SUMS, that the owner carried over
+	// (PUT /api/v1/agent-installers/{name})
+	ImportAgentInstaller(ctx context.Context, request ImportAgentInstallerRequestObject) (ImportAgentInstallerResponseObject, error)
 	// ReplaceAppPrivateKey Replace the GitHub App private key
 	// (PUT /api/v1/app/private-key)
 	ReplaceAppPrivateKey(ctx context.Context, request ReplaceAppPrivateKeyRequestObject) (ReplaceAppPrivateKeyResponseObject, error)
@@ -29348,6 +29577,58 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// ListAgentInstallers operation middleware
+func (sh *strictHandler) ListAgentInstallers(w http.ResponseWriter, r *http.Request) {
+	var request ListAgentInstallersRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAgentInstallers(ctx, request.(ListAgentInstallersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAgentInstallers")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAgentInstallersResponseObject); ok {
+		if err := validResponse.VisitListAgentInstallersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ImportAgentInstaller operation middleware
+func (sh *strictHandler) ImportAgentInstaller(w http.ResponseWriter, r *http.Request, name string) {
+	var request ImportAgentInstallerRequestObject
+
+	request.Name = name
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ImportAgentInstaller(ctx, request.(ImportAgentInstallerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ImportAgentInstaller")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ImportAgentInstallerResponseObject); ok {
+		if err := validResponse.VisitImportAgentInstallerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // ReplaceAppPrivateKey operation middleware

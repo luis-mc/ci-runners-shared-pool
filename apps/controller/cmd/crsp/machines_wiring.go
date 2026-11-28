@@ -330,6 +330,14 @@ func packageServer(mr *machinesRuntime) api.PackageServer {
 	return mr.Packages
 }
 
+// agentInstallerService is the API's view of the agent installer store; a nil store stays a nil interface.
+func agentInstallerService(mr *machinesRuntime) api.AgentInstallerService {
+	if mr == nil || mr.AgentInstallers == nil {
+		return nil
+	}
+	return mr.AgentInstallers
+}
+
 // concreteListenHost is the host of a listen address that names one address of
 // this machine: not loopback, not a wildcard, not empty.
 func concreteListenHost(listen string) string {

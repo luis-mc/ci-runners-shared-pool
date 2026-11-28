@@ -44,7 +44,7 @@ var otherAreaAuth = map[string]string{
 	"getListenerGate": authUser, "putListenerGate": authAdmin, "getTimerSettings": authUser, "checkTimerSettings": authUser, "getJobTimer": authUser, "getRunTimer": authUser,
 	"putTimerSettings": authAdmin, "stopJobNow": authAdmin, "extendJobTimer": authAdmin, "cancelRunNow": authAdmin, "extendRunTimer": authAdmin,
 
-	"getCaCertificate": authPublic, "getPackage": authPublic, "getHealth": authPublic,
+	"getCaCertificate": authPublic, "getPackage": authPublic, "listAgentInstallers": authUser, "importAgentInstaller": authAdmin, "getHealth": authPublic,
 
 	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser, "getSavingsReport": authUser, "getSavingsRates": authUser, "updateSavingsRates": authOwner, "resetSavingsRates": authOwner,
 	"getUpdateStatus": authUser, "getLifecycleStatus": authUser, "listUpdateHistory": authUser, "listUpdateFleet": authUser, "listCaches": authUser, "listImages": authUser, "getDoctorRun": authUser, "getJob": authUser, "getMachine": authUser,

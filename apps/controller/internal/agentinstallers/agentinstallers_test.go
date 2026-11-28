@@ -260,3 +260,67 @@ func TestOfflineDoesNotWaitOnTheNetworkForEveryCall(t *testing.T) {
 type srcFunc func() (update.Release, error)
 
 func (f srcFunc) Latest(context.Context) (update.Release, error) { return f() }
+
+// CRSP347: both name patterns, the archive and the native package, are agent installers.
+func TestParseNameAcceptsArchivesAndPackages(t *testing.T) {
+	good := map[string]Info{
+		"CrspAgent-1.2.3-win-x64.zip":          {Version: "1.2.3", OS: "windows", Arch: "amd64", Format: "zip"},
+		"CrspAgent-1.2.3-win-arm64.msi":        {Version: "1.2.3", OS: "windows", Arch: "arm64", Format: "msi"},
+		"CrspAgent-1.2.3-linux-x64.tar.gz":     {Version: "1.2.3", OS: "linux", Arch: "amd64", Format: "tar.gz"},
+		"CrspAgent-1.2.3-linux-arm64.deb":      {Version: "1.2.3", OS: "linux", Arch: "arm64", Format: "deb"},
+		"CrspAgent-1.2.3-macos-arm64.pkg":      {Version: "1.2.3", OS: "macos", Arch: "arm64", Format: "pkg"},
+		"CrspAgent-1.2.3-macos-x64.tar.gz":     {Version: "1.2.3", OS: "macos", Arch: "amd64", Format: "tar.gz"},
+		"CrspAgent-1.2.3~edge.4-linux-x64.deb": {Version: "1.2.3~edge.4", OS: "linux", Arch: "amd64", Format: "deb"},
+	}
+	for name, want := range good {
+		if got, ok := ParseName(name); !ok || got != want {
+			t.Fatalf("ParseName(%q) = %+v, %v; want %+v", name, got, ok, want)
+		}
+	}
+	for _, bad := range []string{"CrspAgent-1.2.3-linux-x64.msi", "CrspAgent-1.2.3-win-x64.deb", "CrspAgent-1.2.3-macos-x64.deb", "CrspAgent-1.2.3-win-x64.pkg", "CrspAgent-1.2.3-win-x64.msi.part"} {
+		if _, ok := ParseName(bad); ok {
+			t.Fatalf("ParseName(%q) accepted", bad)
+		}
+	}
+}
+
+func TestStateAndSumsImport(t *testing.T) {
+	ctx := context.Background()
+	off := &Store{Version: "1.2.3", Dir: t.TempDir()}
+	st, err := off.State(ctx)
+	if err != nil || st.HaveSums || len(st.Installers) != 0 || st.Version != "1.2.3" {
+		t.Fatalf("State before import = %+v, %v", st, err)
+	}
+	pkg := "CrspAgent-1.2.3-linux-x64.deb"
+	if err := off.ImportSums(strings.NewReader(sum("win") + "  " + winName + "\n" + sum("deb") + "  " + pkg + "\n")); err != nil {
+		t.Fatal(err)
+	}
+	if err := off.Import(ctx, pkg, strings.NewReader("deb")); err != nil {
+		t.Fatal(err)
+	}
+	st, err = off.State(ctx)
+	if err != nil || !st.HaveSums || st.FromRelease || len(st.Installers) != 2 {
+		t.Fatalf("State after import = %+v, %v", st, err)
+	}
+	for _, in := range st.Installers {
+		if in.Cached != (in.Name == pkg) {
+			t.Fatalf("Cached wrong for %+v", in)
+		}
+	}
+	if st.Installers[0].Format == "" {
+		t.Fatalf("no format: %+v", st.Installers[0])
+	}
+
+	// A controller that read the release's own SHA256SUMS does not take a carried-over copy.
+	var calls []string
+	online := newStore(t, &calls)
+	if _, err := online.List(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if err := online.ImportSums(strings.NewReader(sum("win") + "  " + winName + "\n")); !errors.Is(err, ErrSumsKnown) {
+		t.Fatalf("ImportSums on a controller with the release sums = %v", err)
+	}
+	if st, _ := online.State(ctx); !st.FromRelease {
+		t.Fatalf("FromRelease not set: %+v", st)
+	}
+}
