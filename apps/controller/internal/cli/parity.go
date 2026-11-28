@@ -26,6 +26,8 @@ var operationCommands = map[string]string{
 	"listMachines":               "machine list",
 	"createJoinCode":             "machine add",
 	"createJoinFile":             "machine join-file",
+	"listAgentInstallers":        "machine agent-installers list",
+	"importAgentInstaller":       "machine agent-installers import",
 	"drainMachine":               "machine drain",
 	"getMachineChange":           "machine drain|remove",
 	"decideMachineChange":        "machine drain|remove (a stop-jobs decision does not exist; crsp never cuts a job)",

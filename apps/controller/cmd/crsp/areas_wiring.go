@@ -74,7 +74,9 @@ type controllerDeps struct {
 	PublicHost string
 	// Packages serves the release packages to new machines (machines R5.65); nil for a development build.
 	Packages api.PackageServer
-	Updates  api.UpdateService
+	// AgentInstallers lists and imports agent installers (operations R5.132); nil for a development build.
+	AgentInstallers api.AgentInstallerService
+	Updates         api.UpdateService
 	// Lifecycle is the update state machine; Fleet lists the machines for it.
 	Lifecycle *update.Service
 	// Listen is the listen address service of the console (operations R5.90).
@@ -84,8 +86,8 @@ type controllerDeps struct {
 	Caches *caches.Service
 	// Link carries runner commands to remote machines and reports (CRSP63); nil keeps remote machines unreachable.
 	Link *agentlink.Link
-	// AgentInstallers holds the agent installers of the release (CRSP304); nil for a development build.
-	AgentInstallers *agentinstallers.Store
+	// AgentStore holds the agent installers of the release (CRSP304); nil for a development build.
+	AgentStore *agentinstallers.Store
 	// Deps runs the dependency setup jobs (CRSP248); nil leaves the routes at 501.
 	Deps *depsetup.Service
 	// DepStore is the controller's own copy of the dependencies (DEP15); nil leaves the routes at 501.
@@ -407,7 +409,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		Timers:        timerSvc,
 		ListenerGate:  gateSvc,
 		RunnerPin:     pinStatus{m: pinMgr},
-		AgentPackages: agentPackageStatus(d.AgentInstallers),
+		AgentPackages: agentPackageStatus(d.AgentStore),
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger
@@ -425,6 +427,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	if d.DepStore != nil {
 		c.Options.DepStore = d.DepStore
 	}
+	c.Options.AgentInstallers = d.AgentInstallers
 	if d.Deps != nil {
 		c.Options.Deps = d.Deps
 	}

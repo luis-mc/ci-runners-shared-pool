@@ -39,18 +39,18 @@ func newAgentInstallers(dataDir, version, githubAPI string) *agentinstallers.Sto
 	}
 }
 
-// agentPackages is the doctor.AgentPackageSource of the release's SHA256SUMS (CRSP348): which agent archives and
+// agentCoverage is the doctor.AgentPackageSource of the release's SHA256SUMS (CRSP348): which agent archives and
 // native packages it lists. A nil store (a development build) leaves the check skipped.
-type agentPackages struct{ store *agentinstallers.Store }
+type agentCoverage struct{ store *agentinstallers.Store }
 
 func agentPackageStatus(s *agentinstallers.Store) doctor.AgentPackageSource {
 	if s == nil {
 		return nil
 	}
-	return agentPackages{store: s}
+	return agentCoverage{store: s}
 }
 
-func (a agentPackages) AgentPackages(ctx context.Context) (doctor.AgentPackageStatus, error) {
+func (a agentCoverage) AgentPackages(ctx context.Context) (doctor.AgentPackageStatus, error) {
 	sums, version, err := a.store.Sums(ctx)
 	if err != nil {
 		return doctor.AgentPackageStatus{}, err

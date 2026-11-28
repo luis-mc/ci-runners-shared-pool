@@ -6,6 +6,7 @@ import { CaretInput } from './CaretInput';
 import { ThemePreview } from './ThemePreview';
 
 export { FileField } from './FileField';
+export { FileListField } from './FileListField';
 
 export interface FieldShellProps {
   label: string;

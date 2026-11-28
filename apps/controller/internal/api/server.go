@@ -72,6 +72,8 @@ type Options struct {
 	CA CAProvider
 	// Packages serves GET /api/v1/packages/{name} (machines R5.65). Nil answers 501.
 	Packages PackageServer
+	// AgentInstallers lists and imports agent installers (handlers_agentinstallers.go, operations R5.132). Nil answers 501.
+	AgentInstallers AgentInstallerService
 	// Jobs and Slots serve the jobs and slot routes (handlers_jobs.go).
 	Jobs  slots.Jobs
 	Slots scheduler.SlotQueue

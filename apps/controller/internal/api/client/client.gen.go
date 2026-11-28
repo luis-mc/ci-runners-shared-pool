@@ -38,6 +38,72 @@ func (e AddUserRequestRole) Valid() bool {
 	}
 }
 
+// Defines values for AgentInstallerArch.
+const (
+	AgentInstallerArchAmd64 AgentInstallerArch = "amd64"
+	AgentInstallerArchArm64 AgentInstallerArch = "arm64"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerArch enum.
+func (e AgentInstallerArch) Valid() bool {
+	switch e {
+	case AgentInstallerArchAmd64:
+		return true
+	case AgentInstallerArchArm64:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerFormat.
+const (
+	Deb   AgentInstallerFormat = "deb"
+	Msi   AgentInstallerFormat = "msi"
+	Pkg   AgentInstallerFormat = "pkg"
+	TarGz AgentInstallerFormat = "tar.gz"
+	Zip   AgentInstallerFormat = "zip"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerFormat enum.
+func (e AgentInstallerFormat) Valid() bool {
+	switch e {
+	case Deb:
+		return true
+	case Msi:
+		return true
+	case Pkg:
+		return true
+	case TarGz:
+		return true
+	case Zip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerOs.
+const (
+	AgentInstallerOsLinux   AgentInstallerOs = "linux"
+	AgentInstallerOsMacos   AgentInstallerOs = "macos"
+	AgentInstallerOsWindows AgentInstallerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerOs enum.
+func (e AgentInstallerOs) Valid() bool {
+	switch e {
+	case AgentInstallerOsLinux:
+		return true
+	case AgentInstallerOsMacos:
+		return true
+	case AgentInstallerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AppWebhookLastResult.
 const (
 	AppWebhookLastResultFailed AppWebhookLastResult = "failed"
@@ -5251,6 +5317,37 @@ type AddUserRequest struct {
 
 // AddUserRequestRole defines model for AddUserRequest.Role.
 type AddUserRequestRole string
+
+// AgentInstaller One agent installer that SHA256SUMS lists.
+type AgentInstaller struct {
+	Arch   AgentInstallerArch   `json:"arch"`
+	Format AgentInstallerFormat `json:"format"`
+	Name   string               `json:"name"`
+	Os     AgentInstallerOs     `json:"os"`
+
+	// Sha256 The SHA-256 SHA256SUMS lists.
+	Sha256 string `json:"sha256"`
+
+	// Stored The file is on this controller and has that SHA-256.
+	Stored bool `json:"stored"`
+}
+
+// AgentInstallerArch defines model for AgentInstaller.Arch.
+type AgentInstallerArch string
+
+// AgentInstallerFormat defines model for AgentInstaller.Format.
+type AgentInstallerFormat string
+
+// AgentInstallerOs defines model for AgentInstaller.Os.
+type AgentInstallerOs string
+
+// AgentInstallers operations R5.132 (CRSP347).
+type AgentInstallers struct {
+	FromRelease bool             `json:"from_release"`
+	HaveSums    bool             `json:"have_sums"`
+	Installers  []AgentInstaller `json:"installers"`
+	Version     string           `json:"version"`
+}
 
 // AppHealth defines model for AppHealth.
 type AppHealth struct {
@@ -11841,6 +11938,22 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 
+	// ListAgentInstallers The agent installers of this release, and which ones this controller has
+	//
+	// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+	//
+	// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+	ListAgentInstallers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportAgentInstallerWithBody Store an agent installer, or SHA256SUMS, that the owner carried over
+	//
+	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+	ImportAgentInstallerWithBody(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -14299,6 +14412,42 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /webhooks/github (the `ReceiveGithubWebhook` operationId).
 	ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+// ListAgentInstallers The agent installers of this release, and which ones this controller has
+//
+// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+//
+// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+func (c *Client) ListAgentInstallers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAgentInstallersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ImportAgentInstallerWithBody Store an agent installer, or SHA256SUMS, that the owner carried over
+//
+// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+func (c *Client) ImportAgentInstallerWithBody(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportAgentInstallerRequestWithBody(c.Server, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 // ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
@@ -19948,6 +20097,69 @@ func (c *Client) ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithub
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewListAgentInstallersRequest constructs an http.Request for the ListAgentInstallers method
+func NewListAgentInstallersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/agent-installers")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewImportAgentInstallerRequestWithBody constructs an http.Request for the ImportAgentInstaller method, with any body, and a specified content type
+func NewImportAgentInstallerRequestWithBody(server string, name string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/agent-installers/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewReplaceAppPrivateKeyRequest calls the generic ReplaceAppPrivateKey builder with application/json body
@@ -31517,6 +31729,24 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
+	// ListAgentInstallersWithResponse The agent installers of this release, and which ones this controller has
+	//
+	// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+	ListAgentInstallersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAgentInstallersResponse, error)
+
+	// ImportAgentInstallerWithBodyWithResponse Store an agent installer, or SHA256SUMS, that the owner carried over
+	//
+	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+	ImportAgentInstallerWithBodyWithResponse(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportAgentInstallerResponse, error)
+
 	// ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -34339,6 +34569,102 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /webhooks/github (the `ReceiveGithubWebhook` operationId).
 	ReceiveGithubWebhookWithResponse(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*ReceiveGithubWebhookResponse, error)
+}
+
+type ListAgentInstallersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AgentInstallers
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAgentInstallersResponse) GetJSON200() *AgentInstallers {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListAgentInstallersResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAgentInstallersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAgentInstallersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAgentInstallersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAgentInstallersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ImportAgentInstallerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AgentInstallers
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ImportAgentInstallerResponse) GetJSON200() *AgentInstallers {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ImportAgentInstallerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ImportAgentInstallerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportAgentInstallerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportAgentInstallerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ImportAgentInstallerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
 }
 
 type ReplaceAppPrivateKeyResponse struct {
@@ -46368,6 +46694,36 @@ func (r ReceiveGithubWebhookResponse) ContentType() string {
 	return ""
 }
 
+// ListAgentInstallersWithResponse The agent installers of this release, and which ones this controller has
+//
+// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+func (c *ClientWithResponses) ListAgentInstallersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAgentInstallersResponse, error) {
+	rsp, err := c.ListAgentInstallers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAgentInstallersResponse(rsp)
+}
+
+// ImportAgentInstallerWithBodyWithResponse Store an agent installer, or SHA256SUMS, that the owner carried over
+//
+// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+func (c *ClientWithResponses) ImportAgentInstallerWithBodyWithResponse(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportAgentInstallerResponse, error) {
+	rsp, err := c.ImportAgentInstallerWithBody(ctx, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportAgentInstallerResponse(rsp)
+}
+
 // ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 //
 // github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -51103,6 +51459,72 @@ func (c *ClientWithResponses) ReceiveGithubWebhookWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseReceiveGithubWebhookResponse(rsp)
+}
+
+// ParseListAgentInstallersResponse parses an HTTP response from a ListAgentInstallersWithResponse call
+func ParseListAgentInstallersResponse(rsp *http.Response) (*ListAgentInstallersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAgentInstallersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgentInstallers
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseImportAgentInstallerResponse parses an HTTP response from a ImportAgentInstallerWithResponse call
+func ParseImportAgentInstallerResponse(rsp *http.Response) (*ImportAgentInstallerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportAgentInstallerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgentInstallers
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseReplaceAppPrivateKeyResponse parses an HTTP response from a ReplaceAppPrivateKeyWithResponse call

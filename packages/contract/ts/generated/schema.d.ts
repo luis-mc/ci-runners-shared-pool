@@ -1525,6 +1525,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agent-installers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent installers of this release, and which ones this controller has
+         * @description operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+         */
+        get: operations["listAgentInstallers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent-installers/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Store an agent installer, or SHA256SUMS, that the owner carried over
+         * @description operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+         */
+        put: operations["importAgentInstaller"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/join-codes/ssh": {
         parameters: {
             query?: never;
@@ -7664,6 +7704,29 @@ export interface components {
             /** @description Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default. */
             delete_data: boolean | null;
         };
+        /** @description One agent installer that SHA256SUMS lists. */
+        AgentInstaller: {
+            /** @example CrspAgent-1.4.0-linux-x64.tar.gz */
+            name: string;
+            /** @enum {string} */
+            os: "windows" | "linux" | "macos";
+            /** @enum {string} */
+            arch: "amd64" | "arm64";
+            /** @enum {string} */
+            format: "zip" | "tar.gz" | "msi" | "pkg" | "deb";
+            /** @description The SHA-256 SHA256SUMS lists. */
+            sha256: string;
+            /** @description The file is on this controller and has that SHA-256. */
+            stored: boolean;
+        };
+        /** @description operations R5.132 (CRSP347). */
+        AgentInstallers: {
+            /** @example 1.4.0 */
+            version: string;
+            have_sums: boolean;
+            from_release: boolean;
+            installers: components["schemas"]["AgentInstaller"][];
+        };
         /**
          * @description operations R5.11 to R5.18, tray R5.18.
          * @example {
@@ -11569,6 +11632,54 @@ export interface operations {
                 };
                 content: {
                     "application/octet-stream": string;
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listAgentInstallers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The agent installers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentInstallers"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    importAgentInstaller: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Stored. The list after the import. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentInstallers"];
                 };
             };
             default: components["responses"]["Error"];

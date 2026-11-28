@@ -221,7 +221,7 @@ func runController() error {
 	sec = secrets.Learn(sec, secretRedactor.Add)
 	ctl, err := buildController(ctx, controllerDeps{
 		Cfg: cfg, Logger: logger, DB: db, Secrets: sec, Ops: ops,
-		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Lifecycle: lc, Health: mr.Health, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, AgentInstallers: mr.AgentInstallers, Deps: mr.Deps, DepStore: mr.DepStore, MachineSecrets: mr.Secrets,
+		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Lifecycle: lc, Health: mr.Health, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, AgentInstallers: agentInstallerService(mr), AgentStore: mr.AgentInstallers, Deps: mr.Deps, DepStore: mr.DepStore, MachineSecrets: mr.Secrets,
 		Hub: mr.Hub,
 	})
 	if err != nil {

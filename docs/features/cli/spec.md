@@ -247,6 +247,8 @@ A command that Ctrl-C cut off may still run on the machine until its own timeout
 
 **R5.64** (built, OPS69; operations R5.32, R5.33) — `uninstall` (alias `remove`) `[--delete-data|--keep-data] [--yes]` removes crsp from this machine. It lists what goes and what stays, then needs a yes (R5.14). Data is kept unless `--delete-data` or `PURGE=1` says otherwise; `--delete-data` also deletes settings, database, logs, caches, runner images, containers and the `crsp` WSL distro. Both ways unregister the runners from GitHub and are audited with actor and result. In a terminal without either flag it asks "Keep my data or delete my data too", with no default, through the native window `crsp lifecycle-window remove` (exit 10 keep, 11 delete, 1 cancel) or, when no window can be shown, in the terminal. Installer-only flags: `--ask-to FILE`, `--choice-file FILE`, `--from-installer`, `--runners-only`.
 
+**R5.65** (built, CRSP347; operations R5.132) — `machine agent-installers list` MUST show the agent installers of the controller's release (name, system, CPU, `stored` or `missing`) and, with `--json`, the answer of `GET /api/v1/agent-installers`. `machine agent-installers import FILE|FOLDER...` MUST send `SHA256SUMS` first and then each `CrspAgent-*` file (a folder gives its `SHA256SUMS` and `CrspAgent-*` files) to `PUT /api/v1/agent-installers/{name}` as `application/octet-stream`, say for each file that it was stored, or name it and the reason it was refused, and print the list at the end. It exits 1 when a file was not stored and 2 with no argument; it needs the admin role. Without `SHA256SUMS` on the controller, `list` says which files to download.
+
 ## 6. Non-functional requirements
 
 **R6.1** — The CLI MUST NOT print, log or write to its config file any secret: controller tokens, GitHub tokens, the App private key, the webhook secret, registration or remove tokens. The one-time join code (`machine add`) and the one-time console link (`open`) are the only short-lived codes it prints, and only on those commands.
@@ -346,6 +348,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R5.62 | planned in the OPS28 code branches (names reconciled when they land): `apps/controller/internal/cli` tests for `runner add --ephemeral`, the dependency flags, `runner update`, `runner clear-cache` and `repo policy --runner-kind` |
 | R5.63 | built: apps/controller/internal/cli/cmd_machine_leftovers_test.go TestMachineLeftoversLists, TestMachineLeftoversListEmpty, TestMachineLeftoversRemove, TestMachineLeftoversRemoveNeedsConfirmation, TestMachineLeftoversRemoveRefusedAndUnknown |
 | R5.64 | built: apps/controller/internal/cli/cmd_uninstall_test.go TestUninstallSilentKeepsDataAndUnregistersRunners, TestUninstallDeleteDataFlagAndPurge, TestUninstallWindowAnswers, TestUninstallWithoutWindowAsksInTheTerminalWithNoDefault |
+| R5.65 | built: apps/controller/internal/cli/cmd_agent_installers_test.go TestAgentInstallersImportSendsSumsFirstAndNamesRefusals, TestAgentInstallersListAndUsage |
 
 ## 10. Decisions
 

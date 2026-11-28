@@ -50,7 +50,7 @@ var otherAreaAuth = map[string]string{
 	"getJobDebug": authUser, "openDebugSession": authAdmin, "listDebugSessions": authUser, "getDebugSession": authUser,
 	"extendDebugSession": authAdmin, "endDebugSession": authAdmin, "getDebugTranscript": authAdmin,
 
-	"getCaCertificate": authPublic, "getPackage": authPublic, "getHealth": authPublic,
+	"getCaCertificate": authPublic, "getPackage": authPublic, "listAgentInstallers": authUser, "importAgentInstaller": authAdmin, "getHealth": authPublic,
 
 	"createConsoleLink": authUser, "exportAuditEvents": authUser, "exportJobs": authUser, "getImage": authUser, "getSpeedComparison": authUser, "getSavingsReport": authUser, "getSavingsRates": authUser, "updateSavingsRates": authOwner, "resetSavingsRates": authOwner,
 	"getUpdateStatus": authUser, "getLifecycleStatus": authUser, "listUpdateHistory": authUser, "listUpdateFleet": authUser, "listCaches": authUser, "listImages": authUser, "getDoctorRun": authUser, "getJob": authUser, "getMachine": authUser,

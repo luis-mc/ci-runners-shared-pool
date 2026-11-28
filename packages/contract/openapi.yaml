@@ -2262,6 +2262,68 @@ paths:
                 format: binary
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/agent-installers:
+    get:
+      operationId: listAgentInstallers
+      tags: [machines]
+      summary: The agent installers of this release, and which ones this controller has
+      description: >-
+        operations R5.132 (CRSP347). The version this controller serves, whether it has the
+        release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz
+        archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is
+        stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step
+        of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from
+        the release itself, so nothing needs importing for it.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The agent installers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentInstallers'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/agent-installers/{name}:
+    put:
+      operationId: importAgentInstaller
+      tags: [machines]
+      summary: Store an agent installer, or SHA256SUMS, that the owner carried over
+      description: >-
+        operations R5.132 (CRSP347), the offline path. The body is the file. `name` is
+        `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the
+        extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos).
+        SHA256SUMS must list an installer of this controller's version and is refused (409
+        `conflict`) when the controller already read the release's own copy. An installer is
+        stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list
+        answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match
+        answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Stored. The list after the import.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentInstallers'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/join-codes/ssh:
     post:
       operationId: joinMachineOverSsh
@@ -12427,6 +12489,45 @@ components:
         delete_data:
           type: [boolean, 'null']
           description: Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default.
+    AgentInstaller:
+      type: object
+      description: One agent installer that SHA256SUMS lists.
+      required: [name, os, arch, format, sha256, stored]
+      properties:
+        name:
+          type: string
+          example: CrspAgent-1.4.0-linux-x64.tar.gz
+        os:
+          type: string
+          enum: [windows, linux, macos]
+        arch:
+          type: string
+          enum: [amd64, arm64]
+        format:
+          type: string
+          enum: [zip, tar.gz, msi, pkg, deb]
+        sha256:
+          type: string
+          description: The SHA-256 SHA256SUMS lists.
+        stored:
+          type: boolean
+          description: The file is on this controller and has that SHA-256.
+    AgentInstallers:
+      type: object
+      description: operations R5.132 (CRSP347).
+      required: [version, have_sums, from_release, installers]
+      properties:
+        version:
+          type: string
+          example: 1.4.0
+        have_sums:
+          type: boolean
+        from_release:
+          type: boolean
+        installers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentInstaller'
     UpdateStatus:
       type: object
       description: operations R5.11 to R5.18, tray R5.18.

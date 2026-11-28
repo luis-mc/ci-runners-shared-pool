@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agent"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentinstallers"
 )
 
 type recAgentExec struct{ cmds [][]string }
@@ -78,5 +79,15 @@ func TestInstallYesNeedsNoStdin(t *testing.T) {
 	ex2 := &recAgentExec{}
 	if err := installWith(installArgs, io.Discard, strings.NewReader(""), "windows", true, ex2); err == nil || len(ex2.cmds) != 0 {
 		t.Fatalf("without --yes and without an answer nothing runs: %v", err)
+	}
+}
+
+// CRSP347: a development build has no agent installer store, and that stays a nil interface (the API answers 501).
+func TestAgentInstallerServiceStaysNilWithoutAStore(t *testing.T) {
+	if agentInstallerService(nil) != nil || agentInstallerService(&machinesRuntime{}) != nil {
+		t.Fatal("a missing store must be a nil interface")
+	}
+	if agentInstallerService(&machinesRuntime{AgentInstallers: &agentinstallers.Store{}}) == nil {
+		t.Fatal("a store must reach the API")
 	}
 }

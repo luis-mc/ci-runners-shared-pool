@@ -378,7 +378,12 @@ export class Mock {
       method: req.method(),
       path: url.pathname,
       query: url.searchParams,
-      body: text ? (JSON.parse(text) as unknown) : undefined,
+      // A file sent as octet-stream stays the text it is; everything else is JSON.
+      body: !text
+        ? undefined
+        : (req.headers()['content-type'] ?? '').startsWith('application/octet-stream')
+          ? text
+          : (JSON.parse(text) as unknown),
     };
     this.calls.push(call);
     const parts = url.pathname.split('/');
