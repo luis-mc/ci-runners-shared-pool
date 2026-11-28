@@ -19,7 +19,7 @@ code:
   - apps/controller/internal/compare/**
   - apps/controller/internal/metrics/**
 design_system: [UX-6, UX-13, UX-22, UX-24, UX-38, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -325,6 +325,12 @@ Whichever of a time or a size limit is reached first applies. The oldest data go
 **R6.14** — (M1) The audit log holds personal data (GitHub login and user id). It is listed in `docs/reference/data-inventory.md` and `docs/reference/data-retention.md` (stack profile, sections 7 and 10) and follows R6.8.
 
 **R6.15** — (CRSP341) The secret scan is never allowlisted. A pull request that adds a line to `.gitleaksignore` fails: the guard `scripts/ci/gitleaksignore_guard.py` runs in the pre-push hook (gate.json `always_on_guards`) and in the CI lint job; removing lines passes. Planted fake secrets in tests are built at run time, never written as literals (AGENTS.md, Secret scan).
+
+**R6.16** — (CRSP321, CRSP375, CRSP376, CRSP377) This repository's own delivery is lean: one full run per change, and a lane runs only when its inputs changed.
+- The local gate is a smoke. The pre-push hook runs `go test -short` on the touched packages, the secret scan, the guards, gofmt, `go vet`, golangci-lint (also `GOOS=windows` when Go files changed), `prettier --check`, `pnpm -r lint` when web files changed, and the web typecheck. CI is the one full run (gate.json `local_gate: smoke`; `CRSP_PREPUSH_FULL=1` runs the touched packages in full).
+- The watcher updates a ready pull request with the default branch before its run (`watcher.merge_result: update`), so the run tests what will merge and the push to the default branch skips by `scripts/delivery/ci_skip_check.py`. It re-runs a job once when it failed for an infrastructure reason, never a test failure (`watcher.infra_retry: true`).
+- The image, Go OS (Windows, macOS) and MSI lanes are skipped only when the default branch holds a pass record with the same inputs key (`scripts/delivery/ci-shards.json`, `pass_records.py to-result`). A lane with no inputs, no key, a failed record or a manual run always runs. A skipped default-branch push copies the merged pull request's records to the default branch.
+- A flaky Go test goes into `.delivery/quarantine.json` with a task and a review date. The blocking run leaves it out (`go test -skip`); a non-blocking CI step runs it. It is never retried until it passes. An entry with no task or a past date fails lint.
 
 ## 7. Design
 

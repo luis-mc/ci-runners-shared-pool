@@ -275,6 +275,9 @@ jobs:
         run: |
           pnpm -r lint
           pnpm run lint:root
+      # CRSP377 (S9): a quarantine entry needs a task ID and a review date that is not past.
+      - name: Quarantine list is valid
+        run: python3 scripts/delivery/quarantine_check.py check
 
   types:
     name: codegen and types
@@ -377,6 +380,15 @@ jobs:
           CGO_ENABLED: '1'
           GO_TEST_SHARD: ${{ matrix.shard }}/4
           GO_TEST_RERUN: ${{ runner.temp }}/go-rerun.json
+        run: bash scripts/ci/go-test.sh -race
+      # CRSP377 (S9, DL-121): the tests in .delivery/quarantine.json are left out of the step above and run
+      # here, once, on shard 1 only. Non-blocking: a red result is reported and never fails the run.
+      - name: Go quarantined tests (non-blocking)
+        if: ${{ matrix.shard == 1 && hashFiles('.delivery/quarantine.json') != '' }}
+        continue-on-error: true
+        env:
+          CGO_ENABLED: '1'
+          GO_TEST_QUARANTINE: only
         run: bash scripts/ci/go-test.sh -race
       # CRSP201: go-test.sh logs only failures and a summary; the JSON keeps every
       # test's time. The name is stable, so artifact-prune keeps the newest of each.

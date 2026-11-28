@@ -229,4 +229,4 @@ CI runs `govulncheck` and `pnpm audit --prod` on every pull request, and gitleak
 |---|---|---|---|---|---|
 | `STACKSPEC 13.5`, `13.6` | MUST (waived) | Standalone hooks (`.githooks/pre-commit`, `pre-push`, `commit-msg`) and a standalone `ci.yml`. No `luismc-delivery` branch-gate scripts. | The product replaces that plugin's runner-pool feature and must not depend on it. | Luis Carvalho | 2026-11-13 |
 
-Control for the deviation: the pre-push hook runs the fast gates (gofmt, `go vet`, golangci-lint when installed, `go test` of changed packages, `prettier --check` of changed files, web typecheck), and the required CI check runs all twelve gates.
+Control for the deviation: the pre-push hook runs the fast gates (gofmt, `go vet`, golangci-lint when installed, `go test -short` of changed packages as a smoke (CI is the one full run, R6.16), golangci-lint for `GOOS=windows`, `prettier --check` of changed files, web typecheck and web lint), and the required CI check runs all twelve gates.

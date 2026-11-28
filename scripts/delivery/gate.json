@@ -30,7 +30,7 @@
     ],
     "full_on": ["playwright.config.ts", "e2e/tests/web-console/fixtures.ts", "e2e/tests/web-console/ux-guards.ts", "packages/ui/", "apps/controller-console/src/shell/", "apps/controller-console/src/App.tsx", "apps/controller-console/src/main.tsx"]
   },
-  "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "typecheck", "unit"],
+  "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "lint-windows", "lint-web", "typecheck", "unit"],
   "steps": [
     {
       "name": "secret-scan",
@@ -57,6 +57,17 @@
       "run": "golangci-lint run --timeout=5m ./..."
     },
     {
+      "name": "lint-windows",
+      "scope": "changed+dependents",
+      "env": {"GOOS": "windows"},
+      "run": "golangci-lint run --timeout=5m ./..."
+    },
+    {
+      "name": "lint-web",
+      "scope": "ui-changed",
+      "run": "pnpm -r lint"
+    },
+    {
       "name": "typecheck",
       "scope": "changed+dependents",
       "pre_push": true,
@@ -76,6 +87,11 @@
     }
   ],
   "always_on_guards": [
+    {
+      "name": "quarantine-valid",
+      "command": "python3 scripts/delivery/quarantine_check.py check",
+      "inputs": [".delivery/quarantine.json"]
+    },
     {
       "name": "gitleaksignore-no-additions",
       "command": "python3 scripts/ci/gitleaksignore_guard.py --base origin/main",

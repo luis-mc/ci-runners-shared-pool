@@ -68,5 +68,46 @@ class PassRecords(unittest.TestCase):
         self.assertNotIn("--read-from", CI + LIFECYCLE)
 
 
+GATE = json.loads((ROOT / "scripts" / "delivery" / "gate.json").read_text(encoding="utf-8"))
+GO_TEST = (ROOT / "scripts" / "ci" / "go-test.sh").read_text(encoding="utf-8")
+
+
+class Quarantine(unittest.TestCase):
+    def test_the_blocking_run_skips_and_the_other_step_runs_only_the_listed_tests(self):
+        self.assertIn('-skip "^($qnames)', GO_TEST)
+        self.assertIn('-run "^($qnames)', GO_TEST)
+        self.assertIn("GO_TEST_QUARANTINE", GO_TEST)
+
+    def test_the_quarantine_step_never_blocks(self):
+        body = job(CI, "go-race")
+        m = re.search(r"- name: Go quarantined tests \(non-blocking\)\n(.*?)(?=\n      #|\n      - )", body, re.S)
+        self.assertTrue(m)
+        self.assertIn("continue-on-error: true", m.group(1))
+        self.assertIn("GO_TEST_QUARANTINE: only", m.group(1))
+
+    def test_an_invalid_entry_fails_lint_and_the_gate(self):
+        self.assertIn("quarantine_check.py check", job(CI, "lint"))
+        guards = {g["name"]: g for g in GATE["always_on_guards"]}
+        self.assertEqual(guards["quarantine-valid"]["inputs"], [".delivery/quarantine.json"])
+
+    def test_the_file_exists_and_is_valid(self):
+        data = json.loads((ROOT / ".delivery" / "quarantine.json").read_text(encoding="utf-8"))
+        self.assertIsInstance(data["tests"], list)
+
+
+class GateSteps(unittest.TestCase):
+    def test_windows_and_web_lint_steps_exist(self):
+        steps = {s["name"]: s for s in GATE["steps"]}
+        self.assertEqual(steps["lint-windows"]["env"], {"GOOS": "windows"})
+        self.assertEqual(steps["lint-web"]["run"], "pnpm -r lint")
+        self.assertEqual(GATE["local_gate"], "smoke")
+
+    def test_the_pre_push_hook_lints_windows_and_web(self):
+        hook = (ROOT / ".githooks" / "pre-push").read_text(encoding="utf-8")
+        self.assertIn("GOOS=windows golangci-lint run ./...", hook)
+        self.assertIn("pnpm -r lint", hook)
+        self.assertIn("-short", hook)
+
+
 if __name__ == "__main__":
     unittest.main()
