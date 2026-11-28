@@ -110,7 +110,11 @@ function DeviceFlowOffNote({ url }: { url?: string | undefined }) {
   return (
     <Message
       tone="needs-you"
-      action={url ? <ExternalButton href={url}>Open the App settings</ExternalButton> : undefined}
+      action={
+        url ? (
+          <ExternalButton href={url}>Open the App settings</ExternalButton>
+        ) : undefined
+      }
     >
       Device Flow is off for the GitHub App, so crsp login cannot sign anyone in. Turn on
       &quot;Enable Device Flow&quot; in the App settings on GitHub.
@@ -127,7 +131,8 @@ export function AppGoneBanner() {
     [client],
   );
   const health = result.state === 'ready' ? result.data : undefined;
-  if (health && !health.gone && health.device_flow_off) return <DeviceFlowOffNote url={health.settings_url} />;
+  if (health && !health.gone && health.device_flow_off)
+    return <DeviceFlowOffNote url={health.settings_url} />;
   if (!health?.gone) return null;
   return (
     <Message
