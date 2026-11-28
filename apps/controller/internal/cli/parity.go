@@ -26,7 +26,7 @@ var operationCommands = map[string]string{
 	"listMachines":               "machine list",
 	"createJoinCode":             "machine add",
 	"createJoinFile":             "machine join-file",
-	"listAgentInstallers":        "machine agent-installers",
+	"listAgentInstallers":        "machine agent-installers list",
 	"importAgentInstaller":       "machine agent-installers import",
 	"drainMachine":               "machine drain",
 	"getMachineChange":           "machine drain|remove",

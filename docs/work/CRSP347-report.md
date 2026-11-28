@@ -8,7 +8,7 @@ Status: IN PROGRESS.
 - [x] Go handler, authz, wiring, tests.
 
 ## To do
-- [ ] CLI `crsp machine agent-installers [import FILE...]`
+- [x] CLI `crsp machine agent-installers list|import FILE...` + tests
 - [ ] Console step + design-system pass
 - [ ] Spec, change note, docs checks
 

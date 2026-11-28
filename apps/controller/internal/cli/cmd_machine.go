@@ -175,6 +175,7 @@ func cmdMachine() *command {
 					_, _ = fmt.Fprintln(c.env.Stdout, path)
 					return nil
 				}},
+			cmdAgentInstallers(),
 			{name: "drain", summary: "stop giving a machine new jobs; wait for running jobs", args: "NAME [--yes]",
 				flags: drainFlags,
 				run:   func(c *call, args []string) error { return c.drainOrRemove(args, false) }},
