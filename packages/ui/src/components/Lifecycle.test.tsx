@@ -203,7 +203,8 @@ describe('UpdatesCard states', () => {
       </MemoryRouter>
     );
     const { rerender } = render(card({ start: '01:00', end: '01:00' }));
-    const until = () => screen.getAllByRole('spinbutton', { name: 'Hours' })[1] as HTMLElement;
+    const until = () =>
+      screen.getAllByRole('spinbutton', { name: 'Hours' })[1] as HTMLElement;
     until().focus();
     fireEvent.keyDown(until(), { key: 'ArrowUp' });
     fireEvent.keyDown(until(), { key: 'ArrowUp' });
