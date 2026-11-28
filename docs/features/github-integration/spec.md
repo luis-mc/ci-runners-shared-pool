@@ -628,3 +628,6 @@ Proof: UX-5, UX-6, UX-22, UX-26, UX-28, UX-29, UX-30, UX-54, UX-58, UX-62 `scrip
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-38 `scripts/design/wizard-behaviour.test.ts`
+Proof: CORE-1, CORE-7, UX-2 `scripts/design/design-system-follow.test.ts`
+Proof: UX-2 `scripts/design/raw-controls.test.ts`
+Proof: UX-71 `scripts/design/action-bar.test.ts`

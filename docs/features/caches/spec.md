@@ -620,3 +620,4 @@ Proof: UX-4, UX-10, UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-13, UX-38 `scripts/design/wizard-behaviour.test.ts`
 Proof: UX-57 `e2e/tests/web-console/ux-keyboard.spec.ts`
+Proof: CORE-5 `e2e/tests/web-console/ux-routes.spec.ts`

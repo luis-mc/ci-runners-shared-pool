@@ -348,6 +348,13 @@ A row that starts with "planned:" is not built yet; its path is where the test w
 | R6.8 | planned: guards (no listening socket added by this feature) |
 | R6.9 | planned: e2e/tests/web-console/debug-access-a11y.spec.ts |
 
+The Debug card is not built yet. These lines name the shared guards that cover every console route as soon as the card is routed, because they read the route table and the design-system files and need no list edit:
+
+Proof: CORE-1, CORE-3, UX-58 `scripts/design/design-system-follow.test.ts`
+Proof: CORE-5, UX-4, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
+Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
+Proof: UX-13 `scripts/design/wizard-behaviour.test.ts`
+
 ## 11. Build order
 
 1. M-next: policy, session row, audit, repository setting, console Debug card and terminal for the Linux container and VM targets, `crsp debug open`. Windows Hyper-V and WSL2 targets follow in the same release as their runner backend.

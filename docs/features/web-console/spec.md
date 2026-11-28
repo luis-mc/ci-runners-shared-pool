@@ -15,7 +15,7 @@ design_system:
   - v1 components 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 24 26 27 28 29 31 33 34 36 37
   - v1 content action vocabulary, wizard step names, wizard state words, message wording, empty failed and waiting states, dates times and numbers
   - v1 tokens themes, breakpoints, motion, focus
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.0
 ---
@@ -899,6 +899,8 @@ Proof: UX-71 `scripts/design/action-bar.test.ts`
 Proof: UX-74 `e2e/tests/web-console/jobs-doctor.spec.ts`
 Proof: UX-78 `e2e/tests/design-layout.spec.ts`
 Proof: UX-82 `e2e/tests/web-console/updates-lifecycle.spec.ts`
+Proof: CORE-6 `scripts/design/wizard-behaviour.test.ts`
+Proof: UX-88, UX-89, UX-90 `packages/ui/src/components/LiveProgress.test.tsx`
 
 **R5.171** (CRSP364, CRSP365, CRSP368; design system components 16, 18, UX-29) — **One place for update progress.** While an update runs, the progress bar with its step words (Downloading, Checking the download, Installing, Testing) is drawn only inside the Settings > Updates pane. On every other page the banner slot carries one short line, *An update is running.*, with the link *See the update* to Settings > Updates, and no bar. On the Updates page and its Review page there is no top line. While the service restarts the pane shows one line, *Restarting, back in a moment.*; the pane's own loads add no Note. A progress bar is never inside a Note. The pane shows no history table: it says *Last checked {time}, by {who} (manual).* or *Last checked {time} (automatic).* (the time in the console's own format) with *See all in the Audit log*. Test: `apps/controller-console/src/screens/settings/UpdatesLifecycle.test.tsx`, `packages/ui/src/components/Lifecycle.test.tsx`.
 
