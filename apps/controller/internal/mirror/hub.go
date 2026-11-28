@@ -113,7 +113,7 @@ func (s *Service) Hub(ctx context.Context) (Hub, error) {
 	}
 
 	pkg := HubCard{Kind: CardPackages, On: set.PackageProxy, Status: StatusOK, WipeID: IDPrefix + ScopePackages,
-		Note: "npm and PyPI; apt and crates not yet"}
+		Note: "npm, PyPI, crates and apt"}
 	if s.ActStore != nil {
 		for n, e := range s.ActStore.Entries(lancache.NSPackages + "/") {
 			pkg.Entries++

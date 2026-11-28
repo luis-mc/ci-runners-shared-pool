@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["apps/controller/internal/scheduler/**", "apps/controller/internal/timers/**", "apps/controller/internal/api/handlers_timers.go", "apps/controller/internal/github/cancel.go", "apps/controller/internal/store/timers.go", "apps/controller/internal/hooks/**", "apps/controller/internal/api/handlers_jobs.go", "apps/controller/internal/store/schedstore.go", "apps/controller/internal/jobsize/**", "apps/controller/internal/api/handlers_jobsizes.go", "apps/controller/internal/store/jobsizes.go", "apps/controller/internal/scheduler/admit/**", "apps/controller/internal/memcap/**", "apps/controller/internal/runners/sizeclass*.go", "apps/controller/internal/store/schedadmit.go", "apps/controller/internal/api/handlers_runnerclasses.go"]
 design_system: [UX-6, UX-14, UX-17, UX-19, UX-29, UX-34, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62, components 15, components 16, components 17, components 19]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---

@@ -27,6 +27,8 @@ import (
 //	/pkg/ping
 //	/pkg/npm/<repository>/<token>/...
 //	/pkg/pypi/<repository>/<token>/...
+//	/pkg/crates/<repository>/<token>/...
+//	/pkg/apt/<repository>/<token>/<host>/...
 //
 // It keeps what it fetched in the content store, namespace packages, scoped by
 // the repository, so it counts against the hub's one budget (R5.73).
@@ -132,8 +134,15 @@ type Proxy struct {
 	NpmUpstream   string
 	PypiUpstream  string
 	FilesUpstream string
-	HTTP          *http.Client
-	Now           func() time.Time
+	// CratesIndexUpstream and CratesFilesUpstream are the crates.io sparse
+	// index and the crate download host (R5.81).
+	CratesIndexUpstream string
+	CratesFilesUpstream string
+	// AptUpstreams maps an allowed apt host to its upstream base address
+	// (R5.82); nil means AptHosts over https.
+	AptUpstreams map[string]string
+	HTTP         *http.Client
+	Now          func() time.Time
 	// Remote decides whether a caller's address may use the proxy; nil
 	// allows private addresses only.
 	Remote func(remoteAddr string) bool
@@ -166,8 +175,14 @@ func or(v, d string) string {
 	return strings.TrimRight(v, "/")
 }
 
-func (p *Proxy) npmUp() string   { return or(p.NpmUpstream, DefaultNpmUpstream) }
-func (p *Proxy) pypiUp() string  { return or(p.PypiUpstream, DefaultPypiUpstream) }
+func (p *Proxy) npmUp() string  { return or(p.NpmUpstream, DefaultNpmUpstream) }
+func (p *Proxy) pypiUp() string { return or(p.PypiUpstream, DefaultPypiUpstream) }
+func (p *Proxy) cratesIndexUp() string {
+	return or(p.CratesIndexUpstream, addresses.DefaultCratesIndexUpstream)
+}
+func (p *Proxy) cratesFilesUp() string {
+	return or(p.CratesFilesUpstream, addresses.DefaultCratesFilesUpstream)
+}
 func (p *Proxy) filesUp() string { return or(p.FilesUpstream, DefaultFilesUpstream) }
 
 // Stats are the proxy's hits, misses and bytes served per repository key.
@@ -210,7 +225,7 @@ func (p *Proxy) Handler() http.Handler {
 			return
 		}
 		parts := strings.SplitN(rest, "/", 4)
-		if len(parts) < 3 || (parts[0] != "npm" && parts[0] != "pypi") {
+		if len(parts) < 3 || (parts[0] != "npm" && parts[0] != "pypi" && parts[0] != "crates" && parts[0] != "apt") {
 			http.NotFound(w, r)
 			return
 		}
@@ -224,11 +239,16 @@ func (p *Proxy) Handler() http.Handler {
 			sub = parts[3]
 		}
 		base := scheme(r) + "://" + r.Host + ProxyPrefix + kind + "/" + repo + "/" + token
-		if kind == "npm" {
+		switch kind {
+		case "npm":
 			p.npm(w, r, repo, base, sub)
-			return
+		case "crates":
+			p.crates(w, r, repo, base, sub)
+		case "apt":
+			p.apt(w, r, repo, sub)
+		default:
+			p.pypi(w, r, repo, base, sub)
 		}
-		p.pypi(w, r, repo, base, sub)
 	})
 }
 

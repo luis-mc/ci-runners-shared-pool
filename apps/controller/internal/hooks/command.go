@@ -52,6 +52,8 @@ type Env struct {
 	Cleaner func(*Cleaner)
 	// Disk overrides the disk read of the disk guard (tests).
 	Disk func() (runnercache.Disk, error)
+	// HubFiles overrides where the hub's Cargo and apt files go (tests).
+	HubFiles HubFiles
 }
 
 // Run is `crsp hook <job-started|job-completed> [flags]`. It returns the exit
@@ -167,6 +169,10 @@ func runStarted(ctx context.Context, args []string, e Env) int {
 	}
 	var gateID [8]byte
 	_, _ = rand.Read(gateID[:])
+	// Cargo and apt follow the hub the runner was started with (caches R5.81, R5.82).
+	for _, line := range ApplyHubConfig(e.Getenv, e.HubFiles) {
+		log(line)
+	}
 	machine := slots.Defaults()
 	cfg := GateConfig{
 		Client:     e.client(),

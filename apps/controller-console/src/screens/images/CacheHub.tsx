@@ -211,8 +211,7 @@ function facts(c: HubCard, now: number): { name: string; value: string }[] {
       return [{ name: 'Size', value: formatSize(c.size_bytes) }];
     case 'package_proxy':
       return [
-        { name: 'Covers', value: 'npm, PyPI' },
-        { name: 'Apt and crates', value: 'not yet' },
+        { name: 'Covers', value: 'npm, PyPI, crates, apt' },
         { name: 'Entries', value: formatNumber(c.entry_count) },
         { name: 'Size', value: formatSize(c.size_bytes) },
         { name: 'Last hit', value: last },
@@ -275,7 +274,11 @@ function HubCardView({
     >
       <Stack gap="tight">
         <Switch
-          label={card.kind === 'package_proxy' ? 'Package proxy (npm, PyPI)' : name}
+          label={
+            card.kind === 'package_proxy'
+              ? 'Package proxy (npm, PyPI, crates, apt)'
+              : name
+          }
           on={card.on}
           onChange={onSwitch}
           busy={busy}
