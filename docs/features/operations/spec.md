@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: [apps/controller/internal/agentinstallers/**, installer/agent/**, apps/controller/internal/addresses/**, apps/controller/internal/update/**, apps/controller/internal/recovery/**, apps/controller/internal/backup/**, apps/controller/internal/configio/**, apps/controller/internal/install/**, installer/**, apps/controller/cmd/crsp/service_*.go]
 design_system: [components 4, components 9, components 16, components 18, components 34, UX-5, UX-6, UX-9, UX-13, UX-26, UX-29, UX-30, UX-34, UX-38, UX-62]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---
