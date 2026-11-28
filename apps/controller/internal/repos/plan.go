@@ -18,6 +18,10 @@ import (
 type Change struct {
 	RepositoryID int64
 	Pool         bool
+	// Repair asks for the variables of a repository that already uses the pool
+	// to be made right: each missing or wrong one is written and each one that
+	// should not be there is deleted (CRSP388). Pool is true on a repair.
+	Repair bool
 }
 
 // ErrNothingToChange: every repository already is as asked.
@@ -54,6 +58,17 @@ func (s *Service) PlanChanges(ctx context.Context, p auth.Principal, changes []C
 		if err != nil {
 			return Plan{}, err
 		}
+		if c.Repair {
+			if !r.PoolOn {
+				return Plan{}, auth.Invalid("%s does not use the pool, so there is nothing to repair", r.FullName)
+			}
+			more, err := s.planRepair(ctx, r)
+			if err != nil {
+				return Plan{}, err
+			}
+			steps = append(steps, more...)
+			continue
+		}
 		if c.Pool == r.PoolOn {
 			continue
 		}
@@ -71,7 +86,11 @@ func (s *Service) PlanChanges(ctx context.Context, p auth.Principal, changes []C
 		}
 		steps = append(steps, more...)
 	}
-	if len(steps) == 0 {
+	repairOnly := true
+	for _, c := range changes {
+		repairOnly = repairOnly && c.Repair
+	}
+	if len(steps) == 0 && !repairOnly {
 		return Plan{}, ErrNothingToChange
 	}
 	for i := range steps {
@@ -84,6 +103,10 @@ func (s *Service) PlanChanges(ctx context.Context, p auth.Principal, changes []C
 	}
 	now := s.cfg.Now()
 	plan := Plan{ID: "pl_" + auth.RandomToken(9), State: PlanPlanned, StateHash: hash, Steps: steps, CreatedBy: p.Login, CreatedAt: now, UpdatedAt: now}
+	if len(steps) == 0 {
+		// A repair that finds every variable right: nothing to apply, done now.
+		plan.State = PlanDone
+	}
 	if err := s.cfg.Store.InsertPlan(ctx, plan); err != nil {
 		return Plan{}, err
 	}
@@ -105,6 +128,57 @@ func (s *Service) planOn(ctx context.Context, r Repository) ([]Step, error) {
 		if val, ok := want[name]; ok {
 			steps = append(steps, Step{Action: ActWriteVariable, Target: name, RepositoryID: r.ID, Value: val,
 				Text: "Write variable " + name + " of " + r.FullName + " = " + val})
+		}
+	}
+	return steps, nil
+}
+
+// planRepair plans the work that makes a pool-on repository's variables what
+// the product wants. GitHub is read fresh. Each missing or wrong variable is a
+// write step; a variable that should not be there (the policy turns its OS off,
+// or it is a size or an old name the product wrote) is a delete step that needs
+// its own yes. A variable whose OS merely has no runner now is left to the
+// reconcile and its hold (DeleteHold), so a repair never deletes during a
+// restart. No step means nothing differs.
+func (s *Service) planRepair(ctx context.Context, r Repository) ([]Step, error) {
+	pol, err := s.policyOrDefault(ctx, r.ID)
+	if err != nil {
+		return nil, err
+	}
+	want, err := s.desiredFor(ctx, r, pol)
+	if err != nil {
+		return nil, err
+	}
+	have, err := s.cfg.GitHub.ListVariables(github.Background(ctx), r.InstallationID, r.Owner, r.Name)
+	if err != nil {
+		return nil, err
+	}
+	cur := map[string]string{}
+	for _, v := range have {
+		cur[v.Name] = v.Value
+	}
+	var steps []Step
+	for _, name := range namesToCheck(want, cur) {
+		val, ok := want[name]
+		got, exists := cur[name]
+		switch {
+		case ok && !exists:
+			steps = append(steps, Step{Action: ActWriteVariable, Target: name, RepositoryID: r.ID, Value: val,
+				Text: "Write variable " + name + " of " + r.FullName + " = " + val + " (it is missing)"})
+		case ok && !sameLabels(got, val):
+			steps = append(steps, Step{Action: ActWriteVariable, Target: name, RepositoryID: r.ID, Value: val,
+				Text: "Write variable " + name + " of " + r.FullName + " = " + val + " (it was " + got + ")"})
+		case !ok && exists:
+			if os := varOS(name); os != "" && (len(osLabelsEnabled(pol)) == 0 || osLabelsEnabled(pol)[os]) {
+				continue // the policy keeps this OS; only the reconcile's hold may delete it
+			}
+			if yes, err := s.mayDelete(ctx, r, name); err != nil {
+				return nil, err
+			} else if !yes {
+				continue
+			}
+			steps = append(steps, Step{Action: ActDeleteVariable, Target: name, RepositoryID: r.ID, NeedsYes: true,
+				Text: "Delete variable " + name + " of " + r.FullName + " (it should not be there)"})
 		}
 	}
 	return steps, nil
@@ -291,7 +365,7 @@ func (s *Service) ApplyPlan(ctx context.Context, p auth.Principal, id string, ap
 	}
 	if s.cfg.OnPoolOn != nil { // the pool is on and its variables are written (R5.106)
 		for _, c := range changesOf(plan) {
-			if r2, err := s.cfg.Store.GetRepository(ctx, c.RepositoryID); c.Pool && err == nil && r2.PoolOn {
+			if r2, err := s.cfg.Store.GetRepository(ctx, c.RepositoryID); c.Pool && !c.Repair && err == nil && r2.PoolOn {
 				s.cfg.OnPoolOn(ctx, r2)
 			}
 		}
@@ -312,6 +386,8 @@ func changesOf(p Plan) []Change {
 			out = append(out, Change{RepositoryID: st.RepositoryID, Pool: true})
 		case ActPoolOff:
 			out = append(out, Change{RepositoryID: st.RepositoryID, Pool: false})
+		default: // a repair has only variable steps
+			out = append(out, Change{RepositoryID: st.RepositoryID, Pool: true, Repair: true})
 		}
 	}
 	return out

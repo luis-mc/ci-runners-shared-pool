@@ -5723,8 +5723,11 @@ export interface components {
             changes: {
                 /** Format: int64 */
                 repository_id: number;
-                /** @enum {string} */
-                pool: "on" | "off";
+                /**
+                 * @description on and off switch the pool. repair keeps the pool on and writes each missing or wrong CRSP_RUNS_ON variable and deletes each one that should not be there; a repair that finds nothing different answers a plan that is already done.
+                 * @enum {string}
+                 */
+                pool: "on" | "off" | "repair";
             }[];
         };
         RunsOnFinding: {

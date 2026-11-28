@@ -328,7 +328,9 @@ func (s *server) PlanRepositoryChanges(ctx context.Context, req gen.PlanReposito
 	}
 	var cs []repos.Change
 	for _, c := range req.Body.Changes {
-		cs = append(cs, repos.Change{RepositoryID: c.RepositoryId, Pool: c.Pool == gen.PlanRepositoryChangesRequestChangesPoolOn})
+		cs = append(cs, repos.Change{RepositoryID: c.RepositoryId,
+			Pool:   c.Pool == gen.PlanRepositoryChangesRequestChangesPoolOn || c.Pool == gen.PlanRepositoryChangesRequestChangesPoolRepair,
+			Repair: c.Pool == gen.PlanRepositoryChangesRequestChangesPoolRepair})
 	}
 	plan, err := s.ghArea().Repos.PlanChanges(ctx, s.principal(ctx), cs)
 	if err != nil {

@@ -33,6 +33,9 @@ const (
 	batchSize  = 50
 )
 
+// queueCeiling is the ceiling the queue enforces: QueueCeiling, lower only in a test that fills the queue (CRSP394).
+var queueCeiling = QueueCeiling
+
 // jitter spreads a backoff by up to 20 % either way.
 func jitter(d time.Duration, r func() float64) time.Duration {
 	return time.Duration(float64(d) * (0.8 + 0.4*r()))
@@ -248,8 +251,8 @@ func (s *Service) maintain(ctx context.Context, now time.Time) {
 	if !due {
 		return
 	}
-	if n, err := s.cfg.DB.CountQueuedDeliveries(ctx); err == nil && n > QueueCeiling {
-		dropped, err := s.cfg.DB.DropOldestNoteDeliveries(ctx, n-QueueCeiling, now)
+	if n, err := s.cfg.DB.CountQueuedDeliveries(ctx); err == nil && n > queueCeiling {
+		dropped, err := s.cfg.DB.DropOldestNoteDeliveries(ctx, n-queueCeiling, now)
 		if err != nil {
 			s.cfg.Logger.Error("notify: queue ceiling", "err", err)
 		}

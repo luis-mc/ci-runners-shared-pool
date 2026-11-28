@@ -488,8 +488,9 @@ jobs:
           case "$TAG" in *-*) flags="--prerelease" ;; esac
           # shellcheck disable=SC2086
           # CRSP274: the notes of the release: upgrade notes, then the change notes (docs/features/*/changes) not yet
-          # folded into a version table, then GitHub's generated list.
-          { cat docs/guides/upgrade-notes.md; echo; python3 scripts/ci/release_notes.py; } > "$RUNNER_TEMP/release-notes.md"
+          # folded into a version table, then GitHub's generated list. The change notes are kept to 80,000
+          # characters so the whole text stays under GitHub's 125,000 limit (v0.1.33 failed with HTTP 422).
+          { cat docs/guides/upgrade-notes.md; echo; python3 scripts/ci/release_notes.py --max-chars 80000; } > "$RUNNER_TEMP/release-notes.md"
           gh release create "$TAG" dist/* --verify-tag --generate-notes --notes-file "$RUNNER_TEMP/release-notes.md" $flags
 
       # CRSP130: when GitHub found no merged PR between the previous stable tag
@@ -504,7 +505,7 @@ jobs:
           gh release view "$TAG" --json body --jq .body > "$RUNNER_TEMP/notes.md"
           bash scripts/ci/release-notes-fallback.sh "$TAG" "$RUNNER_TEMP/notes.md" > "$RUNNER_TEMP/fallback.md"
           if [ -s "$RUNNER_TEMP/fallback.md" ]; then
-            { cat docs/guides/upgrade-notes.md; echo; python3 scripts/ci/release_notes.py; echo; cat "$RUNNER_TEMP/fallback.md"; } > "$RUNNER_TEMP/fallback-full.md"
+            { cat docs/guides/upgrade-notes.md; echo; python3 scripts/ci/release_notes.py --max-chars 80000; echo; cat "$RUNNER_TEMP/fallback.md"; } > "$RUNNER_TEMP/fallback-full.md"
             mv "$RUNNER_TEMP/fallback-full.md" "$RUNNER_TEMP/fallback.md"
             gh release edit "$TAG" --notes-file "$RUNNER_TEMP/fallback.md"
             echo "notes written from commit subjects"

@@ -10,6 +10,8 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"sync"
@@ -40,9 +42,47 @@ type env struct {
 	now  *time.Time
 }
 
+var (
+	templateOnce sync.Once
+	templateFile []byte
+	templateErr  error
+)
+
+// freshDir makes a data dir that already holds a migrated database. The migrations run once for the package
+// (they cost about a second each under -race); every test then starts from a copy of that file (CRSP394).
+func freshDir(t *testing.T) string {
+	t.Helper()
+	templateOnce.Do(func() {
+		dir, err := os.MkdirTemp("", "notify-template")
+		if err != nil {
+			templateErr = err
+			return
+		}
+		defer func() { _ = os.RemoveAll(dir) }()
+		db, err := store.OpenForTests(context.Background(), dir)
+		if err != nil {
+			templateErr = err
+			return
+		}
+		if err := db.Close(); err != nil {
+			templateErr = err
+			return
+		}
+		templateFile, templateErr = os.ReadFile(filepath.Join(dir, store.DatabaseFile))
+	})
+	if templateErr != nil {
+		t.Fatal(templateErr)
+	}
+	dir := t.TempDir()
+	if err := os.WriteFile(filepath.Join(dir, store.DatabaseFile), templateFile, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	return dir
+}
+
 func newEnv(t *testing.T, tweak func(*Config)) *env {
 	t.Helper()
-	db, err := store.OpenForTests(context.Background(), t.TempDir())
+	db, err := store.OpenForTests(context.Background(), freshDir(t))
 	if err != nil {
 		t.Fatal(err)
 	}

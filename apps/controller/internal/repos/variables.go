@@ -312,6 +312,10 @@ const (
 	// DeleteHold is how long the capacity of an OS must stay absent, over two
 	// syncs at least this far apart, before its CRSP_RUNS_ON variable is deleted.
 	DeleteHold = 15 * time.Minute
+	// AbsentGap is the longest pause between two syncs that still count as one
+	// unbroken absence. A longer pause means the OS may have been back in
+	// between, so the count starts again (CRSP388).
+	AbsentGap = 2 * DeleteHold
 )
 
 // varOS is the OS a managed variable or size variable belongs to, "" for any other.
@@ -356,6 +360,16 @@ func (s *Service) confirmDelete(ctx context.Context, r Repository, pol Policy, n
 	}
 	capy, err := s.osCapacity(ctx)
 	key := r.FullName + "/" + name
+	// An OS that has any runner record (offline, starting, restarting) keeps
+	// its variable: a restart is not a loss (CRSP388).
+	hasRunner := false
+	if s.cfg.RunnerOS != nil {
+		present, perr := s.cfg.RunnerOS(ctx)
+		if perr != nil {
+			return false, ""
+		}
+		hasRunner = present[os]
+	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	if err != nil {
@@ -365,20 +379,26 @@ func (s *Service) confirmDelete(ctx context.Context, r Repository, pol Policy, n
 		delete(s.absent, key)
 		return true, ""
 	}
+	if hasRunner {
+		delete(s.absent, key)
+		return false, ""
+	}
 	if !s.capacityKnown(ctx) {
 		delete(s.absent, key)
 		return false, ""
 	}
 	now := s.cfg.Now()
-	first, seen := s.absent[key]
-	if !seen {
-		s.absent[key] = now
+	a, seen := s.absent[key]
+	if !seen || now.Sub(a.last) > AbsentGap {
+		s.absent[key] = absence{first: now, last: now}
 		return false, ""
 	}
-	if now.Sub(first) < DeleteHold {
+	a.last = now
+	s.absent[key] = a
+	if now.Sub(a.first) < DeleteHold {
 		return false, ""
 	}
-	return true, "no " + strings.ToUpper(os[:1]) + os[1:] + " runner for " + strconv.Itoa(int(now.Sub(first).Minutes())) + " min"
+	return true, "no " + strings.ToUpper(os[:1]) + os[1:] + " runner for " + strconv.Itoa(int(now.Sub(a.first).Minutes())) + " min"
 }
 
 // clearAbsent forgets that the capacity for name was seen absent.
@@ -470,8 +490,8 @@ func (s *Service) recordVariable(ctx context.Context, repoID int64, name, value,
 
 // ReconcileVariables checks one enabled repository's variables against what
 // they should be, as background work within the rate budget (R5.28, R6.6). A
-// value changed outside the product is restored, written to the audit log, and
-// shown as drift until the next check finds it correct. A missing variable is
+// value changed outside the product is restored and written to the audit log; the
+// row shows drift only while the write has not gone through. A missing variable is
 // written back the same way. A variable that should not exist (no runner for
 // its OS, or the pool off for it) is deleted. The names an older version wrote
 // are deleted once the new ones are written; a repository with the pool off
@@ -545,7 +565,10 @@ func (s *Service) ReconcileVariables(ctx context.Context, repoID int64) error {
 		}
 		s.cfg.Audit.Audit(ctx, System, "variable.restored", "repository", r.FullName,
 			name+" was "+driftWas(exists, got)+"; restored to "+val)
-		if err := s.cfg.Store.SetManagedVariableStatus(ctx, repoID, name, status, now); err != nil {
+		// The write is confirmed: the row says OK at once. A restore never leaves
+		// "missing" or "wrong" behind for drift the product already fixed; the
+		// audit entry above is the note that it happened.
+		if err := s.recordVariable(ctx, repoID, name, val, VarOK, true); err != nil {
 			return err
 		}
 	}

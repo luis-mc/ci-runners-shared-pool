@@ -305,6 +305,10 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		},
 	}
 
+	// The runner list answers from the facts this loop keeps of GitHub's runner lists and the
+	// agents' service lists; a request never waits on either (CRSP389).
+	go runnerSvc.FactsLoop(ctx)
+
 	// Automatic runner updates follow the product's automatic-update setting
 	// (runners R5.38, operations R5.15). The Updater sends the bundle over the
 	// agent link; an agent that does not report `runner_swap` answers with a
@@ -354,6 +358,20 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	runnerSvc.PoolRepos = poolRepos(repoStore)
 	rsvc.SetEphemeral(runnerSvc)
 	rsvc.SetRegistrar(runnerSvc)
+	// An OS with any runner record, offline or restarting too, keeps its variable (CRSP388).
+	rsvc.SetRunnerOS(func(ctx context.Context) (map[string]bool, error) {
+		recs, err := rstore.ListRunners(ctx, runners.Filter{})
+		if err != nil {
+			return nil, err
+		}
+		out := map[string]bool{}
+		for _, r := range recs {
+			if r.State != runners.Removing {
+				out[strings.ToLower(r.OS)] = true
+			}
+		}
+		return out, nil
+	})
 	rsvc.SetFleet(runnerSvc)
 
 	// CRSP_RUNS_ON variables: put back to the policy every 10 minutes, and once now.

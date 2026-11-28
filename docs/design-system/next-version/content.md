@@ -1722,7 +1722,7 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 
 | Where | Words |
 |---|---|
-| Summary, cards | Machines, Runners, Repositories; each has a link: Open Machines, Open Runners, Open Pool setup |
+| Summary, cards | Machines, Runners, Repositories; each has a link: Open Machines, Open Runners, Open Pool setup; a card still waiting for its data says Loading the pool figures. |
 | Summary, Machines card | {n} machines, {cpu} CPU and {gib} GiB in the pool. (`pool size not set.` until a machine has a size) |
 | Summary, Runners card | {n} runners: {p} persistent, {e} ephemeral. |
 | Summary, Repositories card | {n} repositories use the pool. / No repository uses the pool yet. |
@@ -2088,7 +2088,7 @@ The rows the console writes into the Terminal and the phases of the weighted bar
 | Group actions | Repair; Repair {n}; Turn off; Turn off {n}; Turn on; Turn on {n} |
 | Locked reasons | Tick at least one repository.; You need admin rights on this repository in GitHub.; Public repositories are off. Turn them on in Settings first. |
 | Health tiles | Machines; Runners; GitHub App; Repositories; {n} online; {n} ready; Installed; {n} of {m} use the pool; {n} needs you; all well; webhooks delivering |
-| Change wizard | Turn on the pool; Turn off the pool; Repair the pool; These will start using the pool; These will stop using the pool; These will be repaired; Their runners are removed and their settings are kept.; The missing variable is written again.; Technical steps ({n}); Turning on; Turning off; Repairing; using the pool; not using the pool; Back to the repositories; No repository was chosen. Go back to Pool setup and tick the repositories first. |
+| Change wizard | Turn on the pool; Turn off the pool; Repair the pool; These will start using the pool; These will stop using the pool; These will be repaired; Their runners are removed and their settings are kept.; The missing variable is written again.; Nothing to repair: the variables are already right.; Technical steps ({n}); Turning on; Turning off; Repairing; using the pool; not using the pool; Back to the repositories; No repository was chosen. Go back to Pool setup and tick the repositories first. |
 ## Runners filter words (CRSP339, the owner's pick of option 3)
 
 The filter bar of Setup > Runners. One row: search, Filters, the selection words. A wide screen opens the four joined-choice rows in the page; a phone opens a bottom sheet.

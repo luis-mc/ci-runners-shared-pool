@@ -41,6 +41,9 @@ export function repoState(
   full: string,
 ): { kind: StatusKind; word: string } {
   const st = stepsOf(plan, full);
+  // A repair that found nothing to change has no step for the repository: when the plan is done
+  // it shows the end state, never "waiting".
+  if (st.length === 0 && plan?.state === 'done') return { kind: 'ok', word: 'done' };
   if (st.length > 0 && st.every((s) => s.state === 'done' || s.state === 'skipped'))
     return { kind: 'ok', word: 'done' };
   if (st.some((s) => s.state === 'failed')) return { kind: 'failed', word: 'failed' };
@@ -164,13 +167,22 @@ export function ChangePoolWizard() {
           body: {
             changes: chosen.map((r) => ({
               repository_id: r.id,
-              pool: dir === 'off' ? ('off' as const) : ('on' as const),
+              pool:
+                dir === 'off'
+                  ? ('off' as const)
+                  : dir === 'repair'
+                    ? ('repair' as const)
+                    : ('on' as const),
             })),
           },
         }),
       );
       setPlan(p);
-      setPhase('ready-to-review');
+      if (p.state === 'done') {
+        // Nothing differs: the plan is already done, so there is nothing to review or apply.
+        setStep(2);
+        setPhase('done');
+      } else setPhase('ready-to-review');
     } catch (e) {
       setProblem(errorText(e));
       setStep(2);
@@ -292,7 +304,9 @@ export function ChangePoolWizard() {
         ? `${repos(list.length)} now ${list.length === 1 ? 'uses' : 'use'} the pool.`
         : dir === 'off'
           ? `${repos(list.length)} no longer ${list.length === 1 ? 'uses' : 'use'} the pool.`
-          : `${repos(list.length)} repaired.`;
+          : plan?.steps.length === 0
+            ? 'Nothing to repair: the variables are already right.'
+            : `${repos(list.length)} repaired.`;
     body = (
       <Pane title="Result">
         <Stack>
