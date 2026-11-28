@@ -17,7 +17,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 $here = $PSScriptRoot
-$controller = Join-Path (Split-Path $here -Parent) 'controller'
+$controller = Join-Path (Split-Path (Split-Path $here -Parent) -Parent) 'controller'
 if ($Version -match '^v?(\d+)\.(\d+)\.(\d+)') {
   $ProductVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).0"
 } elseif ($Version -like 'edge*') {
