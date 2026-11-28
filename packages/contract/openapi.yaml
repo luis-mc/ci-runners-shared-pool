@@ -1539,6 +1539,87 @@ paths:
                 $ref: '#/components/schemas/DependencyJob'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/dependencies/store:
+    get:
+      operationId: listDependencyStore
+      x-cli: dependencies
+      tags: [machines]
+      summary: What the controller keeps for machines without internet
+      description: >-
+        dependency-setup DEP15. Every dependency this release may keep (pinned
+        installers, runner packages, agent packages) and whether the controller
+        holds a checked copy. A machine without internet installs from it.
+      x-auth: user
+      x-rate-limit: 60/minute/user
+      responses:
+        '200':
+          description: The dependencies and their state.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DependencyStoreEntry'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/dependencies/store/{dependencyId}/fetch:
+    post:
+      operationId: fetchDependency
+      x-cli: dependencies fetch
+      tags: [machines]
+      summary: Download one dependency to the controller and check it
+      description: >-
+        dependency-setup DEP15. The controller downloads the file, compares its
+        SHA-256 with the one pinned in this release and keeps it only when they
+        match. A file that does not match is deleted. 409 when this release pins
+        no SHA-256 for it or has no address for it.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DependencyStoreId'
+      responses:
+        '200':
+          description: The entry after the fetch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyStoreEntry'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/dependencies/store/{dependencyId}/file:
+    put:
+      operationId: importDependency
+      x-cli: dependencies import
+      tags: [machines]
+      summary: Give the controller a file you downloaded yourself
+      description: >-
+        dependency-setup DEP15. For a controller that has no internet. The body
+        is the file. It is kept only when its SHA-256 equals the one pinned in
+        this release; otherwise it is deleted and the answer is 422.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DependencyStoreId'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: The entry after the import.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyStoreEntry'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/doctor/registration-fixes:
     post:
       operationId: removeRegistration
@@ -6185,6 +6266,13 @@ components:
       required: true
       schema:
         type: string
+    DependencyStoreId:
+      name: dependencyId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 128
     DependencyJobId:
       name: jobId
       in: path
@@ -9385,6 +9473,48 @@ components:
           type: integer
           format: int64
           description: Unix milliseconds.
+    DependencyStoreEntry:
+      type: object
+      required: [id, name, kind, state, can_fetch, pinned]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [installer, runner, agent]
+        os:
+          type: string
+        arch:
+          type: string
+        version:
+          type: string
+        source:
+          type: string
+          description: The host it is fetched from, in words for the user.
+        state:
+          type: string
+          enum: [ready, missing, failed, not_pinned]
+        pinned:
+          type: boolean
+          description: This release lists a SHA-256 for it, so a file can be checked.
+        can_fetch:
+          type: boolean
+          description: The controller has an address to download it from.
+        sha256:
+          type: string
+        stored_bytes:
+          type: integer
+          format: int64
+        fetched_at:
+          type: string
+          format: date-time
+        origin:
+          type: string
+          enum: [fetched, imported]
+        error:
+          type: string
     DependencyJob:
       type: object
       required:

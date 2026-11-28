@@ -403,6 +403,8 @@ type link struct {
 	facts  *agentv1.Facts
 	factMu sync.Mutex
 	bg     sync.WaitGroup // the goroutines of one session
+	// pin is the controller CA fingerprint of this session (the dependency files are fetched with it).
+	pin string
 
 	drainMu sync.Mutex
 	drainID string // command id of the drain in progress; empty when none
@@ -445,7 +447,7 @@ func (l *link) spawn(f func()) {
 
 func runSession(ctx context.Context, cfg Config, key, id, pin string) error {
 	ctx, cancel := context.WithCancel(ctx)
-	l := &link{cfg: cfg, kick: make(chan struct{}, 1)}
+	l := &link{cfg: cfg, kick: make(chan struct{}, 1), pin: pin}
 	// Stop and wait for every goroutine of this session before returning: they
 	// write into the data folder (settings, health state, caches), and nothing
 	// may still write there once Run has returned.

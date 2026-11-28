@@ -50,6 +50,11 @@ type Config struct {
 	Wait func(ctx context.Context, d time.Duration)
 	// TestImage is the tiny image of the Verify test container.
 	TestImage string
+	// FromController fetches the stored, checked copy of a pinned download from the
+	// controller (DEP15): name is "<item id>-<os>", dest the file to write. Nil means
+	// the machine only goes to the vendor. The SHA-256 of this release's pinned list is
+	// checked on the file either way; the controller is never trusted for it.
+	FromController func(ctx context.Context, name, dest string, onProgress func(bytes, total int64)) error
 }
 
 // Runner runs dependency jobs.
@@ -314,11 +319,33 @@ func (r *Runner) download(ctx context.Context, j *job, p depsetup.Pinned) (strin
 		}
 		_ = sys.Remove(path)
 	}
+	// The controller first (DEP15): it has internet when this machine may not.
+	if r.cfg.FromController != nil {
+		j.status("download", "Asking the crsp controller for "+p.Name)
+		err := r.cfg.FromController(ctx, p.ID+"-"+sys.GOOS(), path, j.progress("download", "Getting "+p.Name+" from the crsp controller"))
+		if ctx.Err() != nil {
+			_ = sys.Remove(path)
+			return "", ctx.Err()
+		}
+		if err == nil {
+			if got, herr := sys.SHA256(path); herr == nil && strings.EqualFold(got, p.SHA256) {
+				j.status("download", "The file from the crsp controller matches the checksum in this release.")
+				return path, nil
+			}
+			j.status("download", "The controller's copy did not match the checksum in this release. It was thrown away.")
+		} else {
+			j.status("download", "The crsp controller has no copy of "+p.Name+" yet, so this machine goes to "+p.Source+".")
+		}
+		_ = sys.Remove(path)
+	}
 	j.status("download", "Downloading "+p.Name+" from "+p.Source)
 	if err := sys.Download(ctx, p.URL, path, j.progress("download", "Downloading "+p.Name)); err != nil {
 		_ = sys.Remove(path)
 		if ctx.Err() != nil {
 			return "", ctx.Err()
+		}
+		if r.cfg.FromController != nil {
+			return "", fmt.Errorf("the download of %s failed: %s. If this machine has no internet, open Dependencies in the console, let the controller fetch it or import the file there, then try again", p.Name, err.Error())
 		}
 		return "", fmt.Errorf("the download of %s failed: %s", p.Name, err.Error())
 	}
