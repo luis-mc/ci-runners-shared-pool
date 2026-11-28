@@ -274,7 +274,11 @@ function HubCardView({
     >
       <Stack gap="tight">
         <Switch
-          label={card.kind === 'package_proxy' ? 'Package proxy (npm, PyPI, crates, apt)' : name}
+          label={
+            card.kind === 'package_proxy'
+              ? 'Package proxy (npm, PyPI, crates, apt)'
+              : name
+          }
           on={card.on}
           onChange={onSwitch}
           busy={busy}
