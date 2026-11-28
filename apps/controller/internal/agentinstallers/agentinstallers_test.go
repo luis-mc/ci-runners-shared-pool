@@ -260,3 +260,45 @@ func TestOfflineDoesNotWaitOnTheNetworkForEveryCall(t *testing.T) {
 type srcFunc func() (update.Release, error)
 
 func (f srcFunc) Latest(context.Context) (update.Release, error) { return f() }
+
+// CRSP348: the native agent packages are release assets the controller does not hand out; the archives keep
+// their names, so the console import (CRSP347) reads what it read before.
+func TestNativePackagesAreNotArchives(t *testing.T) {
+	for _, n := range []string{"CrspAgent-1.2.3-win-x64.msi", "CrspAgent-1.2.3-macos-arm64.pkg", "CrspAgent-1.2.3-linux-x64.deb"} {
+		if _, ok := ParseName(n); ok {
+			t.Errorf("%s must not parse as an archive", n)
+		}
+	}
+	for _, n := range []string{"CrspAgent-1.2.3-win-x64.zip", "CrspAgent-1.2.3-linux-arm64.tar.gz"} {
+		if _, ok := ParseName(n); !ok {
+			t.Errorf("%s must still parse", n)
+		}
+	}
+}
+
+func TestCoverageOf(t *testing.T) {
+	h := strings.Repeat("a", 64)
+	var b strings.Builder
+	for _, os := range []string{"win", "linux", "macos"} {
+		for _, arch := range []string{"x64", "arm64"} {
+			ext := "tar.gz"
+			if os == "win" {
+				ext = "zip"
+			}
+			b.WriteString(h + "  CrspAgent-1.2.3-" + os + "-" + arch + "." + ext + "\n")
+		}
+	}
+	// only the Windows MSIs and one deb are there
+	b.WriteString(h + "  CrspAgent-1.2.3-win-x64.msi\n" + h + "  CrspAgent-1.2.3-win-arm64.msi\n" + h + "  CrspAgent-1.2.3-linux-x64.deb\n")
+	c := CoverageOf([]byte(b.String()))
+	if len(c.MissingArchives) != 0 {
+		t.Errorf("archives: %v", c.MissingArchives)
+	}
+	want := "linux-arm64.deb macos-x64.pkg macos-arm64.pkg"
+	if got := strings.Join(c.MissingNative, " "); got != want {
+		t.Errorf("native: %q want %q", got, want)
+	}
+	if c := CoverageOf(nil); len(c.MissingArchives) != 6 || len(c.MissingNative) != 6 {
+		t.Errorf("empty sums: %+v", c)
+	}
+}

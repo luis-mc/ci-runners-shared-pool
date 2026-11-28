@@ -99,7 +99,7 @@ class Workflow(unittest.TestCase):
         text = open(WORKFLOW).read()
         self.assertIn("release-guard.sh", text)
         self.assertIn("needs: guard", text)  # version, which build and msi follow
-        self.assertIn("needs: [guard, version, build, msi, installers-unix, agent-installers]", text)
+        self.assertIn("needs: [guard, version, build, msi, installers-unix, agent-installers, agent-pkg]", text)
         self.assertIn("release-notes-fallback.sh", text)
 
     def test_release_assets_are_named_crsp_version_os_arch(self):
@@ -170,6 +170,59 @@ class Workflow(unittest.TestCase):
             )
 
 
+class ReleaseNotes(unittest.TestCase):
+    """CRSP274: the release notes come from the change notes."""
+
+    def make(self, d, notes, registry=None):
+        for rel, text in notes.items():
+            p = os.path.join(d, rel)
+            os.makedirs(os.path.dirname(p), exist_ok=True)
+            open(p, "w").write(text)
+        if registry is not None:
+            os.makedirs(os.path.join(d, "docs/project"), exist_ok=True)
+            open(os.path.join(d, "docs/project/registry.json"), "w").write(registry)
+
+    def run_notes(self, d, *args):
+        r = subprocess.run(["python3", os.path.join(HERE, "release_notes.py"), "--root", d, *args], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        return r.stdout
+
+    def test_groups_by_document_and_puts_major_first(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.make(d, {
+                "docs/features/cli/spec.md": "---\nid: cli\ntitle: CLI\n---\n# CLI\n",
+                "docs/features/cli/changes/A1.md": "---\nchange: minor\ntask: A1\n---\nAdds a command.\n",
+                "docs/features/cli/changes/A2.md": "---\nchange: major\ntask: A2\n---\nRemoves a flag\nof the tool.\n",
+            })
+            out = self.run_notes(d)
+            self.assertTrue(out.startswith("## What's new\n\n**CLI**\n"))
+            self.assertLess(out.index("(A2)"), out.index("(A1)"))
+            self.assertIn("- Removes a flag of the tool. (A2)", out)
+
+    def test_release_filter_follows_the_project_record(self):
+        with tempfile.TemporaryDirectory() as d:
+            reg = '{"tasks":[{"id":"T1","release":5},{"id":"T2","release":6},{"id":"T3","rides":"T1"}]}'
+            self.make(d, {
+                "docs/features/x/changes/T1.md": "---\nchange: minor\ntask: T1\n---\nOne.\n",
+                "docs/features/x/changes/T2.md": "---\nchange: minor\ntask: T2\n---\nTwo.\n",
+                "docs/features/x/changes/T3.md": "---\nchange: minor\ntask: T3\n---\nThree.\n",
+                "docs/features/x/changes/T4.md": "---\nchange: minor\ntask: T4\n---\nFour.\n",
+            }, reg)
+            out = self.run_notes(d, "--release", "5")
+            self.assertIn("(T1)", out)
+            self.assertIn("(T3)", out)  # rides T1
+            self.assertIn("(T4)", out)  # no number: kept, like docs_fold
+            self.assertNotIn("(T2)", out)
+
+    def test_no_notes_prints_nothing(self):
+        with tempfile.TemporaryDirectory() as d:
+            self.assertEqual(self.run_notes(d), "")
+
+    def test_release_workflow_uses_the_change_notes(self):
+        text = open(WORKFLOW).read()
+        self.assertIn("python3 scripts/ci/release_notes.py", text)
+
+
 class AgentInstallers(unittest.TestCase):
     """CRSP304: agent installers are CrspAgent-<version>-<os>-<arch>.<ext> release assets."""
 
@@ -184,6 +237,56 @@ class AgentInstallers(unittest.TestCase):
         self.assertEqual(run("agent_asset_name 0.1.22 darwin amd64"), "CrspAgent-0.1.22-macos-x64.tar.gz")
         self.assertEqual(run("agent_stable_to_asset 0.1.22 x/crspagent-darwin-arm64.tar.gz"), "CrspAgent-0.1.22-macos-arm64.tar.gz")
         self.assertEqual(run("agent_stable_to_asset 0.1.22 crspagent-windows-arm64.zip"), "CrspAgent-0.1.22-win-arm64.zip")
+
+    def test_agent_native_package_names(self):
+        # CRSP348: msi, pkg and deb next to the archives; the archive names do not change
+        def run(script):
+            r = subprocess.run(["bash", "-c", 'source "%s"; %s' % (NAMES, script)], capture_output=True, text=True)
+            self.assertEqual(r.returncode, 0, r.stderr)
+            return r.stdout.strip()
+
+        self.assertEqual(run("agent_asset_name 0.1.22 windows arm64 msi"), "CrspAgent-0.1.22-win-arm64.msi")
+        self.assertEqual(run("agent_stable_to_asset 0.1.22 crspagent-linux-amd64.deb"), "CrspAgent-0.1.22-linux-x64.deb")
+        self.assertEqual(run("agent_stable_to_asset 0.1.22 crspagent-darwin-amd64.pkg"), "CrspAgent-0.1.22-macos-x64.pkg")
+        self.assertEqual(run("agent_stable_to_asset 0.1.22 crspagent-linux-amd64.tar.gz"), "CrspAgent-0.1.22-linux-x64.tar.gz")
+
+    def test_release_builds_the_agent_native_packages(self):
+        text = open(WORKFLOW).read()
+        for want in (
+            "bash installer/agent/linux/build.sh",
+            "bash installer/agent/macos/build.sh",
+            "./installer/agent/windows/build.ps1",
+            "name: agent-msi-windows-${{ matrix.goarch }}",
+            "name: agent-pkg-darwin-${{ matrix.arch }}",
+            "-eq 12 ]",
+            "-eq 26 ]",
+            "-eq 30 ]",
+        ):
+            self.assertIn(want, text)
+
+    def test_agent_deb_builds_on_linux(self):
+        # CRSP348: nfpm runs on Linux, so the deb is built and read back here (skipped without nfpm).
+        import shutil
+        if not (shutil.which("dpkg-deb") and shutil.which("python3")):
+            self.skipTest("dpkg-deb not found")
+        with tempfile.TemporaryDirectory() as d:
+            exe = os.path.join(d, "crsp")
+            open(exe, "w").write("x")
+            os.chmod(exe, 0o755)
+            script = os.path.join(HERE, "..", "..", "installer", "agent", "linux", "build.sh")
+            r = subprocess.run(["bash", script, "arm64", exe, "v1.2.3", "5", os.path.join(d, "out")], capture_output=True, text=True)
+            if r.returncode != 0 and "nfpm" in r.stderr.lower():
+                self.skipTest("nfpm not available: " + r.stderr[-200:])
+            self.assertEqual(r.returncode, 0, r.stderr)
+            deb = os.path.join(d, "out", "crspagent-linux-arm64.deb")
+            info = subprocess.run(["dpkg-deb", "-f", deb], capture_output=True, text=True).stdout
+            self.assertIn("Package: crsp-agent", info)
+            self.assertIn("Architecture: arm64", info)
+            self.assertIn("Version: 1.2.3-1", info)
+            self.assertIn("Conflicts: crsp", info)
+            files = subprocess.run(["dpkg-deb", "-c", deb], capture_output=True, text=True).stdout
+            self.assertIn("./usr/bin/crsp", files)
+            self.assertNotIn("systemd", files)
 
     def test_the_controller_name_stays_the_controller_name(self):
         r = subprocess.run(["bash", NAMES, "0.1.22", "windows", "amd64", "msi"], capture_output=True, text=True)

@@ -96,6 +96,10 @@ describe('release data (website R5.7, R5.8, R5.10)', () => {
       'CrspAgent-1.2.3-win-x64.zip',
       'CrspAgent-1.2.3-linux-arm64.tar.gz',
       'CrspAgent-1.2.3-macos-arm64.tar.gz',
+      // CRSP348: the native agent packages are skipped too
+      'CrspAgent-1.2.3-win-arm64.msi',
+      'CrspAgent-1.2.3-macos-x64.pkg',
+      'CrspAgent-1.2.3-linux-x64.deb',
     ]) {
       f.gh.assets.push({ name: n, size: 1, browser_download_url: 'https://x/y' });
     }

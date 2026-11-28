@@ -11,6 +11,9 @@ name: Release
 # no leading v (an edge build carries edge-<sha>). The CI artifacts and the files the build
 # scripts write keep their stable names (DL-22); the publish job renames the files when it fills
 # dist/ (scripts/ci/release-names.sh).
+# CRSP348: the agent also ships as native packages next to its archives: CrspAgent-<version>-win-<arch>.msi,
+# CrspAgent-<version>-macos-<arch>.pkg and CrspAgent-<version>-linux-<arch>.deb (12 CrspAgent assets in all).
+# The archive names are unchanged (the console import reads them, CRSP347).
 # crsp-sbom-go.spdx.json and crsp-sbom-web.spdx.json (SPDX SBOMs, CRSP90),
 # manifest.json and manifest.json.sig (the update manifest and its Ed25519 signature, signed with
 # the secret CRSP_UPDATE_SIGNING_KEY; the release fails when the secret is missing),
@@ -159,6 +162,23 @@ jobs:
           name: msi-windows-${{ matrix.goarch }}
           path: installer/controller/out/crsp-windows-${{ matrix.goarch }}.msi
           if-no-files-found: error
+      # CRSP348: the agent MSI, from the same crsp.exe. Unsigned like the archives of the agent.
+      - name: Build the agent MSI
+        shell: pwsh
+        env:
+          VERSION: ${{ needs.version.outputs.value }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          $edgeBase = '0.1.0'
+          $last = git tag --list 'v*' --sort=-v:refname | Where-Object { $_ -match '^v\d+\.\d+\.\d+$' } | Select-Object -First 1
+          if ($last -match '^v(\d+)\.(\d+)\.(\d+)$') { $edgeBase = "$($Matches[1]).$($Matches[2]).$([int]$Matches[3] + 1)" }
+          ./installer/agent/windows/build.ps1 -Arch ${{ matrix.arch }} -Exe binaries/crsp.exe -Version $env:VERSION `
+            -EdgeBase $edgeBase -Build ([int]$env:RUN_NUMBER % 65535) -Out installer/agent/windows/out
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: agent-msi-windows-${{ matrix.goarch }}
+          path: installer/agent/windows/out/crspagent-windows-${{ matrix.goarch }}.msi
+          if-no-files-found: error
 
   # OPS1: native installers (pkg, deb, rpm). Own job, apart from the MSI job.
   installers-unix:
@@ -248,18 +268,26 @@ jobs:
           - { os: darwin, arch: arm64 }
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # version.sh reads the latest stable tag
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
         with:
           name: release-${{ matrix.os }}-${{ matrix.arch }}
           path: bin
       - name: Build the agent installer
         env:
+          VERSION: ${{ needs.version.outputs.value }}
           OS: ${{ matrix.os }}
           ARCH: ${{ matrix.arch }}
         run: |
           set -euo pipefail
           exe=crsp; [ "$OS" = windows ] && exe=crsp.exe
           bash installer/agent/build.sh "$OS" "$ARCH" "bin/$exe" agents
+          # CRSP348: the .deb next to the archive on Linux.
+          if [ "$OS" = linux ]; then
+            chmod +x bin/crsp
+            bash installer/agent/linux/build.sh "$ARCH" bin/crsp "$VERSION" "$GITHUB_RUN_NUMBER" agents
+          fi
           ls -l agents
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
@@ -267,9 +295,42 @@ jobs:
           path: agents
           if-no-files-found: error
 
+  # CRSP348: the agent .pkg for macOS (pkgbuild runs on macOS only). Unsigned until CRSP90 is switched on.
+  agent-pkg:
+    name: agent pkg darwin-${{ matrix.arch }}
+    needs: [version, build]
+    runs-on: macos-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0 # version.sh reads the latest stable tag
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: release-darwin-${{ matrix.arch }}
+          path: bin
+      - name: Build the agent pkg
+        env:
+          VERSION: ${{ needs.version.outputs.value }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          chmod +x bin/crsp
+          bash installer/agent/macos/build.sh "$ARCH" bin/crsp "$VERSION" "$GITHUB_RUN_NUMBER" agentpkgs
+          ls -l agentpkgs
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: agent-pkg-darwin-${{ matrix.arch }}
+          path: agentpkgs
+          if-no-files-found: error
+
   publish:
     name: publish
-    needs: [guard, version, build, msi, installers-unix, agent-installers]
+    needs: [guard, version, build, msi, installers-unix, agent-installers, agent-pkg]
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -343,15 +404,16 @@ jobs:
           done
           native=$(find dist -type f \( -name '*.pkg' -o -name '*.deb' -o -name '*.rpm' \) | wc -l)
           [ "$native" -eq 6 ] || { echo "::error::expected 6 native installers, found $native"; exit 1; }
-          # CRSP304: the six agent installers (CrspAgent-<version>-<os>-<arch>.<ext>).
+          # CRSP304, CRSP348: the six agent archives, the 2 agent MSIs, the 2 agent pkgs and the 2 agent debs
+          # (CrspAgent-<version>-<os>-<arch>.<ext>).
           for f in agents/*/crspagent-*; do
             cp "$f" "dist/$(agent_stable_to_asset "$VERSION" "$f")"
           done
           agents=$(find dist -type f -name 'CrspAgent-*' | wc -l)
-          [ "$agents" -eq 6 ] || { echo "::error::expected 6 agent installers, found $agents"; exit 1; }
-          # 6 archives + 2 MSIs + 6 native installers + 6 agent installers
+          [ "$agents" -eq 12 ] || { echo "::error::expected 12 agent installers, found $agents"; exit 1; }
+          # 6 archives + 2 MSIs + 6 native installers + 12 agent installers
           count=$(find dist -type f | wc -l)
-          [ "$count" -eq 20 ] || { echo "::error::expected 20 assets, found $count"; exit 1; }
+          [ "$count" -eq 26 ] || { echo "::error::expected 26 assets, found $count"; exit 1; }
 
       # CRSP90: the SBOMs (SPDX JSON), made before SHA256SUMS so the checksums cover them.
       # syft is pinned and sha256-checked in scripts/delivery/tools.json.
@@ -382,16 +444,16 @@ jobs:
       - name: Checksum every asset
         run: |
           set -euo pipefail
-          # 20 installers and archives + 2 SBOMs + the manifest and its signature
+          # 26 installers and archives + 2 SBOMs + the manifest and its signature
           count=$(find dist -type f | wc -l)
-          [ "$count" -eq 24 ] || { echo "::error::expected 24 assets, found $count"; exit 1; }
+          [ "$count" -eq 30 ] || { echo "::error::expected 30 assets, found $count"; exit 1; }
           # Every installer and archive is named Crsp-<version>-<os>-<arch>.<ext> (OPS69).
           bad=$(find dist -type f \( -name '*.msi' -o -name '*.pkg' -o -name '*.deb' -o -name '*.rpm' -o -name '*.tar.gz' -o -name '*.zip' \) -printf '%f\n' \
             | grep -Evc "^Crsp(Agent)?-${VERSION//./\\.}-(win|linux|macos)-(x64|arm64)\.(msi|deb|rpm|pkg|tar\.gz|zip)$" || true)
           [ "$bad" -eq 0 ] || { echo "::error::$bad installers or archives are not named Crsp-${VERSION}-<os>-<arch>.<ext> or CrspAgent-${VERSION}-<os>-<arch>.<ext>"; exit 1; }
           (cd dist && sha256sum Crsp-* CrspAgent-* crsp-sbom-* manifest.json manifest.json.sig > SHA256SUMS)
           lines=$(wc -l < dist/SHA256SUMS)
-          [ "$lines" -eq 24 ] || { echo "::error::SHA256SUMS has $lines lines, expected 24"; exit 1; }
+          [ "$lines" -eq 30 ] || { echo "::error::SHA256SUMS has $lines lines, expected 30"; exit 1; }
           cat dist/SHA256SUMS
 
       # One attestation for every asset and for SHA256SUMS itself.
@@ -425,7 +487,10 @@ jobs:
           flags=""
           case "$TAG" in *-*) flags="--prerelease" ;; esac
           # shellcheck disable=SC2086
-          gh release create "$TAG" dist/* --verify-tag --generate-notes --notes-file docs/guides/upgrade-notes.md $flags
+          # CRSP274: the notes of the release: upgrade notes, then the change notes (docs/features/*/changes) not yet
+          # folded into a version table, then GitHub's generated list.
+          { cat docs/guides/upgrade-notes.md; echo; python3 scripts/ci/release_notes.py; } > "$RUNNER_TEMP/release-notes.md"
+          gh release create "$TAG" dist/* --verify-tag --generate-notes --notes-file "$RUNNER_TEMP/release-notes.md" $flags
 
       # CRSP130: when GitHub found no merged PR between the previous stable tag
       # and this one, the generated notes have no "What's Changed" list; write
@@ -439,7 +504,7 @@ jobs:
           gh release view "$TAG" --json body --jq .body > "$RUNNER_TEMP/notes.md"
           bash scripts/ci/release-notes-fallback.sh "$TAG" "$RUNNER_TEMP/notes.md" > "$RUNNER_TEMP/fallback.md"
           if [ -s "$RUNNER_TEMP/fallback.md" ]; then
-            { cat docs/guides/upgrade-notes.md; echo; cat "$RUNNER_TEMP/fallback.md"; } > "$RUNNER_TEMP/fallback-full.md"
+            { cat docs/guides/upgrade-notes.md; echo; python3 scripts/ci/release_notes.py; echo; cat "$RUNNER_TEMP/fallback.md"; } > "$RUNNER_TEMP/fallback-full.md"
             mv "$RUNNER_TEMP/fallback-full.md" "$RUNNER_TEMP/fallback.md"
             gh release edit "$TAG" --notes-file "$RUNNER_TEMP/fallback.md"
             echo "notes written from commit subjects"

@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentinstallers"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/update"
 )
@@ -36,4 +37,24 @@ func newAgentInstallers(dataDir, version, githubAPI string) *agentinstallers.Sto
 		Source:  update.GitHubSource{Base: githubAPI, Version: version},
 		Dir:     filepath.Join(dataDir, "agent-installers"),
 	}
+}
+
+// agentPackages is the doctor.AgentPackageSource of the release's SHA256SUMS (CRSP348): which agent archives and
+// native packages it lists. A nil store (a development build) leaves the check skipped.
+type agentPackages struct{ store *agentinstallers.Store }
+
+func agentPackageStatus(s *agentinstallers.Store) doctor.AgentPackageSource {
+	if s == nil {
+		return nil
+	}
+	return agentPackages{store: s}
+}
+
+func (a agentPackages) AgentPackages(ctx context.Context) (doctor.AgentPackageStatus, error) {
+	sums, version, err := a.store.Sums(ctx)
+	if err != nil {
+		return doctor.AgentPackageStatus{}, err
+	}
+	c := agentinstallers.CoverageOf(sums)
+	return doctor.AgentPackageStatus{Version: version, MissingArchives: c.MissingArchives, MissingNative: c.MissingNative}, nil
 }
