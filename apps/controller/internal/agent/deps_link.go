@@ -2,6 +2,8 @@ package agent
 
 import (
 	"context"
+	"errors"
+	"net/url"
 	"strings"
 	"sync"
 
@@ -72,9 +74,23 @@ func (l *link) depsRunner(runnerOS, runnerKind string) *install.Runner {
 			s, _ := sys.ReadFile("/etc/os-release")
 			return s
 		},
-		Prepare: l.preparePool(runnerOS, runnerKind),
-		Redact:  l.cfg.redactor().Redact,
+		FromController: l.fromController,
+		Prepare:        l.preparePool(runnerOS, runnerKind),
+		Redact:         l.cfg.redactor().Redact,
 	})
+}
+
+// depFilesPath is where the controller serves its stored dependencies on the agent link (internal/depstore.PathPrefix).
+const depFilesPath = "/dep-files/"
+
+// fromController downloads the controller's copy of a dependency over the pinned
+// link (DEP15). A 404 means the controller holds none; the caller then goes to the vendor.
+func (l *link) fromController(ctx context.Context, name, dest string, onProgress func(bytes, total int64)) error {
+	if l.cfg.Controller == "" || l.pin == "" {
+		return errors.New("this agent has no controller address")
+	}
+	osys := install.NewOSSystem(install.OSOptions{Client: pinnedClient(l.pin)})
+	return osys.Download(ctx, "https://"+l.cfg.Controller+depFilesPath+url.PathEscape(name), dest, onProgress)
 }
 
 // depsCheck answers DepsCheck with one DepsReport (it reads only).

@@ -52,6 +52,12 @@ const RecoveryPath = "/recovery/v1/poll"
 // before NewLinkServer.
 func (s *Service) SetRecoveryHandler(h http.Handler) { s.recoveryHandler = h }
 
+// DepFilesPath is where the link serves the controller's stored dependencies to its machines (internal/depstore.PathPrefix).
+const DepFilesPath = "/dep-files/"
+
+// SetDepFilesHandler mounts the dependency files on the agent link (DEP15).
+func (s *Service) SetDepFilesHandler(h http.Handler) { s.depFilesHandler = h }
+
 // SetHooks sets the hooks; call it before the link serves.
 func (s *Service) SetHooks(h Hooks) { s.hooks = h }
 
@@ -320,6 +326,9 @@ func NewLinkServer(addr string, ca *tlsca.Authority, svc *Service) *http.Server 
 	mux.Handle(path, h)
 	if rh := svc.recoveryHandler; rh != nil {
 		mux.Handle(RecoveryPath, rh)
+	}
+	if dh := svc.depFilesHandler; dh != nil {
+		mux.Handle(DepFilesPath, dh)
 	}
 	return &http.Server{
 		Addr: addr, Handler: mux, TLSConfig: ca.ServerTLS(),

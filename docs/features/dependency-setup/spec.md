@@ -7,7 +7,7 @@ status: building
 version: 0.0.0
 owner: owner
 type: reference
-code: ["apps/controller/internal/agent/backends.go", "apps/controller/internal/agent/engine.go", "apps/controller/internal/doctor/checks/engine.go", "apps/controller/internal/backend/container/**", "apps/controller/internal/machines/**", "apps/controller-console/src/screens/runners/**", "apps/controller-console/src/screens/setup/**"]
+code: ["apps/controller/internal/agent/backends.go", "apps/controller/internal/agent/engine.go", "apps/controller/internal/doctor/checks/engine.go", "apps/controller/internal/backend/container/**", "apps/controller/internal/machines/**", "apps/controller-console/src/screens/runners/**", "apps/controller-console/src/screens/setup/**", "apps/controller-console/src/screens/dependencies/**", "apps/controller/internal/depstore/**", "apps/controller/internal/depsetup/**"]
 design_system: [CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, UX-5, UX-6, UX-9, UX-13, UX-26, UX-29, UX-30, UX-38, UX-42, UX-54, UX-62, "components 4, 16, 18, 19, 26, 39, 48"]
 last_verified: 2026-11-28
 artifact:
@@ -117,6 +117,7 @@ One wizard, "Get this machine ready", opened from the place that found the gap. 
 | Done | What really changed (list), what to remove to undo, a Verify result with the engine version. Primary: back to the original task. | UX-30 |
 | Done after reload | Same Done, read from the audit record. | UX-30, UX-54 |
 | Machine offline | "crsp cannot reach <machine>." No install is offered. Primary "Try again". | UX-6 |
+| Downloads (Setup, Images and caches, tab Downloads) | One card per dependency under Installers, Runner packages and Agent packages. Each card says its state in words: "Ready on the controller", "Ready, imported by you", "Not downloaded yet", "Not kept" (with the reason) or "Cannot be checked in this release". An admin has "Download now" (locks and says "Downloading") and "Import a file" (a file field and "Import", locked until a file is chosen). A viewer sees the facts and no button. The controller keeps a file only when its SHA-256 matches. | UX-13, UX-38, UX-58, components 14, 15, 18 |
 
 Words go into `content` before build (words such as "Get this machine ready", "Install 2 items", "Restart needed to finish").
 
@@ -152,7 +153,7 @@ IDs `DEP1` and up. Milestone is a proposal.
 
 **DEP14** (M1) — **Doctor links to it.** `machine.engine` keeps its text fix and adds a link "Get this machine ready" to the wizard. The doctor still only reads (`machine.engine` today never changes an engine); the change is by the wizard.
 
-**DEP15** (M3) — **Offline machines.** A machine with no internet gets the same offer with "Use a downloaded installer": the controller (which has internet) fetches and checks the file, then serves it to the agent over the agent link or the LAN (D-DEP-8).
+**DEP15** (M3) — **Offline machines.** A machine with no internet installs from the controller first. The controller (which has internet) fetches each file it can pin, checks its SHA-256 against the pinned list of this release, keeps it in its data folder and serves it to its machines over the agent link (`/dep-files/<id>`, the pinned certificate applies). A machine asks the controller first and goes to the vendor only when the controller has no copy or the copy does not match the pinned SHA-256; the machine checks the SHA-256 again from its own pinned list, so the controller is a cache and never a source of trust. What the controller keeps: the pinned installers of the list (Docker Desktop on Windows), the GitHub runner packages (SHA-256 from the runner pins) and the agent packages (SHA256SUMS of the release). When the controller has no internet either, the console and the CLI import a file; it is kept only when its SHA-256 matches, and never otherwise. A dependency this release pins no SHA-256 for cannot be checked, so it is never kept: it shows "Cannot be checked in this release" and the wizard keeps "Do it myself". If a machine cannot reach the vendor and the controller has no copy, the job fails and says to open Downloads in the console (or run `crsp dependencies`).
 
 **DEP16** (M1) — **No install without need.** crsp never installs a dependency that no runner choice asks for, never upgrades an engine the user installed, and never changes Docker Desktop's settings.
 
@@ -227,6 +228,7 @@ Tests of M1 (go and vitest, with fakes for Windows and WSL so CI on Linux runs t
 | DEP9 | `apps/controller/internal/backend/container` test: missing pool container is created; existing image is not rebuilt |
 | DEP10, DEP11 | test: second run changes nothing; undo removes only the recorded items |
 | DEP12 | machines test: offline machine is not offered an install |
+| DEP15 | `apps/controller/internal/depstore` tests (fetch keeps only a match, import refuses a wrong file, tampered file dropped, not-pinned never stored, only stored files served); `apps/controller/internal/machines/depfiles_test.go` (served over the pinned TLS); `apps/controller/internal/agent/install/install_controller_test.go` (controller first, no copy falls back, wrong copy never run, offline names the console); API and CLI tests; `Downloads.test.tsx`; e2e layout of the tab |
 | Screens | `e2e` wizard harness (UX-54) for every state of section 4 at 360, 393, 1300 px |
 | Real PCs | `docs/guides/real-machine-test.md` gets a clean-Windows, clean-macOS and clean-Linux run |
 
@@ -243,7 +245,7 @@ Open. Each has a recommended default; the owner answers.
 | D-DEP-5 | Which engine on Linux: Docker Engine or Podman? | Docker Engine (the code and registry path are tested for it); Podman stays detected and allowed, not installed |
 | D-DEP-6 | Ask or auto-install on Add runners? | Ask. Never install without the Review step (DEP4) |
 | D-DEP-7 | Undo: how far? | Undo only what this run added, from its record; leave images and volumes the user may have used |
-| D-DEP-8 | Offline machines | The controller fetches and checks, the agent receives over the link (DEP15, M3); until then "Do it myself" |
+| D-DEP-8 | Offline machines | The controller fetches and checks, the agent receives over the agent link (DEP15, M3, built in CRSP278 for the file downloads of the pinned list, the runner and the agent packages); the installs by package manager still need the machine's own network ("Do it myself") |
 | D-DEP-9 | macOS | Offer Docker Desktop with the human prompt; no unattended path promised. Revisit if Linux-in-macOS runners are used by the owner |
 | D-DEP-10 | Pinned list or latest | Pinned per release; a newer one only by a crsp update |
 | D-DEP-11 | Setup first-run: install during the very first setup? | Yes, as a step after the machine is chosen, only if a runner type that needs it is picked |
@@ -280,7 +282,15 @@ Open. Each has a recommended default; the owner answers.
 
 **Built in CRSP270 (step two).** DEP13: the Setup summary shows the "Get this machine ready" door for every online machine of the pool that has no container engine, not only this PC; an offline machine gets none (DEP12). The door keeps the way back (`return=/setup/summary`). DEP4 to DEP8, DEP10 and DEP11 were already built in CRSP248 and CRSP265 (above); CRSP270 changed nothing there.
 
-**Not built (M2, M3).** DEP12 for a machine joined over SSH (offer after join: the Add machine door shows once the agent is online, no separate SSH-only path), DEP15 offline machines (needs a new agent-link message and file serving; until then "Do it myself"), time budget "3 times typical", resume only after "Restart now", the yes for removing conflicting Docker packages.
+**Built in CRSP278 (M3, DEP15).** The controller's dependency store and the offline path.
+
+- Store: `apps/controller/internal/depstore` (fetch to a `.part` file, SHA-256 check, keep only a match; a stored file is checked again once per process and a tampered one is dropped; import with the same check and a 2 GiB limit; `Service` adds the agent packages of `agentinstallers`). Wiring and the catalog (pinned downloads, `runners.AllPins`): `apps/controller/cmd/crsp/depstore_wiring.go`. Files live in the data folder `dependencies/`.
+- Serving: `machines.Service.SetDepFilesHandler` mounts `/dep-files/<id>` on the :8461 agent link (TLS 1.3 and the pinned certificate; HTTP/2).
+- Agent: `install.Config.FromController` asks the controller first for a pinned download (`<item id>-<os>`), checks the pinned SHA-256, throws a wrong copy away and then goes to the vendor; with no copy and no internet the job fails and names Downloads. The pinned list, the hash check and the host allow-list are unchanged (DEP5).
+- API: `GET /api/v1/dependencies/store`, `POST .../{dependencyId}/fetch`, `PUT .../{dependencyId}/file` (admin to change; audit rows `dependency.store.fetch` and `dependency.store.import`). CLI: `crsp dependencies`, `crsp dependencies fetch ID`, `crsp dependencies import ID FILE`.
+- Web: the tab Downloads of Images and caches (`apps/controller-console/src/screens/dependencies/Downloads.tsx`).
+
+**Not built (M2, M3).** DEP12 for a machine joined over SSH (offer after join: the Add machine door shows once the agent is online, no separate SSH-only path), DEP15 for the installs that use a package manager (Docker Engine by apt or dnf, Docker in WSL2, WSL2 itself: they need the machine's own network or a mirror), the runner package install path on a machine (the machine still downloads the runner package itself; the controller keeps the file, but the agent does not ask the controller for it yet), toolchains (this spec lists none), a signature check beyond the SHA-256, the Docker Desktop SHA-256 and address in the pinned list (empty until the release pins them, so Docker Desktop shows "Cannot be checked in this release"), time budget "3 times typical", resume only after "Restart now", the yes for removing conflicting Docker packages.
 
 ## 12. Research and code map
 
@@ -308,3 +318,4 @@ Proof: UX-16, UX-17 `e2e/tests/web-console/ux-routes.spec.ts`
 Proof: UX-9 `e2e/tests/web-console/ux-static.spec.ts`
 Proof: UX-13, UX-54 `scripts/design/wizard-behaviour.test.ts`
 Proof: UX-88, UX-89, UX-90 `packages/ui/src/components/LiveProgress.test.tsx`
+Proof: UX-58 `apps/controller-console/src/screens/dependencies/Downloads.test.tsx`

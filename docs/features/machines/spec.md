@@ -16,7 +16,7 @@ code:
   - apps/controller/internal/machinehealth/**
   - apps/controller/internal/dockercompact/**
 design_system: [UX-4, UX-5, UX-6, UX-9, UX-13, UX-16, UX-17, UX-18, UX-19, UX-22, UX-26, UX-29, UX-30, UX-38, UX-41, UX-52, UX-53, UX-58, UX-62]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -365,7 +365,7 @@ The controller serves the packages of the release it was built from at `GET /api
 
 ## 6. Non-functional requirements
 
-**R6.1** (M1) — The agent link uses TLS 1.3 only. A connection without a valid pinned certificate and a valid machine key is refused.
+**R6.1** (M1) — The agent link uses TLS 1.3 only. A connection without a valid pinned certificate and a valid machine key is refused. The same server also serves `/dep-files/<id>` (GET, HEAD): the dependency files the controller keeps for machines without internet. It hands out only a file whose SHA-256 matched its pin; the machine checks it again (dependency-setup DEP15, CRSP278).
 
 **R6.2** (M1) — No key, join code or certificate private key is written to the database, a log or the console in clear. The controller stores join codes and machine keys only as hashes.
 

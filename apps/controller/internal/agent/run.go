@@ -422,8 +422,8 @@ type link struct {
 	capMu sync.Mutex
 	cap   capState
 
-	// pin is the controller CA fingerprint of this session; hub reaches the
-	// package proxy at start (caches R5.76). A nil hub uses the real one.
+	// pin is the controller CA fingerprint of this session (the dependency files and the
+	// package proxy use it); hub reaches the package proxy at start (caches R5.76). A nil hub uses the real one.
 	pin string
 	hub hubAccess
 }

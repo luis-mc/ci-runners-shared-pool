@@ -115,6 +115,7 @@ type Service struct {
 	sessions        *Sessions
 	hooks           Hooks
 	recoveryHandler http.Handler
+	depFilesHandler http.Handler
 	host            HostRunner
 	compact         compactBook
 	// removeRunners deregisters the runners of a machine that is removed (R5.40 to R5.42).

@@ -790,6 +790,69 @@ func (e DependencyJobRequestRunnerOs) Valid() bool {
 	}
 }
 
+// Defines values for DependencyStoreEntryKind.
+const (
+	DependencyStoreEntryKindAgent     DependencyStoreEntryKind = "agent"
+	DependencyStoreEntryKindInstaller DependencyStoreEntryKind = "installer"
+	DependencyStoreEntryKindRunner    DependencyStoreEntryKind = "runner"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryKind enum.
+func (e DependencyStoreEntryKind) Valid() bool {
+	switch e {
+	case DependencyStoreEntryKindAgent:
+		return true
+	case DependencyStoreEntryKindInstaller:
+		return true
+	case DependencyStoreEntryKindRunner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryOrigin.
+const (
+	Fetched  DependencyStoreEntryOrigin = "fetched"
+	Imported DependencyStoreEntryOrigin = "imported"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryOrigin enum.
+func (e DependencyStoreEntryOrigin) Valid() bool {
+	switch e {
+	case Fetched:
+		return true
+	case Imported:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryState.
+const (
+	DependencyStoreEntryStateFailed    DependencyStoreEntryState = "failed"
+	DependencyStoreEntryStateMissing   DependencyStoreEntryState = "missing"
+	DependencyStoreEntryStateNotPinned DependencyStoreEntryState = "not_pinned"
+	DependencyStoreEntryStateReady     DependencyStoreEntryState = "ready"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryState enum.
+func (e DependencyStoreEntryState) Valid() bool {
+	switch e {
+	case DependencyStoreEntryStateFailed:
+		return true
+	case DependencyStoreEntryStateMissing:
+		return true
+	case DependencyStoreEntryStateNotPinned:
+		return true
+	case DependencyStoreEntryStateReady:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DockerCompactMode.
 const (
 	DockerCompactModeAuto DockerCompactMode = "auto"
@@ -5974,6 +6037,40 @@ type DependencyJobRequestRunnerKind string
 // DependencyJobRequestRunnerOs defines model for DependencyJobRequest.RunnerOs.
 type DependencyJobRequestRunnerOs string
 
+// DependencyStoreEntry defines model for DependencyStoreEntry.
+type DependencyStoreEntry struct {
+	Arch *string `json:"arch,omitempty"`
+
+	// CanFetch The controller has an address to download it from.
+	CanFetch  bool                        `json:"can_fetch"`
+	Error     *string                     `json:"error,omitempty"`
+	FetchedAt *time.Time                  `json:"fetched_at,omitempty"`
+	Id        string                      `json:"id"`
+	Kind      DependencyStoreEntryKind    `json:"kind"`
+	Name      string                      `json:"name"`
+	Origin    *DependencyStoreEntryOrigin `json:"origin,omitempty"`
+	Os        *string                     `json:"os,omitempty"`
+
+	// Pinned This release lists a SHA-256 for it, so a file can be checked.
+	Pinned bool    `json:"pinned"`
+	Sha256 *string `json:"sha256,omitempty"`
+
+	// Source The host it is fetched from, in words for the user.
+	Source      *string                   `json:"source,omitempty"`
+	State       DependencyStoreEntryState `json:"state"`
+	StoredBytes *int64                    `json:"stored_bytes,omitempty"`
+	Version     *string                   `json:"version,omitempty"`
+}
+
+// DependencyStoreEntryKind defines model for DependencyStoreEntry.Kind.
+type DependencyStoreEntryKind string
+
+// DependencyStoreEntryOrigin defines model for DependencyStoreEntry.Origin.
+type DependencyStoreEntryOrigin string
+
+// DependencyStoreEntryState defines model for DependencyStoreEntry.State.
+type DependencyStoreEntryState string
+
 // DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
 type DiskFloorGib = int
 
@@ -10794,6 +10891,9 @@ type DebugSessionId = string
 // DependencyJobId defines model for DependencyJobId.
 type DependencyJobId = string
 
+// DependencyStoreId defines model for DependencyStoreId.
+type DependencyStoreId = string
+
 // FindingId defines model for FindingId.
 type FindingId = int64
 
@@ -11767,6 +11867,15 @@ type ServerInterface interface {
 	// GetDebugTranscript The redacted transcript of a session
 	// (GET /api/v1/debug-sessions/{sessionId}/transcript)
 	GetDebugTranscript(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId)
+	// ListDependencyStore What the controller keeps for machines without internet
+	// (GET /api/v1/dependencies/store)
+	ListDependencyStore(w http.ResponseWriter, r *http.Request)
+	// FetchDependency Download one dependency to the controller and check it
+	// (POST /api/v1/dependencies/store/{dependencyId}/fetch)
+	FetchDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId)
+	// ImportDependency Give the controller a file you downloaded yourself
+	// (PUT /api/v1/dependencies/store/{dependencyId}/file)
+	ImportDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(w http.ResponseWriter, r *http.Request, params ListDoctorFindingsParams)
@@ -13225,6 +13334,72 @@ func (siw *ServerInterfaceWrapper) GetDebugTranscript(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetDebugTranscript(w, r, sessionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListDependencyStore operation middleware
+func (siw *ServerInterfaceWrapper) ListDependencyStore(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListDependencyStore(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// FetchDependency operation middleware
+func (siw *ServerInterfaceWrapper) FetchDependency(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "dependencyId" -------------
+	var dependencyId DependencyStoreId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "dependencyId", r.PathValue("dependencyId"), &dependencyId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dependencyId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FetchDependency(w, r, dependencyId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ImportDependency operation middleware
+func (siw *ServerInterfaceWrapper) ImportDependency(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "dependencyId" -------------
+	var dependencyId DependencyStoreId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "dependencyId", r.PathValue("dependencyId"), &dependencyId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dependencyId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ImportDependency(w, r, dependencyId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -20061,6 +20236,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop", wrapper.StopMachineDependencyJob)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo", wrapper.UndoMachineDependencyJob)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host", wrapper.RestartMachineForDependencyJob)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/dependencies/store", wrapper.ListDependencyStore)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/dependencies/store/{dependencyId}/fetch", wrapper.FetchDependency)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/dependencies/store/{dependencyId}/file", wrapper.ImportDependency)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/doctor/registration-fixes", wrapper.RemoveRegistration)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/docker-compact", wrapper.StartDockerCompact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/runner-leftovers/remove", wrapper.RemoveRunnerLeftovers)
@@ -21576,6 +21754,125 @@ type GetDebugTranscriptdefaultJSONResponse struct {
 }
 
 func (response GetDebugTranscriptdefaultJSONResponse) VisitGetDebugTranscriptResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListDependencyStoreRequestObject struct {
+}
+
+type ListDependencyStoreResponseObject interface {
+	VisitListDependencyStoreResponse(w http.ResponseWriter) error
+}
+
+type ListDependencyStore200JSONResponse struct {
+	Items []DependencyStoreEntry `json:"items"`
+}
+
+func (response ListDependencyStore200JSONResponse) VisitListDependencyStoreResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListDependencyStoredefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListDependencyStoredefaultJSONResponse) VisitListDependencyStoreResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type FetchDependencyRequestObject struct {
+	DependencyId DependencyStoreId `json:"dependencyId"`
+}
+
+type FetchDependencyResponseObject interface {
+	VisitFetchDependencyResponse(w http.ResponseWriter) error
+}
+
+type FetchDependency200JSONResponse DependencyStoreEntry
+
+func (response FetchDependency200JSONResponse) VisitFetchDependencyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type FetchDependencydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response FetchDependencydefaultJSONResponse) VisitFetchDependencyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportDependencyRequestObject struct {
+	DependencyId DependencyStoreId `json:"dependencyId"`
+	Body         io.Reader
+}
+
+type ImportDependencyResponseObject interface {
+	VisitImportDependencyResponse(w http.ResponseWriter) error
+}
+
+type ImportDependency200JSONResponse DependencyStoreEntry
+
+func (response ImportDependency200JSONResponse) VisitImportDependencyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportDependencydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ImportDependencydefaultJSONResponse) VisitImportDependencyResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -30228,6 +30525,15 @@ type StrictServerInterface interface {
 	// GetDebugTranscript The redacted transcript of a session
 	// (GET /api/v1/debug-sessions/{sessionId}/transcript)
 	GetDebugTranscript(ctx context.Context, request GetDebugTranscriptRequestObject) (GetDebugTranscriptResponseObject, error)
+	// ListDependencyStore What the controller keeps for machines without internet
+	// (GET /api/v1/dependencies/store)
+	ListDependencyStore(ctx context.Context, request ListDependencyStoreRequestObject) (ListDependencyStoreResponseObject, error)
+	// FetchDependency Download one dependency to the controller and check it
+	// (POST /api/v1/dependencies/store/{dependencyId}/fetch)
+	FetchDependency(ctx context.Context, request FetchDependencyRequestObject) (FetchDependencyResponseObject, error)
+	// ImportDependency Give the controller a file you downloaded yourself
+	// (PUT /api/v1/dependencies/store/{dependencyId}/file)
+	ImportDependency(ctx context.Context, request ImportDependencyRequestObject) (ImportDependencyResponseObject, error)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(ctx context.Context, request ListDoctorFindingsRequestObject) (ListDoctorFindingsResponseObject, error)
@@ -31780,6 +32086,84 @@ func (sh *strictHandler) GetDebugTranscript(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetDebugTranscriptResponseObject); ok {
 		if err := validResponse.VisitGetDebugTranscriptResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListDependencyStore operation middleware
+func (sh *strictHandler) ListDependencyStore(w http.ResponseWriter, r *http.Request) {
+	var request ListDependencyStoreRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListDependencyStore(ctx, request.(ListDependencyStoreRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListDependencyStore")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListDependencyStoreResponseObject); ok {
+		if err := validResponse.VisitListDependencyStoreResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// FetchDependency operation middleware
+func (sh *strictHandler) FetchDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId) {
+	var request FetchDependencyRequestObject
+
+	request.DependencyId = dependencyId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.FetchDependency(ctx, request.(FetchDependencyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "FetchDependency")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(FetchDependencyResponseObject); ok {
+		if err := validResponse.VisitFetchDependencyResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ImportDependency operation middleware
+func (sh *strictHandler) ImportDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId) {
+	var request ImportDependencyRequestObject
+
+	request.DependencyId = dependencyId
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ImportDependency(ctx, request.(ImportDependencyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ImportDependency")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ImportDependencyResponseObject); ok {
+		if err := validResponse.VisitImportDependencyResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

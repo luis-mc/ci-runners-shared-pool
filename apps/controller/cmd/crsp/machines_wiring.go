@@ -23,6 +23,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/caches"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/depsetup"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/depstore"
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/gen/agent/v1"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/logs"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
@@ -66,6 +67,8 @@ type machinesRuntime struct {
 	Packages *packages.Store
 	// AgentInstallers holds the agent installers of the release (CRSP304); nil for a development build.
 	AgentInstallers *agentinstallers.Store
+	// DepStore is the controller's own copy of the dependencies a machine without internet installs from (DEP15).
+	DepStore *depstore.Service
 	// Secrets is the secret store of the controller, read by the config export.
 	Secrets secrets.Store
 	// LogStore is logs.db and LogWriter its fail-open writer (observability R6.9, R6.10); nil when logs.db
@@ -205,6 +208,11 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 	if err != nil {
 		return nil, err
 	}
+	depStore := newDepStore(cfg.DataDir, cfg.Addresses, agentInst)
+	depStore.Audit = func(ctx context.Context, actor, action, id string, details map[string]any) {
+		_ = rec.Record(ctx, audit.Actor{Login: actor, Source: audit.SourceWeb}, action, audit.Target{Type: "dependency", ID: id}, details)
+	}
+	svc.SetDepFilesHandler(depStore.Store.Handler())
 	mountRecovery(svc, ca, cfg.Addresses.GitHubAPIURL, version)
 	link := machines.NewLinkServer(addr, ca, svc)
 	go func() {
@@ -261,7 +269,7 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 			}
 		}()
 	}
-	return &machinesRuntime{Service: svc, Caches: cs, Hub: hub, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, AgentInstallers: agentInst, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
+	return &machinesRuntime{Service: svc, Caches: cs, Hub: hub, Link: lk, Deps: deps, Health: hs, CA: ca, PublicHost: public, Packages: pkgs, AgentInstallers: agentInst, DepStore: depStore, Secrets: store, LogStore: logStore, LogWriter: logWriter, stop: func() {
 		cancel()
 		_ = link.Close()
 		<-done

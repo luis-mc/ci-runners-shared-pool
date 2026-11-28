@@ -28,6 +28,9 @@
     "apps/controller-console/src/screens/analytics/Savings.tsx": [
       "docs/features/observability/spec.md"
     ],
+    "apps/controller-console/src/screens/dependencies/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
     "apps/controller-console/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
@@ -190,6 +193,12 @@
     ],
     "apps/controller/internal/debugaccess/**": [
       "docs/features/debug-access/spec.md"
+    ],
+    "apps/controller/internal/depsetup/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
+    "apps/controller/internal/depstore/**": [
+      "docs/features/dependency-setup/spec.md"
     ],
     "apps/controller/internal/dockercompact/**": [
       "docs/features/caches/spec.md",

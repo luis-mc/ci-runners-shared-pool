@@ -66,6 +66,8 @@ type Options struct {
 	Machines MachinesService
 	// Deps serves the dependency setup routes (handlers_dependencies.go, CRSP248). Nil answers 501.
 	Deps DepsService
+	// DepStore serves the dependency store routes (handlers_depstore.go, DEP15). Nil answers 501.
+	DepStore DepStoreService
 	// CA serves GET /api/v1/ca.pem.
 	CA CAProvider
 	// Packages serves GET /api/v1/packages/{name} (machines R5.65). Nil answers 501.

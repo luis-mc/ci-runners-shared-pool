@@ -2029,6 +2029,32 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 |---|---|
 | Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |
 
+## Downloads words (dependency-setup DEP15, CRSP278)
+
+The tab Downloads of Images and caches: what the controller keeps for machines that cannot reach the internet. One card per dependency; the state is a word with a glyph (UX-58).
+
+| Word | Where and meaning |
+|---|---|
+| Downloads | The tab name, next to Images, Caches and Registry. |
+| Installers, Runner packages, Agent packages | The three section titles. |
+| A machine without internet installs from this controller first. The controller downloads each file, checks it against the checksum of this release, and keeps only a file that matches. If this controller has no internet either, import the file here. | The line above the sections. |
+| Nothing to keep yet. This release lists no downloads. | The empty state. |
+| State, Version, From, Kept, Kept since | The fact names of a card. |
+| Ready on the controller | State: the controller holds a checked copy it downloaded. |
+| Ready, imported by you | State: the controller holds a checked copy the person imported. |
+| Not downloaded yet | State: the controller holds no copy. |
+| Not kept | State: the last download did not match the checksum or failed; the reason follows in a Problem message. |
+| Cannot be checked in this release | State: this release has no checksum for it, so no file is kept. |
+| crsp cannot check a file for it, so it keeps none. Use Do it myself in Get this machine ready. | The line under that state. |
+| Download now | The button that makes the controller download the file (busy word: Downloading). Admin only. After a copy is kept the word is Download again. |
+| Import a file | The button that opens the file field of the card. Admin only. |
+| File you downloaded | The name of the file field. |
+| crsp keeps it only when it matches the checksum of this release. | The help of the file field. |
+| The file is over 2 GB. | The refusal when the chosen file is too large. |
+| Import | The button that sends the chosen file (busy word: Importing). |
+| Choose the file first. | The reason beside a disabled Import. |
+| This release has no checksum for it. / This release has no download address for it. | The reason beside a disabled Download now. |
+
 ## Live run words of the update, restart and add-runners wizards (CRSP336, UX-88 to UX-90)
 
 The rows the console writes into the Terminal and the phases of the weighted bar for the three wizards that have no event stream. Component words stay in Live progress words.

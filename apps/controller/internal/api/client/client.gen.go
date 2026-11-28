@@ -791,6 +791,69 @@ func (e DependencyJobRequestRunnerOs) Valid() bool {
 	}
 }
 
+// Defines values for DependencyStoreEntryKind.
+const (
+	DependencyStoreEntryKindAgent     DependencyStoreEntryKind = "agent"
+	DependencyStoreEntryKindInstaller DependencyStoreEntryKind = "installer"
+	DependencyStoreEntryKindRunner    DependencyStoreEntryKind = "runner"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryKind enum.
+func (e DependencyStoreEntryKind) Valid() bool {
+	switch e {
+	case DependencyStoreEntryKindAgent:
+		return true
+	case DependencyStoreEntryKindInstaller:
+		return true
+	case DependencyStoreEntryKindRunner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryOrigin.
+const (
+	Fetched  DependencyStoreEntryOrigin = "fetched"
+	Imported DependencyStoreEntryOrigin = "imported"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryOrigin enum.
+func (e DependencyStoreEntryOrigin) Valid() bool {
+	switch e {
+	case Fetched:
+		return true
+	case Imported:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryState.
+const (
+	DependencyStoreEntryStateFailed    DependencyStoreEntryState = "failed"
+	DependencyStoreEntryStateMissing   DependencyStoreEntryState = "missing"
+	DependencyStoreEntryStateNotPinned DependencyStoreEntryState = "not_pinned"
+	DependencyStoreEntryStateReady     DependencyStoreEntryState = "ready"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryState enum.
+func (e DependencyStoreEntryState) Valid() bool {
+	switch e {
+	case DependencyStoreEntryStateFailed:
+		return true
+	case DependencyStoreEntryStateMissing:
+		return true
+	case DependencyStoreEntryStateNotPinned:
+		return true
+	case DependencyStoreEntryStateReady:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for DockerCompactMode.
 const (
 	DockerCompactModeAuto DockerCompactMode = "auto"
@@ -5975,6 +6038,40 @@ type DependencyJobRequestRunnerKind string
 // DependencyJobRequestRunnerOs defines model for DependencyJobRequest.RunnerOs.
 type DependencyJobRequestRunnerOs string
 
+// DependencyStoreEntry defines model for DependencyStoreEntry.
+type DependencyStoreEntry struct {
+	Arch *string `json:"arch,omitempty"`
+
+	// CanFetch The controller has an address to download it from.
+	CanFetch  bool                        `json:"can_fetch"`
+	Error     *string                     `json:"error,omitempty"`
+	FetchedAt *time.Time                  `json:"fetched_at,omitempty"`
+	Id        string                      `json:"id"`
+	Kind      DependencyStoreEntryKind    `json:"kind"`
+	Name      string                      `json:"name"`
+	Origin    *DependencyStoreEntryOrigin `json:"origin,omitempty"`
+	Os        *string                     `json:"os,omitempty"`
+
+	// Pinned This release lists a SHA-256 for it, so a file can be checked.
+	Pinned bool    `json:"pinned"`
+	Sha256 *string `json:"sha256,omitempty"`
+
+	// Source The host it is fetched from, in words for the user.
+	Source      *string                   `json:"source,omitempty"`
+	State       DependencyStoreEntryState `json:"state"`
+	StoredBytes *int64                    `json:"stored_bytes,omitempty"`
+	Version     *string                   `json:"version,omitempty"`
+}
+
+// DependencyStoreEntryKind defines model for DependencyStoreEntry.Kind.
+type DependencyStoreEntryKind string
+
+// DependencyStoreEntryOrigin defines model for DependencyStoreEntry.Origin.
+type DependencyStoreEntryOrigin string
+
+// DependencyStoreEntryState defines model for DependencyStoreEntry.State.
+type DependencyStoreEntryState string
+
 // DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
 type DiskFloorGib = int
 
@@ -10795,6 +10892,9 @@ type DebugSessionId = string
 // DependencyJobId defines model for DependencyJobId.
 type DependencyJobId = string
 
+// DependencyStoreId defines model for DependencyStoreId.
+type DependencyStoreId = string
+
 // FindingId defines model for FindingId.
 type FindingId = int64
 
@@ -12046,6 +12146,29 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
 	GetDebugTranscript(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDependencyStore What the controller keeps for machines without internet
+	//
+	// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+	//
+	// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+	ListDependencyStore(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FetchDependency Download one dependency to the controller and check it
+	//
+	// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+	//
+	// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+	FetchDependency(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportDependencyWithBody Give the controller a file you downloaded yourself
+	//
+	// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+	ImportDependencyWithBody(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListDoctorFindings The latest finding per check and subject
 	//
@@ -14874,6 +14997,59 @@ func (c *Client) ExtendDebugSession(ctx context.Context, sessionId DebugSessionI
 // Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
 func (c *Client) GetDebugTranscript(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDebugTranscriptRequest(c.Server, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListDependencyStore What the controller keeps for machines without internet
+//
+// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+//
+// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+func (c *Client) ListDependencyStore(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDependencyStoreRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// FetchDependency Download one dependency to the controller and check it
+//
+// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+//
+// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+func (c *Client) FetchDependency(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFetchDependencyRequest(c.Server, dependencyId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ImportDependencyWithBody Give the controller a file you downloaded yourself
+//
+// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+func (c *Client) ImportDependencyWithBody(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportDependencyRequestWithBody(c.Server, dependencyId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -21112,6 +21288,103 @@ func NewGetDebugTranscriptRequest(server string, sessionId DebugSessionId) (*htt
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewListDependencyStoreRequest constructs an http.Request for the ListDependencyStore method
+func NewListDependencyStoreRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/dependencies/store")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewFetchDependencyRequest constructs an http.Request for the FetchDependency method
+func NewFetchDependencyRequest(server string, dependencyId DependencyStoreId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "dependencyId", dependencyId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/dependencies/store/%s/fetch", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewImportDependencyRequestWithBody constructs an http.Request for the ImportDependency method, with any body, and a specified content type
+func NewImportDependencyRequestWithBody(server string, dependencyId DependencyStoreId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "dependencyId", dependencyId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/dependencies/store/%s/file", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -31602,6 +31875,33 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
 	GetDebugTranscriptWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*GetDebugTranscriptResponse, error)
 
+	// ListDependencyStoreWithResponse What the controller keeps for machines without internet
+	//
+	// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+	ListDependencyStoreWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListDependencyStoreResponse, error)
+
+	// FetchDependencyWithResponse Download one dependency to the controller and check it
+	//
+	// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+	FetchDependencyWithResponse(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*FetchDependencyResponse, error)
+
+	// ImportDependencyWithBodyWithResponse Give the controller a file you downloaded yourself
+	//
+	// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+	ImportDependencyWithBodyWithResponse(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportDependencyResponse, error)
+
 	// ListDoctorFindingsWithResponse The latest finding per check and subject
 	//
 	// Returns a wrapper object for the known response body format(s).
@@ -35605,6 +35905,154 @@ func (r GetDebugTranscriptResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetDebugTranscriptResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListDependencyStoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		Items []DependencyStoreEntry `json:"items"`
+	}
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListDependencyStoreResponse) GetJSON200() *struct {
+	Items []DependencyStoreEntry `json:"items"`
+} {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListDependencyStoreResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListDependencyStoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDependencyStoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDependencyStoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListDependencyStoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type FetchDependencyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyStoreEntry
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r FetchDependencyResponse) GetJSON200() *DependencyStoreEntry {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r FetchDependencyResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r FetchDependencyResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r FetchDependencyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FetchDependencyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r FetchDependencyResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ImportDependencyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyStoreEntry
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ImportDependencyResponse) GetJSON200() *DependencyStoreEntry {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ImportDependencyResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ImportDependencyResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportDependencyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportDependencyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ImportDependencyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -46518,6 +46966,51 @@ func (c *ClientWithResponses) GetDebugTranscriptWithResponse(ctx context.Context
 	return ParseGetDebugTranscriptResponse(rsp)
 }
 
+// ListDependencyStoreWithResponse What the controller keeps for machines without internet
+//
+// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+func (c *ClientWithResponses) ListDependencyStoreWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListDependencyStoreResponse, error) {
+	rsp, err := c.ListDependencyStore(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDependencyStoreResponse(rsp)
+}
+
+// FetchDependencyWithResponse Download one dependency to the controller and check it
+//
+// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+func (c *ClientWithResponses) FetchDependencyWithResponse(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*FetchDependencyResponse, error) {
+	rsp, err := c.FetchDependency(ctx, dependencyId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFetchDependencyResponse(rsp)
+}
+
+// ImportDependencyWithBodyWithResponse Give the controller a file you downloaded yourself
+//
+// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+func (c *ClientWithResponses) ImportDependencyWithBodyWithResponse(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportDependencyResponse, error) {
+	rsp, err := c.ImportDependencyWithBody(ctx, dependencyId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportDependencyResponse(rsp)
+}
+
 // ListDoctorFindingsWithResponse The latest finding per check and subject
 //
 // Returns a wrapper object for the known response body format(s).
@@ -51688,6 +52181,107 @@ func ParseGetDebugTranscriptResponse(rsp *http.Response) (*GetDebugTranscriptRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DebugTranscript
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDependencyStoreResponse parses an HTTP response from a ListDependencyStoreWithResponse call
+func ParseListDependencyStoreResponse(rsp *http.Response) (*ListDependencyStoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDependencyStoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Items []DependencyStoreEntry `json:"items"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFetchDependencyResponse parses an HTTP response from a FetchDependencyWithResponse call
+func ParseFetchDependencyResponse(rsp *http.Response) (*FetchDependencyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FetchDependencyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyStoreEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseImportDependencyResponse parses an HTTP response from a ImportDependencyWithResponse call
+func ParseImportDependencyResponse(rsp *http.Response) (*ImportDependencyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportDependencyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyStoreEntry
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}

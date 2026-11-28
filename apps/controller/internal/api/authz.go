@@ -75,6 +75,7 @@ var otherAreaAuth = map[string]string{
 	"exportConfigFile": authAdmin, "planConfig": authAdmin, "applyConfigPlan": authOwner,
 	"checkMachineDependencies": authAdmin, "startMachineDependencyJob": authAdmin, "stopMachineDependencyJob": authAdmin, "undoMachineDependencyJob": authAdmin, "restartMachineForDependencyJob": authAdmin,
 	"listMachineDependencyJobs": authUser, "getMachineDependencyJob": authUser,
+	"listDependencyStore": authUser, "fetchDependency": authAdmin, "importDependency": authAdmin,
 
 	"restoreBackup": authOwner, "removeCrsp": authOwner, "runMachineCommand": authOwner, "removeRunnerLeftovers": authAdmin, "removeRegistration": authAdmin, "startDockerCompact": authAdmin, "updateSettings": authOwner,
 }

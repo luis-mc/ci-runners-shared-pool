@@ -24,6 +24,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/configexport"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/depsetup"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/depstore"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor/checks"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor/wire"
@@ -87,6 +88,8 @@ type controllerDeps struct {
 	AgentInstallers *agentinstallers.Store
 	// Deps runs the dependency setup jobs (CRSP248); nil leaves the routes at 501.
 	Deps *depsetup.Service
+	// DepStore is the controller's own copy of the dependencies (DEP15); nil leaves the routes at 501.
+	DepStore *depstore.Service
 	// Health is the machine health service (OPS83); nil leaves the health routes and checks off.
 	Health *machinehealth.Service
 	// MachineSecrets is the secret source the config export reads (mr.Secrets).
@@ -419,6 +422,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Health = d.Health
 	}
 	c.Options.Packages = d.Packages
+	if d.DepStore != nil {
+		c.Options.DepStore = d.DepStore
+	}
 	if d.Deps != nil {
 		c.Options.Deps = d.Deps
 	}

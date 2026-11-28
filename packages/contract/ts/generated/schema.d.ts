@@ -1017,6 +1017,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dependencies/store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the controller keeps for machines without internet
+         * @description dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+         */
+        get: operations["listDependencyStore"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dependencies/store/{dependencyId}/fetch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Download one dependency to the controller and check it
+         * @description dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+         */
+        post: operations["fetchDependency"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dependencies/store/{dependencyId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Give the controller a file you downloaded yourself
+         * @description dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+         */
+        put: operations["importDependency"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/doctor/registration-fixes": {
         parameters: {
             query?: never;
@@ -6307,6 +6367,31 @@ export interface components {
              */
             ts: number;
         };
+        DependencyStoreEntry: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "installer" | "runner" | "agent";
+            os?: string;
+            arch?: string;
+            version?: string;
+            /** @description The host it is fetched from, in words for the user. */
+            source?: string;
+            /** @enum {string} */
+            state: "ready" | "missing" | "failed" | "not_pinned";
+            /** @description This release lists a SHA-256 for it, so a file can be checked. */
+            pinned: boolean;
+            /** @description The controller has an address to download it from. */
+            can_fetch: boolean;
+            sha256?: string;
+            /** Format: int64 */
+            stored_bytes?: number;
+            /** Format: date-time */
+            fetched_at?: string;
+            /** @enum {string} */
+            origin?: "fetched" | "imported";
+            error?: string;
+        };
         DependencyJob: {
             id: string;
             machine_id: string;
@@ -9344,6 +9429,7 @@ export interface components {
         /** @description The window of the stats, 24h (default) or 7d. */
         StatsWindow: "24h" | "7d";
         MachineId: string;
+        DependencyStoreId: string;
         DependencyJobId: string;
         ChangeId: string;
         JoinCodeId: string;
@@ -10808,6 +10894,79 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["DependencyJob"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    listDependencyStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The dependencies and their state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["DependencyStoreEntry"][];
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    fetchDependency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dependencyId: components["parameters"]["DependencyStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The entry after the fetch. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyStoreEntry"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    importDependency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dependencyId: components["parameters"]["DependencyStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description The entry after the import. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyStoreEntry"];
                 };
             };
             default: components["responses"]["Error"];
