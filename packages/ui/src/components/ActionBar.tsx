@@ -15,8 +15,9 @@ import {
 import { createPortal } from 'react-dom';
 
 /**
- * The place in the main column where the bar is drawn (RES21 T1). `Frame` provides it: the bar is then a direct
- * child of the main column, so it sticks to the window and not to a wrapper that ends above the page foot.
+ * The place where the bar is drawn (RES21 T1). `Frame` provides it right after the main column, as a child of the
+ * frame: the bar sticks to the window and not to a wrapper that ends above the page foot, and a tall header or
+ * banner above the main column never holds it over the key-hint bar (CRSP381).
  * `slot` is null until the frame has mounted. Outside a frame there is no value and the bar draws in place.
  */
 export const ActionBarSlotContext = createContext<{ slot: HTMLElement | null } | null>(

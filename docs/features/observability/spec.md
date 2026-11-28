@@ -28,7 +28,7 @@ code:
   - apps/controller-console/src/live/store.ts
   - apps/controller-console/src/api/hooks.ts
 design_system: [UX-6, UX-13, UX-22, UX-24, UX-38, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---

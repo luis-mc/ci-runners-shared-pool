@@ -256,7 +256,7 @@ body {
   background: var(--ds-color-page);
   border-block-start: var(--ds-border-thin) solid var(--ds-color-border);
 }
-.ds-main > .ds-bar-slot {
+.ds-frame > .ds-bar-slot {
   display: contents;
 }
 .ds-action-bar[data-sticky='false'] {
@@ -279,22 +279,32 @@ body {
   margin-inline-start: auto;
 }
 /* A screen with a bar fills the window, and the bar sits at its foot even when the page is short: the
-   main column is a column that grows, and the bar (drawn in its slot, a direct child of the column) takes the free
-   space above it. */
+   main column grows, and the bar (drawn in its slot right after the main column) sits under it. The bar is a
+   child of the frame, not of the main column, so it sticks against the whole frame: a sticky box never leaves its
+   parent, and a header, menu or banner taller than the window minus the bar and the key-hint bar would otherwise
+   hold it below its place, over the key-hint bar, at the top of the page (UX-71). */
 .ds-frame:has(.ds-action-bar) {
   display: flex;
   flex-direction: column;
   min-block-size: 100dvh;
 }
-.ds-main:has(.ds-action-bar) {
+.ds-frame:has(.ds-action-bar) > .ds-main {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-inline-size: 0;
 }
-.ds-main > .ds-action-bar,
-.ds-main > .ds-bar-slot > .ds-action-bar {
+.ds-main > .ds-action-bar {
   margin-block-start: auto;
+}
+/* In the frame the bar keeps the edges of the main column's content (the wide frame less one gutter each side),
+   and its top meets the main column as before: the frame's gap between its bands is taken back. */
+.ds-frame > .ds-bar-slot > .ds-action-bar {
+  box-sizing: border-box;
+  inline-size: calc(100% - 2 * var(--ds-page-gutter));
+  max-inline-size: calc(var(--ds-frame-wide) - 2 * var(--ds-page-gutter));
+  margin-inline: auto;
+  margin-block-start: calc(-1 * var(--ds-space-4));
 }
 @media (max-width: 599px) {
   .ds-action-bar {
