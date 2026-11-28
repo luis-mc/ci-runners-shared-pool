@@ -94,7 +94,7 @@ describe('Downloads tab (DEP15)', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Import a file' }));
     const input = screen.getByLabelText<HTMLInputElement>('File you downloaded');
     expect(
-      (screen.getByRole('button', { name: 'Import' }) as HTMLButtonElement).disabled,
+      screen.getByRole<HTMLButtonElement>('button', { name: 'Import' }).disabled,
     ).toBe(true);
     fireEvent.change(input, { target: { files: [new File(['123'], 'd.exe')] } });
     fireEvent.click(await screen.findByRole('button', { name: 'Import' }));

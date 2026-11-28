@@ -104,21 +104,11 @@ type Store struct {
 	Fetch Fetcher
 	// AllowURL says an address may be fetched; nil allows https only.
 	AllowURL func(string) bool
-	// Now is the clock; nil means time.Now.
-	Now func() time.Time
-
-	mu     sync.Mutex
-	errs   map[string]string
-	origin map[string]string
+	mu       sync.Mutex
+	errs     map[string]string
+	origin   map[string]string
 	// verified holds the ids whose stored file matched in this process.
 	verified map[string]bool
-}
-
-func (s *Store) now() time.Time {
-	if s.Now != nil {
-		return s.Now().UTC()
-	}
-	return time.Now().UTC()
 }
 
 func (s *Store) path(id string) string { return filepath.Join(s.Dir, id) }

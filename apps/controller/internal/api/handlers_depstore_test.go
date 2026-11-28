@@ -37,7 +37,7 @@ func depStoreMux(t *testing.T, role auth.Role, body []byte, sha string) *http.Se
 }
 
 func depDo(mux *http.ServeMux, method, path string, body []byte) *httptest.ResponseRecorder {
-	req := httptest.NewRequest(method, path, bytes.NewReader(body))
+	req := httptest.NewRequestWithContext(context.Background(), method, path, bytes.NewReader(body))
 	if body != nil {
 		req.Header.Set("Content-Type", "application/octet-stream")
 	}

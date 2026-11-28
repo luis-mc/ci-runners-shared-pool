@@ -163,7 +163,6 @@ function DownloadCard({
         admin && e.pinned ? (
           <Stack>
             <Button
-              kind={e.state === 'ready' ? 'default' : 'primary'}
               busy={fetchNow.busy}
               busyLabel="Downloading"
               disabled={block !== undefined || importing}
@@ -207,7 +206,6 @@ function DownloadCard({
               }
             />
             <Button
-              kind="primary"
               busy={importIt.busy}
               busyLabel="Importing"
               disabled={file === null}

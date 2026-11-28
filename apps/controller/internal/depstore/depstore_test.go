@@ -152,7 +152,7 @@ func TestHandlerServesOnlyReadyFiles(t *testing.T) {
 	h := s.Handler()
 	get := func(path string) *httptest.ResponseRecorder {
 		w := httptest.NewRecorder()
-		h.ServeHTTP(w, httptest.NewRequest(http.MethodGet, path, nil))
+		h.ServeHTTP(w, httptest.NewRequestWithContext(context.Background(), http.MethodGet, path, nil))
 		return w
 	}
 	if w := get(PathPrefix + "a"); w.Code != http.StatusNotFound {
@@ -172,7 +172,7 @@ func TestHandlerServesOnlyReadyFiles(t *testing.T) {
 		}
 	}
 	w2 := httptest.NewRecorder()
-	h.ServeHTTP(w2, httptest.NewRequest(http.MethodPost, PathPrefix+"a", nil))
+	h.ServeHTTP(w2, httptest.NewRequestWithContext(context.Background(), http.MethodPost, PathPrefix+"a", nil))
 	if w2.Code != http.StatusMethodNotAllowed {
 		t.Fatalf("POST: %d", w2.Code)
 	}
