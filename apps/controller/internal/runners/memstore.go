@@ -157,3 +157,16 @@ func (m *MemStore) SetRunnerPool(_ context.Context, id, poolRunnerID string) err
 	m.runners[id] = r
 	return nil
 }
+
+// SetRunnerLabels implements Store.
+func (m *MemStore) SetRunnerLabels(_ context.Context, id string, labels []string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	r, ok := m.runners[id]
+	if !ok {
+		return ErrNotFound
+	}
+	r.Labels = append([]string(nil), labels...)
+	m.runners[id] = r
+	return nil
+}

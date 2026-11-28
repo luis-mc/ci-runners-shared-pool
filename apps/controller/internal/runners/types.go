@@ -211,6 +211,8 @@ type Store interface {
 	// SetRunnerPool makes a runner a hidden registration of a pool runner
 	// (the migration of a repository runner, runners R5.88).
 	SetRunnerPool(ctx context.Context, id, poolRunnerID string) error
+	// SetRunnerLabels replaces the labels of a runner record (a pool rename).
+	SetRunnerLabels(ctx context.Context, id string, labels []string) error
 	// SetRunnerHygiene stores the dependency setting, the cache size and the
 	// unclean reason of a persistent runner (runners R5.90, R5.91).
 	SetRunnerHygiene(ctx context.Context, id string, h Hygiene) error

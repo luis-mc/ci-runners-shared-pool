@@ -246,3 +246,15 @@ type fakeAudit struct{ entries []string }
 func (f *fakeAudit) Audit(_ context.Context, actor, action, machine, subject, detail string) {
 	f.entries = append(f.entries, fmt.Sprintf("%s|%s|%s|%s|%s", actor, action, machine, subject, detail))
 }
+
+func (m *memStore) SetRunnerLabels(_ context.Context, id string, labels []string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	r, ok := m.runners[id]
+	if !ok {
+		return ErrNotFound
+	}
+	r.Labels = append([]string(nil), labels...)
+	m.runners[id] = r
+	return nil
+}

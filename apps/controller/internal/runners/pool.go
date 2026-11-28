@@ -73,7 +73,7 @@ func (s *Service) addPoolRunner(ctx context.Context, a AddSpec, version, actor s
 		return refuse("%v", err)
 	}
 	rec := Record{ID: s.newID("r_"), Name: a.Name, MachineID: a.MachineID, OS: a.OS, Arch: a.Arch, Kind: a.Kind,
-		Backend: a.Backend, Isolation: isolationOf(a), Labels: a.Labels, Route: RouteForLabels(s.PoolName, a.Labels),
+		Backend: a.Backend, Isolation: isolationOf(a), Labels: a.Labels, Route: RouteForLabels(s.poolName(), a.Labels),
 		SizeClass: size, Scope: Scope{Kind: ScopePool}, RunnerVersion: version, State: Idle,
 		Reason: poolIdleReason(a.Kind), Managed: true, CreatedAt: s.now(), KeepDependencies: a.KeepDependencies}
 	if err := s.Store.InsertRunner(ctx, rec); err != nil {
@@ -111,7 +111,7 @@ func (s *Service) addPoolContainerRunner(ctx context.Context, a AddSpec, actor s
 		return err
 	}
 	rec := Record{ID: s.newID("r_"), Name: a.Name, MachineID: a.MachineID, OS: a.OS, Arch: a.Arch, Kind: "ephemeral",
-		Backend: a.Backend, Isolation: string(backend.IsolationContainer), Labels: a.Labels, Route: RouteForLabels(s.PoolName, a.Labels),
+		Backend: a.Backend, Isolation: string(backend.IsolationContainer), Labels: a.Labels, Route: RouteForLabels(s.poolName(), a.Labels),
 		SizeClass: size, Scope: Scope{Kind: ScopePool}, RunnerVersion: pin.Version, State: Idle,
 		Reason: "a container starts for each job of the pool", Managed: true, CreatedAt: s.now()}
 	if err := s.Store.InsertRunner(ctx, rec); err != nil {

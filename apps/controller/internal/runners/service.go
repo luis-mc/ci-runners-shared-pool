@@ -29,6 +29,12 @@ type Service struct {
 	Audit    Auditor
 	// PoolName is the one pool label a runner may carry.
 	PoolName string
+	// PoolNames, when set, gives the names that mean the pool now, the one in
+	// force first (a rename keeps the old one until it ends). It wins over PoolName.
+	PoolNames func() []string
+	// Labeler adds and removes labels of a registered persistent runner (the
+	// pool rename). Nil means such a runner cannot be relabelled.
+	Labeler github.RunnerLabeler
 	// SharedToolsRoot is the folder on a machine that holds the shared tool
 	// folders of each repository (caches R5.57). Empty takes the default of
 	// the machine's OS (DefaultSharedToolsRoot).
@@ -335,15 +341,15 @@ func (s *Service) addSpecs(ctx context.Context, m Machine, req AddRequest) ([]Ad
 		verified[v] = true
 	}
 	want := append([]string{"self-hosted", req.OS, m.Arch}, req.Labels...)
-	if (req.PoolLevel || crossesToLinuxContainers(m, req.OS)) && s.PoolName != "" {
+	if (req.PoolLevel || crossesToLinuxContainers(m, req.OS)) && s.poolName() != "" {
 		// A container runner on a Windows machine takes the pool's jobs
 		// (R5.47), so it carries the pool label.
-		want = append(want, s.PoolName)
+		want = append(want, s.poolName())
 	}
 	if req.Kind == "ephemeral" {
 		want = append(want, EphemeralLabel)
 	}
-	labels, err := ValidateLabels(want, s.PoolName, verified)
+	labels, err := ValidateLabels(want, s.poolName(), verified)
 	if err != nil {
 		return nil, refuse("%v", err)
 	}
@@ -702,7 +708,7 @@ func (s *Service) addRunner(ctx context.Context, a AddSpec, actor string) error 
 	id := s.newID("r_")
 	rec := Record{ID: id, Name: a.Name, MachineID: a.MachineID, OS: a.OS, Arch: a.Arch, Kind: a.Kind,
 		Backend: a.Backend, Isolation: isolationOf(a), Labels: a.Labels,
-		Route: RouteForLabels(s.PoolName, a.Labels), SizeClass: size, Scope: a.Scope,
+		Route: RouteForLabels(s.poolName(), a.Labels), SizeClass: size, Scope: a.Scope,
 		RunnerVersion: pin.Version, State: Creating, Managed: true, CreatedAt: s.now(), PoolRunnerID: a.PoolRunnerID,
 		KeepDependencies: a.KeepDependencies}
 	if err := s.Store.InsertRunner(ctx, rec); err != nil {
@@ -983,7 +989,7 @@ func (s *Service) ReportFound(ctx context.Context, machineID string, found []bac
 		}
 		rec := Record{ID: s.newID("r_"), Name: f.Name, MachineID: machineID, OS: m.OS, Arch: m.Arch, Kind: "persistent",
 			Backend: string(backend.Persistent), Isolation: string(backend.IsolationPersistent), Labels: f.Labels,
-			Route: RouteForLabels(s.PoolName, f.Labels), SizeClass: DefaultSize, Scope: Scope{Kind: "repository"}, RunnerVersion: f.RunnerVersion, State: state, Managed: f.Managed,
+			Route: RouteForLabels(s.poolName(), f.Labels), SizeClass: DefaultSize, Scope: Scope{Kind: "repository"}, RunnerVersion: f.RunnerVersion, State: state, Managed: f.Managed,
 			ServiceName: f.ServiceName, Account: f.Account, Folder: f.Folder, CreatedAt: s.now()}
 		if err := s.Store.InsertRunner(ctx, rec); err != nil {
 			return err
@@ -1105,4 +1111,30 @@ func (s *Service) sharedTools(a AddSpec, _ Target) runnercache.SharedTools {
 		sep, group = `\`, RunnersGroup // every Windows runner account is in it (runners R5.14)
 	}
 	return runnercache.SharedTools{Root: strings.TrimRight(root, `/\`) + sep + id, Group: group}
+}
+
+// poolName is the pool name in force: the live one when PoolNames is set (the
+// console can rename the pool without a restart), else the fixed PoolName.
+func (s *Service) poolName() string {
+	if s.PoolNames != nil {
+		if n := s.PoolNames(); len(n) > 0 {
+			return n[0]
+		}
+	}
+	return s.PoolName
+}
+
+// poolFor is the pool name a job's labels use: while a rename runs the old name
+// still means the pool, so a job queued with it is still served.
+func (s *Service) poolFor(labels []string) string {
+	if s.PoolNames != nil {
+		for _, n := range s.PoolNames() {
+			for _, l := range labels {
+				if strings.EqualFold(strings.TrimSpace(l), n) {
+					return n
+				}
+			}
+		}
+	}
+	return s.poolName()
 }

@@ -121,3 +121,11 @@ func (d *DurableStore) GetPlan(ctx context.Context, id string) (Plan, error) {
 	}
 	return p, nil
 }
+
+// SetRunnerLabels implements Store.
+func (d *DurableStore) SetRunnerLabels(ctx context.Context, id string, labels []string) error {
+	if err := d.MemStore.SetRunnerLabels(ctx, id, labels); err != nil {
+		return err
+	}
+	return d.save(ctx, id)
+}

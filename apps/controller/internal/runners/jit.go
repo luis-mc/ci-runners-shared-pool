@@ -66,7 +66,7 @@ func (s *Service) ClearFailedStarts(ctx context.Context, jobKey string) error {
 func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string) (Record, error) {
 	// Every ephemeral runner carries the ephemeral label (R5.92).
 	j.Labels = append(append([]string(nil), j.Labels...), EphemeralLabel)
-	labels, err := ValidateLabels(j.Labels, s.PoolName, map[string]bool{"docker": true})
+	labels, err := ValidateLabels(j.Labels, s.poolFor(j.Labels), map[string]bool{"docker": true})
 	if err != nil {
 		return Record{}, err
 	}
@@ -96,7 +96,7 @@ func (s *Service) StartJobRunner(ctx context.Context, j JobRunner, actor string)
 	id := s.newID("r_")
 	rec := Record{ID: id, Name: j.Name, MachineID: j.MachineID, OS: j.OS, Arch: j.Arch, Kind: "ephemeral",
 		Backend: j.Backend, Isolation: string(iso), Labels: j.Labels,
-		Route: RouteForLabels(s.PoolName, j.Labels), SizeClass: DefaultSize, Scope: j.Scope,
+		Route: RouteForLabels(s.poolFor(j.Labels), j.Labels), SizeClass: DefaultSize, Scope: j.Scope,
 		RunnerVersion: pin.Version, State: Creating, Managed: true, CreatedAt: s.now()}
 	if err := s.Store.InsertRunner(ctx, rec); err != nil {
 		return Record{}, err
