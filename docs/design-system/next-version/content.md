@@ -1639,6 +1639,9 @@ The words of install, update and remove (UX-79 to UX-83, components 70 to 74). T
 |---|---|
 | Look for updates | The tray menu item and the Updates card button. It only looks. |
 | Version {version} is ready. | Title when a newer version is found. |
+| From, Until, Any time, Choose a {name} time, Clear {name} | The two ends of the update window on the Updates card. An end is Any time until the user chooses a time with the time picker (component 36); Clear goes back to Any time. |
+| Choose an Until time too, or clear both. | The Updates card window with From set and Until empty; the From version says Choose a From time too, or clear both. Never the help sentence. |
+| Leave both on Any time to allow any time. | The help line of the update window. |
 | Update to {version}, Not now | The primary and the secondary on Review. |
 | Version {version} is required and installs now. | Title when the update is required; there is no Not now. |
 | Downloading, Checking the download, Installing, Testing | The step names, in this order. |

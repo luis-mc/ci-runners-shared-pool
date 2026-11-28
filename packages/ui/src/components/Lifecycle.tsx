@@ -7,7 +7,8 @@ import { useState, type ReactNode } from 'react';
 import { lw } from '../lifecycleWords';
 import { Button, LinkButton, TextLink } from './Button';
 import { Dialog } from './Dialog';
-import { ChoiceField, TextField } from './Fields';
+import { TimePicker } from '../pickers/TimePicker';
+import { ChoiceField } from './Fields';
 import { Facts } from './Card';
 import { Stack, Strong, Text } from './layout';
 import { Message } from './Message';
@@ -183,8 +184,6 @@ const RUNNING_STEPS: readonly UpdateState[] = [
   'testing',
 ];
 
-const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
-
 const STATE_KIND: Record<UpdateState, StatusKind> = {
   idle: 'ok',
   checking: 'running',
@@ -238,16 +237,47 @@ export function updateStateLine(
   }
 }
 
+/** One end of the update window: Any time, or a time from the time picker with a way back to Any time (UX-56). */
+function WindowEnd(p: {
+  label: string;
+  value: string;
+  locked: boolean;
+  onChange: (value: string) => void;
+}) {
+  if (p.value === '' || p.locked)
+    return (
+      <Stack gap="tight">
+        <Text>
+          <Strong>{p.label}</Strong> {p.value === '' ? lw('policy.window_none') : p.value}
+        </Text>
+        {p.locked ? null : (
+          <Button onPress={() => p.onChange('00:00')}>
+            {lw('policy.window_choose', { name: p.label })}
+          </Button>
+        )}
+      </Stack>
+    );
+  return (
+    <Stack gap="tight">
+      <TimePicker label={p.label} value={p.value} onChange={p.onChange} units="hm" />
+      <Button onPress={() => p.onChange('')}>
+        {lw('policy.window_clear', { name: p.label })}
+      </Button>
+    </Stack>
+  );
+}
+
 /** The Updates card: two policies, an optional time window, Check, and the state with its retry text. */
 export function UpdatesCard(p: UpdatesCardProps) {
   const locked = Boolean(p.lockedBy);
   const [start, setStart] = useState(p.window?.start ?? '');
   const [end, setEnd] = useState(p.window?.end ?? '');
-  const bad = (v: string) =>
-    v !== '' && !TIME.test(v) ? lw('policy.window_help') : undefined;
+  // One end set and the other empty is not a window: say which one is missing, never the help text.
+  const missing =
+    start !== '' && end === '' ? 'to' : start === '' && end !== '' ? 'from' : null;
   const commit = (s: string, e: string) => {
     if (s === '' && e === '') p.onWindow?.(null);
-    else if (TIME.test(s) && TIME.test(e)) p.onWindow?.({ start: s, end: e });
+    else if (s !== '' && e !== '') p.onWindow?.({ start: s, end: e });
   };
   return (
     <div
@@ -332,33 +362,35 @@ export function UpdatesCard(p: UpdatesCardProps) {
           />
           {p.policy === 'automatic_when_idle' ? (
             <Stack gap="tight">
-              <TextField
+              <WindowEnd
                 label={lw('policy.window_from')}
                 value={start}
-                optional
-                mono
-                width="short"
-                error={bad(start)}
-                readOnly={locked}
+                locked={locked}
                 onChange={(v) => {
                   setStart(v);
                   commit(v, end);
                 }}
               />
-              <TextField
+              <WindowEnd
                 label={lw('policy.window_to')}
                 value={end}
-                optional
-                mono
-                width="short"
-                help={lw('policy.window_help')}
-                error={bad(end)}
-                readOnly={locked}
+                locked={locked}
                 onChange={(v) => {
                   setEnd(v);
                   commit(start, v);
                 }}
               />
+              {missing ? (
+                <Message tone="problem">
+                  {lw(
+                    missing === 'to'
+                      ? 'policy.window_need_to'
+                      : 'policy.window_need_from',
+                  )}
+                </Message>
+              ) : (
+                <Text>{lw('policy.window_help')}</Text>
+              )}
             </Stack>
           ) : null}
         </Stack>

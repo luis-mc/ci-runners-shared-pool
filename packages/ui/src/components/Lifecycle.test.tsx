@@ -174,12 +174,35 @@ describe('UpdatesCard states', () => {
     );
     fireEvent.click(screen.getByRole('radio', { name: /Ask first/ }));
     expect(onPolicy).toHaveBeenCalledWith('ask_first');
-    fireEvent.change(screen.getByLabelText(/From/), { target: { value: '01:00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Choose a From time' }));
     expect(onWindow).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText(/Until/), { target: { value: '05:00' } });
-    expect(onWindow).toHaveBeenCalledWith({ start: '01:00', end: '05:00' });
+    expect(screen.getByText('Choose an Until time too, or clear both.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose a Until time' }));
+    expect(onWindow).toHaveBeenCalledWith({ start: '00:00', end: '00:00' });
+    const hours = screen.getAllByRole('spinbutton', { name: 'Hours' });
+    fireEvent.keyDown(hours[1] as HTMLElement, { key: 'ArrowUp' });
+    expect(onWindow).toHaveBeenLastCalledWith({ start: '00:00', end: '01:00' });
+    fireEvent.click(screen.getByRole('button', { name: 'Clear From' }));
+    expect(screen.getByText('Choose a From time too, or clear both.')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear Until' }));
+    expect(onWindow).toHaveBeenLastCalledWith(null);
     fireEvent.click(screen.getByRole('button', { name: 'Look for updates' }));
     expect(onCheck).toHaveBeenCalled();
+  });
+  it('shows a locked window as text, with no picker and no button', () => {
+    wrap(
+      <UpdatesCard
+        policy="automatic_when_idle"
+        state="idle"
+        current="1.4.0"
+        lockedBy="IT"
+        window={{ start: '01:00', end: '05:00' }}
+      />,
+    );
+    expect(screen.queryByRole('spinbutton')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Clear|Choose a/ })).toBeNull();
+    expect(screen.getByText('01:00')).toBeTruthy();
+    expect(screen.getByText('05:00')).toBeTruthy();
   });
   it('locks the policy when an admin set it', () => {
     wrap(<UpdatesCard policy="ask_first" state="idle" current="1.4.0" lockedBy="IT" />);
