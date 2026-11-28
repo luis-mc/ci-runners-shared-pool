@@ -69,6 +69,10 @@ type Service struct {
 	// default is a goroutine; tests run it inline.
 	Background func(func())
 
+	// facts is what GitHub's runner lists and the agents' service scans said at
+	// the last refresh; ListView answers from it (CRSP389).
+	facts factCache
+
 	// OnProgress, when set, is called with the plan after each step and when
 	// the plan ends or is stopped (the plan.progress event).
 	OnProgress func(Plan)

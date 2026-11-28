@@ -32,6 +32,23 @@ const empty = () =>
     .on('GET', '/api/v1/runners', { items: [] })
     .on('GET', '/api/v1/github/repositories', repos([]));
 
+describe('Setup > Summary loads each card on its own (CRSP389)', () => {
+  it('shows Machines and Repositories while the runner list is still loading', async () => {
+    let release: (v: unknown) => void = () => undefined;
+    const held = new Promise((r) => (release = r));
+    const api = signedIn()
+      .on('GET', '/api/v1/runners', () => held)
+      .on('GET', '/api/v1/github/repositories', repos([repository({ pool_on: true })]));
+    renderApp(api, '/setup');
+    expect(await screen.findByText('1 repository uses the pool.')).toBeTruthy();
+    // The Runners card alone says it is loading, with no count yet.
+    expect(screen.getAllByText('Loading the pool figures.')).toHaveLength(1);
+    expect(screen.getByText('Open Machines')).toBeTruthy();
+    release({ items: [runner()] });
+    await waitFor(() => expect(screen.queryByText('Loading the pool figures.')).toBeNull());
+  });
+});
+
 describe('the seven areas and the Setup tabs (LOOK56)', () => {
   it.each([
     ['/setup/machines', 'Machines'],

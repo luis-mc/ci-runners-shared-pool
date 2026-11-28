@@ -305,6 +305,10 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		},
 	}
 
+	// The runner list answers from the facts this loop keeps of GitHub's runner lists and the
+	// agents' service lists; a request never waits on either (CRSP389).
+	go runnerSvc.FactsLoop(ctx)
+
 	// Automatic runner updates follow the product's automatic-update setting
 	// (runners R5.38, operations R5.15). The Updater sends the bundle over the
 	// agent link; an agent that does not report `runner_swap` answers with a

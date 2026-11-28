@@ -1722,7 +1722,7 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 
 | Where | Words |
 |---|---|
-| Summary, cards | Machines, Runners, Repositories; each has a link: Open Machines, Open Runners, Open Pool setup |
+| Summary, cards | Machines, Runners, Repositories; each has a link: Open Machines, Open Runners, Open Pool setup; a card still waiting for its data says Loading the pool figures. |
 | Summary, Machines card | {n} machines, {cpu} CPU and {gib} GiB in the pool. (`pool size not set.` until a machine has a size) |
 | Summary, Runners card | {n} runners: {p} persistent, {e} ephemeral. |
 | Summary, Repositories card | {n} repositories use the pool. / No repository uses the pool yet. |
