@@ -245,11 +245,6 @@ func listed(sums []byte) []sumLine {
 	return out
 }
 
-// nativeRe reads the native agent package names (CRSP348): msi for Windows, pkg for macOS, deb for Linux. They are
-// release assets next to the archives; the controller still hands out the archives (ParseName), so this reads
-// them only to say what a release holds.
-var nativeRe = regexp.MustCompile(`^CrspAgent-[0-9A-Za-z][0-9A-Za-z._+~-]*-(win|linux|macos)-(x64|arm64)\.(msi|pkg|deb)$`)
-
 // NativeFormat is the native package format of an OS: msi, pkg or deb.
 var NativeFormat = map[string]string{"win": "msi", "macos": "pkg", "linux": "deb"}
 
