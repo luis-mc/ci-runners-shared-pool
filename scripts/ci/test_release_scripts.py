@@ -218,9 +218,25 @@ class ReleaseNotes(unittest.TestCase):
         with tempfile.TemporaryDirectory() as d:
             self.assertEqual(self.run_notes(d), "")
 
+    def test_max_chars_keeps_major_notes_and_counts_the_rest(self):
+        with tempfile.TemporaryDirectory() as d:
+            notes = {"docs/features/x/changes/M1.md": "---\nchange: major\ntask: M1\n---\nBig change.\n"}
+            for i in range(50):
+                notes["docs/features/x/changes/N%02d.md" % i] = "---\nchange: minor\ntask: N%02d\n---\n%s\n" % (i, "word " * 40)
+            self.make(d, notes)
+            out = self.run_notes(d, "--max-chars", "2000")
+            self.assertLessEqual(len(out), 2000)
+            self.assertIn("(M1)", out)
+            self.assertRegex(out, r"\n\d+ more change notes did not fit here")
+            full = self.run_notes(d)
+            self.assertNotIn("did not fit", full)
+
     def test_release_workflow_uses_the_change_notes(self):
         text = open(WORKFLOW).read()
         self.assertIn("python3 scripts/ci/release_notes.py", text)
+        # GitHub refuses notes over 125,000 characters (v0.1.33 failed with HTTP 422).
+        self.assertNotRegex(text, r"release_notes\.py;")
+        self.assertIn("release_notes.py --max-chars", text)
 
 
 class AgentInstallers(unittest.TestCase):

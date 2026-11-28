@@ -2,12 +2,14 @@
 """CRSP274: release notes from the change notes (DOCSPEC: docs/features/<feature>/changes/<task>.md and
 docs/<area>/changes/<doc>/<task>.md). A change note is a file with a front matter (change, task) and one text.
 
-  release_notes.py [--root .] [--release N] [--out FILE]
+  release_notes.py [--root .] [--release N] [--max-chars N] [--out FILE]
 
 Prints "## What's new" with one bullet per change note, grouped by document, major changes first. The notes that are
 still in the tree are the ones the release fold has not written into a version table yet, so they are the notes of
 the release being cut. --release N keeps a note unless the project record (docs/project/registry.json) puts its task
 in another release (the same rule as docs_fold.py). Prints nothing when there is no note.
+--max-chars N keeps the notes within N characters: GitHub refuses a release whose notes pass 125,000 (HTTP 422).
+Major notes come first; the notes that do not fit are counted on a last line that says where to read them.
 """
 import argparse
 import json
@@ -72,9 +74,9 @@ def collect(root):
     return notes
 
 
-def build(root, release=None):
+def build(root, release=None, max_chars=None):
     known = task_releases(root) if release else None
-    groups = {}
+    notes = []
     for path, doc in collect(root):
         meta, text = front(path.read_text(encoding="utf-8"))
         if not text:
@@ -82,16 +84,30 @@ def build(root, release=None):
         task = meta.get("task", path.stem)
         if release and known is not None and known.get(task) not in (None, release):
             continue
-        groups.setdefault(title_of(doc), []).append((ORDER.get(meta.get("change", "minor"), 1), task, " ".join(text.split())))
-    if not groups:
+        notes.append((ORDER.get(meta.get("change", "minor"), 1), title_of(doc), task, " ".join(text.split())))
+    if not notes:
         return ""
-    lines = ["## What's new", ""]
+    head = ["## What's new", ""]
+    budget = None if max_chars is None else max_chars - 200  # room for the last line
+    used = sum(len(x) + 1 for x in head)
+    groups, left = {}, 0
+    for order, title, task, text in sorted(notes):
+        line = "- %s (%s)" % (text, task)
+        cost = len(line) + 1 + (0 if title in groups else len(title) + 6)
+        if budget is not None and used + cost > budget:
+            left += 1
+            continue
+        used += cost
+        groups.setdefault(title, []).append((order, task, line))
+    lines = list(head)
     for title in sorted(groups):
         lines.append("**%s**" % title)
         lines.append("")
-        for _, task, text in sorted(groups[title]):
-            lines.append("- %s (%s)" % (text, task))
+        for _, _, line in sorted(groups[title]):
+            lines.append(line)
         lines.append("")
+    if left:
+        lines.append("%d more change notes did not fit here; read them in docs/features/*/changes in this tag." % left)
     return "\n".join(lines).rstrip() + "\n"
 
 
@@ -99,9 +115,10 @@ def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--root", default=".")
     ap.add_argument("--release", type=int)
+    ap.add_argument("--max-chars", type=int)
     ap.add_argument("--out")
     a = ap.parse_args(argv)
-    text = build(Path(a.root), a.release)
+    text = build(Path(a.root), a.release, a.max_chars)
     if a.out:
         Path(a.out).write_text(text, encoding="utf-8")
     else:
