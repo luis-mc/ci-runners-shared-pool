@@ -83,8 +83,6 @@ export function UpdatesSettings() {
       >
         {(s) => (
           <UpdatesCard
-            // A new window or policy from the server is a new card, so the window fields restart from it.
-            key={`${s.policy}|${s.window?.start ?? ''}|${s.window?.end ?? ''}`}
             policy={s.policy}
             window={s.window}
             state={s.state}

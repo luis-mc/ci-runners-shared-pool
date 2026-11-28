@@ -3,7 +3,7 @@
 // shared parts (Pane, Button, Dialog, Status, Progress, Message), so they keep crsp's tokens and look.
 // A part never holds a word of its own (LC-22): every word comes from the lifecycle words table. A part never
 // writes a class or a style (LC-23). The page passes data only.
-import { useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { lw } from '../lifecycleWords';
 import { Button, LinkButton, TextLink } from './Button';
 import { Dialog } from './Dialog';
@@ -272,12 +272,39 @@ export function UpdatesCard(p: UpdatesCardProps) {
   const locked = Boolean(p.lockedBy);
   const [start, setStart] = useState(p.window?.start ?? '');
   const [end, setEnd] = useState(p.window?.end ?? '');
+  // The saved window comes back after each save. The card stays mounted while saving, so the
+  // time field being typed in keeps its focus; a value this card sent is an echo of an earlier
+  // save and is not taken back, or it would undo the keys pressed since. Any other value is a
+  // change made elsewhere and is shown.
+  const serverStart = p.window?.start ?? '';
+  const serverEnd = p.window?.end ?? '';
+  const latest = useRef(`${serverStart}|${serverEnd}`);
+  const echoes = useRef(new Set<string>([latest.current]));
+  useEffect(() => {
+    const got = `${serverStart}|${serverEnd}`;
+    if (got === latest.current) {
+      echoes.current = new Set([got]);
+      return;
+    }
+    if (echoes.current.has(got)) return;
+    latest.current = got;
+    echoes.current = new Set([got]);
+    setStart(serverStart);
+    setEnd(serverEnd);
+  }, [serverStart, serverEnd]);
   // One end set and the other empty is not a window: say which one is missing, never the help text.
   const missing =
     start !== '' && end === '' ? 'to' : start === '' && end !== '' ? 'from' : null;
   const commit = (s: string, e: string) => {
-    if (s === '' && e === '') p.onWindow?.(null);
-    else if (s !== '' && e !== '') p.onWindow?.({ start: s, end: e });
+    if (s === '' && e === '') {
+      latest.current = '|';
+      echoes.current.add('|');
+      p.onWindow?.(null);
+    } else if (s !== '' && e !== '') {
+      latest.current = `${s}|${e}`;
+      echoes.current.add(latest.current);
+      p.onWindow?.({ start: s, end: e });
+    }
   };
   return (
     <div

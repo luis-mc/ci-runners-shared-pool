@@ -189,6 +189,33 @@ describe('UpdatesCard states', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Look for updates' }));
     expect(onCheck).toHaveBeenCalled();
   });
+  it('keeps the keys pressed while an earlier save comes back, and shows a change made elsewhere', () => {
+    const onWindow = vi.fn();
+    const card = (window: { start: string; end: string }) => (
+      <MemoryRouter>
+        <UpdatesCard
+          policy="automatic_when_idle"
+          state="idle"
+          current="1.4.0"
+          window={window}
+          onWindow={onWindow}
+        />
+      </MemoryRouter>
+    );
+    const { rerender } = render(card({ start: '01:00', end: '01:00' }));
+    const until = () => screen.getAllByRole('spinbutton', { name: 'Hours' })[1] as HTMLElement;
+    until().focus();
+    fireEvent.keyDown(until(), { key: 'ArrowUp' });
+    fireEvent.keyDown(until(), { key: 'ArrowUp' });
+    expect(onWindow).toHaveBeenLastCalledWith({ start: '01:00', end: '03:00' });
+    // The save of 02:00 comes back after 03:00 was pressed: an echo, not taken back.
+    rerender(card({ start: '01:00', end: '02:00' }));
+    expect(until()).toBe(document.activeElement);
+    expect(until().getAttribute('aria-valuenow')).toBe('3');
+    // A value this card never sent is a change made elsewhere: it is shown.
+    rerender(card({ start: '06:00', end: '07:00' }));
+    expect(until().getAttribute('aria-valuenow')).toBe('7');
+  });
   it('shows a locked window as text, with no picker and no button', () => {
     wrap(
       <UpdatesCard
