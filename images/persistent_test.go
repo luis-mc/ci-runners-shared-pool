@@ -754,3 +754,44 @@ func TestAddRunnerThatFailsOnASetUpFolderLeavesItListedAsLost(t *testing.T) {
 		t.Fatalf("list.sh: %v %q", lerr, b)
 	}
 }
+
+// OPS97: the container user has no passwd entry and a read-only root, so HOME
+// would be "/". The supervisor gives each runner a HOME and XDG folders under
+// its own dependency folder, and a runners.d env file can still override them.
+func TestSupervisorGivesEachRunnerAWritableHome(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("the pool container is Linux")
+	}
+	s := newSup(t)
+	run := filepath.Join(s.state, "r1", "run.sh")
+	body := "#!/bin/sh\n" +
+		"mkdir -p \"$HOME/.cache\" && : >\"$HOME/.cache/probe\" || exit 1\n" +
+		"mkdir -p \"$XDG_CACHE_HOME/x\" || exit 1\n" +
+		"printf '%s\\n%s\\n%s\\n%s\\n%s\\n' \"$HOME\" \"$XDG_CACHE_HOME\" \"$XDG_CONFIG_HOME\" \"$XDG_DATA_HOME\" \"$COREPACK_HOME\" >\"$CRSP_RUNNER_DIR/home.out\"\n"
+	if err := os.WriteFile(run, []byte(body), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	s.tick()
+	out := filepath.Join(s.state, "r1", "home.out")
+	var got []byte
+	for i := 0; i < 100; i++ {
+		var err error
+		if got, err = os.ReadFile(out); err == nil {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	want := []string{"home", "cache", "config", "share", "corepack"}
+	lines := strings.Split(strings.TrimSpace(string(got)), "\n")
+	if len(lines) != len(want) {
+		t.Fatalf("the runner did not write its environment (a write under $HOME failed?): %q", got)
+	}
+	for i, w := range want {
+		if exp := filepath.Join(s.deps, "r1", w); lines[i] != exp {
+			t.Errorf("%s: got %q, want %q", w, lines[i], exp)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(s.deps, "r1", "home", ".cache", "probe")); err != nil {
+		t.Errorf("a write to $HOME/.cache did not land in the runner's deps folder: %v", err)
+	}
+}

@@ -38,9 +38,14 @@ start_runner() {
   dir=$STATE/$n
   [ -x "$dir/run.sh" ] || return 1
   mkdir -p "$DEPS/$n" "/tmp/crsp-run-$n" "$dir/_work/_temp"
+  # the container user has no passwd entry and a read-only root, so HOME would be
+  # "/": every tool that writes under $HOME or XDG fails. Each runner gets its own.
+  mkdir -p "$DEPS/$n/home" "$DEPS/$n/cache" "$DEPS/$n/config" "$DEPS/$n/share" "$DEPS/$n/corepack"
   (
     cd "$dir" || exit 1
     export CRSP_RUNNER_DIR=$dir CRSP_STATE_DIR=$STATE CRSP_DEPS=$DEPS/$n
+    export HOME=$DEPS/$n/home XDG_CACHE_HOME=$DEPS/$n/cache XDG_CONFIG_HOME=$DEPS/$n/config
+    export XDG_DATA_HOME=$DEPS/$n/share COREPACK_HOME=$DEPS/$n/corepack
     export TMPDIR=/tmp/crsp-run-$n
     export RUNNER_TOOL_CACHE=$DEPS/$n/tools AGENT_TOOLSDIRECTORY=$DEPS/$n/tools CI_TOOLS_DIR=$DEPS/$n/tools
     export npm_config_cache=$DEPS/$n/npm npm_config_store_dir=$DEPS/$n/pnpm-store
