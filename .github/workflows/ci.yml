@@ -1120,7 +1120,19 @@ jobs:
   carry-ok:
     name: carry-ok
     needs:
-      [decide, carry, lane-records, lint, types, go-race, web-tests, test-os, build, image, e2e-shards]
+      [
+        decide,
+        carry,
+        lane-records,
+        lint,
+        types,
+        go-race,
+        web-tests,
+        test-os,
+        build,
+        image,
+        e2e-shards,
+      ]
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
