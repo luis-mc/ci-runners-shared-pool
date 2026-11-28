@@ -56,7 +56,7 @@ export const LIFECYCLE_WORDS = {
   'policy.window_to': 'Until',
   'policy.window_none': 'Any time',
   'policy.window_help': 'Leave both on Any time to allow any time.',
-  'policy.window_choose': 'Choose a {name} time',
+  'policy.window_choose': 'Choose the {name} time',
   'policy.window_clear': 'Clear {name}',
   'policy.window_need_to': 'Choose an Until time too, or clear both.',
   'policy.window_need_from': 'Choose a From time too, or clear both.',

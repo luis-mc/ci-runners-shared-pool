@@ -174,10 +174,10 @@ describe('UpdatesCard states', () => {
     );
     fireEvent.click(screen.getByRole('radio', { name: /Ask first/ }));
     expect(onPolicy).toHaveBeenCalledWith('ask_first');
-    fireEvent.click(screen.getByRole('button', { name: 'Choose a From time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Choose the From time' }));
     expect(onWindow).not.toHaveBeenCalled();
     expect(screen.getByText('Choose an Until time too, or clear both.')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Choose a Until time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Choose the Until time' }));
     expect(onWindow).toHaveBeenCalledWith({ start: '00:00', end: '00:00' });
     const hours = screen.getAllByRole('spinbutton', { name: 'Hours' });
     fireEvent.keyDown(hours[1] as HTMLElement, { key: 'ArrowUp' });

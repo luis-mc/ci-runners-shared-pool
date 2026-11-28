@@ -1908,9 +1908,9 @@ legend > .ds-field__changed {
   min-inline-size: 0;
 }
 .ds-file__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* a long file name wraps; text is never hidden (layout judge: clipped-text) */
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
   font-weight: var(--ds-weight-semibold);
 }
 .ds-file__size {

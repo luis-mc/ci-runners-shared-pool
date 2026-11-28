@@ -80,9 +80,9 @@ describe('Settings > Updates (lifecycle)', () => {
   it('saves a time window once both times are right', async () => {
     const a = api();
     renderApp(a, '/settings/updates');
-    fireEvent.click(await screen.findByRole('button', { name: 'Choose a From time' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Choose the From time' }));
     expect(a.count('POST', '/api/v1/update/policy')).toBe(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Choose a Until time' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Choose the Until time' }));
     const hours = screen.getAllByRole('spinbutton', { name: 'Hours' });
     fireEvent.keyDown(hours[0] as HTMLElement, { key: 'ArrowUp' });
     fireEvent.keyDown(hours[1] as HTMLElement, { key: 'ArrowUp' });
