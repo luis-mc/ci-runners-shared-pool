@@ -17,7 +17,7 @@ func writeDiag(t *testing.T, folder, name, body string) {
 	}
 }
 
-// CRSP382, runners R5.140: the listener's own words say the registration is gone.
+// CRSP382, runners R5.152: the listener's own words say the registration is gone.
 func TestIsRegistrationLost(t *testing.T) {
 	for text, want := range map[string]bool{
 		"VssOAuthTokenRequestException: Registration was not found or is not medium trust":                           true,

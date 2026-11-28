@@ -417,6 +417,63 @@ describe('Runners list', () => {
     );
   });
 
+  // runners R5.141: a runner GitHub does not list is not idle, shows why, and offers Register again.
+  it('shows a runner whose registration is lost as not registered with the reason and a Register again button (R5.141)', async () => {
+    const api = signedIn()
+      .on('GET', '/api/v1/runners', {
+        items: [
+          runner({
+            id: 'r7',
+            name: 'gameroompc-pool-1-r1',
+            state: 'not_registered',
+            managed: true,
+            can_reregister: true,
+            reason: 'GitHub deleted the registration of this runner',
+          }),
+          runner({
+            id: 'r8',
+            name: 'gameroompc-pool-1-r2',
+            state: 'idle',
+            managed: true,
+            reason: 'registration lost, registered again',
+          }),
+        ],
+      })
+      .on('POST', '/api/v1/runners/:id/reregister', runner({ id: 'r7' }));
+    renderApp(api, '/setup/runners');
+    await screen.findByRole('table', { name: /^Runners on/ });
+    expect(screen.getByText('not registered')).toBeTruthy();
+    expect(screen.queryAllByRole('button', { name: 'Register again' })).toHaveLength(1);
+    expect(api.count('POST', '/api/v1/runners/r7/reregister')).toBe(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Register again' }));
+    await waitFor(() =>
+      expect(api.count('POST', '/api/v1/runners/r7/reregister')).toBe(1),
+    );
+  });
+
+  it('says why a Register again press failed (R5.141)', async () => {
+    const api = signedIn()
+      .on('GET', '/api/v1/runners', {
+        items: [
+          runner({
+            id: 'r7',
+            name: 'gameroompc-pool-1-r1',
+            state: 'failed',
+            managed: true,
+            can_reregister: true,
+            reason: 'registration lost, could not register again: config.sh exited 1',
+          }),
+        ],
+      })
+      .on('POST', '/api/v1/runners/:id/reregister', () =>
+        apiError(409, 'conflict', 'GitHub lists runner gameroompc-pool-1-r1'),
+      );
+    renderApp(api, '/setup/runners');
+    await screen.findByRole('table', { name: /^Runners on/ });
+    fireEvent.click(screen.getByRole('button', { name: 'Register again' }));
+    await screen.findByText(/Could not register again\./);
+  });
+
   it('keeps a viewer from adding or deleting, and says why', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/runners', { items: [runner()] }),

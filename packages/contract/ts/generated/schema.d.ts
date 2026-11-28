@@ -1817,6 +1817,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/runners/{runnerId}/reregister": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Register a runner again when GitHub deleted its registration
+         * @description runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
+         */
+        post: operations["reregisterRunner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/runners/{runnerId}/registration": {
         parameters: {
             query?: never;
@@ -6436,6 +6456,8 @@ export interface components {
             machine_name: string;
             /** @description Why the runner is in a state that is not idle or busy (UX-19). Absent when there is nothing to say. */
             reason?: string;
+            /** @description True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153). */
+            can_reregister?: boolean;
             os: components["schemas"]["OS"];
             arch: components["schemas"]["Arch"];
             kind: components["schemas"]["RunnerKind"];
@@ -11893,6 +11915,29 @@ export interface operations {
         responses: {
             /** @description Clearing now, or after the running job. */
             202: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Runner"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    reregisterRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runnerId: components["parameters"]["RunnerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Registered again; the runner as it is now. */
+            200: {
                 headers: {
                     [name: string]: unknown;
                 };

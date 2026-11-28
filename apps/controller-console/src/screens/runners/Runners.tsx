@@ -24,7 +24,7 @@ import {
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ApiError, unwrap, useClient, type Schemas } from '../../api/api';
-import { useLoad, useQuestion } from '../../api/hooks';
+import { useCommand, useLoad, useQuestion } from '../../api/hooks';
 import { useSession } from '../../auth/session';
 import { useVersion } from '../../live/LiveProvider';
 import { Ask, Load } from '../common';
@@ -222,6 +222,22 @@ export function RunnersList() {
     },
   );
 
+  // runners R5.141: Register again, for a runner whose registration GitHub deleted.
+  const [againId, setAgainId] = useState<string | undefined>(undefined);
+  const again = useCommand(async (id: string) => {
+    setAgainId(id);
+    try {
+      await unwrap(
+        client.POST('/api/v1/runners/{runnerId}/reregister', {
+          params: { path: { runnerId: id } },
+        }),
+      );
+      reload();
+    } finally {
+      setAgainId(undefined);
+    }
+  });
+
   const columns: Column<Runner>[] = [
     {
       id: 'name',
@@ -291,7 +307,17 @@ export function RunnersList() {
       kind: 'fit',
       cell: (r) =>
         r.managed ? (
-          r.state === 'offline' ? (
+          r.can_reregister ? (
+            <Button
+              onPress={() => void again.run(r.id)}
+              busy={again.busy && againId === r.id}
+              busyLabel="Registering"
+              disabled={!admin || again.busy}
+              reason={why}
+            >
+              Register again
+            </Button>
+          ) : r.state === 'offline' ? (
             <Button
               onPress={() => {
                 cleanup.cancel();
@@ -367,6 +393,9 @@ export function RunnersList() {
           return (
             <Stack>
               <SummaryLine {...runnerSummary(data.items)} />
+              {again.error ? (
+                <Message tone="problem">{`Could not register again. ${again.error}`}</Message>
+              ) : null}
               {data.items.some((r) => r.state === 'failed') ? (
                 <Message
                   tone="needs-you"

@@ -50,7 +50,7 @@ func Truth(r Record, f Facts) (State, string) {
 	}
 	if f.Service != nil && f.Service.RegistrationLost && f.GitHubKnown && f.GitHub == nil {
 		// The listener says GitHub deleted the registration and GitHub does not
-		// list the runner: it is not idle, however its service looks (R5.140).
+		// list the runner: it is not idle, however its service looks (R5.152).
 		return NotRegistered, RegistrationLostReason
 	}
 	if f.ServiceKnown {
@@ -97,7 +97,7 @@ type View struct {
 	Registrations int
 	// CanReregister is true when the Runners page offers Register again: the
 	// registration is lost and could not be made again, or GitHub does not list
-	// the runner (runners R5.141).
+	// the runner (runners R5.153).
 	CanReregister bool
 }
 

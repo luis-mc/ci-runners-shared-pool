@@ -246,7 +246,7 @@ func TestPreparePoolImageOnlyForEphemeral(t *testing.T) {
 	}
 }
 
-// CRSP382, runners R5.140: list.sh gives the supervisor's reason when GitHub
+// CRSP382, runners R5.152: list.sh gives the supervisor's reason when GitHub
 // deleted the registration; an older list.sh gives two fields and no loss.
 func TestParsePersistentFoundReadsALostRegistration(t *testing.T) {
 	got := ParsePersistentFound("a|0|the registration of this runner was deleted at GitHub" + "\n" + "b|1|" + "\n" + "c|1" + "\n")

@@ -834,7 +834,7 @@ func TestSharedToolFoldersGetGroupModify(t *testing.T) {
 	}
 }
 
-// CRSP382, runners R5.140: a runner whose registration GitHub deleted, with an
+// CRSP382, runners R5.152: a runner whose registration GitHub deleted, with an
 // unchanged config, registers again in place: the service stops, the stale
 // files go, Runner.Listener configure runs with --replace and the fresh token
 // (no remove step), and the service starts again. The account and the service
