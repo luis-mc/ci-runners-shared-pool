@@ -331,16 +331,19 @@ func (b *Backend) FindPersistent(ctx context.Context) ([]backend.Found, error) {
 	return ParsePersistentFound(res.Stdout), nil
 }
 
-// ParsePersistentFound reads the lines of list.sh: NAME|RUNNING.
+// ParsePersistentFound reads the lines of list.sh: NAME|RUNNING|LOST. LOST is
+// the supervisor's reason when GitHub deleted the runner's registration; an
+// older list.sh prints no third field (runners R5.140).
 func ParsePersistentFound(out string) []backend.Found {
 	var res []backend.Found
 	for _, ln := range strings.Split(strings.ReplaceAll(out, "\r\n", "\n"), "\n") {
-		n, up, ok := strings.Cut(strings.TrimSpace(ln), "|")
+		n, rest, ok := strings.Cut(strings.TrimSpace(ln), "|")
 		if !ok || n == "" {
 			continue
 		}
+		up, lost, _ := strings.Cut(rest, "|")
 		res = append(res, backend.Found{ServiceName: PersistentPool + ":" + n, Name: n, Folder: StateDir + "/" + n,
-			Running: up == "1", Managed: true})
+			Running: up == "1", Managed: true, RegistrationLost: strings.TrimSpace(lost) != ""})
 	}
 	return res
 }

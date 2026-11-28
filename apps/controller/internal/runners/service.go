@@ -708,14 +708,7 @@ func (s *Service) addRunner(ctx context.Context, a AddSpec, actor string) error 
 	if err != nil {
 		return fail(fmt.Errorf("registration token: %w", err))
 	}
-	spec := backend.RunnerSpec{ID: id, Name: a.Name, OS: a.OS, Arch: a.Arch, Labels: a.Labels, GitHubURL: t.URL, Group: t.Group,
-		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, WindowsSymlinkRight: a.OS == "windows" && a.Symlink, CacheQuota: s.CacheQuota, MaxParallel: a.MaxParallel, KeepDependencies: a.KeepDependencies,
-		Container: a.Backend == string(backend.Docker), SharedTools: s.sharedTools(a, t)}
-	// Container runners cannot read the controller CA from the host yet, so
-	// only the other persistent runners get the package proxy (caches section 11).
-	if s.PackageProxy != nil && !spec.Container {
-		spec.PackageProxy = s.PackageProxy(ctx, t.URL)
-	}
+	spec := s.runnerSpec(ctx, id, a, t, pin)
 	// Names GitHub already knows before the add: only a registration that the
 	// add itself made is removed when it fails.
 	before, listErr := s.GitHub.ListRunners(ctx, t.InstallationID, t.Scope)
@@ -740,6 +733,20 @@ func (s *Service) addRunner(ctx context.Context, a AddSpec, actor string) error 
 	}
 	s.audit(ctx, actor, "runner.add", a.MachineID, id, a.Name)
 	return nil
+}
+
+// runnerSpec is the runner the agent starts for an add spec: the same for a
+// new runner and for one that registers again in place.
+func (s *Service) runnerSpec(ctx context.Context, id string, a AddSpec, t Target, pin Pin) backend.RunnerSpec {
+	spec := backend.RunnerSpec{ID: id, Name: a.Name, OS: a.OS, Arch: a.Arch, Labels: a.Labels, GitHubURL: t.URL, Group: t.Group,
+		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, WindowsSymlinkRight: a.OS == "windows" && a.Symlink, CacheQuota: s.CacheQuota, MaxParallel: a.MaxParallel, KeepDependencies: a.KeepDependencies,
+		Container: a.Backend == string(backend.Docker), SharedTools: s.sharedTools(a, t)}
+	// Container runners cannot read the controller CA from the host yet, so
+	// only the other persistent runners get the package proxy (caches section 11).
+	if s.PackageProxy != nil && !spec.Container {
+		spec.PackageProxy = s.PackageProxy(ctx, t.URL)
+	}
+	return spec
 }
 
 // rollbackRegistered undoes a registration whose local record could not be

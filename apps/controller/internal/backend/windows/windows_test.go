@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -830,5 +831,75 @@ func TestSharedToolFoldersGetGroupModify(t *testing.T) {
 	_, env := r.b.want(spec, "crsp-box-1")
 	if !strings.Contains(env, `CARGO_TARGET_DIR=C:\ProgramData\crsp\tools\r1\cargo-target\box-1`) {
 		t.Errorf("env:\n%s", env)
+	}
+}
+
+// CRSP382, runners R5.140: a runner whose registration GitHub deleted, with an
+// unchanged config, registers again in place: the service stops, the stale
+// files go, Runner.Listener configure runs with --replace and the fresh token
+// (no remove step), and the service starts again. The account and the service
+// stay.
+func TestLostRegistrationRegistersAgainInPlace(t *testing.T) {
+	r := newRig(t)
+	root := t.TempDir()
+	cfg := r.b.cfg
+	cfg.Root = root
+	r.b = New(r.b.d, cfg)
+	if err := start(t, r, r.spec(), backend.StartConfig{Registration: "REGTOKEN"}); err != nil {
+		t.Fatal(err)
+	}
+	folder := Join(root, "box-1")
+	_ = r.fs.WriteFile(Join(folder, ".runner"), []byte("old"), 0o600)
+	_ = r.fs.WriteFile(Join(folder, ".credentials_rsaparams"), []byte("old"), 0o600)
+
+	r.cmd.Calls = nil
+	if err := start(t, r, r.spec(), backend.StartConfig{Registration: "TOKEN2"}); err != nil {
+		t.Fatal(err)
+	}
+	if len(r.cmd.Calls) != 0 {
+		t.Fatalf("an unchanged registered runner is left alone: %d calls", len(r.cmd.Calls))
+	}
+
+	diag := Join(folder, "_diag")
+	if err := os.MkdirAll(diag, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	log := "Failed to create a session. The runner registration has been deleted from the server, please re-configure.\n"
+	if err := os.WriteFile(Join(diag, "Runner_20261128-100000-utc.log"), []byte(log), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	r.cmd.Calls = nil
+	if err := start(t, r, r.spec(), backend.StartConfig{Registration: "TOKEN2"}); err != nil {
+		t.Fatal(err)
+	}
+	i := listenerIdx(r)
+	if i < 0 {
+		t.Fatalf("no Runner.Listener call: %d calls", len(r.cmd.Calls))
+	}
+	c := r.cmd.Calls[i]
+	if c.Args[0] != "configure" && !strings.Contains(strings.Join(c.Args, " "), "--unattended") {
+		t.Errorf("args %v", c.Args)
+	}
+	if !strings.Contains(strings.Join(c.Args, " "), "--replace") || c.SecretEnv["ACTIONS_RUNNER_INPUT_TOKEN"] != "TOKEN2" {
+		t.Errorf("registers with --replace and the fresh token: %v", c.Args)
+	}
+	for _, x := range r.cmd.Calls {
+		if isListener(x) && len(x.Args) > 0 && x.Args[0] == "remove" {
+			t.Error("the registration is gone at GitHub: there is nothing to remove")
+		}
+		if strings.Contains(x.Stdin, "New-LocalUser") || strings.Contains(x.Stdin, "New-Service") {
+			t.Error("the account and the service stay")
+		}
+	}
+	var sawStop, sawStart bool
+	for j, x := range r.cmd.Calls {
+		sawStop = sawStop || (j < i && strings.Contains(x.Stdin, "Stop-Service"))
+		sawStart = sawStart || (j > i && strings.Contains(x.Stdin, "Start-Service"))
+	}
+	if !sawStop || !sawStart {
+		t.Errorf("stop before %v, start after %v", sawStop, sawStart)
+	}
+	if r.fs.Exists(Join(folder, ".runner")) || r.fs.Exists(Join(folder, ".credentials_rsaparams")) {
+		t.Error("the stale registration files stay")
 	}
 }

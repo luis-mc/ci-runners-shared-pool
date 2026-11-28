@@ -49,6 +49,10 @@ const (
 	Reregister   Action = "reregister"
 	UpdateRights Action = "update-rights"
 	RewriteEnv   Action = "rewrite-env"
+	// RegisterLost is a runner whose registration GitHub deleted: the folder is
+	// right but its listener log says the registration is gone. It registers
+	// again in place with the fresh token, with no remove token (runners R5.140).
+	RegisterLost Action = "register-lost"
 )
 
 // Decide compares what is on the machine with what is wanted.
@@ -73,6 +77,27 @@ func Decide(have *Meta, haveEnv string, want Meta, wantEnv string) Action {
 		return RewriteEnv
 	}
 	return Already
+}
+
+// WithLost turns a decision about a runner that is already set up into
+// RegisterLost when the registration was deleted at GitHub (lost). A runner
+// that is made fresh, or registered again for another reason, registers anyway.
+func WithLost(a Action, lost bool) Action {
+	if lost && (a == Already || a == UpdateRights || a == RewriteEnv) {
+		return RegisterLost
+	}
+	return a
+}
+
+// CleanStale removes the files of the old registration from a runner folder
+// before it registers again in place. join builds a path for the OS.
+func CleanStale(fsys sys.FS, folder string, join func(...string) string) error {
+	for _, f := range StaleRegistrationFiles {
+		if err := fsys.RemoveAll(join(folder, f)); err != nil {
+			return fmt.Errorf("remove %s: %w", f, err)
+		}
+	}
+	return nil
 }
 
 // ReadMeta reads the meta file at file. It returns nil with no error when the

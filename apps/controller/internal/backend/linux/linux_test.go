@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -593,5 +594,63 @@ func TestEnvCarriesThePackageProxy(t *testing.T) {
 	}
 	if env := string(started(t).fs.Files["/var/lib/crsp/runners/box-1/.env"]); strings.Contains(env, "npm_config_registry") {
 		t.Errorf("default adds the variable:\n%s", env)
+	}
+}
+
+// CRSP382, runners R5.140: a runner whose registration GitHub deleted, with an
+// unchanged config, is registered again in place: the unit stops, the stale
+// files go, config.sh runs with --replace and the fresh token, no remove step,
+// and the unit starts again.
+func TestLostRegistrationRegistersAgainInPlace(t *testing.T) {
+	root := t.TempDir()
+	r := newRig()
+	r.b = New(r.b.d, Config{Root: root, UnitDir: "/etc/systemd/system"})
+	r.b.d.Sleep = func(context.Context, time.Duration) {}
+	if _, err := r.b.Start(context.Background(), r.spec(), backend.StartConfig{Registration: "REGTOKEN"}); err != nil {
+		t.Fatal(err)
+	}
+	folder := root + "/box-1"
+	r.fs.Files[folder+"/.runner"], r.fs.Files[folder+"/.credentials"] = []byte("old"), []byte("old")
+	// a healthy listener log: still Already
+	r.cmd.Calls = nil
+	if _, err := r.b.Start(context.Background(), r.spec(), backend.StartConfig{Registration: "TOKEN2"}); err != nil {
+		t.Fatal(err)
+	}
+	if r.index("runuser") >= 0 || r.index("systemctl") >= 0 {
+		t.Fatalf("an unchanged registered runner is left alone: %v", r.cmd.Texts())
+	}
+	// the listener says the registration is gone
+	diag := root + "/box-1/_diag"
+	if err := os.MkdirAll(diag, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	log := "VssOAuthTokenRequestException: Registration was not found or is not medium trust\nFailed to create a session. The runner registration has been deleted from the server, please re-configure.\n"
+	if err := os.WriteFile(diag+"/Runner_20261128-100000-utc.log", []byte(log), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	r.cmd.Calls = nil
+	if _, err := r.b.Start(context.Background(), r.spec(), backend.StartConfig{Registration: "TOKEN2"}); err != nil {
+		t.Fatal(err)
+	}
+	stop, reg, start := r.index("systemctl stop"), r.index("runuser -u crsp-box-1 -- "+folder+"/config.sh --unattended"), r.index("systemctl start")
+	if stop < 0 || reg < stop || start < reg {
+		t.Fatalf("stop %d, register %d, start %d: %v", stop, reg, start, r.cmd.Texts())
+	}
+	if !strings.Contains(r.cmd.Texts()[reg], "--replace") {
+		t.Error("registers with --replace")
+	}
+	if r.index("runuser -u crsp-box-1 -- "+folder+"/config.sh remove") >= 0 {
+		t.Error("the registration is gone at GitHub: there is nothing to remove")
+	}
+	if _, ok := r.fs.Files[folder+"/.runner"]; ok {
+		t.Error("the stale .runner stays")
+	}
+	if _, ok := r.fs.Files[folder+"/.credentials"]; ok {
+		t.Error("the stale .credentials stay")
+	}
+	for _, c := range r.cmd.Calls {
+		if strings.Contains(c.String(), "TOKEN2") {
+			t.Errorf("the token is in a command line: %s", c.String())
+		}
 	}
 }
