@@ -339,7 +339,9 @@ describe('App health banner (github-integration R5.6)', () => {
     const note = await screen.findByText(/Device Flow is off/);
     expect(note.textContent).toContain('Enable Device Flow');
     expect(
-      (await screen.findByRole('button', { name: 'Open the App settings' })).getAttribute('href'),
+      (await screen.findByRole('button', { name: 'Open the App settings' })).getAttribute(
+        'href',
+      ),
     ).toBe('https://github.com/settings/apps/crsp-home');
   });
 
