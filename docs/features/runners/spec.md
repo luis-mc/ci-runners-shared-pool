@@ -181,11 +181,11 @@ No mocks yet. The Runners screen and the Create runner wizard follow design syst
 
 **R5.27** (M2, v0.3.0, Built CRSP52) — **Containers on Linux and WSL2.** The container backend uses rootless Podman, or Docker when Podman is not there. The job runs as a non-root user. The container never runs with `--privileged` and never gets the Docker socket. When the machine allows KVM for that runner, `/dev/kvm` is passed with `--device` only. Memory and CPU caps come from the machine's load budget. Built in part: Docker only (rootless Podman is open question 19). One pool container per repository (`PoolName`), `--user 1001:1001`, `--cap-drop ALL` with `no-new-privileges` as the one capability set (open question 18), `--device /dev/kvm` only when the machine allows it, memory and CPU caps from `Config.Limits`. `CheckRunArgs` refuses `--privileged`, `--cap-add`, host PID, network, IPC or user namespace, any other device, any engine socket and root, before every `docker run`. The registry does not list the backend yet (open question 21). Wired by CRSP58: the Linux binary's registry holds the container backend (`apps/controller/internal/backend/registry/registry_linux.go`), listed before the persistent one. A machine uses it only when `docker` is in its allowed backends (machines R5.9), which is off by default: the default allow list is `persistent`. The local agent sends a JIT config to the container backend and a registration token to the persistent one, builds the base image on first use, and cleans up a container handle (`<pool>:<runner>`) with the container backend. `PlanAdd` and its apply start an ephemeral runner only on Linux and only on a machine with the container backend allowed, usable and present (`apps/controller/internal/runners/ephemeral_test.go`). Built by CRSP64: the pool size of the machine (machines R5.58: CPUs and memory) is passed with the runner spec (`PoolCPUs`, `PoolMemoryMB`, set in `StartJobRunner`) and becomes `--cpus` and `--memory` of the repository's pool container (`limitsFor`); `Config.Limits` is the fallback and `DefaultConfig` sets none. `CheckRunArgs` accepts both flags. A machine with no pool size set leaves the container uncapped. The base image files are embedded in the binary (`images/embed.go`) and written with the crsp binary to a build folder under the user cache (`stageBuild`) before a build; the folder is removed after it, and the image key is the same as before. No installer folder is needed. **Planned (CRSP81, M2, NOT YET IMPLEMENTED):** the memory, CPU and process limits, the single job network with no traffic between containers, and the "What a job can reach" page are in R5.63 and R5.64.
 
-**R5.28** (M4) — **Hyper-V and WSL2 VMs on Windows.** The Hyper-V backend starts a VM per job from a prepared disk with a differencing disk on top, and deletes the differencing disk after the job. The WSL2 backend starts a Linux microVM or container per job inside WSL2. **Planned (CRSP86, M4):** a job that needs Docker runs in a copy-on-write clone; see R5.66. Windows containers with Hyper-V isolation (R5.65, CRSP85) are an option beside the VM.
+**R5.28** (M4; spec for owner review CRSP275, section 5.16) — **Hyper-V and WSL2 VMs on Windows, a fresh VM per job on Linux.** The Hyper-V backend starts a VM per job from a prepared disk with a differencing disk on top, and deletes the differencing disk after the job. The WSL2 backend starts a Linux microVM or container per job inside WSL2. **Planned (CRSP86, M4):** a job that needs Docker runs in a copy-on-write clone; see R5.66. Windows containers with Hyper-V isolation (R5.65, CRSP85) are an option beside the VM. On Linux with KVM the `kvm` backend starts a QEMU VM per job the same way, from a qcow2 overlay. The design, the set-up from the console, the images, the budget and the clean-up are R5.156 to R5.164 (section 5.16).
 
-**R5.29** (M5, Built in part CRSP114: `apps/controller/internal/backend/macvm`, tested with fakes; the Virtualization.framework boot bridge, which needs a real Mac, and the registry wiring are NOT YET IMPLEMENTED) — **macOS VMs on Apple's Virtualization.framework, at most two.** (Owner decision D54, 2026-11-15.) crsp uses its own code on Apple's Virtualization.framework, not Tart: Tart moved to OpenAI and is under FSL-1.1-ALv2, a licence the product does not take on. The macOS backend creates a VM per job from a prepared image, with its own image preparation and cloning, and no external VM tool. The agent never runs more than two macOS VMs on one Mac at once, counting VMs it did not start. A third job waits for a free VM and says why. **Built (CRSP114):** the limit of two (a constant, R6.6), the APFS clone per job from the base disk and its removal after the job, the wait with a reason for a third job, the count of VMs the agent did not start, and the refusal on an Intel Mac or macOS older than 13. **Planned (CRSP86, M5):** the macOS clone for Docker in a job follows R5.66.
+**R5.29** (M5, Built in part CRSP114: `apps/controller/internal/backend/macvm`, tested with fakes; the Virtualization.framework boot bridge, which needs a real Mac, and the registry wiring are NOT YET IMPLEMENTED) — **macOS VMs on Apple's Virtualization.framework, at most two.** (Owner decision D54, 2026-11-15.) crsp uses its own code on Apple's Virtualization.framework, not Tart: Tart moved to OpenAI and is under FSL-1.1-ALv2, a licence the product does not take on. The macOS backend creates a VM per job from a prepared image, with its own image preparation and cloning, and no external VM tool. The agent never runs more than two macOS VMs on one Mac at once, counting VMs it did not start. A third job waits for a free VM and says why. **Built (CRSP114):** the limit of two (a constant, R6.6), the APFS clone per job from the base disk and its removal after the job, the wait with a reason for a third job, the count of VMs the agent did not start, and the refusal on an Intel Mac or macOS older than 13. **Planned (CRSP86, M5):** the macOS clone for Docker in a job follows R5.66. **Spec for owner review (CRSP276):** the bridge, the image from an IPSW, the guest set-up, the job's life, the budget and the first real-Mac run are R5.165 to R5.171 (section 5.17).
 
-**R5.30** (M6) — **MicroVMs with snapshots.** On Linux with KVM, the Firecracker or Cloud Hypervisor backend boots an image once, takes a snapshot, and starts each job from that snapshot. The snapshot is keyed by image, kernel, vCPU count and memory; a change of any of them makes a new snapshot. After a restore the guest clock is set from the host and the guest random pool is reseeded (port DS R5.29).
+**R5.30** (M6) — **MicroVMs with snapshots.** On Linux with KVM, the Firecracker or Cloud Hypervisor backend boots an image once, takes a snapshot, and starts each job from that snapshot. The snapshot is keyed by image, kernel, vCPU count and memory; a change of any of them makes a new snapshot. After a restore the guest clock is set from the host and the guest random pool is reseeded (port DS R5.29). **Spec for owner review (CRSP277):** the comparison of the two monitors, the root disk, the snapshot rules, the jail, caches, set-up and budget are R5.172 to R5.177 (section 5.18); it builds on section 5.16.
 
 **R5.31** (M2, v0.3.0, Built CRSP52) — **Best backend first.** When the user does not choose, the agent uses the first allowed backend in the order of decision 0003 for that OS (for Linux with `/dev/kvm`: microVM, then container, then persistent). Built: `backend.Order` and `backend.Choose` (`apps/controller/internal/backend/choose.go`). A backend that is absent, not allowed or not usable is skipped; a backend the user chose is the only one tried, and its failure is named. Wired by CRSP58: the demand loop (github-integration R5.37) picks a machine whose allow list names the container backend and starts the runner there; `PlanAdd` accepts an ephemeral runner only on such a machine. Open questions 21 and 32 to 36.
 
@@ -453,6 +453,198 @@ Owner decision 21 Nov 2026 (job sizing wave 1, T9): a persistent Windows or macO
 
 **R5.150** (OPS89; R5.25, R5.72, R5.93, R5.127; source: the owner's Windows PC GameRoomPC on v0.1.24, 24 Nov 01:20 UTC, job 138144007503 of luis-mc/lan-link) — **An ephemeral Linux runner starts on a Windows host, and a failed start leaves nothing behind.** (a) The container backend never runs `chown` on a Windows host: NTFS has no uid and the folder is owned as the engine (Docker Desktop, WSL2) decides; on a Linux host it still gives the lane folders to the pool uid (R5.72). (b) Each try for a job has its own runner name, `crsp-job-<job id>-<try>`, and a start that fails after GitHub made the JIT registration deletes that registration, so the next try never meets `409 Already exists`. (c) A job gets at most 5 tries; a later `queued` event does not start the loop again for it. (d) The tries of a job share one key and leave one failed row, which the next try replaces and the end of the job removes (`Service.ClearFailedStarts`). (e) An idle ephemeral pool runner says `a container starts for each job of the pool`; `no repository uses the pool yet` shows only for a persistent pool runner with no registration.
 
+### 5.16 A fresh VM per job on Windows and Linux (CRSP275, M4, row Z)
+
+**SPEC FOR OWNER REVIEW (CRSP275). NOT YET IMPLEMENTED.** Nothing here is built; the owner reviews this section before any build. It details R5.28 and is the design that R5.29 (macOS, section 5.17) and R5.30 (microVMs, section 5.18) build on. Decision record: [0006, VM per job](../../architecture/decisions/0006-vm-per-job.md).
+
+What exists today: the backend names `hyperv` and `kvm` and their place in `backend.Order`; the copy-on-write clone runner for jobs that need Docker (`vmclone`, R5.66); the tool image hook `backend.ToolBooter` (R5.80); and the test VM boot `crsp vm` (caches R5.46): a catalogue of Linux cloud images, a download checked against the published digest, the shared VM cache (caches R5.47), a QEMU with KVM command builder and a serial readiness check. None of it starts a runner in a VM yet.
+
+```mermaid
+flowchart TD
+  setup[Console: machine, Set up VMs] --> check{Agent checks the hypervisor}
+  check -- missing or off --> review[Review: what crsp installs or turns on, reboot or not]
+  review --> fix[Install-time helper installs or enables it; reboot when idle]
+  fix --> check
+  check -- ready --> build[Build the base disk once per image key]
+  build --> cache[(VM cache: images, bases)]
+  job[Job assigned, JIT config] --> clone[Copy-on-write disk on the base]
+  cache --> clone
+  clone --> boot[Boot the VM with limits and read-only tools]
+  boot --> guest[crsp guest takes the JIT config over vsock]
+  guest --> run[Runner takes one job, logs stream back]
+  run --> off[Guest powers off; hard stop after grace]
+  off --> clean[Delete the disk and the VM object]
+  sweep[Agent start: orphan sweep] --> clean
+```
+
+**R5.156** (M4, CRSP275) — **One VM core, one hypervisor seam.** A new package `apps/controller/internal/backend/vm` implements `backend.Backend` and `backend.ToolBooter` once for every VM backend. Each hypervisor plugs in through one interface, `vm.Hypervisor`: `Detect`, `Clone` (copy-on-write disk on a base), `Boot` (a `vmclone.BootSpec` with CPU, memory, tool mounts and the guest channel), `Stop`, and `List` (the VMs and disks crsp made, for the sweep). Every VM job runs through `vmclone.Runner.Run`: a job is always a clone of a base; `NeedsDocker` (R5.66) only adds the check that the base manifest lists `docker`. The registry adds `hyperv` to the Windows binary, `kvm` to the Linux binary and `macvm` (R5.29) to the macOS binary. `backend.Order` keeps its order, and on macOS the name `tart` is replaced by `macvm` (decision D54).
+
+**R5.157** (M4, CRSP275) — **The hypervisor per host OS.** The agent uses the hypervisor its OS ships or the distribution packages. It never installs a third-party VM product.
+
+| Host | Guests | Hypervisor | Disk per job | Guest channel | Network |
+|---|---|---|---|---|---|
+| Windows 10 or 11 Pro, Enterprise or Education; Windows Server | Windows, Linux | Hyper-V, driven through the Hyper-V PowerShell module with each argument passed on its own (R5.18); generation 2 VM with Secure Boot (Microsoft template for Windows, the UEFI CA template for Linux) | differencing VHDX on the base VHDX | Hyper-V sockets (`hv_sock`) | the crsp switch `crsp-nat` (internal switch with NAT), never an external switch |
+| Linux, x86_64 or arm64, with `/dev/kvm` | Linux (Windows guests: open question Z8) | QEMU with KVM, started by the agent itself (no libvirt daemon), with the command builder of `crsp vm boot` | qcow2 overlay with the base as its backing file | virtio-vsock (`vhost-vsock`) | user-mode network (`passt`, else QEMU's user network) |
+| macOS on Apple silicon | macOS | Virtualization.framework (R5.29, section 5.17) | APFS clone | virtio-vsock | NAT of the framework |
+
+A Windows edition without Hyper-V (Home) is refused with that reason. WSL2 is not a VM per job: all WSL2 distributions share one utility VM. On Windows, WSL2 stays the container backend (R5.27) and, with nested KVM (R5.41), may host microVMs (R5.30; open question AB4). The R5.28 words "a Linux microVM or container per job inside WSL2" mean exactly that.
+
+**R5.158** (M4, CRSP275; design system UX-5, UX-13, UX-30, UX-38) — **crsp sets the VM backend up itself, from the console.** The machine page has **Set up VMs**, a wizard on the shared wizard part: Check, Review, the work (install, enable, reboot when needed, build the first base, a test boot), Done. Review shows in words what changes on the machine (the Windows feature or the packages, the switch, the disk space the first base takes, whether a reboot is needed). The work runs in the install-time helper the user approved (R6.3):
+
+- Windows: turns on the Hyper-V feature (`Enable-WindowsOptionalFeature -Online -FeatureName Microsoft-Hyper-V-All -NoRestart`), makes the `crsp-nat` switch and its NAT, and adds the agent's service account to `Hyper-V Administrators`. A reboot drains first (R6.4); the step offers Restart when idle or Restart now, and the wizard resumes after the reboot on its own.
+- Linux: installs QEMU (`qemu-system-x86` or `qemu-kvm`, `qemu-img`) and `passt` with the distribution's package manager, the same consented flow as the container engine (dependency-setup), and checks `/dev/kvm` (R5.41).
+
+The CLI does the same steps: `crsp machine vm setup` and `crsp machine vm image build <os>`. The user never edits a file or types a terminal command. Two things crsp cannot do, and the wizard says so with the exact reason and where to do it: turning on virtualization in the firmware (BIOS or UEFI), and giving a Windows licence for Windows guests (R5.159).
+
+**R5.159** (M4, CRSP275) — **Images: built once per key, kept in the VM cache.** A base disk is keyed by guest OS, the source image digest, the layers (R5.50), the extra packages (R5.51), the pinned runner version (R5.37), the `crsp` version of the guest agent and the hypervisor. The base is built only from the repository's default branch (R5.66) and kept with the newest 3 per OS (R5.33). The disk floor (R5.83) is checked before a build. A build runs on the agent with its log and progress in the console; a failed build leaves no file behind.
+
+- **Linux guest.** The source is a cloud image of the `crsp vm` catalogue (`vm-images.json`), downloaded once into `<cache>/images` and checked against the published digest. crsp boots it once with a NoCloud seed disk it makes itself; the seed installs the runner, the `crsp guest` unit, the layers and the extras, then powers off. The result is `<cache>/bases/<distro>-<key>.qcow2`. On Hyper-V the catalogue names the distribution's published VHD image instead (Ubuntu and Debian publish one), so a Windows host never needs `qemu-img`.
+- **Windows guest.** crsp never ships Windows. The owner gives an ISO in the console (a URL with its SHA-256, or an upload) and a licence choice (open question Z2). crsp writes the unattended answer file on a second small disk, installs Windows, the runner, the `crsp guest` service and the layers, and ends with `sysprep /generalize /oobe /shutdown` and an answer file that skips the first-run screens. The result is `<cache>/bases/windows-<key>.vhdx`.
+
+**R5.160** (M4, CRSP275) — **A job's life in its VM.** The agent clones the base (R5.156), boots the VM with the CPU and memory of `runners.LimitsFor` (R5.63), attaches the tool trees read-only (R5.80) and nothing else of the host. The guest agent `crsp guest` (the same `crsp` binary, started by the guest's init or service manager) connects to the host over the guest channel. The host sends the JIT config over that channel; the guest keeps it in memory and passes it to the runner on standard input or the command line, never in a file (R6.2). Runner log lines come back over the same channel and feed `StreamLogs`. When the job ends the guest powers off; the agent waits 30 seconds, then stops the VM hard. A VM still running at the job timeout plus 10 minutes is stopped hard and the job is reported as stopped by the timeout.
+
+**R5.161** (M4, CRSP275; extends R6.5) — **Boot time budget.** From job assigned to runner online in GitHub, median over 20 starts with a warm base: Linux guest on KVM 20 s; Linux guest on Hyper-V 30 s; Windows guest on Hyper-V 90 s. `runners.StartMedian` keeps the samples per backend; over the budget, the doctor warns with the measured median. A warm VM (booted ahead and waiting for a JIT config, through the warm runner of R5.131) hides the boot but holds its memory and a job slot; it is off by default (open question Z6).
+
+**R5.162** (M4, CRSP275) — **Clean-up and orphans.** `CleanUp` stops the VM if it still runs and deletes its disk, its VM object (Hyper-V `Remove-VM`) and its cache lease; it is safe to call twice (R5.10). Every VM object crsp makes is named `crsp-job-<runner id>`, so the sweep knows its own. At agent start the sweep of R5.66 also stops and deletes every `crsp-job-*` VM and every clone disk that no runner owns, and logs each one. A QEMU process dies with the agent (it runs in the agent's process group with a parent-death signal); a Hyper-V VM outlives the agent and is left to the sweep. An ephemeral JIT runner needs no remove call at GitHub.
+
+**R5.163** (M4, CRSP275; R5.13, R6.1) — **What a job in a VM can reach.** No host folder is shared read-write; only the tool trees, read-only. No Docker socket. The VM's network is NAT only: it reaches the internet and the addresses the pool lists (controller, registry mirror); it does not reach the host's own ports (`passt` with no host mapping on Linux; a firewall rule on the `crsp-nat` host interface on Windows). Nested virtualization is off unless the runner asks for the `kvm` layer (Hyper-V `ExposeVirtualizationExtensions`, QEMU `-cpu host` with nesting). The "What a job can reach" table of `SECURITY.md` (R5.64) gets a VM column.
+
+**R5.164** (M4, CRSP275; caches R5.46, R5.47) — **The test VM boot and the job VM share one code path.** The QEMU command builder, the catalogue, the digest-checked download, the cache layout and its locks, the memory warning (R5.55) and the prune move to one shared package that `crsp vm` and the `kvm` hypervisor both call. `crsp vm` stays the in-job test tool and changes no behaviour; `crsp vm doctor` also reports whether the host can run job VMs.
+
+Open questions for the owner (CRSP275), with options, trade-offs and the recommendation:
+
+| # | Question | Options and trade-offs | Recommendation |
+|---|---|---|---|
+| Z1 | How does the Linux agent drive VMs? | (a) QEMU started directly: already used by `crsp vm`, no daemon, crsp owns the whole lifecycle; more crsp code (stop and status through QMP). (b) libvirt: mature lifecycle and tooling; one more daemon and package, XML across many distribution versions. (c) Cloud Hypervisor for every Linux VM, the same VMM as R5.30: small and fast; Windows guests are less proven and the test boot would move off QEMU. | (a) |
+| Z2 | Windows guests: where do the ISO and the licence come from? | (a) The owner gives the ISO and a product key or volume licence in the console: legal and lasting; one manual input. (b) The evaluation ISO, downloaded by crsp: no input; expires after 90 or 180 days, so the base must be rebuilt, and evaluation terms may not cover CI use. (c) No Windows guests in M4, Linux guests only. | (a), with (b) offered as "try it" only if the owner confirms the terms fit |
+| Z3 | Linux jobs on a Windows host | (a) A Hyper-V Linux guest per job: full isolation, slower start. (b) WSL2 containers only (today). | (a) as an option beside (b) |
+| Z4 | The guest channel for the JIT config and logs | (a) vsock and Hyper-V sockets: no network, no key, no disk. (b) Serial console: simplest; slow, one stream. (c) SSH with a per-job key: common; a key and an open port per VM. | (a) |
+| Z5 | Tools in a Hyper-V guest (R5.80 knows squashfs and virtiofs only; Hyper-V attaches VHD or VHDX disks and has no virtiofs) | (a) A new tool kind `vhdx`, packed once per digest. (b) An ISO per digest. (c) The guest downloads its tools (today's fallback, `ErrNoToolMounts`). | (a) |
+| Z6 | A warm VM per runner definition | (a) Off by default, a setting per definition: honest budget, no idle memory. (b) On by default: start feels instant; one VM's memory and a slot held all the time. | (a) |
+| Z7 | The budgets of R5.161 (20 s, 30 s, 90 s) | Confirm, or give numbers. | Confirm, then measure on the owner's machines |
+| Z8 | Windows guests on a Linux host (QEMU with KVM) | (a) Not in M4. (b) In M4: needs the virtio drivers for Windows and the same licence question. | (a) |
+| Z9 | Where QEMU comes from on Linux | (a) Distribution packages through the consented install: updated by the distribution; versions differ. (b) A pinned static QEMU that crsp ships: one version everywhere; crsp carries its security updates. | (a) |
+| Z10 | The Hyper-V network | (a) A crsp switch `crsp-nat` with its own NAT: stable subnet, a firewall rule crsp owns. (b) The built-in Default Switch: nothing to make; its subnet changes after a reboot and it cannot be fenced as well. | (a) |
+
+### 5.17 macOS VM backend on Virtualization.framework (CRSP276, M5, row AA)
+
+**SPEC FOR OWNER REVIEW (CRSP276). Built in part (CRSP114), never run on a real Mac.** It details R5.29. Built and tested with fakes in CI: the limit of two VMs counting VMs crsp did not start, the wait with its reason, the APFS clone of the base disk per job and its removal, and the refusal of an Intel Mac or macOS older than 13 (`apps/controller/internal/backend/macvm`). Not built: the bridge to the framework (`Framework.Boot` returns `ErrNoBridge`), the image from an IPSW, the guest set-up, the guest agent, the registry wiring and any real-Mac run. Decision record: [0007, macOS VM bridge](../../architecture/decisions/0007-macos-vm-bridge.md).
+
+```mermaid
+flowchart TD
+  pick[Console: macOS image, latest supported or a pinned IPSW] --> dl[Download IPSW once, record URL, build, SHA-256]
+  dl --> fit{Host can run it?}
+  fit -- no --> why[Refuse with the reason]
+  fit -- yes --> inst[Install into a base disk through the helper]
+  inst --> prep[Prepare offline: skip set-up, add crsp guest]
+  prep --> seal[First boot: runner and layers, power off: base sealed]
+  job[Job assigned] --> lim{Fewer than two macOS VMs on this Mac?}
+  lim -- no --> wait[Wait and say why]
+  wait --> lim
+  lim -- yes --> clone[APFS clone of disk and auxiliary storage, new machine identifier]
+  seal --> clone
+  clone --> boot[Helper boots the VM: NAT, vsock, read-only tools share]
+  boot --> run[crsp guest takes the JIT config; one job]
+  run --> stop[Stop, remove the clone, free the slot]
+```
+
+**R5.165** (M5, CRSP276; built in part CRSP114) — **The host.** Apple silicon only (`arm64`), macOS 13 or newer (built: `macvm.Check`). The agent also refuses a Mac that is itself a VM (`kern.hv_vmm_present` is 1), because a macOS guest cannot start inside one. Each refusal says why in the console (UX-38).
+
+**R5.166** (M5, CRSP276) — **The bridge is a small signed helper.** Every Virtualization.framework call sits in one helper binary, `crsp-vz`, built for darwin/arm64 only. The agent starts one helper per VM and talks to it with JSON lines on standard input and output (boot, stop, state, exit). The main `crsp` binary stays free of cgo and keeps cross-compiling. The helper is signed with the entitlement `com.apple.security.virtualization` and ships in the macOS package. The darwin `macvm.Framework` starts it; `Visible` counts the helper's VMs and every other virtual machine process of the framework on the Mac.
+
+**R5.167** (M5, CRSP276) — **The image comes from an IPSW.** In the console the owner picks "latest supported by this Mac" (the framework's restore image query) or gives an IPSW URL. crsp records the URL, the macOS build and the SHA-256, downloads it once into `<cache>/ipsw/`, and refuses it with the reason when the host has no supported configuration for it or too little CPU, memory or disk. The guest's macOS is never newer than the host's. The helper installs it into a sparse base disk (default 80 GiB) and keeps the hardware model and the auxiliary storage beside it. The base key is the R5.159 key with the IPSW build in place of the source image digest.
+
+**R5.168** (M5, CRSP276) — **The guest is set up without clicks.** After the install the agent attaches the guest's data volume on the host and writes: the marker that set-up is done, and a launch daemon that runs `crsp guest` as root. On the first boot `crsp guest` makes the runner user (`sysadminctl`), installs the runner and the layers, turns off sleep, the screen saver and automatic updates, then powers off; the base is sealed. If a macOS release blocks this, the fallback is open question AA3.
+
+**R5.169** (M5, CRSP276; built in part CRSP114) — **A job's life in its macOS VM.** The agent takes a slot from the limiter (built), clones the disk (built) and the auxiliary storage, and gives the clone a new machine identifier with the base's hardware model, so two clones never share an identity. The helper boots it with the framework's NAT network, a vsock device for the JIT config and the logs (as R5.160), and the read-only virtiofs share `crsp-tools` (R5.80, kind `virtiofs`). CPU and memory come from `runners.LimitsFor` (R5.63), kept inside the framework's minimum and maximum. At the end the guest powers off; after 30 seconds the helper stops the VM; the clone and its auxiliary storage are removed (built for the disk) and the slot is freed. The agent-start sweep (R5.162) also removes macOS clones no runner owns.
+
+**R5.170** (M5, CRSP276; extends R6.5) — **Boot time budget.** From job assigned to runner online in GitHub, median over 20 starts with a sealed base: 60 s. Measured on the first real Mac (below).
+
+**R5.171** (M5, CRSP276; R6.9) — **What CI proves, and what it cannot.** CI runs the pure-Go tests with fakes, builds the darwin/arm64 `crsp` binary, and builds and unit-tests the helper's JSON protocol on a GitHub macOS arm64 runner. GitHub's macOS runners are themselves VMs, so they cannot boot a macOS guest: no CI run boots one. Until the first real-Mac run passes, `macvm` is in the macOS binary but off: the machine setting "macOS VMs (not yet checked on a real Mac)" is off and the console says so.
+
+**The first real-Mac run must check** (each line passes or the backend stays off):
+
+1. The host check passes on an Apple silicon Mac on macOS 13 or newer, and refuses with its reason on an Intel Mac and inside a VM.
+2. The signed helper starts and the framework accepts its configuration (no entitlement or signature error), from the installed package, not from a build folder.
+3. "Latest supported" finds an IPSW; the download matches the recorded SHA-256; the install finishes; the time and disk it took are recorded.
+4. The offline set-up of R5.168 works: the first boot skips the set-up screens, `crsp guest` starts as root, the runner user is made and the base seals itself (powers off on its own).
+5. A job runs end to end: the JIT config arrives over vsock, the runner comes online in GitHub, runs one job, its log reaches the console, and no JIT config is found on the guest disk afterwards.
+6. Two clones run at once with different machine identifiers and do not disturb each other; their APFS clones take near-zero space until written.
+7. A third job waits with the reason; a VM started by another tool (for example UTM) is counted, so crsp starts only one of its own beside it; the framework's own limit error never shows.
+8. The read-only tools share mounts at `/opt/crsp-tools` and refuses a write.
+9. The guest reaches GitHub and the controller through NAT and cannot reach the host's own ports.
+10. Clean-up: after a job, after a failed job and after `kill -9` of the agent mid-job, no clone, auxiliary storage or helper process is left once the sweep has run.
+11. The boot budget of R5.170: the median over 20 starts is recorded.
+12. The host going to sleep and waking with a job running: the job's outcome is reported (passed, or failed with a reason), never lost.
+
+Open questions for the owner (CRSP276), with options, trade-offs and the recommendation:
+
+| # | Question | Options and trade-offs | Recommendation |
+|---|---|---|---|
+| AA1 | How is the framework called? | (a) A Go helper on the `Code-Hex/vz` bindings (MIT): Go like the rest; one cgo binary to sign. (b) A Swift helper: Apple's own language and samples; a second language and toolchain in the repository. (c) cgo inside `crsp`: one binary; breaks cross-compiling and puts the entitlement on the whole agent. | (a) |
+| AA2 | Signing | (a) A Developer ID certificate of the owner, with notarization: needed for a package other people install. (b) Ad-hoc signing: enough on the owner's own Mac; not for distribution. | (a) for releases, (b) for the first real-Mac run |
+| AA3 | Guest set-up if the offline way is blocked | (a) Offline, on the attached data volume (R5.168): no clicks; may break with a macOS release. (b) Scripted key presses through the VM's screen, as image builders do: works on new releases; fragile timing. (c) The owner clicks through the set-up screens once, in a window crsp opens: simplest and sure; one manual step, against the owner rule. | (a), with (b) as the fallback |
+| AA4 | The IPSW | (a) Latest supported, pinned by the recorded SHA-256 at build time. (b) Always an IPSW the owner names. | (a) |
+| AA5 | The first real-Mac run | Which Mac, when, and who runs it; the checklist above takes about two hours. | The owner's Apple silicon Mac, ad-hoc signed build |
+| AA6 | Xcode in the image | Xcode's download needs an Apple account, so crsp cannot fetch it. (a) A layer `xcode` from a `.xip` the owner gives in the console. (b) Command Line Tools only (no account needed). | (b) by default, (a) when the owner gives the file |
+| AA7 | Linux guests on a Mac through the same framework | (a) Later. (b) In M5. | (a) |
+
+### 5.18 MicroVMs: Firecracker or Cloud Hypervisor (CRSP277, M6, row AB)
+
+**SPEC FOR OWNER REVIEW (CRSP277). NOT YET IMPLEMENTED.** It details R5.30 and builds on section 5.16 (row Z): the `vm.Hypervisor` seam, the guest agent over vsock, the image key, the clean-up and sweep, and the start-time samples. Linux hosts with KVM only (R5.41), x86_64 and arm64. Decision record: [0008, microVM monitor](../../architecture/decisions/0008-microvm-monitor.md).
+
+**The two monitors compared.**
+
+| | Firecracker | Cloud Hypervisor |
+|---|---|---|
+| Licence | Apache-2.0 | Apache-2.0 or BSD-3-Clause |
+| Guests | Linux only | Linux and Windows |
+| Devices | a minimal virtio set: block, net, vsock, balloon, entropy | virtio over PCI: block, net, vsock, virtio-fs, device passthrough (VFIO), hot-plug |
+| Host folder share | none (tools as a squashfs disk, R5.80 kind `disk`) | virtio-fs (needs `virtiofsd`) |
+| Snapshot and restore | built for it: full and diff snapshots, lazy memory loading through userfaultfd | snapshot and restore, and live migration |
+| Process jail | `jailer` ships with it: chroot, own uid, cgroups, seccomp | seccomp and Landlock built in; chroot, uid and cgroups are the agent's job |
+| Control | REST over a Unix socket | REST over a Unix socket, `ch-remote` |
+| Attack surface | smallest | larger (PCI, more devices) |
+| Proven at scale | AWS Lambda and Fargate | used under Kata Containers and in Azure |
+
+```mermaid
+flowchart TD
+  img[Same OCI image as the container backend] --> rootfs[ext4 root disk, read-only base]
+  kern[Pinned guest kernel] --> cold[Cold boot once]
+  rootfs --> cold
+  cold --> ready[crsp guest ready, no secret inside yet]
+  ready --> snap[(Snapshot: memory and state, keyed)]
+  job[Job assigned] --> restore[Restore in its own jail and network namespace]
+  snap --> restore
+  restore --> fresh[Set clock, reseed entropy, new identity]
+  fresh --> jit[JIT config over vsock; one job]
+  jit --> kill[Stop; delete writable disk and jail]
+```
+
+**R5.172** (M6, CRSP277) — **The root disk is the container image.** The microVM's root disk is made from the same OCI image as the container backend (the Linux base R5.49 with the pool's layers R5.50 and extras R5.51): the agent exports the image's files into an ext4 disk once per image key (no Docker build in a VM). The disk is attached read-only; each job gets its own small writable disk, joined in the guest with overlayfs, and deleted after the job. The guest kernel is pinned by version and SHA-256 in `pins.json` (R5.37), with virtio, vsock, overlayfs and the cgroup v2 controllers a job's own Docker needs.
+
+**R5.173** (M6, CRSP277; details R5.30) — **Snapshots, taken before any secret.** The agent cold-boots the image once to the point where `crsp guest` waits for a JIT config, then takes the snapshot. The snapshot is keyed by image key, kernel, vCPU count, memory and the monitor's version; a change of any of them makes a new one, and the newest 3 keys are kept. A snapshot is never taken after a JIT config or any other secret entered the guest. After a restore, before anything else, the guest clock is set from the host, the entropy pool is reseeded (through the VM generation ID where the monitor offers it, else with fresh bytes from the host over vsock), and the guest gets a new hostname, machine ID and network address. Each restore runs in its own network namespace, so the tap name stored in the snapshot never clashes.
+
+**R5.174** (M6, CRSP277; R5.72, R6.1) — **Each microVM is jailed.** The monitor process runs as its own uid from the reserved range (R5.72), in a chroot holding only its disks, sockets and snapshot, with the cgroup v2 limits of `runners.LimitsFor` (R5.63) and the monitor's seccomp filter. With Firecracker the `jailer` does this; with Cloud Hypervisor the agent does it and turns on Landlock.
+
+**R5.175** (M6, CRSP277) — **Caches without a shared folder.** Each cache lane of a repository (caches R5.43) is an ext4 disk image attached read-write to the one microVM that holds the lane, so the lane lock already stops two VMs writing it. Tools come as the squashfs disk of R5.80.
+
+**R5.176** (M6, CRSP277; R5.158) — **Set up from the console, no package manager.** The Set up VMs wizard (R5.158) also offers microVMs on a Linux host with `/dev/kvm`. crsp downloads the monitor binary (and `jailer`) of the pinned version, checks its SHA-256 from `pins.json`, and downloads the pinned kernel from the crsp release. It checks `/dev/kvm`, cgroup v2 and the `tun` device, and says what is missing.
+
+**R5.177** (M6, CRSP277; R6.5) — **Start budget.** From a snapshot, a runner is online in GitHub within 5 s of the job being assigned (R6.5, median over 20 starts); a cold boot within 10 s. A job that needs Docker (R5.66) may run in a microVM: it has its own kernel and its own engine.
+
+Open questions for the owner (CRSP277), with options, trade-offs and the recommendation:
+
+| # | Question | Options and trade-offs | Recommendation |
+|---|---|---|---|
+| AB1 | Which monitor? | (a) Firecracker first: the smallest attack surface for code from pull requests, mature restore with lazy memory, the jailer included; Linux guests only, no shared folders (R5.175 and the squashfs tools cover that). (b) Cloud Hypervisor first: virtio-fs, Windows guests and passthrough; larger surface, the agent builds the jail. (c) Both in M6: one seam, twice the tests. | (a), keeping the seam so (b) can follow |
+| AB2 | The guest kernel | (a) crsp builds it in CI from a pinned config: known contents; one more build. (b) The kernels the Firecracker project publishes for its CI: no build; not meant for production. (c) The distribution's kernel: updates for free; larger and may lack the virtio options. | (a) |
+| AB3 | Caches in a microVM | (a) One ext4 disk per lane (R5.175). (b) virtio-fs (Cloud Hypervisor only). (c) No caches in microVMs. | (a) |
+| AB4 | MicroVMs inside WSL2 on Windows, with nested KVM (R5.41) | (a) Not in M6. (b) Behind a machine setting, marked experimental: nested virtualization is slower and less tested. | (a) |
+| AB5 | Jobs that need Docker in a microVM | (a) Allowed: own kernel, own engine. (b) Only in a full VM (R5.66 today). | (a) |
+| AB6 | The budgets of R5.177 (5 s from a snapshot, 10 s cold) | Confirm, or give numbers. | Confirm |
+| AB7 | Snapshot disk use | Each snapshot holds the guest's memory (for example 4 GiB for a 4 GiB VM), times 3 keys per image. (a) Keep 3. (b) Keep 1. | (a), counted against the disk floor (R5.83) |
+
 ## 6. Non-functional requirements
 
 R6.1 to R6.4 and R6.8 are built (CRSP22). Each requirement below says if it is built; the others are **NOT YET IMPLEMENTED**.
@@ -569,8 +761,8 @@ Rows that name a test file are built and run in CI; rows that say `planned:` are
 | R5.25 | apps/controller/internal/runners/jit_test.go TestJitConfigNotStored, TestJitFailureIsNamedAndLeavesNoSecret, TestJitRunnerRefusesProjectLabels; apps/controller/internal/backend/container/container_test.go TestJitConfigOnlyOnStdin, TestJitConfigRedactedAndNotInLogs; apps/controller/internal/github/jitconfig_test.go TestJitConfigNeverStoredOrLogged |
 | R5.26 | apps/controller/internal/backend/container/container_test.go TestNothingCarriesOver; apps/controller/internal/demand/demand_test.go TestIdleRunnerRemovedAfterFifteenMinutes, TestRunnerWithAJobIsNotIdle, TestBusyRunnerIsLeftAlone, TestFailedIdleRemovalRetriesLater; apps/controller/internal/runners/ephemeral_test.go TestRemoveIdleRunnerFreesSlot, TestRemoveIdleRunnerLeavesBusyRunner, TestRemoveIdleRunnerFailsClosed, TestRemoveIdleRunnerNotListedStillCleansUp |
 | R5.27 | apps/controller/internal/backend/container/container_test.go TestNoPrivilegedNoSocketKvmDevice, TestOnePoolContainerPerRepository, TestStartRefusals, TestDetectReportsTheEngine |; apps/controller/internal/backend/registry/registry_test.go TestRegistryHoldsOnlyThisOS; apps/controller/internal/runners/ephemeral_test.go TestEphemeralOnlyOnAllowListedMachine, TestEphemeralCountAndFinish; apps/controller/internal/runners/localagent_test.go TestLocalAgentRoutesByKind; apps/controller/cmd/crsp/demand_wiring_test.go TestHostsFollowTheAllowList; apps/controller/internal/backend/container/stage_test.go TestPoolSizeBecomesPoolLimits, TestLimitsFallBackToConfig, TestRunArgsGuardPassesLimits, TestDefaultConfigEmbedsImagesAndNeedsNoInstalledFolder; apps/controller/internal/runners/jit_test.go TestJitRunnerCarriesPoolSize, TestJitRunnerWithNoPoolSizeSetsNoLimit
-| R5.28 | planned: apps/controller/internal/backend/hyperv/hyperv_test.go TestDifferencingDiskDeleted; apps/controller/internal/backend/wsl2/wsl2_test.go |
-| R5.29 | built in part: apps/controller/internal/backend/macvm/macvm_test.go TestAtMostTwoVms, TestForeignVmsCount, TestThirdJobWaitsAndSaysWhy, TestCheckRefusesIntelAndOldMacOS (CRSP114); planned: real-Mac boot |
+| R5.28 | planned: apps/controller/internal/backend/vm/hyperv_test.go TestDifferencingDiskDeleted; apps/controller/internal/backend/vm/kvm_test.go TestOverlayOnBase; apps/controller/internal/backend/wsl2/wsl2_test.go |
+| R5.29 | built in part: apps/controller/internal/backend/macvm/macvm_test.go TestAtMostTwoVms, TestForeignVmsCount, TestThirdJobWaitsAndSaysWhy, TestCheckRefusesIntelAndOldMacOS (CRSP114); planned: real-Mac boot (the checklist of section 5.17) |
 | R5.30 | planned: apps/controller/internal/backend/microvm/snapshot_test.go TestSnapshotKeyAndRestore (port of test_dl281_vm_check.py) |
 | R5.31 | apps/controller/internal/backend/choose_test.go TestBestBackendFirst |; apps/controller/internal/demand/demand_test.go TestQueuedJobStartsOneRunner (the demand loop takes the machine from the allow list)
 | R5.32 | apps/controller/internal/backend/container/container_test.go TestBuildOnceReusesTheImage (layers and size listed) |
@@ -679,6 +871,28 @@ Rows that name a test file are built and run in CI; rows that say `planned:` are
 | R5.117 | `apps/controller/internal/toolstore/recipe_test.go` TestLayoutFor; `apps/controller/internal/toolstore/job_test.go` TestBuildJobHome |
 | R5.118 | `apps/controller/internal/toolstore/store_test.go` TestPrune (no Xcode in the store); `apps/controller/internal/agent/toolstore_test.go` TestToolFlowProbeAndHousekeep |
 | R5.119 | `apps/controller/internal/toolstore/store_test.go` TestProbeLacks; `apps/controller/internal/agent/toolstore_test.go` TestToolFlowProbeAndHousekeep; `apps/controller/internal/doctor/checks/runnertools_test.go` TestRunnerToolsPlan, TestRunnerToolsPlanSaysWhichXcodeToInstall |
+| R5.156 | planned: apps/controller/internal/backend/vm/vm_test.go TestEveryJobIsAClone, TestImplementsBackendAndToolBooter; apps/controller/internal/backend/registry/registry_test.go TestVMBackendPerOS; apps/controller/internal/backend/choose_test.go TestMacOSOrderHasNoTart |
+| R5.157 | planned: apps/controller/internal/backend/vm/hyperv_test.go TestGen2SecureBootTemplate, TestRefusedOnHome, TestArgsPassedOneByOne; apps/controller/internal/backend/vm/kvm_test.go TestNoLibvirtQEMUArgs |
+| R5.158 | planned: apps/controller/internal/agent/vmsetup_test.go TestHyperVEnableDrainsBeforeReboot, TestLinuxPackagesThroughConsentedInstall, TestFirmwareOffSaysWhy; e2e/tests/web-console/vm-setup.spec.ts (wizard states) |
+| R5.159 | planned: apps/controller/internal/backend/vm/image_test.go TestBaseKeyFields, TestDefaultBranchOnly, TestFailedBuildLeavesNothing, TestNoCloudSeed, TestWindowsAnswerFileSkipsOOBE |
+| R5.160 | planned: apps/controller/internal/backend/vm/job_test.go TestJITOnlyOverChannel, TestHardStopAfterGrace, TestTimeoutStop; apps/controller/internal/jobcmd/guest_test.go TestGuestNeverWritesJIT |
+| R5.161 | planned: apps/controller/internal/runners/joblimits_test.go TestVMStartBudgets |
+| R5.162 | planned: apps/controller/internal/backend/vm/cleanup_test.go TestCleanUpTwice, TestSweepNamedVMsOnly, TestQEMUDiesWithAgent |
+| R5.163 | planned: apps/controller/internal/backend/vm/network_test.go TestNoHostReadWriteShare, TestNATOnly, TestNestedOnlyWithKvmLayer; apps/controller/internal/runners/joblimits_test.go TestSecurityTableHasVMColumn |
+| R5.164 | planned: apps/controller/internal/vmcheck/boot_test.go TestOneQEMUBuilderForTestAndJob |
+| R5.165 | built in part: apps/controller/internal/backend/macvm/macvm_test.go TestCheckRefusesIntelAndOldMacOS (CRSP114); planned: TestRefusedInsideVM |
+| R5.166 | planned: apps/controller/internal/backend/macvm/helper_test.go TestHelperProtocol, TestVisibleCountsHelperAndForeign; the helper's own tests on the macOS arm64 CI runner |
+| R5.167 | planned: apps/controller/internal/backend/macvm/ipsw_test.go TestIPSWRecordedAndChecked, TestGuestNotNewerThanHost |
+| R5.168 | planned: apps/controller/internal/backend/macvm/setup_test.go TestOfflineSetupFiles; real Mac: checklist item 4 |
+| R5.169 | built in part: apps/controller/internal/backend/macvm/macvm_test.go TestAtMostTwoVms, TestThirdJobWaitsAndSaysWhy (CRSP114); planned: TestNewMachineIdentifierPerClone, TestAuxStorageClonedAndRemoved |
+| R5.170 | planned: real Mac: checklist item 11 |
+| R5.171 | planned: apps/controller/internal/backend/registry/registry_test.go TestMacVMOffUntilChecked |
+| R5.172 | planned: apps/controller/internal/backend/microvm/rootfs_test.go TestRootfsFromOCIImage, TestWritableDiskPerJob; apps/controller/internal/runners/version_test.go TestKernelPinned |
+| R5.173 | planned: apps/controller/internal/backend/microvm/snapshot_test.go TestSnapshotKeyAndRestore, TestNoSnapshotAfterSecret, TestFreshIdentityAfterRestore, TestNetnsPerRestore |
+| R5.174 | planned: apps/controller/internal/backend/microvm/jail_test.go TestJailerArgs, TestOwnUidAndLimits |
+| R5.175 | planned: apps/controller/internal/backend/microvm/lanes_test.go TestLaneDiskOneVM |
+| R5.176 | planned: apps/controller/internal/agent/vmsetup_test.go TestMonitorPinnedDownload |
+| R5.177 | planned: apps/controller/internal/backend/microvm/perf_test.go (M6) |
 | R6.1 | apps/controller/internal/backend/container/container_test.go TestNoPrivilegedNoSocketKvmDevice (CRSP52) |
 | R6.2 | apps/controller/internal/runners/service_test.go TestNoTokenOrPasswordStoredOrLogged; apps/controller/internal/backend/linux/linux_test.go TestTokenOnlyInEnvAndUpdateOff |
 | R6.3 | apps/controller/internal/backend/windows/windows_test.go TestAccountRights (never in Administrators); apps/controller/internal/backend/linux/linux_test.go TestUnitUserAndGroup; apps/controller/internal/backend/macos/macos_test.go TestHiddenUser |
@@ -772,6 +986,9 @@ Open questions for the owner (proposed answers are in the requirements until dec
 63. R5.86 (HND16): the agent has the install hook but no `PackageExec` for the persistent prefix or the VM base disk yet, and the controller does not feed `package_failures` to the doctor. Conservative choice: the agent refuses a persistent runner that names packages until a backend supplies the exec. Alternative: install on the host OS (refused by owner rule: never the host).
 64. R5.88 (OPS23): the agent link has no start-service message, so the slot lock cannot pause a registration yet; it watches and audits `pool.slot_conflict`. Alternative: add `PauseService` and `ResumeService` to the agent protocol and wire `runners.ServicePauser`. The runner store is still in memory, so the `pool` scope needs no migration now; the SQLite adapter must allow scope `pool` and keep `pool_runner_id` when it lands.
 65. R5.97 (OPS53): the shared role is `CREATEROLE` always and the job takes it with `PGOPTIONS` (a connection string option is not added, because some drivers reject it); the alternative is `CREATEROLE` on every login too, which works for clients that ignore `PGOPTIONS` but gives roles that only one login administers. Roles the jobs made stay when the last runner goes. Confirm both. The `GRANT ... WITH INHERIT TRUE, SET TRUE` syntax is PostgreSQL 16 and was not run against a real server (the tests use fakes).
+66. R5.28, R5.156 to R5.164 (CRSP275): the VM per job on Windows and Linux. Ten questions Z1 to Z10, with options and recommendations, end section 5.16.
+67. R5.29, R5.165 to R5.171 (CRSP276): the macOS VM backend and the first real-Mac run. Seven questions AA1 to AA7 end section 5.17.
+68. R5.30, R5.172 to R5.177 (CRSP277): microVMs, Firecracker or Cloud Hypervisor. Seven questions AB1 to AB7 end section 5.18.
 
 ## 11. Not built yet
 
