@@ -25,7 +25,9 @@
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
 
     <!-- State 5 = installed. -->
-    <util:ProductSearch UpgradeCode="C1D62442-6DB4-4FF0-9F28-A1CE3121B332" Result="state" Variable="CONTROLLERSTATE" />
+    <Property Id="CONTROLLERSTATE">
+      <util:ProductSearch UpgradeCode="C1D62442-6DB4-4FF0-9F28-A1CE3121B332" Result="state" />
+    </Property>
     <Launch Condition="NOT (CONTROLLERSTATE = 5)"
             Message="The Controller is installed on this machine. It already contains the agent; remove it first to install the agent alone." />
 
