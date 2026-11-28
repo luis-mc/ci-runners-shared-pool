@@ -62,7 +62,7 @@ func TestRefusalsExitNonZero(t *testing.T) {
 			f.reply("POST /api/v1/machines/m_build-01/drain", 202, change("waiting", job))
 			f.reply("GET /api/v1/machines/m_build-01/changes/c1", 200, change("needs_you", job))
 		}, ExitFailed, "not stopped", "POST /api/v1/machines/m_build-01/changes"},
-		{"unbuilt command", []string{"config", "export"}, func(*fixture) {}, ExitUsage, "not built yet", ""},
+		{"unbuilt command", []string{"tray"}, func(*fixture) {}, ExitUsage, "not built yet", ""},
 		{"unknown command", []string{"frobnicate"}, func(*fixture) {}, ExitUsage, "", ""},
 		{"unreachable controller", []string{"machine", "list"}, func(f *fixture) { f.srv.Close() }, ExitUnreachable, "", ""},
 	}

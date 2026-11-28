@@ -4887,8 +4887,6 @@ paths:
   /api/v1/config/export:
     get:
       operationId: exportConfigFile
-      x-cli: none
-      x-cli-reason: 'Later: `crsp config export` follows in its own task; the API and the console are built (operations R5.28).'
       tags: [settings]
       summary: Export the setup as one config file
       description: >-
@@ -4907,8 +4905,6 @@ paths:
   /api/v1/config/plans:
     post:
       operationId: planConfig
-      x-cli: none
-      x-cli-reason: 'Later: `crsp config plan` follows in its own task; the API and the console are built (operations R5.29).'
       tags: [settings]
       summary: Plan a config file
       description: >-
@@ -4936,8 +4932,6 @@ paths:
   /api/v1/config/plans/{configPlanId}/apply:
     post:
       operationId: applyConfigPlan
-      x-cli: none
-      x-cli-reason: 'Later: `crsp config apply` follows in its own task; the API and the console are built (operations R5.30).'
       tags: [settings]
       summary: Apply a config plan
       description: >-
