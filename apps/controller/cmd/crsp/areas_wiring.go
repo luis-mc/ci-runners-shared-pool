@@ -180,7 +180,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		b, err := d.Secrets.Get(context.Background(), github.SecretKey(app, github.SecretWebhookSecret))
 		return err == nil && len(b) > 0
 	}
-	appHealth := &github.AppHealth{Client: gh, AppID: gh.AppID, Now: d.Now}
+	appHealth := &github.AppHealth{Client: gh, AppID: gh.AppID, Now: d.Now,
+		// The one setting a sign-in from the CLI needs (github-integration R5.14).
+		DeviceFlow: func(ctx context.Context) error { _, err := gh.StartDevice(ctx); return err }}
 	// The Jobs section: every job event ends in one recorder (observability R5.7 to R5.12).
 	jobsIngest := newJobsWiring(ctx, logger, d.DB.Jobs(), gh, repoStore, d.Now)
 	c.closers = append(c.closers, jobsIngest.Close)

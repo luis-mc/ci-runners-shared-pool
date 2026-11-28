@@ -563,6 +563,16 @@ The words of a runner whose registration GitHub deleted (runners R5.152, R5.153)
 | Register again | The button in the Managed column of a managed runner that is not registered or failed with a lost registration, and on its page. Admin only (busy word: Registering). |
 | Could not register again. {why} | Problem message under the list or the page when the press is refused or fails. |
 
+## Device Flow words
+
+The words of the one GitHub App setting that `crsp login` needs (github-integration R5.116).
+
+| Word | Where and meaning |
+|---|---|
+| Device Flow is off for the GitHub App, so crsp login cannot sign anyone in. Turn on "Enable Device Flow" in the App settings on GitHub. | Needs-you message on the Overview while GitHub says the setting is off. |
+| Open the App settings | The button of that message. It opens the App's settings page on GitHub in a new tab. Absent while the App's slug is unknown. |
+| Device Flow is off for this controller's GitHub App. Turn on "Enable Device Flow" at {url}, then run crsp login again. | The CLI error of `crsp login` (exit 1). Without a link, {url} is replaced by: in the App's settings on GitHub (Settings, Developer settings, GitHub Apps). |
+
 ## GitHub App key words
 
 The words of Settings, GitHub App, where the owner replaces the App private key (github-integration R5.7).

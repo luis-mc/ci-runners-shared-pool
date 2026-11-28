@@ -142,7 +142,7 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 
 ### Sign-in and contexts
 
-**R5.4** — `login [URL]` MUST sign in with GitHub's device flow through the controller. It prints the user code and the link `https://github.com/login/device`, waits, and then saves a controller token for that user in the OS secret store (Windows Credential Manager, macOS Keychain, Linux Secret Service, or a file with mode 0600 where no Secret Service exists).
+**R5.4** — `login [URL]` MUST sign in with GitHub's device flow through the controller. It prints the user code and the link `https://github.com/login/device`, waits, and then saves a controller token for that user in the OS secret store (Windows Credential Manager, macOS Keychain, Linux Secret Service, or a file with mode 0600 where no Secret Service exists). When GitHub answers that Device Flow is off for the App, `login` MUST say so and name the App settings page instead of the generic retry words (github-integration R5.116).
 
 **R5.5** — At first login to a controller, `login` MUST show the controller certificate's SHA-256 fingerprint and ask for a yes (or take `--fingerprint`). It pins that fingerprint in the context. A later certificate with another fingerprint MUST be refused.
 

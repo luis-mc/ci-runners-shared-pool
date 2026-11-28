@@ -328,6 +328,21 @@ describe('App health banner (github-integration R5.6)', () => {
     ).toBe('/setup?wizard=1');
   });
 
+  it('names the one setting when Device Flow is off, with a link to the App settings (R5.14)', async () => {
+    const api = signedIn().on('GET', '/api/v1/github/app-health', {
+      gone: false,
+      device_flow_off: true,
+      settings_url: 'https://github.com/settings/apps/crsp-home',
+      checked_at: '2026-11-16T08:00:00Z',
+    });
+    renderApp(api, '/');
+    const note = await screen.findByText(/Device Flow is off/);
+    expect(note.textContent).toContain('Enable Device Flow');
+    expect(
+      (await screen.findByRole('button', { name: 'Open the App settings' })).getAttribute('href'),
+    ).toBe('https://github.com/settings/apps/crsp-home');
+  });
+
   it('draws nothing while the App answers', async () => {
     const api = signedIn().on('GET', '/api/v1/github/app-health', { gone: false });
     renderApp(api, '/');

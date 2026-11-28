@@ -7678,6 +7678,12 @@ components:
         verification_url:
           type: string
           example: https://github.com/login/device
+        settings_url:
+          type: string
+          description: >-
+            The App's settings page on GitHub, where "Enable Device Flow" is
+            turned on. The CLI names it when GitHub says Device Flow is off.
+          example: https://github.com/settings/apps/crsp-home
     ExchangeCliTokenRequest:
       type: object
       required: [github_credential, name]
@@ -8097,6 +8103,14 @@ components:
           type: string
           format: date-time
           description: When GitHub last answered. Absent before the first answer.
+        device_flow_off:
+          type: boolean
+          description: >-
+            True when GitHub answered that "Enable Device Flow" is off for the
+            App, so `crsp login` cannot sign anyone in (R5.14).
+        settings_url:
+          type: string
+          description: The App's settings page on GitHub. Present when device_flow_off is true.
     AppInstallUrl:
       type: object
       required: [url]
