@@ -995,11 +995,15 @@ func TestWorkflowPerJob(t *testing.T) {
 	// versions wrote, is routed too, alone or as the fallback of the per-job form.
 	const oldName = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX) }}\n"
 	const oldFallback = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.RUNS_ON_LINUX || '\"ubuntu-latest\"') }}\n"
+	// CRSP402: CI_RUNS_ON-only workflows are routable; once patched they are routed.
+	const ciOnly = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CI_RUNS_ON) }}\n"
+	const ciDone = "jobs:\n  e2e:\n    runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON) }}\n"
 	for _, tc := range []struct {
 		full, src string
 		sev       doctor.Severity
 		patch     bool
-	}{{"luis-mc/app", old, doctor.Info, false}, {"other/app", old, doctor.Info, true}, {"other/app", done, doctor.OK, false},
+	}{{"luis-mc/app", ciOnly, doctor.Info, false}, {"other/app", ciOnly, doctor.Info, true}, {"other/app", ciDone, doctor.OK, false},
+		{"luis-mc/app", old, doctor.Info, false}, {"other/app", old, doctor.Info, true}, {"other/app", done, doctor.OK, false},
 		{"other/app", oldName, doctor.Info, true}, {"other/app", oldFallback, doctor.Info, true}} {
 		g := newGH()
 		g.files[tc.full] = []github.WorkflowFile{{Path: ".github/workflows/ci.yml", Content: []byte(tc.src)}}

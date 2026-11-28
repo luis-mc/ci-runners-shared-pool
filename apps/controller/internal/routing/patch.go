@@ -28,11 +28,24 @@ type RoutedJob struct {
 	PerJob bool
 	// Default is the labels after the last ||, empty when the job has none.
 	Default []string
+	// Legacy lists the variables the job read before crsp that the patch keeps
+	// as fallbacks, in order: the dev-standards names CI_RUNS_ON and
+	// CI_RUNS_ON_WINDOWS, and any other variable beside them (NIGHTLY_RUNS_ON).
+	// Deleting the CRSP_ variables then brings back the old routing.
+	Legacy []string
+	// FromCI is true when the pool variable was derived from a CI_RUNS_ON name
+	// and the chain holds no CRSP_RUNS_ON_ variable yet, so the patch rewrites it.
+	FromCI bool
 }
 
 // sizeVarRE is a pool variable: CRSP_RUNS_ON_<OS> or CRSP_RUNS_ON_<OS>_<SIZE>,
 // or the same without CRSP_, the name older versions wrote (CRSP229).
 var sizeVarRE = regexp.MustCompile(`^(CRSP_)?RUNS_ON_(LINUX|WINDOWS|MACOS)(_[A-Z][A-Z0-9]*)?$`)
+
+// ciVarRE is the dev-standards runner variable: CI_RUNS_ON (Linux),
+// CI_RUNS_ON_WINDOWS, and CI_RUNS_ON_<OS> or CI_RUNS_ON_<OS>_<SIZE>. A job that
+// reads one is routable (CRSP402).
+var ciVarRE = regexp.MustCompile(`^CI_RUNS_ON(?:_(LINUX|WINDOWS|MACOS)(_[A-Z][A-Z0-9]*)?)?$`)
 
 // Routed reads the routed jobs of a set of workflow files, sorted by path and
 // line. A job with literal labels, a matrix value or no variable is not routed.
@@ -57,20 +70,49 @@ func Routed(files map[string][]byte) []RoutedJob {
 			if len(chain) == 0 {
 				chain = []string{j.Var}
 			}
+			ciOS, ciBase, poolSeen := "", "", false
 			for _, v := range chain {
 				if m := sizeVarRE.FindStringSubmatch(v); m != nil {
 					rj.OS, rj.Base, rj.OldBase = strings.ToLower(m[2]), PoolVarPrefix+m[2]+m[3], m[1] == ""
+					poolSeen = true
 				} else if IsJobVar(v) {
 					rj.PerJob = true
+				} else if m := ciVarRE.FindStringSubmatch(v); m != nil {
+					os := m[1]
+					if os == "" {
+						os = "LINUX"
+					}
+					ciOS, ciBase = strings.ToLower(os), PoolVarPrefix+os+m[2]
+					rj.Legacy = append(rj.Legacy, v)
+				} else if !IsPoolVar(v) {
+					rj.Legacy = append(rj.Legacy, v)
 				}
+			}
+			if rj.Base == "" && ciBase != "" {
+				rj.OS, rj.Base, rj.FromCI = ciOS, ciBase, true
 			}
 			if rj.Base == "" {
 				continue
+			}
+			if poolSeen {
+				rj.FromCI = false
+			}
+			if !rj.FromCI && !hasCI(rj.Legacy) {
+				rj.Legacy = nil // an old pool name is rewritten; other variables are not ours to carry
 			}
 			out = append(out, rj)
 		}
 	}
 	return out
+}
+
+func hasCI(vars []string) bool {
+	for _, v := range vars {
+		if ciVarRE.MatchString(v) {
+			return true
+		}
+	}
+	return false
 }
 
 // Change is one runs-on line the patch rewrites.
@@ -106,12 +148,31 @@ var hostedFor = map[string]string{"linux": "ubuntu-latest", "windows": "windows-
 // Expression is the per-job runs-on: fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"').
 // A default the job already had stays the last fallback.
 func Expression(varName, base, os string, def []string) string {
-	last := `'"` + hostedFor[os] + `"'`
-	if len(def) > 0 {
-		last = "'" + jsonList(def) + "'"
-	}
-	return "${{ fromJSON(vars." + varName + " || vars." + base + " || " + last + ") }}"
+	return expression(varName, base, os, def, nil)
 }
+
+// expression builds the runs-on of one routed job. legacy are the variables the
+// job read before, kept after the pool variable. A job that had legacy
+// variables and no default keeps no default: the old behaviour stays the way back.
+func expression(varName, base, os string, def, legacy []string) string {
+	var b strings.Builder
+	b.WriteString("${{ fromJSON(vars." + varName + " || vars." + base)
+	for _, v := range legacy {
+		b.WriteString(" || vars." + v)
+	}
+	switch {
+	case len(def) == 1:
+		b.WriteString(" || '" + jsonString(def[0]) + "'")
+	case len(def) > 1:
+		b.WriteString(" || '" + jsonList(def) + "'")
+	case len(legacy) == 0:
+		b.WriteString(" || '" + jsonString(hostedFor[os]) + "'")
+	}
+	b.WriteString(") }}")
+	return b.String()
+}
+
+func jsonString(s string) string { return fmt.Sprintf("%q", s) }
 
 func jsonList(l []string) string {
 	var b strings.Builder
@@ -153,7 +214,7 @@ func MakePatch(files map[string][]byte) Patch {
 		lines := strings.Split(string(old), "\n")
 		fp := FilePatch{Path: p, Old: old}
 		for _, r := range byPath[p] {
-			if r.PerJob && !r.OldBase {
+			if r.PerJob && !r.OldBase && !r.FromCI {
 				continue
 			}
 			if r.Line < 1 || r.Line > len(lines) {
@@ -166,7 +227,7 @@ func MakePatch(files map[string][]byte) Patch {
 				patch.Skipped = append(patch.Skipped, p+": "+r.Key)
 				continue
 			}
-			to := m[1] + Expression(names[r.Key], r.Base, r.OS, r.Default) + m[3]
+			to := m[1] + expression(names[r.Key], r.Base, r.OS, r.Default, r.Legacy) + m[3]
 			lines[r.Line-1] = to + strings.TrimPrefix(lines[r.Line-1], ln)
 			fp.Changes = append(fp.Changes, Change{Job: r.Key, Line: r.Line, From: ln, To: to})
 		}

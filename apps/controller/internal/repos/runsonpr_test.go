@@ -167,3 +167,29 @@ func TestRunsOnPRNotOwnedAndBadTarget(t *testing.T) {
 		t.Errorf("off: %v", err)
 	}
 }
+
+// CRSP402: a repository whose workflows read the dev-standards CI_RUNS_ON names
+// has a preview with files and a diff, and the old variable stays a fallback.
+func TestPreviewRunsOnPRRoutesCIRunsOn(t *testing.T) {
+	wf := "jobs:\n  unit:\n    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}\n  win:\n    runs-on: ${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }}\n"
+	e, f := runsOnEnv(t, map[string][]byte{".github/workflows/ci.yml": []byte(wf)})
+	out, err := e.svc.PreviewRunsOnPR(context.Background(), adminP, RunsOnPRTarget{RepositoryID: 100})
+	if err != nil || len(out) != 1 {
+		t.Fatalf("%v %+v", err, out)
+	}
+	v := out[0]
+	if v.State != PRPreviewChange || len(v.Files) != 1 || v.Files[0].Changes != 2 {
+		t.Fatalf("%+v", v)
+	}
+	for _, want := range []string{
+		"+    runs-on: ${{ fromJSON(vars.CRSP_UNIT || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}",
+		"+    runs-on: ${{ fromJSON(vars.CRSP_WIN || vars.CRSP_RUNS_ON_WINDOWS || vars.CI_RUNS_ON_WINDOWS) }}",
+	} {
+		if !strings.Contains(v.Diff, want) {
+			t.Errorf("diff misses %q:\n%s", want, v.Diff)
+		}
+	}
+	if len(f.opened) != 0 {
+		t.Error("a preview opened a pull request")
+	}
+}

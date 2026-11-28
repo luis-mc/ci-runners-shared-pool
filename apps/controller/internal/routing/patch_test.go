@@ -98,8 +98,6 @@ func TestMakePatchWritesTheNewPoolNames(t *testing.T) {
     runs-on: ${{ fromJSON(vars.RUNS_ON_WINDOWS_LARGE) }}
   half:
     runs-on: ${{ fromJSON(vars.CRSP_HALF || vars.RUNS_ON_MACOS || '"macos-latest"') }}
-  ci:
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON) }}
 `
 	files := map[string][]byte{"ci.yml": []byte(old)}
 	routed := routing.Routed(files)
@@ -119,8 +117,7 @@ func TestMakePatchWritesTheNewPoolNames(t *testing.T) {
 	for _, want := range []string{
 		"runs-on: ${{ fromJSON(vars.CRSP_UNIT || vars.CRSP_RUNS_ON_LINUX || '\"ubuntu-latest\"') }}",
 		"runs-on: ${{ fromJSON(vars.CRSP_BIG || vars.CRSP_RUNS_ON_WINDOWS_LARGE || '\"windows-latest\"') }}",
-		"runs-on: ${{ fromJSON(vars.CRSP_HALF || vars.CRSP_RUNS_ON_MACOS || '[\"macos-latest\"]') }}",
-		"runs-on: ${{ fromJSON(vars.CI_RUNS_ON) }}",
+		"runs-on: ${{ fromJSON(vars.CRSP_HALF || vars.CRSP_RUNS_ON_MACOS || '\"macos-latest\"') }}",
 	} {
 		if !strings.Contains(got, want) {
 			t.Errorf("missing %q in\n%s", want, got)
@@ -131,5 +128,72 @@ func TestMakePatchWritesTheNewPoolNames(t *testing.T) {
 	}
 	if again := routing.MakePatch(map[string][]byte{"ci.yml": p.Files[0].New}); !again.Empty() {
 		t.Fatalf("second patch not empty: %+v", again)
+	}
+}
+
+// CRSP402: a workflow that reads the dev-standards names CI_RUNS_ON and
+// CI_RUNS_ON_WINDOWS is routed; the old variable stays as the fallback, so the
+// way back is deleting the CRSP_ variables. A line with no default keeps none.
+func TestMakePatchRoutesCIRunsOn(t *testing.T) {
+	cases := []struct{ name, in, want string }{
+		{"linux with default", "${{ fromJSON(vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}",
+			"${{ fromJSON(vars.CRSP_JOB || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}"},
+		{"linux no default", "${{ fromJSON(vars.CI_RUNS_ON) }}",
+			"${{ fromJSON(vars.CRSP_JOB || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON) }}"},
+		{"windows no default", "${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }}",
+			"${{ fromJSON(vars.CRSP_JOB || vars.CRSP_RUNS_ON_WINDOWS || vars.CI_RUNS_ON_WINDOWS) }}"},
+		{"os and size", "${{ fromJSON(vars.CI_RUNS_ON_WINDOWS_LARGE) }}",
+			"${{ fromJSON(vars.CRSP_JOB || vars.CRSP_RUNS_ON_WINDOWS_LARGE || vars.CI_RUNS_ON_WINDOWS_LARGE) }}"},
+		{"other variable first", "${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}",
+			"${{ fromJSON(vars.CRSP_JOB || vars.CRSP_RUNS_ON_LINUX || vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}"},
+		{"per-job form without pool variable", "${{ fromJSON(vars.CRSP_JOB || vars.CI_RUNS_ON) }}",
+			"${{ fromJSON(vars.CRSP_JOB || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON) }}"},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			wf := "jobs:\n  job:\n    runs-on: " + c.in + "  # keep\n"
+			files := map[string][]byte{"w.yml": []byte(wf)}
+			if r := routing.Routed(files); len(r) != 1 {
+				t.Fatalf("routed %+v", r)
+			}
+			p := routing.MakePatch(files)
+			if p.Empty() {
+				t.Fatal("no patch")
+			}
+			if got, want := string(p.Files[0].New), "jobs:\n  job:\n    runs-on: "+c.want+"  # keep\n"; got != want {
+				t.Fatalf("got\n%s\nwant\n%s", got, want)
+			}
+			if again := routing.MakePatch(map[string][]byte{"w.yml": p.Files[0].New}); !again.Empty() {
+				t.Fatalf("not idempotent: %+v", again)
+			}
+		})
+	}
+}
+
+func TestMakePatchMixedFileAndPerJobPresent(t *testing.T) {
+	const wf = `jobs:
+  a:
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON) }}
+  b:
+    runs-on: ${{ fromJSON(vars.CRSP_B || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+  c:
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }}
+  d:
+    runs-on: ubuntu-latest
+  e:
+    runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
+  f:
+    runs-on:
+      ${{ fromJSON(vars.CI_RUNS_ON) }}
+`
+	p := routing.MakePatch(map[string][]byte{"w.yml": []byte(wf)})
+	if len(p.Files) != 1 || len(p.Files[0].Changes) != 2 {
+		t.Fatalf("patch %+v", p)
+	}
+	if len(p.Skipped) != 1 || !strings.HasSuffix(p.Skipped[0], ": f") {
+		t.Fatalf("skipped %v", p.Skipped)
+	}
+	if !strings.Contains(p.Diff(), "+    runs-on: ${{ fromJSON(vars.CRSP_C || vars.CRSP_RUNS_ON_WINDOWS || vars.CI_RUNS_ON_WINDOWS) }}") {
+		t.Fatalf("diff %s", p.Diff())
 	}
 }
