@@ -83,11 +83,23 @@ jobs:
           sparse-checkout: |
             scripts/ci
             scripts/delivery
+      # CRSP375 (S16): the push to main is decided by the shipped scripts/delivery/ci_skip_check.py (a pull request
+      # run that passed on the same tree, or one that differs only in paths-ignore files). The watcher
+      # (watcher.merge_result = update) merges main into a ready pull request before its run, so that run tests
+      # what will merge and the push to main skips. A pull request that only changes repo config skips through
+      # scripts/ci/pr_config_only.py (DS261). A manual run never skips.
       - id: check
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ github.token }}
           PR_NUMBER: ${{ github.event.pull_request.number }}
-        run: python3 scripts/ci/ci_skip_check.py
+          EVENT: ${{ github.event_name }}
+        run: |
+          case "$EVENT" in
+            push) python3 scripts/delivery/ci_skip_check.py ;;
+            pull_request) python3 scripts/ci/pr_config_only.py ;;
+            *) echo "skip=false" >> "$GITHUB_OUTPUT" ;;
+          esac
       # OPS41: the base image build is slow. It runs on a release pull request
       # (head branch *-integration or *-release-N), on main and on a manual run; on any other
       # pull request only when images/** or the build or ci workflow changed.
