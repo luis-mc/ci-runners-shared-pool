@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "shard": "image",
+  "key": "4f88e4e1c5f17e4e9ad531df2a133137739d95b6c5d4a70835935a0d8c8e0c74",
+  "state": "success",
+  "sha": "a68ea2c0a948d9123ff2404d32b3c759a5794a4a",
+  "branch": "main",
+  "seconds": 0.0,
+  "at": "2026-11-28T17:04:38Z",
+  "copied_from": "CRSP390-integration"
+}
