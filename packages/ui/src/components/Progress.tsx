@@ -129,10 +129,7 @@ export function LevelBar({
 }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
   return (
-    <div
-      className="ds-level"
-      style={{ '--ds-pct': Math.round(pct) } as CSSProperties}
-    >
+    <div className="ds-level" style={{ '--ds-pct': Math.round(pct) } as CSSProperties}>
       <span className="ds-level__name">
         {label}
         {help}
