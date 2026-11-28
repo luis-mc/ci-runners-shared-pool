@@ -3,6 +3,7 @@ package api
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"time"
 
@@ -13,19 +14,141 @@ import (
 
 // forecaster reads the samples a forecast needs. It lives for one request and remembers what it read, so the jobs
 // of a page that share a workflow or a repository read those samples once; nothing is kept between requests.
+//
+// It also keeps the open jobs and the queue simulation of the request, so a page of many runs reads and forecasts the
+// open jobs once, and prefetch loads the samples of a whole page in a few queries (CRSP290, audit F1, F2, F11).
 type forecaster struct {
 	r    jobsdata.Reader
 	now  time.Time
 	memo map[string][]jobsdata.Sample
+
+	open      []jobsdata.Job
+	openRead  bool
+	queue     map[int64]queueInfo
+	queueRead bool
 }
 
 func newForecaster(r jobsdata.Reader, now time.Time) *forecaster {
 	return &forecaster{r: r, now: now, memo: map[string][]jobsdata.Sample{}}
 }
 
+func sampleKey(q jobsdata.SampleQuery) string {
+	return fmt.Sprintf("%d|%s|%s|%s|%s", q.RepositoryID, q.JobKey, q.Workflow, q.JobType, q.StepName)
+}
+
+// openJobs is every queued and running job, read once per request.
+func (f *forecaster) openJobs(ctx context.Context) ([]jobsdata.Job, error) {
+	if f.openRead {
+		return f.open, nil
+	}
+	open, err := f.r.OpenJobs(ctx)
+	if err != nil {
+		return nil, err
+	}
+	f.open, f.openRead = open, true
+	return open, nil
+}
+
+// needsSamples says whether forJob reads samples for j.
+func needsSamples(j jobsdata.Job) bool { return j.State == jobsdata.Queued || j.Forecast == nil }
+
+// prefetch reads, for all the jobs at once, the samples forJob will ask for: the job-key level for every job, then
+// the workflow level for the jobs whose key has too few, then the repository level. Each level is one batch read
+// (the reader answers many questions in one query). A reader without batch reads is left to forJob, one question at
+// a time. Nothing here changes an answer: forJob finds the same samples in the memo that it would have read.
+func (f *forecaster) prefetch(ctx context.Context, lists ...[]jobsdata.Job) error {
+	br, ok := f.r.(jobsdata.BatchReader)
+	if !ok {
+		return nil
+	}
+	var jobs []jobsdata.Job
+	for _, l := range lists {
+		for _, j := range l {
+			if needsSamples(j) {
+				jobs = append(jobs, j)
+			}
+		}
+	}
+	load := func(qs []jobsdata.SampleQuery) error {
+		var todo []jobsdata.SampleQuery
+		seen := map[string]bool{}
+		for _, q := range qs {
+			q.Since, q.Limit = f.now.Add(-forecast.MaxAge), forecast.Window
+			k := sampleKey(q)
+			if _, have := f.memo[k]; have || seen[k] {
+				continue
+			}
+			seen[k] = true
+			todo = append(todo, q)
+		}
+		if len(todo) == 0 {
+			return nil
+		}
+		got, err := br.SamplesMany(ctx, todo)
+		if err != nil {
+			return err
+		}
+		for i, q := range todo {
+			f.memo[sampleKey(q)] = got[i]
+		}
+		return nil
+	}
+	short := func(q jobsdata.SampleQuery) bool { return len(f.memo[sampleKey(q)]) < forecast.MinSamples }
+	var l1, l2, l3 []jobsdata.SampleQuery
+	for _, j := range jobs {
+		l1 = append(l1, jobsdata.SampleQuery{RepositoryID: j.RepositoryID, JobKey: j.JobKey})
+	}
+	if err := load(l1); err != nil {
+		return err
+	}
+	var rest []jobsdata.Job
+	for _, j := range jobs {
+		if q := (jobsdata.SampleQuery{RepositoryID: j.RepositoryID, JobKey: j.JobKey}); short(withLimits(q, f.now)) {
+			rest = append(rest, j)
+			if j.Workflow != "" {
+				l2 = append(l2, jobsdata.SampleQuery{RepositoryID: j.RepositoryID, Workflow: j.Workflow, JobType: j.JobType})
+			}
+		}
+	}
+	if err := load(l2); err != nil {
+		return err
+	}
+	for _, j := range rest {
+		if j.Workflow != "" {
+			if q := (jobsdata.SampleQuery{RepositoryID: j.RepositoryID, Workflow: j.Workflow, JobType: j.JobType}); !short(withLimits(q, f.now)) {
+				continue
+			}
+		}
+		l3 = append(l3, jobsdata.SampleQuery{RepositoryID: j.RepositoryID})
+	}
+	return load(l3)
+}
+
+// prepare reads ahead what forecasting jobs (and placing the queued ones) will need: the open jobs when one of jobs
+// is queued, then the samples of all of them in a few batch reads.
+func (f *forecaster) prepare(ctx context.Context, jobs ...[]jobsdata.Job) error {
+	lists := jobs
+	for _, l := range jobs {
+		if slices.ContainsFunc(l, func(j jobsdata.Job) bool { return j.State == jobsdata.Queued }) {
+			open, err := f.openJobs(ctx)
+			if err != nil {
+				return err
+			}
+			lists = append(lists[:len(lists):len(lists)], open)
+			break
+		}
+	}
+	return f.prefetch(ctx, lists...)
+}
+
+func withLimits(q jobsdata.SampleQuery, now time.Time) jobsdata.SampleQuery {
+	q.Since, q.Limit = now.Add(-forecast.MaxAge), forecast.Window
+	return q
+}
+
 func (f *forecaster) samples(ctx context.Context, q jobsdata.SampleQuery) ([]jobsdata.Sample, error) {
 	q.Since, q.Limit = f.now.Add(-forecast.MaxAge), forecast.Window
-	key := fmt.Sprintf("%d|%s|%s|%s|%s", q.RepositoryID, q.JobKey, q.Workflow, q.JobType, q.StepName)
+	key := sampleKey(q)
 	if got, ok := f.memo[key]; ok {
 		return got, nil
 	}
@@ -122,15 +245,22 @@ func (s *server) queueFor(ctx context.Context, fc *forecaster, jobs []jobsdata.J
 	if !queued {
 		return nil, nil
 	}
-	open, err := s.opts.JobsData.OpenJobs(ctx)
+	if fc.queueRead {
+		return fc.queue, nil
+	}
+	open, err := fc.openJobs(ctx)
 	if err != nil {
+		return nil, err
+	}
+	if err := fc.prefetch(ctx, open); err != nil {
 		return nil, err
 	}
 	fcs, err := fc.forJobs(ctx, open)
 	if err != nil {
 		return nil, err
 	}
-	return queueETAs(open, fcs, s.slotCounts(ctx), fc.now), nil
+	fc.queue, fc.queueRead = queueETAs(open, fcs, s.slotCounts(ctx), fc.now), true
+	return fc.queue, nil
 }
 
 // item is a job as the contract shows it: its forecast and, when queued, its place and ETA.

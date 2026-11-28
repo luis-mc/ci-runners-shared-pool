@@ -15,6 +15,7 @@ const (
 	TestingStep                = "Testing"
 	UpdatedTitle               = "Updated to version {version}."
 	UpdatedAction              = "What's new"
+	UpdatedNotes               = "What is new in version {version}"
 	RolledBackTitle            = "The update to {version} failed its test. Version {previous} is running again. We try again at {time}."
 	RefusedTitle               = "The download for {version} did not pass its signature check. Nothing changed."
 	RemoveTitle                = "Remove {product}"

@@ -12,6 +12,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
 	"regexp"
 	"strconv"
 	"strings"
@@ -39,6 +40,10 @@ type Settings struct {
 	// names no label of its own. Empty means the GitHub-hosted defaults
 	// (github-integration R5.42, CRSP261).
 	OverflowLabel string
+	// OverflowTargets are the owner's priority rules for cloud overflow, first
+	// target first (github-integration R5.114, CRSP281). Empty means the single
+	// OverflowLabel rule above.
+	OverflowTargets []OverflowTarget
 	// AutoUpdate is operations R5.15: on by default; a newer stable release
 	// installs by itself after a drain.
 	AutoUpdate bool
@@ -67,6 +72,7 @@ type Patch struct {
 	MaxEventStreams            *int
 	FallbackGraceMinutes       *int
 	OverflowLabel              *string
+	OverflowTargets            *[]OverflowTarget
 	AutoUpdate                 *bool
 
 	InsightsKeepCIData             *bool
@@ -186,6 +192,11 @@ func (s *Service) Get(ctx context.Context) (Settings, error) {
 			var v string
 			if json.Unmarshal([]byte(r.Value), &v) == nil && validOverflowLabel(v) {
 				out.OverflowLabel = v
+			}
+		case "overflow_targets":
+			var v []OverflowTarget
+			if json.Unmarshal([]byte(r.Value), &v) == nil && validOverflowTargets(v) == nil {
+				out.OverflowTargets = v
 			}
 		case "backup_time_local":
 			var v string
@@ -314,6 +325,17 @@ func (s *Service) Update(ctx context.Context, actor audit.Actor, p Patch) (Setti
 			writes["overflow_label"] = string(b)
 		}
 	}
+	if p.OverflowTargets != nil {
+		v := normalizeTargets(*p.OverflowTargets)
+		if err := validOverflowTargets(v); err != nil {
+			problems = append(problems, "overflow_targets: "+err.Error())
+		} else if !sameTargets(v, before.OverflowTargets) {
+			after.OverflowTargets = v
+			changes["overflow_targets"] = describeTargets(before.OverflowTargets) + " -> " + describeTargets(v)
+			b, _ := json.Marshal(v)
+			writes["overflow_targets"] = string(b)
+		}
+	}
 	if p.AutoUpdate != nil && *p.AutoUpdate != before.AutoUpdate {
 		after.AutoUpdate = *p.AutoUpdate
 		changes["auto_update"] = strconv.FormatBool(before.AutoUpdate) + " -> " + strconv.FormatBool(*p.AutoUpdate)
@@ -393,4 +415,110 @@ const MaxOverflowLabelLen = 100
 // that is safe inside the JSON list written to a runs-on variable.
 func validOverflowLabel(v string) bool {
 	return len(v) <= MaxOverflowLabelLen && !strings.ContainsAny(v, " \t\r\n,\"\\")
+}
+
+// The overflow target kinds (github-integration R5.114).
+const (
+	TargetGitHubHosted = "github_hosted"
+	TargetAWSEC2       = "aws_ec2"
+)
+
+// MaxOverflowCapMinutes bounds a target's monthly cap per repository.
+const MaxOverflowCapMinutes = 1000000
+
+// MaxOverflowPriceUSD bounds a target's price per minute.
+const MaxOverflowPriceUSD = 1000
+
+// MaxOverflowBudgetUSD bounds a target's monthly money budget.
+const MaxOverflowBudgetUSD = 1000000
+
+// OverflowTarget is one rule of the owner's overflow priority list: a cloud a
+// queued job may go to while no crsp machine can take it.
+type OverflowTarget struct {
+	// Kind is github_hosted or aws_ec2, once each.
+	Kind    string
+	Enabled bool
+	// Label is the runner label jobs run on at this target. Empty is allowed for
+	// github_hosted only (the ubuntu-latest, windows-latest, macos-latest defaults).
+	Label string
+	// CapMinutes is the minutes per repository and month this target may take;
+	// 0 means no cap. When it is used up the next target is tried.
+	CapMinutes int
+	// TotalCapMinutes is the minutes per month this target may take across all
+	// repositories together; 0 means no cap. A target is used only while both
+	// caps have minutes left.
+	TotalCapMinutes int
+	// BudgetUSD is the money, in US dollars per month across all repositories,
+	// this target may cost; 0 means no budget (R5.115). It is checked beside
+	// the minute caps: a target is used only while all of them have room.
+	BudgetUSD float64
+	// PriceUSDPerMinute is what one minute at this target costs, in US dollars
+	// (R5.115, CRSP372); 0 means no price of its own. A set price counts the
+	// budget at any target; github_hosted without one uses the savings rate
+	// table, aws_ec2 without one has no rate and its budget is not enforced.
+	PriceUSDPerMinute float64
+	// Systems are the operating systems this target serves ("linux", "windows",
+	// "macos"); empty means all.
+	Systems []string
+}
+
+var targetSystems = map[string]bool{"linux": true, "windows": true, "macos": true}
+
+func validOverflowTargets(v []OverflowTarget) error {
+	seen := map[string]bool{}
+	for _, t := range v {
+		if t.Kind != TargetGitHubHosted && t.Kind != TargetAWSEC2 {
+			return fmt.Errorf("kind %q is not github_hosted or aws_ec2", t.Kind)
+		}
+		if seen[t.Kind] {
+			return fmt.Errorf("%s is listed twice", t.Kind)
+		}
+		seen[t.Kind] = true
+		t.Label = strings.TrimSpace(t.Label)
+		if !validOverflowLabel(t.Label) {
+			return fmt.Errorf("the label of %s must be one runner label of up to %d characters without spaces, commas or quotes", t.Kind, MaxOverflowLabelLen)
+		}
+		if t.Kind == TargetAWSEC2 && t.Enabled && t.Label == "" {
+			return fmt.Errorf("aws_ec2 needs a runner label while it is on")
+		}
+		if t.CapMinutes < 0 || t.CapMinutes > MaxOverflowCapMinutes {
+			return fmt.Errorf("the cap of %s must be from 0 to %d minutes", t.Kind, MaxOverflowCapMinutes)
+		}
+		if t.TotalCapMinutes < 0 || t.TotalCapMinutes > MaxOverflowCapMinutes {
+			return fmt.Errorf("the total cap of %s must be from 0 to %d minutes", t.Kind, MaxOverflowCapMinutes)
+		}
+		if math.IsNaN(t.BudgetUSD) || t.BudgetUSD < 0 || t.BudgetUSD > MaxOverflowBudgetUSD {
+			return fmt.Errorf("the budget of %s must be from 0 to %d dollars", t.Kind, MaxOverflowBudgetUSD)
+		}
+		if math.IsNaN(t.PriceUSDPerMinute) || t.PriceUSDPerMinute < 0 || t.PriceUSDPerMinute > MaxOverflowPriceUSD {
+			return fmt.Errorf("the price per minute of %s must be from 0 to %d dollars", t.Kind, MaxOverflowPriceUSD)
+		}
+		for _, s := range t.Systems {
+			if !targetSystems[s] {
+				return fmt.Errorf("system %q is not linux, windows or macos", s)
+			}
+		}
+	}
+	return nil
+}
+
+func sameTargets(a, b []OverflowTarget) bool {
+	return describeTargets(a) == describeTargets(b)
+}
+
+func describeTargets(v []OverflowTarget) string {
+	if len(v) == 0 {
+		return "none"
+	}
+	b, _ := json.Marshal(v)
+	return string(b)
+}
+
+func normalizeTargets(in []OverflowTarget) []OverflowTarget {
+	out := make([]OverflowTarget, len(in))
+	for i, t := range in {
+		t.Label = strings.TrimSpace(t.Label)
+		out[i] = t
+	}
+	return out
 }

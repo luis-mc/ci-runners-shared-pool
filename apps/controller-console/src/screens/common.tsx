@@ -17,11 +17,14 @@ export function Load<T>({
   result,
   what,
   reload,
+  quietRestart = false,
   children,
 }: {
   result: Loaded<T>;
   what: string;
   reload: () => void;
+  /** The page says the restart in its own one line, so this part adds no Note (CRSP364). */
+  quietRestart?: boolean;
   children: (data: T) => ReactNode;
 }) {
   const now = useNow();
@@ -50,9 +53,11 @@ export function Load<T>({
   return (
     <>
       {restarting ? (
-        <Message tone="note" dismissible={false}>
-          {RESTARTING}
-        </Message>
+        quietRestart ? null : (
+          <Message tone="note" dismissible={false}>
+            {RESTARTING}
+          </Message>
+        )
       ) : result.state === 'failed' ? (
         <Message tone="problem" action={<Button onPress={reload}>Try again</Button>}>
           Could not refresh {what}. {result.error.message} The list shows the last copy,

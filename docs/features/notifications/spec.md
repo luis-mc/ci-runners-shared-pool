@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["apps/controller/internal/notify/**", "apps/controller/internal/mail/**", "apps/controller-console/src/screens/notices/**", "apps/controller/cmd/crsp/notify_wiring.go"]
 design_system: [UX-6, UX-9, UX-13, UX-18, UX-20, UX-22, UX-26, UX-27, UX-37, UX-38, UX-52, UX-58, components 8, components 14, components 15, components 18]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---

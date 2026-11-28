@@ -41,8 +41,14 @@ var otherAreaAuth = map[string]string{
 	"stopRegistryReplacePlan": authAdmin, "rollbackRegistryReplacePlan": authAdmin, "putRegistryMirrorSettings": authAdmin,
 
 	// crsp's job and run timers (OPS81, docs/features/scheduling R5.99 to R5.106).
-	"getListenerGate": authUser, "putListenerGate": authAdmin, "getTimerSettings": authUser, "checkTimerSettings": authUser, "getJobTimer": authUser, "getRunTimer": authUser,
+	"reregisterRunner": authAdmin, "getListenerGate": authUser, "putListenerGate": authAdmin, "getTimerSettings": authUser, "checkTimerSettings": authUser, "getJobTimer": authUser, "getRunTimer": authUser,
 	"putTimerSettings": authAdmin, "stopJobNow": authAdmin, "extendJobTimer": authAdmin, "cancelRunNow": authAdmin, "extendRunTimer": authAdmin,
+
+	// Debug access to a running job (CRSP331, docs/features/debug-access R5.2, R5.26, R5.30). The service checks
+	// the role again: Owner only narrowing, the user's own session, the kill switch for the owner.
+	"getDebugPoolSettings": authUser, "putDebugPoolSettings": authOwner, "getRepoDebugAccess": authUser, "setRepoDebugAccess": authAdmin,
+	"getJobDebug": authUser, "openDebugSession": authAdmin, "listDebugSessions": authUser, "getDebugSession": authUser,
+	"extendDebugSession": authAdmin, "endDebugSession": authAdmin, "getDebugTranscript": authAdmin,
 
 	"getCaCertificate": authPublic, "getPackage": authPublic, "listAgentInstallers": authUser, "importAgentInstaller": authAdmin, "getHealth": authPublic,
 
@@ -53,7 +59,8 @@ var otherAreaAuth = map[string]string{
 	"listAuditEvents": authUser, "listDoctorFindings": authUser, "listJobs": authUser, "listMachines": authUser,
 	"listRunners": authUser, "listSlots": authUser, "listAssignLeases": authUser, "streamEvents": authUser,
 	"listRuns": authUser, "getRun": authUser, "getCommitView": authUser, "listJobGroups": authUser, "getJobStats": authUser, "listJobSummaries": authUser, "getForecast": authUser,
-	"exportJobSummaries": authUser,
+	"exportJobSummaries": authUser, "getCacheHub": authUser,
+	"putCacheSettings": authAdmin,
 
 	"applyUpdate": authAdmin, "setUpdatePolicy": authAdmin, "installUpdate": authAdmin, "checkForUpdate": authAdmin, "exportConfig": authAdmin, "rebuildImage": authAdmin,
 	"restartService": authAdmin, "getMetricsSettings": authAdmin, "putMetricsSettings": authAdmin, "makeMetricsToken": authAdmin, "getListenAddress": authAdmin, "putListenAddress": authAdmin, "stopRunnerPlan": authAdmin, "updateImageLayers": authAdmin, "wipeCache": authAdmin,

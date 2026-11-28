@@ -160,3 +160,25 @@ func (f *Fetcher) Fetch(_ context.Context, url, dest string) error {
 	}
 	return f.FS.WriteFile(dest, f.Body, 0o600)
 }
+
+// ReadDir implements sys.DirReader: the files directly in dir, sorted.
+func (f *FS) ReadDir(dir string) ([]string, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	var out []string
+	for k := range f.Files {
+		for _, sep := range []string{"/", `\`} {
+			if rest, ok := strings.CutPrefix(k, dir+sep); ok && rest != "" && !strings.ContainsAny(rest, `/\`) {
+				out = append(out, rest)
+				break
+			}
+		}
+	}
+	if len(out) == 0 {
+		if _, ok := f.Dirs[dir]; !ok {
+			return nil, fs.ErrNotExist
+		}
+	}
+	sort.Strings(out)
+	return out, nil
+}

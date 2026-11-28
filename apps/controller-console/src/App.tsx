@@ -32,6 +32,8 @@ import {
   AccessTab,
   AuditTab,
   ConsoleTab,
+  NetworkingTab,
+  ThemesTab,
   UpdatesTab,
   DataTab,
   RepositoriesTab,
@@ -93,6 +95,10 @@ const MachineRestartPage = later(
 const ConfigApplyPage = later(
   () => import('./screens/settings/ConfigAsCode').then((m) => m.ConfigApplyPage),
   { heading: 'Apply a config file' },
+);
+// Nested in Setup, whose h1 is the page's: the fallback draws no heading of its own (one h1).
+const ChangePoolPage = later(() =>
+  import('./screens/repositories/ChangePool').then((m) => m.ChangePoolWizard),
 );
 const TurnOnPoolPage = later(
   () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
@@ -263,6 +269,7 @@ export function App({
                   <Route path="images" element={<ImagesAndCaches />} />
                   <Route path="size" element={<SizePage />} />
                   <Route path="pool" element={<RepositoriesList />} />
+                  <Route path="pool/change" element={<ChangePoolPage />} />
                 </Route>
                 <Route path="config/apply" element={<ConfigApplyPage />} />
                 <Route path="setup/pool/turn-on" element={<TurnOnPoolPage />} />
@@ -314,6 +321,8 @@ export function App({
                   <Route path="access" element={<AccessTab />} />
                   <Route path="repositories" element={<RepositoriesTab />} />
                   <Route path="console" element={<ConsoleTab />} />
+                  <Route path="themes" element={<ThemesTab />} />
+                  <Route path="networking" element={<NetworkingTab />} />
                   <Route path="updates" element={<UpdatesTab />} />
                   <Route path="data" element={<DataTab />} />
                   <Route path="audit" element={<AuditTab />} />
@@ -328,6 +337,8 @@ export function App({
                     path="notifications"
                     element={<OldSettingsAddress old="notifications" />}
                   />
+                  <Route path="network" element={<OldSettingsAddress old="network" />} />
+                  <Route path="metrics" element={<OldSettingsAddress old="metrics" />} />
                   <Route
                     path="retention"
                     element={<OldSettingsAddress old="retention" />}

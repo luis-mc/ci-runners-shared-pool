@@ -68,7 +68,12 @@ type Service struct {
 	setupCookies      map[string]time.Time // hash -> expiry
 	userTokens        map[int64]github.UserToken
 	consoles          []string
+	touched           map[string]time.Time // session hash -> when its last-seen time was written (touchEvery)
 }
+
+// touchEvery is how often a session's last-seen time is written: a signed-in page makes a dozen calls and each used to
+// be a write on the single writer (CRSP290, audit F8). Nothing reads the time to a finer grain than minutes.
+const touchEvery = time.Minute
 
 // New returns a Service.
 func New(store Store, cfg Config) *Service {

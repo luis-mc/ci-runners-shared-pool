@@ -323,9 +323,25 @@ func (s *Service) Authenticate(ctx context.Context, cookie string) (Principal, e
 		}
 		return Principal{}, err
 	}
-	_ = s.store.TouchSession(ctx, sess.IDHash, s.cfg.Now())
+	if now := s.cfg.Now(); s.dueTouch(sess.IDHash, now) {
+		_ = s.store.TouchSession(ctx, sess.IDHash, now)
+	}
 	return Principal{UserID: u.GitHubID, Login: u.Login, Role: u.Role, Source: sess.Source,
 		SessionHash: sess.IDHash, CSRF: csrfFor(cookie)}, nil
+}
+
+// dueTouch says whether the last-seen time of a session is to be written now, and notes it when it is.
+func (s *Service) dueTouch(hash string, now time.Time) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if last, ok := s.touched[hash]; ok && now.Sub(last) < touchEvery {
+		return false
+	}
+	if s.touched == nil || len(s.touched) > 4096 {
+		s.touched = map[string]time.Time{}
+	}
+	s.touched[hash] = now
+	return true
 }
 
 // CheckCSRF compares the X-CSRF-Token header with the session's token.

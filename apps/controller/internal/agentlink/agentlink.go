@@ -223,6 +223,9 @@ func (a *Agent) AddRunner(ctx context.Context, machineID string, spec backend.Ru
 			RunnerVersion: spec.RunnerVersion, RunnerSha256: spec.RunnerSHA256, WindowsSymlinkRight: spec.WindowsSymlinkRight,
 			ExtraPackages: spec.ExtraPackages, KeepDependencies: &spec.KeepDependencies,
 		}}
+		if spec.PackageProxy.On() {
+			add.Runner.PackageProxy = &agentv1.PackageProxy{Repo: spec.PackageProxy.Repo, Token: spec.PackageProxy.Token}
+		}
 		if cfg.JITConfig != "" {
 			add.Start = &agentv1.AddRunner_JitConfig{JitConfig: cfg.JITConfig}
 		} else {

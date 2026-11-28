@@ -9,6 +9,8 @@ import {
   type GhRelease,
   type ReleaseData,
 } from '../lib/release.ts';
+import type { ShotData, SiteData } from '../lib/pages.ts';
+import type { StudyExample } from '../lib/study.ts';
 
 const base = 'https://github.com/luis-mc/ci-runners-shared-pool/releases/download/v1.2.3';
 
@@ -41,5 +43,40 @@ export function fixtureGh(): { gh: GhRelease; sums: string } {
 
 export function fixtureRelease(): ReleaseData {
   const { gh, sums } = fixtureGh();
-  return buildRelease(gh, sums);
+  const older: GhRelease = {
+    tag_name: 'v1.2.2',
+    html_url: 'https://github.com/luis-mc/ci-runners-shared-pool/releases/tag/v1.2.2',
+    published_at: '2026-11-20T05:00:00Z',
+    assets: [],
+  };
+  return buildRelease(gh, sums, [gh, older]);
+}
+
+export const fixtureShots: ShotData[] = ['overview', 'machines', 'repositories'].map(
+  (n) => ({
+    name: `console-${n}`,
+    src: `/shots/console-${n}.png`,
+    alt: `The ${n} of a demo pool.`,
+    width: 1280,
+    height: 800,
+  }),
+);
+
+export const fixtureStudy: StudyExample = {
+  workload: '10,000 minutes a month of 4-vCPU Linux jobs',
+  ratesRead: '25 Nov 2026',
+  totals: [
+    { name: 'GitHub-hosted', total: '$120' },
+    { name: 'CRSP', total: '$0' },
+  ],
+  reading: 'CRSP cuts it to zero, but only while the PCs are on.',
+};
+
+export function fixtureSite(docs: SiteData['docs'] = []): SiteData {
+  return {
+    release: fixtureRelease(),
+    docs,
+    study: fixtureStudy,
+    shots: fixtureShots,
+  };
 }

@@ -16,18 +16,21 @@ type PoolJobRow struct {
 	Run        time.Duration
 }
 
-// FinishedPoolJobs lists the jobs that completed in [from, to) on a machine of the pool: they have a machine
-// and a real start and end. The system is the machine's, the repository is public when GitHub says so
-// (observability R5.15, R5.18).
-func (s *Store) FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]PoolJobRow, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT j.repository, COALESCE(r.visibility, 'private') = 'public',
+// finishedPoolJobsSQL reads one completed-at window of done jobs on the (state, completed_at) index (audit R3-1).
+const finishedPoolJobsSQL = `SELECT j.repository, COALESCE(r.visibility, 'private') = 'public',
  COALESCE(m.os, ''), CASE WHEN j.machine_name != '' THEN j.machine_name ELSE COALESCE(m.name, j.machine_id) END,
  j.started_at, j.completed_at
  FROM jobs j
  LEFT JOIN repositories r ON r.id = j.repository_id
  LEFT JOIN machines m ON m.id = j.machine_id
  WHERE j.state = 'done' AND j.machine_id != '' AND j.started_at != '' AND j.completed_at != ''
- AND j.completed_at >= ? AND j.completed_at < ?`, fmtTime(from), fmtTime(to))
+ AND j.completed_at >= ? AND j.completed_at < ?`
+
+// FinishedPoolJobs lists the jobs that completed in [from, to) on a machine of the pool: they have a machine
+// and a real start and end. The system is the machine's, the repository is public when GitHub says so
+// (observability R5.15, R5.18).
+func (s *Store) FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]PoolJobRow, error) {
+	rows, err := s.rdb.QueryContext(ctx, finishedPoolJobsSQL, fmtTime(from), fmtTime(to))
 	if err != nil {
 		return nil, fmt.Errorf("finished pool jobs: %w", err)
 	}

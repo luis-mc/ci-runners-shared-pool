@@ -40,6 +40,11 @@ func graceOf(v timers.JobView, found bool) (time.Time, bool) {
 	return v.Deadline.UTC(), true
 }
 
+// batchTimers is the optional half of a TimerService that answers many jobs at once.
+type batchTimers interface {
+	JobsByID(ids []int64) map[int64]timers.JobView
+}
+
 // flagsFor reads the reservations and timers of the open jobs in rows. A service that is not wired says nothing.
 func (s *server) flagsFor(ctx context.Context, rows []jobsdata.Job) jobFlags {
 	var queued bool
@@ -56,7 +61,14 @@ func (s *server) flagsFor(ctx context.Context, rows []jobsdata.Job) jobFlags {
 // flagsOf reads the reservations (when some job is queued) and the timers of the running jobs.
 func (s *server) flagsOf(ctx context.Context, anyQueued bool, running []int64) jobFlags {
 	f := jobFlags{reserved: map[int64]time.Time{}, grace: map[int64]time.Time{}}
-	if s.opts.Timers != nil {
+	if bt, ok := s.opts.Timers.(batchTimers); ok && len(running) > 0 {
+		// One read for the page; the running jobs are all held in memory (CRSP290, audit F2).
+		for id, v := range bt.JobsByID(running) {
+			if d, ok := graceOf(v, true); ok {
+				f.grace[id] = d
+			}
+		}
+	} else if s.opts.Timers != nil {
 		for _, id := range running {
 			v, ok := s.opts.Timers.Job(ctx, id)
 			if d, ok := graceOf(v, ok); ok {

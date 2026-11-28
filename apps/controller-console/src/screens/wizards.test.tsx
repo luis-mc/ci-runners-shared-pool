@@ -490,7 +490,7 @@ const updateDriverFor = (compact: boolean): WizardDriver => ({
     if (state === 'ready-to-review') return snap();
     await press(goWord);
     if (state === 'running') {
-      await screen.findByText(/Waiting for running jobs to end/, { selector: 'p' });
+      await screen.findAllByText(/Waiting for running jobs to end/, { selector: 'p' });
       return snap();
     }
     await screen.findByRole('button', { name: closeWord });
@@ -582,7 +582,7 @@ const restartDriver: WizardDriver = {
     if (state === 'ready-to-review') return snap();
     await press('Restart the service');
     if (state === 'running') {
-      await screen.findByText(/Restarting the service|Waiting for/, { selector: 'p' });
+      await screen.findAllByText(/Restarting the service|Waiting for/, { selector: 'p' });
       return snap();
     }
     await screen.findByRole('button', { name: 'Open the machine' });
