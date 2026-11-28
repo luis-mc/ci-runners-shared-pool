@@ -172,6 +172,7 @@ func (c *call) configPlan(args []string, usage string) error {
 		if n := len(deref(p.Removals)); n > 0 {
 			_, _ = fmt.Fprintf(c.env.Stderr, "%d %s. Applying needs a yes that names each one.\n", n, plural(n, "removal", "removals"))
 		}
+		_, _ = fmt.Fprintln(c.env.Stdout, "Nothing has changed yet.")
 	}
 	return &exitError{Code: ExitFindings, Message: "The file has changes. Nothing changed. Run: crsp config apply " + args[0]}
 }
