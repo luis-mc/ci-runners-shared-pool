@@ -72,6 +72,8 @@ export function PhaseProgress({
 // LevelBar shows a level against a budget (UX-41) with its value in words.
 /** Segments in a progress bar in the Cool Terminal themes (UX-91). */
 export const PROGRESS_SEGMENTS = 20;
+/** Segments in every level bar of a list: one count, so every bar of a list looks the same (UX-92). */
+export const LEVEL_SEGMENTS = 10;
 
 export function Progress({
   label,
@@ -110,6 +112,35 @@ export function Progress({
   );
 }
 
+/** The words of a level split where the unit changes: `3.7 of 32` is `3.7` and `of 32`, so the numbers of a list line up
+ * and so do the "of" words (UX-92). Words without " of " stay whole. */
+export function splitLevelText(text: string): { used: string; rest: string } {
+  const m = /^(.+?) (of .+)$/.exec(text);
+  return m ? { used: m[1] ?? text, rest: m[2] ?? '' } : { used: text, rest: '' };
+}
+
+/** Component 92 (UX-92): a list of label, bar and value rows. Every row of the list shares one grid, so the labels, the
+ * bars and the values line up; put every `LevelBar` of a list inside one. */
+export function MeterList({
+  label,
+  children,
+}: {
+  label?: string | undefined;
+  children: ReactNode;
+}) {
+  return (
+    <div className="ds-meters">
+      <div
+        className="ds-meters__grid"
+        role={label ? 'group' : undefined}
+        aria-label={label}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
 export function LevelBar({
   label,
   value,
@@ -128,6 +159,7 @@ export function LevelBar({
   help?: ReactNode;
 }) {
   const pct = max > 0 ? Math.min(100, (value / max) * 100) : 0;
+  const { used, rest } = splitLevelText(text);
   return (
     <div className="ds-level">
       <span className="ds-level__name">
@@ -146,9 +178,21 @@ export function LevelBar({
         data-level={pct >= 90 ? 'bad' : pct >= 75 ? 'warn' : 'ok'}
       >
         <span className="ds-level__fill" style={{ inlineSize: `${pct}%` }} />
-        <Segments pct={pct} segments={segments} />
+        <Segments pct={pct} segments={segments ?? LEVEL_SEGMENTS} />
       </div>
-      <span className="ds-level__text">{text}</span>
+      {rest ? (
+        <>
+          <span className="ds-visually-hidden">{text}</span>
+          <span className="ds-level__used" aria-hidden="true">
+            {used}
+          </span>
+          <span className="ds-level__rest" aria-hidden="true">
+            {rest}
+          </span>
+        </>
+      ) : (
+        <span className="ds-level__text">{text}</span>
+      )}
     </div>
   );
 }

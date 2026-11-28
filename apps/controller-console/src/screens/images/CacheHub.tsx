@@ -8,7 +8,9 @@ import {
   Empty,
   Facts,
   Message,
+  LevelBar,
   Meter,
+  MeterList,
   NumberField,
   Section,
   Stack,
@@ -116,12 +118,14 @@ function HubView({ hub, reload }: { hub: Hub; reload: () => void }) {
         hint="All caches share this space. When it is full, the least recently used entries go first."
       >
         <Stack>
-          <Meter
-            label="Cache budget"
-            value={used}
-            max={budget}
-            text={`${formatSize(used)} of ${budgetText} used`}
-          />
+          <MeterList>
+            <LevelBar
+              label="Cache budget"
+              value={used}
+              max={budget}
+              text={`${formatSize(used)} of ${budgetText} used`}
+            />
+          </MeterList>
           {admin ? (
             <NumberField
               label="Budget"

@@ -65,13 +65,14 @@ describe('Card machine', () => {
 });
 
 describe('Meter', () => {
-  it('draws block characters and says the level in words', () => {
+  it('draws the shared segments and says the level in words', () => {
     render(<Meter label="CPU" value={52} />);
     const m = screen.getByRole('meter', { name: 'CPU' });
     expect(m.getAttribute('aria-valuenow')).toBe('52');
     expect(m.getAttribute('aria-valuetext')).toBe('52%');
-    expect(m.querySelector('.ds-meter__on')?.textContent).toBe('■■■■');
-    expect(m.querySelector('.ds-meter__off')?.textContent).toBe('■■■■');
+    // UX-92: the meter draws the shared segments, the same bar style as every other bar.
+    expect(m.querySelectorAll('.ds-segs__cell')).toHaveLength(8);
+    expect(m.querySelectorAll('[data-fill="full"]')).toHaveLength(4);
     expect(m.getAttribute('data-level')).toBe('ok');
   });
 

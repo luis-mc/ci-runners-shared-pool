@@ -6,6 +6,7 @@ import {
   Empty,
   Facts,
   LevelBar,
+  MeterList,
   Message,
   Page,
   PageHeader,
@@ -98,17 +99,19 @@ function DiskSection({ h, os }: { h: Health | undefined; os: string }) {
         <Text>{unknownOn(os)}</Text>
       ) : (
         <Stack gap="tight">
-          {volumes.map((v) =>
-            v.total_bytes !== undefined && v.free_bytes !== undefined ? (
-              <LevelBar
-                key={`${v.role}${v.path}`}
-                label={`${VOLUME_WORDS[v.role]} used`}
-                value={v.total_bytes - v.free_bytes}
-                max={v.total_bytes}
-                text={`${formatSize(v.total_bytes - v.free_bytes)} of ${formatSize(v.total_bytes)} used`}
-              />
-            ) : null,
-          )}
+          <MeterList>
+            {volumes.map((v) =>
+              v.total_bytes !== undefined && v.free_bytes !== undefined ? (
+                <LevelBar
+                  key={`${v.role}${v.path}`}
+                  label={`${VOLUME_WORDS[v.role]} used`}
+                  value={v.total_bytes - v.free_bytes}
+                  max={v.total_bytes}
+                  text={`${formatSize(v.total_bytes - v.free_bytes)} of ${formatSize(v.total_bytes)} used`}
+                />
+              ) : null,
+            )}
+          </MeterList>
           <Table
             caption="Disks of this machine"
             columns={volumeColumns(os)}
@@ -128,15 +131,16 @@ function MemorySection({ m, h }: { m: Machine; h: Health | undefined }) {
   return (
     <Section title="Memory and swap">
       <Stack gap="tight">
-        <MachineLoadBars m={m} />
-        {swapped && swap.total_bytes ? (
-          <LevelBar
-            label="Swap"
-            value={swap.used_bytes ?? 0}
-            max={swap.total_bytes}
-            text={`${formatSize(swap.used_bytes ?? 0)} of ${formatSize(swap.total_bytes)} used`}
-          />
-        ) : null}
+        <MachineLoadBars m={m}>
+          {swapped && swap.total_bytes ? (
+            <LevelBar
+              label="Swap"
+              value={swap.used_bytes ?? 0}
+              max={swap.total_bytes}
+              text={`${formatSize(swap.used_bytes ?? 0)} of ${formatSize(swap.total_bytes)} used`}
+            />
+          ) : null}
+        </MachineLoadBars>
         <Facts
           items={[
             {
@@ -543,15 +547,17 @@ function StatsSection({
         <Load result={stats.result} what="the job stats" reload={stats.reload}>
           {(d) => (
             <Stack gap="tight">
-              {OUTCOMES.map(([key, label]) => (
-                <LevelBar
-                  key={key}
-                  label={label}
-                  value={d.machine.counts[key]}
-                  max={Math.max(1, d.machine.counts.total)}
-                  text={`${d.machine.counts[key]} of ${d.machine.counts.total} jobs`}
-                />
-              ))}
+              <MeterList>
+                {OUTCOMES.map(([key, label]) => (
+                  <LevelBar
+                    key={key}
+                    label={label}
+                    value={d.machine.counts[key]}
+                    max={Math.max(1, d.machine.counts.total)}
+                    text={`${d.machine.counts[key]} of ${d.machine.counts.total} jobs`}
+                  />
+                ))}
+              </MeterList>
               <StatsSummary stats={d.machine} machineId={m.id} window={window} />
               {runnerRowsOf(runners, d).length === 0 ? (
                 <Empty title="No runner is on this machine." />

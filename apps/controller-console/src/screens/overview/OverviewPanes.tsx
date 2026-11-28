@@ -7,6 +7,7 @@ import {
   Code,
   LevelBar,
   Message,
+  MeterList,
   Stack,
   Status,
   Tag,
@@ -50,7 +51,7 @@ export function MachineSizeBars({ m }: { m: Machine }) {
   const memPct = m.load?.memory_pct;
   const totalGib = mem ? mem / GIB : undefined;
   return (
-    <>
+    <MeterList>
       {cpus && cpu !== undefined ? (
         <LevelBar
           label="CPU"
@@ -81,7 +82,7 @@ export function MachineSizeBars({ m }: { m: Machine }) {
           text={memPct === undefined ? 'not known' : formatPercent(memPct)}
         />
       )}
-    </>
+    </MeterList>
   );
 }
 
