@@ -248,3 +248,42 @@ describe('live store reconnect (R5.7)', () => {
     cleanup();
   });
 });
+
+describe('job events keep open lists current (observability R5.78)', () => {
+  const job = (id: number, state: 'queued' | 'running' | 'done') => ({
+    id,
+    repository: 'octo/app',
+    run_id: 100 + id,
+    run_attempt: 1,
+    github_job_id: id,
+    job_name: 'test',
+    labels: [],
+    state,
+  });
+
+  it('job.queued, job.started and job.finished move the jobs version, a burst once', () => {
+    const store = started();
+    const es = FakeEventSource.latest();
+    es.emit({ id: '1', type: 'snapshot', at: 'x', snapshot: overview() });
+    const before = store.getState().versions.jobs ?? 0;
+    for (let i = 0; i < 40; i++)
+      es.emit({ id: String(10 + i), type: 'job.queued', at: 'x', job: job(i, 'queued') });
+    es.emit({ id: '60', type: 'job.started', at: 'x', job: job(1, 'running') });
+    es.emit({ id: '61', type: 'job.finished', at: 'x', job: job(1, 'done') });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(store.getState().versions.jobs).toBe(before + 1);
+  });
+
+  it('a finished job leaves the queued strip even when started was missed', () => {
+    const store = started();
+    const es = FakeEventSource.latest();
+    es.emit({ id: '1', type: 'snapshot', at: 'x', snapshot: overview() });
+    es.emit({ id: '2', type: 'job.queued', at: 'x', job: job(9, 'queued') });
+    expect(store.getState().overview?.queued_count).toBe(1);
+    es.emit({ id: '3', type: 'job.finished', at: 'x', job: job(9, 'done') });
+    expect(store.getState().overview?.queued_count).toBe(0);
+    expect(store.getState().overview?.queued ?? []).toHaveLength(0);
+  });
+});

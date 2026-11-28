@@ -279,7 +279,16 @@ function reduceOverview(o: Overview, ev: LiveEvent): Overview {
       };
     case 'job.finished':
       if (!ev.job) return o;
-      return { ...o, running: o.running.filter((j) => j.id !== ev.job?.id) };
+      return {
+        ...o,
+        queued: (o.queued ?? []).filter((j) => j.id !== ev.job?.id),
+        waiting: (o.waiting ?? []).filter((w) => w.job_id !== ev.job?.id),
+        queued_count: Math.max(
+          0,
+          o.queued_count - ((o.queued ?? []).some((j) => j.id === ev.job?.id) ? 1 : 0),
+        ),
+        running: o.running.filter((j) => j.id !== ev.job?.id),
+      };
     default:
       return o;
   }
