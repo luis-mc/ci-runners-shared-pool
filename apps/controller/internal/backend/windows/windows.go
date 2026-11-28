@@ -624,7 +624,7 @@ func (b *Backend) stopService(ctx context.Context, env map[string]string, folder
 			return nil, fmt.Errorf("list listeners: %w", err)
 		}
 		if res.ExitCode != 0 {
-			return nil, fmt.Errorf("list listeners: powershell exited %d", res.ExitCode)
+			return nil, fmt.Errorf("list listeners: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 		}
 		return persistent.ParsePIDs(res.Stdout), nil
 	}
@@ -652,7 +652,7 @@ func (b *Backend) guardStart(ctx context.Context, folder string) error {
 			return nil, fmt.Errorf("list listeners: %w", err)
 		}
 		if res.ExitCode != 0 {
-			return nil, fmt.Errorf("list listeners: powershell exited %d", res.ExitCode)
+			return nil, fmt.Errorf("list listeners: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 		}
 		return persistent.ParsePIDs(res.Stdout), nil
 	})

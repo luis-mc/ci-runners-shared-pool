@@ -28,7 +28,7 @@ func (b *Backend) Find(ctx context.Context) ([]backend.Found, error) {
 		return nil, fmt.Errorf("list services: %w", err)
 	}
 	if res.ExitCode != 0 {
-		return nil, fmt.Errorf("list services: powershell exited %d", res.ExitCode)
+		return nil, fmt.Errorf("list services: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 	}
 	return b.parseFind(res.Stdout)
 }
