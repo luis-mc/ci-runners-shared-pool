@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["apps/controller/internal/doctor/**"]
 design_system: [UX-4, UX-6, UX-11, UX-13, UX-17, UX-18, UX-19, UX-25, UX-26, UX-28, UX-29, UX-31, UX-52, UX-53, UX-58, UX-61, "components 1, 10, 11, 12, 15, 16, 17, 18, 19, 21"]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -397,6 +397,7 @@ Repositories and workflows:
 | `runner.slots` | A machine has more runners for one repository than job slots, or its stored hold maximum wait is above the 2-minute hold cap (scheduling R5.73, R5.75) | warn | Remove runners on the machine page, or raise Job slots; set Gate maximum wait to 2 minutes or less | no | 1 |
 | `listener.gate` | The listener gate of persistent runners is in observe mode: it reports and starts and stops no listener (runners R5.138) | info (ok when enforcing, skip when the gate does not run) | When the reports look right, switch on Gate persistent runners in Settings | no | 1 |
 | `runner.pin_age` | The pinned GitHub runner version is 21 days or more behind the newest `actions/runner` release (operations R5.20): warn from 21 days, fail from 28 | warn, fail (skip until the first daily check) | Check that this PC can reach api.github.com, then open the audit log for `runner.pin.move` |
+| `install.agent_packages` | The release this controller was built from lacks an agent archive for one of the six systems (fail) or a native agent package: msi, pkg, deb (warn) (operations R5.136) | warn, fail (skip on a development build or when the release is unknown) | Update the controller to a release that has them, or import the file in Machines | no | 1 |
 | `timers.mode` | The timers are in observe mode: `enforce` is off, so jobs over the limit are reported and not stopped (scheduling R5.107) | info (ok when enforcing, skip when the timers do not run) | Switch on Enforce timers in Settings when the reports look right | no | 1 |
 | `runner.tools.same` | A tool (git, node, npm, pnpm, go, cargo, rustc, python, docker) is on some runners that can get the same job (same repository, same labels) and not on others (R5.63) | warn | Install it for the runner's account and add it to its PATH, use the same image profile, or give the runners different labels | no | 1 |
 | `runner.unclean` | A persistent runner whose cleanup failed, so it takes no new job (runners R5.91) | fail | Wait for the next cleanup, or fix the cause named in the finding on the machine | no | 1 |

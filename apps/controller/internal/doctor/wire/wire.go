@@ -49,6 +49,8 @@ type DoctorDeps struct {
 	ListenerGate doctor.GateSource
 	// RunnerPin tells how far the runner pin is behind; nil makes runner.pin_age skip.
 	RunnerPin doctor.RunnerPinSource
+	// AgentPackages tells what agent installers the release holds; nil makes install.agent_packages skip.
+	AgentPackages doctor.AgentPackageSource
 }
 
 // NewDoctor makes the engine with the M1 core checks and every extra check,
@@ -62,7 +64,7 @@ func NewDoctor(d DoctorDeps) (*doctor.Engine, *doctor.Service) {
 	eng := &doctor.Engine{
 		Registry: reg, Store: d.Store, Events: d.Events, Logger: d.Logger,
 		Env: func(ctx context.Context) (doctor.Env, error) {
-			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate, RunnerPin: d.RunnerPin}
+			env := doctor.Env{Fleet: d.Fleet, PoolName: d.PoolName, KVM: d.KVM, Engines: d.Engines, Demand: d.Demand, Ephemeral: d.Ephemeral, Timers: d.Timers, ListenerGate: d.ListenerGate, RunnerPin: d.RunnerPin, AgentPackages: d.AgentPackages}
 			if d.GitHub != nil {
 				g, err := d.GitHub(ctx)
 				if err != nil {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The agent MSI for Windows (CRSP348), WiX v5. No user interface: it copies crsp.exe to
+  %ProgramFiles%\crsp and stops; joining the controller is the next command
+  (crsp.exe agent install --controller ... --join-code ...). build.ps1 defines:
+
+    ProductVersion  a.b.c.d for the MSI
+    CrspExe         the crsp.exe to install
+
+  The Controller MSI (installer/controller/crsp.wxs) installs the same file, so the two do not
+  go on one machine: this package refuses to install when the Controller product is there.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="CI Runners Shared Pool Agent"
+           Manufacturer="Luis Carvalho"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="7B0E5C1A-3D52-4F6E-9A47-5E8C2F1D90B4"
+           Scope="perMachine"
+           InstallerVersion="500"
+           Compressed="yes">
+    <SummaryInformation Description="CI Runners Shared Pool agent (crsp)" />
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <!-- State 5 = installed. -->
+    <util:ProductSearch UpgradeCode="C1D62442-6DB4-4FF0-9F28-A1CE3121B332" Result="state" Variable="CONTROLLERSTATE" />
+    <Launch Condition="NOT (CONTROLLERSTATE = 5)"
+            Message="The Controller is installed on this machine. It already contains the agent; remove it first to install the agent alone." />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="crsp" />
+    </StandardDirectory>
+
+    <Feature Id="CrspAgent" Title="crsp agent" Level="1">
+      <ComponentGroupRef Id="Program" />
+    </Feature>
+
+    <ComponentGroup Id="Program" Directory="INSTALLFOLDER">
+      <Component Id="CrspAgentProgram">
+        <File Id="CrspExe" Name="crsp.exe" Source="$(var.CrspExe)" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Package>
+</Wix>

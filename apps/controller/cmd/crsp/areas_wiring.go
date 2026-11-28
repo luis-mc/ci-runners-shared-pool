@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentinstallers"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentlink"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/auth"
@@ -80,6 +81,8 @@ type controllerDeps struct {
 	Caches *caches.Service
 	// Link carries runner commands to remote machines and reports (CRSP63); nil keeps remote machines unreachable.
 	Link *agentlink.Link
+	// AgentInstallers holds the agent installers of the release (CRSP304); nil for a development build.
+	AgentInstallers *agentinstallers.Store
 	// Deps runs the dependency setup jobs (CRSP248); nil leaves the routes at 501.
 	Deps *depsetup.Service
 	// Health is the machine health service (OPS83); nil leaves the health routes and checks off.
@@ -380,14 +383,15 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			return gh, nil
 		},
 		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
-		KVM:          reportSources{fleet: fleet, link: d.Link},
-		Engines:      reportSources{fleet: fleet, link: d.Link},
-		Extra:        append(checks.KVMReportedChecks(), checks.HealthChecks()...),
-		Demand:       quietSource{wd: quietDemand},
-		Ephemeral:    runnerSvc,
-		Timers:       timerSvc,
-		ListenerGate: gateSvc,
-		RunnerPin:    pinStatus{m: pinMgr},
+		KVM:           reportSources{fleet: fleet, link: d.Link},
+		Engines:       reportSources{fleet: fleet, link: d.Link},
+		Extra:         append(checks.KVMReportedChecks(), checks.HealthChecks()...),
+		Demand:        quietSource{wd: quietDemand},
+		Ephemeral:     runnerSvc,
+		Timers:        timerSvc,
+		ListenerGate:  gateSvc,
+		RunnerPin:     pinStatus{m: pinMgr},
+		AgentPackages: agentPackageStatus(d.AgentInstallers),
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger

@@ -218,7 +218,7 @@ var sumRe = regexp.MustCompile(`^([0-9a-f]{64})[ ]+\*?(\S+)$`)
 func listed(sums []byte) []sumLine {
 	var out []sumLine
 	for _, line := range strings.Split(string(sums), "\n") {
-		m := sumRe.FindStringSubmatch(strings.TrimRight(line, ""))
+		m := sumRe.FindStringSubmatch(strings.TrimRight(line, ""))
 		if m == nil {
 			continue
 		}
@@ -227,6 +227,54 @@ func listed(sums []byte) []sumLine {
 		}
 	}
 	return out
+}
+
+// nativeRe reads the native agent package names (CRSP348): msi for Windows, pkg for macOS, deb for Linux. They are
+// release assets next to the archives; the controller still hands out the archives (ParseName), so this reads
+// them only to say what a release holds.
+var nativeRe = regexp.MustCompile(`^CrspAgent-[0-9A-Za-z][0-9A-Za-z._+~-]*-(win|linux|macos)-(x64|arm64)\.(msi|pkg|deb)$`)
+
+// NativeFormat is the native package format of an OS: msi, pkg or deb.
+var NativeFormat = map[string]string{"win": "msi", "macos": "pkg", "linux": "deb"}
+
+// Coverage says which of the six targets (win, linux, macos by x64, arm64) a SHA256SUMS lists an agent archive and
+// a native package for. A target is "<os>-<arch>" in the release names, e.g. "win-x64".
+type Coverage struct {
+	MissingArchives, MissingNative []string
+}
+
+// CoverageOf reads the SHA256SUMS text of a release.
+func CoverageOf(sums []byte) Coverage {
+	haveArchive, haveNative := map[string]bool{}, map[string]bool{}
+	for _, line := range strings.Split(string(sums), "\n") {
+		m := sumRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		if in, ok := ParseName(m[2]); ok {
+			os := map[string]string{"windows": "win", "linux": "linux", "macos": "macos"}[in.OS]
+			arch := "x64"
+			if in.Arch == "arm64" {
+				arch = "arm64"
+			}
+			haveArchive[os+"-"+arch] = true
+		} else if n := nativeRe.FindStringSubmatch(m[2]); n != nil {
+			haveNative[n[1]+"-"+n[2]+"."+n[3]] = true
+		}
+	}
+	var c Coverage
+	for _, os := range []string{"win", "linux", "macos"} {
+		for _, arch := range []string{"x64", "arm64"} {
+			t := os + "-" + arch
+			if !haveArchive[t] {
+				c.MissingArchives = append(c.MissingArchives, t)
+			}
+			if !haveNative[t+"."+NativeFormat[os]] {
+				c.MissingNative = append(c.MissingNative, t+"."+NativeFormat[os])
+			}
+		}
+	}
+	return c
 }
 
 // Sums returns the SHA256SUMS text and the version.
