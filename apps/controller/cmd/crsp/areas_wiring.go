@@ -266,7 +266,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	runnerSvc := &runners.Service{
 		Store: rstore, Machines: machineLookup{svc: d.Machines}, Resolver: scopeResolver{repos: repoStore, auth: asvc, addr: d.Cfg.Addresses},
 		GitHub: gh, Agent: agent, Audit: runnerAudit{auth: asvc},
-		PoolName: pool, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services,
+		PoolName: pool, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services, Release: version,
 		// Shared tool folders with group access, one build folder per runner (caches R5.57).
 		SharedToolsRoot: os.Getenv("CRSP_SHARED_TOOLS_ROOT"), NoSharedTools: os.Getenv("CRSP_NO_SHARED_TOOLS") != "",
 		// The package proxy key and token of the runner's repository (caches R5.76).

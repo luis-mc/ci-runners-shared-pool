@@ -175,3 +175,28 @@ func TestRealListenersScriptNoListenerIsNotAnError(t *testing.T) {
 		}
 	}
 }
+
+// CRSP385: the cause of win-1's "list listeners: powershell exited 1" on the
+// owner's PC (crsp 0.1.28). With no process of the name at all, the old script
+// ended on a Get-Process that left $? false, and `powershell -Command -` exits
+// 1 then, with nothing on stderr. The script of this release exits 0 for the
+// same machine. The process name is one no machine runs, so the test does not
+// depend on a runner running here.
+func TestRealListenersScriptExitsZeroWhenNoProcessHasTheName(t *testing.T) {
+	const none = "Runner.Listener-crsp385-none"
+	old := scriptHeader + "$want = (Join-Path (Join-Path $env:CRSP_FOLDER 'bin') 'Runner.Listener') + '.exe'\n" +
+		"Get-Process -Name '" + none + "' -ErrorAction SilentlyContinue |\n" +
+		"    Where-Object { $_.Path -and ($_.Path -ieq $want) } |\n" +
+		"    ForEach-Object { $_.Id }\n"
+	folder := t.TempDir()
+	if _, _, code := runPS(t, old, map[string]string{"CRSP_FOLDER": folder}); code != 1 {
+		t.Fatalf("the 0.1.28 script should reproduce exit 1, got %d", code)
+	}
+	for name, script := range map[string]string{"listeners": scriptListeners, "workers": scriptWorkers} {
+		s := strings.NewReplacer("'Runner.Listener'", "'"+none+"'", "'Runner.Worker'", "'"+none+"'").Replace(script)
+		out, errOut, code := runPS(t, s, map[string]string{"CRSP_FOLDER": folder})
+		if code != 0 || strings.TrimSpace(out) != "" {
+			t.Errorf("%s: exit %d, stdout %q, stderr %q", name, code, out, errOut)
+		}
+	}
+}

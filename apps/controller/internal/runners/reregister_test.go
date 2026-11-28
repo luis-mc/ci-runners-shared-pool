@@ -181,3 +181,159 @@ func TestCanRegisterAgainOnlyWhereItHelps(t *testing.T) {
 		t.Error("not for a runner CRSP did not make or an ephemeral one")
 	}
 }
+
+// poolRegRig is a pool runner with one hidden registration in the given state
+// and reason, as the owner's PC had them after 0.1.31 (CRSP385).
+func poolRegRig(t *testing.T, st State, reason string) (*rig, Record) {
+	t.Helper()
+	r := newRig(machine("linux", "x64", true))
+	ctx := context.Background()
+	parent := Record{ID: "r_pool", Name: "gameroompc-pool-1", MachineID: "m1", OS: "linux", Arch: "x64", Kind: "persistent",
+		Backend: "docker", Scope: Scope{Kind: ScopePool}, State: Idle, Managed: true, CreatedAt: r.clock}
+	reg := Record{ID: "r_reg", Name: "gameroompc-pool-1-r1378816711", MachineID: "m1", OS: "linux", Arch: "x64", Kind: "persistent",
+		Backend: "docker", Scope: Scope{Kind: "repository", RepositoryID: 1378816711}, State: st, Reason: reason, FailedReason: reason,
+		Managed: true, ServiceName: "crsp-persistent-pool:gameroompc-pool-1-r1378816711", PoolRunnerID: "r_pool", CreatedAt: r.clock}
+	for _, x := range []Record{parent, reg} {
+		if err := r.store.InsertRunner(ctx, x); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// the machine's list no longer has the runner: its entry file is gone
+	r.svc.Services = func(context.Context, string) ([]backend.Found, error) { return nil, nil }
+	r.svc.Release = "0.1.32"
+	return r, reg
+}
+
+// CRSP385: 0.1.31 failed to register the lost runners again (config.sh said
+// "already configured") and wrote the reason without a release. The next
+// release tries once by itself; a failure it writes names it, so it is not
+// tried again until a newer release, and the log gets the reason.
+func TestRecoverTriesAFailureOfAnOlderReleaseOnce(t *testing.T) {
+	old := ReregisterFailedPrefix + "register: exit status 1: Cannot configure the runner because it is already configured."
+	r, reg := poolRegRig(t, Failed, old)
+	ctx := context.Background()
+	r.ag.addErr = errors.New("register: config.sh exited 1")
+	res, err := r.svc.RecoverLostRegistrations(ctx, "recovery")
+	if err != nil || len(res.Failed) != 1 || len(r.ag.added) != 1 || !strings.Contains(res.Why[reg.Name], "config.sh exited 1") {
+		t.Fatalf("one try with the reason for the log: %+v adds %d %v", res, len(r.ag.added), err)
+	}
+	got, _ := r.store.GetRunner(ctx, reg.ID)
+	if got.State != Failed || !strings.HasPrefix(got.Reason, ReregisterFailedPrefix) || !strings.HasSuffix(got.Reason, "(crsp 0.1.32)") {
+		t.Fatalf("record %s %q", got.State, got.Reason)
+	}
+	for i := 0; i < 3; i++ {
+		_, _ = r.svc.RecoverLostRegistrations(ctx, "recovery")
+	}
+	if len(r.ag.added) != 1 {
+		t.Fatalf("the same release tries once, adds %d", len(r.ag.added))
+	}
+	if v, _ := r.svc.GetView(ctx, reg.ID); !v.CanReregister {
+		t.Fatal("then the button")
+	}
+	// a newer release tries once more, and this time it works
+	r.svc.Release, r.ag.addErr = "0.1.33", nil
+	res, _ = r.svc.RecoverLostRegistrations(ctx, "recovery")
+	if len(res.Registered) != 1 || len(r.ag.added) != 2 || r.ag.cfgs[1].Registration == "" {
+		t.Fatalf("%+v adds %d", res, len(r.ag.added))
+	}
+	got, _ = r.store.GetRunner(ctx, reg.ID)
+	if got.State != Idle || got.Reason != ReregisteredReason {
+		t.Fatalf("record %s %q", got.State, got.Reason)
+	}
+}
+
+// CRSP385: a hidden pool registration whose add was cut by a restart stays in
+// creating, is settled failed, and is then set up again by the product: the
+// owner never removes and adds it by hand.
+func TestStuckPoolRegistrationIsSetUpAgain(t *testing.T) {
+	r, reg := poolRegRig(t, Creating, "")
+	ctx := context.Background()
+	r.clock = r.clock.Add(time.Hour)
+	if got, _ := r.svc.SettleStuckCreating(ctx, 45*time.Minute, "recovery"); len(got) != 1 {
+		t.Fatalf("settled %v", got)
+	}
+	res, err := r.svc.RecoverLostRegistrations(ctx, "recovery")
+	if err != nil || len(res.Registered) != 1 || len(r.ag.added) != 1 || r.ag.added[0].Name != reg.Name {
+		t.Fatalf("%+v %v adds %+v", res, err, r.ag.added)
+	}
+	got, _ := r.store.GetRunner(ctx, reg.ID)
+	if got.State != Idle || got.ServiceName == "" {
+		t.Fatalf("record %s %q service %q", got.State, got.Reason, got.ServiceName)
+	}
+}
+
+// CRSP385: a failed hidden registration (win-1's adds failed on 0.1.28 with
+// "list listeners: powershell exited 1" and cleaned up) is set up whole again
+// once, and a failure names this release.
+func TestFailedPoolRegistrationOfAnOldReleaseIsSetUpAgainOnce(t *testing.T) {
+	r, reg := poolRegRig(t, Failed, "list listeners: powershell exited 1. Cleaned up: account crsp-x, folder of the runner")
+	ctx := context.Background()
+	r.ag.addErr = errors.New("the service did not start")
+	res, _ := r.svc.RecoverLostRegistrations(ctx, "recovery")
+	if len(res.Failed) != 1 || len(r.ag.added) != 1 {
+		t.Fatalf("%+v adds %d", res, len(r.ag.added))
+	}
+	got, _ := r.store.GetRunner(ctx, reg.ID)
+	if !strings.HasPrefix(got.Reason, SetUpAgainFailedPrefix) || !strings.Contains(got.Reason, "the service did not start") || !strings.Contains(got.Reason, "(crsp 0.1.32)") {
+		t.Fatalf("reason %q", got.Reason)
+	}
+	_, _ = r.svc.RecoverLostRegistrations(ctx, "recovery")
+	if len(r.ag.added) != 1 {
+		t.Fatal("once per release")
+	}
+}
+
+// CRSP385: what the retry must not touch: GitHub lists it, GitHub unreadable,
+// the scope gate refuses, the pool runner is going away, a runner with no
+// pool that failed for another reason.
+func TestRetryLeavesWhatItMustNot(t *testing.T) {
+	ctx := context.Background()
+	old := ReregisterFailedPrefix + "x"
+	r, reg := poolRegRig(t, Failed, old)
+	r.gh.runners = []github.Runner{{ID: 1, Name: reg.Name, Status: "offline"}}
+	if res, _ := r.svc.RecoverLostRegistrations(ctx, "recovery"); len(r.ag.added) != 0 || len(res.Left) != 1 {
+		t.Fatalf("GitHub lists it: %+v", res)
+	}
+	r.gh.runners, r.gh.listErr = nil, errors.New("rate limit")
+	if _, _ = r.svc.RecoverLostRegistrations(ctx, "recovery"); len(r.ag.added) != 0 {
+		t.Fatal("GitHub unreadable")
+	}
+	r.gh.listErr = nil
+	r.svc.Gate = func(context.Context, Scope) error { return refuse("public repository") }
+	if _, _ = r.svc.RecoverLostRegistrations(ctx, "recovery"); len(r.ag.added) != 0 {
+		t.Fatal("the gate refuses")
+	}
+	r.svc.Gate = nil
+	_ = r.store.SetRunnerState(ctx, "r_pool", Removing, "")
+	if _, _ = r.svc.RecoverLostRegistrations(ctx, "recovery"); len(r.ag.added) != 0 {
+		t.Fatal("the pool runner is going away")
+	}
+	plain := Record{ID: "r_plain", Name: "box-9", MachineID: "m1", OS: "linux", Arch: "x64", Kind: "persistent", State: Failed,
+		Reason: "the image build failed", Managed: true, Scope: Scope{Kind: "repository", RepositoryID: 1}}
+	_ = r.store.InsertRunner(ctx, plain)
+	r.svc.Release = "0.1.40"
+	_, _ = r.svc.RecoverLostRegistrations(ctx, "recovery")
+	for _, s := range r.ag.added {
+		if s.Name == plain.Name {
+			t.Fatal("a runner outside the pool that failed for another reason waits for the owner")
+		}
+	}
+}
+
+// CRSP385: a hidden registration its machine does not list at all (the entry
+// file was removed by the failed add) is set up again like a lost one.
+func TestPoolRegistrationMissingOnItsMachineIsSetUpAgain(t *testing.T) {
+	r, reg := poolRegRig(t, Idle, "registered")
+	ctx := context.Background()
+	res, _ := r.svc.RecoverLostRegistrations(ctx, "recovery")
+	if len(res.Registered) != 1 || len(r.ag.added) != 1 {
+		t.Fatalf("%+v", res)
+	}
+	// a machine list that cannot be read changes nothing
+	r2, _ := poolRegRig(t, Idle, "registered")
+	r2.svc.Services = func(context.Context, string) ([]backend.Found, error) { return nil, errors.New("agent offline") }
+	if _, _ = r2.svc.RecoverLostRegistrations(ctx, "recovery"); len(r2.ag.added) != 0 {
+		t.Fatal("an unread list is not a missing runner")
+	}
+	_ = reg
+}

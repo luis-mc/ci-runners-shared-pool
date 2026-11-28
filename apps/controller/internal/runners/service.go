@@ -80,6 +80,11 @@ type Service struct {
 	// R5.15); nil means on.
 	AutoUpdate func(ctx context.Context) bool
 
+	// Release is the crsp version this controller runs. The recovery writes it
+	// into a failed reason, so each release tries a failed runner once by
+	// itself (CRSP385). Empty reads as "dev".
+	Release string
+
 	// LogInfo writes one INFO line; nil writes nothing.
 	LogInfo func(line string)
 	// Services lists the OS services of a machine, from its agent. Nil means

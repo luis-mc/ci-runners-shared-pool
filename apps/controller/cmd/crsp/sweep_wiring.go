@@ -70,7 +70,7 @@ func startRecovery(ctx context.Context, logger *slog.Logger, svc *runners.Servic
 				logger.Info("registration lost, registered again", "runner", n)
 			}
 			for _, n := range res.Failed {
-				logger.Warn("registration lost, could not register again", "runner", n)
+				logger.Warn("registration lost, could not register again", "runner", n, "reason", res.Why[n])
 			}
 			if err != nil && ctx.Err() == nil {
 				logger.Warn("runner recovery", "err", err)

@@ -560,7 +560,10 @@ The words of a runner whose registration GitHub deleted (runners R5.152, R5.153)
 | GitHub deleted the registration of this runner | The reason on the State not registered of a runner whose listener says its registration is gone and that GitHub does not list. |
 | registration lost, could not register again: {reason} | The reason on the State failed when crsp could not register the runner again, or GitHub deleted the registration again at once. {reason} is the plain reason of the step that failed. |
 | its set-up did not finish; remove it and add it again | The reason on the State failed of a runner that stayed in creating with no set-up running. |
-| Register again | The button in the Managed column of a managed runner that is not registered or failed with a lost registration, and on its page. Admin only (busy word: Registering). |
+| could not be set up again: {reason} | The reason on the State failed when a new release tried once more to set up a runner whose set-up failed or did not finish, and that failed too (runners R5.155). |
+| (crsp {version}) | Ends a failed reason that crsp wrote when it tried by itself: the release that tried. That release does not try again by itself; a newer one tries once. |
+| registering this runner again failed | The reason the pool container keeps for a runner whose register again failed after its old files were removed; it shows as not registered until it is registered again. |
+| Register again | The button in the Managed column of a managed runner that is not registered, failed with a lost registration or a set-up that did not finish, or whose pool registration failed, and on its page. Admin only (busy word: Registering). |
 | Could not register again. {why} | Problem message under the list or the page when the press is refused or fails. |
 
 ## Device Flow words
