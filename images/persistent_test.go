@@ -452,7 +452,7 @@ func TestListScriptNamesEntriesAndWhetherTheyRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := string(out); got != "dead|0\nheld|0\nup|1\n" {
+	if got := string(out); got != "dead|0|\nheld|0|\nup|1|\n" {
 		t.Fatalf("list: %q", got)
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -861,11 +860,11 @@ func TestLostRegistrationRegistersAgainInPlace(t *testing.T) {
 	}
 
 	diag := Join(folder, "_diag")
-	if err := os.MkdirAll(diag, 0o755); err != nil {
+	if err := r.fs.MkdirAll(diag, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	log := "Failed to create a session. The runner registration has been deleted from the server, please re-configure.\n"
-	if err := os.WriteFile(Join(diag, "Runner_20261128-100000-utc.log"), []byte(log), 0o644); err != nil {
+	if err := r.fs.WriteFile(Join(diag, "Runner_20261128-100000-utc.log"), []byte(log), 0o644); err != nil {
 		t.Fatal(err)
 	}
 	r.cmd.Calls = nil

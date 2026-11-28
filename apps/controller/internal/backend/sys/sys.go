@@ -203,3 +203,23 @@ func (OSFS) Exists(p string) bool { _, err := os.Stat(p); return err == nil }
 
 // RemoveAll implements FS.
 func (OSFS) RemoveAll(p string) error { return os.RemoveAll(p) }
+
+// DirReader lists a directory; a file system that can is read for the logs of a
+// runner folder (runners R5.152).
+type DirReader interface {
+	// ReadDir returns the names of the files and folders directly in dir.
+	ReadDir(dir string) ([]string, error)
+}
+
+// ReadDir implements DirReader.
+func (OSFS) ReadDir(dir string) ([]string, error) {
+	ents, err := os.ReadDir(dir)
+	if err != nil {
+		return nil, err
+	}
+	names := make([]string, 0, len(ents))
+	for _, e := range ents {
+		names = append(names, e.Name())
+	}
+	return names, nil
+}

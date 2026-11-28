@@ -306,7 +306,7 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	if e, err := b.d.FS.ReadFile(Join(folder, ".env")); err == nil {
 		haveEnv = string(e)
 	}
-	action := persistent.WithLost(persistent.Decide(have, haveEnv, wantMeta, wantEnv), have != nil && persistent.RegistrationLost(folder))
+	action := persistent.WithLost(persistent.Decide(have, haveEnv, wantMeta, wantEnv), have != nil && persistent.RegistrationLostIn(b.d.FS, folder, Join))
 	b.log("register", fmt.Sprintf("runner %s: %s", r.Name, action))
 
 	env := map[string]string{"CRSP_FOLDER": folder, "CRSP_ACCOUNT": account, "CRSP_SERVICE": wantMeta.Service, "CRSP_RUNNER": r.Name}
