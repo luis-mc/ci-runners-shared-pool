@@ -76,6 +76,11 @@ type Config struct {
 	// RunsOnPR builds and opens the runs-on pull request (R5.113); nil means
 	// the feature is off.
 	RunsOnPR RunsOnPullRequests
+	// RunnerOS says, per lowercase OS, whether the pool has any runner record
+	// for it, in any state: an offline, starting or restarting runner counts.
+	// An OS that has one never loses its CRSP_RUNS_ON variable (CRSP388). Nil
+	// means unknown: only the capacity hold (DeleteHold) guards the delete.
+	RunnerOS func(ctx context.Context) (map[string]bool, error)
 }
 
 // Service is the pool switch, policy, variables and runs-on check.
@@ -91,7 +96,7 @@ type Service struct {
 	fb fallbackState
 
 	started time.Time
-	absent  map[string]time.Time // repository/variable -> first sync that saw its OS capacity absent
+	absent  map[string]absence // repository/variable -> when its OS capacity was first and last seen absent
 
 	stopMu  sync.Mutex
 	stops   map[string]bool // plan id -> a stop was asked while it applies
@@ -107,7 +112,16 @@ func New(cfg Config) *Service {
 		cfg.Addresses = addresses.Defaults()
 	}
 	return &Service{cfg: cfg, admin: map[int64]map[int64]bool{}, synced: map[int64]time.Time{},
-		etags: map[int64]map[string]string{}, cache: map[int64]map[string][]byte{}, stops: map[string]bool{}, running: map[string]bool{}, fb: newFallbackState(), started: cfg.Now(), absent: map[string]time.Time{}}
+		etags: map[int64]map[string]string{}, cache: map[int64]map[string][]byte{}, stops: map[string]bool{}, running: map[string]bool{}, fb: newFallbackState(), started: cfg.Now(), absent: map[string]absence{}}
+}
+
+// absence is a run of syncs that all saw an OS without capacity.
+type absence struct{ first, last time.Time }
+
+// SetRunnerOS sets who says which operating systems have a runner record. The
+// wiring calls it once the runners service exists.
+func (s *Service) SetRunnerOS(f func(ctx context.Context) (map[string]bool, error)) {
+	s.cfg.RunnerOS = f
 }
 
 // SetRegistrar sets who keeps the registrations of the pool runners. The

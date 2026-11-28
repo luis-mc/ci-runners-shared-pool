@@ -80,8 +80,11 @@ func TestVariableDriftRestoredAndAudited(t *testing.T) { // R5.28
 		t.Fatalf("the audit log records the drift: %v", e.audit.events)
 	}
 	mv, _ := e.store.ListManagedVariables(ctx, 101)
-	if mv[0].Status != VarWrong {
-		t.Fatalf("the row shows drift until the next check finds it right: %+v", mv)
+	if mv[0].Status != VarOK { // CRSP388: a confirmed restore is not "Needs you"
+		t.Fatalf("a restored variable shows OK at once: %+v", mv)
+	}
+	if v, _ := e.svc.Get(ctx, adminP, 101); v.VariablesDrift {
+		t.Fatal("no drift is shown after a confirmed restore")
 	}
 	if err := e.svc.ReconcileVariables(ctx, 101); err != nil {
 		t.Fatal(err)
@@ -107,7 +110,7 @@ func TestMissingVariableRestored(t *testing.T) { // R5.28
 	if _, ok := e.fake.Variable("alice/secret", "CRSP_RUNS_ON_LINUX"); !ok {
 		t.Fatal("deleted outside the product: written back")
 	}
-	if mv, _ := e.store.ListManagedVariables(ctx, 101); mv[0].Status != VarMissing {
+	if mv, _ := e.store.ListManagedVariables(ctx, 101); mv[0].Status != VarOK { // CRSP388: written back and confirmed
 		t.Fatalf("%+v", mv)
 	}
 }

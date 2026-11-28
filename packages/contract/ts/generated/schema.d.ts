@@ -1555,7 +1555,7 @@ export interface paths {
         get?: never;
         /**
          * Store an agent installer, or SHA256SUMS, that the owner carried over
-         * @description operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+         * @description operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
          */
         put: operations["importAgentInstaller"];
         post?: never;
@@ -5723,8 +5723,11 @@ export interface components {
             changes: {
                 /** Format: int64 */
                 repository_id: number;
-                /** @enum {string} */
-                pool: "on" | "off";
+                /**
+                 * @description on and off switch the pool. repair keeps the pool on and writes each missing or wrong CRSP_RUNS_ON variable and deletes each one that should not be there; a repair that finds nothing different answers a plan that is already done.
+                 * @enum {string}
+                 */
+                pool: "on" | "off" | "repair";
             }[];
         };
         RunsOnFinding: {

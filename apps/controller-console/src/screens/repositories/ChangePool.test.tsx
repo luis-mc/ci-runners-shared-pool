@@ -47,6 +47,42 @@ describe('Change pool wizard', () => {
     );
   });
 
+  it('repair asks the controller to repair and shows its steps (CRSP388)', async () => {
+    const bodies: unknown[] = [];
+    const write = {
+      id: 's1',
+      action: 'write_variable',
+      text: 'Write variable CRSP_RUNS_ON_LINUX of octo/live = ["self-hosted","linux"] (it is missing)',
+      target: 'CRSP_RUNS_ON_LINUX',
+      needs_yes: false,
+      state: 'planned',
+    };
+    const planned = { ...plan('planned', 'planned'), steps: [write] };
+    const mock = signedIn()
+      .on('GET', '/api/v1/github/repositories', { items: [live], stale: { stale: false } })
+      .on('POST', '/api/v1/repository-plans', (req: { body?: unknown }) => {
+        bodies.push(req.body);
+        return planned;
+      });
+    renderApp(mock, '/setup/pool/change?to=repair&repo=9');
+    expect(await screen.findByText('These will be repaired')).toBeTruthy();
+    expect(bodies[0]).toEqual({ changes: [{ repository_id: 9, pool: 'repair' }] });
+  });
+
+  it('repair with nothing different finishes Done with a plain line, never waiting (CRSP388)', async () => {
+    const done = { ...plan('done', 'done'), steps: [] };
+    const mock = signedIn()
+      .on('GET', '/api/v1/github/repositories', { items: [live], stale: { stale: false } })
+      .on('POST', '/api/v1/repository-plans', done);
+    renderApp(mock, '/setup/pool/change?to=repair&repo=9');
+    expect(
+      await screen.findByText('Nothing to repair: the variables are already right.'),
+    ).toBeTruthy();
+    expect(screen.queryByText(/Nothing more was changed/)).toBeNull();
+    expect(screen.queryByText('waiting')).toBeNull();
+    expect(screen.getByText('using the pool')).toBeTruthy();
+  });
+
   it('says so when no repository was chosen', async () => {
     renderApp(api(), '/setup/pool/change?to=on');
     expect(await screen.findByText(/No repository was chosen/)).toBeTruthy();
