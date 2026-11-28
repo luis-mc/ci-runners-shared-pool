@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { expectDomLayout } from '../../scripts/design/dom-layout';
 import {
+  busyQueue,
   failure,
   machine,
   needingRecovery,
@@ -138,6 +139,15 @@ const SCREENS: {
   { name: 'pool overview', path: '/pool', ready: 'Pool' },
   { name: 'pool live', path: '/pool/live', ready: 'Pool' },
   { name: 'pool queue analysis', path: '/pool/queue', ready: 'Pool' },
+  // CRSP391: 16 queued jobs (7 ask for a label no runner has) and long running names: the panes take the full width,
+  // the table fits, no text is cut. The screen with no jobs never showed the running pane that overflowed.
+  {
+    name: 'pool queue analysis with 16 jobs and running jobs',
+    path: '/pool/queue',
+    ready: 'Pool',
+    tweak: (m: ReturnType<typeof signedIn>) =>
+      m.on('GET', '/api/v1/overview', busyQueue()),
+  },
   { name: 'pool jobs', path: '/pool/jobs', ready: 'Pool' },
   { name: 'pool machines', path: '/pool/machines', ready: 'Pool' },
   { name: 'analytics suggestions', path: '/analytics', ready: 'Analytics' },

@@ -308,6 +308,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	// The runner list answers from the facts this loop keeps of GitHub's runner lists and the
 	// agents' service lists; a request never waits on either (CRSP389).
 	go runnerSvc.FactsLoop(ctx)
+	// Jobs GitHub finished that crsp still holds as queued or running are closed: at start, then every five
+	// minutes (CRSP392).
+	c.closers = append(c.closers, startJobReconcile(ctx, logger, d.DB, gh, repoStore, runnerSvc.List, d.Now))
 
 	// Automatic runner updates follow the product's automatic-update setting
 	// (runners R5.38, operations R5.15). The Updater sends the bundle over the

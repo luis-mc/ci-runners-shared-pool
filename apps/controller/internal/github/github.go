@@ -64,6 +64,9 @@ func (e *RateLimitError) Error() string {
 	return "github rate limited until " + e.ResetAt.UTC().Format(time.RFC3339)
 }
 
+// RateLimited lets the job reconcile stop its pass without importing this package.
+func (e *RateLimitError) RateLimited() bool { return true }
+
 // Unwrap lets errors.Is match ErrRateLimited.
 func (e *RateLimitError) Unwrap() error { return ErrRateLimited }
 

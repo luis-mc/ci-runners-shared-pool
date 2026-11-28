@@ -55,6 +55,7 @@ func (s *server) GetOverview(ctx context.Context, _ gen.GetOverviewRequestObject
 			Body: gen.ErrorEnvelope{Error: gen.ErrorBody{Code: CodeInternal, Message: "the overview could not be built"}}}, nil
 	}
 	s.markOverview(ctx, &o)
+	s.markNoRunner(ctx, &o)
 	return gen.GetOverview200JSONResponse(o), nil
 }
 

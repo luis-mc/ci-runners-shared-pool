@@ -50,6 +50,12 @@ describe('dom layout judge', () => {
     ).toHaveLength(1);
     expect(domLayoutSource()).toContain("add('time-one-line'");
   });
+  it('judges the pane-width rule like every other rule (CRSP391)', () => {
+    expect(
+      judgeLayout('queue', [{ width: 1300, rule: 'pane-width', text: 'x' }], []).unknown,
+    ).toHaveLength(1);
+    expect(domLayoutSource()).toContain("add('pane-width'");
+  });
   it('builds a source that carries the options', () => {
     const src = domLayoutSource({ primary: '#go', spaceVar: '--s-' });
     expect(src).toContain('"#go"');

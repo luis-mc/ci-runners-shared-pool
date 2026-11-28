@@ -36,14 +36,24 @@ type Waiting = {
   state?: Job['state'] | undefined;
   wait_reason?: Job['wait_reason'] | undefined;
   wait_text?: Job['wait_text'] | undefined;
+  labels?: Job['labels'] | undefined;
 };
 
 export const RESERVED_WORDS = 'waits for the room another job holds on its machine';
 
 export function waitWords(j: Waiting): string {
+  if (j.wait_reason === 'no_runner_with_labels') return noRunnerWords(j.wait_text);
   if (j.wait_text) return j.wait_text;
   if (isReserved(j)) return RESERVED_WORDS;
   return j.wait_reason ? REASON_WORDS[j.wait_reason] : 'waits to be placed';
+}
+
+/** "No runner has the label pool-main. Check the repository's runs-on variable." The controller names the labels in the wait text (CRSP391). */
+export function noRunnerWords(missing: string | undefined): string {
+  const names = (missing ?? '').trim();
+  if (names === '') return REASON_WORDS.no_runner_with_labels;
+  const many = names.includes(',');
+  return `No runner has the ${many ? 'labels' : 'label'} ${names}. Check the repository's runs-on variable.`;
 }
 
 const REASON_SHORT: Record<Schemas['WaitReason'], string> = {

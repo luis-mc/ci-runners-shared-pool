@@ -12,6 +12,9 @@
  *  9. (LOOK46, opt in with `sectionGapVar` and `focusVars`) the top-level panes of a page are one section gap apart
  *     (the token named by `sectionGapVar`, `--ds-space-6`, 32 px), and no pane title overlaps the box of a control above
  *     it, counting the control's focus outline and glow;
+ * 11. (CRSP391) a top-level pane takes the width of its row: it is as wide as the column it sits in, unless another
+ *     block shares its row (a card grid, two panes side by side). A pane in a form-field grid keeps the 12.5 rem column
+ *     of a field and leaves the rest of the row empty; this finds it.
  *  8. no clipped text (CRSP210): no element whose text is wider than its box while it hides the rest (`overflow` hidden
  *     or clip, or `text-overflow: ellipsis`), and no table cell whose box overlaps another cell of its row (the action
  *     cell included) or whose content runs out of the cell into the next one.
@@ -44,7 +47,8 @@ export type LayoutRule =
   | 'clipped-text'
   | 'section-gap'
   | 'title-clear'
-  | 'time-one-line';
+  | 'time-one-line'
+  | 'pane-width';
 
 /** One known breach: the screen, the width it happens at ('*' for every width), the rule and the task that removes it. */
 export interface KnownLayoutBreach {
@@ -260,6 +264,24 @@ export function domLayoutSource(
             add('clipped-text', 'the content of the cell ' + label(c) + ' runs out of it (' + name(d) + ' ends ' + Math.round(dr.right - r.right) + ' px past the cell) in ' + name(row.closest('table')));
             break;
           }
+        }
+      }
+    }
+
+    // 11. a top-level pane takes the width of its row (CRSP391)
+    {
+      const nestedPane = (e) => e.parentElement && e.parentElement.closest('.ds-pane, .ds-side, [role=dialog], .ds-wizard');
+      for (const p3 of Array.from(document.querySelectorAll('main .ds-pane')).filter((q) => visible(q) && !nestedPane(q) && !q.closest('.ds-card-grid'))) {
+        const parent = p3.parentElement;
+        if (!parent) continue;
+        const pr = p3.getBoundingClientRect();
+        const par = parent.getBoundingClientRect();
+        const ps2 = getComputedStyle(parent);
+        const inner = par.width - (parseFloat(ps2.paddingLeft) || 0) - (parseFloat(ps2.paddingRight) || 0);
+        const beside = Array.from(parent.children).some((k) => k !== p3 && visible(k) && sameRow(k.getBoundingClientRect(), pr));
+        if (!beside && pr.width < inner - 2) {
+          const title = ((p3.querySelector(':scope > .ds-pane__title') || {}).textContent || name(p3)).trim().replace(/\s+/g, ' ').slice(0, 40);
+          add('pane-width', 'the pane "' + title + '" is ' + Math.round(pr.width) + ' px wide in a row of ' + Math.round(inner) + ' px with nothing beside it (' + name(parent) + ')');
         }
       }
     }

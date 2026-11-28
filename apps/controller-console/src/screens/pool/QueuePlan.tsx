@@ -2,16 +2,21 @@
 // A job that will not start by itself is marked "Needs you" and says what to do (UX-29, UX-58). LOOK70: as the approved
 // prototype, no count tiles, no slot timeline, and a Reservation pane beside the running jobs.
 import {
+  Code,
   Empty,
-  FieldGrid,
+  ExternalButton,
   Message,
   Section,
   Segmented,
   Stack,
   Status,
   Strong,
+  Table,
   Text,
   TextLink,
+  useNow,
+  type Column,
+  type StatusKind,
 } from '@crsp/ui';
 import { useState } from 'react';
 import type { Schemas } from '../../api/api';
@@ -19,20 +24,29 @@ import { RESERVATION_WORDS, ReservationCharts } from '../jobs/ChartsMachines';
 import { isReserved, type Job } from '../jobs/words';
 import { RunningTable } from './PoolOverview';
 import { WithOverview } from './OverviewState';
-import { needsYou, needsYouWords, placeWords, startsAbout, waitWords } from './poolWords';
+import { placeWords, startsAbout, waitWords } from './poolWords';
+import {
+  QUEUE_WORDS,
+  missingOf,
+  queueGroups,
+  queueReason,
+  waitedWords,
+  type Reason,
+} from './queueWords';
 
-type Filter = '' | 'room' | 'reserved' | 'none';
-const FILTERS = [
-  { value: 'room', label: 'Waiting for room' },
-  { value: 'reserved', label: 'Reserved' },
-  { value: 'none', label: 'No runner fits' },
-] as const;
+type Filter = '' | Reason;
 
-const matches = (f: Filter, j: Job): boolean => {
-  if (f === '') return true;
-  if (f === 'none') return j.wait_reason === 'no_runner_with_labels';
-  if (f === 'reserved') return j.wait_reason === 'reserved';
-  return j.wait_reason !== 'no_runner_with_labels' && j.wait_reason !== 'reserved';
+const FILTERS: readonly { value: Reason; label: string }[] = [
+  { value: 'room', label: QUEUE_WORDS.room },
+  { value: 'reserved', label: QUEUE_WORDS.reserved },
+  { value: 'none', label: QUEUE_WORDS.none },
+];
+
+const KIND: Record<Reason, StatusKind> = {
+  room: 'waiting',
+  reserved: 'info',
+  none: 'failed',
+  drained: 'failed',
 };
 
 export function QueuePlan() {
@@ -43,40 +57,135 @@ export function QueuePlan() {
         const queue = [...(o.queued ?? [])].sort(
           (a, b) => (a.queue_position ?? 1e9) - (b.queue_position ?? 1e9),
         );
-        const shown = queue.filter((j) => matches(filter, j));
+        const count = (r: Reason) => queue.filter((j) => queueReason(j) === r).length;
+        const shown = queue.filter((j) => filter === '' || queueReason(j) === filter);
+        const groups = queueGroups(queue);
         return (
           <Stack gap="section">
-            <Segmented<Filter>
+            <Segmented<Reason>
               label="Show"
-              options={FILTERS}
+              options={FILTERS.map((f) => ({
+                ...f,
+                label: `${f.label} ${count(f.value) + (f.value === 'room' ? count('drained') : 0)}`,
+              }))}
               value={filter}
               onChange={setFilter}
-              allLabel={`All ${queue.length}`}
+              allLabel={`${QUEUE_WORDS.all} ${queue.length}`}
             />
             <Section title="Queue, in start order" count={shown.length}>
+              {groups.map((g) => (
+                <Message key={g.key} tone="problem">
+                  {g.words} <TextLink to={g.to}>{g.link}</TextLink>
+                </Message>
+              ))}
               {shown.length === 0 ? (
                 <Empty title="Nothing is waiting. Every job has a slot." />
               ) : (
-                <Stack>
-                  {shown.map((j) => (
-                    <QueueEntry
-                      key={j.id}
-                      j={j}
-                      place={queue.indexOf(j) + 1}
-                      readAt={readAt}
-                    />
-                  ))}
-                </Stack>
+                <QueueTable shown={shown} queue={queue} readAt={readAt} />
               )}
             </Section>
-            <FieldGrid>
-              <ReservationPane readAt={readAt} queue={queue} />
-              <RunningTable title="Where running jobs are going" running={o.running} />
-            </FieldGrid>
+            <ReservationPane readAt={readAt} queue={queue} />
+            <RunningTable title="Where running jobs are going" running={o.running} />
           </Stack>
         );
       }}
     </WithOverview>
+  );
+}
+
+/** One row per waiting job: the word that says why, its labels (the ones no runner has stand out) and how long it waited. */
+function QueueTable({
+  shown,
+  queue,
+  readAt,
+}: {
+  shown: readonly Job[];
+  queue: readonly Job[];
+  readAt: number;
+}) {
+  const now = useNow();
+  const columns: Column<Job>[] = [
+    {
+      id: 'job',
+      header: 'Job',
+      grow: 3,
+      cell: (j) => (
+        <>
+          {queue.indexOf(j) + 1}. <Strong>{j.job_name}</Strong> {j.repository} #{j.run_id}
+        </>
+      ),
+      title: (j) => `${queue.indexOf(j) + 1}. ${j.job_name} ${j.repository} #${j.run_id}`,
+    },
+    {
+      id: 'why',
+      header: 'Why it waits',
+      cell: (j) => <Status kind={KIND[queueReason(j)]} word={stateWord(j)} />,
+      title: (j) => stateWord(j),
+    },
+    {
+      id: 'labels',
+      header: 'Labels',
+      grow: 3,
+      secondary: true,
+      cell: (j) => <LabelLine j={j} />,
+      title: (j) => j.labels.join(', '),
+    },
+    {
+      id: 'waited',
+      header: 'Waiting',
+      cell: (j) => waitedWords(j, now),
+      title: (j) => startsAbout(j.queue_eta, readAt),
+    },
+  ];
+  return (
+    <Table
+      caption="Queue, in start order"
+      columns={columns}
+      rows={shown}
+      rowKey={(j) => String(j.id)}
+      oneLine
+      detail={{ label: 'Details', render: (j) => <QueueDetail j={j} readAt={readAt} /> }}
+      rowLabel={(j) => j.job_name}
+    />
+  );
+}
+
+/** The runs-on labels as one line; the labels no runner has are in bold. */
+function LabelLine({ j }: { j: Job }) {
+  const missing = queueReason(j) === 'none' ? missingOf(j) : [];
+  return (
+    <>
+      {j.labels.map((l, i) => (
+        <span key={l}>
+          {i > 0 ? ', ' : ''}
+          {missing.includes(l) ? (
+            <Strong>
+              <Code>{l}</Code>
+            </Strong>
+          ) : (
+            <Code>{l}</Code>
+          )}
+        </span>
+      ))}
+    </>
+  );
+}
+
+/** What opens under a row: the start estimate, where it will go, the whole reason, and the job's own page. */
+function QueueDetail({ j, readAt }: { j: Job; readAt: number }) {
+  return (
+    <Stack gap="tight">
+      <Text>{waitWords(j)}</Text>
+      <Text>
+        {startsAbout(j.queue_eta, readAt)}.{' '}
+        {placeWords(j) === 'none yet' ? 'No machine yet.' : `Plan: ${placeWords(j)}.`}
+      </Text>
+      <Text mono>{j.labels.join(', ')}</Text>
+      <TextLink to={`/pool/jobs/${j.id}`}>{`Open ${j.job_name} in Pool > Jobs`}</TextLink>
+      {j.html_url ? (
+        <ExternalButton href={j.html_url}>Open on GitHub</ExternalButton>
+      ) : null}
+    </Stack>
   );
 }
 
@@ -113,35 +222,5 @@ function ReservationPane({ queue, readAt }: { queue: readonly Job[]; readAt: num
 }
 
 function stateWord(j: Job): string {
-  if (isReserved(j)) return 'Reserved';
-  if (j.wait_reason === 'no_runner_with_labels') return 'No runner fits';
-  if (j.wait_reason === 'machine_drained') return 'Machine not taking jobs';
-  return 'Waiting for room';
-}
-
-function QueueEntry({ j, place, readAt }: { j: Job; place: number; readAt: number }) {
-  const risk = needsYou(j);
-  return (
-    <Section
-      title={`${place}. ${j.job_name} ${j.repository} #${j.run_id}`}
-      hint={waitWords(j)}
-    >
-      <Status kind={risk ? 'failed' : 'waiting'} word={stateWord(j)} />
-      <Text>
-        <Strong>
-          {risk ? 'Does not start by itself' : startsAbout(j.queue_eta, readAt)}
-        </Strong>
-      </Text>
-      <p>
-        {placeWords(j) === 'none yet' ? 'No machine yet.' : `Plan: ${placeWords(j)}.`}{' '}
-        {j.labels.length ? `Label ${j.labels.join(', ')}.` : ''}
-      </p>
-      {risk ? (
-        <Message tone="problem">
-          <Status kind="waiting" word="Needs you" /> {needsYouWords(j)}{' '}
-          <TextLink to="/setup/machines">Open Setup &gt; Machines</TextLink>
-        </Message>
-      ) : null}
-    </Section>
-  );
+  return QUEUE_WORDS[queueReason(j)];
 }

@@ -2,7 +2,9 @@ package reconcile
 
 import (
 	"context"
+	"fmt"
 	"testing"
+	"time"
 )
 
 func staleRun(id int64) StaleRun {
@@ -69,4 +71,96 @@ func TestPassStopsWhenShareSpent(t *testing.T) { // R6.1: reconcile goes first, 
 	if err != nil || n != 2 || len(gh.runCalls) != 2 || gh.runCalls[0] != 10 {
 		t.Fatalf("Pass = %d, %v, calls %v: want the two oldest runs only", n, err, gh.runCalls)
 	}
+}
+
+// CRSP392: a job crsp holds as running for days is closed with GitHub's real end, and the correction is reported.
+func TestStaleRunningJobIsClosedAndReported(t *testing.T) {
+	end := t0.Add(-90 * time.Hour)
+	gh := &fakeGH{runs: map[int64][]RemoteJob{10: {{ID: 100, Status: "completed", Conclusion: "cancelled", CompletedAt: end}}}}
+	st := &fakeStore{runs: []StaleRun{staleRun(10)}, open: map[int64][]int64{10: {100}}}
+	now := t0
+	var said []string
+	r := New(Config{GitHub: gh, Store: st, Jobs: st, Budget: &fakeBudget{left: 5},
+		Classify:     NewClassifier(fakeRunners{}),
+		Installation: func(context.Context, int64) (int64, bool) { return 7, true },
+		Now:          func() time.Time { return now },
+		OnCorrected: func(_ context.Context, id int64, repo, s string) {
+			said = append(said, fmt.Sprint(id, " ", repo, " ", s))
+		}})
+	if n, err := r.Pass(context.Background(), now); err != nil || n != 1 {
+		t.Fatalf("Pass = %d, %v", n, err)
+	}
+	if len(st.applied) != 1 || st.applied[0].job.Conclusion != "cancelled" || !st.applied[0].job.CompletedAt.Equal(end) {
+		t.Fatalf("applied %+v", st.applied)
+	}
+	if len(said) != 1 || said[0] != "100 o/r completed on GitHub: cancelled" {
+		t.Fatalf("reported %v", said)
+	}
+}
+
+// A job GitHub still has queued is stored as GitHub says it, never closed or lost, and not reported.
+func TestStillQueuedJobIsLeft(t *testing.T) {
+	gh := &fakeGH{runs: map[int64][]RemoteJob{10: {{ID: 100, Status: "queued"}}}}
+	st := &fakeStore{runs: []StaleRun{staleRun(10)}, open: map[int64][]int64{10: {100}}}
+	now := t0
+	said := 0
+	r := New(Config{GitHub: gh, Store: st, Jobs: st, Budget: &fakeBudget{left: 5}, Classify: NewClassifier(fakeRunners{}),
+		Installation: func(context.Context, int64) (int64, bool) { return 7, true }, Now: func() time.Time { return now },
+		OnCorrected: func(context.Context, int64, string, string) { said++ }})
+	if _, err := r.Pass(context.Background(), now); err != nil {
+		t.Fatal(err)
+	}
+	if len(st.lost) != 0 || said != 0 || len(st.applied) != 1 || st.applied[0].job.Status != "queued" {
+		t.Fatalf("lost %v said %d applied %+v", st.lost, said, st.applied)
+	}
+}
+
+type limitedGH struct {
+	*fakeGH
+	calls int
+}
+
+type limitErr struct{}
+
+func (limitErr) Error() string     { return "limit" }
+func (limitErr) RateLimited() bool { return true }
+
+func (g *limitedGH) RunJobs(context.Context, int64, string, string, int64, int) ([]RemoteJob, error) {
+	g.calls++
+	return nil, fmt.Errorf("read: %w", limitErr{})
+}
+
+// GitHub's own limit stops the pass at the first refused call; the next pass goes on.
+func TestPassStopsOnGitHubRateLimit(t *testing.T) {
+	gh := &limitedGH{fakeGH: &fakeGH{}}
+	st := &fakeStore{runs: []StaleRun{staleRun(10), staleRun(11), staleRun(12)}, open: map[int64][]int64{}}
+	now := t0
+	r := New(Config{GitHub: gh, Store: st, Jobs: st, Budget: &fakeBudget{left: 9}, Classify: NewClassifier(fakeRunners{}),
+		Installation: func(context.Context, int64) (int64, bool) { return 7, true }, Now: func() time.Time { return now }})
+	n, err := r.Pass(context.Background(), now)
+	if err != nil || n != 0 || gh.calls != 1 {
+		t.Fatalf("Pass = %d, %v after %d calls: want a stop at the first refusal", n, err, gh.calls)
+	}
+}
+
+func TestRunPassesAtStartAndStopsWithContext(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	c := &countingRec{}
+	c.onPass = cancel
+	Run(ctx, c, nil, nil)
+	if c.passes != 1 {
+		t.Fatalf("%d passes, want the one at start", c.passes)
+	}
+}
+
+type countingRec struct {
+	Reconciler
+	passes int
+	onPass func()
+}
+
+func (c *countingRec) Pass(context.Context, time.Time) (int, error) {
+	c.passes++
+	c.onPass()
+	return 0, nil
 }

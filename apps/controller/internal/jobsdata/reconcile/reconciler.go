@@ -54,6 +54,56 @@ type Config struct {
 	Installation func(ctx context.Context, repositoryID int64) (id int64, ok bool)
 	Now          func() time.Time
 	Log          *slog.Logger
+	// OnCorrected is told of every open job the pass closed or fixed: the job id, its repository, and in words
+	// what GitHub said (CRSP392). Nil records nothing beyond the log.
+	OnCorrected func(ctx context.Context, jobID int64, repository, said string)
+}
+
+// rateLimited is the error of a call GitHub's limit stopped; the github package's RateLimitError answers it.
+type rateLimited interface{ RateLimited() bool }
+
+func isRateLimited(err error) bool {
+	var r rateLimited
+	return errors.As(err, &r) && r.RateLimited()
+}
+
+func (r *reconciler) corrected(ctx context.Context, id int64, repository, said string) {
+	r.cfg.Log.Info("reconcile: job corrected", "job", id, "repository", repository, "said", said)
+	if r.cfg.OnCorrected != nil {
+		r.cfg.OnCorrected(ctx, id, repository, said)
+	}
+}
+
+// Run does one Pass at start, so jobs a down controller missed are closed at once, then one every PassEvery,
+// until ctx ends (CRSP392). A failed pass is logged; the next one goes on.
+func Run(ctx context.Context, r Reconciler, now func() time.Time, log *slog.Logger) {
+	if now == nil {
+		now = time.Now
+	}
+	if log == nil {
+		log = slog.Default()
+	}
+	pass := func() {
+		n, err := r.Pass(ctx, now())
+		if err != nil && ctx.Err() == nil {
+			log.Warn("reconcile: pass stopped", "err", err)
+			return
+		}
+		if n > 0 {
+			log.Info("reconcile: pass done", "runs", n)
+		}
+	}
+	pass()
+	t := time.NewTicker(PassEvery)
+	defer t.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-t.C:
+			pass()
+		}
+	}
 }
 
 type reconciler struct {
@@ -104,6 +154,10 @@ func (r *reconciler) Pass(ctx context.Context, now time.Time) (int, error) {
 			if ctx.Err() != nil {
 				return checked, ctx.Err()
 			}
+			if isRateLimited(err) {
+				r.cfg.Log.Warn("reconcile: GitHub limit reached, the pass stops", "err", err)
+				break
+			}
 			r.cfg.Log.Warn("reconcile: run not read", "repository", run.Repository, "run", run.RunID, "err", err)
 			continue
 		}
@@ -123,6 +177,7 @@ func (r *reconciler) reconcileRun(ctx context.Context, now time.Time, inst int64
 			if err := r.cfg.Store.MarkLost(ctx, id, RunGoneWhy, now); err != nil {
 				return err
 			}
+			r.corrected(ctx, id, run.Repository, RunGoneWhy)
 		}
 		return nil
 	}
@@ -130,6 +185,10 @@ func (r *reconciler) reconcileRun(ctx context.Context, now time.Time, inst int64
 		return err
 	}
 	seen := make(map[int64]bool, len(remote))
+	wasOpen := make(map[int64]bool, len(open))
+	for _, id := range open {
+		wasOpen[id] = true
+	}
 	for _, j := range remote {
 		seen[j.ID] = true
 		origin, err := r.cfg.Classify.Origin(ctx, j.RunnerName, j.RunnerGroupName)
@@ -139,12 +198,16 @@ func (r *reconciler) reconcileRun(ctx context.Context, now time.Time, inst int64
 		if err := r.cfg.Store.Apply(ctx, run.RepositoryID, j, origin, now); err != nil {
 			return err
 		}
+		if wasOpen[j.ID] && j.Status == "completed" {
+			r.corrected(ctx, j.ID, run.Repository, "completed on GitHub: "+j.Conclusion)
+		}
 	}
 	for _, id := range open {
 		if !seen[id] {
 			if err := r.cfg.Store.MarkLost(ctx, id, GoneReason, now); err != nil {
 				return err
 			}
+			r.corrected(ctx, id, run.Repository, GoneReason)
 		}
 	}
 	return nil
