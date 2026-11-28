@@ -110,9 +110,13 @@ for (const width of WIDTHS) {
       await page.waitForLoadState('networkidle');
       // One primary per screen (UX-4); the header's, never a second one in an empty or failed state.
       // The action bar sits right after main (its own region), so it counts too.
-      expect(await page.locator('main .ds-button[data-kind="primary"], .ds-frame > .ds-bar-slot .ds-button[data-kind="primary"]').count()).toBe(
-        s.primaries,
-      );
+      expect(
+        await page
+          .locator(
+            'main .ds-button[data-kind="primary"], .ds-frame > .ds-bar-slot .ds-button[data-kind="primary"]',
+          )
+          .count(),
+      ).toBe(s.primaries);
       await expectDomLayout(page, `${s.name} ${width}`, { spaceVar: '--ds-space-' });
       const axe = await new AxeBuilder({ page }).analyze();
       expect(
