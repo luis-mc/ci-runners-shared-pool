@@ -5845,6 +5845,11 @@ export interface components {
             /** @enum {string} */
             state: "planned" | "running" | "done" | "failed" | "skipped" | "waiting";
             error?: string;
+            /**
+             * Format: int64
+             * @description The repository a step of a repository plan works on; a page groups the steps by it.
+             */
+            repository_id?: number;
         };
         /**
          * @example {

@@ -8601,9 +8601,12 @@ type PlanStep struct {
 	Error    *string        `json:"error,omitempty"`
 	Id       string         `json:"id"`
 	NeedsYes bool           `json:"needs_yes"`
-	State    PlanStepState  `json:"state"`
-	Target   *string        `json:"target,omitempty"`
-	Text     string         `json:"text"`
+
+	// RepositoryId The repository a step of a repository plan works on; a page groups the steps by it.
+	RepositoryId *int64        `json:"repository_id,omitempty"`
+	State        PlanStepState `json:"state"`
+	Target       *string       `json:"target,omitempty"`
+	Text         string        `json:"text"`
 
 	// WaitsFor The step this one waits for, such as the new runner being online.
 	WaitsFor *string `json:"waits_for,omitempty"`

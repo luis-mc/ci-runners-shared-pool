@@ -24,7 +24,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { TIMING } from '../../timing';
 import { ApiError, errorText, unwrap, useClient } from '../../api/api';
 import { useMounted } from '../../api/mounted';
-import { planNotes, planPhases, useLiveLog } from '../liveLog';
+import { planNotes, useLiveLog, type Phase, type StepGrouping } from '../liveLog';
 import { allRepositories, needsYes, type Plan, type Repository } from './plans';
 
 export type Dir = 'on' | 'off' | 'repair';
@@ -32,15 +32,28 @@ export type Dir = 'on' | 'off' | 'repair';
 const count = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
 const repos = (n: number) => count(n, 'repository', 'repositories');
 
-const stepsOf = (plan: Plan | undefined, full: string) =>
-  (plan?.steps ?? []).filter((s) => s.target === full);
+/** The steps of one repository: a variable step names the variable, so the repository is read from the step. */
+const stepsOf = (plan: Plan | undefined, r: Pick<Repository, 'id' | 'full_name'>) =>
+  (plan?.steps ?? []).filter((s) => s.repository_id === r.id || s.target === r.full_name);
+
+const finished = (st: { state: string }) => st.state === 'done' || st.state === 'skipped';
+
+/** What the repository's card says about the step in hand: the running one, else the one that failed, else the next. */
+export function stepText(plan: Plan | undefined, r: Pick<Repository, 'id' | 'full_name'>) {
+  const st = stepsOf(plan, r);
+  return (
+    st.find((s) => s.state === 'running') ??
+    st.find((s) => s.state === 'failed') ??
+    st.find((s) => !finished(s))
+  )?.text;
+}
 
 /** One repository's state in the work: waiting, working, done or failed. */
 export function repoState(
   plan: Plan | undefined,
-  full: string,
+  r: Pick<Repository, 'id' | 'full_name'>,
 ): { kind: StatusKind; word: string } {
-  const st = stepsOf(plan, full);
+  const st = stepsOf(plan, r);
   // A repair that found nothing to change has no step for the repository: when the plan is done
   // it shows the end state, never "waiting".
   if (st.length === 0 && plan?.state === 'done') return { kind: 'ok', word: 'done' };
@@ -51,6 +64,19 @@ export function repoState(
     return { kind: 'running', word: 'working' };
   return { kind: 'waiting', word: 'waiting' };
 }
+
+/** One phase of the live bar per repository: the bar counts the repositories finished and the part of the one in hand. */
+const repoPhases = (list: Repository[], verb: string): Phase[] =>
+  list.map((r) => ({ name: `${verb} ${r.full_name}` }));
+
+const grouping = (list: Repository[]): StepGrouping => ({
+  phaseOf: (s) => Math.max(0, list.findIndex((r) => r.id === s.repository_id || r.full_name === s.target)),
+  pctOf: (plan, at) => {
+    const r = list[at];
+    const st = r ? stepsOf(plan, r) : [];
+    return st.length === 0 ? 0 : Math.round((100 * st.filter(finished).length) / st.length);
+  },
+});
 
 const WORDS: Record<Dir, { work: string; name: string; button: string }> = {
   on: { work: 'Turning on', name: 'Turn on the pool', button: 'Turn on' },
@@ -99,26 +125,31 @@ function Work({
   plan: Plan | undefined;
   verb: string;
 }) {
+  // A pane clears the bar above it and holds one full-width card per repository: a long name stays on one line.
   return (
-    <CardGrid>
-      {list.map((r) => {
-        const st = stepsOf(plan, r.full_name);
-        const done = st.filter((s) => s.state === 'done' || s.state === 'skipped').length;
-        const s = repoState(plan, r.full_name);
-        return (
-          <Card key={r.id} title={r.full_name}>
-            <Stack gap="tight">
-              <Status kind={s.kind} word={s.word} />
-              <Progress
-                label={`${verb} ${r.full_name}`}
-                value={done}
-                max={Math.max(st.length, 1)}
-              />
-            </Stack>
-          </Card>
-        );
-      })}
-    </CardGrid>
+    <Pane title="Repositories" count={list.length}>
+      <CardGrid columns={1}>
+        {list.map((r) => {
+          const st = stepsOf(plan, r);
+          const done = st.filter(finished).length;
+          const s = repoState(plan, r);
+          const now = stepText(plan, r);
+          return (
+            <Card key={r.id} title={r.full_name}>
+              <Stack gap="tight">
+                <Status kind={s.kind} word={s.word} />
+                {now && s.word !== 'done' ? <Text tone="muted">{now}</Text> : null}
+                <Progress
+                  label={`${verb} ${r.full_name}: ${done} of ${st.length} steps`}
+                  value={done}
+                  max={Math.max(st.length, 1)}
+                />
+              </Stack>
+            </Card>
+          );
+        })}
+      </CardGrid>
+    </Pane>
   );
 }
 
@@ -140,14 +171,15 @@ export function ChangePoolWizard() {
   const [problem, setProblem] = useState<string | undefined>(undefined);
   const [stopping, setStopping] = useState(false);
   const seen = useRef(new Map<string, string>());
-  const log = useLiveLog(planPhases(plan));
-  const record = (p: Plan) => {
-    for (const n of planNotes(p, seen.current)) log.say(n, planPhases(p));
+  const log = useLiveLog(repoPhases(list, word.work));
+  const record = (p: Plan, repos: Repository[] = list) => {
+    for (const n of planNotes(p, seen.current, undefined, grouping(repos)))
+      log.say(n, repoPhases(repos, word.work));
   };
 
-  const settle = (p: Plan, afterReload: boolean) => {
+  const settle = (p: Plan, afterReload: boolean, repos: Repository[] = list) => {
     setPlan(p);
-    record(p);
+    record(p, repos);
     setStopping(false);
     setStep(2);
     if (p.state === 'done') setPhase(afterReload ? 'done-after-reload' : 'done');
@@ -206,10 +238,13 @@ export function ChangePoolWizard() {
           );
           if (!on) return;
           if (p.state === 'applying') {
+            // The run goes on without this page: show the step in hand and keep reading it (CRSP405).
             setPlan(p);
+            record(p, chosen);
             setStep(1);
-            setPhase('paused');
-          } else settle(p, true);
+            setPhase('running');
+            await follow(p, undefined, chosen);
+          } else settle(p, true, chosen);
           return;
         }
         if (chosen.length === 0) {
@@ -231,24 +266,18 @@ export function ChangePoolWizard() {
     // The stored run is read once, when the page opens.
   }, [client]);
 
-  const apply = async () => {
-    if (!plan) return;
-    setStep(1);
-    setPhase('running');
+  /** Read the plan until it ends, and show it. `posted` is the apply request still in flight, if this page sent it. */
+  const follow = async (
+    first: Plan,
+    posted: Promise<{ plan?: Plan; error?: unknown }> | undefined,
+    repos: Repository[] = list,
+  ) => {
+    let p = first;
     try {
-      let p = await unwrap(
-        client.POST('/api/v1/repository-plans/{planId}/apply', {
-          params: { path: { planId: plan.id } },
-          body: { approved_steps: needsYes(plan) },
-        }),
-      );
-      const next = new URLSearchParams(params);
-      next.set('plan', p.id);
-      setParams(next, { replace: true });
-      setPlan(p);
-      record(p);
       while (p.state === 'applying' || p.state === 'planned') {
         if (!(await sleep(TIMING.planPollMs))) return;
+        const failed = posted ? await Promise.race([posted, Promise.resolve(undefined)]) : undefined;
+        if (failed?.error) throw failed.error;
         p = await unwrap(
           client.GET('/api/v1/repository-plans/{planId}', {
             params: { path: { planId: p.id } },
@@ -256,14 +285,37 @@ export function ChangePoolWizard() {
         );
         if (!mounted.current) return;
         setPlan(p);
-        record(p);
+        record(p, repos);
       }
-      settle(p, false);
+      // A refused request (a stale plan, a missing right) says so; the plan it left is not the story.
+      const sent = posted ? await posted : undefined;
+      if (sent?.error) throw sent.error;
+      settle(sent?.plan && sent.plan.state !== 'applying' ? sent.plan : p, false, repos);
     } catch (e) {
       setProblem(errorText(e));
       setStep(2);
       setPhase('failed');
     }
+  };
+
+  const apply = async () => {
+    if (!plan) return;
+    setStep(1);
+    setPhase('running');
+    // The request answers when the whole plan has run; the page reads the plan meanwhile, so the bars move step by step.
+    const next = new URLSearchParams(params);
+    next.set('plan', plan.id);
+    setParams(next, { replace: true });
+    const posted = unwrap(
+      client.POST('/api/v1/repository-plans/{planId}/apply', {
+        params: { path: { planId: plan.id } },
+        body: { approved_steps: needsYes(plan) },
+      }),
+    ).then(
+      (p) => ({ plan: p }),
+      (error: unknown) => ({ error }),
+    );
+    await follow({ ...plan, state: 'applying' }, posted);
   };
 
   const stop = async () => {
@@ -282,11 +334,15 @@ export function ChangePoolWizard() {
 
   const back = () => void navigate('/setup/pool');
   const reposDone = list.filter(
-    (r) => repoState(plan, r.full_name).word === 'done',
+    (r) => repoState(plan, r).word === 'done',
   ).length;
-  const current = list.find((r) => repoState(plan, r.full_name).word === 'working');
-  const total = plan?.steps.length ?? 0;
-  const stepsDone = plan?.steps.filter((s) => s.state === 'done').length ?? 0;
+  const current = list.find((r) => repoState(plan, r).word === 'working');
+  // The line before the first event: whole repositories finished, and the part of the one in hand.
+  const partial = (() => {
+    if (!current) return undefined;
+    const st = stepsOf(plan, current);
+    return st.length === 0 ? 0 : (100 * st.filter(finished).length) / st.length;
+  })();
 
   let body: ReactNode;
   if (phase === 'first-run')
@@ -319,7 +375,7 @@ export function ChangePoolWizard() {
           )}
           <Facts
             items={list.map((r) => {
-              const s = repoState(plan, r.full_name);
+              const s = repoState(plan, r);
               // A finished repository says where it stands now, in the words of Pool setup.
               const now =
                 s.word !== 'done'
@@ -352,8 +408,8 @@ export function ChangePoolWizard() {
           phase === 'running'
             ? {
                 text: `${word.work} ${Math.min(reposDone + 1, Math.max(list.length, 1))} of ${list.length}${current ? `: ${current.full_name}` : ''}`,
-                value: stepsDone,
-                max: Math.max(total, 1),
+                value: reposDone * 100 + (partial ?? 0),
+                max: Math.max(list.length, 1) * 100,
               }
             : undefined
         }

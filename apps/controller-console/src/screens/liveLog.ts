@@ -76,7 +76,7 @@ export function useLiveLog(phases: readonly Phase[], base: Where = CONSOLE_SIDE)
   return { events, say, clear };
 }
 
-const STEP_WORD: Record<string, string> = {
+export const STEP_WORD: Record<string, string> = {
   planned: 'Waiting to start',
   waiting: 'Waiting for the step before it',
   running: 'Running',
@@ -89,15 +89,26 @@ const STEP_WORD: Record<string, string> = {
 export const planPhases = (plan: Plan | undefined): Phase[] =>
   (plan?.steps ?? []).map((s) => ({ name: s.text }));
 
+/** How a page that shows one phase per group of steps (a repository) maps a step to its phase and reads the phase's percent. */
+export interface StepGrouping {
+  phaseOf: (step: Plan['steps'][number], index: number) => number;
+  /** 0 to 100: the steps of the phase that are done or skipped, of all its steps. */
+  pctOf: (plan: Plan, phase: number) => number;
+}
+
 /** The notes a plan's steps add since `seen` (step id and state, filled here): a step that begins writes its command
  * line, a step that ends writes its result. Call it with each plan the page reads. */
 export function planNotes(
   plan: Plan,
   seen: Map<string, string>,
   machine?: Where,
+  by?: StepGrouping,
 ): Note[] {
   const out: Note[] = [];
-  plan.steps.forEach((s, at) => {
+  plan.steps.forEach((s, index) => {
+    const at = by ? by.phaseOf(s, index) : index;
+    // A page that groups steps (one phase per repository) knows how far its phase is after each step (CRSP405).
+    const pctNow = (fallback: number | null) => (by ? by.pctOf(plan, at) : fallback);
     const before = seen.get(s.id);
     if (before === s.state) return;
     seen.set(s.id, s.state);
@@ -106,7 +117,7 @@ export function planNotes(
     if (s.state === 'running' || s.state === 'waiting')
       out.push({
         at,
-        pct: null,
+        pct: pctNow(null),
         reason:
           s.state === 'waiting'
             ? (STEP_WORD.waiting ?? '')
@@ -120,7 +131,7 @@ export function planNotes(
     else if (s.state === 'done' || s.state === 'skipped')
       out.push({
         at,
-        pct: 100,
+        pct: pctNow(100),
         line: STEP_WORD[s.state] ?? s.state,
         ...(began ? {} : { command: s.text }),
         ...where,
@@ -128,7 +139,7 @@ export function planNotes(
     else if (s.state === 'failed')
       out.push({
         at,
-        pct: null,
+        pct: pctNow(null),
         line: `Failed: ${s.error ?? 'no reason given'}`,
         error: true,
         ...(began ? {} : { command: s.text }),

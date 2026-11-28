@@ -9151,6 +9151,10 @@ components:
           enum: [planned, running, done, failed, skipped, waiting]
         error:
           type: string
+        repository_id:
+          type: integer
+          format: int64
+          description: The repository a step of a repository plan works on; a page groups the steps by it.
     ApplyPlanRequest:
       type: object
       required: [approved_steps]

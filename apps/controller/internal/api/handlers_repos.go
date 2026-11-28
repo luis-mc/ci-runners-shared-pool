@@ -312,6 +312,10 @@ func toPlan(p repos.Plan) gen.Plan {
 			e := st.Error
 			ps.Error = &e
 		}
+		if st.RepositoryID != 0 {
+			id := st.RepositoryID
+			ps.RepositoryId = &id
+		}
 		out.Steps = append(out.Steps, ps)
 	}
 	return out

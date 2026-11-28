@@ -3195,6 +3195,9 @@ button.ds-jobpath__box {
     grid-template-columns: minmax(0, 1fr);
   }
 }
+.ds-card-grid[data-columns='1'] {
+  grid-template-columns: minmax(0, 1fr);
+}
 .ds-boxbadge {
   display: inline-flex;
   align-items: center;

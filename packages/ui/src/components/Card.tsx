@@ -2,13 +2,14 @@
 import type { ReactNode } from 'react';
 import { Pane } from './Pane';
 
-/** `columns={4}` is the Help grid: 4 columns on a wide screen, 2 on a tablet, 1 on a phone (LOOK48). */
+/** `columns={4}` is the Help grid: 4 columns on a wide screen, 2 on a tablet, 1 on a phone (LOOK48).
+ * `columns={1}` is one card per row, the full width of the page: a card whose title is a long name (CRSP405). */
 export function CardGrid({
   children,
   columns,
 }: {
   children: ReactNode;
-  columns?: 4 | undefined;
+  columns?: 1 | 4 | undefined;
 }) {
   return (
     <div className="ds-card-grid" data-columns={columns} data-layout-group>
