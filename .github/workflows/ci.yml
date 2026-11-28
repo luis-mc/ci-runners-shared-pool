@@ -144,6 +144,34 @@ jobs:
           fi
           python3 scripts/delivery/area_select.py "${args[@]}" || echo "::warning::area plan failed, every job runs"
 
+  # CRSP376 (S21, S2, DL-118): a costly lane is skipped only when main holds a pass record with the same inputs
+  # key (scripts/delivery/pass_records.py to-result reads main's records and nothing else; the inputs of each lane
+  # are in scripts/delivery/ci-shards.json). No key, no record, a failed record, a manual run, a failed or missing
+  # step here: the lane runs. Every output below is `true` only on a proven hit.
+  lane-records:
+    name: lane pass records
+    needs: decide
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      image: ${{ steps.records.outputs.image }}
+      test_os: ${{ steps.records.outputs.test-os }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: records
+        env:
+          EVENT: ${{ github.event_name }}
+        run: |
+          for shard in image test-os; do
+            hit=false
+            if [ "$EVENT" != "workflow_dispatch" ] &&
+               python3 scripts/delivery/pass_records.py to-result --shard "$shard" --out "lane-$shard.json"; then
+              hit=true
+            fi
+            echo "$shard=$hit" >> "$GITHUB_OUTPUT"
+          done
+
   # CRSP209: verify was one serial job of 9.6 to 17 min. The same checks now run in
   # three parallel jobs and the `verify` job at the end keeps the name a required
   # check matches.
@@ -447,9 +475,10 @@ jobs:
 
   test-os:
     name: Go tests (${{ matrix.os }})
-    needs: decide
+    needs: [decide, lane-records]
     # CRSP324 (S12): macOS and Windows run only when a Go file, go.mod or a Windows file changed.
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.test_os != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # CRSP376: and not when main already holds a pass record with the same inputs (lane-records).
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.test_os != 'false' && needs.lane-records.outputs.test_os != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -494,6 +523,8 @@ jobs:
     uses: ./.github/workflows/lifecycle.yml
     with:
       release: true
+      # CRSP376: lifecycle.yml skips the MSI lanes itself when main holds a pass record with the same inputs.
+      use_records: true
 
   build:
     name: build
@@ -519,10 +550,11 @@ jobs:
   # stage plus the crsp binary. Every self-check step stays.
   image:
     name: base image ${{ matrix.arch }} (build only)
-    needs: [decide, build, lint, types]
+    needs: [decide, build, lint, types, lane-records]
     # A release pull request starts as soon as the build is done; any other run waits for
-    # lint and types to pass (CRSP209, DL-97/DL-98).
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.image != 'false' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
+    # lint and types to pass (CRSP209, DL-97/DL-98). CRSP376: and not when main already holds a pass
+    # record with the same inputs (lane-records).
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.image != 'false' && needs.lane-records.outputs.image != 'true' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
@@ -946,3 +978,50 @@ jobs:
             echo "shards=$SHARDS"
             [ "$SHARDS" = "success" ]
           fi
+
+  # CRSP376 (DL-118): write the pass records of the lanes that ran and passed, as the branch of this run
+  # (a pull request) or as main (a push). A push to main that `decide` skipped has no lane of its own, so the
+  # records of the pull request it merged are copied to main (pass_records.py copy-to-main); the next release
+  # pull request then finds them. This job holds the only `contents: write` of the workflow and writes only to
+  # the orphan branch ci-pass-records; a failed write never fails the run (a missed record costs one lane run).
+  pass-records:
+    name: pass records
+    needs: [decide, image, test-os, lifecycle]
+    if: ${{ always() && github.event_name != 'workflow_dispatch' && (github.event_name != 'pull_request' || (!github.event.pull_request.draft && github.event.pull_request.head.repo.full_name == github.repository)) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      pull-requests: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+      BRANCH: ${{ github.head_ref || github.ref_name }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Git identity for the records branch
+        run: |
+          git config user.name "ci-pass-records"
+          git config user.email "ci-pass-records@users.noreply.github.com"
+      - name: Write the records of the lanes that passed
+        continue-on-error: true
+        env:
+          IMAGE: ${{ needs.image.result }}
+          TEST_OS: ${{ needs.test-os.result }}
+          MSI: ${{ needs.lifecycle.result }}
+        run: |
+          [ "${{ needs.decide.outputs.skip }}" = "true" ] && exit 0
+          write() { python3 scripts/delivery/pass_records.py write --shard "$1" --state success --write-as "$BRANCH" || true; }
+          [ "$IMAGE" = "success" ] && write image
+          [ "$TEST_OS" = "success" ] && write test-os
+          [ "$MSI" = "success" ] && write msi
+          exit 0
+      - name: Copy the merged pull request's records to main
+        if: ${{ github.event_name == 'push' && needs.decide.outputs.skip == 'true' }}
+        continue-on-error: true
+        env:
+          SHA: ${{ github.sha }}
+          REPO: ${{ github.repository }}
+        run: |
+          for head in $(gh api "repos/$REPO/commits/$SHA/pulls" --jq '.[].head.ref'); do
+            python3 scripts/delivery/pass_records.py copy-to-main --from-branch "$head" || true
+          done
