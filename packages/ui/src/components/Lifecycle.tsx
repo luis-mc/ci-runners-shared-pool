@@ -381,14 +381,13 @@ export function UpdatesCard(p: UpdatesCardProps) {
                 }}
               />
               {missing ? (
-                <Status
-                  kind="failed"
-                  word={lw(
+                <Message tone="problem">
+                  {lw(
                     missing === 'to'
                       ? 'policy.window_need_to'
                       : 'policy.window_need_from',
                   )}
-                />
+                </Message>
               ) : (
                 <Text>{lw('policy.window_help')}</Text>
               )}
