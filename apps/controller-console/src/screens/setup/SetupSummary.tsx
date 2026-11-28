@@ -152,7 +152,8 @@ export function SetupSummary() {
       <Load result={machines.result} what="the pool" reload={machines.reload}>
         {(m) => {
           // Each card shows as soon as its own data is in; a card still waiting says so alone (CRSP389).
-          const rs = runners.result.state === 'ready' ? runners.result.data.items : undefined;
+          const rs =
+            runners.result.state === 'ready' ? runners.result.data.items : undefined;
           const rp = repos.result.state === 'ready' ? repos.result.data.items : undefined;
           const f = poolFigures(m.items, rs ?? [], rp?.length ?? 0);
           const app = setup.result.state === 'ready' ? setup.result.data : undefined;

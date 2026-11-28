@@ -59,7 +59,10 @@ describe('Change pool wizard', () => {
     };
     const planned = { ...plan('planned', 'planned'), steps: [write] };
     const mock = signedIn()
-      .on('GET', '/api/v1/github/repositories', { items: [live], stale: { stale: false } })
+      .on('GET', '/api/v1/github/repositories', {
+        items: [live],
+        stale: { stale: false },
+      })
       .on('POST', '/api/v1/repository-plans', (req: { body?: unknown }) => {
         bodies.push(req.body);
         return planned;
@@ -72,7 +75,10 @@ describe('Change pool wizard', () => {
   it('repair with nothing different finishes Done with a plain line, never waiting (CRSP388)', async () => {
     const done = { ...plan('done', 'done'), steps: [] };
     const mock = signedIn()
-      .on('GET', '/api/v1/github/repositories', { items: [live], stale: { stale: false } })
+      .on('GET', '/api/v1/github/repositories', {
+        items: [live],
+        stale: { stale: false },
+      })
       .on('POST', '/api/v1/repository-plans', done);
     renderApp(mock, '/setup/pool/change?to=repair&repo=9');
     expect(

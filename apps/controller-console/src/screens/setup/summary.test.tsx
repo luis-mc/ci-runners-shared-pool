@@ -45,7 +45,9 @@ describe('Setup > Summary loads each card on its own (CRSP389)', () => {
     expect(screen.getAllByText('Loading the pool figures.')).toHaveLength(1);
     expect(screen.getByText('Open Machines')).toBeTruthy();
     release({ items: [runner()] });
-    await waitFor(() => expect(screen.queryByText('Loading the pool figures.')).toBeNull());
+    await waitFor(() =>
+      expect(screen.queryByText('Loading the pool figures.')).toBeNull(),
+    );
   });
 });
 

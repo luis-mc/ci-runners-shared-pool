@@ -2,6 +2,7 @@ package runners
 
 import (
 	"context"
+	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -14,7 +15,10 @@ import (
 type countingGitHub struct {
 	*fakeGitHub
 	lists, now, peak atomic.Int32
-	delay            time.Duration
+	// meet, when set, holds each call until two are inside at once: calls that run one after
+	// another never get past it, so the test fails by timeout instead of by a clock.
+	meet chan struct{}
+	once sync.Once
 }
 
 func (g *countingGitHub) ListRunners(ctx context.Context, id int64, s github.RunnerScope) ([]github.Runner, error) {
@@ -26,7 +30,12 @@ func (g *countingGitHub) ListRunners(ctx context.Context, id int64, s github.Run
 			break
 		}
 	}
-	time.Sleep(g.delay)
+	if g.meet != nil {
+		if n >= 2 {
+			g.once.Do(func() { close(g.meet) })
+		}
+		<-g.meet
+	}
 	g.now.Add(-1)
 	return g.fakeGitHub.ListRunners(ctx, id, s)
 }
@@ -103,17 +112,13 @@ func TestRefreshFactsReadsScopesConcurrentlyWithinTheBound(t *testing.T) {
 			t.Fatal(err)
 		}
 	}
-	gh := &countingGitHub{fakeGitHub: r.gh, delay: 20 * time.Millisecond}
+	gh := &countingGitHub{fakeGitHub: r.gh, meet: make(chan struct{})}
 	r.svc.GitHub = gh
-	start := time.Now()
 	r.svc.RefreshFacts(ctx)
 	if gh.lists.Load() < 2 {
 		t.Fatalf("lists: %d", gh.lists.Load())
 	}
 	if p := gh.peak.Load(); p < 2 || p > factsParallel {
 		t.Fatalf("peak concurrency %d, want 2 to %d", p, factsParallel)
-	}
-	if d := time.Since(start); d > time.Duration(gh.lists.Load())*20*time.Millisecond {
-		t.Fatalf("the calls ran one after another: %v", d)
 	}
 }
