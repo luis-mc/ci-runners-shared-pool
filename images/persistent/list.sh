@@ -3,11 +3,23 @@
 #   NAME|RUNNING|LOST   (RUNNING is 1 when the supervisor has the runner up, else 0;
 #   LOST is the reason when GitHub deleted the runner's registration, else empty)
 # Read only (runners R5.93, OPS70). A runner is in the list when its entry file
-# is in runners.d, the same file the supervisor and report.sh go by.
+# (or only its `.lost` marker) is in runners.d, the files the supervisor and
+# report.sh go by.
 STATE=${CRSP_STATE_DIR:-/state}
 RUN=${CRSP_SUPERVISOR_RUN:-/tmp/crsp-supervisor}
-for f in "$STATE"/runners.d/*.env; do
+# A runner with only a `.lost` marker (an add that failed after it removed the
+# entry file, CRSP385) is listed too: it is not running and its registration
+# is lost, so the controller registers it again.
+for f in "$STATE"/runners.d/*.env "$STATE"/runners.d/*.lost; do
   [ -e "$f" ] || continue
+  case "$f" in
+  *.lost)
+    n=$(basename "$f" .lost)
+    [ -e "$STATE/runners.d/$n.env" ] && continue
+    printf '%s|0|%s\n' "$n" "$(head -n1 "$f" | tr -d '|\r')"
+    continue
+    ;;
+  esac
   n=$(basename "$f" .env)
   up=0
   if [ ! -e "$STATE/runners.d/$n.stopped" ] && [ -f "$RUN/$n.pid" ] && kill -0 "$(cat "$RUN/$n.pid")" 2>/dev/null; then up=1; fi

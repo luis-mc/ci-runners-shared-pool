@@ -675,3 +675,82 @@ func TestSupervisorLoadsItsNewCopyOnlyWhileNoRunnerHasAJob(t *testing.T) {
 		t.Fatalf("the supervisor process ended on reload (the runners would go with it): %v", err)
 	}
 }
+
+// CRSP385: the state the owner's pool was left in by crsp 0.1.31. The runner
+// keeps `.runner_migrated` beside `.runner`, and config.sh refuses with
+// "already configured" while either is there; add-runner.sh removed only
+// `.runner`, failed, and had already removed the entry file. list.sh still
+// lists such a runner (from its `.lost` marker) and the next add registers it.
+func TestLostRunnerWithAMigratedCopyAndNoEntryIsListedAndRegistered(t *testing.T) {
+	s := newSup(t)
+	p := &pool{t: t}
+	s.diag("Runner_20261128-040451-utc.log", lostLog)
+	if err := os.Remove(filepath.Join(s.state, "runners.d", "r1.env")); err != nil {
+		t.Fatal(err)
+	}
+	p.write(filepath.Join(s.state, "runners.d", "r1.lost"), "the registration of this runner was deleted at GitHub\n")
+	p.write(filepath.Join(s.state, "r1", ".runner_migrated"), "old")
+	p.write(filepath.Join(s.state, "r1", ".credentials_migrated"), "old")
+	list := func() string {
+		cmd := exec.CommandContext(t.Context(), "sh", script(t, "list.sh"))
+		cmd.Env = s.env()
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	if got := list(); got != "r1|0|the registration of this runner was deleted at GitHub" {
+		t.Fatalf("a runner with only its .lost marker is listed as lost: %q", got)
+	}
+	// the supervisor leaves it alone: it has no entry file
+	if out := s.tick(); strings.Contains(out, "starting runner r1") {
+		t.Fatalf("started: %s", out)
+	}
+	cfg := filepath.Join(s.state, "r1", "config.sh")
+	p.write(cfg, "#!/bin/sh\nfor f in .runner .runner_migrated .credentials_migrated; do\n"+
+		"  [ -f \"$CRSP_STATE_DIR/r1/$f\" ] && { echo 'Cannot configure the runner because it is already configured.' >&2; exit 1; }\ndone\n"+
+		": >\"$CRSP_STATE_DIR/r1/.runner\"\n")
+	if err := os.Chmod(cfg, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	add := exec.CommandContext(t.Context(), "sh", script(t, "add-runner.sh"), "r1", "https://github.com/o/r", "self-hosted,linux", "", "1")
+	add.Env = s.env()
+	add.Stdin = strings.NewReader("tok\n")
+	if out, err := add.CombinedOutput(); err != nil {
+		t.Fatalf("add-runner: %v\n%s", err, out)
+	}
+	if exists(filepath.Join(s.state, "runners.d", "r1.lost")) || !exists(filepath.Join(s.state, "runners.d", "r1.env")) {
+		t.Fatal("registered: the marker goes and the entry file is back")
+	}
+	if got := list(); got != "r1|0|" {
+		t.Errorf("after the repair: %q", got)
+	}
+}
+
+// CRSP385: an add that fails on a folder that was set up keeps the runner in
+// list.sh as not registered (its old registration files and its entry file
+// are gone), so the controller sees it and the supervisor does not start a
+// runner that has no registration.
+func TestAddRunnerThatFailsOnASetUpFolderLeavesItListedAsLost(t *testing.T) {
+	a := newAddRig(t, `[ -f ../fail ] && { echo 'Http response code: NotFound' >&2; exit 1; }; exit 0`)
+	if out, err := a.do("n1"); err != nil {
+		t.Fatal(err, out)
+	}
+	if err := os.WriteFile(filepath.Join(a.state, "fail"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	out, err := a.do("n1")
+	if err == nil || !strings.Contains(out, "NotFound") {
+		t.Fatalf("the add fails with config.sh's own words on stderr: %v %s", err, out)
+	}
+	if exists(filepath.Join(a.state, "runners.d", "n1.env")) || !exists(filepath.Join(a.state, "runners.d", "n1.lost")) {
+		t.Fatal("no entry file, and a .lost marker")
+	}
+	cmd := exec.CommandContext(t.Context(), "sh", script(t, "list.sh"))
+	cmd.Env = append(os.Environ(), "CRSP_STATE_DIR="+a.state, "CRSP_SUPERVISOR_RUN="+a.run)
+	b, lerr := cmd.CombinedOutput()
+	if lerr != nil || strings.TrimSpace(string(b)) != "n1|0|registering this runner again failed" {
+		t.Fatalf("list.sh: %v %q", lerr, b)
+	}
+}

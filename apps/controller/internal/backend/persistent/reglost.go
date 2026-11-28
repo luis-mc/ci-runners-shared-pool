@@ -36,8 +36,9 @@ func IsRegistrationLost(text string) bool {
 
 // RegistrationLost says whether the newest listener log of a runner folder
 // that has any content says the registration was deleted at GitHub. A folder
-// with no logs, or whose newest log is healthy, is not lost. A folder with no
-// `.runner` file at all is not registered either (a half-done re-register).
+// with no logs, or whose newest log is healthy, is not lost. A folder that has
+// logs but neither `.runner` nor `.runner_migrated` is not registered either (a
+// register again that failed after the old files were removed, CRSP385).
 func RegistrationLost(folder string) bool {
 	if folder == "" {
 		return false
@@ -57,6 +58,9 @@ func RegistrationLost(folder string) bool {
 			logs = append(logs, log{e.Name(), t.Unix()})
 		}
 	}
+	if len(logs) > 0 && !hasRegistration(func(n string) bool { _, err := os.Stat(filepath.Join(folder, n)); return err == nil }) {
+		return true
+	}
 	sort.Slice(logs, func(i, j int) bool { return logs[i].at > logs[j].at })
 	for _, l := range logs {
 		b, err := os.ReadFile(filepath.Join(dir, l.name))
@@ -68,9 +72,20 @@ func RegistrationLost(folder string) bool {
 	return false
 }
 
+// hasRegistration says whether a runner folder holds a registration: config.sh
+// writes `.runner` (and the runner keeps a copy in `.runner_migrated`). A
+// folder that ran the runner (it has `_diag`) but has neither was cleaned for
+// a register again that failed, so it is not registered (CRSP385).
+func hasRegistration(exists func(name string) bool) bool {
+	return exists(".runner") || exists(".runner_migrated")
+}
+
 // StaleRegistrationFiles are the files `config.sh` leaves that hold the old
 // registration; they are removed before a runner registers again in place.
-var StaleRegistrationFiles = []string{".runner", ".credentials", ".credentials_rsaparams"}
+// The runner keeps a second copy of its settings and credentials
+// (`.runner_migrated`, `.credentials_migrated`), and config.sh refuses with
+// "already configured" while either copy is there (CRSP385).
+var StaleRegistrationFiles = []string{".runner", ".credentials", ".credentials_rsaparams", ".runner_migrated", ".credentials_migrated"}
 
 // RegistrationLostIn is RegistrationLost read through the backend's own file
 // system (a Windows backend may run on another machine than the controller).
@@ -94,6 +109,9 @@ func RegistrationLostIn(fsys sys.FS, folder string, join func(...string) string)
 		if t, ok := DiagStart(n); ok {
 			logs = append(logs, log{n, t.Unix()})
 		}
+	}
+	if len(logs) > 0 && !hasRegistration(func(n string) bool { return fsys.Exists(join(folder, n)) }) {
+		return true
 	}
 	sort.Slice(logs, func(i, j int) bool { return logs[i].at > logs[j].at })
 	for _, l := range logs {
