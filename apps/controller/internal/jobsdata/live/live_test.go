@@ -3,6 +3,7 @@ package live
 import (
 	"context"
 	"errors"
+	"runtime"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -16,7 +17,6 @@ import (
 type fakeStore struct {
 	jobsdata.Store
 	groupReads, statsReads atomic.Int64
-	delay                  time.Duration
 	fail                   atomic.Bool
 	writes                 atomic.Int64
 	gate                   atomic.Pointer[chan struct{}] // when set, Groups waits for it to close
@@ -39,7 +39,6 @@ func (f *fakeStore) Groups(context.Context, jobsdata.GroupBy) ([]jobsdata.GroupR
 		f.blocked.Add(1)
 		<-*g
 	}
-	time.Sleep(f.delay)
 	if f.fail.Load() {
 		return nil, errors.New("boom")
 	}
@@ -84,7 +83,7 @@ func itoa(n int64) string {
 
 func eventually(t *testing.T, what string, ok func() bool) {
 	t.Helper()
-	for end := time.Now().Add(3 * time.Second); time.Now().Before(end); time.Sleep(2 * time.Millisecond) {
+	for end := time.Now().Add(3 * time.Second); time.Now().Before(end); runtime.Gosched() {
 		if ok() {
 			return
 		}
@@ -229,7 +228,7 @@ func TestReadsDoNotWaitForARebuild(t *testing.T) {
 
 // A burst of writes costs a few rebuilds, and the answer shows all of them.
 func TestWritesCoalesceIntoFewRebuilds(t *testing.T) {
-	f := &fakeStore{delay: 2 * time.Millisecond}
+	f := &fakeStore{}
 	s := newStore(f, nil)
 	defer s.Close()
 	ctx := context.Background()
