@@ -38,6 +38,7 @@ export function StatTile({
   loading?: boolean | undefined;
 }) {
   const none = value === undefined;
+  const zero = !none && /^0(\D.*)?$/.test(value);
   const body = (
     <>
       <span className="ds-stat__label">{label}</span>{' '}
@@ -79,11 +80,11 @@ export function StatTile({
     </>
   );
   return to ? (
-    <Link to={to} className="ds-stat" data-layout-group>
+    <Link to={to} className="ds-stat" data-layout-group data-zero={zero || undefined}>
       {body}
     </Link>
   ) : (
-    <div className="ds-stat" data-layout-group>
+    <div className="ds-stat" data-layout-group data-zero={zero || undefined}>
       {body}
     </div>
   );

@@ -2,6 +2,8 @@
 import { test } from '@playwright/test';
 import { machine, runner, overview, signedIn, machineHealth } from './fixtures';
 import { insightsApi } from './insights-fixtures';
+import { doneJob, jobsAndDoctor, queuedJob, runningJob } from './jobs-doctor-fixtures';
+import type { Call } from './fixtures';
 
 const OUT = process.env.LOOK_OUT ?? 'docs/work/look73';
 const THEMES = [
@@ -34,8 +36,27 @@ const runners = [
 ];
 
 function api() {
-  const mock = insightsApi(signedIn())
-    .on('GET', '/api/v1/overview', { ...overview(machines), queued_count: 5 })
+  const reserved = { ...queuedJob, id: 9, run_id: 103, job_name: 'build-reserved', node_id: 'build-reserved', wait_reason: 'reserved', wait_text: undefined };
+  const hist = [1, 2, 3, 4, 5, 6].map((i) => doneJob(i));
+  const mock = jobsAndDoctor(insightsApi(signedIn()), hist)
+    .on('GET', '/api/v1/jobs', (c: Call) => {
+      const st = c.query.get('state');
+      const items = st === 'queued' ? [queuedJob, reserved] : st === 'running' ? [runningJob] : hist;
+      return { items, total: items.length, stale: { stale: false } };
+    })
+    .on('GET', '/api/v1/overview', {
+      ...overview(machines),
+      queued_count: 3,
+      queued: [
+        { ...queuedJob, queue_position: 1 },
+        { ...reserved, queue_position: 2 },
+        { ...queuedJob, id: 10, job_name: 'e2e-2', queue_position: 3, wait_reason: 'no_runner', wait_text: 'no runner carries these labels' },
+      ],
+      running: [
+        { ...runningJob, machine_id: 'm2', machine_name: 'build-2' },
+        { ...runningJob, id: 11, job_name: 'lint', machine_id: 'm3', machine_name: 'gpu-box' },
+      ],
+    })
     .on('GET', '/api/v1/machines', { items: machines })
     .on('GET', '/api/v1/runners', { items: runners })
     .on('GET', '/api/v1/machines/:id/health', machineHealth());
@@ -44,8 +65,9 @@ function api() {
 
 for (const t of THEMES) {
   if (only && only !== t.id) continue;
+  if (process.env.LOOK_PREFIX && t.id === 'phosphor') continue;
   for (const [w, h, shots] of [
-    [1300, 900, t.id === 'phosphor' ? ['overview'] : ['overview', 'runners', 'analytics', 'appearance']],
+    [1300, 900, t.id === 'phosphor' ? ['overview'] : ['overview', 'runners', 'analytics', 'appearance', 'queue', 'jobs']],
     [393, 852, ['overview']],
   ] as [number, number, string[]][]) {
     test.describe(`${t.id} ${w}`, () => {
@@ -69,11 +91,13 @@ for (const t of THEMES) {
             runners: '/setup/runners',
             analytics: '/analytics/charts',
             appearance: '/settings/appearance',
+            queue: '/pool/queue',
+            jobs: '/pool/jobs',
           };
           await page.goto(url[s]!);
           await page.waitForLoadState('networkidle');
           await page.waitForTimeout(600);
-          await page.screenshot({ path: `${OUT}/${t.id}-${s}-${w}.png`, fullPage: true });
+          await page.screenshot({ path: `${OUT}/${process.env.LOOK_PREFIX ?? ''}${t.id}-${s}-${w}.png`, fullPage: true });
         });
       }
     });

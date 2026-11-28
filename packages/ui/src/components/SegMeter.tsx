@@ -70,6 +70,7 @@ export function SegMeter({
       aria-valuenow={Math.round(pct)}
       aria-valuetext={words}
       data-level={level}
+      style={{ '--ds-pct': Math.round(pct) } as React.CSSProperties}
     >
       <Segments pct={pct} segments={segments} />
       <span className="ds-segmeter__text">{words}</span>

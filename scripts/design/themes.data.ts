@@ -127,7 +127,7 @@ export const TERMINAL: Record<TerminalPalette, Palette> = {
     c: '#5fb8e8',
     m: '#dcafde',
     o: '#ffb814',
-    sel: '#5a2828',
+    sel: '#6a2f2f',
   }),
   // LOOK73 study: Dracula as abtop has it.
   dracula: terminal({

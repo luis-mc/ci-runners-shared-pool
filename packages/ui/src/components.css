@@ -1809,15 +1809,18 @@ legend > .ds-field__changed {
 /* theme preview: a sample drawn from the tokens of its own theme and mode (data-theme-name and data-theme sit on it) */
 /* Colours of the btop, Dracula and Catppuccin palettes' extra rules (LOOK73 study): values live here, before the preview rules. */
 [data-theme-name='terminal'][data-pal='btop'] {
-  --look-box-1: #5f7a64;
-  --look-box-2: #7a7a54;
-  --look-box-3: #6e69a8;
-  --look-box-4: #94605f;
+  --look-box-1: #56c28a;
+  --look-box-2: #d0c25a;
+  --look-box-3: #8f86e6;
+  --look-box-4: #e8707a;
   --look-grad-start: #77ca9b;
   --look-grad-mid: #cbc06c;
   --look-grad-end: #dc4c4c;
-  --look-hi: #dc4c4c;
+  --look-hi: #ee5c5c;
   --look-title: #eeeeee;
+  --look-low: #6b6b6b;
+  --look-money: #b5e685;
+  --look-grad-end-text: #ee5c5c;
 }
 [data-theme-name='terminal'][data-pal='dracula'] {
   --look-box-1: #8be9fd;
@@ -1829,17 +1832,22 @@ legend > .ds-field__changed {
   --look-grad-end: #ff5555;
   --look-hi: #ff79c6;
   --look-title: #f8f8f2;
+  --look-low: #6d7db3;
+  --look-money: #f1fa8c;
+  --look-grad-end-text: #ff6e6e;
 }
 [data-theme-name='terminal'][data-pal='catppuccin'] {
   --look-box-1: #89b4fa;
   --look-box-2: #cba6f7;
   --look-box-3: #f5c2e7;
-  --look-box-4: #f2cdcd;
+  --look-box-4: #f38ba8;
   --look-grad-start: #a6e3a1;
   --look-grad-mid: #f9e2af;
   --look-grad-end: #f38ba8;
   --look-hi: #f38ba8;
   --look-title: #cdd6f4;
+  --look-low: #6c7086;
+  --look-money: #d8e8a0;
 }
 .ds-theme-preview {
   display: grid;
@@ -4666,4 +4674,455 @@ a.ds-stat:focus-visible {
   tr[data-active]
   > :first-child {
   box-shadow: inset 3px 0 var(--look-hi);
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Round 2 (LOOK74): colour by meaning. Labels are muted, values are bold and coloured by kind, zeros are lowlit,
+   percents run green to yellow to red by value, every box and its title take an accent, links are bright, messages
+   are a coloured rule and a coloured word, the key hints put the key in the highlight colour.
+   --------------------------------------------------------------------------------------------------------------- */
+[data-theme-name='terminal']:is(
+  [data-pal='btop'],
+  [data-pal='dracula'],
+  [data-pal='catppuccin']
+) {
+  --look-bright: var(--look-title);
+}
+/* Boxes: the outline is the accent, the title is bold in a brighter tint of it, the number is the highlight. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel:not([data-tone])) {
+  border-width: 1px;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__title,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-panel__title {
+  color: color-mix(in srgb, var(--look-box, var(--ds-color-text)) 62%, var(--look-title));
+  font-weight: 700;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__title[data-machine] {
+  color: color-mix(in srgb, var(--look-box, var(--ds-color-done)) 62%, var(--look-title));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__title::before {
+  color: var(--look-hi);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__count {
+  color: var(--look-box, var(--ds-color-text-muted));
+  font-weight: 700;
+}
+/* Headings and table headers: bold and bright; secondary text stays dim. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-h1, .ds-h2, .ds-h3) {
+  color: var(--look-title);
+  font-weight: 700;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-page-header__lead {
+  color: var(--ds-color-text-muted);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  th,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table__sort {
+  color: var(--look-title);
+  font-weight: 700;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  th {
+  border-block-end-color: var(--look-box, var(--ds-color-border));
+}
+/* Stat tiles: a muted label, a big bold value coloured by meaning, a zero lowlit. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat {
+  border-color: var(--ds-color-border);
+  border-radius: 0;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat__label {
+  color: var(--ds-color-text-muted);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat__value {
+  color: var(--look-bright);
+  font-weight: 700;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat-grid
+  > .ds-stat:nth-child(1)
+  .ds-stat__value {
+  color: var(--ds-color-done);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat-grid
+  > .ds-stat:nth-child(2)
+  .ds-stat__value {
+  color: var(--ds-color-note);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat-grid
+  > .ds-stat:nth-child(3)
+  .ds-stat__value {
+  color: var(--ds-color-needs-you);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat-grid
+  > .ds-stat:nth-child(4)
+  .ds-stat__value {
+  color: var(--ds-color-problem);
+}
+/* The two saving tiles (a grid of two): time is amber, money is yellow-green. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat-grid
+  > .ds-stat:first-child:nth-last-child(2)
+  .ds-stat__value {
+  color: var(--ds-color-needs-you);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat-grid
+  > .ds-stat:last-child:nth-child(2)
+  .ds-stat__value {
+  color: var(--look-money);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat[data-zero][data-zero][data-zero]
+  .ds-stat__value {
+  color: var(--look-low);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-stat__change {
+  color: var(--ds-color-text-muted);
+}
+/* A percent is coloured along the gradient by its value: green at 0, yellow at 50, red at 100. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-level, .ds-segmeter) {
+  --look-c1: color-mix(
+    in srgb,
+    var(--look-grad-mid) calc(clamp(0, var(--ds-pct, 0) * 2, 100) * 1%),
+    var(--look-grad-start)
+  );
+  --look-pct: color-mix(
+    in srgb,
+    var(--look-grad-end-text, var(--look-grad-end))
+      calc(clamp(0, (var(--ds-pct, 0) - 50) * 2, 100) * 1%),
+    var(--look-c1)
+  );
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-level__text, .ds-segmeter__text) {
+  color: var(--look-pct);
+  font-weight: 700;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-level__name {
+  color: var(--ds-color-text-muted);
+}
+/* Links and actions: a bright accent with an underline. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-link,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-link:visited {
+  color: var(--ds-color-note);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-link:hover {
+  color: var(--look-bright);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__title
+  .ds-link {
+  text-decoration: none;
+}
+/* The top menu and the tabs: the current one is bright with a highlight underline. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-tab[aria-selected='true'],
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-topmenu__link[aria-current] {
+  color: var(--look-bright);
+  border-block-end-color: var(--look-hi);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-topmenu__link[aria-current] {
+  text-decoration-color: var(--look-hi);
+}
+/* Messages: no filled box; a coloured rule and a coloured label word. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-message {
+  background: transparent;
+  border-radius: 0;
+  border-inline-start-width: 3px;
+  color: var(--ds-color-text);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-message[data-tone]
+  .ds-message__body {
+  color: var(--ds-color-text-muted);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-message[data-tone='note']
+  .ds-message__label {
+  color: var(--ds-color-note);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-message[data-tone='done']
+  .ds-message__label {
+  color: var(--ds-color-done);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-message[data-tone='needs-you']
+  .ds-message__label {
+  color: var(--ds-color-needs-you);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-message[data-tone='problem']
+  .ds-message__label {
+  color: var(--ds-color-problem);
+}
+/* Key hints: the key in the highlight colour, the action word muted. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-keyhints
+  .ds-kbd {
+  border: 0;
+  padding: 0;
+  background: none;
+  color: var(--look-hi);
+  font-weight: 700;
+  font-size: inherit;
+}
+/* Selected and focused rows: a full-width band, bright text, the highlight edge. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-selected],
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-list-row]:focus,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-list-row]:focus-within,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-active] {
+  background: var(--ds-color-selection);
+  color: var(--look-bright);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-selected]
+  td,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-list-row]:focus
+  td,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-list-row]:focus-within
+  td,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-active]
+  td {
+  color: var(--look-bright);
+}
+/* A header status word and a tag keep their tone. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-status {
+  font-weight: 700;
 }
