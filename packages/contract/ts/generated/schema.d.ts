@@ -4903,6 +4903,11 @@ export interface components {
             device_code_url: string;
             /** @example https://github.com/login/device */
             verification_url: string;
+            /**
+             * @description The App's settings page on GitHub, where "Enable Device Flow" is turned on. The CLI names it when GitHub says Device Flow is off.
+             * @example https://github.com/settings/apps/crsp-home
+             */
+            settings_url?: string;
         };
         ExchangeCliTokenRequest: {
             /** @description The device-flow user token. Checked once and dropped. */
@@ -5184,6 +5189,10 @@ export interface components {
              * @description When GitHub last answered. Absent before the first answer.
              */
             checked_at?: string;
+            /** @description True when GitHub answered that "Enable Device Flow" is off for the App, so `crsp login` cannot sign anyone in (R5.14). */
+            device_flow_off?: boolean;
+            /** @description The App's settings page on GitHub. Present when device_flow_off is true. */
+            settings_url?: string;
         };
         AppInstallUrl: {
             /** @example https://github.com/apps/crsp-home/installations/new */

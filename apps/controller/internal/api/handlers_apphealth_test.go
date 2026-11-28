@@ -68,3 +68,26 @@ func TestRepositoryThatLeftSaysWhy(t *testing.T) { // R5.22
 		t.Fatalf("only the leaver carries the reason (%d): %s", n, b)
 	}
 }
+
+// CRSP384, R5.14: the health answer says Device Flow is off, with the page where
+// the one setting is turned on; the CLI login config names the same page.
+func TestAppHealthAndLoginConfigNameTheDeviceFlowSetting(t *testing.T) {
+	h := newHarness(t)
+	owner, _ := h.setup(1, "alice")
+	src := &appState{}
+	h.withAppHealth(src)
+	_, b := h.do("GET", "/api/v1/github/app-health", nil, owner, nil)
+	if strings.Contains(string(b), "device_flow_off") || strings.Contains(string(b), "settings_url") {
+		t.Fatalf("a healthy App says nothing about Device Flow: %s", b)
+	}
+	src.st = github.AppState{CheckedAt: time.Now(), DeviceFlowOff: true}
+	res, b := h.do("GET", "/api/v1/github/app-health", nil, owner, nil)
+	if res.StatusCode != 200 || !strings.Contains(string(b), `"gone":false`) || !strings.Contains(string(b), `"device_flow_off":true`) ||
+		!strings.Contains(string(b), "/settings/apps/") {
+		t.Fatalf("Device Flow off: %d %s", res.StatusCode, b)
+	}
+	res, b = h.do("GET", "/api/v1/auth/cli/config", nil, nil, nil)
+	if res.StatusCode != 200 || !strings.Contains(string(b), `"settings_url"`) || !strings.Contains(string(b), "/settings/apps/") {
+		t.Fatalf("login config: %d %s", res.StatusCode, b)
+	}
+}

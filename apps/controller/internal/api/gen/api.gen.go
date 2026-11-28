@@ -5193,11 +5193,17 @@ type AppHealth struct {
 	// CheckedAt When GitHub last answered. Absent before the first answer.
 	CheckedAt *time.Time `json:"checked_at,omitempty"`
 
+	// DeviceFlowOff True when GitHub answered that "Enable Device Flow" is off for the App, so `crsp login` cannot sign anyone in (R5.14).
+	DeviceFlowOff *bool `json:"device_flow_off,omitempty"`
+
 	// Gone True when GitHub says the App or its key is gone (R5.6).
 	Gone bool `json:"gone"`
 
 	// Reason Why, in words for the page. Only when gone.
 	Reason *string `json:"reason,omitempty"`
+
+	// SettingsUrl The App's settings page on GitHub. Present when device_flow_off is true.
+	SettingsUrl *string `json:"settings_url,omitempty"`
 }
 
 // AppInstallUrl defines model for AppInstallUrl.
@@ -5491,9 +5497,12 @@ type CacheList struct {
 
 // CliLoginConfig defines model for CliLoginConfig.
 type CliLoginConfig struct {
-	ClientId        string `json:"client_id"`
-	DeviceCodeUrl   string `json:"device_code_url"`
-	VerificationUrl string `json:"verification_url"`
+	ClientId      string `json:"client_id"`
+	DeviceCodeUrl string `json:"device_code_url"`
+
+	// SettingsUrl The App's settings page on GitHub, where "Enable Device Flow" is turned on. The CLI names it when GitHub says Device Flow is off.
+	SettingsUrl     *string `json:"settings_url,omitempty"`
+	VerificationUrl string  `json:"verification_url"`
 }
 
 // CliToken defines model for CliToken.
