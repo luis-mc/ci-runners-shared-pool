@@ -550,6 +550,19 @@ The words of the action that deletes the registration of an offline runner whose
 | The registration of offline runner {runner} on GitHub. | First line of the card: what goes. |
 | Its record here, and its folder if its machine answers. | Second line of the card. |
 
+## Registration lost words
+
+The words of a runner whose registration GitHub deleted (runners R5.152, R5.153). crsp registers such a runner again once by itself; when that fails it shows the reason and the button.
+
+| Word | Where and meaning |
+|---|---|
+| registration lost, registered again | The reason on the State of an idle runner that crsp registered again by itself. A note, not a problem. |
+| GitHub deleted the registration of this runner | The reason on the State not registered of a runner whose listener says its registration is gone and that GitHub does not list. |
+| registration lost, could not register again: {reason} | The reason on the State failed when crsp could not register the runner again, or GitHub deleted the registration again at once. {reason} is the plain reason of the step that failed. |
+| its set-up did not finish; remove it and add it again | The reason on the State failed of a runner that stayed in creating with no set-up running. |
+| Register again | The button in the Managed column of a managed runner that is not registered or failed with a lost registration, and on its page. Admin only (busy word: Registering). |
+| Could not register again. {why} | Problem message under the list or the page when the press is refused or fails. |
+
 ## GitHub App key words
 
 The words of Settings, GitHub App, where the owner replaces the App private key (github-integration R5.7).

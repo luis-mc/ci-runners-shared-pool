@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: [apps/controller/cmd/crsp/**, apps/controller/internal/cli/**]
 design_system: [content action-vocabulary, content message-wording, content dates-times-numbers]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -124,6 +124,7 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 | `machine maintain NAME -- COMMAND...` | Hold new jobs, wait until idle, run one command on the machine, lift the hold | built | this spec (R5.29), `machines` |
 | `machine leftovers MACHINE`, `machine leftovers remove MACHINE NAME...` | List the runner leftovers of the latest doctor finding, and remove named ones (OPS38) | built | this spec (R5.63), `doctor` (R5.48) |
 | `runner list\|create\|update\|clear-cache\|remove` | Runners on machines, with kind, dependency setting and cache clear (OPS28) | M1 | `runners` |
+| `runner reregister NAME` | Registers a runner again in place when GitHub deleted its registration; no question, nothing is removed (runners R5.152) | M1 | `runners` |
 | `job list\|watch` | Queue and history; live view | M1 | `scheduling` |
 | `history` | Finished jobs, newest first, with `--repo`, `--machine`, `--backend`, `--result`, `--since`, `--limit`; `--json` prints the rows of `listJobs` (CRSP271c) | built | `observability` (R5.11) |
 | `doctor` | Run every check and print fixes | M2 | `doctor` |
