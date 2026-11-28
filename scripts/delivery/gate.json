@@ -15,6 +15,20 @@
   "lockfile_scope": "per-package",
   "inert_paths": ["docs/**"],
   "ui_paths": ["apps/controller-console/", "packages/ui/"],
+  "e2e_map": {
+    "specs": [
+      {"spec": "e2e/tests/web-console/pool-jobs.spec.ts", "paths": ["apps/controller-console/src/screens/jobs/"]},
+      {"spec": "e2e/tests/web-console/ux-jobs-rows.spec.ts", "paths": ["apps/controller-console/src/screens/jobs/"]},
+      {"spec": "e2e/tests/web-console/pool-machines.spec.ts", "paths": ["apps/controller-console/src/screens/machines/"]},
+      {"spec": "e2e/tests/web-console/machines-panes.spec.ts", "paths": ["apps/controller-console/src/screens/machines/"]},
+      {"spec": "e2e/tests/web-console/registry.spec.ts", "paths": ["apps/controller-console/src/screens/registry/"]},
+      {"spec": "e2e/tests/web-console/repositories-panes.spec.ts", "paths": ["apps/controller-console/src/screens/repositories/"]},
+      {"spec": "e2e/tests/web-console/runners-images-doctor.spec.ts", "paths": ["apps/controller-console/src/screens/runners/", "apps/controller-console/src/screens/images/", "apps/controller-console/src/screens/doctor/"]},
+      {"spec": "e2e/tests/web-console/ux-runners-table.spec.ts", "paths": ["apps/controller-console/src/screens/runners/"]},
+      {"spec": "e2e/tests/web-console/notifications.spec.ts", "paths": ["apps/controller-console/src/screens/notices/"]}
+    ],
+    "full_on": ["playwright.config.ts", "e2e/tests/web-console/fixtures.ts", "e2e/tests/web-console/ux-guards.ts", "packages/ui/", "apps/controller-console/src/shell/", "apps/controller-console/src/App.tsx", "apps/controller-console/src/main.tsx"]
+  },
   "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "typecheck", "unit"],
   "steps": [
     {
