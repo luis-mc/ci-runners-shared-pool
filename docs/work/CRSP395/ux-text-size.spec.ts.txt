@@ -1,0 +1,80 @@
+// CRSP399: the Text size choice at its smallest and largest step keeps every layout sound: the DOM layout judges
+// (including meter-align, UX-92) at 360, 393 and 1300 px on the screens that carry the most text and meters.
+import { expect, test } from '@playwright/test';
+import { judgeLayout, measureDomLayout } from '../../../scripts/design/dom-layout';
+import { machine, signedIn } from './fixtures';
+import { insightsApi } from './insights-fixtures';
+import { jobsAndDoctor } from './jobs-doctor-fixtures';
+import { frames, headingShown, settle } from './ux-guards';
+
+const GIB = 1024 ** 3;
+const big = (id: string, name: string, cpu: number, mem: number) =>
+  machine({
+    id,
+    name,
+    facts: { threads: 32, cores: 16, memory_bytes: 31.7 * GIB },
+    load: {
+      memory_pct: mem,
+      cpu_pct: cpu,
+      memory_known: true,
+      cpu_known: true,
+      sampled_at: '2026-11-14T10:00:00Z',
+      stale: false,
+    },
+  });
+const SCREENS = [
+  '/',
+  '/pool/machines/m1',
+  '/pool/queue',
+  '/analytics/insights',
+  '/settings/appearance',
+];
+
+for (const theme of ['phosphor', 'terminal']) {
+  for (const size of ['80', '130']) {
+    for (const url of SCREENS) {
+      test(`layout at text size ${size}%: ${url} (${theme})`, async ({ page }) => {
+        const mock = insightsApi(jobsAndDoctor(signedIn()))
+          .on('GET', '/api/v1/me/preferences', { theme: 'dark' })
+          .on('GET', '/api/v1/machines', {
+            items: [big('m1', 'GameRoomPC', 11.6, 61.5), big('m2', 'BuildBox', 82, 45)],
+          })
+          .on('GET', '/api/v1/machines/:id', big('m1', 'GameRoomPC', 11.6, 61.5));
+        await mock.install(page);
+        await page.addInitScript(
+          ([t, s]) => {
+            try {
+              window.localStorage.setItem('crsp.theme-name', t as string);
+              window.localStorage.setItem('crsp.theme-mode', 'dark');
+              window.localStorage.setItem('crsp.text-size', s as string);
+            } catch {
+              // storage blocked
+            }
+          },
+          [theme, size],
+        );
+        await page.setViewportSize({ width: 1300, height: 900 });
+        await page.goto(url);
+        await settle(page, 'dark');
+        await headingShown(page);
+        expect(
+          await page.evaluate(() =>
+            document.documentElement.getAttribute('data-text-size'),
+          ),
+        ).toBe(size);
+        const problems = await measureDomLayout(page, {
+          known: [],
+          spaceVar: '--ds-space-',
+          sectionGapVar: '--ds-space-6',
+          focusVars: {
+            width: '--ds-focus-width',
+            offset: '--ds-focus-offset',
+            glow: '--ds-glow-focus',
+          },
+          ready: () => frames(page),
+        });
+        expect(judgeLayout(`${url} ${size} ${theme}`, problems, []).unknown).toEqual([]);
+      });
+    }
+  }
+}

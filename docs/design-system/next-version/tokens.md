@@ -226,7 +226,7 @@ System monospace stacks only. Nothing is bundled and nothing is loaded from the 
 
 ## Type scale
 
-One root factor, `--ds-type-scale` (`0.85`, owner decision 28 Nov 2026: "the fonts seem too big, reduce to between 80-90%"), multiplies every size and the icon size, so the whole console moves together and the ratios between the levels stay. A size never falls below its floor: 11 px for a badge and secondary text, 12 px for body text. Touch targets, control heights, rows and spacing are not scaled (UX-16 keeps 44 px).
+One root factor, `--ds-type-scale` (`0.85`, owner decision 28 Nov 2026: "the fonts seem too big, reduce to between 80-90%"), multiplies every size and the icon size, so the whole console moves together and the ratios between the levels stay. A size never falls below its floor: 11 px for a badge and secondary text, 12 px for body text. Touch targets, control heights, rows and spacing are not scaled (UX-16 keeps 44 px). The Text size choice of Settings, Appearance (CRSP399) sets `data-text-size` on the page root, which moves this one factor: 80 % = `0.68`, 90 % = `0.765`, 100 % = `0.85` (the base), 110 % = `0.935`, 120 % = `1.02`, 130 % = `1.105`. The floors still hold at 80 %.
 
 | Token                    | Value                                          | Size at 0.85 | Use                  |
 | ------------------------ | ---------------------------------------------- | ------------ | -------------------- |

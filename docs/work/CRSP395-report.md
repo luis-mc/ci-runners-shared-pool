@@ -16,3 +16,8 @@ Status: implemented, checks running (see the end).
 
 ## e2e spec location
 The new spec is at docs/work/CRSP395/ux-meter-lists.spec.ts.txt (copy it to e2e/tests/web-console/ux-meter-lists.spec.ts at the join; agent-common rule: the pre-push gate wants the whole suite for a spec under e2e/, and packages/ui is in the full_on list). The join moves it to e2e/tests/web-console/ux-meter-lists.spec.ts; the docs already cite that final path. It ran locally (copied into e2e/): 6 tests passed.
+
+## CRSP399 (text size)
+- Settings > Appearance: ChoiceField "Text size" 80/90/100/110/120/130 % (added between Graphs and Mode; additive edit only), saved at once in `crsp.text-size`, applied by `data-text-size` on the root which sets `--ds-type-scale` (0.68, 0.765, base 0.85, 0.935, 1.02, 1.105) in tokens.css; theme-init.js applies it before first paint. A slider does not exist in the design system, so the existing segmented ChoiceField is used.
+- Tests: packages/ui/src/textSize.test.ts, Settings.test.tsx; e2e spec (docs/work/CRSP395/ux-text-size.spec.ts.txt) ran locally: 20 passed (5 screens x 80/130 % x phosphor/terminal, DOM judges at 360/393/1300).
+- Words in content.md Theme words; CHANGES; change note web-console CRSP399.

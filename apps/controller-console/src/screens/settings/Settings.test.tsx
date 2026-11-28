@@ -190,6 +190,27 @@ describe('Colour themes (UX-60)', () => {
     expect(screen.queryByRole('group', { name: 'Graphs' })).toBeNull();
   });
 
+  it('offers the text size in six steps, applies it at once and keeps it in this browser (CRSP399)', async () => {
+    window.localStorage.clear();
+    document.documentElement.removeAttribute('data-text-size');
+    renderApp(signedIn(), '/settings/appearance');
+    const size = await screen.findByRole('group', { name: 'Text size' });
+    expect(
+      within(size)
+        .getAllByRole('radio')
+        .map((r) => r.parentElement?.textContent),
+    ).toEqual(['80%', '90%', '100%', '110%', '120%', '130%']);
+    expect(
+      within(size).getByRole<HTMLInputElement>('radio', { name: /^100%/ }).checked,
+    ).toBe(true);
+    fireEvent.click(within(size).getByRole('radio', { name: /^130%/ }));
+    expect(document.documentElement.getAttribute('data-text-size')).toBe('130');
+    expect(window.localStorage.getItem('crsp.text-size')).toBe('130');
+    fireEvent.click(within(size).getByRole('radio', { name: /^100%/ }));
+    expect(document.documentElement.hasAttribute('data-text-size')).toBe(false);
+    expect(window.localStorage.getItem('crsp.text-size')).toBe('100');
+  });
+
   it('picks a theme, applies it at once and keeps it in this browser', async () => {
     window.localStorage.clear();
     renderApp(signedIn(), '/settings/appearance');

@@ -24,6 +24,10 @@ export const TERMINAL_PALETTE_CHOICES: readonly ThemeInfo[] = [
 export const PALETTE_STORAGE = 'crsp.theme-palette';
 /** How the Cool Terminal themes draw graphs: blocks, or dots (`data-graphs=dotted` on the page root; blocks sets none). */
 export const GRAPHS_STORAGE = 'crsp.theme-graphs';
+/** The text size choice (CRSP399): a percent of the base type scale, kept in this browser. 100 is the base (`--ds-type-scale`). */
+export const TEXT_SIZE_STORAGE = 'crsp.text-size';
+export const TEXT_SIZE_STEPS = [80, 90, 100, 110, 120, 130] as const;
+export const TEXT_SIZE_DEFAULT = 100;
 
 export const DEFAULT_THEME_ID = 'phosphor';
 
@@ -131,6 +135,28 @@ export function applyGraphs(style: 'blocks' | 'dotted'): void {
   if (style === 'dotted') document.documentElement.setAttribute('data-graphs', 'dotted');
   else document.documentElement.removeAttribute('data-graphs');
   remember(GRAPHS_STORAGE, style);
+}
+
+/** The saved text size of this browser in percent: one of the steps, or 100. */
+export function savedTextSize(): number {
+  try {
+    const n = Number(window.localStorage.getItem(TEXT_SIZE_STORAGE));
+    if ((TEXT_SIZE_STEPS as readonly number[]).includes(n)) return n;
+  } catch {
+    // Storage may be blocked.
+  }
+  return TEXT_SIZE_DEFAULT;
+}
+
+/** Applies a text size to the page (`data-text-size` on the root moves `--ds-type-scale`) and remembers it for the next first paint. */
+export function applyTextSize(pct: number): void {
+  const step = (TEXT_SIZE_STEPS as readonly number[]).includes(pct)
+    ? pct
+    : TEXT_SIZE_DEFAULT;
+  if (step === TEXT_SIZE_DEFAULT)
+    document.documentElement.removeAttribute('data-text-size');
+  else document.documentElement.setAttribute('data-text-size', String(step));
+  remember(TEXT_SIZE_STORAGE, String(step));
 }
 
 /** True for `terminal-green`, `terminal-amber` and `terminal-ice`. */
