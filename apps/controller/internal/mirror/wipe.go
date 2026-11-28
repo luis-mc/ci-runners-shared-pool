@@ -18,6 +18,10 @@ const (
 	ScopeGitMirror    = "git_mirror"
 	ScopeToolCache    = "tool_cache"
 	ScopeRegistry     = "registry_mirror"
+	// ScopePackages is every package proxy entry, ScopeGitAll every git
+	// mirror (R5.73).
+	ScopePackages = "packages"
+	ScopeGitAll   = "git_all"
 )
 
 // Item is one line of the plan: what goes and how big it is.

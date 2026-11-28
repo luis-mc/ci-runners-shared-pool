@@ -11,6 +11,7 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runnercache"
 )
 
@@ -646,5 +647,25 @@ func TestAddPassesSharedToolFoldersOfTheRepository(t *testing.T) {
 	r.svc.NoSharedTools = true
 	if r.svc.sharedTools(AddSpec{OS: "linux", Scope: Scope{Kind: "repository", RepositoryID: 1}}, Target{}).On() {
 		t.Error("the switch turns it off")
+	}
+}
+
+// Caches R5.76: a persistent repository runner is added with the package
+// proxy grant of its repository address; nil gives none.
+func TestAddPassesThePackageProxyGrant(t *testing.T) {
+	r := newRig(machine("linux", "x64", true))
+	var asked string
+	r.svc.PackageProxy = func(_ context.Context, u string) lancache.ProxyGrant {
+		asked = u
+		return lancache.ProxyGrant{Repo: "o__r", Token: "t0"}
+	}
+	r.add(t)
+	if g := r.ag.added[0].PackageProxy; g.Repo != "o__r" || g.Token != "t0" || asked == "" {
+		t.Fatalf("grant %+v asked %q", g, asked)
+	}
+	r2 := newRig(machine("linux", "x64", true))
+	r2.add(t)
+	if r2.ag.added[0].PackageProxy.On() {
+		t.Error("no hook, no grant")
 	}
 }

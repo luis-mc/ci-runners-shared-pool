@@ -88,6 +88,9 @@ type UpdateInfo struct {
 	// ReleaseURL is the release page of Latest; Jobs is how many jobs run now (a drain waits for them).
 	ReleaseURL string
 	Jobs       int
+	// Notes is the owner-facing note of Latest and UpdatedNotes the note of the running version; "" when none.
+	Notes        string
+	UpdatedNotes string
 	// Stage is the live update stage (the update window follows it); nil when none ran.
 	Stage *StageInfo
 }

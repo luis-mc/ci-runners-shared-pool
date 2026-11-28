@@ -43,6 +43,9 @@ type timelineInput struct {
 	Before    *time.Time // nil on the first call
 	Hours     int
 	MachineID string // "" for all machines
+	// OlderFinished says that Finished left out jobs that ended before the window (but within 24 hours): it was
+	// read for the window only, so the builder cannot see them (CRSP290).
+	OlderFinished bool
 }
 
 type tlMachine struct {
@@ -196,7 +199,7 @@ func (b *tlBuilder) pastBars(jobs []slotJob, out *gen.Timeline) (lower time.Time
 			more = true
 		}
 	}
-	return lower, more
+	return lower, more || b.in.OlderFinished
 }
 
 func (b *tlBuilder) rowKey(machineID string, slot int) string {

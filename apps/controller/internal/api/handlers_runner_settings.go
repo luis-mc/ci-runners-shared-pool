@@ -25,6 +25,20 @@ func (s *server) UpdateRunnerSettings(ctx context.Context, req gen.UpdateRunnerS
 	return gen.UpdateRunnerSettings200JSONResponse(toGenRunner(v)), nil
 }
 
+// ReregisterRunner implements POST /api/v1/runners/{runnerId}/reregister (runners R5.153): the
+// Register again button of a runner whose GitHub registration is gone.
+func (s *server) ReregisterRunner(ctx context.Context, req gen.ReregisterRunnerRequestObject) (gen.ReregisterRunnerResponseObject, error) {
+	if s.opts.Runners == nil {
+		return gen.ReregisterRunnerdefaultJSONResponse{StatusCode: http.StatusNotImplemented, Body: notImplemented()}, nil
+	}
+	v, err := s.opts.Runners.ReregisterRunner(ctx, req.RunnerId, actorFrom(ctx))
+	if err != nil {
+		code, body := runnerFail(err)
+		return gen.ReregisterRunnerdefaultJSONResponse{StatusCode: code, Body: body}, nil
+	}
+	return gen.ReregisterRunner200JSONResponse(toGenRunner(v)), nil
+}
+
 // ClearRunnerCache implements POST /api/v1/runners/{runnerId}/clear-cache (runners R5.90).
 // The answer is 202: an idle runner clears now, a runner with a job clears when the job ends.
 func (s *server) ClearRunnerCache(ctx context.Context, req gen.ClearRunnerCacheRequestObject) (gen.ClearRunnerCacheResponseObject, error) {

@@ -70,6 +70,9 @@ export function PhaseProgress({
 }
 // Component 16: a progress bar. A known total is a filled bar; an unknown total is an animated bar (UX-29).
 // LevelBar shows a level against a budget (UX-41) with its value in words.
+/** Segments in a progress bar in the Cool Terminal themes (UX-91). */
+export const PROGRESS_SEGMENTS = 20;
+
 export function Progress({
   label,
   value,
@@ -91,6 +94,10 @@ export function Progress({
       aria-valuetext={known ? `${value} of ${max}` : label}
       data-known={known || undefined}
     >
+      <Segments
+        pct={known ? Math.min(100, ((value ?? 0) / (max ?? 1)) * 100) : 100}
+        segments={PROGRESS_SEGMENTS}
+      />
       <span
         className="ds-progress__fill"
         style={

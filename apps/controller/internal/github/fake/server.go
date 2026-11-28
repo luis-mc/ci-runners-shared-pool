@@ -155,7 +155,10 @@ type Server struct {
 	// Groups are the runner groups of an organization (lower case login).
 	Groups             map[string][]*Group
 	DeviceSlowDownOnce bool
-	devicePolls        int
+	// DeviceFlowOff makes the device code endpoint answer as GitHub does when
+	// "Enable Device Flow" is off for the App.
+	DeviceFlowOff bool
+	devicePolls   int
 	// ClientSecret is what the token endpoint demands.
 	ClientSecret string
 	PEM          string

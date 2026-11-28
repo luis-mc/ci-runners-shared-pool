@@ -67,7 +67,7 @@ describe('Notifications: the channel table', () => {
     expect(within(table).getByText('Off')).toBeTruthy();
     expect(within(table).getByText('Delivered')).toBeTruthy();
     expect(within(table).getByText('Not tested')).toBeTruthy();
-    expect(screen.getByRole('tab', { name: 'Console' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Networking', selected: true })).toBeTruthy();
   });
 
   it('says what to do when there is no channel', async () => {

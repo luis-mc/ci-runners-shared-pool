@@ -53,7 +53,7 @@ describe('ActionBar', () => {
 });
 
 describe('ActionBar in a Frame (RES21 T1)', () => {
-  it('is a direct child of the main column, whatever wrapper holds it', async () => {
+  it('is drawn right after the main column, whatever wrapper holds it', async () => {
     const { Frame } = await import('./Shell');
     const { MemoryRouter } = await import('react-router-dom');
     render(
@@ -69,7 +69,9 @@ describe('ActionBar in a Frame (RES21 T1)', () => {
     );
     const bar = await screen.findByRole('region', { name: 'Actions' });
     expect(bar.parentElement?.className).toBe('ds-bar-slot');
-    expect(bar.parentElement?.parentElement?.id).toBe('main');
+    // A child of the frame, so it sticks against the whole frame and not the main column (UX-71, CRSP381).
+    expect(bar.parentElement?.parentElement?.className).toBe('ds-frame');
+    expect(bar.parentElement?.previousElementSibling?.id).toBe('main');
   });
 
   it('stays in the flow when it is not sticky', async () => {

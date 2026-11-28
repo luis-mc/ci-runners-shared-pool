@@ -18,6 +18,15 @@ code:
   - apps/controller/internal/logs/**
   - apps/controller/internal/compare/**
   - apps/controller/internal/metrics/**
+  - apps/controller/internal/api/jobs_forecast.go
+  - apps/controller/internal/api/handlers_runs.go
+  - apps/controller/internal/api/handlers_timeline.go
+  - apps/controller/internal/api/handlers_jobs_export.go
+  - apps/controller/internal/api/transport.go
+  - apps/controller/internal/store/jobsdata_batch.go
+  - apps/controller/internal/store/querycount.go
+  - apps/controller-console/src/live/store.ts
+  - apps/controller-console/src/api/hooks.ts
 design_system: [UX-6, UX-13, UX-22, UX-24, UX-38, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
 last_verified: 2026-11-28
 artifact:
@@ -116,7 +125,7 @@ The screens are the Overview (screen 2), Jobs (screen 6), the Runners and Machin
 
 **Audit log.** Read-only rows: when, who, what, target, result.
 
-**Metrics (Settings, Console, Metrics).** Off until the owner turns it on (CRSP262, R5.70 to R5.77). Two check boxes that wait for the tab's Save (UX-22): *Prometheus page* and *Push to OpenTelemetry*. With the page on: the port, *Let other computers read the page* (off by default), *Ask for a key* and a *Make a key* button that shows the key once in a copy block. With the push on: the collector address and the interval. While the page is on, a copy block holds the Prometheus scrape text. A viewer sees every control off with the reason (UX-38). The tab ends with the shared Cancel and Save bar (UX-24). Nothing here is drawn by the page: it uses the shared parts `Section`, `CheckRow`, `NumberField`, `TextField`, `FieldGrid`, `Button`, `CodeBlock`, `Message` and `ErrorSummary`.
+**Metrics (Settings, Networking, Metrics).** Off until the owner turns it on (CRSP262, R5.70 to R5.77). Two check boxes that wait for the tab's Save (UX-22): *Prometheus page* and *Push to OpenTelemetry*. With the page on: the port, *Let other computers read the page* (off by default), *Ask for a key* and a *Make a key* button that shows the key once in a copy block. With the push on: the collector address and the interval. While the page is on, a copy block holds the Prometheus scrape text. A viewer sees every control off with the reason (UX-38). The tab ends with the shared Cancel and Save bar (UX-24). Nothing here is drawn by the page: it uses the shared parts `Section`, `CheckRow`, `NumberField`, `TextField`, `FieldGrid`, `Button`, `CodeBlock`, `Message` and `ErrorSummary`.
 
 **States.**
 
@@ -385,12 +394,33 @@ The live view flows one way: controller to browser. Commands go through the norm
 | Redactor | Panics or errors | The line is dropped, not written raw | closed: never leak a secret |
 | Rate table | Missing or bad | Minutes still show; money shows "rate unknown" | open |
 
+**R6.16** — (CRSP290) A page of runs or jobs costs a fixed number of SQL statements however many runs and jobs are open, and answers in under 200 ms (p95) with 50 open runs on 20,000 runs and 150,000 jobs. The forecast samples of the page are read in a few batch queries (the index `jobs (repository_id, job_ident, completed_at)`), the open jobs and the queue simulation are read once per request, the jobs and graphs of the open runs in two queries, and the timers of the running jobs in one in-memory read. The timeline reads only the finished jobs of the window it shows, from the completed-at index, with one existence query for older ones. A page of 50 runs or jobs takes at most 10 or 12 statements, the timeline at most 8.
+
+**R6.17** — (CRSP290) A GET answer of `/api/v1` carries `Cache-Control: no-cache`. A JSON answer over 1 KB is gzipped for a caller that accepts it, and carries an ETag (a different one for the gzipped form); a request with `If-None-Match` gets a 304 with no body when the answer is the same. The event stream, downloads and error answers pass through untouched.
+
+**R6.18** — (CRSP290) The jobs export is written page by page (500 rows, no total) as it is read, so its memory is one page whatever the size of the filter. A page that fails after the head is out ends the connection, so the download fails instead of ending as a file that looks whole.
+
+**R6.19** — (CRSP290) A burst of job events moves the console's `jobs` version once per 400 ms, a list that is already loading is not asked again until it ends (one more request follows, however many events came), and a screen that reads only the stream's status or a version does not render again for every machine load event. The last-seen time of a session is written at most once a minute.
+
+**R6.20** — (CRSP292) The reads of finished jobs in a time window (minutes saved, the overview, the timeline, the event snapshot) are one range of an index on state and completed time, the hour grid and the insights waits read an index on created time, and the follow-ups of a runs page start from the follow-up table; none of them walks the whole jobs table, so each answers in under 20 ms on 150,000 jobs. The savings, overview, waits, follow-up and parent-run reads use the read pool. The grouped table and the stats read the finished jobs of their window once, cut the stored times apart without a date parser, and keep the answer for 10 seconds; any write of a job or run drops it, and callers that ask at the same time share one read. The forecast samples of a page are kept the same way (bounded to 2,048 questions). A caller that holds the tag of the grouped table or of the stats of the same data gets a 304 before the read.
+
+**R6.21** — (CRSP292) The Overview and the first event of the stream list the machines with their load, the queued jobs (at most 200, the count exact) and the running jobs, each with its forecast; a running job in its grace carries its timer deadline, and the console asks for the timer of those jobs only.
+
+**R6.22** — (CRSP292) The console sends one request for the same GET while it is on its way and gives every caller the answer; nothing is kept once the answer has arrived, so a reload after an event reads fresh data, and a change is never shared.
+
 ## 9. How it is proven
 
 Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Planned rows are NOT YET IMPLEMENTED; their paths are where each test will live.
 
 | Requirement | Test |
 |---|---|
+| R6.16 | apps/controller/cmd/crsp/jobsdata_querycount_test.go TestListAndDetailQueryCountsDoNotGrowWithOpenWork; apps/controller/internal/store/jobsdata_batch_test.go TestIntegrationSamplesManyMatchesSamples, TestIntegrationRunsWithJobsMatchesGetRun, TestIntegrationFinishedBetweenReadsOnlyTheWindow |
+| R6.17 | apps/controller/internal/api/transport_test.go TestTransportCompressesBigJSONOnly, TestTransportETagAnswers304, TestTransportLeavesStreamsAndErrorsAlone |
+| R6.18 | apps/controller/internal/api/handlers_jobs_export_test.go TestExportJobsHoldsEveryRowNewestFirst, TestExportJobsStreamsJSONAndAbortsWhenALaterPageFails |
+| R6.19 | apps/controller-console/src/live/store.test.ts "moves the jobs version once for a burst"; apps/controller-console/src/api/load.test.tsx; apps/controller/internal/auth/session_test.go TestLastSeenIsWrittenOncePerMinute |
+| R6.20 | apps/controller/internal/store/jobsdata_history_plan_test.go TestFinishedWindowQueryPlans, TestSampleQueryPlanKeepsSampleIndex, TestCreatedWindowQueryPlan, TestFollowUpsQueryPlan; apps/controller/internal/store/aggcache_test.go TestGroupsAndStatsAreCachedUntilAWrite, TestSamplesManyKeepsAnswersUntilAWrite, TestSampleCacheIsBounded; apps/controller/internal/store/fasttime_test.go TestUnixMillisMatchesParse; apps/controller/internal/api/transport_version_test.go TestGroupsNotModifiedSkipsTheRead |
+| R6.21 | apps/controller/cmd/crsp/overview_source_test.go TestPoolOverviewSourceListsOpenJobs; apps/controller-console/src/screens/overview/Overview.test.tsx "shows a timer alert for a job whose timer ran out" |
+| R6.22 | apps/controller-console/src/api/dedupe.test.ts |
 | R5.1 | apps/controller/internal/overview/overview_test.go TestGetBuildsOverview, TestQueueListIsCappedButCountIsExact; apps/controller/internal/api/handlers_live_test.go TestGetOverview (the e2e screen test is planned) |
 | R5.2 | apps/controller/internal/events/hub_test.go TestFirstEventIsSnapshotThenChangesInOrder; apps/controller/internal/api/handlers_live_test.go TestStreamEventsSnapshotThenChanges |
 | R5.3 | apps/controller/internal/events/hub_test.go TestReplayByLastEventID, TestReplayGapSendsMarkedSnapshot, TestReplayAgeLimit; apps/controller/internal/api/handlers_live_test.go TestStreamEventsReplayByLastEventID |

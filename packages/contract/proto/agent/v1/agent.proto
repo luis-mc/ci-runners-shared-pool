@@ -370,6 +370,17 @@ message RunnerSpec {
   // Persistent runner: keep the downloaded dependencies between jobs (runners
   // R5.90). Unset means keep.
   optional bool keep_dependencies = 14;
+  // Persistent runner of one repository: the package proxy key and token of
+  // that repository, set while the package proxy is on (caches R5.76). The
+  // agent asks the hub at start and points npm and pip at it when it answers.
+  PackageProxy package_proxy = 15;
+}
+
+// PackageProxy names one repository's package proxy address on the controller
+// (caches R5.76, R5.80): /pkg/npm/<repo>/<token>/ and /pkg/pypi/<repo>/<token>/.
+message PackageProxy {
+  string repo = 1;
+  string token = 2;
 }
 
 // RunnerClean is what the agent read from each persistent runner's folder: the

@@ -197,3 +197,37 @@ func TestGitHubSignInState(t *testing.T) {
 		t.Fatal("sign-out: ended")
 	}
 }
+
+// countTouches wraps a store and counts the writes of the last-seen time.
+type countTouches struct {
+	Store
+	n int
+}
+
+func (c *countTouches) TouchSession(ctx context.Context, h string, at time.Time) error {
+	c.n++
+	return c.Store.TouchSession(ctx, h, at)
+}
+
+func TestLastSeenIsWrittenOncePerMinute(t *testing.T) { // CRSP290, audit F8
+	e := newEnv(t)
+	ctx := context.Background()
+	si := e.ownerSignIn(1, "alice")
+	counter := &countTouches{Store: e.store}
+	svc := New(counter, Config{GitHub: e.gh, Secrets: e.secrets, WebBase: e.fake.URL, Now: e.clock, ConsoleURLs: func() []string { return e.consoles }})
+	for range 20 {
+		if _, err := svc.Authenticate(ctx, si.Cookie); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if counter.n != 1 {
+		t.Fatalf("20 requests in one moment wrote %d times, want 1", counter.n)
+	}
+	e.advance(59 * time.Second)
+	_, _ = svc.Authenticate(ctx, si.Cookie)
+	e.advance(2 * time.Second)
+	_, _ = svc.Authenticate(ctx, si.Cookie)
+	if counter.n != 2 {
+		t.Fatalf("writes %d after a minute, want 2", counter.n)
+	}
+}

@@ -9,7 +9,7 @@ owner: owner
 type: reference
 code: ["apps/controller/internal/agent/backends.go", "apps/controller/internal/agent/engine.go", "apps/controller/internal/doctor/checks/engine.go", "apps/controller/internal/backend/container/**", "apps/controller/internal/machines/**", "apps/controller-console/src/screens/runners/**", "apps/controller-console/src/screens/setup/**"]
 design_system: [CORE-1, CORE-3, CORE-4, CORE-5, CORE-6, UX-5, UX-6, UX-9, UX-13, UX-26, UX-29, UX-30, UX-38, UX-42, UX-54, UX-62, "components 4, 16, 18, 19, 26, 39, 48"]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---

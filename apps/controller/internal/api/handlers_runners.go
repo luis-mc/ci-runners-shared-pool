@@ -30,6 +30,7 @@ type RunnersService interface {
 	StartRemove(ctx context.Context, finish func(context.Context) error)
 	UpdateSettings(ctx context.Context, runnerID string, keepDependencies *bool, actor string) (runners.View, error)
 	RequestClearCache(ctx context.Context, runnerID, actor string) (runners.View, error)
+	ReregisterRunner(ctx context.Context, runnerID, actor string) (runners.View, error)
 	RemoveStrayRegistration(ctx context.Context, in runners.StrayRegistration, prefix string, confirm bool, actor string) error
 	RemoveRecordWithoutRegistration(ctx context.Context, id string, confirm bool, actor string) (runners.Record, error)
 }
@@ -143,6 +144,10 @@ func toGenRunner(v runners.View) gen.Runner {
 			sv := v.Serving
 			out.Serving = &sv
 		}
+	}
+	if v.CanReregister {
+		yes := true
+		out.CanReregister = &yes
 	}
 	if r.RunnerVersion != "" {
 		ver := r.RunnerVersion

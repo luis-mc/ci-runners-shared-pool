@@ -32,3 +32,4 @@ __pycache__/
 # luismc-delivery: end of compiled Python
 /crsp
 /crsp.exe
+apps/web/node_modules/.site-e2e/

@@ -18,6 +18,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runnercache"
 )
 
@@ -136,6 +137,13 @@ type RunnerSpec struct {
 	// runs in a per-job clone of a VM base disk with its own engine, never with
 	// the host's Docker socket, and a machine with no VM backend refuses it.
 	NeedsDocker bool
+	// PackageProxy is the package proxy key and token of the runner's
+	// repository (caches R5.76); the zero value asks for none.
+	PackageProxy lancache.ProxyGrant
+	// PackageEnv is what the agent decided at start from PackageProxy: the npm
+	// and pip values when the hub answered, else nothing. The persistent
+	// backends write it into the runner's environment.
+	PackageEnv map[string]string
 }
 
 // PoolSetup is the part of a repository's pool settings the container backend

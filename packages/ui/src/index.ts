@@ -60,3 +60,4 @@ export * from './components/SideMenu';
 export * from './components/Timeline.types';
 export * from './components/Terminal';
 export * from './components/DownloadProgress';
+export * from './components/Marketing';

@@ -46,6 +46,12 @@ type Service struct {
 	// wired (caches section 11) the row says it is waiting.
 	Listening bool
 	Now       func() time.Time
+	// Proxy is the npm and PyPI proxy (R5.74 to R5.76), Budget the one budget
+	// pass (R5.73) and RegistrySize the registry mirror's folder size; nil
+	// parts show as empty.
+	Proxy        *lancache.Proxy
+	Budget       *Budget
+	RegistrySize func() int64
 }
 
 // Get reads the settings with their defaults.
@@ -68,6 +74,14 @@ func (s *Service) Put(ctx context.Context, actor audit.Actor, rec audit.Recorder
 		_ = rec.Record(ctx, actor, "cache.settings", audit.Target{Type: "cache", ID: "mirrors"}, map[string]any{
 			"summary": "change the cache settings", "from": old, "to": v,
 		})
+	}
+	// The budget applies at once (R5.73): the store's cap follows it and a
+	// pass runs.
+	if s.ActStore != nil && old.BudgetBytes() != v.BudgetBytes() {
+		_ = s.ActStore.SetCap(v.BudgetBytes())
+	}
+	if s.Budget != nil {
+		s.Budget.Kick()
 	}
 	return v, nil
 }
@@ -110,7 +124,11 @@ func (s *Service) Rows(ctx context.Context) ([]Row, error) {
 		}
 	}
 	if set.RegistryMirror {
-		rows = append(rows, Row{ID: IDPrefix + ScopeRegistry, Kind: "registry_mirror", Size: dirSize(s.Layout.Registry()), Status: StatusOK})
+		size := dirSize(s.Layout.Registry())
+		if s.RegistrySize != nil {
+			size = s.RegistrySize()
+		}
+		rows = append(rows, Row{ID: IDPrefix + ScopeRegistry, Kind: "registry_mirror", Size: size, Status: StatusOK})
 	}
 	return rows, nil
 }
@@ -123,7 +141,7 @@ func ParseID(id string) (scope, target string, ok bool) {
 	}
 	scope, target, _ = strings.Cut(rest, ":")
 	switch scope {
-	case ScopeActionsAll, ScopeToolCache, ScopeRegistry:
+	case ScopeActionsAll, ScopeToolCache, ScopeRegistry, ScopePackages, ScopeGitAll:
 		return scope, "", target == ""
 	case ScopeGitMirror, ScopeActionsRepo:
 		return scope, target, target != ""

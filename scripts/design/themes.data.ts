@@ -116,6 +116,56 @@ export const TERMINAL: Record<'green' | 'amber' | 'ice', Palette> = {
   }),
 };
 
+/**
+ * The light form of each terminal palette (CRSP371): paper-like page and panel in the hue of the palette, the same
+ * flat look. Every text pair meets 4.5:1 and the border 3:1 on the page and the panel (UX-17); the divider and the
+ * empty segments are the panel mixed 30% toward the border, as in every theme.
+ */
+export const TERMINAL_LIGHT: Record<'green' | 'amber' | 'ice', Palette> = {
+  green: terminal({
+    bg: '#e9efe5',
+    panel: '#f4f8f1',
+    fg: '#14221a',
+    dim: '#5a7263',
+    muted: '#3d5646',
+    g: '#1b6a3d',
+    y: '#785a00',
+    r: '#a52f2a',
+    c: '#0d6277',
+    m: '#74429f',
+    o: '#9c4f10',
+    sel: '#cde4d2',
+  }),
+  amber: terminal({
+    bg: '#f2eadb',
+    panel: '#faf5e8',
+    fg: '#2b200c',
+    dim: '#7d6535',
+    muted: '#5a4620',
+    g: '#865400',
+    y: '#6a5400',
+    r: '#a5352a',
+    c: '#7a5516',
+    m: '#8a4a3a',
+    o: '#9c4f10',
+    sel: '#ebd8a6',
+  }),
+  ice: terminal({
+    bg: '#e7edf3',
+    panel: '#f2f6fa',
+    fg: '#0e1e2c',
+    dim: '#587086',
+    muted: '#394f63',
+    g: '#08666f',
+    y: '#675700',
+    r: '#a3253d',
+    c: '#1b5ca6',
+    m: '#5a3aaa',
+    o: '#9a4710',
+    sel: '#c9dcec',
+  }),
+};
+
 export const THEME_DATA: readonly ThemeData[] = [
   {
     id: 'phosphor',
@@ -328,15 +378,15 @@ export const THEME_DATA: readonly ThemeData[] = [
     },
   },
   {
-    // The btop-style terminal theme (CRSP300; owner-approved concept 2026-11-25). It is dark in every mode: a
-    // choice of light or system mode leaves it as it is. --dim of the concept is the border; the muted text is
+    // The btop-style terminal theme (CRSP300; owner-approved concept 2026-11-25). It has a dark and, since CRSP371,
+    // a light form, and the Mode setting applies to it. --dim of the concept is the border; the muted text is
     // --dim lightened to 4.5:1 on every surface (UX-17).
     id: 'terminal',
     name: 'Terminal',
     radius: sharp,
     flat: true,
     dark: TERMINAL.green,
-    light: TERMINAL.green,
+    light: TERMINAL_LIGHT.green,
   },
 ];
 
