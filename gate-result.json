@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "kind": "branch-gate",
+  "branch": "CRSP402-runs-on-ci-vars",
+  "head": "38b7beddf1f838c98c4bddc5ee4b4baac1bd3b36",
+  "base": "7549893c6178ada4ec89cee27ca9281efbed7380",
+  "base_ref": "origin/CRSP390-integration",
+  "base_fetched": false,
+  "widened": false,
+  "changed_dirs": [
+    "."
+  ],
+  "steps": [
+    {
+      "name": "setup",
+      "outcome": "pass",
+      "seconds": 24.4,
+      "command": "go mod download && go mod verify && go list -mod=readonly -m all && go list -mod=readonly -deps -test ./...",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/setup.log"
+    },
+    {
+      "name": "secret-scan",
+      "outcome": "pass",
+      "seconds": 0.4,
+      "command": "gitleaks git --log-opts=7549893c6178ada4ec89cee27ca9281efbed7380..HEAD --redact --no-banner",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/secret-scan.log"
+    },
+    {
+      "name": "change-notes",
+      "outcome": "pass",
+      "seconds": 0.3,
+      "command": "python3 scripts/delivery/change_notes.py check --base-ref 7549893c6178ada4ec89cee27ca9281efbed7380 || python scripts/delivery/change_notes.py check --base-ref 7549893c6178ada4ec89cee27ca9281efbed7380",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/change-notes.log"
+    },
+    {
+      "name": "guards",
+      "outcome": "pass",
+      "seconds": 14.7,
+      "command": "go test -timeout 10s -run \"^TestGuard\" ./...",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/guards.log"
+    },
+    {
+      "name": "lint",
+      "outcome": "pass",
+      "seconds": 6.3,
+      "command": "golangci-lint run --timeout=5m ./...",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/lint.log"
+    },
+    {
+      "name": "typecheck",
+      "outcome": "pass",
+      "seconds": 4.4,
+      "command": "go vet ./...",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/typecheck.log"
+    },
+    {
+      "name": "lint-windows",
+      "outcome": "pass",
+      "seconds": 6.1,
+      "command": "golangci-lint run --timeout=5m ./...",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/lint-windows.log"
+    },
+    {
+      "name": "lint-web",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "no ui_paths change"
+    },
+    {
+      "name": "unit",
+      "outcome": "pass",
+      "seconds": 169.4,
+      "command": "bash scripts/ci/go-test.sh -short",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/unit.log"
+    },
+    {
+      "name": "e2e",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "no ui_paths change"
+    }
+  ],
+  "required_steps": [
+    "typecheck",
+    "lint"
+  ],
+  "pass": true,
+  "timed_out": false,
+  "partial": false,
+  "e2e_only": false,
+  "ui_changed": false,
+  "e2e": {
+    "required": false,
+    "step": "lint-web",
+    "outcome": "skip",
+    "selection": "none",
+    "specs": [],
+    "changed_specs": []
+  },
+  "started_at": "2026-11-28T17:05:15Z",
+  "finished_at": "2026-11-28T17:09:01Z",
+  "tool": "branch_gate.py 2"
+}
