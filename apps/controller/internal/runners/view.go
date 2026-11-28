@@ -99,6 +99,9 @@ type View struct {
 	// registration is lost and could not be made again, or GitHub does not list
 	// the runner (runners R5.153).
 	CanReregister bool
+	// CanStart is true when the Runners page offers Start: the service of a
+	// persistent runner is stopped (runners R5.157).
+	CanStart bool
 }
 
 // ListView lists runners with the state each one really has, from GitHub's
@@ -237,7 +240,7 @@ func (s *Service) views(ctx context.Context, recs []Record) []View {
 			why = "needs clean-up, takes no new job: " + r.UncleanReason
 		}
 		out = append(out, View{Record: r, State: state, Reason: why, MachineName: names[r.MachineID],
-			CanReregister: CanReregister(r, state, why)})
+			CanReregister: CanReregister(r, state, why), CanStart: CanStart(r, state)})
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out

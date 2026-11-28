@@ -476,6 +476,7 @@ func poolViewBase(p Record, kids []View, names map[int64]string, machine string)
 	v.State, v.Reason = best.State, best.Reason
 	for _, k := range kids {
 		v.CanReregister = v.CanReregister || k.CanReregister
+		v.CanStart = v.CanStart || k.CanStart
 	}
 	if best.State == Busy {
 		v.Serving = names[best.Scope.RepositoryID]

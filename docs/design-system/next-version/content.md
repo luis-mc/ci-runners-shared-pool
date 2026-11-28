@@ -565,6 +565,8 @@ The words of a runner whose registration GitHub deleted (runners R5.152, R5.153)
 | registering this runner again failed | The reason the pool container keeps for a runner whose register again failed after its old files were removed; it shows as not registered until it is registered again. |
 | Register again | The button in the Managed column of a managed runner that is not registered, failed with a lost registration or a set-up that did not finish, or whose pool registration failed, and on its page. Admin only (busy word: Registering). |
 | Could not register again. {why} | Problem message under the list or the page when the press is refused or fails. |
+| Start | The button in the Managed column of a managed runner whose service is stopped, and on its page next to the reason. Admin only (busy word: Starting). |
+| Could not start. {why} | Problem message under the list or the page when the start is refused or fails. {why} is the reason the runner service gave, for example that it started and stopped again at once (runners R5.156, R5.157). |
 
 ## Device Flow words
 

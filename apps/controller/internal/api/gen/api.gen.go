@@ -9562,8 +9562,11 @@ type Runner struct {
 	Backend BackendName `json:"backend"`
 
 	// CanReregister True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153).
-	CanReregister *bool      `json:"can_reregister,omitempty"`
-	CreatedAt     *time.Time `json:"created_at,omitempty"`
+	CanReregister *bool `json:"can_reregister,omitempty"`
+
+	// CanStart True when the Runners page offers Start: the service of a persistent runner is stopped (runners R5.157).
+	CanStart  *bool      `json:"can_start,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// CurrentJob One job attempt (observability R5.7, R5.8).
 	CurrentJob *Job `json:"current_job,omitempty"`
@@ -12244,6 +12247,9 @@ type ServerInterface interface {
 	// UpdateRunnerSettings Change a persistent runner's settings
 	// (PATCH /api/v1/runners/{runnerId}/settings)
 	UpdateRunnerSettings(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
+	// StartRunner Start the service of a stopped runner
+	// (POST /api/v1/runners/{runnerId}/start)
+	StartRunner(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
 	// ListRuns Workflow runs, newest first
 	// (GET /api/v1/runs)
 	ListRuns(w http.ResponseWriter, r *http.Request, params ListRunsParams)
@@ -18447,6 +18453,32 @@ func (siw *ServerInterfaceWrapper) UpdateRunnerSettings(w http.ResponseWriter, r
 	handler.ServeHTTP(w, r)
 }
 
+// StartRunner operation middleware
+func (siw *ServerInterfaceWrapper) StartRunner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runnerId" -------------
+	var runnerId RunnerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runnerId", r.PathValue("runnerId"), &runnerId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runnerId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartRunner(w, r, runnerId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRuns operation middleware
 func (siw *ServerInterfaceWrapper) ListRuns(w http.ResponseWriter, r *http.Request) {
 
@@ -20077,6 +20109,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/api/v1/runners/{runnerId}/settings", wrapper.UpdateRunnerSettings)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/clear-cache", wrapper.ClearRunnerCache)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/reregister", wrapper.ReregisterRunner)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/start", wrapper.StartRunner)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/runners/{runnerId}/registration", wrapper.DeleteRunnerRegistration)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/env", wrapper.GetRunnerEnv)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/env-sets", wrapper.ListEnvSets)
@@ -27981,6 +28014,45 @@ func (response UpdateRunnerSettingsdefaultJSONResponse) VisitUpdateRunnerSetting
 	return err
 }
 
+type StartRunnerRequestObject struct {
+	RunnerId RunnerId `json:"runnerId"`
+}
+
+type StartRunnerResponseObject interface {
+	VisitStartRunnerResponse(w http.ResponseWriter) error
+}
+
+type StartRunner200JSONResponse Runner
+
+func (response StartRunner200JSONResponse) VisitStartRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartRunnerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StartRunnerdefaultJSONResponse) VisitStartRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListRunsRequestObject struct {
 	Params ListRunsParams
 }
@@ -30636,6 +30708,9 @@ type StrictServerInterface interface {
 	// UpdateRunnerSettings Change a persistent runner's settings
 	// (PATCH /api/v1/runners/{runnerId}/settings)
 	UpdateRunnerSettings(ctx context.Context, request UpdateRunnerSettingsRequestObject) (UpdateRunnerSettingsResponseObject, error)
+	// StartRunner Start the service of a stopped runner
+	// (POST /api/v1/runners/{runnerId}/start)
+	StartRunner(ctx context.Context, request StartRunnerRequestObject) (StartRunnerResponseObject, error)
 	// ListRuns Workflow runs, newest first
 	// (GET /api/v1/runs)
 	ListRuns(ctx context.Context, request ListRunsRequestObject) (ListRunsResponseObject, error)
@@ -36110,6 +36185,32 @@ func (sh *strictHandler) UpdateRunnerSettings(w http.ResponseWriter, r *http.Req
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateRunnerSettingsResponseObject); ok {
 		if err := validResponse.VisitUpdateRunnerSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StartRunner operation middleware
+func (sh *strictHandler) StartRunner(w http.ResponseWriter, r *http.Request, runnerId RunnerId) {
+	var request StartRunnerRequestObject
+
+	request.RunnerId = runnerId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StartRunner(ctx, request.(StartRunnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StartRunner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StartRunnerResponseObject); ok {
+		if err := validResponse.VisitStartRunnerResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

@@ -76,6 +76,8 @@ func cmdRunner() *command {
 				run:   func(c *call, args []string) error { return c.runnerClearCache(args) }},
 			{name: "reregister", summary: "register a runner again when GitHub deleted its registration", args: "NAME",
 				run: func(c *call, args []string) error { return c.runnerReregister(args) }},
+			{name: "start", summary: "start the service of a stopped runner", args: "NAME",
+				run: func(c *call, args []string) error { return c.runnerStart(args) }},
 			{name: "env", summary: "show the merged environment of a runner (sensitive values masked)", args: "NAME",
 				run: func(c *call, args []string) error { return c.runnerEnv(args) }},
 			{name: "remove", summary: "remove a runner after its job ends", args: "NAME [--yes]",
@@ -209,6 +211,34 @@ func (c *call) runnerReregister(args []string) error {
 		return output.JSON(c.env.Stdout, r.JSON200)
 	}
 	_, _ = fmt.Fprintf(c.env.Stderr, "Runner %s is registered again.\n", run.Name)
+	return nil
+}
+
+// runnerStart starts the service of a stopped persistent runner (runners
+// R5.157). The controller refuses a runner CRSP did not make.
+func (c *call) runnerStart(args []string) error {
+	if len(args) != 1 {
+		return fail(ExitUsage, "Usage: crsp runner start NAME")
+	}
+	s, err := c.open()
+	if err != nil {
+		return err
+	}
+	run, err := c.findRunner(s, args[0])
+	if err != nil {
+		return err
+	}
+	r, err := s.client.StartRunnerWithResponse(c.env.Context, run.Id)
+	if err != nil {
+		return s.transport(err)
+	}
+	if err := apiError(r.StatusCode(), r.Body); err != nil {
+		return err
+	}
+	if c.g.json && r.JSON200 != nil {
+		return output.JSON(c.env.Stdout, r.JSON200)
+	}
+	_, _ = fmt.Fprintf(c.env.Stderr, "Runner %s is started.\n", run.Name)
 	return nil
 }
 

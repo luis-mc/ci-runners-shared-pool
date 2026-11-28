@@ -31,6 +31,7 @@ type RunnersService interface {
 	UpdateSettings(ctx context.Context, runnerID string, keepDependencies *bool, actor string) (runners.View, error)
 	RequestClearCache(ctx context.Context, runnerID, actor string) (runners.View, error)
 	ReregisterRunner(ctx context.Context, runnerID, actor string) (runners.View, error)
+	StartRunner(ctx context.Context, runnerID, actor string) (runners.View, error)
 	RemoveStrayRegistration(ctx context.Context, in runners.StrayRegistration, prefix string, confirm bool, actor string) error
 	RemoveRecordWithoutRegistration(ctx context.Context, id string, confirm bool, actor string) (runners.Record, error)
 }
@@ -148,6 +149,10 @@ func toGenRunner(v runners.View) gen.Runner {
 	if v.CanReregister {
 		yes := true
 		out.CanReregister = &yes
+	}
+	if v.CanStart {
+		yes := true
+		out.CanStart = &yes
 	}
 	if r.RunnerVersion != "" {
 		ver := r.RunnerVersion

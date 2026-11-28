@@ -44,6 +44,7 @@ var operationCommands = map[string]string{
 	"updateRunnerSettings":       "runner update",
 	"clearRunnerCache":           "runner clear-cache",
 	"reregisterRunner":           "runner reregister",
+	"startRunner":                "runner start",
 	"listJobs":                   "job list, history",
 	"streamEvents":               "job watch",
 	"getSpeedComparison":         "compare",

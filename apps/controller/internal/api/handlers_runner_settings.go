@@ -39,6 +39,20 @@ func (s *server) ReregisterRunner(ctx context.Context, req gen.ReregisterRunnerR
 	return gen.ReregisterRunner200JSONResponse(toGenRunner(v)), nil
 }
 
+// StartRunner implements POST /api/v1/runners/{runnerId}/start (runners R5.157): the
+// Start button of a runner whose service is stopped.
+func (s *server) StartRunner(ctx context.Context, req gen.StartRunnerRequestObject) (gen.StartRunnerResponseObject, error) {
+	if s.opts.Runners == nil {
+		return gen.StartRunnerdefaultJSONResponse{StatusCode: http.StatusNotImplemented, Body: notImplemented()}, nil
+	}
+	v, err := s.opts.Runners.StartRunner(ctx, req.RunnerId, actorFrom(ctx))
+	if err != nil {
+		code, body := runnerFail(err)
+		return gen.StartRunnerdefaultJSONResponse{StatusCode: code, Body: body}, nil
+	}
+	return gen.StartRunner200JSONResponse(toGenRunner(v)), nil
+}
+
 // ClearRunnerCache implements POST /api/v1/runners/{runnerId}/clear-cache (runners R5.90).
 // The answer is 202: an idle runner clears now, a runner with a job clears when the job ends.
 func (s *server) ClearRunnerCache(ctx context.Context, req gen.ClearRunnerCacheRequestObject) (gen.ClearRunnerCacheResponseObject, error) {

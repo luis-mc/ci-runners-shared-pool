@@ -125,6 +125,7 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 | `machine leftovers MACHINE`, `machine leftovers remove MACHINE NAME...` | List the runner leftovers of the latest doctor finding, and remove named ones (OPS38) | built | this spec (R5.63), `doctor` (R5.48) |
 | `runner list\|create\|update\|clear-cache\|remove` | Runners on machines, with kind, dependency setting and cache clear (OPS28) | M1 | `runners` |
 | `runner reregister NAME` | Registers a runner again in place when GitHub deleted its registration; no question, nothing is removed (runners R5.152) | M1 | `runners` |
+| `runner start NAME` | Starts the service of a stopped runner, or of each registration of a pool runner; a runner that already runs is left alone, and a service that starts and stops again at once is answered with the reason (runners R5.156, R5.157) | M1 | `runners` |
 | `job list\|watch` | Queue and history; live view | M1 | `scheduling` |
 | `history` | Finished jobs, newest first, with `--repo`, `--machine`, `--backend`, `--result`, `--since`, `--limit`; `--json` prints the rows of `listJobs` (CRSP271c) | built | `observability` (R5.11) |
 | `doctor` | Run every check and print fixes | M2 | `doctor` |
