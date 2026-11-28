@@ -100,9 +100,9 @@ jobs:
           sudo dpkg -i pkgs/agent/crspagent-linux-amd64.deb
           test -x /usr/bin/crsp
           /usr/bin/crsp version || /usr/bin/crsp --version
-          ! test -e /usr/lib/systemd/system/crsp.service
+          test ! -e /usr/lib/systemd/system/crsp.service
           sudo dpkg -r crsp-agent
-          ! test -e /usr/bin/crsp
+          test ! -e /usr/bin/crsp
 
   smoke-rpm:
     name: smoke rpm (fedora container)
@@ -150,7 +150,7 @@ jobs:
           bash installer/agent/macos/build.sh arm64 bin/crsp edge-ci 1 pkgs/agent
           sudo installer -pkg pkgs/agent/crspagent-darwin-arm64.pkg -target /
           test -x /usr/local/bin/crsp
-          ! test -e /Library/LaunchDaemons/crsp.plist
+          test ! -e /Library/LaunchDaemons/crsp.plist
           sudo rm -f /usr/local/bin/crsp
           sudo pkgutil --forget dev.luismc.crsp.agent
       - name: Install, upgrade, uninstall

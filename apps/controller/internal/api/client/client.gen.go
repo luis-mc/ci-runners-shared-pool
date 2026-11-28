@@ -11947,7 +11947,7 @@ type ClientInterface interface {
 
 	// ImportAgentInstallerWithBody Store an agent installer, or SHA256SUMS, that the owner carried over
 	//
-	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
 	//
 	// Takes any type of body and a specified content type.
 	//
@@ -14433,7 +14433,7 @@ func (c *Client) ListAgentInstallers(ctx context.Context, reqEditors ...RequestE
 
 // ImportAgentInstallerWithBody Store an agent installer, or SHA256SUMS, that the owner carried over
 //
-// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
 //
 // Takes any type of body and a specified content type.
 //
@@ -31740,7 +31740,7 @@ type ClientWithResponsesInterface interface {
 
 	// ImportAgentInstallerWithBodyWithResponse Store an agent installer, or SHA256SUMS, that the owner carried over
 	//
-	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
 	//
 	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 	//
@@ -46711,7 +46711,7 @@ func (c *ClientWithResponses) ListAgentInstallersWithResponse(ctx context.Contex
 
 // ImportAgentInstallerWithBodyWithResponse Store an agent installer, or SHA256SUMS, that the owner carried over
 //
-// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409, `sums_known`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, a file that does not match answers 422 `checksum_mismatch` and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
 //
 // Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
 //
