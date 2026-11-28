@@ -226,14 +226,17 @@ System monospace stacks only. Nothing is bundled and nothing is loaded from the 
 
 ## Type scale
 
-| Token                    | Value      | Use                  |
-| ------------------------ | ---------- | -------------------- |
-| `--ds-size-1`            | `0.75rem`  | badge                |
-| `--ds-size-2`            | `0.875rem` | hint, secondary text |
-| `--ds-size-3`            | `1rem`     | body, label, button  |
-| `--ds-size-4`            | `1.125rem` | subtitle             |
-| `--ds-size-5`            | `1.25rem`  | section title        |
-| `--ds-size-6`            | `1.75rem`  | page title           |
+One root factor, `--ds-type-scale` (`0.85`, owner decision 28 Nov 2026: "the fonts seem too big, reduce to between 80-90%"), multiplies every size and the icon size, so the whole console moves together and the ratios between the levels stay. A size never falls below its floor: 11 px for a badge and secondary text, 12 px for body text. Touch targets, control heights, rows and spacing are not scaled (UX-16 keeps 44 px).
+
+| Token                    | Value                                          | Size at 0.85 | Use                  |
+| ------------------------ | ---------------------------------------------- | ------------ | -------------------- |
+| `--ds-type-scale`        | `0.85`                                         | -            | factor of every size |
+| `--ds-size-1`            | `max(0.6875rem, calc(0.75rem * scale))`        | 11 px (floor) | badge               |
+| `--ds-size-2`            | `max(0.6875rem, calc(0.875rem * scale))`       | 11.9 px      | hint, secondary text |
+| `--ds-size-3`            | `max(0.75rem, calc(1rem * scale))`             | 13.6 px      | body, label, button  |
+| `--ds-size-4`            | `calc(1.125rem * scale)`                       | 15.3 px      | subtitle             |
+| `--ds-size-5`            | `calc(1.25rem * scale)`                        | 17 px        | section title        |
+| `--ds-size-6`            | `calc(1.75rem * scale)`                        | 23.8 px      | page title           |
 | `--ds-line-height`       | `1.5`      | body text            |
 | `--ds-line-height-tight` | `1.25`     | titles               |
 

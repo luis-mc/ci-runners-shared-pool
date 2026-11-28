@@ -6,12 +6,13 @@
   --ds-font-mono:
     ui-monospace, 'Cascadia Mono', 'SF Mono', Menlo, Consolas, 'Liberation Mono',
     monospace;
-  --ds-size-1: 0.75rem;
-  --ds-size-2: 0.875rem;
-  --ds-size-3: 1rem;
-  --ds-size-4: 1.125rem;
-  --ds-size-5: 1.25rem;
-  --ds-size-6: 1.75rem;
+  --ds-type-scale: 0.85;
+  --ds-size-1: max(0.6875rem, calc(0.75rem * var(--ds-type-scale)));
+  --ds-size-2: max(0.6875rem, calc(0.875rem * var(--ds-type-scale)));
+  --ds-size-3: max(0.75rem, calc(1rem * var(--ds-type-scale)));
+  --ds-size-4: calc(1.125rem * var(--ds-type-scale));
+  --ds-size-5: calc(1.25rem * var(--ds-type-scale));
+  --ds-size-6: calc(1.75rem * var(--ds-type-scale));
   --ds-line-height: 1.5;
   --ds-line-height-tight: 1.25;
   --ds-weight-regular: 400;
@@ -71,7 +72,7 @@
   --ds-hairline: 1px;
   --ds-dot-r: 2px;
   --ds-dot-gap: 3px;
-  --ds-icon-size: 16px;
+  --ds-icon-size: calc(16px * var(--ds-type-scale));
   --ds-tone-bar: 12px;
   --ds-focus-width: 3px;
   --ds-focus-offset: 2px;
@@ -120,11 +121,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -253,11 +250,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -388,11 +381,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -476,11 +465,7 @@
   --ds-color-problem-tint: #2b2117;
   --ds-color-on-problem-tint: #ff7466;
   --ds-glow-focus: 0 0 0 1px #4dff88, 0 0 8px rgba(77, 255, 136, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(77, 255, 136, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(77, 255, 136, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -523,11 +508,7 @@
   --ds-color-problem-tint: #3a2b37;
   --ds-color-on-problem-tint: #ff8aa0;
   --ds-glow-focus: 0 0 0 1px #7aa2f7, 0 0 8px rgba(122, 162, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(122, 162, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(122, 162, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -658,11 +639,7 @@
   --ds-color-problem-tint: #3a2b37;
   --ds-color-on-problem-tint: #ff8aa0;
   --ds-glow-focus: 0 0 0 1px #7aa2f7, 0 0 8px rgba(122, 162, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(122, 162, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(122, 162, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -746,11 +723,7 @@
   --ds-color-problem-tint: #3a2b37;
   --ds-color-on-problem-tint: #ff8aa0;
   --ds-glow-focus: 0 0 0 1px #7aa2f7, 0 0 8px rgba(122, 162, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(122, 162, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(122, 162, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -793,11 +766,7 @@
   --ds-color-problem-tint: #3c2d3f;
   --ds-color-on-problem-tint: #f38ba8;
   --ds-glow-focus: 0 0 0 1px #cba6f7, 0 0 8px rgba(203, 166, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(203, 166, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(203, 166, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 8px;
@@ -928,11 +897,7 @@
   --ds-color-problem-tint: #3c2d3f;
   --ds-color-on-problem-tint: #f38ba8;
   --ds-glow-focus: 0 0 0 1px #cba6f7, 0 0 8px rgba(203, 166, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(203, 166, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(203, 166, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 8px;
@@ -1016,11 +981,7 @@
   --ds-color-problem-tint: #3c2d3f;
   --ds-color-on-problem-tint: #f38ba8;
   --ds-glow-focus: 0 0 0 1px #cba6f7, 0 0 8px rgba(203, 166, 247, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(203, 166, 247, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(203, 166, 247, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 8px;
@@ -1063,11 +1024,7 @@
   --ds-color-problem-tint: #3e2f2d;
   --ds-color-on-problem-tint: #ff6b5a;
   --ds-glow-focus: 0 0 0 1px #fabd2f, 0 0 8px rgba(250, 189, 47, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(250, 189, 47, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(250, 189, 47, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1198,11 +1155,7 @@
   --ds-color-problem-tint: #3e2f2d;
   --ds-color-on-problem-tint: #ff6b5a;
   --ds-glow-focus: 0 0 0 1px #fabd2f, 0 0 8px rgba(250, 189, 47, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(250, 189, 47, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(250, 189, 47, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1286,11 +1239,7 @@
   --ds-color-problem-tint: #3e2f2d;
   --ds-color-on-problem-tint: #ff6b5a;
   --ds-glow-focus: 0 0 0 1px #fabd2f, 0 0 8px rgba(250, 189, 47, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(250, 189, 47, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(250, 189, 47, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1333,11 +1282,7 @@
   --ds-color-problem-tint: #2a444e;
   --ds-color-on-problem-tint: #ff9a95;
   --ds-glow-focus: 0 0 0 1px #6cbcf5, 0 0 8px rgba(108, 188, 245, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(108, 188, 245, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(108, 188, 245, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1468,11 +1413,7 @@
   --ds-color-problem-tint: #2a444e;
   --ds-color-on-problem-tint: #ff9a95;
   --ds-glow-focus: 0 0 0 1px #6cbcf5, 0 0 8px rgba(108, 188, 245, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(108, 188, 245, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(108, 188, 245, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1556,11 +1497,7 @@
   --ds-color-problem-tint: #2a444e;
   --ds-color-on-problem-tint: #ff9a95;
   --ds-glow-focus: 0 0 0 1px #6cbcf5, 0 0 8px rgba(108, 188, 245, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(108, 188, 245, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(108, 188, 245, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 0;
@@ -1603,11 +1540,7 @@
   --ds-color-problem-tint: #49424e;
   --ds-color-on-problem-tint: #ef9aa1;
   --ds-glow-focus: 0 0 0 1px #88c0d0, 0 0 8px rgba(136, 192, 208, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(136, 192, 208, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(136, 192, 208, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 6px;
@@ -1738,11 +1671,7 @@
   --ds-color-problem-tint: #49424e;
   --ds-color-on-problem-tint: #ef9aa1;
   --ds-glow-focus: 0 0 0 1px #88c0d0, 0 0 8px rgba(136, 192, 208, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(136, 192, 208, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(136, 192, 208, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 6px;
@@ -1826,11 +1755,7 @@
   --ds-color-problem-tint: #49424e;
   --ds-color-on-problem-tint: #ef9aa1;
   --ds-glow-focus: 0 0 0 1px #88c0d0, 0 0 8px rgba(136, 192, 208, 0.55);
-  --ds-scanline-focus: repeating-linear-gradient(
-    0deg,
-    rgba(136, 192, 208, 0.06) 0 1px,
-    transparent 1px 3px
-  );
+  --ds-scanline-focus: repeating-linear-gradient(0deg, rgba(136, 192, 208, 0.06) 0 1px, transparent 1px 3px);
   --ds-shadow-2: 0 0 0 1px rgba(0, 0, 0, 0.6);
   --ds-shadow-3: 0 0 0 1px rgba(0, 0, 0, 0.8);
   --ds-radius-1: 6px;
