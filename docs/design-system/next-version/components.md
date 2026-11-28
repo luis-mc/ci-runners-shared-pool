@@ -780,7 +780,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 ## 72. Card grid
 
 - **Used for:** cards side by side. It wraps from one column on a phone to as many as fit. The form role of a layout is the field grid (component 43), not a new part.
-- **Looks:** equal columns with the card gap `--ds-space-5`.
+- **Looks:** equal columns with the card gap `--ds-space-5`. `columns={1}` is one card per row at the full width of the page, for a card whose title is a long name that must stay on one line (the work of the Turn on, Turn off and Repair wizard, CRSP405); a grid sits inside a pane, which leaves the gap above its first row.
 - **Source:** `packages/ui/src/components` (`CardGrid`)
 - **Rules:** UX-81, UX-16, CORE-2, CORE-7.
 - **Guard:** `scripts/design/guards/design-guards/layout-roles.mjs`.

@@ -39,7 +39,10 @@ const stepsOf = (plan: Plan | undefined, r: Pick<Repository, 'id' | 'full_name'>
 const finished = (st: { state: string }) => st.state === 'done' || st.state === 'skipped';
 
 /** What the repository's card says about the step in hand: the running one, else the one that failed, else the next. */
-export function stepText(plan: Plan | undefined, r: Pick<Repository, 'id' | 'full_name'>) {
+export function stepText(
+  plan: Plan | undefined,
+  r: Pick<Repository, 'id' | 'full_name'>,
+) {
   const st = stepsOf(plan, r);
   return (
     st.find((s) => s.state === 'running') ??
@@ -70,11 +73,17 @@ const repoPhases = (list: Repository[], verb: string): Phase[] =>
   list.map((r) => ({ name: `${verb} ${r.full_name}` }));
 
 const grouping = (list: Repository[]): StepGrouping => ({
-  phaseOf: (s) => Math.max(0, list.findIndex((r) => r.id === s.repository_id || r.full_name === s.target)),
+  phaseOf: (s) =>
+    Math.max(
+      0,
+      list.findIndex((r) => r.id === s.repository_id || r.full_name === s.target),
+    ),
   pctOf: (plan, at) => {
     const r = list[at];
     const st = r ? stepsOf(plan, r) : [];
-    return st.length === 0 ? 0 : Math.round((100 * st.filter(finished).length) / st.length);
+    return st.length === 0
+      ? 0
+      : Math.round((100 * st.filter(finished).length) / st.length);
   },
 });
 
@@ -276,7 +285,9 @@ export function ChangePoolWizard() {
     try {
       while (p.state === 'applying' || p.state === 'planned') {
         if (!(await sleep(TIMING.planPollMs))) return;
-        const failed = posted ? await Promise.race([posted, Promise.resolve(undefined)]) : undefined;
+        const failed = posted
+          ? await Promise.race([posted, Promise.resolve(undefined)])
+          : undefined;
         if (failed?.error) throw failed.error;
         p = await unwrap(
           client.GET('/api/v1/repository-plans/{planId}', {
@@ -333,9 +344,7 @@ export function ChangePoolWizard() {
   };
 
   const back = () => void navigate('/setup/pool');
-  const reposDone = list.filter(
-    (r) => repoState(plan, r).word === 'done',
-  ).length;
+  const reposDone = list.filter((r) => repoState(plan, r).word === 'done').length;
   const current = list.find((r) => repoState(plan, r).word === 'working');
   // The line before the first event: whole repositories finished, and the part of the one in hand.
   const partial = (() => {

@@ -134,7 +134,10 @@ describe('Change pool progress (CRSP405)', () => {
     let release: () => void = () => {};
     const gate = new Promise<void>((r) => (release = r));
     const mock = signedIn()
-      .on('GET', '/api/v1/github/repositories', { items: [R1, R2], stale: { stale: false } })
+      .on('GET', '/api/v1/github/repositories', {
+        items: [R1, R2],
+        stale: { stale: false },
+      })
       .on('POST', '/api/v1/repository-plans', tw('planned', []))
       .on('POST', '/api/v1/repository-plans/:id/apply', async () => {
         await gate;
@@ -147,7 +150,9 @@ describe('Change pool progress (CRSP405)', () => {
       });
     TIMING.planPollMs = 60;
     renderApp(mock, '/setup/pool/change?to=off&repo=1&repo=2');
-    fireEvent.click(await screen.findByRole('button', { name: /^Turn off 2 repositories/ }));
+    fireEvent.click(
+      await screen.findByRole('button', { name: /^Turn off 2 repositories/ }),
+    );
     // First read: octo/one is at step 2 of 2 (one done), octo/two has not started.
     await waitFor(() => {
       expect(bar(/Turning off octo\/one/).getAttribute('aria-valuenow')).toBe('1');
@@ -155,7 +160,9 @@ describe('Change pool progress (CRSP405)', () => {
       expect(screen.getAllByText('waiting').length).toBe(1);
       expect(screen.getAllByText('octo/one step s2').length).toBeGreaterThan(0);
     });
-    await waitFor(() => expect(bar(/Turning off octo\/one/).getAttribute('aria-valuenow')).toBe('2'));
+    await waitFor(() =>
+      expect(bar(/Turning off octo\/one/).getAttribute('aria-valuenow')).toBe('2'),
+    );
     release();
     await waitFor(() =>
       expect(screen.getByText('2 repositories no longer use the pool.')).toBeTruthy(),
@@ -166,7 +173,10 @@ describe('Change pool progress (CRSP405)', () => {
   it('shows the step in hand after a reload, and goes on to Done', async () => {
     let read = 0;
     const mock = signedIn()
-      .on('GET', '/api/v1/github/repositories', { items: [R1, R2], stale: { stale: false } })
+      .on('GET', '/api/v1/github/repositories', {
+        items: [R1, R2],
+        stale: { stale: false },
+      })
       .on('GET', '/api/v1/repository-plans/:id', () => {
         read += 1;
         return read < 3
@@ -174,7 +184,9 @@ describe('Change pool progress (CRSP405)', () => {
           : tw('done', ['done', 'done', 'done', 'done']);
       });
     renderApp(mock, '/setup/pool/change?to=off&repo=1&repo=2&plan=p2');
-    await waitFor(() => expect(screen.getAllByText('octo/two step s4').length).toBeGreaterThan(0));
+    await waitFor(() =>
+      expect(screen.getAllByText('octo/two step s4').length).toBeGreaterThan(0),
+    );
     expect(bar(/Turning off octo\/two/).getAttribute('aria-valuenow')).toBe('1');
     expect(screen.getByRole('button', { name: 'Stop' })).toBeTruthy();
     await waitFor(() =>
@@ -193,11 +205,16 @@ describe('Change pool progress (CRSP405)', () => {
       ],
     };
     const mock = signedIn()
-      .on('GET', '/api/v1/github/repositories', { items: [R1, R2], stale: { stale: false } })
+      .on('GET', '/api/v1/github/repositories', {
+        items: [R1, R2],
+        stale: { stale: false },
+      })
       .on('GET', '/api/v1/repository-plans/:id', failed);
     renderApp(mock, '/setup/pool/change?to=off&repo=1&repo=2&plan=p2');
     expect(
-      await screen.findByText(/Nothing more was changed. GitHub refused: a permission is missing/),
+      await screen.findByText(
+        /Nothing more was changed. GitHub refused: a permission is missing/,
+      ),
     ).toBeTruthy();
     expect(screen.getAllByText(/octo\/one step s2/).length).toBeGreaterThan(0);
   });
