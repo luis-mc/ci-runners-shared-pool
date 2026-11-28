@@ -20,6 +20,18 @@ mkdir -p "$RUN" "$STATE/busy"
 
 now() { date +%s; }
 
+# self_sum is the checksum of this script's file as it is now on disk.
+self_sum() { cksum <"$0" 2>/dev/null; }
+# idle is true when no runner of this container has a job.
+idle() {
+  for b in "$STATE"/busy/*; do
+    [ -e "$b" ] && return 1
+  done
+  return 0
+}
+SELF_SUM=$(self_sum)
+echo "$SELF_SUM" >"$RUN/supervisor.sum"
+
 # runner_env prints the environment of one runner as `env` arguments.
 start_runner() {
   n=$1
@@ -130,6 +142,10 @@ trap term TERM INT
 [ -n "$CRSP_SUPERVISOR_ONCE" ] && { tick; exit 0; }
 while :; do
   tick
+  if [ "$(self_sum)" != "$SELF_SUM" ] && idle; then
+    echo "crsp supervisor: a newer copy of this script is in place, loading it"
+    exec sh "$0"
+  fi
   sleep "$TICK" &
   wait $!
 done

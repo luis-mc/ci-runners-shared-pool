@@ -246,12 +246,17 @@ func (b *Backend) writePersistentFiles(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
-		if err := b.step(ctx, "pool files", []string{"exec", "-i", PersistentPool, "sh", "-c",
-			`mkdir -p "$(dirname "$1")" && cat >"$1.new" && chmod 0755 "$1.new" && mv -f "$1.new" "$1"`, "sh", StateDir + "/bin/" + n}, string(body)); err != nil {
+		if err := b.writePersistentFile(ctx, n, body); err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+// writePersistentFile writes one script, replacing the old copy in one step.
+func (b *Backend) writePersistentFile(ctx context.Context, n string, body []byte) error {
+	return b.step(ctx, "pool files", []string{"exec", "-i", PersistentPool, "sh", "-c",
+		`mkdir -p "$(dirname "$1")" && cat >"$1.new" && chmod 0755 "$1.new" && mv -f "$1.new" "$1"`, "sh", StateDir + "/bin/" + n}, string(body))
 }
 
 // stopPersistent holds the runner: the supervisor ends it and does not start it
@@ -318,6 +323,12 @@ func (b *Backend) PersistentStates(ctx context.Context) ([]PersistentState, erro
 // R5.93, OPS70). ServiceName is the handle Ref the record stores
 // (`crsp-persistent-pool:<name>`); a container that is not there has none.
 func (b *Backend) FindPersistent(ctx context.Context) ([]backend.Found, error) {
+	// The first look at the pool after crsp started (or after an update) also
+	// brings its scripts up to this release (runners R5.154). A failure here
+	// never hides the runners: it is tried again on the next look.
+	if err := b.syncPersistentDue(ctx); err != nil {
+		b.log("sync", "persistent scripts: "+b.redact(err.Error()))
+	}
 	res, err := b.run(ctx, "exec", PersistentPool, "sh", StateDir+"/bin/list.sh")
 	if err != nil {
 		return nil, err

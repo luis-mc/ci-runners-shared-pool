@@ -257,3 +257,97 @@ func TestParsePersistentFoundReadsALostRegistration(t *testing.T) {
 		t.Errorf("running: %+v", got)
 	}
 }
+
+// startedPool is a pool whose scripts and supervisor are as a past release left
+// them: the scripts differ and there is no supervisor checksum.
+func startedPool(t *testing.T) (*rig, *fakeC) {
+	t.Helper()
+	r := newPersistentRig(t, 64000)
+	if _, err := r.b.StartPersistent(ctx, persistentSpec(), backend.StartConfig{Registration: "reg-tok"}); err != nil {
+		t.Fatal(err)
+	}
+	return r, r.f.containers[PersistentPool]
+}
+
+// CRSP382, runners R5.154: scripts of an older release are rewritten, and an
+// older supervisor is replaced by restarting the container, while it is idle.
+func TestSyncRewritesStaleScriptsAndRestartsAnOldIdleSupervisor(t *testing.T) {
+	r, c := startedPool(t)
+	c.files[StateDir+"/bin/list.sh"] = "#!/bin/sh\n# an old list.sh\n"
+	c.files[StateDir+"/bin/pool-supervisor.sh"] = "#!/bin/sh\n# an old supervisor\n"
+	delete(c.files, SupervisorSumFile)
+	settled, err := r.b.SyncPersistentFiles(ctx)
+	if err != nil || !settled {
+		t.Fatalf("settled %v, err %v", settled, err)
+	}
+	for _, n := range []string{"list.sh", "pool-supervisor.sh"} {
+		want, _ := images.FS.ReadFile("persistent/" + n)
+		if c.files[StateDir+"/bin/"+n] != string(want) {
+			t.Errorf("%s was not brought up to date", n)
+		}
+	}
+	if c.restarts != 1 {
+		t.Errorf("restarts = %d, want 1", c.restarts)
+	}
+}
+
+// A runner with a job is never cut: the restart waits until none has one.
+func TestSyncNeverRestartsWhileARunnerHasAJob(t *testing.T) {
+	r, c := startedPool(t)
+	delete(c.files, SupervisorSumFile)
+	c.files[StateDir+"/busy/p1"] = ""
+	settled, err := r.b.SyncPersistentFiles(ctx)
+	if err != nil || settled || c.restarts != 0 {
+		t.Fatalf("settled %v, err %v, restarts %d", settled, err, c.restarts)
+	}
+	delete(c.files, StateDir+"/busy/p1")
+	settled, err = r.b.SyncPersistentFiles(ctx)
+	if err != nil || !settled || c.restarts != 1 {
+		t.Fatalf("after the job: settled %v, err %v, restarts %d", settled, err, c.restarts)
+	}
+}
+
+// A supervisor that writes its checksum reloads by itself: no restart, and
+// scripts that already match are not written again.
+func TestSyncLeavesACurrentPoolAndAReloadingSupervisorAlone(t *testing.T) {
+	r, c := startedPool(t)
+	c.files[SupervisorSumFile] = "1 1"
+	c.files[StateDir+"/busy/p1"] = ""
+	before := r.f.count("exec -i " + PersistentPool + " sh -c mkdir")
+	settled, err := r.b.SyncPersistentFiles(ctx)
+	if err != nil || !settled || c.restarts != 0 {
+		t.Fatalf("settled %v, err %v, restarts %d", settled, err, c.restarts)
+	}
+	if got := r.f.count("exec -i " + PersistentPool + " sh -c mkdir"); got != before {
+		t.Errorf("%d scripts were written again", got-before)
+	}
+	// a stale supervisor script with a reloading supervisor: written, not restarted
+	c.files[StateDir+"/bin/pool-supervisor.sh"] = "old"
+	if _, err := r.b.SyncPersistentFiles(ctx); err != nil || c.restarts != 0 {
+		t.Fatalf("err %v, restarts %d", err, c.restarts)
+	}
+	want, _ := images.FS.ReadFile("persistent/pool-supervisor.sh")
+	if c.files[StateDir+"/bin/pool-supervisor.sh"] != string(want) {
+		t.Error("the supervisor script was not written")
+	}
+}
+
+// The first look at the pool after crsp started does the sync, once.
+func TestFindPersistentSyncsTheScriptsOnceAfterStart(t *testing.T) {
+	r, c := startedPool(t)
+	c.files[StateDir+"/bin/report.sh"] = "old"
+	c.files[SupervisorSumFile] = "1 1"
+	r.b.psync = persistentSync{} // crsp just started
+	for i := 0; i < 3; i++ {
+		if _, err := r.b.FindPersistent(ctx); err != nil {
+			t.Fatal(err)
+		}
+	}
+	want, _ := images.FS.ReadFile("persistent/report.sh")
+	if c.files[StateDir+"/bin/report.sh"] != string(want) {
+		t.Error("report.sh was not brought up to date")
+	}
+	if n := r.f.count("exec " + PersistentPool + " sh -c cd"); n != 1 {
+		t.Errorf("the scripts were compared %d times, want once", n)
+	}
+}
