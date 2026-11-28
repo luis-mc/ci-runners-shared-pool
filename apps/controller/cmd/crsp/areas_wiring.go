@@ -70,7 +70,9 @@ type controllerDeps struct {
 	PublicHost string
 	// Packages serves the release packages to new machines (machines R5.65); nil for a development build.
 	Packages api.PackageServer
-	Updates  api.UpdateService
+	// AgentInstallers lists and imports agent installers (operations R5.132); nil for a development build.
+	AgentInstallers api.AgentInstallerService
+	Updates         api.UpdateService
 	// Lifecycle is the update state machine; Fleet lists the machines for it.
 	Lifecycle *update.Service
 	// Listen is the listen address service of the console (operations R5.90).
@@ -402,6 +404,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Health = d.Health
 	}
 	c.Options.Packages = d.Packages
+	c.Options.AgentInstallers = d.AgentInstallers
 	if d.Deps != nil {
 		c.Options.Deps = d.Deps
 	}
