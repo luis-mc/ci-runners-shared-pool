@@ -57,5 +57,8 @@ var operationCommands = map[string]string{
 	"applyUpdate":                "update apply",
 	"restartService":             "restart",
 	"getPublicRepositories":      "settings public-repositories",
+	"exportConfigFile":           "config export",
+	"planConfig":                 "config plan, config import --dry-run, config apply",
+	"applyConfigPlan":            "config apply",
 	"setPublicRepositories":      "settings public-repositories --on|--off",
 }

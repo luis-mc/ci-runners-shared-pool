@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-The binary is built in part. Built: `controller`, `agent` (`run`, `join`, `install`), `tray`, `version`, sign-in, contexts, repositories, machines, runners, jobs, `doctor`, `backup` and `restore`, `update`, `uninstall` and `completion`. Not built: `config export|import|apply` (M8, it says it is not built yet and exits 2) and the items in section 11. On a Mac, `crsp agent` also gives the agent a counter of macOS VMs for its machine report (machines R5.14, CRSP114); it adds no command.
+The binary is built in part. Built: `controller`, `agent` (`run`, `join`, `install`), `tray`, `version`, sign-in, contexts, repositories, machines, runners, jobs, `doctor`, `backup` and `restore`, `update`, `uninstall` and `completion`. Built by CRSP259: `config export|plan|apply` and `config import --dry-run`. Not built: the items in section 11. On a Mac, `crsp agent` also gives the agent a counter of macOS VMs for its machine report (machines R5.14, CRSP114); it adds no command.
 
 The controller and the agent write their logs through a redacting handler (`apps/controller/internal/logging`, github-integration R6.3), so no token, PEM block or stored secret value reaches a log line.
 
@@ -128,7 +128,9 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 | `job list\|watch` | Queue and history; live view | M1 | `scheduling` |
 | `history` | Finished jobs, newest first, with `--repo`, `--machine`, `--backend`, `--result`, `--since`, `--limit`; `--json` prints the rows of `listJobs` (CRSP271c) | built | `observability` (R5.11) |
 | `doctor` | Run every check and print fixes | M2 | `doctor` |
-| `config export\|import --dry-run\|apply` | Configuration as a file | M8 | `config-as-code` |
+| `config export [--out FILE]` | Write the setup as one file without any secret; prints it without `--out` (admin; operations R5.28) | built | `operations` (R5.28) |
+| `config plan FILE`, `config import FILE --dry-run` | List each change of a file; change nothing; exit 8 when it has changes, 1 when it has problems (admin; operations R5.29) | built | `operations` (R5.29) |
+| `config apply FILE [--yes]` | Plan the file, print each change, ask for a yes (R5.14), apply exactly that plan; each removal is sent by name (owner; operations R5.30) | built | `operations` (R5.30) |
 | `backup\|restore` | Back up and restore the controller | M1 | `backup` |
 | `app rotate-key --file PATH\|-` | Replace the GitHub App private key (owner only; the controller checks it with GitHub first) | M8 | `github-integration` (R5.7) |
 | `update` | Update this machine's binary, with drain | M3 | `updates` |
@@ -209,7 +211,7 @@ With `--json`, a refusal prints the contract's `ErrorEnvelope` to stderr and use
 
 **R5.21** — `doctor` MUST print every finding with its fix. `--machine M` narrows it to one machine.
 
-**R5.22** — `config export [--out FILE]` MUST write the configuration file. `config import FILE --dry-run` MUST print the plan (each change: add, edit, remove) and change nothing; "Nothing has changed yet." ends the plan. `config import FILE` without `--dry-run` MUST exit 2 and point to `config apply`. `config apply FILE` MUST print the same plan, ask for a yes (R5.14), and apply it.
+**R5.22** — `config export [--out FILE]` MUST write the configuration file. `config import FILE --dry-run` MUST print the plan (each change: add, edit, remove) and change nothing; "Nothing has changed yet." ends the plan. `config import FILE` without `--dry-run` MUST exit 2 and point to `config apply`. `config apply FILE` MUST print the same plan, ask for a yes (R5.14), and apply it. `config plan FILE` is `config import FILE --dry-run`. Both exit 8 when the file has changes, 0 when it has none and 1 when it has problems. Built (CRSP259).
 
 **R5.23** — `backup --out FILE` MUST download a backup of the controller's configuration. `restore FILE` MUST show what it replaces, need a yes, and be allowed for the owner only.
 
@@ -322,7 +324,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R5.19 | built: apps/controller/internal/cli/resources_test.go TestRunnerCreateRefusesUnsupported, TestRunnerListAndRemove |
 | R5.20 | built: apps/controller/internal/cli/resources_test.go TestJobListFilters, TestWatchReconnects |
 | R5.21 | built: apps/controller/internal/cli/resources_test.go TestFindingsAndExitCode |
-| R5.22 | planned (M8): apps/controller/internal/cli/config_test.go TestDryRunChangesNothing, TestApplyNeedsYes |
+| R5.22 | built (CRSP259): apps/controller/internal/cli/config_test.go TestConfigPlanAndDryRunChangeNothingAndExit8, TestConfigImportNeedsDryRun, TestConfigApplyAsksAndNoMeansNothingChanged, TestConfigApplySendsEachRemovalByName |
 | R5.23 | built: apps/controller/internal/cli/resources_test.go TestBackupRestoreOwnerOnly (backup --out is not built: no download operation in the contract) |
 | R5.24 | planned (M3): apps/controller/internal/cli/update_test.go TestChecksumAndDrain |
 | R5.25 | built: apps/controller/internal/cli/completion_test.go TestScriptsAndOfflineCompletion |
@@ -358,7 +360,7 @@ Open questions for the owner (not decided):
 
 1. `runner create`: the content rules say "Add", never "Create". Rename to `runner add`?
 2. Which milestone ships the `tray` mode? This spec says M8; the brief does not say.
-3. `config import` without `--dry-run`: refuse and point to `config apply` (this spec), or apply after a yes?
+3. `config import` without `--dry-run`: refuse and point to `config apply` (this spec), or apply after a yes? Built as refuse (CRSP259).
 4. Does `backup` include secrets (App private key, webhook secret), encrypted with a passphrase, or leave them out?
 5. Should scripts be able to pass a token in an environment variable (for example `CRSP_TOKEN`), or only through `login`?
 6. Command library: the standard `flag` package or `spf13/cobra` (built-in completion)?
@@ -371,7 +373,7 @@ Built in milestone 1 (CRSP25): `controller`, `agent` and `tray` dispatch, `versi
 
 NOT YET IMPLEMENTED:
 
-- `config export|import|apply` (M8). It says it is not built yet and exits 2. `update` and the `tray` mode are built.
+- `config`, `update` and the `tray` mode are built (`config` by CRSP259). `config plan` and `apply` take a file, or `-` for stdin with `--yes`; the plan lives in the controller until it restarts, so `apply` plans and applies in one run.
 - `backup --out FILE`: the contract has no download operation, so `backup` starts a backup on the controller and names its file. A download operation is needed first.
 - OS secret stores (Windows Credential Manager, macOS Keychain, Linux Secret Service): the CLI uses the 0600 file store behind `apps/controller/internal/secrets` until each store lands. The file is refused when its mode is wider than 0600.
 - `login` runs GitHub's device flow with the URLs from `getCliLoginConfig` (the contract's shape) and then calls `exchangeCliToken`. The sequence diagram in section 3 shows the controller doing the polling; the contract does not.
