@@ -30,7 +30,10 @@ import {
   applyThemeName,
   applyPalette,
   applyGraphs,
+  applyTextSize,
   savedGraphs,
+  savedTextSize,
+  TEXT_SIZE_STEPS,
   applyThemeChoice,
   isTerminalChoice,
   savedThemeChoice,
@@ -470,6 +473,7 @@ export function ThemeApplier() {
     applyThemeName(savedThemeName());
     applyPalette(savedPalette());
     applyGraphs(savedGraphs());
+    applyTextSize(savedTextSize());
     let on = true;
     unwrap(client.GET('/api/v1/me/preferences'))
       .then((p) => on && applyTheme(p.theme))
@@ -489,6 +493,7 @@ export function AppearanceSettings() {
   );
   const [themeChoice, setThemeChoice] = useState(savedThemeChoice);
   const [graphs, setGraphs] = useState(savedGraphs);
+  const [textSize, setTextSize] = useState(savedTextSize);
   const save = useCommand(async (theme: Schemas['Theme']) => {
     const p = await unwrap(client.PUT('/api/v1/me/preferences', { body: { theme } }));
     applyTheme(p.theme);
@@ -529,6 +534,16 @@ export function AppearanceSettings() {
                 ]}
               />
             ) : null}
+            <ChoiceField
+              label="Text size"
+              help="How big the text is, in percent of the standard size. The choice is saved at once."
+              value={String(textSize)}
+              onChange={(v) => {
+                setTextSize(Number(v));
+                applyTextSize(Number(v));
+              }}
+              choices={TEXT_SIZE_STEPS.map((n) => ({ value: String(n), label: `${n}%` }))}
+            />
             <ChoiceField
               label="Mode"
               help="System follows your device. The choice is saved at once."

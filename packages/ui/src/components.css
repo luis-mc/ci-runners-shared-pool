@@ -841,12 +841,96 @@ body {
     transform: translateX(230%);
   }
 }
+/* UX-92: a list of label, bar and value rows is one grid (component 92, MeterList). Four tracks: the labels (as wide as the
+   longest, up to 14rem), the bars (all one width, 6 to 28rem), and the value split in two: the number (right-aligned) and
+   the words after it ("of 32 GiB"), so the numbers and the "of" words line up. Each row takes the tracks of the list.
+   When the list's own box is narrower than 26rem (a phone, a card in a grid), the label and the value share the first line
+   and every bar takes the full width under them. */
+.ds-meters {
+  container-type: inline-size;
+  min-inline-size: 0;
+}
+.ds-meters__grid,
+.ds-bars {
+  --ds-meter-cols: fit-content(14rem) minmax(6rem, 28rem) max-content
+    minmax(0, max-content);
+  display: grid;
+  grid-template-columns: var(--ds-meter-cols);
+  justify-content: start;
+  align-items: center;
+  column-gap: var(--ds-space-3);
+  row-gap: var(--ds-space-2);
+  font-variant-numeric: tabular-nums;
+}
 .ds-level {
   display: grid;
-  grid-template-columns: 5rem minmax(0, 1fr) auto;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
   align-items: center;
-  gap: var(--ds-space-2);
   font-size: var(--ds-size-2);
+}
+.ds-level__name {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+/* The help button keeps its 44 px target but does not make its row taller than the others (UX-92: one row height). */
+.ds-level__name .ds-termhelp {
+  margin-block: calc((1lh - var(--ds-target-min)) / 2);
+}
+.ds-level__bar {
+  min-inline-size: 0;
+}
+.ds-level__used {
+  text-align: end;
+  white-space: nowrap;
+}
+.ds-level__rest {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+.ds-level__text {
+  grid-column: 3 / 5;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+@container (max-inline-size: 26rem) {
+  .ds-meters__grid,
+  .ds-bars {
+    --ds-meter-cols: fit-content(14rem) minmax(0, 1fr) max-content minmax(0, max-content);
+    row-gap: var(--ds-space-1);
+  }
+  .ds-level {
+    row-gap: var(--ds-space-1);
+    margin-block-end: var(--ds-space-2);
+  }
+  .ds-level:last-child {
+    margin-block-end: 0;
+  }
+  .ds-level__name {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .ds-level__used {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .ds-level__rest {
+    grid-column: 4;
+    grid-row: 1;
+  }
+  .ds-level__text {
+    grid-column: 3 / 5;
+    grid-row: 1;
+  }
+  .ds-level__bar {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+  .ds-bars__track,
+  .ds-bars__segs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 .ds-level__bar {
   block-size: var(--ds-space-2);
@@ -3504,17 +3588,19 @@ a.ds-stat:focus-visible {
 
 /* Component 60: bar list. */
 .ds-bars {
-  display: grid;
-  gap: var(--ds-space-1);
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.ds-bars > li {
+  display: contents;
+}
+/* A row is a label, a bar and a value on the grid of the list (UX-92). */
 .ds-bars__row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: var(--ds-space-1) var(--ds-space-3);
-  align-items: baseline;
+  grid-template-columns: subgrid;
+  grid-column: 1 / -1;
+  align-items: center;
   min-block-size: var(--ds-target-min);
   padding-block: var(--ds-space-1);
   color: var(--ds-color-text);
@@ -3527,14 +3613,22 @@ a.ds-stat:focus-visible {
   outline: var(--ds-border-medium) solid var(--ds-color-focus);
 }
 .ds-bars__label {
+  grid-column: 1;
+  grid-row: 1;
+  min-inline-size: 0;
   overflow-wrap: anywhere;
 }
 .ds-bars__value {
+  grid-column: 3 / 5;
+  grid-row: 1;
+  text-align: end;
+  font-variant-numeric: tabular-nums;
   color: var(--ds-color-text-muted);
   white-space: nowrap;
 }
 .ds-bars__track {
-  grid-column: 1 / -1;
+  grid-column: 2;
+  grid-row: 1;
   display: block;
   block-size: var(--ds-space-2);
   background: var(--ds-color-divider);
@@ -3544,7 +3638,6 @@ a.ds-stat:focus-visible {
   block-size: 100%;
   background: var(--ds-color-note);
 }
-
 /* Component 59: ranked findings. */
 .ds-findings {
   display: grid;
@@ -3786,20 +3879,11 @@ a.ds-stat:focus-visible {
   gap: var(--ds-space-2);
   white-space: nowrap;
 }
-.ds-meter__blocks {
-  letter-spacing: -1px;
+.ds-meter[data-level='warn'] .ds-segs__cell {
+  --ds-seg-on: var(--ds-color-needs-you);
 }
-.ds-meter__on {
-  color: var(--ds-color-done);
-}
-.ds-meter[data-level='warn'] .ds-meter__on {
-  color: var(--ds-color-needs-you);
-}
-.ds-meter[data-level='bad'] .ds-meter__on {
-  color: var(--ds-color-problem);
-}
-.ds-meter__off {
-  color: var(--ds-color-divider);
+.ds-meter[data-level='bad'] .ds-segs__cell {
+  --ds-seg-on: var(--ds-color-problem);
 }
 .ds-meter__text {
   color: var(--ds-color-text-muted);
@@ -4107,7 +4191,15 @@ a.ds-stat:focus-visible {
 }
 [data-theme-name='terminal'] .ds-bars__segs {
   display: block;
-  grid-column: 1 / -1;
+  grid-column: 2;
+  grid-row: 1;
+  min-inline-size: 0;
+}
+@container (max-inline-size: 26rem) {
+  [data-theme-name='terminal'] .ds-bars__segs {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
 }
 [data-theme-name='terminal'] .ds-progress .ds-segs__cell,
 [data-theme-name='terminal'] .ds-bars__segs .ds-segs__cell {

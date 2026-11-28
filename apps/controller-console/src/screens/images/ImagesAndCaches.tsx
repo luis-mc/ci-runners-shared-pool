@@ -8,6 +8,7 @@ import {
   Empty,
   Facts,
   LevelBar,
+  MeterList,
   Message,
   OpenRow,
   Page,
@@ -285,12 +286,14 @@ function CacheCard({ cache, onChanged }: { cache: Cache; onChanged: () => void }
       <Stack gap="tight">
         {wiping ? <Status kind="running" word="wiping" /> : null}
         {cap !== undefined && cap > 0 ? (
-          <LevelBar
-            label="Size"
-            value={cache.size_bytes}
-            max={cap}
-            text={`${formatSize(cache.size_bytes)} of ${formatSize(cap)} (${formatPercent((cache.size_bytes / cap) * 100)})${cache.size_bytes > cap ? ', over the cap' : ''}`}
-          />
+          <MeterList>
+            <LevelBar
+              label="Size"
+              value={cache.size_bytes}
+              max={cap}
+              text={`${formatSize(cache.size_bytes)} of ${formatSize(cap)} (${formatPercent((cache.size_bytes / cap) * 100)})${cache.size_bytes > cap ? ', over the cap' : ''}`}
+            />
+          </MeterList>
         ) : (
           <Text>{formatSize(cache.size_bytes)}, no cap</Text>
         )}

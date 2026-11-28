@@ -19,6 +19,9 @@
     if (pal === 'amber' || pal === 'ice') root.setAttribute('data-pal', pal);
     if (window.localStorage.getItem('crsp.theme-graphs') === 'dotted')
       root.setAttribute('data-graphs', 'dotted');
+    var size = window.localStorage.getItem('crsp.text-size');
+    if (['80', '90', '110', '120', '130'].indexOf(size) >= 0)
+      root.setAttribute('data-text-size', size);
     var mode = window.localStorage.getItem('crsp.theme-mode');
     // Nothing saved yet: a new install is dark (owner decision D4). Only a saved "system" follows the device.
     if (mode === 'dark' || mode === 'light') root.setAttribute('data-theme', mode);

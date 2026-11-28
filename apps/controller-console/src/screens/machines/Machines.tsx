@@ -5,6 +5,7 @@ import {
   Card,
   CardGrid,
   LevelBar,
+  MeterList,
   LinkButton,
   Chips,
   CheckRow,
@@ -84,27 +85,37 @@ export function PoolSizeCard({ m }: { m: Machine }) {
   const gib = m.settings.pool_memory_gib ?? 0;
   const cores = m.facts?.cores;
   const total = m.facts?.memory_bytes ? m.facts.memory_bytes / 2 ** 30 : undefined;
+  const cpuBar =
+    cpus > 0 && cores ? (
+      <LevelBar
+        label="CPU in the pool"
+        value={cpus}
+        max={cores}
+        text={`${cpus} of ${cores} CPU`}
+      />
+    ) : null;
+  const memBar =
+    gib > 0 && total ? (
+      <LevelBar
+        label="Memory in the pool"
+        value={gib}
+        max={Number(total.toFixed(1))}
+        text={`${Number(gib.toFixed(1))} of ${Number(total.toFixed(1))} GiB`}
+      />
+    ) : null;
   return (
     <Card title={`${m.name}: pool size`}>
       <Stack>
-        {cpus > 0 && cores ? (
-          <LevelBar
-            label="CPU in the pool"
-            value={cpus}
-            max={cores}
-            text={`${cpus} of ${cores} CPU`}
-          />
-        ) : (
+        {cpuBar || memBar ? (
+          <MeterList>
+            {cpuBar}
+            {memBar}
+          </MeterList>
+        ) : null}
+        {cpuBar ? null : (
           <Text>{`CPU in the pool: ${cpus > 0 ? `${cpus} CPU` : 'not set'}`}</Text>
         )}
-        {gib > 0 && total ? (
-          <LevelBar
-            label="Memory in the pool"
-            value={gib}
-            max={Number(total.toFixed(1))}
-            text={`${Number(gib.toFixed(1))} of ${Number(total.toFixed(1))} GiB`}
-          />
-        ) : (
+        {memBar ? null : (
           <Text>{`Memory in the pool: ${gib > 0 ? `${Number(gib.toFixed(1))} GiB` : 'not set'}`}</Text>
         )}
         <LinkButton to={`/setup/machines/${m.id}`}>Change the pool size</LinkButton>

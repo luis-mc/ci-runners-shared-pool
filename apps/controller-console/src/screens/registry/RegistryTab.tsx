@@ -10,6 +10,7 @@ import {
   Empty,
   Facts,
   LevelBar,
+  MeterList,
   LinkButton,
   Message,
   Section,
@@ -282,12 +283,14 @@ export function BudgetCard({
   return (
     <Card title={title}>
       <Stack gap="tight">
-        <LevelBar
-          label={title}
-          value={budget.used_bytes}
-          max={Math.max(budget.limit_bytes, 1)}
-          text={`${formatSize(budget.used_bytes)} of ${formatSize(budget.limit_bytes)}${budget.over ? ', over the budget' : ''}`}
-        />
+        <MeterList>
+          <LevelBar
+            label={title}
+            value={budget.used_bytes}
+            max={Math.max(budget.limit_bytes, 1)}
+            text={`${formatSize(budget.used_bytes)} of ${formatSize(budget.limit_bytes)}${budget.over ? ', over the budget' : ''}`}
+          />
+        </MeterList>
         <Facts
           items={[
             { name: 'Images', value: formatNumber(count) },

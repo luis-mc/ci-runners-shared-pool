@@ -987,3 +987,12 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 - **Source:** `packages/ui/src/components/Marketing.tsx` (`DocSearch`: `label`, `hint`, `groups`), `packages/ui/src/components.css` (`ds-docsearch`).
 - **Rules:** UX-31, UX-57, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/marketing.test.tsx` and `apps/web/browser/docs.spec.ts`.
+
+## 92. Meter list
+
+- **Used for:** a list of label, bar and value rows: a machine's CPU and memory, disks, a cache budget, outcomes of jobs, the busiest repositories (UX-92). `MeterList` holds the rows; each row is a `LevelBar` (component 16). `BarList` (component 60) is the same grid for a ranking whose rows are links.
+- **Looks:** four columns shared by every row: the labels (as wide as the longest), the bars (one width, one segment count), and the value split into its number and the words after it ("of 31.7 GiB"), so the numbers and the "of" words line up. In a box narrower than 26 rem the label and value share the first line and each bar takes the full width under it. The help button of a label keeps its target but does not make its row taller. The bar draws the shared segments in the Cool Terminal themes and the plain bar elsewhere; `Meter` (component 79) draws the same segments.
+- **States:** _ok_, _warn_, _bad_ and _over_ (by level, as `LevelBar`); a value without "of" fills the two value columns right-aligned.
+- **Source:** `packages/ui/src/components/Progress.tsx` (`MeterList`, `LevelBar`, `splitLevelText`), `packages/ui/src/components/BarList.tsx`, `packages/ui/src/components.css` (`ds-meters`, `ds-level`).
+- **Rules:** UX-17, UX-91, UX-92, CORE-1, CORE-3, CORE-7.
+- **Guard:** `packages/ui/src/components/meterList.test.tsx`, `e2e/tests/web-console/ux-meter-lists.spec.ts`.

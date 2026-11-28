@@ -1,0 +1,97 @@
+// CRSP395 (design system UX-92, component 92): every list of label, bar and value rows is one grid. At 360, 393 and 1300 px
+// the labels of a list start at one x, its bars have one left edge and one width, its values end at one x, and the
+// numbers and the "of" words of a split value line up. The DOM layout judge (`meter-align` in scripts/design/dom-layout.ts)
+// measures it; each screen must show at least two rows, so the check is never empty.
+import { expect, test } from '@playwright/test';
+import { judgeLayout, measureDomLayout } from '../../../scripts/design/dom-layout';
+import { machine, signedIn } from './fixtures';
+import { insightsApi } from './insights-fixtures';
+import { jobsAndDoctor } from './jobs-doctor-fixtures';
+import { MODES, frames, headingShown, settle } from './ux-guards';
+
+const GIB = 1024 ** 3;
+const big = (id: string, name: string, cpu: number, mem: number) =>
+  machine({
+    id,
+    name,
+    facts: { threads: 32, cores: 16, memory_bytes: 31.7 * GIB },
+    load: {
+      memory_pct: mem,
+      cpu_pct: cpu,
+      memory_known: true,
+      cpu_known: true,
+      sampled_at: '2026-11-14T10:00:00Z',
+      stale: false,
+    },
+  });
+const group = (name: string, done: number) => ({
+  name,
+  filter: `repository=${name}`,
+  done,
+  running: 0,
+  queued: 0,
+  failed: 0,
+  wait_p50: 60,
+  wait_p90: 300,
+  run_p50: 300,
+  run_p90: 600,
+  trend: [],
+});
+
+const SCREENS = [
+  { name: 'overview machine cards', url: '/', min: 4, ready: 'GameRoomPC' },
+  {
+    name: 'pool machine memory and swap',
+    url: '/pool/machines/m1',
+    min: 3,
+    ready: 'Memory and swap',
+  },
+  { name: 'busiest repositories', url: '/analytics/insights', min: 3, ready: 'octo/app' },
+];
+
+for (const mode of MODES) {
+  for (const screen of SCREENS) {
+    test(`meter lists line up: ${screen.name} (${mode})`, async ({ page }) => {
+      const mock = insightsApi(jobsAndDoctor(signedIn()))
+        .on('GET', '/api/v1/me/preferences', { theme: mode })
+        .on('GET', '/api/v1/machines', {
+          items: [big('m1', 'GameRoomPC', 11.6, 61.5), big('m2', 'BuildBox', 82, 45)],
+        })
+        .on('GET', '/api/v1/machines/:id', big('m1', 'GameRoomPC', 11.6, 61.5))
+        .on('GET', '/api/v1/jobs/groups', {
+          items: [
+            group('octo/app', 78),
+            group('octo/desktop-client', 34),
+            group('octo/docs', 6),
+          ],
+        });
+      await mock.install(page);
+      await page.emulateMedia({ colorScheme: mode });
+      await page.addInitScript(
+        ([m]) => {
+          try {
+            window.localStorage.setItem('crsp.theme-name', 'terminal');
+            window.localStorage.setItem('crsp.theme-mode', m as string);
+          } catch {
+            // storage blocked
+          }
+        },
+        [mode],
+      );
+      await page.setViewportSize({ width: 1300, height: 900 });
+      await page.goto(screen.url);
+      await settle(page, mode);
+      await headingShown(page);
+      await expect(page.getByText(screen.ready).first()).toBeVisible();
+      const rows = await page.locator('.ds-level:visible, .ds-bars__row:visible').count();
+      expect(rows).toBeGreaterThanOrEqual(screen.min);
+      const problems = await measureDomLayout(page, {
+        known: [],
+        spaceVar: '--ds-space-',
+        ready: () => frames(page),
+      });
+      const mine = problems.filter((p) => p.rule === 'meter-align');
+      expect(judgeLayout(`${screen.name} ${mode}`, mine, []).unknown).toEqual([]);
+    });
+  }
+}

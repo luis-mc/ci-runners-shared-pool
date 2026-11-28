@@ -44,7 +44,8 @@ export type LayoutRule =
   | 'clipped-text'
   | 'section-gap'
   | 'title-clear'
-  | 'time-one-line';
+  | 'time-one-line'
+  | 'meter-align';
 
 /** One known breach: the screen, the width it happens at ('*' for every width), the rule and the task that removes it. */
 export interface KnownLayoutBreach {
@@ -332,6 +333,49 @@ export function domLayoutSource(
               add('title-clear', 'the title ' + label(own) + ' sits ' + Math.round(tr.top - cr.bottom) + ' px under ' + name(c) + ', inside its focus ring (reach ' + Math.round(reach) + ' px)');
           }
         }
+      }
+    }
+
+    // 6. meter lists (UX-92): the rows of one list share the left edge of the labels, the left edge and width of the bars
+    // and the right edge of the values; and the level bars of one parent sit in one list
+    {
+      const near = (a, b) => Math.abs(a - b) <= 1;
+      const parts = (row) => {
+        const lab = row.querySelector('.ds-level__name, .ds-bars__label');
+        const bar = row.querySelector('.ds-level__bar, .ds-bars__track, .ds-bars__segs');
+        const val = row.querySelector('.ds-level__text, .ds-bars__value');
+        return { lab, bar, val };
+      };
+      const lists = Array.from(document.querySelectorAll('.ds-meters__grid, .ds-bars')).filter(visible);
+      for (const list of lists) {
+        const rows = Array.from(list.querySelectorAll('.ds-level, .ds-bars__row')).filter(visible);
+        const m = rows.map((row) => {
+          const p = parts(row);
+          const box = (e) => (e && visible(e) ? e.getBoundingClientRect() : null);
+          return { row, lab: box(p.lab), bar: box(p.bar), val: box(p.val) };
+        });
+        for (const kid of Array.from(list.children).filter(visible)) {
+          if (list.classList.contains('ds-meters__grid') && !kid.classList.contains('ds-level'))
+            add('meter-align', 'the meter list ' + name(list) + ' holds ' + name(kid) + ', which is not a level bar row');
+        }
+        const first = m[0];
+        if (!first) continue;
+        for (const r of m.slice(1)) {
+          if (first.lab && r.lab && !near(first.lab.left, r.lab.left)) add('meter-align', 'in the meter list ' + name(list) + ' the labels start at ' + Math.round(first.lab.left) + ' and ' + Math.round(r.lab.left) + ' px');
+          if (first.bar && r.bar && !near(first.bar.left, r.bar.left)) add('meter-align', 'in the meter list ' + name(list) + ' the bars start at ' + Math.round(first.bar.left) + ' and ' + Math.round(r.bar.left) + ' px');
+          if (first.bar && r.bar && !near(first.bar.width, r.bar.width)) add('meter-align', 'in the meter list ' + name(list) + ' the bars are ' + Math.round(first.bar.width) + ' and ' + Math.round(r.bar.width) + ' px wide');
+          if (first.val && r.val && !near(first.val.right, r.val.right)) add('meter-align', 'in the meter list ' + name(list) + ' the values end at ' + Math.round(first.val.right) + ' and ' + Math.round(r.val.right) + ' px');
+        }
+        // the "of" words of a split value start at one x, and the numbers end at one x
+        const used = Array.from(list.querySelectorAll('.ds-level__used')).filter(visible).map((e) => e.getBoundingClientRect().right);
+        const rest = Array.from(list.querySelectorAll('.ds-level__rest')).filter(visible).map((e) => e.getBoundingClientRect().left);
+        if (used.some((x) => !near(x, used[0]))) add('meter-align', 'in the meter list ' + name(list) + ' the numbers do not end at one x');
+        if (rest.some((x) => !near(x, rest[0]))) add('meter-align', 'in the meter list ' + name(list) + ' the "of" words do not start at one x');
+      }
+      for (const lvl of Array.from(document.querySelectorAll('.ds-level')).filter(visible)) {
+        if (lvl.closest('.ds-meters__grid')) continue;
+        add('meter-align', 'the level bar ' + name(lvl) + ' is not inside a MeterList');
+        break;
       }
     }
 

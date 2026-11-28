@@ -7,6 +7,7 @@ import {
   ExternalButton,
   LevelBar,
   Loading,
+  MeterList,
   Message,
   Page,
   PageHeader,
@@ -15,7 +16,7 @@ import {
   TextLink,
   formatPercent,
 } from '@crsp/ui';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLiveState, useLiveStore } from '../../live/LiveProvider';
 import { useLoad } from '../../api/hooks';
@@ -57,12 +58,19 @@ export function withLiveLoad(m: Machine, live: Schemas['Overview'] | undefined):
 }
 
 /** The memory, CPU and slot bars of a machine (shared by the Overview card and the Pool > Machines card). */
-export function MachineLoadBars({ m }: { m: Machine }) {
+export function MachineLoadBars({
+  m,
+  children,
+}: {
+  m: Machine;
+  /** More rows of the same list (UX-92), for example Swap. */
+  children?: ReactNode;
+}) {
   const mem = m.load?.memory_pct;
   const cpu = m.load?.cpu_pct;
   const budget = m.settings;
   return (
-    <>
+    <MeterList>
       <LevelBar
         label="Memory"
         value={mem ?? 0}
@@ -90,7 +98,8 @@ export function MachineLoadBars({ m }: { m: Machine }) {
         max={Math.max(1, budget.job_slots)}
         text={`${m.slots_used} of ${budget.job_slots}`}
       />
-    </>
+      {children}
+    </MeterList>
   );
 }
 

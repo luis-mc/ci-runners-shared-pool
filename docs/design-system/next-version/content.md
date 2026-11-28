@@ -447,6 +447,9 @@ The words of Settings, Appearance (UX-60).
 | Graphs label | Graphs |
 | Graphs help | How the Terminal themes draw charts; bars keep their blocks. The choice is saved at once. |
 | Graphs choices | Blocks, Dots |
+| Text size label | Text size |
+| Text size help | How big the text is, in percent of the standard size. The choice is saved at once. |
+| Text size choices | 80%, 90%, 100%, 110%, 120%, 130% |
 | Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
 | Mode label | Mode |
 | Mode help | System follows your device. The choice is saved at once. |

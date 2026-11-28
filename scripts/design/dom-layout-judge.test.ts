@@ -50,6 +50,19 @@ describe('dom layout judge', () => {
     ).toHaveLength(1);
     expect(domLayoutSource()).toContain("add('time-one-line'");
   });
+  it('judges the meter-align rule like every other rule (CRSP395, UX-92)', () => {
+    expect(
+      judgeLayout('overview', [{ width: 393, rule: 'meter-align', text: 'x' }], [])
+        .unknown,
+    ).toHaveLength(1);
+    const src = domLayoutSource();
+    expect(src).toContain("add('meter-align'");
+    // labels, bars (left and width) and values of a list are compared; split values by their numbers and "of" words
+    for (const part of ['the labels start', 'the bars start', 'wide', 'the values end'])
+      expect(src).toContain(part);
+    expect(src).toContain('not inside a MeterList');
+    expect(src).toContain('which is not a level bar row');
+  });
   it('builds a source that carries the options', () => {
     const src = domLayoutSource({ primary: '#go', spaceVar: '--s-' });
     expect(src).toContain('"#go"');
