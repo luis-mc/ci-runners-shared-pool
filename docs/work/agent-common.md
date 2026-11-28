@@ -12,3 +12,9 @@
 - PR: GraphQL is blocked; open a DRAFT PR to CRSP383-integration with `gh api repos/luis-mc/ci-runners-shared-pool/pulls -f title='<TASKS>: ...' -f head=<branch> -f base=CRSP383-integration -F draft=true -f body=@body.md` (no attribution). Never mark ready, never merge, never comment, never push main or CRSP383-integration.
 - Owner rule: the CRSP product does all the work itself; every setup and admin step is in the web console (and the CLI); never tell the user to edit files, run terminal steps or change GitHub settings by hand unless impossible.
 - Final message: READY or NOT READY, files changed, tests with results, PR number, head sha, open questions for the owner.
+
+## Added 28 Nov 06:20
+
+- CRSP383-integration now contains main (RELEASE-71 to RELEASE-74, merged at f7c78216). Branch from it fresh.
+- e2e specs: a cloud sandbox cannot pass the pre-push e2e gate (it wants the full Playwright suite on the exact head, ~3.5 h here, and its result publish is refused). So never put a new or changed spec under `e2e/` on your branch. Write it as `docs/work/e2e/<path-under-e2e>` (same content, e.g. `docs/work/e2e/tests/web-console/foo.spec.ts`), run it locally with Playwright from there if you can (copy it into e2e/ in your sandbox only, run, then remove it before committing), and say so in the PR body. Keep these files (do not `git rm` docs/work/e2e). The orchestrator moves them into `e2e/` at the join and runs the full gate on the joined head before the ready PR.
+- Never use pkill/kill by name; stop only the process ids you started.
