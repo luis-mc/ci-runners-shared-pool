@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "shard": "msi",
+  "key": "3fad0fa3ca5f16f3288a0f718949f39dc4c4c8e8ac2d2745dee528652cd71cb7",
+  "state": "success",
+  "sha": "f263c7ed52850616d93e052f5f7c52577bb42dd3",
+  "branch": "main",
+  "seconds": 0.0,
+  "at": "2026-11-28T15:21:01Z",
+  "copied_from": "CRSP383-integration"
+}
