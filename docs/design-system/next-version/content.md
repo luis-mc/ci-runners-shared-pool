@@ -1696,9 +1696,15 @@ The top menu, in this order: Overview, Setup, Pool, Doctor, Analytics, Settings,
 | A job at risk | Needs you (a word, a glyph and a colour, UX-58) |
 | Needs you, no runner has its labels | {job} will not start by itself. Add a runner with its labels, or change the labels of the job. |
 | Needs you, its machine does not take jobs | {job} waits on a machine that is not taking jobs. Let the machine take jobs again, or add a runner on another machine. |
-| Queue Analysis, filter | All {n}, Waiting for room, No runner fits |
+| Queue Analysis, filter | All {n}, Waiting for room {n}, Reserved {n}, No runner fits {n} (each count is real) |
 | Queue Analysis, panes | Queue, in start order; Where running jobs are going |
-| Queue Analysis, an entry | {place}. {job} {repository} #{run}; the wait words; Plan: {machine} · {runner}.; Label {labels}. |
+| Queue Analysis, table | One row per waiting job, columns Job ({place}. {job}), Repository (the name without its owner; the full name and the run are its hover text), Why it waits, Labels, Waiting. At phone width a row is two lines (job and status, then repository and waiting time) and Labels are left out. The row opens by click or Enter; there is no Details button |
+| Queue Analysis, why it waits | One word: Waiting for room (a runner that fits exists and is busy), Reserved, No runner fits, Machine not taking jobs |
+| Queue Analysis, same reason | Once above the table: {n} job asks for the label {labels}, which no runner has. Check the repository's runs-on variable. (more than one: {n} jobs ask for ...); link Open Setup > Pool setup |
+| Queue Analysis, Waiting | How long it has waited: 4 h 10 min, 4 d 2 h; not known |
+| Queue Analysis, opened row | The wait words, Starts about {time} or Start not known, Plan: {machine} · {runner}. or No machine yet., the labels, link Open {job} in Pool > Jobs, button Open on GitHub |
+| Wait words, no runner has its labels | No runner has the label {label}. Check the repository's runs-on variable. (labels: No runner has the labels {a}, {b}. ...) |
+| Pool > Overview, Routing labels in use | The labels and their jobs show at once; the last column says checking until the runner list is read, then the runners, or none yet; not read when the list failed |
 | Pool > Live, panes | Jobs over time (Each row is a slot of a machine. Scroll left for the past 24 hours, right for the forecast.), Machines |
 | Pool > Live, empty | No job runs or waits. Jobs show here as they come. |
 | Pool > Machines, note | This page shows what runs where. To change a machine, its pool size or its load budget, go to Setup > Machines. |

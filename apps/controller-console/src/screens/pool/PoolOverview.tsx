@@ -12,7 +12,6 @@ import {
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad } from '../../api/hooks';
 import { useNow } from '@crsp/ui';
-import { Load } from '../common';
 import { jobStatus, ranSeconds, type Job } from '../jobs/words';
 import { WithOverview } from './OverviewState';
 import { needsYou, placeWords, startsAbout, waitWords } from './poolWords';
@@ -139,33 +138,38 @@ interface LabelRow {
 
 function RoutingLabels({ jobs }: { jobs: readonly Job[] }) {
   const client = useClient();
+  // The labels and their jobs come from the overview and show at once; the runner list (the fast list of stored
+  // facts) fills the last column when it arrives, and its own failure never hides the labels (CRSP391).
   const runners = useLoad(() => unwrap(client.GET('/api/v1/runners')), [client]);
+  const items: readonly Runner[] | undefined =
+    runners.result.state === 'loading' ? undefined : runners.result.data?.items;
   const columns: Column<LabelRow>[] = [
     { id: 'label', header: 'Label', cell: (r) => r.label },
     { id: 'jobs', header: 'Jobs', cell: (r) => r.jobs.join(', ') || 'none' },
     {
       id: 'runners',
       header: 'Runner carrying it',
-      cell: (r) => r.runners.join(', ') || 'none yet',
+      cell: (r) =>
+        items === undefined
+          ? runners.result.state === 'failed'
+            ? 'not read'
+            : 'checking'
+          : r.runners.join(', ') || 'none yet',
     },
   ];
+  const rows = labelRows(jobs, items ?? []);
   return (
     <Section title="Routing labels in use">
-      <Load result={runners.result} what="the runners" reload={runners.reload}>
-        {(r) => {
-          const rows = labelRows(jobs, r.items);
-          return rows.length === 0 ? (
-            <Empty title="No job carries a routing label right now." />
-          ) : (
-            <Table
-              caption="Routing labels"
-              columns={columns}
-              rows={rows}
-              rowKey={(x) => x.label}
-            />
-          );
-        }}
-      </Load>
+      {rows.length === 0 ? (
+        <Empty title="No job carries a routing label right now." />
+      ) : (
+        <Table
+          caption="Routing labels"
+          columns={columns}
+          rows={rows}
+          rowKey={(x) => x.label}
+        />
+      )}
     </Section>
   );
 }

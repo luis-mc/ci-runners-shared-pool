@@ -972,9 +972,21 @@ def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
     return "affected", sorted(set(specs) | set(own))
 
 
+def smoke_changed_specs(ctx: Context) -> list[str]:
+    """The spec files a change touches, plus those an e2e_map entry claims for a changed file (CRSP401)."""
+    specs = set(changed_e2e_specs(ctx.files, ctx.cfg, ctx.root))
+    emap = ctx.cfg.get("e2e_map") or {}
+    for entry in emap.get("specs", []):
+        if any(widen_match(f, e) for f in ctx.files for e in entry["paths"]):
+            specs.add(entry["spec"])
+    return sorted(specs)
+
+
 def e2e_step(cfg: dict) -> dict | None:
-    """The gate step that runs the end-to-end specs: the first with scope ui-changed."""
-    return next((st for st in cfg["steps"] if st["scope"] == "ui-changed"), None)
+    """The gate step that runs the end-to-end specs: the step named e2e when it has scope ui-changed, else the
+    first with that scope. Another ui-changed step (lint-web) may come before it in gate.json (CRSP397)."""
+    steps = [st for st in cfg["steps"] if st["scope"] == "ui-changed"]
+    return next((st for st in steps if st["name"] == "e2e"), steps[0] if steps else None)
 
 
 def e2e_record(entries: list[dict], ctx: Context) -> dict:
@@ -1106,8 +1118,12 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             if selection == "affected":
                 cmd, why, e2e_specs = step["run"], "affected specs (dependency graph)", " ".join(specs)
         if not e2e_specs and smoke_gate(ctx):
-            # DS264, DL-12: no way to name the touched specs, so the local gate leaves the whole suite to CI
-            return False, None, "smoke gate: touched specs not derived, CI is the one full run"
+            # DS264, DL-12: the whole suite is CI's. The specs the change touches or that gate.json claims for the
+            # changed files still run here (CRSP401): the gate runs more, never less.
+            changed = smoke_changed_specs(ctx)
+            if not changed:
+                return False, None, "smoke gate: touched specs not derived, CI is the one full run"
+            cmd, why, e2e_specs = step["run"], "changed specs, full suite left to CI", " ".join(changed)
     mine = lambda dirs: step_dirs(step, ctx, dirs)  # noqa: E731
     cmd = (
         cmd.replace("{e2e_specs}", e2e_specs)

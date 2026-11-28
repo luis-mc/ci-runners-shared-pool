@@ -9,6 +9,7 @@ import {
   stoppedMachine,
 } from './web-console/fixtures';
 import { jobsAndDoctor } from './web-console/jobs-doctor-fixtures';
+import { busyQueue } from './web-console/queue-fixtures';
 
 // The DOM layout checker (design system, Enforcement kit) on the console's M1 screens, at 360, 393 and 1300 px.
 // It uses the DOM only. The known list (scripts/design/layout.known.json) is empty and only shrinks.
@@ -138,6 +139,15 @@ const SCREENS: {
   { name: 'pool overview', path: '/pool', ready: 'Pool' },
   { name: 'pool live', path: '/pool/live', ready: 'Pool' },
   { name: 'pool queue analysis', path: '/pool/queue', ready: 'Pool' },
+  // CRSP391: 16 queued jobs (7 ask for a label no runner has) and long running names: the panes take the full width,
+  // the table fits, no text is cut. The screen with no jobs never showed the running pane that overflowed.
+  {
+    name: 'pool queue analysis with 16 jobs and running jobs',
+    path: '/pool/queue',
+    ready: 'Pool',
+    tweak: (m: ReturnType<typeof signedIn>) =>
+      m.on('GET', '/api/v1/overview', busyQueue()),
+  },
   { name: 'pool jobs', path: '/pool/jobs', ready: 'Pool' },
   { name: 'pool machines', path: '/pool/machines', ready: 'Pool' },
   { name: 'analytics suggestions', path: '/analytics', ready: 'Analytics' },

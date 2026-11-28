@@ -18,8 +18,10 @@
   "ui_paths": ["apps/controller-console/", "packages/ui/"],
   "e2e_map": {
     "specs": [
-      {"spec": "e2e/tests/web-console/pool-jobs.spec.ts", "paths": ["apps/controller-console/src/screens/jobs/"]},
-      {"spec": "e2e/tests/web-console/ux-jobs-rows.spec.ts", "paths": ["apps/controller-console/src/screens/jobs/"]},
+      {"spec": "e2e/tests/web-console/pool-jobs.spec.ts", "paths": ["apps/controller-console/src/screens/jobs/", "apps/controller-console/src/screens/pool/"]},
+      {"spec": "e2e/tests/web-console/ux-jobs-rows.spec.ts", "paths": ["apps/controller-console/src/screens/jobs/", "apps/controller-console/src/screens/pool/"]},
+      {"spec": "e2e/tests/web-console/ux-queue-rows.spec.ts", "paths": ["apps/controller-console/src/screens/pool/"]},
+      {"spec": "e2e/tests/design-layout.spec.ts", "paths": ["apps/controller-console/src/screens/pool/"]},
       {"spec": "e2e/tests/web-console/pool-machines.spec.ts", "paths": ["apps/controller-console/src/screens/machines/"]},
       {"spec": "e2e/tests/web-console/machines-panes.spec.ts", "paths": ["apps/controller-console/src/screens/machines/"]},
       {"spec": "e2e/tests/web-console/registry.spec.ts", "paths": ["apps/controller-console/src/screens/registry/"]},

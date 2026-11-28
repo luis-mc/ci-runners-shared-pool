@@ -1,5 +1,5 @@
 // LOOK65: Pool > Queue Analysis has the Reserved chip: only the job its machine reserves room for.
-import { cleanup, fireEvent, screen } from '@testing-library/react';
+import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { overview, renderApp, signedIn } from '../../testing/mock';
 import { job } from '../../testing/jobsData';
@@ -28,34 +28,68 @@ const queued = [
     job_name: 'nofit',
     queue_position: 3,
     wait_reason: 'no_runner_with_labels',
+    wait_text: 'pool-main',
+    labels: ['self-hosted', 'linux', 'pool-main'],
   }),
 ];
 
-describe('Queue Analysis chips', () => {
-  it('offers All, Waiting for room, Reserved and No runner fits, and each chip keeps its own jobs', async () => {
-    renderApp(
-      signedIn().on('GET', '/api/v1/overview', overview({ queued, queued_count: 3 })),
-      '/pool/queue',
-    );
-    await screen.findByText(/1\. plain/);
-    for (const name of ['Waiting for room', 'Reserved', 'No runner fits']) {
-      expect(screen.getByRole('button', { name })).toBeTruthy();
-    }
-    fireEvent.click(screen.getByRole('button', { name: 'Reserved' }));
-    expect(screen.getByText(/2\. held/)).toBeTruthy();
-    expect(screen.queryByText(/1\. plain/)).toBeNull();
-    expect(screen.queryByText(/3\. nofit/)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Waiting for room' }));
-    expect(screen.getByText(/1\. plain/)).toBeTruthy();
-    expect(screen.queryByText(/2\. held/)).toBeNull();
+const ov = (q = queued) =>
+  signedIn().on(
+    'GET',
+    '/api/v1/overview',
+    overview({ queued: q, queued_count: q.length }),
+  );
+
+describe('Queue Analysis table', () => {
+  it('offers All, Waiting for room, Reserved and No runner fits with real counts, and each keeps its own jobs', async () => {
+    renderApp(ov(), '/pool/queue');
+    await screen.findByText('plain');
+    expect(screen.getByRole('button', { name: 'All 3' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Waiting for room 1' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Reserved 1' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'No runner fits 1' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Reserved 1' }));
+    const t = () => within(screen.getByRole('table', { name: 'Queue, in start order' }));
+    expect(t().getByText('held')).toBeTruthy();
+    expect(t().queryByText('plain')).toBeNull();
+    expect(t().queryByText('nofit')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Waiting for room 1' }));
+    expect(t().getByText('plain')).toBeTruthy();
+    expect(t().queryByText('held')).toBeNull();
   });
 
-  it('has no count tiles and no slot timeline, and shows the Reservation pane beside the running jobs (LOOK70)', async () => {
-    renderApp(
-      signedIn().on('GET', '/api/v1/overview', overview({ queued, queued_count: 3 })),
-      '/pool/queue',
-    );
-    await screen.findByText(/1\. plain/);
+  it('is one row per job with one status word, and says once why jobs have no runner', async () => {
+    renderApp(ov(), '/pool/queue');
+    await screen.findByText('plain');
+    expect(
+      within(screen.getByRole('table', { name: 'Queue, in start order' })).getAllByRole(
+        'row',
+      ).length,
+    ).toBe(1 + 3); // head and three jobs
+    expect(
+      screen.getByText(
+        /1 job asks for the label pool-main, which no runner has\. Check the repository's runs-on variable\./,
+      ),
+    ).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Open Setup > Pool setup' })).toBeTruthy();
+    expect(screen.queryByText('waits to be placed')).toBeNull();
+    expect(screen.queryByText('Does not start by itself')).toBeNull();
+  });
+
+  it('opens the details of a row: start estimate, machine and the whole reason', async () => {
+    renderApp(ov(), '/pool/queue');
+    await screen.findByText('nofit');
+    fireEvent.click(screen.getByText('nofit').closest('tr') as HTMLElement);
+    expect(
+      screen.getAllByText(/No runner has the label pool-main\./).length,
+    ).toBeGreaterThan(0);
+    const d = screen.getByRole('region', { name: 'Details: nofit' });
+    expect(d.textContent).toMatch(/Start not known|Starts about/);
+  });
+
+  it('has no count tiles and no slot timeline, and shows the Reservation pane and the running jobs, each in its own full pane (LOOK70)', async () => {
+    renderApp(ov(), '/pool/queue');
+    await screen.findByText('plain');
     expect(screen.queryByText('Starting')).toBeNull();
     expect(screen.queryByText('Where the queue lands on the slots')).toBeNull();
     expect(screen.queryByRole('region', { name: 'Jobs over time' })).toBeNull();
@@ -64,29 +98,13 @@ describe('Queue Analysis chips', () => {
     expect(
       screen.getByRole('region', { name: 'Where running jobs are going' }),
     ).toBeTruthy();
+    // CRSP391: the panes sit in a Stack, never in the form field grid that gave them a 280 px column.
+    expect(document.querySelector('.ds-field-grid')).toBeNull();
   });
 
   it('shows no Reservation pane when no job is reserved', async () => {
-    renderApp(
-      signedIn().on(
-        'GET',
-        '/api/v1/overview',
-        overview({ queued: [queued[0]!], queued_count: 1 }),
-      ),
-      '/pool/queue',
-    );
-    await screen.findByText(/1\. plain/);
+    renderApp(ov([queued[0]!]), '/pool/queue');
+    await screen.findByText('plain');
     expect(screen.queryByRole('region', { name: 'Reservation' })).toBeNull();
-  });
-
-  it('names the state of each card in one word and says when it starts', async () => {
-    renderApp(
-      signedIn().on('GET', '/api/v1/overview', overview({ queued, queued_count: 3 })),
-      '/pool/queue',
-    );
-    await screen.findByText(/1\. plain/);
-    expect(screen.getAllByText('Waiting for room').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Reserved').length).toBeGreaterThan(0);
-    expect(screen.getAllByText('Does not start by itself').length).toBeGreaterThan(0);
   });
 });
