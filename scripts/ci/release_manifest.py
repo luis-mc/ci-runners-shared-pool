@@ -9,6 +9,10 @@ final newline, so a signature over the file's bytes is a signature over the cano
 Keys: product, channel, version, required, expires_at, url, sha256 (the contract), and assets: one
 {url, sha256} per release package, keyed <os>-<arch> (win-x64, win-arm64, linux-x64, ...), so an updater on
 another target finds its own package. url and sha256 are the Windows x64 MSI, the contract's default package.
+notes (CRSP354) is the owner-facing note of the release, read from <notes-dir>/<version>.txt when that file exists
+(default packaging/release-notes). The manifest stays without the key when there is no note, so older updaters read
+it as before. The note is plain ASCII (the updater re-encodes the manifest to check the signature) and at most
+MAX_NOTES characters.
 """
 import argparse
 import hashlib
@@ -21,6 +25,23 @@ from pathlib import Path
 PRODUCT = "crsp"
 NAME = re.compile(r"^Crsp-(?P<version>.+)-(?P<os>win|linux|macos)-(?P<arch>x64|arm64)\.(?P<ext>msi|deb|rpm|pkg|tar\.gz|zip)$")
 DEFAULT = "win-x64"
+MAX_NOTES = 600  # the same limit as lifecycle.MaxNotes in the updater
+DEFAULT_NOTES_DIR = Path(__file__).resolve().parents[2] / "packaging" / "release-notes"
+
+
+def read_notes(notes_dir, version):
+    """The note of a version, or "" when it has none. A bad note fails the release: it would not verify."""
+    path = Path(notes_dir) / ("%s.txt" % version)
+    if not path.is_file():
+        return ""
+    text = chr(10).join(line.rstrip() for line in path.read_text(encoding="utf-8").strip().splitlines())
+    if not text:
+        return ""
+    if not text.isascii() or any(ord(c) < 32 and c != chr(10) for c in text):
+        raise SystemExit("%s must be plain ASCII text: the signed manifest is checked byte for byte" % path)
+    if len(text) > MAX_NOTES:
+        raise SystemExit("%s has %d characters; the note is at most %d" % (path, len(text), MAX_NOTES))
+    return text
 
 
 def sha256(path):
@@ -35,7 +56,7 @@ def canonical(manifest):
     return json.dumps(manifest, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
 
 
-def build(version, channel, dist, repo, tag, now, expires_days, required):
+def build(version, channel, dist, repo, tag, now, expires_days, required, notes=""):
     base = "https://github.com/%s/releases/download/%s/" % (repo, tag)
     assets = {}
     for p in sorted(Path(dist).iterdir()):
@@ -49,7 +70,7 @@ def build(version, channel, dist, repo, tag, now, expires_days, required):
         assets["%s-%s" % (m.group("os"), m.group("arch"))] = {"url": base + p.name, "sha256": sha256(p)}
     if DEFAULT not in assets:
         raise SystemExit("no Crsp-%s-win-x64.msi in %s" % (version, dist))
-    return {
+    m = {
         "product": PRODUCT,
         "channel": channel,
         "version": version,
@@ -59,6 +80,9 @@ def build(version, channel, dist, repo, tag, now, expires_days, required):
         "sha256": assets[DEFAULT]["sha256"],
         "assets": assets,
     }
+    if notes:
+        m["notes"] = notes
+    return m
 
 
 def main(argv=None):
@@ -71,12 +95,15 @@ def main(argv=None):
     ap.add_argument("--now", type=int, default=None)
     ap.add_argument("--expires-days", type=int, default=180)
     ap.add_argument("--required", action="store_true")
+    ap.add_argument("--notes-dir", default=str(DEFAULT_NOTES_DIR))
     ap.add_argument("--out", required=True)
     a = ap.parse_args(argv)
     m = build(a.version.lstrip("v"), a.channel, a.dist, a.repo, a.tag,
-              a.now if a.now is not None else time.time(), a.expires_days, a.required)
+              a.now if a.now is not None else time.time(), a.expires_days, a.required,
+              read_notes(a.notes_dir, a.version.lstrip("v")))
     Path(a.out).write_bytes(canonical(m))
-    print("manifest %s %s: %d package(s)" % (m["channel"], m["version"], len(m["assets"])))
+    print("manifest %s %s: %d package(s)%s" % (m["channel"], m["version"], len(m["assets"]),
+                                             ", with a release note" if m.get("notes") else ""))
     return 0
 
 

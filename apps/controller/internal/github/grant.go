@@ -92,6 +92,20 @@ func DiffGrant(need []string, asked, accepted map[string]string) Grant {
 	return g
 }
 
+// AppSettingsURL is the App's settings page on GitHub, where the owner of the
+// App turns on "Enable Device Flow" and changes its permissions. It is empty
+// when the App has no slug yet.
+func AppSettingsURL(webBase, appSlug, ownerType, ownerLogin string) string {
+	if appSlug == "" {
+		return ""
+	}
+	slug := url.PathEscape(appSlug)
+	if strings.EqualFold(ownerType, "Organization") && ownerLogin != "" {
+		return webBase + "/organizations/" + url.PathEscape(ownerLogin) + "/settings/apps/" + slug
+	}
+	return webBase + "/settings/apps/" + slug
+}
+
 // GrantPages names the two GitHub pages that grant an App permission: the
 // App's permissions page (the App's owner changes the request), then the
 // installation page (the installation's owner accepts it).

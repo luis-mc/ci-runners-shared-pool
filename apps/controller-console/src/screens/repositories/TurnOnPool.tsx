@@ -40,6 +40,7 @@ import {
   type Plan,
   type Repository,
 } from './plans';
+import { planNotes, planPhases, useLiveLog } from '../liveLog';
 
 const STEPS = ['Repositories', 'Review', 'Turning on', 'Done'] as const;
 
@@ -59,9 +60,16 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
   const [stopping, setStopping] = useState(false);
   const [stopError, setStopError] = useState<string | undefined>(undefined);
   const running = useRef(false);
+  // The live run (UX-88): the terminal shows each plan step as a command and its result.
+  const seenSteps = useRef(new Map<string, string>());
+  const log = useLiveLog(planPhases(plan));
+  const record = (p: Plan) => {
+    for (const n of planNotes(p, seenSteps.current)) log.say(n, planPhases(p));
+  };
 
   const settle = useCallback((p: Plan, afterReload: boolean) => {
     setPlan(p);
+    record(p);
     setStopping(false);
     setStep(4);
     if (p.state === 'done') setPhase(afterReload ? 'done-after-reload' : 'done');
@@ -172,6 +180,7 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
       next.set('plan', p.id);
       setParams(next, { replace: true });
       setPlan(p);
+      record(p);
       while (p.state === 'applying' || p.state === 'planned') {
         if (!(await sleep(TIMING.planPollMs))) {
           running.current = false;
@@ -187,6 +196,7 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
           return;
         }
         setPlan(p);
+        record(p);
       }
       running.current = false;
       settle(p, false);
@@ -221,6 +231,8 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
   };
 
   const startAgain = () => {
+    seenSteps.current.clear();
+    log.clear();
     const next = new URLSearchParams();
     setParams(next, { replace: true });
     setPicked(new Set());
@@ -424,6 +436,7 @@ export function TurnOnPoolWizard({ onDone }: { onDone?: () => void }) {
       firstStep={0}
       phase={phase}
       reading="Reading repositories"
+      live={log.events}
       progress={
         phase === 'running'
           ? {

@@ -49,6 +49,9 @@ type Routing struct {
 	OSes []string
 	// UsedMinutes are the fallback minutes counted this month.
 	UsedMinutes int
+	// Target is the overflow target in use now ("github_hosted", "aws_ec2"), empty
+	// when the jobs are not on a listed target (R5.115).
+	Target string
 }
 
 type fallbackState struct {
@@ -57,12 +60,13 @@ type fallbackState struct {
 	up        map[string]bool           // os -> up at the last evaluation; absent = no machine
 	on        map[int64]map[string]bool // repository -> os -> on hosted
 	seen      map[int64]map[int64]time.Time
+	label     map[int64]map[string]string // repository -> os -> label chosen when it fell back (CRSP281)
 	evaluated bool
 }
 
 func newFallbackState() fallbackState {
 	return fallbackState{downSince: map[string]time.Time{}, up: map[string]bool{}, on: map[int64]map[string]bool{},
-		seen: map[int64]map[int64]time.Time{}}
+		seen: map[int64]map[int64]time.Time{}, label: map[int64]map[string]string{}}
 }
 
 func (s *Service) grace() time.Duration {
@@ -117,6 +121,9 @@ func (s *Service) hostedNow(r Repository, pol Policy) map[string]string {
 			out = map[string]string{}
 		}
 		out[os] = s.hostedLabelFor(pol, os)
+		if l := s.fb.label[r.ID][os]; l != "" {
+			out[os] = l
+		}
 	}
 	return out
 }
@@ -259,6 +266,7 @@ func (s *Service) dropFallback(id int64) bool {
 	defer s.fb.mu.Unlock()
 	was := len(s.fb.on[id]) > 0
 	delete(s.fb.on, id)
+	delete(s.fb.label, id)
 	return was
 }
 
@@ -288,15 +296,37 @@ func (s *Service) evaluateRepo(ctx context.Context, r Repository, pol Policy) er
 		on := s.fb.on[r.ID][os]
 		s.fb.mu.Unlock()
 		var want bool
-		var reason string
+		var reason, chosen string
 		switch {
 		case !down:
 			reason = "a crsp machine for " + os + " is up again"
 		case capped:
 			reason = "the monthly cap of " + fmt.Sprint(pol.FallbackCapMinutes) + " minutes is reached"
 		case long >= grace:
+			label, _, ok, perr := s.pickTarget(ctx, r, pol, os)
+			if perr != nil {
+				return perr
+			}
+			if !ok {
+				reason = "every overflow target is used up or does not serve " + os
+				break
+			}
 			want = true
+			chosen = label
 			reason = "no crsp machine for " + os + " has been up for " + long.Round(time.Second).String() + " (offline, asleep or paused)"
+		}
+		if want && on {
+			s.fb.mu.Lock()
+			prev := s.fb.label[r.ID][os]
+			s.fb.mu.Unlock()
+			if prev != "" && prev != chosen {
+				s.fb.mu.Lock()
+				s.fb.label[r.ID][os] = chosen
+				s.fb.mu.Unlock()
+				s.cfg.Audit.Audit(ctx, System, "fallback.retargeted", "repository", r.FullName, os+": switched from "+prev+" to "+chosen+": the first overflow target is used up or off")
+				changed = true
+				continue
+			}
 		}
 		if want == on {
 			continue
@@ -307,8 +337,15 @@ func (s *Service) evaluateRepo(ctx context.Context, r Repository, pol Policy) er
 				s.fb.on[r.ID] = map[string]bool{}
 			}
 			s.fb.on[r.ID][os] = true
+			if chosen != "" {
+				if s.fb.label[r.ID] == nil {
+					s.fb.label[r.ID] = map[string]string{}
+				}
+				s.fb.label[r.ID][os] = chosen
+			}
 		} else {
 			delete(s.fb.on[r.ID], os)
+			delete(s.fb.label[r.ID], os)
 			if len(s.fb.on[r.ID]) == 0 {
 				delete(s.fb.on, r.ID)
 			}
@@ -316,7 +353,7 @@ func (s *Service) evaluateRepo(ctx context.Context, r Repository, pol Policy) er
 		s.fb.mu.Unlock()
 		verb, action := "switched back to crsp machines", "fallback.ended"
 		if want {
-			verb, action = "switched to "+s.hostedLabelFor(pol, os), "fallback.started"
+			verb, action = "switched to "+firstNonEmpty(chosen, s.hostedLabelFor(pol, os)), "fallback.started"
 		}
 		s.cfg.Audit.Audit(ctx, System, action, "repository", r.FullName, os+": "+verb+": "+reason)
 		changed = true
@@ -343,17 +380,18 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 	if err != nil {
 		return err
 	}
-	hosted := map[string]bool{}
-	for _, os := range []string{"linux", "windows", "macos"} {
-		hosted[strings.ToLower(s.hostedLabelFor(pol, os))] = true
-	}
+	hosted := s.labelKinds(pol)
 	now := s.cfg.Now()
+	var runnerOS runnerOSLookup
 	var add int64
+	perKind := map[string]int64{}
+	micro := map[string]int64{}
 	s.fb.mu.Lock()
 	prev := s.fb.seen[r.ID]
 	next := map[int64]time.Time{}
 	for _, j := range jobs {
-		if j.Status != "in_progress" || !hasHostedLabel(j.Labels, hosted) {
+		kind := hostedKind(j.Labels, hosted)
+		if j.Status != "in_progress" || kind == "" {
 			continue
 		}
 		last, known := prev[j.ID]
@@ -365,6 +403,10 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 		}
 		if d := now.Sub(last); d > 0 {
 			add += int64(d.Seconds())
+			perKind[kind] += int64(d.Seconds())
+			if rate, ok := s.rate(ctx, kind, s.jobOS(ctx, r, j, &runnerOS)); ok {
+				micro[kind] += int64(d.Seconds() * rate / 60 * 1e6)
+			}
 		}
 		next[j.ID] = now
 	}
@@ -377,16 +419,268 @@ func (s *Service) countMinutes(ctx context.Context, r Repository, pol Policy) er
 	if add == 0 {
 		return nil
 	}
+	for kind, sec := range perKind {
+		if kind == kindOther {
+			continue
+		}
+		if err := s.cfg.Store.AddFallbackSeconds(ctx, r.ID, monthKey(now)+"#"+kind, sec); err != nil {
+			return err
+		}
+		if err := s.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, totalKey(now, kind), sec); err != nil {
+			return err
+		}
+		if m := micro[kind]; m > 0 {
+			if err := s.cfg.Store.AddFallbackSeconds(ctx, totalRepoID, usdKey(now, kind), m); err != nil {
+				return err
+			}
+		}
+	}
 	return s.cfg.Store.AddFallbackSeconds(ctx, r.ID, monthKey(now), add)
 }
 
-func hasHostedLabel(labels []string, hosted map[string]bool) bool {
-	for _, l := range labels {
-		if hosted[strings.ToLower(l)] {
-			return true
+// totalRepoID holds the minutes of a target across all repositories: the same
+// fallback-seconds table, under repository 0 and the key "2026-11#github_hosted#total"
+// (R5.115). No repository has id 0.
+const totalRepoID int64 = 0
+
+func totalKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind + "#total" }
+
+// usdKey is the money a target cost this month, in millionths of a dollar, in
+// the same table under repository 0 (R5.115, CRSP367). The table stores
+// integers, so the money is counted in whole millionths.
+func usdKey(t time.Time, kind string) string { return monthKey(t) + "#" + kind + "#usd" }
+
+// rate is the price of a minute of a target's kind on an OS: the target's own
+// price per minute when the owner set one (R5.115, CRSP372), else the savings
+// rate table. false means no price, so the target's budget is not enforced.
+func (s *Service) rate(ctx context.Context, kind, os string) (float64, bool) {
+	for _, t := range s.targets() {
+		if t.Kind == kind && t.PriceUSDPerMinute > 0 {
+			return t.PriceUSDPerMinute, true
 		}
 	}
-	return false
+	if s.cfg.Rate == nil {
+		return 0, false
+	}
+	return s.cfg.Rate(ctx, kind, os)
+}
+
+// runnerLister is the part of the GitHub client that lists the runners GitHub
+// knows of a repository, with the OS each one reports.
+type runnerLister interface {
+	ListRunners(ctx context.Context, installationID int64, scope github.RunnerScope) ([]github.Runner, error)
+}
+
+// runnerOSLookup reads a repository's runner list at most once per pass.
+type runnerOSLookup struct {
+	done bool
+	byID map[string]string
+}
+
+// jobOS is the OS a counted job ran on, for pricing (CRSP372). The OS GitHub
+// reports for the job's runner comes first: the runner list of the repository
+// names the OS of each runner (self-hosted, such as AWS EC2 runners), matched by
+// the runner name on the job. GitHub's job object carries no OS of its own, and
+// a standard GitHub-hosted runner is not in that list, so when GitHub reports
+// none the OS is guessed from the job's labels (osOfLabels). That guess is the
+// fallback only.
+func (s *Service) jobOS(ctx context.Context, r Repository, j github.Job, lk *runnerOSLookup) string {
+	if name := strings.ToLower(strings.TrimSpace(j.RunnerName)); name != "" {
+		if !lk.done {
+			lk.done = true
+			if rl, ok := s.cfg.GitHub.(runnerLister); ok {
+				if runners, err := rl.ListRunners(github.Background(ctx), r.InstallationID, github.RunnerScope{Owner: r.Owner, Repo: r.Name}); err == nil {
+					lk.byID = map[string]string{}
+					for _, rn := range runners {
+						if os := normalizeOS(rn.OS); os != "" {
+							lk.byID[strings.ToLower(rn.Name)] = os
+						}
+					}
+				}
+			}
+		}
+		if os := lk.byID[name]; os != "" {
+			return os
+		}
+	}
+	return osOfLabels(j.Labels)
+}
+
+// normalizeOS maps the OS GitHub reports ("Linux", "Windows", "macOS") to the
+// names used here; empty for one it does not know.
+func normalizeOS(v string) string {
+	switch strings.ToLower(strings.TrimSpace(v)) {
+	case "linux":
+		return "linux"
+	case "windows":
+		return "windows"
+	case "macos", "darwin":
+		return "macos"
+	}
+	return ""
+}
+
+// osOfLabels is the fallback guess of the OS a hosted job runs on, from its labels: windows and macos by name, else linux.
+func osOfLabels(labels []string) string {
+	for _, l := range labels {
+		l = strings.ToLower(l)
+		switch {
+		case strings.Contains(l, "windows"):
+			return "windows"
+		case strings.Contains(l, "macos"), strings.HasPrefix(l, "mac"):
+			return "macos"
+		}
+	}
+	return "linux"
+}
+
+// TargetUsage is the minutes and the money a target took this month, all repositories together.
+type TargetUsage struct {
+	Kind        string
+	UsedMinutes int
+	// UsedUSD is the money used: minutes times the savings rate of the OS.
+	UsedUSD float64
+	// Priced is false when the target has no rate, so its budget is not enforced.
+	Priced bool
+}
+
+// OverflowUsage is the minutes each enabled overflow target took in the month of at.
+func (s *Service) OverflowUsage(ctx context.Context, at time.Time) ([]TargetUsage, error) {
+	var out []TargetUsage
+	for _, t := range s.targets() {
+		sec, err := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, totalKey(at, t.Kind))
+		if err != nil {
+			return nil, err
+		}
+		micro, err := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, usdKey(at, t.Kind))
+		if err != nil {
+			return nil, err
+		}
+		_, priced := s.rate(ctx, t.Kind, "linux")
+		out = append(out, TargetUsage{Kind: t.Kind, UsedMinutes: int((sec + 59) / 60), UsedUSD: float64(micro) / 1e6, Priced: priced})
+	}
+	return out, nil
+}
+
+// kindOther marks minutes on a label that belongs to no overflow target (a
+// repository's own label, or the single overflow label): they count in the
+// month total and the repository cap only.
+const kindOther = "other"
+
+// labelKinds maps each lower-case overflow label to the target kind it
+// belongs to, for counting minutes per target (R5.114).
+func (s *Service) labelKinds(pol Policy) map[string]string {
+	out := map[string]string{}
+	for _, os := range []string{"linux", "windows", "macos"} {
+		out[strings.ToLower(s.hostedLabelFor(pol, os))] = kindOther
+	}
+	for _, t := range s.targets() {
+		if t.Label != "" {
+			out[strings.ToLower(t.Label)] = t.Kind
+		} else if t.Kind == "github_hosted" {
+			for _, l := range DefaultHostedLabels {
+				out[strings.ToLower(l)] = t.Kind
+			}
+		}
+	}
+	return out
+}
+
+func hostedKind(labels []string, kinds map[string]string) string {
+	for _, l := range labels {
+		if k, ok := kinds[strings.ToLower(l)]; ok {
+			return k
+		}
+	}
+	return ""
+}
+
+func firstNonEmpty(a, b string) string {
+	if a != "" {
+		return a
+	}
+	return b
+}
+
+// OverflowTarget is one enabled rule of the owner's priority list (R5.114).
+type OverflowTarget struct {
+	Kind       string
+	Label      string
+	CapMinutes int
+	// TotalCapMinutes is the monthly minutes across all repositories; 0 is no cap.
+	TotalCapMinutes int
+	// BudgetUSD is the monthly money across all repositories; 0 is no budget.
+	BudgetUSD float64
+	// PriceUSDPerMinute is the owner's price of a minute at this target; 0 means
+	// none: GitHub-hosted then uses the rate table, AWS EC2 has no rate.
+	PriceUSDPerMinute float64
+	Systems           []string
+}
+
+func (s *Service) targets() []OverflowTarget {
+	if s.cfg.OverflowTargets == nil {
+		return nil
+	}
+	return s.cfg.OverflowTargets()
+}
+
+// pickTarget chooses the label a repository's jobs for an OS go to while no
+// crsp machine is up (R5.114): the repository's own label first, then the
+// first enabled target in the owner's order that serves the OS and has not
+// used its monthly minutes for this repository. With no targets set it keeps
+// the single overflow label rule (R5.42). ok is false when no target can take
+// the jobs, so they wait.
+func (s *Service) pickTarget(ctx context.Context, r Repository, pol Policy, os string) (label, kind string, ok bool, err error) {
+	if l := strings.TrimSpace(pol.HostedLabels[os]); l != "" {
+		return l, kindOther, true, nil
+	}
+	ts := s.targets()
+	if len(ts) == 0 {
+		return s.hostedLabelFor(pol, os), kindOther, true, nil
+	}
+	for _, t := range ts {
+		if len(t.Systems) > 0 && !inList(t.Systems, os) {
+			continue
+		}
+		l := strings.TrimSpace(t.Label)
+		if l == "" && t.Kind == "github_hosted" {
+			l = DefaultHostedLabels[os]
+		}
+		if l == "" {
+			continue
+		}
+		if t.CapMinutes > 0 {
+			sec, e := s.cfg.Store.FallbackSeconds(ctx, r.ID, monthKey(s.cfg.Now())+"#"+t.Kind)
+			if e != nil {
+				return "", "", false, e
+			}
+			if sec >= int64(t.CapMinutes)*60 {
+				continue
+			}
+		}
+		if t.TotalCapMinutes > 0 {
+			sec, e := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, totalKey(s.cfg.Now(), t.Kind))
+			if e != nil {
+				return "", "", false, e
+			}
+			if sec >= int64(t.TotalCapMinutes)*60 {
+				continue
+			}
+		}
+		if t.BudgetUSD > 0 {
+			if _, priced := s.rate(ctx, t.Kind, os); priced {
+				micro, e := s.cfg.Store.FallbackSeconds(ctx, totalRepoID, usdKey(s.cfg.Now(), t.Kind))
+				if e != nil {
+					return "", "", false, e
+				}
+				if float64(micro) >= t.BudgetUSD*1e6 {
+					continue
+				}
+			}
+		}
+		return l, t.Kind, true, nil
+	}
+	return "", "", false, nil
 }
 
 // routing says where the jobs of a repository go now and why (R5.44). The pool
@@ -431,6 +725,7 @@ func (s *Service) routing(ctx context.Context, r Repository, pol Policy) (Routin
 	sort.Strings(hostedOS)
 	if len(hostedOS) > 0 {
 		out.Where, out.Why, out.OSes = WhereHosted, WhyFallbackOn, hostedOS
+		out.Target = s.targetInUse(r, pol, hostedOS)
 		return out, nil
 	}
 	if len(waitOS) == 0 {
@@ -444,10 +739,46 @@ func (s *Service) routing(ctx context.Context, r Repository, pol Policy) (Routin
 		out.Why = WhyFallbackOff
 	case capped:
 		out.Why = WhyCap
+	case s.targetsUsedUp(ctx, r, pol, waitOS, now):
+		out.Why = WhyCap
 	default:
 		out.Why = WhyGrace
 	}
 	return out, nil
+}
+
+// targetInUse is the kind of the target the first OS on fallback runs on.
+func (s *Service) targetInUse(r Repository, pol Policy, oses []string) string {
+	kinds := s.labelKinds(pol)
+	for _, os := range oses {
+		s.fb.mu.Lock()
+		l := s.fb.label[r.ID][os]
+		s.fb.mu.Unlock()
+		if l == "" {
+			l = s.hostedLabelFor(pol, os)
+		}
+		if k := kinds[strings.ToLower(l)]; k != "" && k != kindOther {
+			return k
+		}
+	}
+	return ""
+}
+
+// targetsUsedUp says whether a repository waits because past the grace time no
+// overflow target can take the jobs of some OS (R5.114).
+func (s *Service) targetsUsedUp(ctx context.Context, r Repository, pol Policy, oses []string, now time.Time) bool {
+	if len(s.targets()) == 0 {
+		return false
+	}
+	for _, os := range oses {
+		if _, long := s.osDown(os, now); long < s.grace() {
+			continue
+		}
+		if _, _, ok, err := s.pickTarget(ctx, r, pol, os); err == nil && !ok {
+			return true
+		}
+	}
+	return false
 }
 
 func inList(s []string, v string) bool {

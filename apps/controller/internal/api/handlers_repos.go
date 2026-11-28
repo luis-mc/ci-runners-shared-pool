@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/addresses"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/auth"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
@@ -150,6 +151,10 @@ func toRepository(v repos.RepositoryView) gen.Repository {
 			}
 			rt.Oses = &oses
 		}
+		if v.Routing.Target != "" {
+			t := gen.RepositoryRoutingTarget(v.Routing.Target)
+			rt.Target = &t
+		}
 		out.Routing = &rt
 	}
 	if v.Problem != nil {
@@ -200,7 +205,7 @@ func (s *server) ListInstallations(ctx context.Context, _ gen.ListInstallationsR
 }
 
 // GetAppHealth implements GET /api/v1/github/app-health (R5.6).
-func (s *server) GetAppHealth(_ context.Context, _ gen.GetAppHealthRequestObject) (gen.GetAppHealthResponseObject, error) {
+func (s *server) GetAppHealth(ctx context.Context, _ gen.GetAppHealthRequestObject) (gen.GetAppHealthResponseObject, error) {
 	var st github.AppState
 	if src := s.ghArea().AppHealth; src != nil {
 		st = src.State()
@@ -213,6 +218,21 @@ func (s *server) GetAppHealth(_ context.Context, _ gen.GetAppHealthRequestObject
 	if !st.CheckedAt.IsZero() {
 		at := st.CheckedAt
 		out.CheckedAt = &at
+	}
+	if st.DeviceFlowOff {
+		// R5.14: the one setting, with the page where it is turned on.
+		off := true
+		out.DeviceFlowOff = &off
+		a := s.ghArea()
+		if as, err := a.Auth.State(ctx); err == nil && as.HasApp {
+			base := a.WebBase
+			if base == "" {
+				base = addresses.DefaultGitHubURL
+			}
+			if u := github.AppSettingsURL(base, as.App.Slug, as.App.OwnerType, as.App.OwnerLogin); u != "" {
+				out.SettingsUrl = &u
+			}
+		}
 	}
 	return gen.GetAppHealth200JSONResponse(out), nil
 }

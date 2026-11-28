@@ -192,6 +192,8 @@ func (b *Backend) want(r backend.RunnerSpec, user string) (persistent.Meta, stri
 	if m := b.d.Addresses.VMImageMirror; m != "" {
 		kv[addresses.EnvVMImageMirror] = m // `crsp vm` downloads from the mirror (operations R5.96)
 	}
+	// The package proxy of the runner's repository, when the hub answered at start (caches R5.76).
+	maps.Copy(kv, r.PackageEnv)
 	kv["ACTIONS_RUNNER_HOOK_JOB_STARTED"] = folder + "/hooks/job-started.sh"
 	kv["ACTIONS_RUNNER_HOOK_JOB_COMPLETED"] = folder + "/hooks/job-completed.sh"
 	env := persistent.Env(kv)
@@ -232,7 +234,7 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	if e, err := b.d.FS.ReadFile(folder + "/.env"); err == nil {
 		haveEnv = string(e)
 	}
-	action := persistent.Decide(have, haveEnv, wantMeta, wantEnv)
+	action := persistent.WithLost(persistent.Decide(have, haveEnv, wantMeta, wantEnv), have != nil && persistent.RegistrationLost(folder))
 	b.log("register", fmt.Sprintf("runner %s: %s", r.Name, action))
 
 	switch action {
@@ -246,6 +248,26 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 			return h, err
 		}
 		return h, b.restart(ctx, label, folder)
+	case persistent.RegisterLost:
+		// GitHub deleted the registration: nothing is left to remove (R5.152).
+		if err := b.stopDaemon(ctx, label, folder); err != nil {
+			return h, err
+		}
+		if err := persistent.CleanStale(b.d.FS, folder, path.Join); err != nil {
+			return h, err
+		}
+		if err := b.configure(ctx, "register again", folder, user,
+			persistent.ConfigArgs(r.GitHubURL, r.Name, r.Group, r.Labels), cfg.Registration); err != nil {
+			return h, err
+		}
+		if err := b.writeFiles(ctx, folder, user, wantEnv, r.KeepDependencies); err != nil {
+			return h, err
+		}
+		if err := persistent.WriteMeta(b.d.FS, folder+"/"+persistent.MetaFile, wantMeta); err != nil {
+			return h, err
+		}
+		_, err := b.run(ctx, "bootstrap", sys.Command{Name: "launchctl", Args: []string{"bootstrap", "system", b.plistPath(label)}})
+		return h, err
 	case persistent.Reregister:
 		if cfg.Removal == "" {
 			return h, errors.New("registering again in place needs a remove token for the old runner")

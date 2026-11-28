@@ -103,6 +103,8 @@ export function statusFromWire(w: WireStatus): UpdateStatusV2 {
     next_check_at: w.next_check_at,
     failures: w.failures,
     waiting_for_jobs: w.waiting_for_jobs,
+    notes: w.notes ?? null,
+    updated: w.updated ?? null,
   };
 }
 
@@ -131,6 +133,12 @@ export interface UpdateStatusV2 {
   next_check_at: string | null;
   failures: { version: string; count: number; retry_at: string | null } | null;
   waiting_for_jobs: boolean;
+  /** The note of the offered version (signed in the manifest), or null when the release has none. */
+  notes: string | null;
+  /** The note of the version that runs now, or null when that release had none. */
+  updated: { version: string; notes: string } | null;
+  /** The last time crsp looked for an update, when the controller says (CRSP368). */
+  last_check?: { at: string; by: string; kind: 'manual' | 'automatic' } | undefined;
   /** 0 to 100 while a step runs. */
   percent?: number | undefined;
   /** Where crsp keeps its data and how big it is, when the controller says (for the Remove question). */
@@ -184,6 +192,7 @@ export function makeLifecycleApi(raw: Raw): LifecycleApi {
       >('/api/v1/update/status');
       return {
         ...statusFromWire(w),
+        ...(w.last_check ? { last_check: w.last_check } : {}),
         ...(w.percent === undefined ? {} : { percent: w.percent }),
         ...(w.data_path === undefined ? {} : { data_path: w.data_path }),
         ...(w.data_size_bytes === undefined

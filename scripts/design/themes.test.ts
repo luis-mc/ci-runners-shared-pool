@@ -7,7 +7,13 @@
  */
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { THEME_DATA, DEFAULT_THEME, TERMINAL, type ThemeData } from './themes.data.ts';
+import {
+  THEME_DATA,
+  DEFAULT_THEME,
+  TERMINAL,
+  TERMINAL_LIGHT,
+  type ThemeData,
+} from './themes.data.ts';
 import { colourTokens, effectTokens, ratio } from './themes.ts';
 
 const css = readFileSync(
@@ -215,23 +221,43 @@ describe('contrast in every theme (UX-17)', () => {
 
 describe('terminal palettes (data-pal)', () => {
   for (const pal of ['amber', 'ice'] as const)
-    it(`${pal}: written after the mode rules, tokens only, contrast holds`, () => {
-      const rule = rules.find((r) =>
-        r.selectors.map(ds).includes(`:root[data-theme-name=terminal][data-pal=${pal}]`),
-      );
-      expect(rule, `${pal} rule`).toBeTruthy();
-      const want = colourTokens(TERMINAL[pal], 'dark');
-      for (const [k, v] of Object.entries(want))
-        expect(rule?.decls.get(`--ds-color-${k}`), k).toBe(norm(v));
-      for (const k of rule?.decls.keys() ?? []) expect(k).toMatch(ALLOWED);
-      for (const bg of ['page', 'surface', 'selection'])
-        for (const fg of ['text', 'text-muted'])
-          expect(ratio(want[fg] as string, want[bg] as string)).toBeGreaterThanOrEqual(
-            4.5,
+    for (const mode of MODES)
+      it(`${pal} ${mode}: written after the mode rules, tokens only, contrast holds`, () => {
+        const palette = mode === 'dark' ? TERMINAL[pal] : TERMINAL_LIGHT[pal];
+        const base = `[data-theme-name=terminal][data-pal=${pal}]`;
+        const sels =
+          mode === 'dark'
+            ? [`:root${base}`, `:root${base}[data-theme=dark]`]
+            : [`:root${base}[data-theme=light]`];
+        const rule = (sel: string, media: string): Rule | undefined =>
+          rules.find((r) => r.media === media && r.selectors.map(ds).includes(sel));
+        const found = sels.map((s) => rule(s, ''));
+        if (mode === 'light')
+          found.push(rule(`:root${base}:not([data-theme=dark])`, LIGHT_MEDIA));
+        const want = colourTokens(palette, mode);
+        for (const r of found) {
+          expect(r, `${pal} ${mode} rule`).toBeTruthy();
+          for (const [k, v] of Object.entries(want))
+            expect(r?.decls.get(`--ds-color-${k}`), k).toBe(norm(v));
+          for (const k of r?.decls.keys() ?? []) expect(k).toMatch(ALLOWED);
+        }
+        for (const bg of ['page', 'surface', 'selection'])
+          for (const fg of ['text', 'text-muted'])
+            expect(ratio(want[fg] as string, want[bg] as string)).toBeGreaterThanOrEqual(
+              4.5,
+            );
+        for (const bg of ['page', 'surface'])
+          expect(ratio(want.border as string, want[bg] as string)).toBeGreaterThanOrEqual(
+            3,
           );
-      for (const bg of ['page', 'surface'])
-        expect(ratio(want.border as string, want[bg] as string)).toBeGreaterThanOrEqual(
-          3,
-        );
-    });
+      });
+
+  it('green has its own light form, and a Terminal light page is light', () => {
+    const t = THEME_DATA.find((x) => x.id === 'terminal') as ThemeData;
+    expect(t.light).toBe(TERMINAL_LIGHT.green);
+    for (const pal of ['green', 'amber', 'ice'] as const) {
+      const c = colourTokens(TERMINAL_LIGHT[pal], 'light');
+      expect(ratio(c.page as string, '#000000')).toBeGreaterThan(15);
+    }
+  });
 });

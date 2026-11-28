@@ -1,4 +1,4 @@
-// LOOK5 (LOOK D15, D16): the list is grouped by owner and lists only repositories of an active type.
+// LOOK5 (LOOK D15, D16), CRSP340: the cards sit in three groups and only repositories of an active type are listed.
 import { cleanup, fireEvent, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import { renderApp, repository, signedIn, type MockApi } from '../../testing/mock';
@@ -31,88 +31,60 @@ function app(enabled = false): MockApi {
     .on('GET', '/api/v1/github/repositories', { items, stale: { stale: false } });
 }
 
-describe('Repositories grouped by owner', () => {
-  it('has no Owner column; each owner is a heading with its counts and one table', async () => {
+describe('Repositories in three groups (CRSP359)', () => {
+  it('puts each repository in its group with one tick row each and the count in the title', async () => {
     renderApp(app(), '/setup/pool');
-    const acme = await screen.findByRole('table', { name: 'acme repositories' });
-    expect(screen.getByRole('table', { name: 'octo repositories' })).toBeTruthy();
-    expect(within(acme).queryByRole('columnheader', { name: 'Owner' })).toBeNull();
-    expect(screen.getByText('2 repositories · 1 use the pool')).toBeTruthy();
-    expect(screen.getByText('1 repository · 0 use the pool')).toBeTruthy();
+    const using = await screen.findByRole('region', { name: /^Using the pool/ });
+    expect(within(using).getByRole('checkbox', { name: 'acme/api' })).toBeTruthy();
+    const not = screen.getByRole('region', { name: /^Not using the pool/ });
+    expect(within(not).getByRole('checkbox', { name: 'acme/web' })).toBeTruthy();
+    expect(within(not).getByRole('checkbox', { name: 'octo/app' })).toBeTruthy();
+    expect(screen.queryByRole('region', { name: /^Needs you/ })).toBeNull();
   });
 
-  it('selects the whole group with its tick box', async () => {
+  it('ticks rows of one group and turns the bar action into a count', async () => {
     renderApp(app(), '/setup/pool');
-    await screen.findByRole('table', { name: 'acme repositories' });
-    fireEvent.click(screen.getByRole('checkbox', { name: /^acme/ }));
-    expect(screen.getByText('2 selected')).toBeTruthy();
-    expect(screen.getByRole('checkbox', { name: 'Select acme/api' })).toHaveProperty(
-      'checked',
-      true,
-    );
-    expect(screen.getByRole('checkbox', { name: 'Select octo/app' })).toHaveProperty(
-      'checked',
-      false,
-    );
+    const not = await screen.findByRole('region', { name: /^Not using the pool/ });
+    const bar = screen.getByRole('region', { name: 'Actions' });
+    expect(
+      within(bar).getByRole<HTMLButtonElement>('button', { name: 'Turn on' }).disabled,
+    ).toBe(true);
+    fireEvent.click(within(not).getByRole('checkbox', { name: 'acme/web' }));
+    fireEvent.click(within(not).getByRole('checkbox', { name: 'octo/app' }));
+    expect(
+      within(bar).getByRole<HTMLButtonElement>('button', { name: 'Turn on 2' }).disabled,
+    ).toBe(false);
   });
 
-  it('searches across groups and hides a group with no match', async () => {
+  it('has no search and no pager: every row of a group is listed', async () => {
     renderApp(app(), '/setup/pool');
-    await screen.findByRole('table', { name: 'acme repositories' });
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search repositories' }), {
-      target: { value: 'app' },
-    });
-    expect(screen.queryByRole('table', { name: 'acme repositories' })).toBeNull();
-    expect(screen.getByRole('table', { name: 'octo repositories' })).toBeTruthy();
-    fireEvent.change(screen.getByRole('textbox', { name: 'Search repositories' }), {
-      target: { value: 'a' },
-    });
-    expect(screen.getByRole('table', { name: 'acme repositories' })).toBeTruthy();
-    expect(screen.getByRole('table', { name: 'octo repositories' })).toBeTruthy();
+    await screen.findByRole('region', { name: /^Using the pool/ });
+    expect(screen.queryByRole('textbox', { name: 'Search repositories' })).toBeNull();
+    expect(screen.queryByRole('button', { name: /^Show all/ })).toBeNull();
   });
 });
 
 describe('Repositories: inactive types are not listed', () => {
-  it('lists private only, says how many are not listed, and counts private ones', async () => {
+  it('lists private only and says how many are not listed, with a way to the setting', async () => {
     renderApp(app(), '/setup/pool');
-    await screen.findByRole('table', { name: 'octo repositories' });
-    expect(screen.queryByRole('link', { name: 'site' })).toBeNull();
-    expect(screen.queryByRole('table', { name: 'pub repositories' })).toBeNull();
+    await screen.findByRole('region', { name: /^Not using the pool/ });
+    expect(screen.queryByRole('checkbox', { name: 'octo/site' })).toBeNull();
+    expect(screen.queryByRole('checkbox', { name: 'pub/open' })).toBeNull();
     expect(
       screen.getByText(
         /2 public repositories are not listed: the pool serves private repositories only\./,
       ),
     ).toBeTruthy();
-    expect(screen.getByText('3 private repositories')).toBeTruthy();
-    fireEvent.click(screen.getByRole('button', { name: 'Select all 3' }));
-    expect(screen.getByText('3 selected')).toBeTruthy();
-  });
-
-  it('List them too shows them in grey in their groups and the line offers to hide them', async () => {
-    renderApp(app(), '/setup/pool');
-    fireEvent.click(await screen.findByRole('link', { name: 'List them too' }));
-    const octo = await screen.findByRole('table', { name: 'octo repositories' });
-    const row = within(octo)
-      .getAllByRole('row')
-      .find((r) => within(r).queryByRole('link', { name: 'site' }));
-    expect(row?.getAttribute('data-inactive')).toBe('true');
-    expect(screen.getByRole('table', { name: 'pub repositories' })).toBeTruthy();
-    expect(screen.getByText(/2 public repositories are listed in grey/)).toBeTruthy();
-    fireEvent.click(screen.getByRole('link', { name: 'Hide them' }));
-    expect(await screen.findByRole('link', { name: 'List them too' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'site' })).toBeNull();
-  });
-
-  it('the note has List them too and no Change active types link', async () => {
-    renderApp(app(), '/setup/pool');
-    expect(await screen.findByRole('link', { name: 'List them too' })).toBeTruthy();
-    expect(screen.queryByRole('link', { name: 'Change active types' })).toBeNull();
+    expect(screen.getByRole('button', { name: 'Open the setting' })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: 'List them too' })).toBeNull();
   });
 
   it('shows no note and lists everything when public repositories are on', async () => {
     renderApp(app(true), '/setup/pool');
-    await screen.findByRole('table', { name: 'pub repositories' });
+    await screen.findByRole('checkbox', { name: 'pub/open' });
     expect(screen.queryByText(/are not listed/)).toBeNull();
-    expect(screen.getByText('5 private & public repositories')).toBeTruthy();
+    expect(
+      screen.getByRole<HTMLInputElement>('checkbox', { name: 'pub/open' }).disabled,
+    ).toBe(false);
   });
 });

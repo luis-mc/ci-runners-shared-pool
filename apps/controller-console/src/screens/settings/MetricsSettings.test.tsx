@@ -25,7 +25,7 @@ describe('Settings > Console > Metrics', () => {
   it('is off by default and shows no scrape text', async () => {
     renderApp(
       signedIn().on('GET', '/api/v1/settings/metrics', metrics()),
-      '/settings/console',
+      '/settings/networking',
     );
     expect(await screen.findByText('Metrics')).toBeTruthy();
     expect(
@@ -43,7 +43,7 @@ describe('Settings > Console > Metrics', () => {
         '/api/v1/settings/metrics',
         metrics({ enabled: true, running: true, address: '127.0.0.1:9464' }),
       ),
-      '/settings/console',
+      '/settings/networking',
     );
     expect(await screen.findByLabelText('Prometheus scrape configuration')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Copy' })).toBeTruthy();
@@ -54,7 +54,7 @@ describe('Settings > Console > Metrics', () => {
     const a = signedIn()
       .on('GET', '/api/v1/settings/metrics', metrics({ enabled: true }))
       .on('POST', '/api/v1/settings/metrics/token', () => ({ key: 'abc123key' }));
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     fireEvent.click(await screen.findByRole('button', { name: 'Make a key' }));
     expect(await screen.findByLabelText('The metrics key')).toBeTruthy();
     await waitFor(() => expect(screen.getByText('abc123key')).toBeTruthy());
@@ -64,7 +64,7 @@ describe('Settings > Console > Metrics', () => {
     const a = signedIn()
       .on('GET', '/api/v1/settings/metrics', metrics())
       .on('PUT', '/api/v1/settings/metrics', (c) => metrics(c.body as object));
-    renderApp(a, '/settings/console');
+    renderApp(a, '/settings/networking');
     fireEvent.click(await screen.findByRole('checkbox', { name: /Prometheus page/ }));
     fireEvent.click(await screen.findByRole('button', { name: /^Save/ }));
     await waitFor(() =>
@@ -79,7 +79,7 @@ describe('Settings > Console > Metrics', () => {
   it('keeps the switches off for a viewer, with the reason', async () => {
     renderApp(
       signedIn(viewer).on('GET', '/api/v1/settings/metrics', metrics()),
-      '/settings/console',
+      '/settings/networking',
     );
     const box = await screen.findByRole<HTMLInputElement>('checkbox', {
       name: /Prometheus page/,

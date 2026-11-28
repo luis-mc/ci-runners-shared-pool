@@ -295,7 +295,7 @@ describe('Caches', () => {
       ),
     ).toBeTruthy();
     expect(screen.getAllByRole('button', { name: 'Add runners' }).length).toBe(1);
-    expect(screen.getByRole('region', { name: 'Caches' })).toBeTruthy();
+    expect(screen.getByRole('region', { name: 'Caches per machine' })).toBeTruthy();
     expect(screen.getByRole('heading', { level: 1 })).toBeTruthy();
   });
 

@@ -1,11 +1,13 @@
 package lancache
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"hash"
 	"io"
 	"os"
 	"path/filepath"
@@ -107,6 +109,14 @@ func validDigest(d string) bool {
 // SHA-256 of the bytes, else nothing is stored (ErrDigestMismatch). Older
 // entries are dropped, least recently used first, until the store fits the cap.
 func (s *Store) Put(name, want string, r io.Reader) (Entry, error) {
+	return s.PutChecked(name, want, r, nil, nil)
+}
+
+// PutChecked is Put with one more hash the bytes must match, such as the
+// SHA-512 integrity of an npm tarball (caches R5.74): extra is fed the same
+// bytes and its sum must equal extraWant, else nothing is stored
+// (ErrDigestMismatch). A nil extra checks only the SHA-256.
+func (s *Store) PutChecked(name, want string, r io.Reader, extra hash.Hash, extraWant []byte) (Entry, error) {
 	if want != "" && !validDigest(want) {
 		return Entry{}, ErrDigestMismatch
 	}
@@ -116,19 +126,27 @@ func (s *Store) Put(name, want string, r io.Reader) (Entry, error) {
 	}
 	defer func() { _ = os.Remove(tmp.Name()) }()
 	h := sha256.New()
+	w := io.MultiWriter(tmp, h)
+	if extra != nil {
+		w = io.MultiWriter(tmp, h, extra)
+	}
+	capNow := s.Cap()
 	// One byte past the cap tells an oversize body without storing it all.
-	n, err := io.Copy(io.MultiWriter(tmp, h), io.LimitReader(r, s.cap+1))
+	n, err := io.Copy(w, io.LimitReader(r, capNow+1))
 	if cerr := tmp.Close(); err == nil {
 		err = cerr
 	}
 	if err != nil {
 		return Entry{}, fmt.Errorf("write cache entry: %w", err)
 	}
-	if n > s.cap {
+	if n > capNow {
 		return Entry{}, ErrTooLarge
 	}
 	got := hex.EncodeToString(h.Sum(nil))
 	if want != "" && want != got {
+		return Entry{}, ErrDigestMismatch
+	}
+	if extra != nil && !bytes.Equal(extra.Sum(nil), extraWant) {
 		return Entry{}, ErrDigestMismatch
 	}
 	s.mu.Lock()
@@ -202,6 +220,48 @@ func (s *Store) PrefixNewest(prefix string) (string, Entry, bool) {
 		}
 	}
 	return bn, be, bn != ""
+}
+
+// Cap is the byte cap of the store now.
+func (s *Store) Cap() int64 {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.cap
+}
+
+// SetCap changes the byte cap (the hub's one budget, caches R5.73) and drops
+// the least recently used entries until the store fits. A cap <= 0 is refused.
+func (s *Store) SetCap(capBytes int64) error {
+	if capBytes <= 0 {
+		return errors.New("the cache cap must be above zero")
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.cap = capBytes
+	s.evictLocked("")
+	return s.saveLocked()
+}
+
+// Remove deletes one name, and its blob when no other name holds it. It
+// returns the bytes freed; a name that is not there frees nothing.
+func (s *Store) Remove(name string) (int64, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, ok := s.index[name]
+	if !ok {
+		return 0, nil
+	}
+	delete(s.index, name)
+	for _, x := range s.index {
+		if x.Digest == e.Digest {
+			return 0, s.saveLocked()
+		}
+	}
+	var freed int64
+	if err := os.Remove(s.blob(e.Digest)); err == nil || os.IsNotExist(err) {
+		freed = e.Size
+	}
+	return freed, s.saveLocked()
 }
 
 // Size is the bytes the blobs hold (each blob once).

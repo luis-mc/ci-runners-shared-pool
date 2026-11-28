@@ -131,3 +131,48 @@ func waitFor(t *testing.T, ok func() bool) {
 		}
 	}
 }
+
+// CRSP384, R5.14: the health check asks GitHub for a device code and records
+// that "Enable Device Flow" is off; an unclear answer keeps the last verdict.
+func TestAppHealthNotesDeviceFlowOff(t *testing.T) {
+	e := newEnv(t)
+	h := healthOf(e)
+	var answer error
+	h.DeviceFlow = func(ctx context.Context) error { return answer }
+	ctx := context.Background()
+	if st, err := h.Check(ctx); err != nil || st.DeviceFlowOff || st.Gone {
+		t.Fatalf("Device Flow on: %+v %v", st, err)
+	}
+	answer = ErrDeviceFlowOff
+	if st, _ := h.Check(ctx); !st.DeviceFlowOff || st.Gone || h.Gone() {
+		t.Fatalf("Device Flow off is a note, never a stop: %+v", st)
+	}
+	answer = errors.New("github down")
+	if st, _ := h.Check(ctx); !st.DeviceFlowOff {
+		t.Fatalf("an unclear answer keeps the verdict: %+v", st)
+	}
+	answer = nil
+	if st, _ := h.Check(ctx); st.DeviceFlowOff {
+		t.Fatalf("turned on again: %+v", st)
+	}
+}
+
+func TestStartDeviceSaysDeviceFlowIsOff(t *testing.T) { // R5.14
+	e := newEnv(t)
+	e.fake.DeviceFlowOff = true
+	if _, err := e.client.StartDevice(context.Background()); !errors.Is(err, ErrDeviceFlowOff) {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestAppSettingsURL(t *testing.T) { // R5.14
+	if got := AppSettingsURL("https://github.com", "crsp-home", "User", "alice"); got != "https://github.com/settings/apps/crsp-home" {
+		t.Errorf("user: %s", got)
+	}
+	if got := AppSettingsURL("https://github.com", "crsp", "Organization", "acme"); got != "https://github.com/organizations/acme/settings/apps/crsp" {
+		t.Errorf("org: %s", got)
+	}
+	if got := AppSettingsURL("https://github.com", "", "User", "alice"); got != "" {
+		t.Errorf("no slug: %s", got)
+	}
+}

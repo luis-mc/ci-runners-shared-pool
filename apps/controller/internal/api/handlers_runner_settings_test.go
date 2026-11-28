@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"testing"
+
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
 )
 
 // Runners R5.90: PATCH settings changes keep_dependencies of a persistent runner.
@@ -69,5 +71,33 @@ func TestPlanRunnersPassesKeepDependencies(t *testing.T) {
 	do(mux, http.MethodPost, "/api/v1/runner-plans", `{"os":"linux","kind":"persistent","machine_id":"m1","count":1}`)
 	if f.lastAdd.KeepDependencies != nil {
 		t.Errorf("default sent %v", *f.lastAdd.KeepDependencies)
+	}
+}
+
+// CRSP382, runners R5.153: POST reregister answers 200 with the runner and asks
+// the service to register it again; a refusal is a 4xx.
+func TestReregisterRunner(t *testing.T) {
+	f := sample()
+	mux := runnersMux(f)
+	rec := do(mux, http.MethodPost, "/api/v1/runners/r1/reregister", "")
+	if rec.Code != http.StatusOK || len(f.reregistered) != 1 || f.reregistered[0] != "r1" {
+		t.Fatalf("status %d registered again %v: %s", rec.Code, f.reregistered, rec.Body)
+	}
+	e := f.recs["r1"]
+	e.Kind = "ephemeral"
+	f.recs["r1"] = e
+	if rec := do(mux, http.MethodPost, "/api/v1/runners/r1/reregister", ""); rec.Code < 400 || rec.Code >= 500 {
+		t.Fatalf("ephemeral: %d", rec.Code)
+	}
+}
+
+// CRSP382: can_reregister reaches the console only when the view says so.
+func TestRunnerCanReregisterIsInTheAnswer(t *testing.T) {
+	r := toGenRunner(runners.View{Record: runners.Record{ID: "r1", Kind: "persistent"}, State: runners.NotRegistered, CanReregister: true})
+	if r.CanReregister == nil || !*r.CanReregister {
+		t.Fatal("can_reregister is true")
+	}
+	if toGenRunner(runners.View{Record: runners.Record{ID: "r1"}, State: runners.Idle}).CanReregister != nil {
+		t.Fatal("absent when there is nothing to offer")
 	}
 }

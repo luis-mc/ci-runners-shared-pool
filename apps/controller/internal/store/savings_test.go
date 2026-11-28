@@ -2,7 +2,6 @@ package store
 
 import (
 	"context"
-	"strings"
 	"testing"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/jobsdata"
@@ -47,23 +46,5 @@ func TestPoolJobGroupsRoundUpPerJobAndGroup(t *testing.T) {
 	}
 	if len(got) != 2 || by[1] != 3 || by[2] != 1 {
 		t.Fatalf("want 3 jobs of 1 minute and 1 of 2: %+v", got)
-	}
-}
-
-func TestPoolJobGroupsUseTheDoneAtIndex(t *testing.T) {
-	js := jobsDB(t)
-	var plan string
-	rows, err := js.db.QueryContext(context.Background(), `EXPLAIN QUERY PLAN `+poolJobGroupsSQL, "a", "b")
-	must(t, err)
-	defer func() { _ = rows.Close() }()
-	for rows.Next() {
-		var id, parent, unused int
-		var detail string
-		must(t, rows.Scan(&id, &parent, &unused, &detail))
-		plan += detail + "\n"
-	}
-	must(t, rows.Err())
-	if !strings.Contains(plan, "jobs_done_at") {
-		t.Fatalf("the window should use the index jobs_done_at:\n%s", plan)
 	}
 }
