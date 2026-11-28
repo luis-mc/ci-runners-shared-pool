@@ -27,6 +27,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.addRegistryPullDailyStmt, err = db.PrepareContext(ctx, addRegistryPullDaily); err != nil {
 		return nil, fmt.Errorf("error preparing query AddRegistryPullDaily: %w", err)
 	}
+	if q.appendDebugTranscriptStmt, err = db.PrepareContext(ctx, appendDebugTranscript); err != nil {
+		return nil, fmt.Errorf("error preparing query AppendDebugTranscript: %w", err)
+	}
 	if q.beatTicketStmt, err = db.PrepareContext(ctx, beatTicket); err != nil {
 		return nil, fmt.Errorf("error preparing query BeatTicket: %w", err)
 	}
@@ -96,8 +99,14 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.deleteCtlRunnerStmt, err = db.PrepareContext(ctx, deleteCtlRunner); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteCtlRunner: %w", err)
 	}
+	if q.deleteDebugTranscriptStmt, err = db.PrepareContext(ctx, deleteDebugTranscript); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteDebugTranscript: %w", err)
+	}
 	if q.deleteEndedRegistryTokenLeasesStmt, err = db.PrepareContext(ctx, deleteEndedRegistryTokenLeases); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteEndedRegistryTokenLeases: %w", err)
+	}
+	if q.deleteExpiredDebugTranscriptsStmt, err = db.PrepareContext(ctx, deleteExpiredDebugTranscripts); err != nil {
+		return nil, fmt.Errorf("error preparing query DeleteExpiredDebugTranscripts: %w", err)
 	}
 	if q.deleteGuardrailReportsBeforeStmt, err = db.PrepareContext(ctx, deleteGuardrailReportsBefore); err != nil {
 		return nil, fmt.Errorf("error preparing query DeleteGuardrailReportsBefore: %w", err)
@@ -192,6 +201,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.dueDeliveriesStmt, err = db.PrepareContext(ctx, dueDeliveries); err != nil {
 		return nil, fmt.Errorf("error preparing query DueDeliveries: %w", err)
 	}
+	if q.endDebugSessionStmt, err = db.PrepareContext(ctx, endDebugSession); err != nil {
+		return nil, fmt.Errorf("error preparing query EndDebugSession: %w", err)
+	}
 	if q.endSessionStmt, err = db.PrepareContext(ctx, endSession); err != nil {
 		return nil, fmt.Errorf("error preparing query EndSession: %w", err)
 	}
@@ -200,6 +212,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.enqueueJobStmt, err = db.PrepareContext(ctx, enqueueJob); err != nil {
 		return nil, fmt.Errorf("error preparing query EnqueueJob: %w", err)
+	}
+	if q.extendDebugSessionStmt, err = db.PrepareContext(ctx, extendDebugSession); err != nil {
+		return nil, fmt.Errorf("error preparing query ExtendDebugSession: %w", err)
 	}
 	if q.findCtlJoinCodeByHashStmt, err = db.PrepareContext(ctx, findCtlJoinCodeByHash); err != nil {
 		return nil, fmt.Errorf("error preparing query FindCtlJoinCodeByHash: %w", err)
@@ -275,6 +290,15 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.getCtlRunnerPlanStmt, err = db.PrepareContext(ctx, getCtlRunnerPlan); err != nil {
 		return nil, fmt.Errorf("error preparing query GetCtlRunnerPlan: %w", err)
+	}
+	if q.getDebugRepoSettingsStmt, err = db.PrepareContext(ctx, getDebugRepoSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDebugRepoSettings: %w", err)
+	}
+	if q.getDebugSessionStmt, err = db.PrepareContext(ctx, getDebugSession); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDebugSession: %w", err)
+	}
+	if q.getDebugTranscriptStmt, err = db.PrepareContext(ctx, getDebugTranscript); err != nil {
+		return nil, fmt.Errorf("error preparing query GetDebugTranscript: %w", err)
 	}
 	if q.getDeliveryStmt, err = db.PrepareContext(ctx, getDelivery); err != nil {
 		return nil, fmt.Errorf("error preparing query GetDelivery: %w", err)
@@ -459,6 +483,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.insertCliTokenStmt, err = db.PrepareContext(ctx, insertCliToken); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertCliToken: %w", err)
 	}
+	if q.insertDebugSessionStmt, err = db.PrepareContext(ctx, insertDebugSession); err != nil {
+		return nil, fmt.Errorf("error preparing query InsertDebugSession: %w", err)
+	}
 	if q.insertDeliveryStmt, err = db.PrepareContext(ctx, insertDelivery); err != nil {
 		return nil, fmt.Errorf("error preparing query InsertDelivery: %w", err)
 	}
@@ -633,6 +660,12 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.listDanglingRegistryLayersStmt, err = db.PrepareContext(ctx, listDanglingRegistryLayers); err != nil {
 		return nil, fmt.Errorf("error preparing query ListDanglingRegistryLayers: %w", err)
 	}
+	if q.listDebugSessionsStmt, err = db.PrepareContext(ctx, listDebugSessions); err != nil {
+		return nil, fmt.Errorf("error preparing query ListDebugSessions: %w", err)
+	}
+	if q.listDebugSessionsOfJobStmt, err = db.PrepareContext(ctx, listDebugSessionsOfJob); err != nil {
+		return nil, fmt.Errorf("error preparing query ListDebugSessionsOfJob: %w", err)
+	}
 	if q.listDeliveriesForNoticesStmt, err = db.PrepareContext(ctx, listDeliveriesForNotices); err != nil {
 		return nil, fmt.Errorf("error preparing query ListDeliveriesForNotices: %w", err)
 	}
@@ -737,6 +770,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.listOldStagedRegistryImagesStmt, err = db.PrepareContext(ctx, listOldStagedRegistryImages); err != nil {
 		return nil, fmt.Errorf("error preparing query ListOldStagedRegistryImages: %w", err)
+	}
+	if q.listOpenDebugSessionsStmt, err = db.PrepareContext(ctx, listOpenDebugSessions); err != nil {
+		return nil, fmt.Errorf("error preparing query ListOpenDebugSessions: %w", err)
 	}
 	if q.listOpenGitHubJobsStmt, err = db.PrepareContext(ctx, listOpenGitHubJobs); err != nil {
 		return nil, fmt.Errorf("error preparing query ListOpenGitHubJobs: %w", err)
@@ -879,6 +915,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.markRegistryImageDeletedStmt, err = db.PrepareContext(ctx, markRegistryImageDeleted); err != nil {
 		return nil, fmt.Errorf("error preparing query MarkRegistryImageDeleted: %w", err)
 	}
+	if q.oldestDebugTranscriptStmt, err = db.PrepareContext(ctx, oldestDebugTranscript); err != nil {
+		return nil, fmt.Errorf("error preparing query OldestDebugTranscript: %w", err)
+	}
 	if q.promoteRegistryImageStmt, err = db.PrepareContext(ctx, promoteRegistryImage); err != nil {
 		return nil, fmt.Errorf("error preparing query PromoteRegistryImage: %w", err)
 	}
@@ -962,6 +1001,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.revokeUserCliTokensStmt, err = db.PrepareContext(ctx, revokeUserCliTokens); err != nil {
 		return nil, fmt.Errorf("error preparing query RevokeUserCliTokens: %w", err)
+	}
+	if q.setDebugSessionEndsAtStmt, err = db.PrepareContext(ctx, setDebugSessionEndsAt); err != nil {
+		return nil, fmt.Errorf("error preparing query SetDebugSessionEndsAt: %w", err)
 	}
 	if q.setDeliveryResultStmt, err = db.PrepareContext(ctx, setDeliveryResult); err != nil {
 		return nil, fmt.Errorf("error preparing query SetDeliveryResult: %w", err)
@@ -1074,6 +1116,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.slotLogCutoffStmt, err = db.PrepareContext(ctx, slotLogCutoff); err != nil {
 		return nil, fmt.Errorf("error preparing query SlotLogCutoff: %w", err)
 	}
+	if q.sumDebugTranscriptBytesStmt, err = db.PrepareContext(ctx, sumDebugTranscriptBytes); err != nil {
+		return nil, fmt.Errorf("error preparing query SumDebugTranscriptBytes: %w", err)
+	}
 	if q.sumRegistryBytesPulledSinceStmt, err = db.PrepareContext(ctx, sumRegistryBytesPulledSince); err != nil {
 		return nil, fmt.Errorf("error preparing query SumRegistryBytesPulledSince: %w", err)
 	}
@@ -1100,6 +1145,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.supersedeRegistryImageStmt, err = db.PrepareContext(ctx, supersedeRegistryImage); err != nil {
 		return nil, fmt.Errorf("error preparing query SupersedeRegistryImage: %w", err)
+	}
+	if q.touchDebugSessionStmt, err = db.PrepareContext(ctx, touchDebugSession); err != nil {
+		return nil, fmt.Errorf("error preparing query TouchDebugSession: %w", err)
 	}
 	if q.touchSessionStmt, err = db.PrepareContext(ctx, touchSession); err != nil {
 		return nil, fmt.Errorf("error preparing query TouchSession: %w", err)
@@ -1163,6 +1211,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.upsertDailySummaryStmt, err = db.PrepareContext(ctx, upsertDailySummary); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertDailySummary: %w", err)
+	}
+	if q.upsertDebugRepoSettingsStmt, err = db.PrepareContext(ctx, upsertDebugRepoSettings); err != nil {
+		return nil, fmt.Errorf("error preparing query UpsertDebugRepoSettings: %w", err)
 	}
 	if q.upsertDoctorStateStmt, err = db.PrepareContext(ctx, upsertDoctorState); err != nil {
 		return nil, fmt.Errorf("error preparing query UpsertDoctorState: %w", err)
@@ -1253,6 +1304,11 @@ func (q *Queries) Close() error {
 	if q.addRegistryPullDailyStmt != nil {
 		if cerr := q.addRegistryPullDailyStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing addRegistryPullDailyStmt: %w", cerr)
+		}
+	}
+	if q.appendDebugTranscriptStmt != nil {
+		if cerr := q.appendDebugTranscriptStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing appendDebugTranscriptStmt: %w", cerr)
 		}
 	}
 	if q.beatTicketStmt != nil {
@@ -1370,9 +1426,19 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing deleteCtlRunnerStmt: %w", cerr)
 		}
 	}
+	if q.deleteDebugTranscriptStmt != nil {
+		if cerr := q.deleteDebugTranscriptStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteDebugTranscriptStmt: %w", cerr)
+		}
+	}
 	if q.deleteEndedRegistryTokenLeasesStmt != nil {
 		if cerr := q.deleteEndedRegistryTokenLeasesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing deleteEndedRegistryTokenLeasesStmt: %w", cerr)
+		}
+	}
+	if q.deleteExpiredDebugTranscriptsStmt != nil {
+		if cerr := q.deleteExpiredDebugTranscriptsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing deleteExpiredDebugTranscriptsStmt: %w", cerr)
 		}
 	}
 	if q.deleteGuardrailReportsBeforeStmt != nil {
@@ -1530,6 +1596,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing dueDeliveriesStmt: %w", cerr)
 		}
 	}
+	if q.endDebugSessionStmt != nil {
+		if cerr := q.endDebugSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing endDebugSessionStmt: %w", cerr)
+		}
+	}
 	if q.endSessionStmt != nil {
 		if cerr := q.endSessionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing endSessionStmt: %w", cerr)
@@ -1543,6 +1614,11 @@ func (q *Queries) Close() error {
 	if q.enqueueJobStmt != nil {
 		if cerr := q.enqueueJobStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing enqueueJobStmt: %w", cerr)
+		}
+	}
+	if q.extendDebugSessionStmt != nil {
+		if cerr := q.extendDebugSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing extendDebugSessionStmt: %w", cerr)
 		}
 	}
 	if q.findCtlJoinCodeByHashStmt != nil {
@@ -1668,6 +1744,21 @@ func (q *Queries) Close() error {
 	if q.getCtlRunnerPlanStmt != nil {
 		if cerr := q.getCtlRunnerPlanStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing getCtlRunnerPlanStmt: %w", cerr)
+		}
+	}
+	if q.getDebugRepoSettingsStmt != nil {
+		if cerr := q.getDebugRepoSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDebugRepoSettingsStmt: %w", cerr)
+		}
+	}
+	if q.getDebugSessionStmt != nil {
+		if cerr := q.getDebugSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDebugSessionStmt: %w", cerr)
+		}
+	}
+	if q.getDebugTranscriptStmt != nil {
+		if cerr := q.getDebugTranscriptStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing getDebugTranscriptStmt: %w", cerr)
 		}
 	}
 	if q.getDeliveryStmt != nil {
@@ -1975,6 +2066,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing insertCliTokenStmt: %w", cerr)
 		}
 	}
+	if q.insertDebugSessionStmt != nil {
+		if cerr := q.insertDebugSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing insertDebugSessionStmt: %w", cerr)
+		}
+	}
 	if q.insertDeliveryStmt != nil {
 		if cerr := q.insertDeliveryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing insertDeliveryStmt: %w", cerr)
@@ -2265,6 +2361,16 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing listDanglingRegistryLayersStmt: %w", cerr)
 		}
 	}
+	if q.listDebugSessionsStmt != nil {
+		if cerr := q.listDebugSessionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listDebugSessionsStmt: %w", cerr)
+		}
+	}
+	if q.listDebugSessionsOfJobStmt != nil {
+		if cerr := q.listDebugSessionsOfJobStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listDebugSessionsOfJobStmt: %w", cerr)
+		}
+	}
 	if q.listDeliveriesForNoticesStmt != nil {
 		if cerr := q.listDeliveriesForNoticesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listDeliveriesForNoticesStmt: %w", cerr)
@@ -2438,6 +2544,11 @@ func (q *Queries) Close() error {
 	if q.listOldStagedRegistryImagesStmt != nil {
 		if cerr := q.listOldStagedRegistryImagesStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listOldStagedRegistryImagesStmt: %w", cerr)
+		}
+	}
+	if q.listOpenDebugSessionsStmt != nil {
+		if cerr := q.listOpenDebugSessionsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listOpenDebugSessionsStmt: %w", cerr)
 		}
 	}
 	if q.listOpenGitHubJobsStmt != nil {
@@ -2675,6 +2786,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing markRegistryImageDeletedStmt: %w", cerr)
 		}
 	}
+	if q.oldestDebugTranscriptStmt != nil {
+		if cerr := q.oldestDebugTranscriptStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing oldestDebugTranscriptStmt: %w", cerr)
+		}
+	}
 	if q.promoteRegistryImageStmt != nil {
 		if cerr := q.promoteRegistryImageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing promoteRegistryImageStmt: %w", cerr)
@@ -2813,6 +2929,11 @@ func (q *Queries) Close() error {
 	if q.revokeUserCliTokensStmt != nil {
 		if cerr := q.revokeUserCliTokensStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing revokeUserCliTokensStmt: %w", cerr)
+		}
+	}
+	if q.setDebugSessionEndsAtStmt != nil {
+		if cerr := q.setDebugSessionEndsAtStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing setDebugSessionEndsAtStmt: %w", cerr)
 		}
 	}
 	if q.setDeliveryResultStmt != nil {
@@ -3000,6 +3121,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing slotLogCutoffStmt: %w", cerr)
 		}
 	}
+	if q.sumDebugTranscriptBytesStmt != nil {
+		if cerr := q.sumDebugTranscriptBytesStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing sumDebugTranscriptBytesStmt: %w", cerr)
+		}
+	}
 	if q.sumRegistryBytesPulledSinceStmt != nil {
 		if cerr := q.sumRegistryBytesPulledSinceStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing sumRegistryBytesPulledSinceStmt: %w", cerr)
@@ -3043,6 +3169,11 @@ func (q *Queries) Close() error {
 	if q.supersedeRegistryImageStmt != nil {
 		if cerr := q.supersedeRegistryImageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing supersedeRegistryImageStmt: %w", cerr)
+		}
+	}
+	if q.touchDebugSessionStmt != nil {
+		if cerr := q.touchDebugSessionStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing touchDebugSessionStmt: %w", cerr)
 		}
 	}
 	if q.touchSessionStmt != nil {
@@ -3148,6 +3279,11 @@ func (q *Queries) Close() error {
 	if q.upsertDailySummaryStmt != nil {
 		if cerr := q.upsertDailySummaryStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing upsertDailySummaryStmt: %w", cerr)
+		}
+	}
+	if q.upsertDebugRepoSettingsStmt != nil {
+		if cerr := q.upsertDebugRepoSettingsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing upsertDebugRepoSettingsStmt: %w", cerr)
 		}
 	}
 	if q.upsertDoctorStateStmt != nil {
@@ -3325,6 +3461,7 @@ type Queries struct {
 	db                                          DBTX
 	tx                                          *sql.Tx
 	addRegistryPullDailyStmt                    *sql.Stmt
+	appendDebugTranscriptStmt                   *sql.Stmt
 	beatTicketStmt                              *sql.Stmt
 	bumpGroupStmt                               *sql.Stmt
 	cIDataBytesByRepositoryStmt                 *sql.Stmt
@@ -3348,7 +3485,9 @@ type Queries struct {
 	dailySummarisedDaysStmt                     *sql.Stmt
 	deleteAuditBeforeStmt                       *sql.Stmt
 	deleteCtlRunnerStmt                         *sql.Stmt
+	deleteDebugTranscriptStmt                   *sql.Stmt
 	deleteEndedRegistryTokenLeasesStmt          *sql.Stmt
+	deleteExpiredDebugTranscriptsStmt           *sql.Stmt
 	deleteGuardrailReportsBeforeStmt            *sql.Stmt
 	deleteImageProfileStmt                      *sql.Stmt
 	deleteInsightDigestStmt                     *sql.Stmt
@@ -3380,9 +3519,11 @@ type Queries struct {
 	dismissInsightFindingStmt                   *sql.Stmt
 	dropOldestNoteDeliveriesStmt                *sql.Stmt
 	dueDeliveriesStmt                           *sql.Stmt
+	endDebugSessionStmt                         *sql.Stmt
 	endSessionStmt                              *sql.Stmt
 	endUserSessionsStmt                         *sql.Stmt
 	enqueueJobStmt                              *sql.Stmt
+	extendDebugSessionStmt                      *sql.Stmt
 	findCtlJoinCodeByHashStmt                   *sql.Stmt
 	findJoinCodeByHashStmt                      *sql.Stmt
 	findOpenGroupStmt                           *sql.Stmt
@@ -3408,6 +3549,9 @@ type Queries struct {
 	getCtlMachineSettingsStmt                   *sql.Stmt
 	getCtlRunnerStmt                            *sql.Stmt
 	getCtlRunnerPlanStmt                        *sql.Stmt
+	getDebugRepoSettingsStmt                    *sql.Stmt
+	getDebugSessionStmt                         *sql.Stmt
+	getDebugTranscriptStmt                      *sql.Stmt
 	getDeliveryStmt                             *sql.Stmt
 	getDoctorRunStmt                            *sql.Stmt
 	getGitHubAppStmt                            *sql.Stmt
@@ -3469,6 +3613,7 @@ type Queries struct {
 	insertBackupStmt                            *sql.Stmt
 	insertCIReportFileStmt                      *sql.Stmt
 	insertCliTokenStmt                          *sql.Stmt
+	insertDebugSessionStmt                      *sql.Stmt
 	insertDeliveryStmt                          *sql.Stmt
 	insertDoctorFindingStmt                     *sql.Stmt
 	insertDoctorRunStmt                         *sql.Stmt
@@ -3527,6 +3672,8 @@ type Queries struct {
 	listCtlRunnersStmt                          *sql.Stmt
 	listDailySummariesStmt                      *sql.Stmt
 	listDanglingRegistryLayersStmt              *sql.Stmt
+	listDebugSessionsStmt                       *sql.Stmt
+	listDebugSessionsOfJobStmt                  *sql.Stmt
 	listDeliveriesForNoticesStmt                *sql.Stmt
 	listExpiredCIJobLogsStmt                    *sql.Stmt
 	listExpiredCIReportFilesStmt                *sql.Stmt
@@ -3562,6 +3709,7 @@ type Queries struct {
 	listNotificationChannelsStmt                *sql.Stmt
 	listNotifyEventsByTypeStmt                  *sql.Stmt
 	listOldStagedRegistryImagesStmt             *sql.Stmt
+	listOpenDebugSessionsStmt                   *sql.Stmt
 	listOpenGitHubJobsStmt                      *sql.Stmt
 	listOpenInsightFindingsStmt                 *sql.Stmt
 	listOpenJobIDsOfRunStmt                     *sql.Stmt
@@ -3609,6 +3757,7 @@ type Queries struct {
 	markMachineSeenStmt                         *sql.Stmt
 	markMachinesOfflineStmt                     *sql.Stmt
 	markRegistryImageDeletedStmt                *sql.Stmt
+	oldestDebugTranscriptStmt                   *sql.Stmt
 	promoteRegistryImageStmt                    *sql.Stmt
 	pruneDailySummariesStmt                     *sql.Stmt
 	pruneJobFactsStmt                           *sql.Stmt
@@ -3637,6 +3786,7 @@ type Queries struct {
 	revokeMachineKeysStmt                       *sql.Stmt
 	revokeOpenJoinCodesStmt                     *sql.Stmt
 	revokeUserCliTokensStmt                     *sql.Stmt
+	setDebugSessionEndsAtStmt                   *sql.Stmt
 	setDeliveryResultStmt                       *sql.Stmt
 	setGitHubJobWaitStmt                        *sql.Stmt
 	setImageBuildProgressStmt                   *sql.Stmt
@@ -3674,6 +3824,7 @@ type Queries struct {
 	setSettingStmt                              *sql.Stmt
 	setTicketWaitReasonStmt                     *sql.Stmt
 	slotLogCutoffStmt                           *sql.Stmt
+	sumDebugTranscriptBytesStmt                 *sql.Stmt
 	sumRegistryBytesPulledSinceStmt             *sql.Stmt
 	sumRegistryLayersByKindStmt                 *sql.Stmt
 	sumRegistryPullDailyByImageSinceStmt        *sql.Stmt
@@ -3683,6 +3834,7 @@ type Queries struct {
 	sumRegistryUsedByKindStmt                   *sql.Stmt
 	sumRunMinutesSinceStmt                      *sql.Stmt
 	supersedeRegistryImageStmt                  *sql.Stmt
+	touchDebugSessionStmt                       *sql.Stmt
 	touchSessionStmt                            *sql.Stmt
 	trimSlotLogStmt                             *sql.Stmt
 	typicalImageBuildSecondsStmt                *sql.Stmt
@@ -3704,6 +3856,7 @@ type Queries struct {
 	upsertCtlRunnerStmt                         *sql.Stmt
 	upsertCtlRunnerPlanStmt                     *sql.Stmt
 	upsertDailySummaryStmt                      *sql.Stmt
+	upsertDebugRepoSettingsStmt                 *sql.Stmt
 	upsertDoctorStateStmt                       *sql.Stmt
 	upsertGitHubAppStmt                         *sql.Stmt
 	upsertGitHubJobStmt                         *sql.Stmt
@@ -3738,6 +3891,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		db:                                          tx,
 		tx:                                          tx,
 		addRegistryPullDailyStmt:                    q.addRegistryPullDailyStmt,
+		appendDebugTranscriptStmt:                   q.appendDebugTranscriptStmt,
 		beatTicketStmt:                              q.beatTicketStmt,
 		bumpGroupStmt:                               q.bumpGroupStmt,
 		cIDataBytesByRepositoryStmt:                 q.cIDataBytesByRepositoryStmt,
@@ -3761,7 +3915,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		dailySummarisedDaysStmt:                     q.dailySummarisedDaysStmt,
 		deleteAuditBeforeStmt:                       q.deleteAuditBeforeStmt,
 		deleteCtlRunnerStmt:                         q.deleteCtlRunnerStmt,
+		deleteDebugTranscriptStmt:                   q.deleteDebugTranscriptStmt,
 		deleteEndedRegistryTokenLeasesStmt:          q.deleteEndedRegistryTokenLeasesStmt,
+		deleteExpiredDebugTranscriptsStmt:           q.deleteExpiredDebugTranscriptsStmt,
 		deleteGuardrailReportsBeforeStmt:            q.deleteGuardrailReportsBeforeStmt,
 		deleteImageProfileStmt:                      q.deleteImageProfileStmt,
 		deleteInsightDigestStmt:                     q.deleteInsightDigestStmt,
@@ -3793,9 +3949,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		dismissInsightFindingStmt:                   q.dismissInsightFindingStmt,
 		dropOldestNoteDeliveriesStmt:                q.dropOldestNoteDeliveriesStmt,
 		dueDeliveriesStmt:                           q.dueDeliveriesStmt,
+		endDebugSessionStmt:                         q.endDebugSessionStmt,
 		endSessionStmt:                              q.endSessionStmt,
 		endUserSessionsStmt:                         q.endUserSessionsStmt,
 		enqueueJobStmt:                              q.enqueueJobStmt,
+		extendDebugSessionStmt:                      q.extendDebugSessionStmt,
 		findCtlJoinCodeByHashStmt:                   q.findCtlJoinCodeByHashStmt,
 		findJoinCodeByHashStmt:                      q.findJoinCodeByHashStmt,
 		findOpenGroupStmt:                           q.findOpenGroupStmt,
@@ -3821,6 +3979,9 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getCtlMachineSettingsStmt:                   q.getCtlMachineSettingsStmt,
 		getCtlRunnerStmt:                            q.getCtlRunnerStmt,
 		getCtlRunnerPlanStmt:                        q.getCtlRunnerPlanStmt,
+		getDebugRepoSettingsStmt:                    q.getDebugRepoSettingsStmt,
+		getDebugSessionStmt:                         q.getDebugSessionStmt,
+		getDebugTranscriptStmt:                      q.getDebugTranscriptStmt,
 		getDeliveryStmt:                             q.getDeliveryStmt,
 		getDoctorRunStmt:                            q.getDoctorRunStmt,
 		getGitHubAppStmt:                            q.getGitHubAppStmt,
@@ -3882,6 +4043,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		insertBackupStmt:                            q.insertBackupStmt,
 		insertCIReportFileStmt:                      q.insertCIReportFileStmt,
 		insertCliTokenStmt:                          q.insertCliTokenStmt,
+		insertDebugSessionStmt:                      q.insertDebugSessionStmt,
 		insertDeliveryStmt:                          q.insertDeliveryStmt,
 		insertDoctorFindingStmt:                     q.insertDoctorFindingStmt,
 		insertDoctorRunStmt:                         q.insertDoctorRunStmt,
@@ -3940,6 +4102,8 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listCtlRunnersStmt:                          q.listCtlRunnersStmt,
 		listDailySummariesStmt:                      q.listDailySummariesStmt,
 		listDanglingRegistryLayersStmt:              q.listDanglingRegistryLayersStmt,
+		listDebugSessionsStmt:                       q.listDebugSessionsStmt,
+		listDebugSessionsOfJobStmt:                  q.listDebugSessionsOfJobStmt,
 		listDeliveriesForNoticesStmt:                q.listDeliveriesForNoticesStmt,
 		listExpiredCIJobLogsStmt:                    q.listExpiredCIJobLogsStmt,
 		listExpiredCIReportFilesStmt:                q.listExpiredCIReportFilesStmt,
@@ -3975,6 +4139,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listNotificationChannelsStmt:                q.listNotificationChannelsStmt,
 		listNotifyEventsByTypeStmt:                  q.listNotifyEventsByTypeStmt,
 		listOldStagedRegistryImagesStmt:             q.listOldStagedRegistryImagesStmt,
+		listOpenDebugSessionsStmt:                   q.listOpenDebugSessionsStmt,
 		listOpenGitHubJobsStmt:                      q.listOpenGitHubJobsStmt,
 		listOpenInsightFindingsStmt:                 q.listOpenInsightFindingsStmt,
 		listOpenJobIDsOfRunStmt:                     q.listOpenJobIDsOfRunStmt,
@@ -4022,6 +4187,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		markMachineSeenStmt:                         q.markMachineSeenStmt,
 		markMachinesOfflineStmt:                     q.markMachinesOfflineStmt,
 		markRegistryImageDeletedStmt:                q.markRegistryImageDeletedStmt,
+		oldestDebugTranscriptStmt:                   q.oldestDebugTranscriptStmt,
 		promoteRegistryImageStmt:                    q.promoteRegistryImageStmt,
 		pruneDailySummariesStmt:                     q.pruneDailySummariesStmt,
 		pruneJobFactsStmt:                           q.pruneJobFactsStmt,
@@ -4050,6 +4216,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		revokeMachineKeysStmt:                       q.revokeMachineKeysStmt,
 		revokeOpenJoinCodesStmt:                     q.revokeOpenJoinCodesStmt,
 		revokeUserCliTokensStmt:                     q.revokeUserCliTokensStmt,
+		setDebugSessionEndsAtStmt:                   q.setDebugSessionEndsAtStmt,
 		setDeliveryResultStmt:                       q.setDeliveryResultStmt,
 		setGitHubJobWaitStmt:                        q.setGitHubJobWaitStmt,
 		setImageBuildProgressStmt:                   q.setImageBuildProgressStmt,
@@ -4087,6 +4254,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		setSettingStmt:                              q.setSettingStmt,
 		setTicketWaitReasonStmt:                     q.setTicketWaitReasonStmt,
 		slotLogCutoffStmt:                           q.slotLogCutoffStmt,
+		sumDebugTranscriptBytesStmt:                 q.sumDebugTranscriptBytesStmt,
 		sumRegistryBytesPulledSinceStmt:             q.sumRegistryBytesPulledSinceStmt,
 		sumRegistryLayersByKindStmt:                 q.sumRegistryLayersByKindStmt,
 		sumRegistryPullDailyByImageSinceStmt:        q.sumRegistryPullDailyByImageSinceStmt,
@@ -4096,6 +4264,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		sumRegistryUsedByKindStmt:                   q.sumRegistryUsedByKindStmt,
 		sumRunMinutesSinceStmt:                      q.sumRunMinutesSinceStmt,
 		supersedeRegistryImageStmt:                  q.supersedeRegistryImageStmt,
+		touchDebugSessionStmt:                       q.touchDebugSessionStmt,
 		touchSessionStmt:                            q.touchSessionStmt,
 		trimSlotLogStmt:                             q.trimSlotLogStmt,
 		typicalImageBuildSecondsStmt:                q.typicalImageBuildSecondsStmt,
@@ -4117,6 +4286,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		upsertCtlRunnerStmt:                         q.upsertCtlRunnerStmt,
 		upsertCtlRunnerPlanStmt:                     q.upsertCtlRunnerPlanStmt,
 		upsertDailySummaryStmt:                      q.upsertDailySummaryStmt,
+		upsertDebugRepoSettingsStmt:                 q.upsertDebugRepoSettingsStmt,
 		upsertDoctorStateStmt:                       q.upsertDoctorStateStmt,
 		upsertGitHubAppStmt:                         q.upsertGitHubAppStmt,
 		upsertGitHubJobStmt:                         q.upsertGitHubJobStmt,

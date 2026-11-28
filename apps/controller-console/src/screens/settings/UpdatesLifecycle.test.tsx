@@ -16,6 +16,8 @@ const status = (extra: Record<string, unknown> = {}) => ({
   next_check_at: null,
   failures: null,
   waiting_for_jobs: false,
+  notes: null,
+  updated: null,
   ...extra,
 });
 
@@ -40,14 +42,26 @@ const api = (s: Record<string, unknown> = status()) =>
     .on('POST', '/api/v1/remove', {});
 
 describe('Settings > Updates (lifecycle)', () => {
-  it('shows the Updates card, the history and the machines', async () => {
-    renderApp(api(), '/settings/updates');
+  it('shows the Updates card, the last check and the machines, no history table (CRSP368)', async () => {
+    renderApp(
+      api(
+        status({
+          last_check: { at: '2026-11-27T13:49:13.637Z', by: 'luis-mc', kind: 'manual' },
+        }),
+      ),
+      '/settings/updates',
+    );
     expect(await screen.findByRole('region', { name: 'Updates' })).toBeTruthy();
     expect(
       await screen.findByRole('radio', { name: /Automatic when idle/ }),
     ).toBeTruthy();
     expect(screen.getByText('Up to date. Version 1.4.0 is the newest.')).toBeTruthy();
-    expect(await screen.findByRole('table', { name: 'Update history' })).toBeTruthy();
+    const line = await screen.findByText(/^Last checked .*, by luis-mc \(manual\)\.$/);
+    expect(line.textContent).not.toMatch(/T\d\d:\d\d|Z$/);
+    expect(screen.queryByRole('table', { name: 'Update history' })).toBeNull();
+    expect(
+      screen.getByRole('link', { name: 'See all in the Audit log' }).getAttribute('href'),
+    ).toBe('/settings/audit');
     expect(await screen.findByText('build-2')).toBeTruthy();
     expect(screen.getByText('Needs you')).toBeTruthy();
   });
@@ -161,16 +175,32 @@ describe('the app-wide update banner', () => {
     await waitFor(() => expect(a.count('POST', '/api/v1/update/install')).toBe(1));
   });
 
-  it('shows progress while a step runs and hides when nothing is going on', async () => {
+  it('shows progress only in the Updates pane, and one top line on other pages (CRSP364)', async () => {
     renderApp(
       api(status({ state: 'installing', available: '1.5.0', percent: 60 })),
       '/settings/updates',
     );
-    await waitFor(() =>
-      expect(
-        document.querySelector('[data-lifecycle="update-banner"][data-state="running"]'),
-      ).toBeTruthy(),
+    const card = await screen.findByRole('region', { name: 'Updates' });
+    await waitFor(() => expect(within(card).getByRole('progressbar')).toBeTruthy());
+    expect(screen.getAllByRole('progressbar')).toHaveLength(1);
+    expect(document.querySelector('[data-lifecycle="update-banner"]')).toBeNull();
+    cleanup();
+    renderApp(
+      api(status({ state: 'installing', available: '1.5.0', percent: 60 })),
+      '/settings/access',
     );
+    const banner = await waitFor(() => {
+      const el = document.querySelector(
+        '[data-lifecycle="update-banner"][data-state="running"]',
+      );
+      if (!el) throw new Error('no banner');
+      return el as HTMLElement;
+    });
+    expect(within(banner).getByText('An update is running.')).toBeTruthy();
+    expect(within(banner).queryByRole('progressbar')).toBeNull();
+    expect(
+      within(banner).getByRole('button', { name: 'See the update' }).getAttribute('href'),
+    ).toBe('/settings/updates');
     cleanup();
     renderApp(api(), '/settings/updates');
     await screen.findByRole('region', { name: 'Updates' });
@@ -184,5 +214,39 @@ describe('the app-wide update banner', () => {
     expect(
       await screen.findByRole('heading', { name: 'Restart the service' }),
     ).toBeTruthy();
+  });
+});
+
+describe('Settings > Updates, release notes', () => {
+  it('shows the note of the offered version, and nothing without one', async () => {
+    window.localStorage.clear();
+    renderApp(
+      api(status({ state: 'available', available: '1.5.0', notes: 'Live progress.' })),
+      '/settings/updates',
+    );
+    expect(await screen.findByText('What is new in version 1.5.0')).toBeTruthy();
+    expect(screen.getByText('Live progress.')).toBeTruthy();
+    cleanup();
+    renderApp(
+      api(status({ state: 'available', available: '1.5.0' })),
+      '/settings/updates',
+    );
+    await screen.findByRole('region', { name: 'Updates' });
+    expect(screen.queryByText(/What is new in version/)).toBeNull();
+  });
+
+  it('shows the note of the new version once after an update', async () => {
+    window.localStorage.clear();
+    const s = status({
+      updated: { version: '1.4.0', notes: 'Runners have a filter bar.' },
+    });
+    renderApp(api(s), '/settings/updates');
+    const note = await screen.findAllByText('Runners have a filter bar.');
+    expect(note.length).toBeGreaterThan(0);
+    fireEvent.click(screen.getAllByRole('button', { name: /^hide$/i })[0]!);
+    cleanup();
+    renderApp(api(s), '/settings/updates');
+    await screen.findByRole('region', { name: 'Updates' });
+    expect(screen.queryByText('Runners have a filter bar.')).toBeNull();
   });
 });

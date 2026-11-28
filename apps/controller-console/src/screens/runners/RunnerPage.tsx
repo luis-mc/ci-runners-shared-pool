@@ -116,6 +116,14 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
     );
     onChanged();
   });
+  const again = useCommand(async () => {
+    await unwrap(
+      client.POST('/api/v1/runners/{runnerId}/reregister', {
+        params: { path: { runnerId: r.id } },
+      }),
+    );
+    onChanged();
+  });
   const clear = useCommand(async () => {
     await unwrap(
       client.POST('/api/v1/runners/{runnerId}/clear-cache', {
@@ -130,6 +138,27 @@ function RunnerBody({ r, onChanged }: { r: Runner; onChanged: () => void }) {
       <PageHeader title={r.name} />
       {r.unclean_reason ? (
         <Message tone="problem">{uncleanText(r.unclean_reason)}</Message>
+      ) : null}
+      {r.can_reregister ? (
+        <Message
+          tone="needs-you"
+          action={
+            <Button
+              onPress={() => void again.run()}
+              busy={again.busy}
+              busyLabel="Registering"
+              disabled={!admin}
+              reason={why}
+            >
+              Register again
+            </Button>
+          }
+        >
+          {r.reason ?? 'GitHub does not list this runner.'}
+        </Message>
+      ) : null}
+      {again.error ? (
+        <Message tone="problem">{`Could not register again. ${again.error}`}</Message>
       ) : null}
       <Section title="Runner">
         <Facts

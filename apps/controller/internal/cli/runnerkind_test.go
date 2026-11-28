@@ -119,3 +119,20 @@ func TestRunnerUpdateAndClearCache(t *testing.T) { // runners R5.89
 		t.Fatal("an ephemeral runner has no cache")
 	}
 }
+
+// CRSP382, runners R5.153: runner reregister asks the controller to register
+// the runner again, no confirmation (nothing is removed).
+func TestRunnerReregister(t *testing.T) {
+	f := newFixture(t)
+	f.machines(machineJSON("build-01", "active", true))
+	pers := runnerJSON("pool-1", "m_build-01", nil)
+	pers["kind"] = "persistent"
+	f.reply("GET /api/v1/runners", 200, map[string]any{"items": []any{pers}})
+	f.reply("POST /api/v1/runners/r_pool-1/reregister", 200, pers)
+	if code, _, e := f.run("runner", "reregister", "pool-1"); code != 0 || !f.called("POST /api/v1/runners/r_pool-1/reregister") || !strings.Contains(e, "registered again") {
+		t.Fatalf("reregister: %d %q", code, e)
+	}
+	if code, _, _ := f.run("runner", "reregister"); code != ExitUsage {
+		t.Fatal("a runner name is needed")
+	}
+}

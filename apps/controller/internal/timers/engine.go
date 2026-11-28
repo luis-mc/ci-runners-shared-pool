@@ -528,13 +528,7 @@ func (e *Engine) Job(ctx context.Context, k JobKey) (JobView, bool) {
 	now := e.cfg.Clock.Now()
 	e.mu.Lock()
 	if j, ok := e.jobs[k]; ok {
-		covered := e.coveredLocked(j)
-		var rv *RunView
-		if r, ok := e.runs[k.Run()]; ok && covered {
-			v := runView(r.RunClock, now, e.cfg.Settings().Enforce)
-			rv = &v
-		}
-		v := jobView(j.JobClock, now, covered, j.acting, rv, e.cfg.Settings().Enforce)
+		v := e.jobViewLocked(j, now)
 		e.mu.Unlock()
 		return v, true
 	}
@@ -545,6 +539,37 @@ func (e *Engine) Job(ctx context.Context, k JobKey) (JobView, bool) {
 		}
 	}
 	return JobView{}, false
+}
+
+// jobViewLocked is the view of a job held in memory; the caller holds e.mu.
+func (e *Engine) jobViewLocked(j *job, now time.Time) JobView {
+	covered := e.coveredLocked(j)
+	var rv *RunView
+	if r, ok := e.runs[j.Key.Run()]; ok && covered {
+		v := runView(r.RunClock, now, e.cfg.Settings().Enforce)
+		rv = &v
+	}
+	return jobView(j.JobClock, now, covered, j.acting, rv, e.cfg.Settings().Enforce)
+}
+
+// JobsByID is JobByID for many jobs at once, from memory only and under one lock. The jobs that are open are all in
+// memory (the engine loads them at start), so a list of running jobs needs no store read; an id that is not held
+// is left out of the answer.
+func (e *Engine) JobsByID(ids []int64) map[int64]JobView {
+	want := make(map[int64]bool, len(ids))
+	for _, id := range ids {
+		want[id] = true
+	}
+	out := make(map[int64]JobView, len(ids))
+	now := e.cfg.Clock.Now()
+	e.mu.Lock()
+	defer e.mu.Unlock()
+	for k, j := range e.jobs {
+		if want[k.JobID] {
+			out[k.JobID] = e.jobViewLocked(j, now)
+		}
+	}
+	return out
 }
 
 // Run returns the state of one run's timer.

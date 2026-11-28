@@ -58,6 +58,9 @@ func (s *server) ListJobGroups(ctx context.Context, req gen.ListJobGroupsRequest
 	default:
 		return fail(http.StatusBadRequest, CodeBadRequest, "by must be repository, machine, runner, runner-type or job-type")
 	}
+	if etag, ok := s.notModified(ctx, s.now()); ok {
+		return notModifiedResponse{etag}, nil
+	}
 	rows, err := s.opts.JobsData.Groups(ctx, by)
 	if err != nil {
 		s.opts.Logger.Error("list job groups", "err", err)
@@ -100,6 +103,9 @@ func (s *server) GetJobStats(ctx context.Context, req gen.GetJobStatsRequestObje
 	f, msg := q.jobFilter()
 	if msg != "" {
 		return fail(http.StatusBadRequest, CodeBadRequest, msg)
+	}
+	if etag, ok := s.notModified(ctx, s.now()); ok {
+		return notModifiedResponse{etag}, nil
 	}
 	st, err := s.opts.JobsData.Stats(ctx, days, f)
 	if err != nil {

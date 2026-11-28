@@ -30,15 +30,29 @@ if [ ! -x "$dir/config.sh" ]; then
   fresh=1
   mkdir -p "$dir" && cp -a "$SRC/." "$dir/" || { rm -rf "$dir"; exit 1; }
 fi
+# Files of an old registration (deleted at GitHub) would make config.sh refuse
+# or the listener use dead credentials: they go before the registration. The
+# runner keeps a copy of its settings in `.runner_migrated` and
+# `.credentials_migrated` too, and config.sh counts either copy as "already
+# configured" (CRSP385).
+[ "$fresh" = 1 ] || rm -f "$dir/.runner" "$dir/.credentials" "$dir/.credentials_rsaparams" \
+  "$dir/.runner_migrated" "$dir/.credentials_migrated"
 set -- --unattended --replace --url "$url" --name "$name" --labels "$labels" --disableupdate --work _work
 [ -n "$group" ] && set -- "$@" --runnergroup "$group"
 if ! (export ACTIONS_RUNNER_INPUT_TOKEN && cd "$dir" && ./config.sh "$@"); then
   # only a folder this call made is removed: a failed retry never deletes a
   # runner that was already set up
-  [ "$fresh" = 1 ] && rm -rf "$dir"
+  if [ "$fresh" = 1 ]; then
+    rm -rf "$dir"
+  else
+    # its old registration files are gone and its entry file too, so it cannot
+    # run: the `.lost` marker keeps it in list.sh as not registered, and the
+    # supervisor does not start it, until an add registers it (CRSP385)
+    [ -f "$STATE/runners.d/$name.lost" ] || echo "registering this runner again failed" >"$STATE/runners.d/$name.lost"
+  fi
   exit 1
 fi
 if [ "$keep" = 0 ]; then k=0; else k=1; fi
 printf 'CRSP_KEEP_DEPENDENCIES=%s\n' "$k" >"$dir/crsp-hygiene.env"
-rm -f "$STATE/runners.d/$name.stopped"
+rm -f "$STATE/runners.d/$name.stopped" "$STATE/runners.d/$name.lost"
 : >"$STATE/runners.d/$name.env"

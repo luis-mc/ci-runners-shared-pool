@@ -179,7 +179,7 @@ func TestJobStatsUseTheIndexes(t *testing.T) {
 	s := openTemp(t)
 	for col, idx := range map[string]string{"machine_id": "jobs_machine_done", "runner_id": "jobs_runner_done"} {
 		rows, err := s.db.QueryContext(context.Background(), `EXPLAIN QUERY PLAN SELECT j.id FROM jobs j LEFT JOIN job_end_reasons r ON r.job_id = j.id
- WHERE j.`+col+` = ? AND j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?`, "x", "a", "b")
+ WHERE j.`+col+` = ? AND `+statsDoneWindow, "x", "a", "b")
 		if err != nil {
 			t.Fatal(err)
 		}

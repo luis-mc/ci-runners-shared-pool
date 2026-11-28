@@ -123,6 +123,11 @@ body {
   .ds-header__live {
     min-inline-size: 0;
   }
+  /* A status word wraps here: nowrap would push the machines text under Commands at 393 px (CRSP373). */
+  .ds-header__state .ds-status {
+    white-space: normal;
+    min-inline-size: 0;
+  }
   .ds-header__commands {
     grid-area: commands;
     justify-self: end;
@@ -251,7 +256,7 @@ body {
   background: var(--ds-color-page);
   border-block-start: var(--ds-border-thin) solid var(--ds-color-border);
 }
-.ds-main > .ds-bar-slot {
+.ds-frame > .ds-bar-slot {
   display: contents;
 }
 .ds-action-bar[data-sticky='false'] {
@@ -274,22 +279,32 @@ body {
   margin-inline-start: auto;
 }
 /* A screen with a bar fills the window, and the bar sits at its foot even when the page is short: the
-   main column is a column that grows, and the bar (drawn in its slot, a direct child of the column) takes the free
-   space above it. */
+   main column grows, and the bar (drawn in its slot right after the main column) sits under it. The bar is a
+   child of the frame, not of the main column, so it sticks against the whole frame: a sticky box never leaves its
+   parent, and a header, menu or banner taller than the window minus the bar and the key-hint bar would otherwise
+   hold it below its place, over the key-hint bar, at the top of the page (UX-71). */
 .ds-frame:has(.ds-action-bar) {
   display: flex;
   flex-direction: column;
   min-block-size: 100dvh;
 }
-.ds-main:has(.ds-action-bar) {
+.ds-frame:has(.ds-action-bar) > .ds-main {
   display: flex;
   flex-direction: column;
   flex: 1 1 auto;
   min-inline-size: 0;
 }
-.ds-main > .ds-action-bar,
-.ds-main > .ds-bar-slot > .ds-action-bar {
+.ds-main > .ds-action-bar {
   margin-block-start: auto;
+}
+/* In the frame the bar keeps the edges of the main column's content (the wide frame less one gutter each side),
+   and its top meets the main column as before: the frame's gap between its bands is taken back. */
+.ds-frame > .ds-bar-slot > .ds-action-bar {
+  box-sizing: border-box;
+  inline-size: calc(100% - 2 * var(--ds-page-gutter));
+  max-inline-size: calc(var(--ds-frame-wide) - 2 * var(--ds-page-gutter));
+  margin-inline: auto;
+  margin-block-start: calc(-1 * var(--ds-space-4));
 }
 @media (max-width: 599px) {
   .ds-action-bar {
@@ -3904,8 +3919,8 @@ a.ds-stat:focus-visible {
   font-weight: var(--ds-weight-bold);
 }
 
-/* Segment meter (component 85, UX-91): segments with partial fill; blocks in the Cool Terminal theme, dots when
-   data-graphs=dotted. Outside the theme a LevelBar keeps its bar and hides the segments. */
+/* Segment meter (component 85, UX-91): segments with partial fill; blocks in the Cool Terminal theme, also when
+   data-graphs=dotted (dots are for charts only). Outside the theme a LevelBar keeps its bar and hides the segments. */
 .ds-segs {
   display: inline-flex;
   gap: var(--ds-seg-gap);
@@ -3938,11 +3953,6 @@ a.ds-stat:focus-visible {
 .ds-segmeter__text {
   color: var(--ds-color-text-muted);
 }
-[data-graphs='dotted'] .ds-segs__cell {
-  inline-size: 0.8ch;
-  block-size: 0.8ch;
-  border-radius: 50%;
-}
 .ds-level__bar .ds-segs {
   display: none;
 }
@@ -3963,14 +3973,439 @@ a.ds-stat:focus-visible {
   inline-size: auto;
   min-inline-size: 0;
 }
-[data-theme-name='terminal'][data-graphs='dotted'] .ds-level__bar .ds-segs__cell {
-  flex: 0 0 0.8ch;
-}
-/* Spark: the dotted form swaps the character set. */
+/* Spark: the dotted form swaps the character set. Dots change charts only; bars and meters stay blocks (owner, 27 Nov). */
 .ds-spark__dots,
 [data-graphs='dotted'] .ds-spark__blocks {
   display: none;
 }
 [data-graphs='dotted'] .ds-spark__dots {
   display: inline;
+}
+
+/* Dotted charts (UX-91, owner 27 Nov, CRSP370): in the Cool Terminal themes with Graphs set to Dots, the data charts are drawn
+   with solid round filled dots, like the dotted meters of the theme page: a column is a grid of dots filling the bar's own box, a line a line of dots, an
+   area a grid of dots, a heat cell a grid of dots, a bar list a row of dots. The chart parts draw the dots themselves (dots.tsx), so a
+   stretched chart never squashes one. Only the drawing changes; the words, the legend, the table and the text alternative stay.
+   Level bars, progress bars and segment meters stay blocks. Components 52 to 55 and 60. Blocks (the default) set no data-graphs. */
+.ds-trend__plot {
+  position: relative;
+}
+.ds-trend__dots,
+.ds-spark__dotlayer,
+.ds-fchart__dotlayer {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+.ds-dot {
+  fill: var(--ds-color-primary);
+}
+.ds-dot[data-dot='off'] {
+  fill: var(--ds-color-divider);
+}
+.ds-dot[data-dot='band'] {
+  fill-opacity: 0.5;
+}
+.ds-trend__series[data-series='1'] .ds-dot:not([data-dot='off']) {
+  fill: var(--ds-color-note);
+}
+.ds-trend__series[data-series='2'] .ds-dot:not([data-dot='off']) {
+  fill: var(--ds-color-needs-you);
+}
+.ds-trend__series[data-series='3'] .ds-dot:not([data-dot='off']) {
+  fill: var(--ds-color-done);
+}
+[data-theme-name='terminal'][data-graphs='dotted']
+  :is(
+    .ds-trend__line,
+    .ds-trend__band,
+    .ds-trend__column,
+    .ds-spark__line,
+    .ds-fchart__diagonal
+  ) {
+  display: none;
+}
+/* The legend swatch is a short line of round dots. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__swatch line {
+  stroke-width: var(--ds-border-thick);
+  stroke-dasharray: 0 6;
+  stroke-linecap: round;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-trend__grid {
+  stroke-dasharray: 0 6;
+  stroke-linecap: round;
+  stroke-width: var(--ds-border-medium);
+}
+/* Heatmap (CRSP374): each cell keeps its own footprint and is filled with a grid of round dots, tinted by the level like the
+   filled square it replaces; a cell at no value shows divider dots. */
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell {
+  --heat-ink: var(--ds-color-divider);
+  --heat-tile: calc(var(--ds-dot-r) * 2 + var(--ds-dot-gap));
+  background-color: transparent;
+  background-image: radial-gradient(
+    circle var(--ds-dot-r) at 50% 50%,
+    var(--heat-ink) calc(var(--ds-dot-r) - 0.5px),
+    transparent var(--ds-dot-r)
+  );
+  background-size: var(--heat-tile) var(--heat-tile);
+  background-position: center;
+  border-color: transparent;
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='1'] {
+  --heat-ink: color-mix(in srgb, var(--ds-color-primary) 25%, var(--ds-color-surface));
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='2'] {
+  --heat-ink: color-mix(in srgb, var(--ds-color-primary) 50%, var(--ds-color-surface));
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='3'] {
+  --heat-ink: color-mix(in srgb, var(--ds-color-primary) 75%, var(--ds-color-surface));
+}
+[data-theme-name='terminal'][data-graphs='dotted'] .ds-heat__cell[data-level='4'] {
+  --heat-ink: var(--ds-color-primary);
+}
+
+/* Bars in the Cool Terminal themes draw the theme's blocks (UX-91, CRSP369): the progress bar and the bar list are rows of
+   shared segments in the theme's colours; the plain bar and fill hide. In Dots only the charts draw dots, so these stay blocks
+   (the bar list is a bar, not a chart, so it draws blocks in Dots too). Outside the theme nothing changes. */
+.ds-progress .ds-segs,
+.ds-bars__segs {
+  display: none;
+}
+[data-theme-name='terminal'] .ds-progress {
+  background: transparent;
+  border-radius: 0;
+  block-size: auto;
+  overflow: visible;
+}
+[data-theme-name='terminal'] .ds-progress__fill {
+  display: none;
+}
+[data-theme-name='terminal'] .ds-progress .ds-segs,
+[data-theme-name='terminal'] .ds-bars__segs .ds-segs {
+  display: flex;
+}
+[data-theme-name='terminal'] .ds-bars__segs {
+  display: block;
+  grid-column: 1 / -1;
+}
+[data-theme-name='terminal'] .ds-progress .ds-segs__cell,
+[data-theme-name='terminal'] .ds-bars__segs .ds-segs__cell {
+  flex: 1 1 0;
+  inline-size: auto;
+  min-inline-size: 0;
+  --ds-seg-on: var(--ds-color-primary);
+}
+[data-theme-name='terminal'] .ds-bars__segs .ds-segs__cell {
+  --ds-seg-on: var(--ds-color-note);
+}
+[data-theme-name='terminal'] .ds-progress:not([data-known]) .ds-segs__cell {
+  animation: ds-seg-chase var(--ds-duration-loop) var(--ds-ease-in-out) infinite alternate;
+}
+[data-theme-name='terminal']
+  .ds-progress:not([data-known])
+  .ds-segs__cell:nth-child(3n + 2) {
+  animation-delay: calc(var(--ds-duration-loop) / 6);
+}
+[data-theme-name='terminal'] .ds-progress:not([data-known]) .ds-segs__cell:nth-child(3n) {
+  animation-delay: calc(var(--ds-duration-loop) / 3);
+}
+@keyframes ds-seg-chase {
+  from {
+    opacity: 0.25;
+  }
+  to {
+    opacity: 1;
+  }
+}
+[data-theme-name='terminal'] .ds-bars__track,
+[data-theme-name='terminal'] .ds-bars__bar {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Marketing frame (CRSP332, components 86 to 91): the public site's frame, hero, feature band, screenshot, prose and
+   static doc search. Only tokens; one column on a phone (360 px), two on a wide screen.
+   --------------------------------------------------------------------------------------------------------------- */
+.ds-site {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-block-size: 100vh;
+  min-inline-size: 0;
+}
+.ds-site__bar,
+.ds-site__main,
+.ds-site__footer {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: var(--ds-frame-marketing);
+  margin-inline: auto;
+  padding-inline: var(--ds-page-gutter);
+  min-inline-size: 0;
+}
+.ds-site__bar {
+  padding-block-start: var(--ds-space-2);
+}
+.ds-site__main {
+  display: grid;
+  gap: var(--ds-space-6);
+  align-content: start;
+  padding-block: var(--ds-page-padding);
+}
+.ds-site__footer {
+  display: grid;
+  gap: var(--ds-space-2);
+  padding-block: var(--ds-space-5);
+  border-block-start: var(--ds-border-thin) solid var(--ds-color-divider);
+}
+.ds-site__bar .ds-topmenu__list {
+  padding-inline: 0;
+}
+.ds-site__skip {
+  position: absolute;
+  inset-inline-start: var(--ds-space-2);
+  inset-block-start: var(--ds-space-2);
+  transform: translateY(-200%);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  color: var(--ds-color-text);
+  background: var(--ds-color-surface);
+  border: var(--ds-border-medium) solid var(--ds-color-focus);
+  z-index: 1;
+}
+.ds-site__skip:focus {
+  transform: none;
+}
+
+.ds-hero {
+  display: grid;
+  gap: var(--ds-space-6);
+  align-items: center;
+  min-inline-size: 0;
+}
+.ds-hero__text {
+  display: grid;
+  gap: var(--ds-space-4);
+  align-content: start;
+  justify-items: start;
+  min-inline-size: 0;
+}
+.ds-hero__title {
+  font-size: var(--ds-size-6);
+  overflow-wrap: anywhere;
+}
+.ds-hero__lead {
+  margin: 0;
+  font-size: var(--ds-size-4);
+  line-height: var(--ds-line-height);
+  color: var(--ds-color-text-muted);
+}
+.ds-hero__media,
+.ds-band-feature__media {
+  min-inline-size: 0;
+}
+
+.ds-band-feature {
+  display: grid;
+  gap: var(--ds-space-5);
+  align-items: start;
+  min-inline-size: 0;
+}
+.ds-band-feature__text {
+  display: grid;
+  gap: var(--ds-space-3);
+  align-content: start;
+  min-inline-size: 0;
+}
+.ds-band-feature__lead {
+  margin: 0;
+  color: var(--ds-color-text-muted);
+}
+.ds-band-feature__body {
+  display: grid;
+  gap: var(--ds-space-4);
+  min-inline-size: 0;
+}
+
+.ds-shot {
+  margin: 0;
+  display: grid;
+  gap: var(--ds-space-2);
+  min-inline-size: 0;
+}
+.ds-shot__img {
+  display: block;
+  max-inline-size: 100%;
+  block-size: auto;
+  border: var(--ds-border-thin) solid var(--ds-color-divider);
+  border-radius: var(--ds-radius-2);
+}
+.ds-shot__caption {
+  font-size: var(--ds-size-2);
+  color: var(--ds-color-text-muted);
+}
+
+.ds-prose {
+  display: grid;
+  gap: var(--ds-space-3);
+  max-inline-size: var(--ds-measure-prose);
+  min-inline-size: 0;
+  line-height: var(--ds-line-height);
+  overflow-wrap: anywhere;
+}
+.ds-prose > * {
+  margin: 0;
+  min-inline-size: 0;
+}
+.ds-prose h1,
+.ds-prose h2,
+.ds-prose h3,
+.ds-prose h4 {
+  line-height: var(--ds-line-height-tight);
+  color: var(--ds-color-primary);
+}
+.ds-prose h2 {
+  margin-block-start: var(--ds-space-4);
+  font-size: var(--ds-size-5);
+}
+.ds-prose h3 {
+  font-size: var(--ds-size-4);
+}
+.ds-prose h4 {
+  font-size: var(--ds-size-3);
+}
+.ds-prose ul,
+.ds-prose ol {
+  padding-inline-start: var(--ds-space-5);
+}
+.ds-prose li + li {
+  margin-block-start: var(--ds-space-1);
+}
+.ds-prose a {
+  color: var(--ds-color-primary);
+  text-underline-offset: var(--ds-space-1);
+}
+.ds-prose a:visited {
+  color: var(--ds-color-primary);
+}
+.ds-prose a:hover {
+  color: var(--ds-color-text);
+}
+.ds-prose a:focus-visible {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+  outline-offset: var(--ds-border-medium);
+}
+.ds-prose code {
+  font-family: var(--ds-font-mono);
+  font-size: var(--ds-size-2);
+}
+.ds-prose pre {
+  margin: 0;
+  max-inline-size: 100%;
+  overflow-x: auto;
+  padding: var(--ds-space-3);
+  font-family: var(--ds-font-mono);
+  font-size: var(--ds-size-2);
+  background: var(--ds-color-page);
+  border: var(--ds-border-thin) solid var(--ds-color-divider);
+  border-radius: var(--ds-radius-2);
+}
+.ds-prose pre:focus-visible {
+  outline: var(--ds-border-medium) solid var(--ds-color-focus);
+}
+.ds-prose blockquote {
+  padding-inline-start: var(--ds-space-3);
+  border-inline-start: var(--ds-border-medium) solid var(--ds-color-border);
+  color: var(--ds-color-text-muted);
+}
+.ds-prose hr {
+  inline-size: 100%;
+  border: 0;
+  border-block-start: var(--ds-border-thin) solid var(--ds-color-divider);
+}
+/* A table in running text scrolls inside its own box, so the page never scrolls sideways (R6.3). */
+.ds-prose .ds-prose__table {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+.ds-prose table {
+  border-collapse: collapse;
+  font-size: var(--ds-size-2);
+}
+.ds-prose th,
+.ds-prose td {
+  padding: var(--ds-space-1) var(--ds-space-3);
+  text-align: start;
+  vertical-align: top;
+  border: var(--ds-border-thin) solid var(--ds-color-divider);
+}
+.ds-prose th {
+  color: var(--ds-color-primary);
+}
+.ds-prose img,
+.ds-prose svg {
+  max-inline-size: 100%;
+  block-size: auto;
+}
+.ds-prose .ds-prose__diagram {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+/* A diagram drawn at build time carries only shapes that read these variables; the colours come from the theme. */
+.ds-prose__diagram svg {
+  --bg: var(--ds-color-page);
+  --_text: var(--ds-color-text);
+  --_text-sec: var(--ds-color-text);
+  --_text-muted: var(--ds-color-text-muted);
+  --_text-faint: var(--ds-color-text-muted);
+  --_line: var(--ds-color-border);
+  --_arrow: var(--ds-color-primary);
+  --_node-fill: var(--ds-color-surface);
+  --_node-stroke: var(--ds-color-border);
+  --_group-fill: var(--ds-color-page);
+  --_group-hdr: var(--ds-color-surface);
+  --_inner-stroke: var(--ds-color-divider);
+  --_key-badge: var(--ds-color-surface);
+  font-family: var(--ds-font-body);
+}
+
+.ds-docsearch {
+  display: grid;
+  gap: var(--ds-space-3);
+  min-inline-size: 0;
+}
+.ds-docsearch__box {
+  max-inline-size: var(--ds-width-field-full);
+}
+.ds-docsearch__list {
+  display: grid;
+  gap: var(--ds-space-5);
+  min-inline-size: 0;
+}
+.ds-docsearch__group {
+  display: grid;
+  gap: var(--ds-space-2);
+}
+.ds-docsearch__items {
+  display: grid;
+  gap: var(--ds-space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-docsearch__hint {
+  color: var(--ds-color-text-muted);
+}
+.ds-docsearch__list [hidden] {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .ds-hero {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
+  .ds-band-feature[data-media] {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  }
 }

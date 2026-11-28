@@ -368,3 +368,29 @@ func TestRestartingOnlyAfterTheInstallerFinished(t *testing.T) {
 		t.Fatalf("waiting claims progress: %s", w.State())
 	}
 }
+
+func TestNotesShowOnReviewAndDoneOnlyWhenThereAreSome(t *testing.T) {
+	m := NewModel("0.1.12", "0.1.13", ModeReview)
+	m.Observe(Snapshot{ServiceUp: true, ServiceVersion: "0.1.12", Notes: "Live progress."})
+	if v := m.View(); v.State != StateReview || !strings.Contains(strings.Join(v.Body, " "), "Live progress.") {
+		t.Fatalf("review: %+v", v.Body)
+	}
+	m = NewModel("0.1.12", "0.1.13", ModeReview)
+	m.Observe(Snapshot{ServiceUp: true, ServiceVersion: "0.1.12"})
+	if v := m.View(); strings.Contains(strings.Join(v.Body, " "), "What's new") {
+		t.Fatalf("a release without a note shows one: %+v", v.Body)
+	}
+	d := snap("done", 100)
+	d.UpdatedNotes = "Live progress."
+	m = NewModel("0.1.12", "0.1.13", ModeLive)
+	m.Observe(d)
+	v := m.View()
+	if v.State != StateDone || len(v.Body) != 2 || v.Body[1] != "Live progress." || len(v.Buttons) != 1 || v.Buttons[0].ID != BtnClose {
+		t.Fatalf("done with a note: %+v %+v", v.Body, v.Buttons)
+	}
+	m = NewModel("0.1.12", "0.1.13", ModeLive)
+	m.Observe(snap("done", 100))
+	if v := m.View(); len(v.Buttons) != 2 || v.Buttons[0].ID != BtnWhatsNew {
+		t.Fatalf("done without a note keeps the release page button: %+v", v.Buttons)
+	}
+}

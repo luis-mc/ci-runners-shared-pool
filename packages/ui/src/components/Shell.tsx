@@ -280,8 +280,11 @@ export function Frame({
           {strip}
           <main className="ds-main ds-band" id="main" data-frame-band>
             {children}
-            <div className="ds-bar-slot" ref={setSlot} />
           </main>
+          {/* The action bar is drawn here, right after the main column and as a child of the frame, so it sticks
+              against the whole frame: a tall header, menu or banner above the main column never holds it below
+              its place over the key-hint bar at the top of the page (UX-71). */}
+          <div className="ds-bar-slot" ref={setSlot} />
           {hints}
         </div>
       </ActionBarSlotContext.Provider>

@@ -14,12 +14,18 @@ type Settings struct {
 	RegistryMirror bool `json:"registry_mirror"`
 	GitRefreshMin  int  `json:"git_refresh_minutes"`
 	WarmthHours    int  `json:"warmth_hours"`
+	// PackageProxy turns the npm and PyPI proxy on (R5.74 to R5.77).
+	PackageProxy bool `json:"package_proxy"`
+	// BudgetGiB is the hub's one byte budget (R5.73).
+	BudgetGiB int `json:"budget_gib"`
 }
 
-// Defaults of the numbers (R5.66, R5.11, R5.28).
+// Defaults of the numbers (R5.66, R5.11, R5.28, R5.73).
 const (
 	DefaultRefreshMinutes = 15
 	DefaultWarmthHours    = 24
+	DefaultBudgetGiB      = 60
+	MaxBudgetGiB          = 4096
 )
 
 // Normalize fills the defaults for a zero number.
@@ -30,11 +36,20 @@ func (s Settings) Normalize() Settings {
 	if s.WarmthHours == 0 {
 		s.WarmthHours = DefaultWarmthHours
 	}
+	if s.BudgetGiB == 0 {
+		s.BudgetGiB = DefaultBudgetGiB
+	}
 	return s
 }
 
+// BudgetBytes is the budget in bytes, with its default.
+func (s Settings) BudgetBytes() int64 { return int64(s.Normalize().BudgetGiB) << 30 }
+
 // Validate says what is wrong with a setting, in a sentence fit to show.
 func (s Settings) Validate() error {
+	if s.BudgetGiB < 0 || s.BudgetGiB > MaxBudgetGiB {
+		return fmt.Errorf("the cache budget must be 1 to %d GiB, not %d", MaxBudgetGiB, s.BudgetGiB)
+	}
 	if s.GitRefreshMin < 0 || s.GitRefreshMin > 1440 {
 		return fmt.Errorf("git refresh must be 1 to 1440 minutes, not %d", s.GitRefreshMin)
 	}

@@ -561,8 +561,12 @@ func (s *server) GetCliLoginConfig(ctx context.Context, _ gen.GetCliLoginConfigR
 	if base == "" {
 		base = addresses.DefaultGitHubURL
 	}
-	return gen.GetCliLoginConfig200JSONResponse{ClientId: st.App.ClientID,
-		DeviceCodeUrl: base + "/login/device/code", VerificationUrl: base + "/login/device"}, nil
+	out := gen.GetCliLoginConfig200JSONResponse{ClientId: st.App.ClientID,
+		DeviceCodeUrl: base + "/login/device/code", VerificationUrl: base + "/login/device"}
+	if u := github.AppSettingsURL(base, st.App.Slug, st.App.OwnerType, st.App.OwnerLogin); u != "" {
+		out.SettingsUrl = &u
+	}
+	return out, nil
 }
 
 func toCliToken(t auth.CLIToken) gen.CliToken {

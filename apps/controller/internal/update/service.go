@@ -10,6 +10,7 @@ import (
 	"math/rand"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"time"
 
@@ -45,6 +46,51 @@ type LifecycleStatus struct {
 	NextCheckAt    *time.Time
 	Failures       *FailureView
 	WaitingForJobs bool
+	// Notes is the owner-facing note of the offered release; empty when it has none.
+	Notes string
+	// Updated is the note of the release this machine now runs, kept until the next update; nil when
+	// that release had no note.
+	Updated *WhatsNew
+}
+
+// WhatsNew is the note of a release that was installed.
+type WhatsNew struct {
+	Version string `json:"version"`
+	Notes   string `json:"notes"`
+}
+
+// NotesView is what the tray shows: the note of the offered release and of the installed one.
+type NotesView struct {
+	OfferedVersion string
+	Offered        string
+	Updated        *WhatsNew
+}
+
+const whatsNewFile = "whats-new.json"
+
+// Notes returns the notes the tray shows.
+func (s *Service) Notes() NotesView {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	v := NotesView{Updated: s.updatedNotes()}
+	if o := s.u.Offered; o != nil {
+		v.OfferedVersion, v.Offered = o.Version, o.Notes
+	}
+	return v
+}
+
+// updatedNotes reads the note saved when the running version was installed; nil when the file is
+// missing, empty or for another version.
+func (s *Service) updatedNotes() *WhatsNew {
+	b, err := os.ReadFile(filepath.Join(s.o.Dir, whatsNewFile)) //nolint:gosec // work folder
+	if err != nil {
+		return nil
+	}
+	var w WhatsNew
+	if json.Unmarshal(b, &w) != nil || w.Notes == "" || strings.TrimPrefix(w.Version, "v") != strings.TrimPrefix(s.o.Current, "v") {
+		return nil
+	}
+	return &w
 }
 
 // FailureView is the failed-install record of the offered version.
@@ -208,6 +254,7 @@ func (e *serviceEnv) Package(m lifecycle.Manifest) (string, error) {
 func (e *serviceEnv) Install(m lifecycle.Manifest, actor string, remote bool) (bool, error) {
 	b, _ := json.Marshal(installRecord{Actor: actor, Remote: remote, Version: m.Version})
 	_ = os.WriteFile(filepath.Join(e.s.o.Dir, installFile), b, 0o600)
+	e.s.saveWhatsNew(m)
 	who := actor
 	if actor == "updater" {
 		who = "auto-update" // the engine waits at most its drain limit for an automatic install
@@ -329,9 +376,9 @@ func (s *Service) Status(ctx context.Context) LifecycleStatus {
 func (s *Service) statusLocked() LifecycleStatus {
 	u := s.u
 	st := LifecycleStatus{State: u.State, Current: u.Version, Policy: u.Policy, Window: u.Window,
-		NextCheckAt: epoch(u.NextCheckAt), WaitingForJobs: u.WaitingForJobs()}
+		NextCheckAt: epoch(u.NextCheckAt), WaitingForJobs: u.WaitingForJobs(), Updated: s.updatedNotes()}
 	if u.Offered != nil {
-		st.Available, st.Required = u.Offered.Version, u.Offered.Required
+		st.Available, st.Required, st.Notes = u.Offered.Version, u.Offered.Required, u.Offered.Notes
 		if u.Failures > 0 {
 			st.Failures = &FailureView{Version: u.Offered.Version, Count: u.Failures, RetryAt: epoch(u.RetryAt)}
 		}
@@ -371,4 +418,16 @@ func RowToHistory(r lifecycle.Row) HistoryRow {
 		action, result = "install", "skipped"
 	}
 	return HistoryRow{At: time.Unix(int64(r.At), 0).UTC(), Actor: r.Actor, Action: action, Version: r.Version, Result: result}
+}
+
+// saveWhatsNew keeps the note of the release being installed, so the new version can show it once
+// it runs. A release without a note clears the old one.
+func (s *Service) saveWhatsNew(m lifecycle.Manifest) {
+	path := filepath.Join(s.o.Dir, whatsNewFile)
+	if m.Notes == "" {
+		_ = os.Remove(path)
+		return
+	}
+	b, _ := json.Marshal(WhatsNew{Version: m.Version, Notes: m.Notes})
+	_ = os.WriteFile(path, b, 0o600)
 }

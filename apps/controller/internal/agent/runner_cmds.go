@@ -6,6 +6,7 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend"
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/gen/agent/v1"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/redact"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
 )
@@ -40,7 +41,8 @@ func SpecFromProto(p *agentv1.RunnerSpec) backend.RunnerSpec {
 		GitHubURL: p.GetGithubUrl(), Group: p.GetRunnerGroup(), RunnerVersion: p.GetRunnerVersion(),
 		RunnerSHA256: p.GetRunnerSha256(), WindowsSymlinkRight: p.GetWindowsSymlinkRight(),
 		ExtraPackages: p.GetExtraPackages(), KeepDependencies: p.KeepDependencies == nil || p.GetKeepDependencies(),
-		Container: p.GetKind() == "persistent" && p.GetBackend() == string(backend.Docker),
+		Container:    p.GetKind() == "persistent" && p.GetBackend() == string(backend.Docker),
+		PackageProxy: lancache.ProxyGrant{Repo: p.GetPackageProxy().GetRepo(), Token: p.GetPackageProxy().GetToken()},
 	}
 }
 
@@ -58,6 +60,8 @@ func (l *link) runnerCmd(ctx context.Context, msg *agentv1.SessionResponse) {
 				return
 			}
 			spec := SpecFromProto(a.GetRunner())
+			l.redactor().Add(spec.PackageProxy.Token)
+			spec.PackageEnv = l.packageEnv(ctx, spec)
 			if err := l.preparePackages(ctx, spec, cfg); err != nil {
 				l.answer(a.GetCommandId(), a.GetRunner().GetRunnerId(), false, "failed", "", err)
 				return
