@@ -41,8 +41,8 @@ func TestAgentMSIIsItsOwnProduct(t *testing.T) {
 	if !strings.Contains(s, "<MajorUpgrade") || !strings.Contains(s, "DowngradeErrorMessage") {
 		t.Error("a newer agent MSI replaces the old one and a downgrade is refused")
 	}
-	if !strings.Contains(s, controllerCode) || !strings.Contains(s, "<Launch ") {
-		t.Error("the agent MSI refuses to install next to the Controller")
+	if strings.Contains(s, "ProductSearch") || strings.Contains(s, "<Launch ") {
+		t.Error("WiX v5 refuses a ProductSearch under Package or Property (WIX0005); no product search in this package")
 	}
 	for _, bad := range []string{"<ServiceInstall", "<Shortcut", "<ui:", "<UIRef", "fw:"} {
 		if strings.Contains(s, bad) {

@@ -8,7 +8,8 @@
     CrspExe         the crsp.exe to install
 
   The Controller MSI (installer/controller/crsp.wxs) installs the same file, so the two do not
-  go on one machine: this package refuses to install when the Controller product is there.
+  go on one machine. WiX v5 has no package-level product search that this build could use, so the
+  package does not check for it; the Controller already contains the agent.
 -->
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
      xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
@@ -23,13 +24,6 @@
     <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed."
                   AllowSameVersionUpgrades="yes" />
     <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
-
-    <!-- State 5 = installed. -->
-    <Property Id="CONTROLLERSTATE">
-      <util:ProductSearch UpgradeCode="C1D62442-6DB4-4FF0-9F28-A1CE3121B332" Result="state" />
-    </Property>
-    <Launch Condition="NOT (CONTROLLERSTATE = 5)"
-            Message="The Controller is installed on this machine. It already contains the agent; remove it first to install the agent alone." />
 
     <StandardDirectory Id="ProgramFiles64Folder">
       <Directory Id="INSTALLFOLDER" Name="crsp" />
