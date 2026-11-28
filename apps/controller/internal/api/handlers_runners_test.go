@@ -17,15 +17,16 @@ import (
 )
 
 type fakeRunners struct {
-	recs      map[string]runners.Record
-	refuse    string
-	removed   bool
-	started   []string
-	cleared   []string
-	lastActor string
-	lastAdd   runners.AddRequest
-	views     map[string]runners.View // overrides of the view fields of a record
-	stray     []runners.StrayRegistration
+	recs         map[string]runners.Record
+	refuse       string
+	removed      bool
+	started      []string
+	cleared      []string
+	reregistered []string
+	lastActor    string
+	lastAdd      runners.AddRequest
+	views        map[string]runners.View // overrides of the view fields of a record
+	stray        []runners.StrayRegistration
 }
 
 func (f *fakeRunners) ListView(_ context.Context, fl runners.Filter) ([]runners.View, error) {
@@ -67,6 +68,18 @@ func (f *fakeRunners) UpdateSettings(_ context.Context, id string, keep *bool, a
 		r.KeepDependencies = *keep
 	}
 	f.recs[id] = r
+	return f.view(r), nil
+}
+func (f *fakeRunners) ReregisterRunner(_ context.Context, id, actor string) (runners.View, error) {
+	r, ok := f.recs[id]
+	if !ok {
+		return runners.View{}, runners.ErrNotFound
+	}
+	if r.Kind != "persistent" {
+		return runners.View{}, &runners.RefusalError{Reason: "runner " + r.Name + " is ephemeral"}
+	}
+	f.lastActor = actor
+	f.reregistered = append(f.reregistered, id)
 	return f.view(r), nil
 }
 func (f *fakeRunners) RequestClearCache(_ context.Context, id, actor string) (runners.View, error) {

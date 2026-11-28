@@ -5194,11 +5194,17 @@ type AppHealth struct {
 	// CheckedAt When GitHub last answered. Absent before the first answer.
 	CheckedAt *time.Time `json:"checked_at,omitempty"`
 
+	// DeviceFlowOff True when GitHub answered that "Enable Device Flow" is off for the App, so `crsp login` cannot sign anyone in (R5.14).
+	DeviceFlowOff *bool `json:"device_flow_off,omitempty"`
+
 	// Gone True when GitHub says the App or its key is gone (R5.6).
 	Gone bool `json:"gone"`
 
 	// Reason Why, in words for the page. Only when gone.
 	Reason *string `json:"reason,omitempty"`
+
+	// SettingsUrl The App's settings page on GitHub. Present when device_flow_off is true.
+	SettingsUrl *string `json:"settings_url,omitempty"`
 }
 
 // AppInstallUrl defines model for AppInstallUrl.
@@ -5492,9 +5498,12 @@ type CacheList struct {
 
 // CliLoginConfig defines model for CliLoginConfig.
 type CliLoginConfig struct {
-	ClientId        string `json:"client_id"`
-	DeviceCodeUrl   string `json:"device_code_url"`
-	VerificationUrl string `json:"verification_url"`
+	ClientId      string `json:"client_id"`
+	DeviceCodeUrl string `json:"device_code_url"`
+
+	// SettingsUrl The App's settings page on GitHub, where "Enable Device Flow" is turned on. The CLI names it when GitHub says Device Flow is off.
+	SettingsUrl     *string `json:"settings_url,omitempty"`
+	VerificationUrl string  `json:"verification_url"`
 }
 
 // CliToken defines model for CliToken.
@@ -9550,9 +9559,12 @@ type RunWasteKind string
 
 // Runner defines model for Runner.
 type Runner struct {
-	Arch      Arch        `json:"arch"`
-	Backend   BackendName `json:"backend"`
-	CreatedAt *time.Time  `json:"created_at,omitempty"`
+	Arch    Arch        `json:"arch"`
+	Backend BackendName `json:"backend"`
+
+	// CanReregister True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153).
+	CanReregister *bool      `json:"can_reregister,omitempty"`
+	CreatedAt     *time.Time `json:"created_at,omitempty"`
 
 	// CurrentJob One job attempt (observability R5.7, R5.8).
 	CurrentJob *Job `json:"current_job,omitempty"`
@@ -13567,6 +13579,13 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /api/v1/runners/{runnerId}/replace (the `PlanRunnerReplacement` operationId).
 	PlanRunnerReplacement(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ReregisterRunner Register a runner again when GitHub deleted its registration
+	//
+	// runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
+	//
+	// Corresponds with POST /api/v1/runners/{runnerId}/reregister (the `ReregisterRunner` operationId).
+	ReregisterRunner(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// UpdateRunnerSettingsWithBody Change a persistent runner's settings
 	//
@@ -18381,6 +18400,23 @@ func (c *Client) DeleteRunnerRegistration(ctx context.Context, runnerId RunnerId
 // Corresponds with POST /api/v1/runners/{runnerId}/replace (the `PlanRunnerReplacement` operationId).
 func (c *Client) PlanRunnerReplacement(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewPlanRunnerReplacementRequest(c.Server, runnerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ReregisterRunner Register a runner again when GitHub deleted its registration
+//
+// runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
+//
+// Corresponds with POST /api/v1/runners/{runnerId}/reregister (the `ReregisterRunner` operationId).
+func (c *Client) ReregisterRunner(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewReregisterRunnerRequest(c.Server, runnerId)
 	if err != nil {
 		return nil, err
 	}
@@ -28666,6 +28702,40 @@ func NewPlanRunnerReplacementRequest(server string, runnerId RunnerId) (*http.Re
 	return req, nil
 }
 
+// NewReregisterRunnerRequest constructs an http.Request for the ReregisterRunner method
+func NewReregisterRunnerRequest(server string, runnerId RunnerId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runnerId", runnerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runners/%s/reregister", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewUpdateRunnerSettingsRequest calls the generic UpdateRunnerSettings builder with application/json body
 func NewUpdateRunnerSettingsRequest(server string, runnerId RunnerId, body UpdateRunnerSettingsJSONRequestBody) (*http.Request, error) {
 	var bodyReader io.Reader
@@ -33238,6 +33308,15 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /api/v1/runners/{runnerId}/replace (the `PlanRunnerReplacement` operationId).
 	PlanRunnerReplacementWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*PlanRunnerReplacementResponse, error)
+
+	// ReregisterRunnerWithResponse Register a runner again when GitHub deleted its registration
+	//
+	// runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runners/{runnerId}/reregister (the `ReregisterRunner` operationId).
+	ReregisterRunnerWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*ReregisterRunnerResponse, error)
 
 	// UpdateRunnerSettingsWithBodyWithResponse Change a persistent runner's settings
 	//
@@ -43037,6 +43116,54 @@ func (r PlanRunnerReplacementResponse) ContentType() string {
 	return ""
 }
 
+type ReregisterRunnerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Runner
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ReregisterRunnerResponse) GetJSON200() *Runner {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ReregisterRunnerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ReregisterRunnerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ReregisterRunnerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ReregisterRunnerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ReregisterRunnerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type UpdateRunnerSettingsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -49239,6 +49366,21 @@ func (c *ClientWithResponses) PlanRunnerReplacementWithResponse(ctx context.Cont
 		return nil, err
 	}
 	return ParsePlanRunnerReplacementResponse(rsp)
+}
+
+// ReregisterRunnerWithResponse Register a runner again when GitHub deleted its registration
+//
+// runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runners/{runnerId}/reregister (the `ReregisterRunner` operationId).
+func (c *ClientWithResponses) ReregisterRunnerWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*ReregisterRunnerResponse, error) {
+	rsp, err := c.ReregisterRunner(ctx, runnerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseReregisterRunnerResponse(rsp)
 }
 
 // UpdateRunnerSettingsWithBodyWithResponse Change a persistent runner's settings
@@ -56695,6 +56837,39 @@ func ParsePlanRunnerReplacementResponse(rsp *http.Response) (*PlanRunnerReplacem
 			return nil, err
 		}
 		response.JSON201 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseReregisterRunnerResponse parses an HTTP response from a ReregisterRunnerWithResponse call
+func ParseReregisterRunnerResponse(rsp *http.Response) (*ReregisterRunnerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ReregisterRunnerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Runner
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
 
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
 		var dest Error

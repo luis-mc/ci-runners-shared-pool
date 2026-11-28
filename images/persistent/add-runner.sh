@@ -30,6 +30,9 @@ if [ ! -x "$dir/config.sh" ]; then
   fresh=1
   mkdir -p "$dir" && cp -a "$SRC/." "$dir/" || { rm -rf "$dir"; exit 1; }
 fi
+# Files of an old registration (deleted at GitHub) would make config.sh refuse
+# or the listener use dead credentials: they go before the registration.
+[ "$fresh" = 1 ] || rm -f "$dir/.runner" "$dir/.credentials" "$dir/.credentials_rsaparams"
 set -- --unattended --replace --url "$url" --name "$name" --labels "$labels" --disableupdate --work _work
 [ -n "$group" ] && set -- "$@" --runnergroup "$group"
 if ! (export ACTIONS_RUNNER_INPUT_TOKEN && cd "$dir" && ./config.sh "$@"); then
@@ -40,5 +43,5 @@ if ! (export ACTIONS_RUNNER_INPUT_TOKEN && cd "$dir" && ./config.sh "$@"); then
 fi
 if [ "$keep" = 0 ]; then k=0; else k=1; fi
 printf 'CRSP_KEEP_DEPENDENCIES=%s\n' "$k" >"$dir/crsp-hygiene.env"
-rm -f "$STATE/runners.d/$name.stopped"
+rm -f "$STATE/runners.d/$name.stopped" "$STATE/runners.d/$name.lost"
 : >"$STATE/runners.d/$name.env"

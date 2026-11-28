@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"testing"
 )
@@ -98,6 +99,79 @@ func TestRealPowerShellReadOnlyScriptsRun(t *testing.T) {
 	for name, marker := range want {
 		if !strings.Contains(out, "== "+name+" ") || !strings.Contains(out, marker) {
 			t.Errorf("%s: missing %q in %q", name, marker, out)
+		}
+	}
+}
+
+// listenerScriptRun runs a script of the Runner.Listener / Runner.Worker list
+// with a real process named like it, started from the folder's bin.
+func startNamedProcess(t *testing.T, name string) (folder string, pid int) {
+	t.Helper()
+	folder = t.TempDir()
+	bin := filepath.Join(folder, "bin")
+	if err := os.MkdirAll(bin, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	src := filepath.Join(os.Getenv("SystemRoot"), "System32", "ping.exe")
+	b, err := os.ReadFile(src)
+	if err != nil {
+		t.Skip("no ping.exe to copy")
+	}
+	exe := filepath.Join(bin, name+".exe")
+	if err := os.WriteFile(exe, b, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.CommandContext(t.Context(), exe, "-n", "30", "127.0.0.1")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = cmd.Process.Kill(); _ = cmd.Wait() })
+	return folder, cmd.Process.Pid
+}
+
+// CRSP382: the listener list gives the id of a listener of the folder, nothing
+// for another folder or for no listener, and always exits 0.
+func TestRealListenersScriptFindsOnlyTheFoldersListener(t *testing.T) {
+	folder, pid := startNamedProcess(t, "Runner.Listener")
+	out, errOut, code := runPS(t, scriptListeners, map[string]string{"CRSP_FOLDER": folder})
+	if code != 0 || strings.TrimSpace(out) != strconv.Itoa(pid) {
+		t.Fatalf("exit %d, stdout %q, stderr %q, want pid %d", code, out, errOut, pid)
+	}
+	out, errOut, code = runPS(t, scriptListeners, map[string]string{"CRSP_FOLDER": t.TempDir()})
+	if code != 0 || strings.TrimSpace(out) != "" {
+		t.Fatalf("another folder: exit %d, stdout %q, stderr %q", code, out, errOut)
+	}
+}
+
+// CRSP382: a process whose Path cannot be read (it throws, as it does for a
+// process of another account or of another bitness) is not a failure of the
+// list; Windows is asked for its path another way.
+func TestRealListenersScriptSurvivesAProcessPathThatThrows(t *testing.T) {
+	folder, pid := startNamedProcess(t, "Runner.Listener")
+	prefix := "function Get-Process {\n" +
+		"  $o = New-Object psobject -Property @{ Id = " + strconv.Itoa(pid) + " }\n" +
+		"  $o | Add-Member -MemberType ScriptProperty -Name Path -Value { throw 'Access is denied' }\n" +
+		"  $o\n}\n"
+	for name, script := range map[string]string{"listeners": scriptListeners, "workers": scriptWorkers} {
+		out, errOut, code := runPS(t, prefix+script, map[string]string{"CRSP_FOLDER": folder})
+		if code != 0 {
+			t.Errorf("%s: exit %d, stdout %q, stderr %q", name, code, out, errOut)
+		}
+		if name == "listeners" && strings.TrimSpace(out) != strconv.Itoa(pid) {
+			t.Errorf("listeners: stdout %q, want pid %d", out, pid)
+		}
+	}
+}
+
+// CRSP382: a folder on a drive that is not there, or no folder at all, has no
+// listener; it is not an error (Join-Path used to throw for both).
+func TestRealListenersScriptNoListenerIsNotAnError(t *testing.T) {
+	for _, folder := range []string{`Q:\crsp\runners\absent`, "", `C:\crsp-382-absent\`} {
+		for name, script := range map[string]string{"listeners": scriptListeners, "workers": scriptWorkers} {
+			out, errOut, code := runPS(t, script, map[string]string{"CRSP_FOLDER": folder})
+			if code != 0 || strings.TrimSpace(out) != "" {
+				t.Errorf("%s of %q: exit %d, stdout %q, stderr %q", name, folder, code, out, errOut)
+			}
 		}
 	}
 }

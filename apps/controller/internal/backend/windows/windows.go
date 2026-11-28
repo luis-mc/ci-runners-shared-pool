@@ -306,7 +306,7 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	if e, err := b.d.FS.ReadFile(Join(folder, ".env")); err == nil {
 		haveEnv = string(e)
 	}
-	action := persistent.Decide(have, haveEnv, wantMeta, wantEnv)
+	action := persistent.WithLost(persistent.Decide(have, haveEnv, wantMeta, wantEnv), have != nil && persistent.RegistrationLostIn(b.d.FS, folder, Join))
 	b.log("register", fmt.Sprintf("runner %s: %s", r.Name, action))
 
 	env := map[string]string{"CRSP_FOLDER": folder, "CRSP_ACCOUNT": account, "CRSP_SERVICE": wantMeta.Service, "CRSP_RUNNER": r.Name}
@@ -331,6 +331,27 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 			return h, err
 		}
 		return h, persistent.WriteMeta(b.d.FS, Join(folder, persistent.MetaFile), wantMeta)
+	case persistent.RegisterLost:
+		// GitHub deleted the registration: nothing is left to remove. The
+		// account and service stay; the registration is made again in place
+		// (runners R5.152).
+		if err := b.stopService(ctx, env, folder); err != nil {
+			return h, err
+		}
+		if err := persistent.CleanStale(b.d.FS, folder, Join); err != nil {
+			return h, err
+		}
+		if err := b.runner(ctx, "register again", folder,
+			ConfigureArgs(r.GitHubURL, r.Name, r.Group, r.Labels), cfg.Registration); err != nil {
+			return h, err
+		}
+		if err := b.writeHooksAndEnv(folder, wantEnv, r.KeepDependencies); err != nil {
+			return h, err
+		}
+		if err := persistent.WriteMeta(b.d.FS, Join(folder, persistent.MetaFile), wantMeta); err != nil {
+			return h, err
+		}
+		return h, b.startService(ctx, env, account)
 	case persistent.Reregister:
 		if cfg.Removal == "" {
 			return h, errors.New("registering again in place needs a remove token for the old runner")

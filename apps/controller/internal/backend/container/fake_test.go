@@ -2,6 +2,7 @@ package container
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"slices"
 	"strings"
@@ -44,14 +45,15 @@ type fakeDocker struct {
 }
 
 type fakeC struct {
-	args    []string
-	running bool
-	label   string
-	key     string
-	image   string
-	files   map[string]string // path -> content ("" for a dir)
-	started []string          // JIT configs the start script read from stdin
-	owners  map[string]string // path -> uid:gid of the exec that wrote it
+	args     []string
+	running  bool
+	label    string
+	key      string
+	image    string
+	files    map[string]string // path -> content ("" for a dir)
+	started  []string          // JIT configs the start script read from stdin
+	owners   map[string]string // path -> uid:gid of the exec that wrote it
+	restarts int               // docker restart calls
 }
 
 // user is the Config.User of the container: the --user of its run arguments.
@@ -161,6 +163,14 @@ func (f *fakeDocker) handle(cmd sys.Command) sys.Result {
 			return ok0()
 		}
 		return fail1("Error: No such container: " + a[1])
+	case "restart":
+		if c, ok := f.containers[a[len(a)-1]]; ok {
+			c.running = true
+			c.restarts++
+			c.files[SupervisorSumFile] = "1 1" // the new supervisor writes its checksum
+			return ok0()
+		}
+		return fail1("Error: No such container")
 	case "stop":
 		if c, ok := f.containers[a[len(a)-1]]; ok {
 			c.running = false
@@ -363,6 +373,22 @@ found:
 		}
 		script := rest[2]
 		switch {
+		case strings.HasPrefix(script, "cd \"$1/bin\"") && strings.Contains(script, "sha256sum"):
+			var out []string
+			for k, v := range c.files {
+				if strings.HasPrefix(k, StateDir+"/bin/") && strings.HasSuffix(k, ".sh") {
+					out = append(out, fmt.Sprintf("%x  %s", sha256.Sum256([]byte(v)), strings.TrimPrefix(k, StateDir+"/bin/")))
+				}
+			}
+			return sys.Result{Stdout: strings.Join(out, "\n") + "\n"}
+		case strings.HasPrefix(script, "ls -A"):
+			var out []string
+			for k := range c.files {
+				if strings.HasPrefix(k, StateDir+"/busy/") {
+					out = append(out, strings.TrimPrefix(k, StateDir+"/busy/"))
+				}
+			}
+			return sys.Result{Stdout: strings.Join(out, "\n")}
 		case strings.HasPrefix(script, "mkdir -p") && strings.Contains(script, `cat >"$1.new"`):
 			c.files[rest[4]] = stdin
 			c.owners[rest[4]] = user

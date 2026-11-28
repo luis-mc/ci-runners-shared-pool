@@ -5193,11 +5193,17 @@ type AppHealth struct {
 	// CheckedAt When GitHub last answered. Absent before the first answer.
 	CheckedAt *time.Time `json:"checked_at,omitempty"`
 
+	// DeviceFlowOff True when GitHub answered that "Enable Device Flow" is off for the App, so `crsp login` cannot sign anyone in (R5.14).
+	DeviceFlowOff *bool `json:"device_flow_off,omitempty"`
+
 	// Gone True when GitHub says the App or its key is gone (R5.6).
 	Gone bool `json:"gone"`
 
 	// Reason Why, in words for the page. Only when gone.
 	Reason *string `json:"reason,omitempty"`
+
+	// SettingsUrl The App's settings page on GitHub. Present when device_flow_off is true.
+	SettingsUrl *string `json:"settings_url,omitempty"`
 }
 
 // AppInstallUrl defines model for AppInstallUrl.
@@ -5491,9 +5497,12 @@ type CacheList struct {
 
 // CliLoginConfig defines model for CliLoginConfig.
 type CliLoginConfig struct {
-	ClientId        string `json:"client_id"`
-	DeviceCodeUrl   string `json:"device_code_url"`
-	VerificationUrl string `json:"verification_url"`
+	ClientId      string `json:"client_id"`
+	DeviceCodeUrl string `json:"device_code_url"`
+
+	// SettingsUrl The App's settings page on GitHub, where "Enable Device Flow" is turned on. The CLI names it when GitHub says Device Flow is off.
+	SettingsUrl     *string `json:"settings_url,omitempty"`
+	VerificationUrl string  `json:"verification_url"`
 }
 
 // CliToken defines model for CliToken.
@@ -9549,9 +9558,12 @@ type RunWasteKind string
 
 // Runner defines model for Runner.
 type Runner struct {
-	Arch      Arch        `json:"arch"`
-	Backend   BackendName `json:"backend"`
-	CreatedAt *time.Time  `json:"created_at,omitempty"`
+	Arch    Arch        `json:"arch"`
+	Backend BackendName `json:"backend"`
+
+	// CanReregister True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153).
+	CanReregister *bool      `json:"can_reregister,omitempty"`
+	CreatedAt     *time.Time `json:"created_at,omitempty"`
 
 	// CurrentJob One job attempt (observability R5.7, R5.8).
 	CurrentJob *Job `json:"current_job,omitempty"`
@@ -12226,6 +12238,9 @@ type ServerInterface interface {
 	// PlanRunnerReplacement Plan replacing a runner not made by CRSP with a managed one
 	// (POST /api/v1/runners/{runnerId}/replace)
 	PlanRunnerReplacement(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
+	// ReregisterRunner Register a runner again when GitHub deleted its registration
+	// (POST /api/v1/runners/{runnerId}/reregister)
+	ReregisterRunner(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
 	// UpdateRunnerSettings Change a persistent runner's settings
 	// (PATCH /api/v1/runners/{runnerId}/settings)
 	UpdateRunnerSettings(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
@@ -18380,6 +18395,32 @@ func (siw *ServerInterfaceWrapper) PlanRunnerReplacement(w http.ResponseWriter, 
 	handler.ServeHTTP(w, r)
 }
 
+// ReregisterRunner operation middleware
+func (siw *ServerInterfaceWrapper) ReregisterRunner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runnerId" -------------
+	var runnerId RunnerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runnerId", r.PathValue("runnerId"), &runnerId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runnerId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ReregisterRunner(w, r, runnerId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // UpdateRunnerSettings operation middleware
 func (siw *ServerInterfaceWrapper) UpdateRunnerSettings(w http.ResponseWriter, r *http.Request) {
 
@@ -20035,6 +20076,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}", wrapper.GetRunner)
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/api/v1/runners/{runnerId}/settings", wrapper.UpdateRunnerSettings)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/clear-cache", wrapper.ClearRunnerCache)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/reregister", wrapper.ReregisterRunner)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/runners/{runnerId}/registration", wrapper.DeleteRunnerRegistration)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/env", wrapper.GetRunnerEnv)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/env-sets", wrapper.ListEnvSets)
@@ -27860,6 +27902,45 @@ func (response PlanRunnerReplacementdefaultJSONResponse) VisitPlanRunnerReplacem
 	return err
 }
 
+type ReregisterRunnerRequestObject struct {
+	RunnerId RunnerId `json:"runnerId"`
+}
+
+type ReregisterRunnerResponseObject interface {
+	VisitReregisterRunnerResponse(w http.ResponseWriter) error
+}
+
+type ReregisterRunner200JSONResponse Runner
+
+func (response ReregisterRunner200JSONResponse) VisitReregisterRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ReregisterRunnerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ReregisterRunnerdefaultJSONResponse) VisitReregisterRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type UpdateRunnerSettingsRequestObject struct {
 	RunnerId RunnerId `json:"runnerId"`
 	Body     *UpdateRunnerSettingsJSONRequestBody
@@ -30549,6 +30630,9 @@ type StrictServerInterface interface {
 	// PlanRunnerReplacement Plan replacing a runner not made by CRSP with a managed one
 	// (POST /api/v1/runners/{runnerId}/replace)
 	PlanRunnerReplacement(ctx context.Context, request PlanRunnerReplacementRequestObject) (PlanRunnerReplacementResponseObject, error)
+	// ReregisterRunner Register a runner again when GitHub deleted its registration
+	// (POST /api/v1/runners/{runnerId}/reregister)
+	ReregisterRunner(ctx context.Context, request ReregisterRunnerRequestObject) (ReregisterRunnerResponseObject, error)
 	// UpdateRunnerSettings Change a persistent runner's settings
 	// (PATCH /api/v1/runners/{runnerId}/settings)
 	UpdateRunnerSettings(ctx context.Context, request UpdateRunnerSettingsRequestObject) (UpdateRunnerSettingsResponseObject, error)
@@ -35967,6 +36051,32 @@ func (sh *strictHandler) PlanRunnerReplacement(w http.ResponseWriter, r *http.Re
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(PlanRunnerReplacementResponseObject); ok {
 		if err := validResponse.VisitPlanRunnerReplacementResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ReregisterRunner operation middleware
+func (sh *strictHandler) ReregisterRunner(w http.ResponseWriter, r *http.Request, runnerId RunnerId) {
+	var request ReregisterRunnerRequestObject
+
+	request.RunnerId = runnerId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ReregisterRunner(ctx, request.(ReregisterRunnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ReregisterRunner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ReregisterRunnerResponseObject); ok {
+		if err := validResponse.VisitReregisterRunnerResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

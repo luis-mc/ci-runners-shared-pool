@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -451,7 +452,226 @@ func TestListScriptNamesEntriesAndWhetherTheyRun(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got := string(out); got != "dead|0\nheld|0\nup|1\n" {
+	if got := string(out); got != "dead|0|\nheld|0|\nup|1|\n" {
 		t.Fatalf("list: %q", got)
+	}
+}
+
+// The supervisor, list.sh and add-runner.sh with a runner whose registration
+// GitHub deleted (runners R5.152, CRSP382).
+
+const lostLog = "VssOAuthTokenRequestException: Registration was not found or is not medium trust\n" +
+	"Failed to create a session. The runner registration has been deleted from the server, please re-configure.\n"
+
+type sup struct {
+	t               *testing.T
+	state, deps, rn string
+}
+
+func newSup(t *testing.T) *sup {
+	t.Helper()
+	if runtime.GOOS != "linux" {
+		t.Skip("the container scripts run on Linux")
+	}
+	root := t.TempDir()
+	s := &sup{t: t, state: filepath.Join(root, "state"), deps: filepath.Join(root, "deps"), rn: filepath.Join(root, "run")}
+	p := &pool{t: t}
+	p.write(filepath.Join(s.state, "runners.d", "r1.env"), "")
+	p.write(filepath.Join(s.state, "r1", "started-marker-source"), "x")
+	// run.sh of the runner: when the supervisor starts it, it leaves a marker
+	p.write(filepath.Join(s.state, "r1", "run.sh"), "#!/bin/sh\n: >\"$CRSP_RUNNER_DIR/started\"\nsleep 30\n")
+	if err := os.Chmod(filepath.Join(s.state, "r1", "run.sh"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
+func (s *sup) diag(name, body string) {
+	s.t.Helper()
+	(&pool{t: s.t}).write(filepath.Join(s.state, "r1", "_diag", name), body)
+}
+
+// ended makes the supervisor see a runner that ran and died.
+func (s *sup) ended() {
+	s.t.Helper()
+	(&pool{t: s.t}).write(filepath.Join(s.rn, "r1.pid"), "999999")
+}
+
+func (s *sup) env() []string {
+	return append(os.Environ(), "CRSP_STATE_DIR="+s.state, "CRSP_DEPS_DIR="+s.deps, "CRSP_SUPERVISOR_RUN="+s.rn, "CRSP_SUPERVISOR_ONCE=1")
+}
+
+func (s *sup) tick() string {
+	s.t.Helper()
+	cmd := exec.CommandContext(s.t.Context(), "sh", script(s.t, "pool-supervisor.sh"))
+	cmd.Env = s.env()
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		s.t.Fatalf("%v\n%s", err, out)
+	}
+	return string(out)
+}
+
+func TestSupervisorStopsAtADeletedRegistrationInsteadOfLooping(t *testing.T) {
+	s := newSup(t)
+	s.diag("Runner_20261128-100000-utc.log", lostLog)
+	s.ended()
+	out := s.tick()
+	if !strings.Contains(out, "deleted at GitHub") {
+		t.Errorf("the supervisor says why: %s", out)
+	}
+	if b, err := os.ReadFile(filepath.Join(s.state, "runners.d", "r1.lost")); err != nil || !strings.Contains(string(b), "deleted at GitHub") {
+		t.Fatalf("the reason is kept for the controller: %q %v", b, err)
+	}
+	for i := 0; i < 3; i++ {
+		s.tick()
+	}
+	if exists(filepath.Join(s.state, "r1", "started")) || exists(filepath.Join(s.rn, "r1.pid")) || exists(filepath.Join(s.rn, "r1.fails")) {
+		t.Error("a runner with no registration is never started again by the supervisor")
+	}
+}
+
+func TestSupervisorKeepsTheBackOffForAnOrdinaryFailure(t *testing.T) {
+	s := newSup(t)
+	s.diag("Runner_20261128-100000-utc.log", "Listening for Jobs\nconnection reset\n")
+	s.ended()
+	out := s.tick()
+	if !strings.Contains(out, "starting it again in") || exists(filepath.Join(s.state, "runners.d", "r1.lost")) {
+		t.Fatalf("an ordinary failure backs off and is not lost: %s", out)
+	}
+	if b, _ := os.ReadFile(filepath.Join(s.rn, "r1.fails")); strings.TrimSpace(string(b)) != "1" {
+		t.Errorf("fails = %q", b)
+	}
+}
+
+func TestSupervisorIgnoresALogFromBeforeTheLatestRegistration(t *testing.T) {
+	s := newSup(t)
+	s.diag("Runner_20261128-100000-utc.log", lostLog)
+	log := filepath.Join(s.state, "r1", "_diag", "Runner_20261128-100000-utc.log")
+	old := time.Now().Add(-time.Hour)
+	if err := os.Chtimes(log, old, old); err != nil {
+		t.Fatal(err)
+	}
+	(&pool{t: t}).write(filepath.Join(s.state, "r1", ".runner"), "{}") // registered after that log
+	s.ended()
+	s.tick()
+	if exists(filepath.Join(s.state, "runners.d", "r1.lost")) {
+		t.Error("a log older than the registration says nothing about it")
+	}
+}
+
+func TestListReportsALostRegistrationAndAddRunnerRepairsIt(t *testing.T) {
+	s := newSup(t)
+	s.diag("Runner_20261128-100000-utc.log", lostLog)
+	list := func() string {
+		cmd := exec.CommandContext(t.Context(), "sh", script(t, "list.sh"))
+		cmd.Env = s.env()
+		out, err := cmd.CombinedOutput()
+		if err != nil {
+			t.Fatalf("%v\n%s", err, out)
+		}
+		return strings.TrimSpace(string(out))
+	}
+	// the log alone is enough: an older supervisor writes no marker
+	if got := list(); got != "r1|0|the registration of this runner was deleted at GitHub" {
+		t.Fatalf("list.sh: %q", got)
+	}
+	p := &pool{t: t}
+	p.write(filepath.Join(s.state, "runners.d", "r1.lost"), "the registration of this runner was deleted at GitHub\n")
+	p.write(filepath.Join(s.state, "r1", ".runner"), "old")
+	p.write(filepath.Join(s.state, "r1", ".credentials"), "old")
+	p.write(filepath.Join(s.state, "r1", ".credentials_rsaparams"), "old")
+	cfg := filepath.Join(s.state, "r1", "config.sh")
+	p.write(cfg, "#!/bin/sh\necho \"$@\" >\"$CRSP_STATE_DIR/config-args\"\n[ -f \"$CRSP_STATE_DIR/r1/.runner\" ] && exit 9\n: >\"$CRSP_STATE_DIR/r1/.runner\"\n")
+	if err := os.Chmod(cfg, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	add := exec.CommandContext(t.Context(), "sh", script(t, "add-runner.sh"), "r1", "https://github.com/o/r", "self-hosted,linux", "", "1")
+	add.Env = s.env()
+	add.Stdin = strings.NewReader("TOKEN-NEVER-ON-A-LINE\n")
+	if out, err := add.CombinedOutput(); err != nil {
+		t.Fatalf("add-runner: %v\n%s", err, out)
+	}
+	args, _ := os.ReadFile(filepath.Join(s.state, "config-args"))
+	if !strings.Contains(string(args), "--replace") || strings.Contains(string(args), "TOKEN") {
+		t.Errorf("config.sh args %q", args)
+	}
+	for _, f := range []string{"runners.d/r1.lost", "r1/.credentials", "r1/.credentials_rsaparams"} {
+		if exists(filepath.Join(s.state, f)) {
+			t.Errorf("%s stays", f)
+		}
+	}
+	if !exists(filepath.Join(s.state, "runners.d", "r1.env")) {
+		t.Error("the supervisor starts the runner again once its entry file is back")
+	}
+	// the new registration is newer than the old log: not lost any more
+	if got := list(); got != "r1|0|" {
+		t.Errorf("after the repair: %q", got)
+	}
+}
+
+// TestSupervisorLoadsItsNewCopyOnlyWhileNoRunnerHasAJob (runners R5.154): the
+// controller rewrites pool-supervisor.sh in place; the running supervisor
+// waits for the idle moment, then execs the new copy in the same process.
+func TestSupervisorLoadsItsNewCopyOnlyWhileNoRunnerHasAJob(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Linux scripts")
+	}
+	root := t.TempDir()
+	state, run, logf := filepath.Join(root, "state"), filepath.Join(root, "run"), filepath.Join(root, "sup.log")
+	if err := os.MkdirAll(filepath.Join(state, "busy"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	sup := script(t, "pool-supervisor.sh")
+	out, err := os.Create(logf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = out.Close() }()
+	cmd := exec.CommandContext(t.Context(), "sh", sup)
+	cmd.Env = append(os.Environ(), "CRSP_STATE_DIR="+state, "CRSP_DEPS_DIR="+filepath.Join(root, "deps"), "CRSP_SUPERVISOR_RUN="+run, "CRSP_SUPERVISOR_TICK=1")
+	cmd.Stdout, cmd.Stderr = out, out
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
+	logText := func() string { b, _ := os.ReadFile(logf); return string(b) }
+	waitFor := func(what string, ok func() bool) {
+		t.Helper()
+		for i := 0; i < 100; i++ {
+			if ok() {
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		t.Fatalf("waited for %s\n%s", what, logText())
+	}
+	waitFor("the checksum file", func() bool { return exists(filepath.Join(run, "supervisor.sum")) })
+	first, _ := os.ReadFile(filepath.Join(run, "supervisor.sum"))
+	// a runner has a job, the controller rewrites the script
+	if err := os.WriteFile(filepath.Join(state, "busy", "r1"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(sup)
+	if err := os.WriteFile(sup+".new", append(b, []byte("\n# a newer release\n")...), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(sup+".new", sup); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(2500 * time.Millisecond)
+	if strings.Contains(logText(), "loading it") {
+		t.Fatalf("it loaded the new copy while a runner had a job\n%s", logText())
+	}
+	if err := os.Remove(filepath.Join(state, "busy", "r1")); err != nil {
+		t.Fatal(err)
+	}
+	waitFor("the new copy to load", func() bool { return strings.Contains(logText(), "loading it") })
+	waitFor("the new checksum", func() bool {
+		n, _ := os.ReadFile(filepath.Join(run, "supervisor.sum"))
+		return len(n) > 0 && string(n) != string(first)
+	})
+	if err := cmd.Process.Signal(syscall.Signal(0)); err != nil {
+		t.Fatalf("the supervisor process ended on reload (the runners would go with it): %v", err)
 	}
 }
