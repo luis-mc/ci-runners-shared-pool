@@ -414,7 +414,7 @@ func (s *Service) SettleStuckCreating(ctx context.Context, after time.Duration, 
 			continue
 		}
 		to, why := Failed, StuckCreatingReason
-		if v := s.views(ctx, []Record{withState(r, Idle)}); len(v) == 1 && v[0].State == Idle {
+		if v := s.views(ctx, []Record{withState(r, Idle)}, true); len(v) == 1 && v[0].State == Idle {
 			to, why = Idle, "registered"
 		}
 		if err := s.Store.SetRunnerState(ctx, r.ID, to, why); err != nil {

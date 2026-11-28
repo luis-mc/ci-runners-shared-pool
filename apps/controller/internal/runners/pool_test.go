@@ -256,6 +256,7 @@ func TestListShowsPoolRunnerWithServingAndRegistrationCount(t *testing.T) {
 		}
 	}
 	r.gh.runners = []github.Runner{{ID: 6, Name: busyKid.Name, Status: "online", Busy: true}}
+	r.svc.RefreshFacts(ctx) // ListView answers from the last refresh (CRSP389)
 	views, err := r.svc.ListView(ctx, Filter{})
 	if err != nil {
 		t.Fatal(err)
@@ -350,6 +351,7 @@ func TestFailedPoolRegistrationStaysVisibleAndIsNotRetried(t *testing.T) {
 	if len(r.ag.added) != tries {
 		t.Errorf("a sync retried the failed build: %d tries, want %d", len(r.ag.added), tries)
 	}
+	r.svc.RefreshFacts(ctx) // ListView answers from the last refresh (CRSP389)
 	views, err := r.svc.ListView(ctx, Filter{})
 	if err != nil || len(views) != 1 || views[0].State != Failed || !strings.Contains(views[0].Reason, "build failed") {
 		t.Fatalf("the list shows %+v %v", views, err)

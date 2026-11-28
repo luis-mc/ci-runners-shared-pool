@@ -151,11 +151,13 @@ export function SetupSummary() {
     <Page>
       <Load result={machines.result} what="the pool" reload={machines.reload}>
         {(m) => {
-          const rs = runners.result.state === 'loading' ? undefined : runners.result.data;
-          const rp = repos.result.state === 'loading' ? undefined : repos.result.data;
-          if (!rs || !rp) return <Text tone="muted">Loading the pool figures.</Text>;
-          const f = poolFigures(m.items, rs.items, rp.items.length);
+          // Each card shows as soon as its own data is in; a card still waiting says so alone (CRSP389).
+          const rs =
+            runners.result.state === 'ready' ? runners.result.data.items : undefined;
+          const rp = repos.result.state === 'ready' ? repos.result.data.items : undefined;
+          const f = poolFigures(m.items, rs ?? [], rp?.length ?? 0);
           const app = setup.result.state === 'ready' ? setup.result.data : undefined;
+          const loading = <Text tone="muted">Loading the pool figures.</Text>;
           return (
             <Stack>
               <CardGrid>
@@ -165,24 +167,28 @@ export function SetupSummary() {
                     <TextLink to="/setup/machines">Open Machines</TextLink>
                   </Stack>
                 </Card>
-                <Card title="Runners" count={f.runners}>
+                <Card title="Runners" {...(rs ? { count: f.runners } : {})}>
                   <Stack>
-                    <SummaryLine {...runnerKinds(rs.items)} />
+                    {rs ? <SummaryLine {...runnerKinds(rs)} /> : loading}
                     <TextLink to="/setup/runners">Open Runners</TextLink>
                   </Stack>
                 </Card>
-                <Card title="Repositories" count={f.repositories}>
+                <Card title="Repositories" {...(rp ? { count: f.repositories } : {})}>
                   <Stack>
-                    <Text>
-                      {f.repositories === 0
-                        ? 'No repository uses the pool yet.'
-                        : `${f.repositories} ${f.repositories === 1 ? 'repository uses' : 'repositories use'} the pool.`}
-                    </Text>
+                    {rp ? (
+                      <Text>
+                        {f.repositories === 0
+                          ? 'No repository uses the pool yet.'
+                          : `${f.repositories} ${f.repositories === 1 ? 'repository uses' : 'repositories use'} the pool.`}
+                      </Text>
+                    ) : (
+                      loading
+                    )}
                     <TextLink to="/setup/pool">Open Pool setup</TextLink>
                   </Stack>
                 </Card>
               </CardGrid>
-              <SetupSteps f={f} app={app} />
+              {rp ? <SetupSteps f={f} app={app} /> : null}
             </Stack>
           );
         }}

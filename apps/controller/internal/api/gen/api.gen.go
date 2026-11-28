@@ -2658,8 +2658,9 @@ func (e PlanState) Valid() bool {
 
 // Defines values for PlanRepositoryChangesRequestChangesPool.
 const (
-	PlanRepositoryChangesRequestChangesPoolOff PlanRepositoryChangesRequestChangesPool = "off"
-	PlanRepositoryChangesRequestChangesPoolOn  PlanRepositoryChangesRequestChangesPool = "on"
+	PlanRepositoryChangesRequestChangesPoolOff    PlanRepositoryChangesRequestChangesPool = "off"
+	PlanRepositoryChangesRequestChangesPoolOn     PlanRepositoryChangesRequestChangesPool = "on"
+	PlanRepositoryChangesRequestChangesPoolRepair PlanRepositoryChangesRequestChangesPool = "repair"
 )
 
 // Valid indicates whether the value is a known member of the PlanRepositoryChangesRequestChangesPool enum.
@@ -2668,6 +2669,8 @@ func (e PlanRepositoryChangesRequestChangesPool) Valid() bool {
 	case PlanRepositoryChangesRequestChangesPoolOff:
 		return true
 	case PlanRepositoryChangesRequestChangesPoolOn:
+		return true
+	case PlanRepositoryChangesRequestChangesPoolRepair:
 		return true
 	default:
 		return false
@@ -8561,12 +8564,13 @@ type PlanState string
 // PlanRepositoryChangesRequest defines model for PlanRepositoryChangesRequest.
 type PlanRepositoryChangesRequest struct {
 	Changes []struct {
+		// Pool on and off switch the pool. repair keeps the pool on and writes each missing or wrong CRSP_RUNS_ON variable and deletes each one that should not be there; a repair that finds nothing different answers a plan that is already done.
 		Pool         PlanRepositoryChangesRequestChangesPool `json:"pool"`
 		RepositoryId int64                                   `json:"repository_id"`
 	} `json:"changes"`
 }
 
-// PlanRepositoryChangesRequestChangesPool defines model for PlanRepositoryChangesRequest.Changes.Pool.
+// PlanRepositoryChangesRequestChangesPool on and off switch the pool. repair keeps the pool on and writes each missing or wrong CRSP_RUNS_ON variable and deletes each one that should not be there; a repair that finds nothing different answers a plan that is already done.
 type PlanRepositoryChangesRequestChangesPool string
 
 // PlanRunnersRequest defines model for PlanRunnersRequest.

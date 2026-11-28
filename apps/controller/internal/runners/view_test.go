@@ -49,6 +49,7 @@ func TestListViewReconcilesAgainstGitHubAndAgent(t *testing.T) { // UX-19
 	r.svc.Services = func(context.Context, string) ([]backend.Found, error) {
 		return []backend.Found{{ServiceName: rec.ServiceName, Name: rec.Name, Running: false}}, nil
 	}
+	r.svc.RefreshFacts(ctx) // ListView answers from the last refresh (CRSP389)
 	v, err := r.svc.ListView(ctx, Filter{})
 	if err != nil || len(v) != 1 || v[0].State != Stopped || v[0].MachineName != "box" || v[0].Reason == "" {
 		t.Fatalf("%+v %v", v, err)
@@ -59,6 +60,7 @@ func TestListViewReconcilesAgainstGitHubAndAgent(t *testing.T) { // UX-19
 	r.svc.Services = func(context.Context, string) ([]backend.Found, error) {
 		return []backend.Found{{ServiceName: rec.ServiceName, Name: rec.Name, Running: true}}, nil
 	}
+	r.svc.RefreshFacts(ctx)
 	if v, _ = r.svc.ListView(ctx, Filter{}); v[0].State != NotRegistered {
 		t.Fatalf("GitHub lists nothing: %s", v[0].State)
 	}

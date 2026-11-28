@@ -2,7 +2,6 @@ package runners
 
 import (
 	"context"
-	"fmt"
 	"sort"
 	"time"
 
@@ -104,14 +103,18 @@ type View struct {
 	CanStart bool
 }
 
-// ListView lists runners with the state each one really has, from GitHub's
-// runner list and the agent's service list (UX-19).
+// ListView lists runners with the state each one really has (UX-19). It
+// answers from stored records and from the facts the last background refresh
+// kept of GitHub's runner lists and the agents' service lists (FactsTTL); it
+// never calls GitHub or an agent itself (CRSP389). A stale cache starts a
+// refresh and the answer does not wait for it.
 func (s *Service) ListView(ctx context.Context, f Filter) ([]View, error) {
 	recs, err := s.Store.ListRunners(ctx, f)
 	if err != nil {
 		return nil, err
 	}
-	return s.withPool(ctx, recs, true), nil
+	s.kickFacts()
+	return s.withPool(ctx, recs, true, false), nil
 }
 
 // GetView is ListView for one runner.
@@ -120,12 +123,12 @@ func (s *Service) GetView(ctx context.Context, id string) (View, error) {
 	if err != nil {
 		return View{}, err
 	}
-	return s.withPool(ctx, []Record{r}, false)[0], nil
+	return s.withPool(ctx, []Record{r}, false, true)[0], nil
 }
 
 // withPool shows the hidden registrations of a pool runner as that runner: a
 // list does not show them by themselves, a lookup by id does.
-func (s *Service) withPool(ctx context.Context, recs []Record, hideKids bool) []View {
+func (s *Service) withPool(ctx context.Context, recs []Record, hideKids, live bool) []View {
 	var plain, parents []Record
 	for _, r := range recs {
 		switch {
@@ -136,7 +139,7 @@ func (s *Service) withPool(ctx context.Context, recs []Record, hideKids bool) []
 			plain = append(plain, r)
 		}
 	}
-	out := s.views(ctx, plain)
+	out := s.views(ctx, plain, live)
 	if len(parents) == 0 {
 		return out
 	}
@@ -165,7 +168,7 @@ func (s *Service) withPool(ctx context.Context, recs []Record, hideKids bool) []
 				machine = m.Name
 			}
 		}
-		out = append(out, poolView(p, s.views(ctx, kids[p.ID]), names, machine))
+		out = append(out, poolView(p, s.views(ctx, kids[p.ID], live), names, machine))
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out
@@ -176,7 +179,9 @@ type ghList struct {
 	list []github.Runner
 }
 
-func (s *Service) views(ctx context.Context, recs []Record) []View {
+// views builds the views of records. live reads GitHub and the agent now (the
+// lookup of one runner); otherwise the facts come from the refresh cache.
+func (s *Service) views(ctx context.Context, recs []Record, live bool) []View {
 	gh := map[string]ghList{}
 	svc := map[string]map[string]backend.Found{}
 	names := map[string]string{}
@@ -191,50 +196,47 @@ func (s *Service) views(ctx context.Context, recs []Record) []View {
 			}
 		}
 		var f Facts
-		if r.State == Idle || r.State == Busy || r.State == Offline {
-			key := fmt.Sprintf("%s|%d|%s|%s", r.Scope.Kind, r.Scope.RepositoryID, r.Scope.Organization, r.Scope.Group)
-			l, seen := gh[key]
-			if !seen {
-				l = s.githubList(ctx, r.Scope)
-				gh[key] = l
-			}
-			f.GitHubKnown = l.ok
-			for i := range l.list {
-				if l.list[i].Name == r.Name || (r.GitHubRunnerID != 0 && l.list[i].ID == r.GitHubRunnerID) {
-					g := l.list[i]
-					f.GitHub = &g
-					break
-				}
-			}
-			if r.Kind == "persistent" && s.Services != nil {
-				m, seen := svc[r.MachineID]
-				if !seen {
-					if found, err := s.Services(ctx, r.MachineID); err == nil {
-						m = map[string]backend.Found{}
-						for _, x := range found {
-							m[x.ServiceName] = x
-						}
-						// A container runner is also found by name: the folder may
-						// carry a -r<repo id> suffix the record's ref does not (OPS70).
-						for _, x := range found {
-							if _, dup := m[nameKey(x.Name)]; !dup && x.Name != "" {
-								m[nameKey(x.Name)] = x
-							}
-						}
+		pending := false // the first refresh after a start has not finished
+		if wantsFacts(r) {
+			if !live {
+				l, ok := s.facts.ghFor(r.Scope)
+				pending = !ok
+				f.GitHubKnown = ok && l.ok
+				f.GitHub = findRunner(l.list, r)
+				if r.Kind == "persistent" && s.Services != nil {
+					if m, ok := s.facts.svcFor(r.MachineID); ok {
+						f.ServiceKnown = true
+						f.Service = findService(m, r)
 					}
-					svc[r.MachineID] = m
 				}
-				if m != nil {
-					f.ServiceKnown = true
-					if x, ok := m[r.ServiceName]; ok && r.ServiceName != "" {
-						f.Service = &x
-					} else if x, ok := m[nameKey(r.Name)]; ok && isContainerRef(r.ServiceName) {
-						f.Service = &x
+			} else {
+				key := ghKey(r.Scope)
+				l, seen := gh[key]
+				if !seen {
+					l = s.githubList(ctx, r.Scope)
+					gh[key] = l
+				}
+				f.GitHubKnown = l.ok
+				f.GitHub = findRunner(l.list, r)
+				if r.Kind == "persistent" && s.Services != nil {
+					m, seen := svc[r.MachineID]
+					if !seen {
+						if found, err := s.Services(ctx, r.MachineID); err == nil {
+							m = serviceMap(found)
+						}
+						svc[r.MachineID] = m
+					}
+					if m != nil {
+						f.ServiceKnown = true
+						f.Service = findService(m, r)
 					}
 				}
 			}
 		}
 		state, why := Truth(r, f)
+		if pending && state == Unknown {
+			state, why = r.State, "" // not read yet: the stored state shows, with no reason
+		}
 		if r.UncleanReason != "" && state != Failed {
 			// An unclean runner takes no new job until its clean-up works (R5.91).
 			why = "needs clean-up, takes no new job: " + r.UncleanReason
@@ -244,6 +246,29 @@ func (s *Service) views(ctx context.Context, recs []Record) []View {
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out
+}
+
+// findRunner is GitHub's entry for a runner record, by name or by id.
+func findRunner(list []github.Runner, r Record) *github.Runner {
+	for i := range list {
+		if list[i].Name == r.Name || (r.GitHubRunnerID != 0 && list[i].ID == r.GitHubRunnerID) {
+			g := list[i]
+			return &g
+		}
+	}
+	return nil
+}
+
+// findService is the agent's service for a runner record, by service name or,
+// for a container runner, by runner name.
+func findService(m map[string]backend.Found, r Record) *backend.Found {
+	if x, ok := m[r.ServiceName]; ok && r.ServiceName != "" {
+		return &x
+	}
+	if x, ok := m[nameKey(r.Name)]; ok && isContainerRef(r.ServiceName) {
+		return &x
+	}
+	return nil
 }
 
 func (s *Service) githubList(ctx context.Context, sc Scope) ghList {
