@@ -19,6 +19,13 @@ name: CI
 # (never a workflow-level paths filter). An unknown path, a release pull request, a push to
 # main and a failed plan all run everything. A job the plan skips is a planned skip, not a failure.
 #
+# CRSP349 (DS287, R5.88-R5.95): `carry` plans what an earlier head of the pull request already proved
+# (scripts/delivery/carry_plan.py through .github/actions/carry-plan, with the same ci-areas.json). A job whose
+# last run on an earlier head was green and that no change since reaches is skipped and named in `carried`;
+# every required aggregate (tests, verify, e2e) and `carry-ok` count a carried skip as passed
+# (scripts/delivery/carry_verify.py). The first run of a pull request, a failed plan and a dispatch run
+# run everything. A fix push re-runs the failed and the touched jobs only.
+#
 # Documentation-only changes skip this workflow (paths-ignore). Repo-config-only pull requests
 # (.claude, .nvmrc, .gitignore, .delivery/config.json) still start it, and `decide` skips every
 # job, so the run is green and the delivery watcher finds it (DS261, S15).
@@ -27,7 +34,8 @@ on:
     # Drafts are skipped by the job-level `if`; ready_for_review starts the run
     # when a draft is marked ready.
     types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore: ['**/*.md', 'docs/**']
+    # No paths-ignore (CRSP352, DL-116): a docs-only change still gets the required checks; decide and
+    # carry skip the work jobs it does not touch.
   push:
     branches: [main]
     paths-ignore: ['**/*.md', 'docs/**']
@@ -69,12 +77,14 @@ jobs:
       image: ${{ steps.image-scope.outputs.image }}
       release: ${{ steps.release.outputs.release }}
       areas: ${{ steps.areas.outputs.areas }}
-      go_race: ${{ steps.areas.outputs.go_race }}
-      web_tests: ${{ steps.areas.outputs.web_tests }}
-      test_os: ${{ steps.areas.outputs.test_os }}
+      # The area plan names the jobs by their workflow job key (scripts/delivery/ci-areas.json), the
+      # same names the carry plan uses; go_win_lint is a step of lint, not a job.
+      go-race: ${{ steps.areas.outputs.go-race }}
+      web-tests: ${{ steps.areas.outputs.web-tests }}
+      test-os: ${{ steps.areas.outputs.test-os }}
       go_win_lint: ${{ steps.areas.outputs.go_win_lint }}
       build: ${{ steps.areas.outputs.build }}
-      e2e: ${{ steps.areas.outputs.e2e }}
+      e2e-shards: ${{ steps.areas.outputs.e2e-shards }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -83,6 +93,11 @@ jobs:
           sparse-checkout: |
             scripts/ci
             scripts/delivery
+      # DS287 (R5.94): a tracked file that no area, `docs` glob or `run_everything` entry names fails the
+      # pull request and is listed, so it never silently runs every job.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: python3 scripts/delivery/area_select.py --unmapped --check
       - id: check
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -132,13 +147,59 @@ jobs:
           fi
           python3 scripts/delivery/area_select.py "${args[@]}" || echo "::warning::area plan failed, every job runs"
 
+  # CRSP349 (DS287, R5.88, R5.91, R5.95): the carry-forward plan. A job it carries is skipped and counted as
+  # passed by the aggregates below. An empty plan (a failed or skipped plan job, a dispatch run) runs everything.
+  carry:
+    name: carry plan
+    needs: decide
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read # R5.95: the merged pull request of a push to the default branch
+    outputs:
+      plan: ${{ steps.adjust.outputs.plan }}
+      carried: ${{ steps.adjust.outputs.carried }}
+      reason: ${{ steps.adjust.outputs.reason }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # The plan diffs the pull request against its base and against each proof head.
+          fetch-depth: 0
+      - id: plan
+        continue-on-error: true
+        uses: ./.github/actions/carry-plan
+        with:
+          workflow: ci.yml
+          # R5.95: on a push to the default branch these jobs always run (they save the caches main serves).
+          always: image,e2e-shards,build
+          default-branch: ${{ github.event.repository.default_branch }}
+      # The base image and the e2e shards download the crsp binary of THIS run, so they need the build job: it runs
+      # whenever either of them runs. A change to build.yml (a called workflow, which the plan reads as another
+      # workflow's file) since the proof head re-runs the build too.
+      - id: adjust
+        env:
+          PLAN: ${{ steps.plan.outputs.plan }}
+          CARRIED: ${{ steps.plan.outputs.carried }}
+          REASON: ${{ steps.plan.outputs.reason }}
+        run: python3 scripts/delivery/carry_adjust.py
+      - name: Carry plan
+        env:
+          REASON: ${{ steps.adjust.outputs.reason }}
+          CARRIED: ${{ steps.adjust.outputs.carried }}
+        run: |
+          echo "carry plan: $REASON"
+          echo "carried jobs: $CARRIED"
+
   # CRSP209: verify was one serial job of 9.6 to 17 min. The same checks now run in
   # three parallel jobs and the `verify` job at the end keeps the name a required
   # check matches.
   lint:
     name: lint
-    needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, carry]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.carry.outputs.plan || '{}')['run_lint'] != 'false' }}
     # CRSP268: pool first. CRSP_LINT, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_LINT || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 20
@@ -238,8 +299,8 @@ jobs:
 
   types:
     name: codegen and types
-    needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, carry]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.carry.outputs.plan || '{}')['run_types'] != 'false' }}
     # CRSP268: pool first. CRSP_TYPES, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_TYPES || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 20
@@ -290,8 +351,8 @@ jobs:
   # in exactly one shard, balanced by recorded seconds (scripts/ci/go-tiers.json).
   go-race:
     name: Go tests (race) ${{ matrix.shard }}
-    needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.go_race != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, carry]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.go-race != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.carry.outputs.plan || '{}')['run_go-race'] != 'false' }}
     # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_TESTS || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
@@ -349,10 +410,11 @@ jobs:
           if-no-files-found: ignore
           retention-days: 3
 
-  tests:
+  # CRSP349: the job key is `web-tests`, so the carry plan does not confuse it with the `tests` check below.
+  web-tests:
     name: web tests and lifecycle conformance
-    needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.web_tests != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, carry]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.web-tests != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.carry.outputs.plan || '{}')['run_web-tests'] != 'false' }}
     # CRSP268: pool first. CRSP_TESTS, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_TESTS || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
@@ -397,7 +459,7 @@ jobs:
   # pull request is a draft.
   tests-result:
     name: tests
-    needs: [decide, go-race, tests]
+    needs: [decide, carry, go-race, web-tests]
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -405,21 +467,24 @@ jobs:
       - name: Go race shards and web tests succeeded
         env:
           GO: ${{ needs.go-race.result }}
-          WEB: ${{ needs.tests.result }}
-          GO_PLAN: ${{ needs.decide.outputs.go_race }}
-          WEB_PLAN: ${{ needs.decide.outputs.web_tests }}
+          WEB: ${{ needs.web-tests.result }}
+          GO_PLAN: ${{ needs.decide.outputs.go-race }}
+          WEB_PLAN: ${{ needs.decide.outputs.web-tests }}
+          CARRIED: ${{ needs.carry.outputs.carried || '{}' }}
         run: |
           echo "go-race=$GO (plan $GO_PLAN) web=$WEB (plan $WEB_PLAN)"
-          # A job the area plan skipped is skipped on purpose; a skip the plan did not ask for is a failure.
-          [ "$GO" = "success" ] || { [ "$GO" = "skipped" ] && [ "$GO_PLAN" = "false" ]; }
-          [ "$WEB" = "success" ] || { [ "$WEB" = "skipped" ] && [ "$WEB_PLAN" = "false" ]; }
+          # A job the area plan skipped is skipped on purpose; a job the carry plan skipped passed on an
+          # earlier head (CRSP349); a skip that neither asked for is a failure.
+          carried() { echo "$CARRIED" | jq -e --arg j "$1" 'has($j)' >/dev/null; }
+          [ "$GO" = "success" ] || { [ "$GO" = "skipped" ] && { [ "$GO_PLAN" = "false" ] || carried go-race; }; }
+          [ "$WEB" = "success" ] || { [ "$WEB" = "skipped" ] && { [ "$WEB_PLAN" = "false" ] || carried web-tests; }; }
 
   # The name a required check matches: green only when lint, types and tests are.
   # Skipped, like the single job it replaces, when decide skips the run or the pull
   # request is a draft.
   verify:
     name: verify
-    needs: [decide, lint, types, tests-result]
+    needs: [decide, carry, lint, types, tests-result]
     if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -429,15 +494,20 @@ jobs:
           LINT: ${{ needs.lint.result }}
           TYPES: ${{ needs.types.result }}
           TESTS: ${{ needs.tests-result.result }}
+          CARRIED: ${{ needs.carry.outputs.carried || '{}' }}
         run: |
           echo "lint=$LINT types=$TYPES tests=$TESTS"
-          [ "$LINT" = "success" ] && [ "$TYPES" = "success" ] && [ "$TESTS" = "success" ]
+          # CRSP349: lint and types skipped by the carry plan passed on an earlier head.
+          carried() { echo "$CARRIED" | jq -e --arg j "$1" 'has($j)' >/dev/null; }
+          [ "$LINT" = "success" ] || { [ "$LINT" = "skipped" ] && carried lint; }
+          [ "$TYPES" = "success" ] || { [ "$TYPES" = "skipped" ] && carried types; }
+          [ "$TESTS" = "success" ]
 
   test-os:
     name: Go tests (${{ matrix.os }})
-    needs: decide
+    needs: [decide, carry]
     # CRSP324 (S12): macOS and Windows run only when a Go file, go.mod or a Windows file changed.
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.test_os != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.test-os != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.carry.outputs.plan || '{}')['run_test-os'] != 'false' }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
     strategy:
@@ -485,8 +555,8 @@ jobs:
 
   build:
     name: build
-    needs: decide
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.build != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    needs: [decide, carry]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.build != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.carry.outputs.plan || '{}')['run_build'] != 'false' }}
     uses: ./.github/workflows/build.yml
     with:
       version: ${{ github.sha }}
@@ -507,10 +577,11 @@ jobs:
   # stage plus the crsp binary. Every self-check step stays.
   image:
     name: base image ${{ matrix.arch }} (build only)
-    needs: [decide, build, lint, types]
+    needs: [decide, carry, build, lint, types]
     # A release pull request starts as soon as the build is done; any other run waits for
-    # lint and types to pass (CRSP209, DL-97/DL-98).
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.image != 'false' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
+    # lint and types to pass (CRSP209, DL-97/DL-98). CRSP349: a lint or types job skipped by the carry plan
+    # passed on an earlier head, so `skipped` counts here (it is skipped for no other reason in this run).
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.image != 'false' && needs.build.result == 'success' && fromJSON(needs.carry.outputs.plan || '{}')['run_image'] != 'false' && (needs.decide.outputs.release == 'true' || ((needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.types.result == 'success' || needs.types.result == 'skipped'))) }}
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 30
     strategy:
@@ -728,10 +799,10 @@ jobs:
   # 30-minute job, so the specs run in 4 shards. Each shard has its own budget.
   e2e-shards:
     name: e2e shard ${{ matrix.shard }}
-    needs: [decide, build, lint, types]
+    needs: [decide, carry, build, lint, types]
     # A release pull request never waits for lint and types and is never skipped; any
-    # other run waits for them to pass (CRSP209, DL-97/DL-98).
-    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.e2e != 'false' && needs.build.result == 'success' && (needs.decide.outputs.release == 'true' || (needs.lint.result == 'success' && needs.types.result == 'success')) }}
+    # other run waits for them to pass (CRSP209, DL-97/DL-98). CRSP349: `skipped` lint or types is a carry.
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && needs.decide.outputs.e2e-shards != 'false' && needs.build.result == 'success' && fromJSON(needs.carry.outputs.plan || '{}')['run_e2e-shards'] != 'false' && (needs.decide.outputs.release == 'true' || ((needs.lint.result == 'success' || needs.lint.result == 'skipped') && (needs.types.result == 'success' || needs.types.result == 'skipped'))) }}
     # CRSP268: pool first. CRSP_E2E, else CRSP_RUNS_ON_LINUX (crsp-home labels), else GitHub-hosted.
     runs-on: ${{ fromJSON(vars.CRSP_E2E || vars.CRSP_RUNS_ON_LINUX || '"ubuntu-latest"') }}
     timeout-minutes: 30
@@ -908,7 +979,7 @@ jobs:
   # this job is skipped-equivalent (passes), as the single e2e job was.
   e2e:
     name: e2e (Playwright)
-    needs: [decide, build, lint, types, e2e-shards]
+    needs: [decide, carry, build, lint, types, e2e-shards]
     if: ${{ always() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -919,14 +990,20 @@ jobs:
           BUILD: ${{ needs.build.result }}
           SHARDS: ${{ needs.e2e-shards.result }}
           RELEASE: ${{ needs.decide.outputs.release }}
-          PLAN: ${{ needs.decide.outputs.e2e }}
+          PLAN: ${{ needs.decide.outputs.e2e-shards }}
           LINT: ${{ needs.lint.result }}
           TYPES: ${{ needs.types.result }}
+          CARRIED: ${{ needs.carry.outputs.carried || '{}' }}
         run: |
-          if [ "$SKIP" = "true" ] || [ "$BUILD" != "success" ] || [ "$PLAN" = "false" ]; then
+          # CRSP349: a job the carry plan skipped passed on an earlier head.
+          carried() { echo "$CARRIED" | jq -e --arg j "$1" 'has($j)' >/dev/null; }
+          ok() { [ "$1" = "success" ] || { [ "$1" = "skipped" ] && carried "$2"; }; }
+          if [ "$SHARDS" = "skipped" ] && carried e2e-shards; then
+            echo "e2e shards carried from an earlier head"
+          elif [ "$SKIP" = "true" ] || [ "$BUILD" != "success" ] || [ "$PLAN" = "false" ]; then
             echo "e2e did not run (decide skip=$SKIP, build=$BUILD, area plan=$PLAN); shards=$SHARDS"
             [ "$SHARDS" = "skipped" ]
-          elif [ "$RELEASE" != "true" ] && { [ "$LINT" != "success" ] || [ "$TYPES" != "success" ]; }; then
+          elif [ "$RELEASE" != "true" ] && ! { ok "$LINT" lint && ok "$TYPES" types; }; then
             # Not a release run: e2e waits for lint and types, and verify is red anyway.
             echo "e2e waited for lint ($LINT) and types ($TYPES); shards=$SHARDS"
             [ "$SHARDS" = "skipped" ]
@@ -934,3 +1011,37 @@ jobs:
             echo "shards=$SHARDS"
             [ "$SHARDS" = "success" ]
           fi
+
+  # CRSP349 (DS287, R5.91): the carry-forward summary. Green when every job of this run passed or was carried from
+  # an earlier head (a table of job, result and the run that proved it is in the step summary). A job the area
+  # plan skipped on purpose is left out. tests, verify and e2e are the required checks and count a carried skip too.
+  carry-ok:
+    name: carry-ok
+    needs:
+      [decide, carry, lint, types, go-race, web-tests, test-os, build, image, e2e-shards]
+    if: ${{ always() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          sparse-checkout: scripts/delivery
+      - name: Every needed job passed or was carried
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          CARRIED: ${{ needs.carry.outputs.carried || '{}' }}
+          GO_PLAN: ${{ needs.decide.outputs.go-race }}
+          WEB_PLAN: ${{ needs.decide.outputs.web-tests }}
+          OS_PLAN: ${{ needs.decide.outputs.test-os }}
+          BUILD_PLAN: ${{ needs.decide.outputs.build }}
+          IMAGE_PLAN: ${{ needs.decide.outputs.image }}
+          E2E_PLAN: ${{ needs.decide.outputs.e2e-shards }}
+        run: |
+          ignore="decide,carry"
+          if [ "$GO_PLAN" = "false" ]; then ignore="$ignore,go-race"; fi
+          if [ "$WEB_PLAN" = "false" ]; then ignore="$ignore,web-tests"; fi
+          if [ "$OS_PLAN" = "false" ]; then ignore="$ignore,test-os"; fi
+          if [ "$BUILD_PLAN" = "false" ]; then ignore="$ignore,build"; fi
+          if [ "$IMAGE_PLAN" = "false" ]; then ignore="$ignore,image"; fi
+          if [ "$E2E_PLAN" = "false" ]; then ignore="$ignore,e2e-shards"; fi
+          python3 scripts/delivery/carry_verify.py --needs "$NEEDS" --carried "$CARRIED" --ignore "$ignore"

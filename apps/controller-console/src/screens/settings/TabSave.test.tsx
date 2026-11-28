@@ -107,7 +107,7 @@ describe('Settings tab: one Save (D26)', () => {
   it('actions that do not save are normal buttons inside their section', async () => {
     renderApp(
       signedIn(owner).on('GET', '/api/v1/notification-channels', { items: [] }),
-      '/settings/console',
+      '/settings/networking',
     );
     const add = await screen.findByRole('button', { name: 'Add channel' });
     expect(add.hasAttribute('data-primary')).toBe(false);

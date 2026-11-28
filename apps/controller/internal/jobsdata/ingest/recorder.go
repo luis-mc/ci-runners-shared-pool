@@ -226,7 +226,7 @@ func toJob(gj github.Job, repoID int64, path string, state jobsdata.State) jobsd
 	j := jobsdata.Job{ID: gj.ID, RepositoryID: repoID, Repository: gj.Repository, RunID: gj.RunID,
 		Attempt: attemptOf(gj.RunAttempt), Workflow: path, Name: gj.Name, JobType: jobType, Matrix: matrix,
 		JobKey: jobsdata.MakeKey(gj.Repository, wf, gj.Name), Branch: gj.HeadBranch, HeadSHA: gj.HeadSHA,
-		Event: gj.Event, Labels: gj.Labels, State: state, HTMLURL: gj.HTMLURL, RunnerName: gj.RunnerName,
+		Event: gj.Event, HeadRepository: gj.HeadRepository, Labels: gj.Labels, State: state, HTMLURL: gj.HTMLURL, RunnerName: gj.RunnerName,
 		CreatedAt: gj.CreatedAt, StartedAt: gj.StartedAt, CompletedAt: gj.CompletedAt}
 	if state == jobsdata.Done {
 		j.Result = resultOf(gj.Conclusion)
@@ -256,6 +256,7 @@ func merge(old, n jobsdata.Job) jobsdata.Job {
 		}
 	}
 	n.Branch, n.HeadSHA, n.Event = str(old.Branch, n.Branch), str(old.HeadSHA, n.HeadSHA), str(old.Event, n.Event)
+	n.HeadRepository = str(old.HeadRepository, n.HeadRepository)
 	n.HTMLURL, n.RunnerName = str(old.HTMLURL, n.HTMLURL), str(old.RunnerName, n.RunnerName)
 	if len(n.Labels) == 0 {
 		n.Labels = old.Labels

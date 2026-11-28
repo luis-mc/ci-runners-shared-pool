@@ -43,6 +43,7 @@ var operationCommands = map[string]string{
 	"getRunnerEnv":               "runner env",
 	"updateRunnerSettings":       "runner update",
 	"clearRunnerCache":           "runner clear-cache",
+	"reregisterRunner":           "runner reregister",
 	"listJobs":                   "job list, history",
 	"streamEvents":               "job watch",
 	"getSpeedComparison":         "compare",

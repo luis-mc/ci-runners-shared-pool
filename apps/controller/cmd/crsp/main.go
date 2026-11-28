@@ -32,6 +32,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/hooks"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/jobcmd"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/logging"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
@@ -221,6 +222,7 @@ func runController() error {
 	ctl, err := buildController(ctx, controllerDeps{
 		Cfg: cfg, Logger: logger, DB: db, Secrets: sec, Ops: ops,
 		Machines: mr.Service, CA: mr.CA, PublicHost: mr.PublicHost, Packages: packageServer(mr), Updates: um, Lifecycle: lc, Health: mr.Health, Listen: listen, Queue: queue, Caches: mr.Caches, Link: mr.Link, AgentInstallers: mr.AgentInstallers, Deps: mr.Deps, MachineSecrets: mr.Secrets,
+		Hub: mr.Hub,
 	})
 	if err != nil {
 		return err
@@ -264,6 +266,7 @@ func runController() error {
 		Updates: um, Drain: machineDrainer{svc: mr.Service}, Console: console,
 		Links:  setupOrConsole{auth: ctl.Auth, console: console, next: authLinks{svc: ctl.Auth, console: console}},
 		Digest: func() string { return latestDigest(cfg.DataDir) },
+		Notes:  notesOf(lc),
 	})
 
 	// The pull-through mirror of upstream bases, under its own route prefix (registry R5.63).
@@ -282,6 +285,17 @@ func runController() error {
 	mux := http.NewServeMux()
 	api.Register(mux, ctl.Options)
 	mux.Handle(mirror.PathPrefix, mirrorProxy.Handler())
+	// The one cache hub (caches R5.73 to R5.80): the npm and PyPI proxy on this
+	// listener, the registry mirror's size on its card and the budget pass every 10 minutes.
+	if mr.Hub != nil {
+		mr.Hub.RegistrySize = mirrorProxy.UsedBytes
+		if mr.Hub.Proxy != nil {
+			mux.Handle(lancache.ProxyPrefix, mr.Hub.Proxy.Handler())
+		}
+		if mr.Hub.Budget != nil {
+			go mr.Hub.Budget.Run(ctx, 10*time.Minute)
+		}
+	}
 	// The agent installers (CRSP304): public like the GitHub release, each served only after its SHA-256 matched.
 	if mr.AgentInstallers != nil {
 		mux.Handle(agentinstallers.PathPrefix, mr.AgentInstallers.Handler())

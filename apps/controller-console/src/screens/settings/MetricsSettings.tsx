@@ -1,4 +1,4 @@
-// Settings > Console > Metrics (observability R5.40 to R5.47): send the pool's numbers to Prometheus (a page the
+// Settings > Networking > Metrics (observability R5.40 to R5.47): send the pool's numbers to Prometheus (a page the
 // tool reads) or to an OpenTelemetry collector (the controller pushes). Both are off until the owner turns them
 // on; the page listens on this PC only unless the owner exposes it, and may ask for a key. One section of the
 // tab form (UX-22, UX-24): the tab's Save applies it. Only shared parts of @crsp/ui are used (UX-9, UX-13, UX-22).

@@ -34,6 +34,7 @@ import { useJobDetail, useRun } from './api';
 import { SlotTimeline } from '../pool/SlotTimeline';
 import { ResourcesPane, StepsSource, runsOnFact } from '../insights/JobInsights';
 import { graphSource } from './runBasis';
+import { DebugCard } from './DebugCard';
 import { edgesOf, graphNodes, stepRows } from './runViews';
 import {
   RUNNER_KIND_WORDS,
@@ -279,6 +280,7 @@ function JobBody({ j }: { j: JobDetail }) {
         )}
       </Section>
       {runner && j.state !== 'queued' ? <ResourcesPane jobId={j.id} /> : null}
+      {j.state === 'queued' ? null : <DebugCard jobId={j.id} />}
       <Section title="Times">
         <Facts
           items={[

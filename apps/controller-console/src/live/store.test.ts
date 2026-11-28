@@ -97,6 +97,44 @@ describe('live store (R5.6)', () => {
   });
 });
 
+describe('live store job bursts (CRSP290, audit F6)', () => {
+  const job = (id: string) => ({
+    id,
+    repository: 'o/r',
+    name: 'build',
+    labels: [],
+    state: 'queued' as const,
+  });
+
+  it('moves the jobs version once for a burst, and keeps the overview current at once', () => {
+    const store = started();
+    const es = FakeEventSource.latest();
+    es.emit({ id: '1', type: 'snapshot', at: 'x', snapshot: overview() });
+    for (let i = 0; i < 60; i++)
+      es.emit({ id: `q${i}`, type: 'job.queued', at: 'x', job: job(`j${i}`) as never });
+    expect(store.getState().overview?.queued_count).toBe(60);
+    expect(store.getState().versions.jobs ?? 0).toBe(0);
+    vi.advanceTimersByTime(399);
+    expect(store.getState().versions.jobs ?? 0).toBe(0);
+    vi.advanceTimersByTime(1);
+    expect(store.getState().versions.jobs).toBe(1);
+    es.emit({ id: 'f', type: 'job.finished', at: 'x', job: job('j1') as never });
+    vi.advanceTimersByTime(400);
+    expect(store.getState().versions.jobs).toBe(2);
+  });
+
+  it('does not wait for kinds that do not come in bursts', () => {
+    const store = started();
+    FakeEventSource.latest().emit({
+      id: '1',
+      type: 'machine.state',
+      at: 'x',
+      machine: machine(),
+    });
+    expect(store.getState().versions.machines).toBe(1);
+  });
+});
+
 describe('live store reconnect (R5.7)', () => {
   it('keeps the last data, says paused, and reconnects with backoff', () => {
     const store = started();

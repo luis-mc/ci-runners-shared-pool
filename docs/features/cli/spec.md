@@ -124,6 +124,7 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 | `machine maintain NAME -- COMMAND...` | Hold new jobs, wait until idle, run one command on the machine, lift the hold | built | this spec (R5.29), `machines` |
 | `machine leftovers MACHINE`, `machine leftovers remove MACHINE NAME...` | List the runner leftovers of the latest doctor finding, and remove named ones (OPS38) | built | this spec (R5.63), `doctor` (R5.48) |
 | `runner list\|create\|update\|clear-cache\|remove` | Runners on machines, with kind, dependency setting and cache clear (OPS28) | M1 | `runners` |
+| `runner reregister NAME` | Registers a runner again in place when GitHub deleted its registration; no question, nothing is removed (runners R5.152) | M1 | `runners` |
 | `job list\|watch` | Queue and history; live view | M1 | `scheduling` |
 | `history` | Finished jobs, newest first, with `--repo`, `--machine`, `--backend`, `--result`, `--since`, `--limit`; `--json` prints the rows of `listJobs` (CRSP271c) | built | `observability` (R5.11) |
 | `doctor` | Run every check and print fixes | M2 | `doctor` |
@@ -141,7 +142,7 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 
 ### Sign-in and contexts
 
-**R5.4** — `login [URL]` MUST sign in with GitHub's device flow through the controller. It prints the user code and the link `https://github.com/login/device`, waits, and then saves a controller token for that user in the OS secret store (Windows Credential Manager, macOS Keychain, Linux Secret Service, or a file with mode 0600 where no Secret Service exists).
+**R5.4** — `login [URL]` MUST sign in with GitHub's device flow through the controller. It prints the user code and the link `https://github.com/login/device`, waits, and then saves a controller token for that user in the OS secret store (Windows Credential Manager, macOS Keychain, Linux Secret Service, or a file with mode 0600 where no Secret Service exists). When GitHub answers that Device Flow is off for the App, `login` MUST say so and name the App settings page instead of the generic retry words (github-integration R5.116).
 
 **R5.5** — At first login to a controller, `login` MUST show the controller certificate's SHA-256 fingerprint and ask for a yes (or take `--fingerprint`). It pins that fingerprint in the context. A later certificate with another fingerprint MUST be refused.
 

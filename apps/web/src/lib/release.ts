@@ -28,6 +28,15 @@ export interface ReleaseData {
   /** Today the installers are not signed (owner decision D58); the page changes when signing turns on. */
   signed: boolean;
   assets: Asset[];
+  /** Earlier stable releases, newest first (R5.13). The edge build is never listed. */
+  older: OlderVersion[];
+}
+
+export interface OlderVersion {
+  version: string;
+  tag: string;
+  date: string;
+  notesUrl: string;
 }
 
 /** The fields of a GitHub release that the site reads. */
@@ -36,6 +45,7 @@ export interface GhRelease {
   html_url: string;
   published_at: string;
   prerelease?: boolean;
+  draft?: boolean;
   assets: { name: string; size: number; browser_download_url: string }[];
 }
 
@@ -76,8 +86,34 @@ export function parseAssetName(
   };
 }
 
+/** R5.13: the stable releases (`v1.2.3` tags, not drafts or pre-releases) other than `current`, newest first. */
+export function olderVersions(
+  all: readonly GhRelease[],
+  current: string,
+): OlderVersion[] {
+  return all
+    .filter(
+      (r) =>
+        !r.prerelease &&
+        !r.draft &&
+        /^v\d+\.\d+\.\d+$/.test(r.tag_name) &&
+        r.tag_name !== current,
+    )
+    .sort((a, b) => b.published_at.localeCompare(a.published_at))
+    .map((r) => ({
+      version: r.tag_name.replace(/^v/, ''),
+      tag: r.tag_name,
+      date: r.published_at.slice(0, 10),
+      notesUrl: r.html_url,
+    }));
+}
+
 /** Throws with every problem at once, so the failed build says what to fix. */
-export function buildRelease(gh: GhRelease, sums: string): ReleaseData {
+export function buildRelease(
+  gh: GhRelease,
+  sums: string,
+  all: readonly GhRelease[] = [],
+): ReleaseData {
   const problems: string[] = [];
   if (gh.prerelease)
     problems.push('the release is a pre-release; the site lists stable releases only');
@@ -146,6 +182,7 @@ export function buildRelease(gh: GhRelease, sums: string): ReleaseData {
     sboms,
     signed: false,
     assets,
+    older: olderVersions(all, gh.tag_name),
   };
 }
 
@@ -171,5 +208,17 @@ export async function fetchRelease(
     headers: { 'user-agent': agent },
   });
   if (!sumsRes.ok) throw new Error(`SHA256SUMS answered ${sumsRes.status}`);
-  return buildRelease(gh, await sumsRes.text());
+  // The feed of every release, for the older versions (R5.13): up to five pages of 100.
+  const all: GhRelease[] = [];
+  for (let page = 1; page <= 5; page++) {
+    const feed = await fetchFn(
+      `https://api.github.com/repos/${REPO}/releases?per_page=100&page=${page}`,
+      { headers },
+    );
+    if (!feed.ok) throw new Error(`GitHub releases feed answered ${feed.status}`);
+    const batch = (await feed.json()) as GhRelease[];
+    all.push(...batch);
+    if (batch.length < 100) break;
+  }
+  return buildRelease(gh, await sumsRes.text(), all);
 }

@@ -634,7 +634,7 @@ type RunnerPinSource interface {
 }
 
 // AgentPackageStatus is what the release this controller was built from holds for the agents (operations R5.128,
-// R5.134). Version is the release; the lists name the targets (win-x64, linux-arm64.deb, ...) it lacks.
+// R5.135). Version is the release; the lists name the targets (win-x64, linux-arm64.deb, ...) it lacks.
 type AgentPackageStatus struct {
 	Version         string
 	MissingArchives []string

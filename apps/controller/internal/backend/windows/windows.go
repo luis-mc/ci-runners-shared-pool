@@ -245,6 +245,8 @@ func (b *Backend) want(r backend.RunnerSpec, account string) (persistent.Meta, s
 	if m := b.d.Addresses.VMImageMirror; m != "" {
 		kv[addresses.EnvVMImageMirror] = m // `crsp vm` downloads from the mirror (operations R5.96)
 	}
+	// The package proxy of the runner's repository, when the hub answered at start (caches R5.76).
+	maps.Copy(kv, r.PackageEnv)
 	kv["ACTIONS_RUNNER_HOOK_JOB_STARTED"] = Join(hookDir, "job-started.ps1")
 	kv["ACTIONS_RUNNER_HOOK_JOB_COMPLETED"] = Join(hookDir, "job-completed.ps1")
 	kv["PSExecutionPolicyPreference"] = "RemoteSigned"
@@ -304,7 +306,7 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	if e, err := b.d.FS.ReadFile(Join(folder, ".env")); err == nil {
 		haveEnv = string(e)
 	}
-	action := persistent.Decide(have, haveEnv, wantMeta, wantEnv)
+	action := persistent.WithLost(persistent.Decide(have, haveEnv, wantMeta, wantEnv), have != nil && persistent.RegistrationLostIn(b.d.FS, folder, Join))
 	b.log("register", fmt.Sprintf("runner %s: %s", r.Name, action))
 
 	env := map[string]string{"CRSP_FOLDER": folder, "CRSP_ACCOUNT": account, "CRSP_SERVICE": wantMeta.Service, "CRSP_RUNNER": r.Name}
@@ -329,6 +331,27 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 			return h, err
 		}
 		return h, persistent.WriteMeta(b.d.FS, Join(folder, persistent.MetaFile), wantMeta)
+	case persistent.RegisterLost:
+		// GitHub deleted the registration: nothing is left to remove. The
+		// account and service stay; the registration is made again in place
+		// (runners R5.152).
+		if err := b.stopService(ctx, env, folder); err != nil {
+			return h, err
+		}
+		if err := persistent.CleanStale(b.d.FS, folder, Join); err != nil {
+			return h, err
+		}
+		if err := b.runner(ctx, "register again", folder,
+			ConfigureArgs(r.GitHubURL, r.Name, r.Group, r.Labels), cfg.Registration); err != nil {
+			return h, err
+		}
+		if err := b.writeHooksAndEnv(folder, wantEnv, r.KeepDependencies); err != nil {
+			return h, err
+		}
+		if err := persistent.WriteMeta(b.d.FS, Join(folder, persistent.MetaFile), wantMeta); err != nil {
+			return h, err
+		}
+		return h, b.startService(ctx, env, account)
 	case persistent.Reregister:
 		if cfg.Removal == "" {
 			return h, errors.New("registering again in place needs a remove token for the old runner")
@@ -601,7 +624,7 @@ func (b *Backend) stopService(ctx context.Context, env map[string]string, folder
 			return nil, fmt.Errorf("list listeners: %w", err)
 		}
 		if res.ExitCode != 0 {
-			return nil, fmt.Errorf("list listeners: powershell exited %d", res.ExitCode)
+			return nil, fmt.Errorf("list listeners: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 		}
 		return persistent.ParsePIDs(res.Stdout), nil
 	}
@@ -629,7 +652,7 @@ func (b *Backend) guardStart(ctx context.Context, folder string) error {
 			return nil, fmt.Errorf("list listeners: %w", err)
 		}
 		if res.ExitCode != 0 {
-			return nil, fmt.Errorf("list listeners: powershell exited %d", res.ExitCode)
+			return nil, fmt.Errorf("list listeners: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 		}
 		return persistent.ParsePIDs(res.Stdout), nil
 	})

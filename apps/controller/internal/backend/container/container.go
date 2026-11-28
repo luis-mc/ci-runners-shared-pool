@@ -138,6 +138,8 @@ type Backend struct {
 	caDone    map[string]bool // registry hosts whose engine CA is installed (registry R5.12)
 	// buildGate lets one image build run at a time on this machine (decision D20).
 	buildGate *builds.Gate
+	// psync is the state of the scripts check of the persistent pool (runners R5.154).
+	psync persistentSync
 }
 
 var _ backend.Backend = (*Backend)(nil)

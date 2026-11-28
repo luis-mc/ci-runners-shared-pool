@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"strings"
 	"testing"
 )
 
@@ -159,5 +160,39 @@ func TestRestoreAfterFailedInstall(t *testing.T) {
 	u.Restore("1.1.0", false, 3, 5000)
 	if u.State != "skipped" {
 		t.Fatalf("%s", u.State)
+	}
+}
+
+func notedManifest(t *testing.T, priv ed25519.PrivateKey, notes string) []byte {
+	t.Helper()
+	m := map[string]interface{}{"product": "crsp", "channel": "stable", "version": "1.1.0", "required": false,
+		"expires_at": 1e12, "url": "https://example/pkg", "sha256": "aa"}
+	if notes != "" {
+		m["notes"] = notes
+	}
+	body, _ := Canonical(m)
+	raw, _ := json.Marshal(map[string]interface{}{"manifest": m, "signature": hex.EncodeToString(ed25519.Sign(priv, body))})
+	return raw
+}
+
+func TestManifestNotesAreSignedAndOptional(t *testing.T) {
+	pub, priv, _ := ed25519.GenerateKey(rand.Reader)
+	m, bad := ParseManifest(notedManifest(t, priv, "  Live progress.  "), pub, "crsp", 1, "1.0.0")
+	if bad != "" || m.Notes != "Live progress." {
+		t.Fatalf("with notes: %q %q", bad, m.Notes)
+	}
+	m, bad = ParseManifest(notedManifest(t, priv, ""), pub, "crsp", 1, "1.0.0")
+	if bad != "" || m.Notes != "" {
+		t.Fatalf("without notes: %q %q", bad, m.Notes)
+	}
+	// Changing the note after signing breaks the signature.
+	raw := notedManifest(t, priv, "Live progress.")
+	tampered := []byte(strings.Replace(string(raw), "Live progress.", "Pay me now.", 1))
+	if _, bad := ParseManifest(tampered, pub, "crsp", 1, "1.0.0"); bad != BadSignature {
+		t.Fatalf("tampered note: %q", bad)
+	}
+	long := strings.Repeat("a", MaxNotes+50)
+	if m, _ := ParseManifest(notedManifest(t, priv, long), pub, "crsp", 1, "1.0.0"); len([]rune(m.Notes)) != MaxNotes {
+		t.Fatalf("long note kept %d", len([]rune(m.Notes)))
 	}
 }
