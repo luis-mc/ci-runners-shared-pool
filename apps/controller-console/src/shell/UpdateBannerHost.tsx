@@ -1,6 +1,8 @@
 // The update banner, app-wide (UX-27, one banner slot): it reads the update status and shows the UpdateBanner part
 // when an update is ready to start, running, done or failed. Not now hides it until the status changes.
+import { ReleaseNotes } from '@crsp/ui/lifecycle';
 import { lazy, Suspense, useEffect, useState, type ReactNode } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useCommand, useLoad } from '../api/hooks';
 import { useLifecycle } from '../api/lifecycle';
 import { useRefreshTick } from '../api/machines';
@@ -13,6 +15,7 @@ const REFRESH_MS = 10_000;
 /** The banner element, or null when nothing is worth showing (the banner slot then stays empty). */
 export function useUpdateBanner(): ReactNode {
   const api = useLifecycle();
+  const { pathname } = useLocation();
   const tick = useRefreshTick(REFRESH_MS);
   const { result, reload } = useLoad(() => api.status(), [tick]);
   // The state the person hid; a different state or version brings the banner back.
@@ -29,7 +32,20 @@ export function useUpdateBanner(): ReactNode {
   }, [hidden, key]);
   if (!data) return null;
   const state = bannerFor(data, false);
+  // Nothing else needs the slot: the note of the version that now runs shows once (a release without one shows nothing).
+  if (!state && data.updated) {
+    return (
+      <ReleaseNotes
+        key="notes"
+        after
+        version={data.updated.version}
+        notes={data.updated.notes}
+      />
+    );
+  }
   if (!state || hidden === key) return null;
+  // The Updates page shows the progress in its own pane: no top line there (CRSP364).
+  if (state === 'running' && pathname.startsWith('/settings/updates')) return null;
   const version = state === 'done' ? data.current : (data.available ?? data.current);
   return (
     <Suspense key="update" fallback={null}>

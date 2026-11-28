@@ -1,4 +1,4 @@
-// Settings > Console > Network, and the dialog that chooses the console address (operations R5.90).
+// Settings > Networking > Network, and the dialog that chooses the console address (operations R5.90).
 // The owner chooses the address the controller listens on in the console, never with a terminal. The choice is
 // kept and the controller restarts once through the drain path (running jobs finish first); the dialog waits and
 // says when the controller answers on the new address. Only shared parts of @crsp/ui are used (UX-9, UX-13,
@@ -27,7 +27,7 @@ type Listen = Schemas['ListenAddress'];
 
 const OTHER = 'other';
 
-/** Settings > Console > Network. */
+/** Settings > Networking > Network. */
 export function NetworkSettings() {
   const client = useClient();
   const session = useSession();

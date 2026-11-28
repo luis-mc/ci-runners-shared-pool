@@ -248,7 +248,8 @@
       },
       "updated": {
         "title": "Updated to version {version}.",
-        "action": "What's new"
+        "action": "What's new",
+        "notes": "What is new in version {version}"
       },
       "rolled_back": {
         "title": "The update to {version} failed its test. Version {previous} is running again. We try again at {time}."

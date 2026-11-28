@@ -224,8 +224,11 @@ describe('Overview (R5.20)', () => {
       labels: [],
       state: 'running' as const,
     };
+    const inGrace = { ...job, timer_deadline: '2026-11-27T10:00:20Z' };
+    // A running job that is not in its grace has no deadline, and its timer is not asked for (audit R3-10).
+    const other = { ...job, id: 8, job_name: 'lint' };
     const api = signedIn()
-      .on('GET', '/api/v1/overview', overview({ running: [job] }))
+      .on('GET', '/api/v1/overview', overview({ running: [inGrace, other] }))
       .on('GET', '/api/v1/jobs/7/timer', {
         job_id: 7,
         state: 'grace',
@@ -323,6 +326,23 @@ describe('App health banner (github-integration R5.6)', () => {
         .getByRole('link', { name: 'Run the setup wizard again' })
         .getAttribute('href'),
     ).toBe('/setup?wizard=1');
+  });
+
+  it('names the one setting when Device Flow is off, with a link to the App settings (R5.14)', async () => {
+    const api = signedIn().on('GET', '/api/v1/github/app-health', {
+      gone: false,
+      device_flow_off: true,
+      settings_url: 'https://github.com/settings/apps/crsp-home',
+      checked_at: '2026-11-16T08:00:00Z',
+    });
+    renderApp(api, '/');
+    const note = await screen.findByText(/Device Flow is off/);
+    expect(note.textContent).toContain('Enable Device Flow');
+    expect(
+      (await screen.findByRole('button', { name: 'Open the App settings' })).getAttribute(
+        'href',
+      ),
+    ).toBe('https://github.com/settings/apps/crsp-home');
   });
 
   it('draws nothing while the App answers', async () => {

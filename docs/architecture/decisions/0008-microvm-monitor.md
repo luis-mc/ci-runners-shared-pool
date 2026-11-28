@@ -9,7 +9,7 @@ type: explanation
 ---
 # Firecracker first for microVMs, behind the VM seam, with Cloud Hypervisor as the next option
 
-Proposed by CRSP277 for owner review. Requirements: runners R5.30, R5.168 to R5.173. Builds on decision 0006.
+Proposed by CRSP277 for owner review. Requirements: runners R5.30, R5.172 to R5.177. Builds on decision 0006.
 
 ## Context and problem
 

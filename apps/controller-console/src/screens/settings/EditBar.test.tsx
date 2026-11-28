@@ -92,22 +92,22 @@ describe('Settings tab: the leave guard (LOOK21)', () => {
   it('asks "Discard changes?" on another tab; Keep editing stays, Discard leaves', async () => {
     const router = renderRouted(dataApi(), '/settings/data');
     await changeJobHistory();
-    fireEvent.click(screen.getByRole('tab', { name: 'Console' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Themes' }));
     const dialog = await screen.findByRole('dialog', { name: 'Discard changes?' });
     fireEvent.click(within(dialog).getByRole('button', { name: 'Keep editing' }));
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
     expect(router.state.location.pathname).toBe('/settings/data');
-    fireEvent.click(screen.getByRole('tab', { name: 'Console' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Themes' }));
     const again = await screen.findByRole('dialog', { name: 'Discard changes?' });
     fireEvent.click(within(again).getByRole('button', { name: 'Discard' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/settings/console'));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/settings/themes'));
   });
 
   it('does not ask when nothing changed', async () => {
     const router = renderRouted(dataApi(), '/settings/data');
     await screen.findByRole('button', { name: /Job history/ });
-    fireEvent.click(screen.getByRole('tab', { name: 'Console' }));
-    await waitFor(() => expect(router.state.location.pathname).toBe('/settings/console'));
+    fireEvent.click(screen.getByRole('tab', { name: 'Themes' }));
+    await waitFor(() => expect(router.state.location.pathname).toBe('/settings/themes'));
     expect(screen.queryByRole('dialog', { name: 'Discard changes?' })).toBeNull();
   });
 });

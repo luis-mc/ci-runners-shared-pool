@@ -1,10 +1,11 @@
 {
-  "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build", "e2e"],
-  "always_jobs": [],
+  "jobs": ["lint", "types", "go-race", "web-tests", "test-os", "go_win_lint", "build", "image", "e2e-shards"],
+  "always_jobs": ["lint"],
   "run_everything": [
     "package.json",
     "pnpm-lock.yaml",
     "pnpm-workspace.yaml",
+    ".npmrc",
     "go.mod",
     "go.sum",
     ".github/**",
@@ -14,32 +15,43 @@
   "docs": ["docs/**", "**/*.md", "LICENSE", ".claude/**", ".delivery/**"],
   "areas": {
     "go": {
-      "paths": ["**/*.go", "apps/controller/cmd/**", "apps/controller/internal/**"],
-      "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build", "e2e"]
+      "paths": ["**/*.go", "apps/controller/cmd/**", "apps/controller/internal/**", "sqlc.yaml"],
+      "jobs": ["types", "go-race", "web-tests", "test-os", "go_win_lint", "build", "image", "e2e-shards"]
     },
     "windows": {
-      "paths": ["**/*.syso", "apps/controller/cmd/crsp/winres/**", "**/*.ps1", "**/*.wxs"],
-      "jobs": ["test_os", "go_win_lint", "build"]
+      "paths": [
+        "**/*.syso",
+        "apps/controller/cmd/crsp/winres/**",
+        "**/*.ps1",
+        "**/*.wxs",
+        "scripts/install/**",
+        "scripts/real-machine/**"
+      ],
+      "jobs": ["test-os", "go_win_lint", "build"]
     },
     "web": {
       "paths": ["apps/controller-console/**", "packages/**", "scripts/design/**"],
-      "jobs": ["web_tests", "build", "e2e"]
+      "jobs": ["types", "web-tests", "build", "image", "e2e-shards"]
     },
     "site": {
       "paths": ["apps/web/**"],
-      "jobs": ["web_tests"]
+      "jobs": ["types", "web-tests"]
+    },
+    "guards": {
+      "paths": ["guards/**", "tools/design-guards.json", "tsconfig.json", "vitest.config.ts"],
+      "jobs": ["types", "web-tests"]
     },
     "e2e": {
       "paths": ["e2e/**", "playwright.config.ts"],
-      "jobs": ["build", "e2e"]
+      "jobs": ["types", "build", "e2e-shards"]
     },
     "image": {
       "paths": ["images/**"],
-      "jobs": ["build"]
+      "jobs": ["build", "image"]
     },
     "installer": {
       "paths": ["installer/**", "packaging/**"],
-      "jobs": ["go_race", "web_tests", "test_os", "go_win_lint", "build"]
+      "jobs": ["types", "go-race", "web-tests", "test-os", "go_win_lint", "build"]
     },
     "config": {
       "paths": [
@@ -49,10 +61,14 @@
         ".prettierrc",
         ".prettierignore",
         ".gitattributes",
+        ".gitignore",
+        ".nvmrc",
+        ".githooks/**",
         ".env.example",
         "Taskfile.yml",
         "pytest.ini",
-        "eslint.config.mjs"
+        "eslint.config.mjs",
+        "routines/**"
       ],
       "jobs": []
     }

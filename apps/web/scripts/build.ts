@@ -1,12 +1,31 @@
-// Builds the site into apps/web/dist (website R6.6, R6.7): release data, one client build (stylesheet and the system
-// picker), one server build that renders each page to static HTML. Run by `pnpm --filter web build` and by Vercel.
-// `CRSP_RELEASE_FILE` points at a release.json to use instead of reading GitHub (tests, offline builds).
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+// Builds the site into apps/web/dist (website R6.6, R6.7): release data, the docs, one client build (stylesheet, the
+// system picker and the docs search), one server build that renders each page to static HTML. Run by
+// `pnpm --filter web build` and by Vercel. `CRSP_RELEASE_FILE` points at a release.json to use instead of reading
+// GitHub (tests, offline builds); `CRSP_REPO_DIR` points at another repository root for `docs/`.
+import {
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'vite';
-import { canonical, PAGES, SITE, type PageMeta } from '../src/lib/pages.ts';
+import { loadDocs } from '../src/lib/docs.ts';
+import {
+  canonical,
+  pagesFor,
+  SITE,
+  type PageMeta,
+  type ShotData,
+  type SiteData,
+} from '../src/lib/pages.ts';
 import { fetchRelease, type ReleaseData } from '../src/lib/release.ts';
+import { buildIndex } from '../src/lib/search.ts';
+import { loadStudy } from '../src/lib/study.ts';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -60,14 +79,51 @@ export function pageHtml(page: PageMeta, body: string, entry: ManifestEntry): st
   ].join('');
 }
 
-export const sitemap = (): string =>
-  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${PAGES.filter(
-    (p) => p.indexed,
-  )
+export const sitemap = (pages: readonly PageMeta[]): string =>
+  `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${pages
+    .filter((p) => p.indexed)
     .map((p) => `  <url><loc>${canonical(p.path)}</loc></url>`)
     .join('\n')}\n</urlset>\n`;
 
-export async function buildSite(outDir: string, release: ReleaseData): Promise<void> {
+/** The pictures under `content/shots/` and their manifest (R5.4). Without a manifest the site has no pictures. */
+export function loadShots(dir: string = join(root, 'content', 'shots')): ShotData[] {
+  const file = join(dir, 'shots.json');
+  if (!existsSync(file)) return [];
+  const list = JSON.parse(readFileSync(file, 'utf8')) as {
+    name: string;
+    alt: string;
+    width: number;
+    height: number;
+  }[];
+  return list.map((s) => {
+    if (!existsSync(join(dir, `${s.name}.png`)))
+      throw new Error(`content/shots/shots.json names ${s.name}.png, which is missing`);
+    if (!s.alt.trim()) throw new Error(`the shot ${s.name} has no alt text (R6.4)`);
+    return { ...s, src: `/shots/${s.name}.png` };
+  });
+}
+
+/** Everything a build reads: the release, the docs (R5.15 to R5.20), the study (R5.5) and the shots (R5.4). */
+export function loadSiteData(
+  repo: string,
+  release: ReleaseData,
+): { data: SiteData; llms: string; warnings: string[] } {
+  const docs = loadDocs(repo);
+  if (docs.problems.length > 0)
+    throw new Error(`The docs cannot be published:\n- ${docs.problems.join('\n- ')}`);
+  return {
+    data: { release, docs: docs.pages, study: loadStudy(repo), shots: loadShots() },
+    llms: docs.llms,
+    warnings: docs.warnings,
+  };
+}
+
+export async function buildSite(
+  outDir: string,
+  data: SiteData,
+  llms: string,
+): Promise<void> {
+  const pages = pagesFor(data);
   await build({
     root,
     configFile: join(root, 'vite.config.ts'),
@@ -103,23 +159,34 @@ export async function buildSite(outDir: string, release: ReleaseData): Promise<v
     const server = (await import(
       pathToFileURL(join(ssrDir, 'entry-server.js')).href
     )) as {
-      render: (path: string, release: ReleaseData) => string;
+      render: (path: string, data: SiteData) => string;
     };
-    for (const page of PAGES) {
+    for (const page of pages) {
       const file = join(outDir, page.file);
       mkdirSync(dirname(file), { recursive: true });
-      writeFileSync(file, pageHtml(page, server.render(page.path, release), entry));
+      writeFileSync(file, pageHtml(page, server.render(page.path, data), entry));
     }
   } finally {
     rmSync(ssrDir, { recursive: true, force: true });
   }
   rmSync(join(outDir, '.vite'), { recursive: true, force: true });
-  writeFileSync(join(outDir, 'sitemap.xml'), sitemap());
+  writeFileSync(join(outDir, 'sitemap.xml'), sitemap(pages));
+  // R5.16: llms.txt is the repository's own file, copied unchanged. R5.19: the static search index.
+  writeFileSync(join(outDir, 'llms.txt'), llms);
+  writeFileSync(join(outDir, 'search-index.json'), JSON.stringify(buildIndex(data.docs)));
+  if (existsSync(join(root, 'content', 'shots')))
+    cpSync(join(root, 'content', 'shots'), join(outDir, 'shots'), {
+      recursive: true,
+      filter: (src) => !src.endsWith('shots.json'),
+    });
   writeFileSync(
     join(outDir, 'robots.txt'),
     `User-agent: *\nAllow: /\nSitemap: ${SITE}/sitemap.xml\n`,
   );
-  writeFileSync(join(outDir, 'release.json'), `${JSON.stringify(release, null, 2)}\n`);
+  writeFileSync(
+    join(outDir, 'release.json'),
+    `${JSON.stringify(data.release, null, 2)}\n`,
+  );
 }
 
 if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url) {
@@ -127,6 +194,11 @@ if (process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.m
   const release = file
     ? (JSON.parse(readFileSync(file, 'utf8')) as ReleaseData)
     : await fetchRelease();
-  await buildSite(join(root, 'dist'), release);
-  console.log(`site built: release ${release.tag}, ${PAGES.length} pages`);
+  const repo = process.env['CRSP_REPO_DIR'] ?? resolve(root, '..', '..');
+  const { data, llms, warnings } = loadSiteData(repo, release);
+  await buildSite(join(root, 'dist'), data, llms);
+  for (const w of warnings) console.warn(`warning: ${w}`);
+  console.log(
+    `site built: release ${release.tag}, ${pagesFor(data).length} pages (${data.docs.length} docs)`,
+  );
 }

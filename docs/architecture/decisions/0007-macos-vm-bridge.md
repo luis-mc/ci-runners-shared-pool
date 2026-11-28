@@ -9,7 +9,7 @@ type: explanation
 ---
 # macOS VMs through a small signed helper on Virtualization.framework
 
-Proposed by CRSP276 for owner review. Requirements: runners R5.29, R5.161 to R5.167. Builds on decision 0003 (amended by D54: no Tart) and decision 0006.
+Proposed by CRSP276 for owner review. Requirements: runners R5.29, R5.165 to R5.171. Builds on decision 0003 (amended by D54: no Tart) and decision 0006.
 
 ## Context and problem
 

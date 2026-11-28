@@ -8,6 +8,7 @@ import {
   RemoteUpdate,
   RemoveDialog,
   UpdateBanner,
+  ReleaseNotes,
   UpdateHistory,
   UpdatesCard,
   updateStateLine,
@@ -46,7 +47,7 @@ describe('UpdateBanner states', () => {
         <UpdateBanner
           state={state}
           version="1.5.0"
-          percent={40}
+          to="/settings/updates"
           step="verifying"
           reason="x"
           onUpdate={onUpdate}
@@ -63,8 +64,12 @@ describe('UpdateBanner states', () => {
         expect(screen.getByRole('button', { name: 'Not now' })).toBeTruthy();
       }
       if (state === 'running') {
-        expect(screen.getByText(/Checking the download 40%/)).toBeTruthy();
-        expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('40');
+        // One short line with a link, no bar and no step words (CRSP364).
+        expect(screen.getByText('An update is running.')).toBeTruthy();
+        expect(screen.queryByRole('progressbar')).toBeNull();
+        expect(
+          screen.getByRole('button', { name: 'See the update' }).getAttribute('href'),
+        ).toBe('/settings/updates');
       }
       if (state === 'done')
         expect(screen.getByText('Updated to version 1.5.0.')).toBeTruthy();
@@ -73,6 +78,24 @@ describe('UpdateBanner states', () => {
         expect(onRetry).toHaveBeenCalled();
       }
     });
+});
+
+describe('UpdatesCard progress and restart (CRSP364)', () => {
+  it('draws the bar with the step words only inside the pane', () => {
+    wrap(
+      <UpdatesCard policy="ask_first" state="installing" current="1.4.0" percent={60} />,
+    );
+    const bar = screen.getByRole('progressbar');
+    expect(bar.getAttribute('aria-valuenow')).toBe('60');
+    expect(bar.closest('[data-tone]')).toBeNull();
+  });
+  it('says the restart in one line, no bar', () => {
+    wrap(
+      <UpdatesCard policy="ask_first" state="installing" current="1.4.0" restarting />,
+    );
+    expect(screen.getAllByText('Restarting, back in a moment.')).toHaveLength(1);
+    expect(screen.queryByRole('progressbar')).toBeNull();
+  });
 });
 
 describe('UpdatesCard states', () => {
@@ -330,5 +353,56 @@ describe('FleetRows states', () => {
   it('says so when no machine is paired', () => {
     wrap(<FleetRows rows={[]} />);
     expect(screen.getByText('This is the only machine.')).toBeTruthy();
+  });
+});
+
+describe('ReleaseNotes', () => {
+  it('shows the note with its title, one paragraph per line', () => {
+    wrap(<ReleaseNotes version="0.1.30" notes={'First thing.\n\nSecond thing.'} />);
+    expect(screen.getByText('What is new in version 0.1.30')).toBeTruthy();
+    expect(screen.getByText('First thing.')).toBeTruthy();
+    expect(screen.getByText('Second thing.')).toBeTruthy();
+  });
+  it('draws nothing for a release without a note', () => {
+    for (const notes of [undefined, null, '', '  \n ']) {
+      const { container } = wrap(<ReleaseNotes version="0.1.30" notes={notes} />);
+      expect(container.querySelector('[data-lifecycle="release-notes"]')).toBeNull();
+      cleanup();
+    }
+  });
+  it('is dismissed once after an update, and stays with the offer before it', () => {
+    window.localStorage.clear();
+    wrap(<ReleaseNotes version="0.1.30" notes="A note." after />);
+    fireEvent.click(screen.getByRole('button', { name: /^hide$/i }));
+    expect(screen.queryByText('A note.')).toBeNull();
+    cleanup();
+    wrap(<ReleaseNotes version="0.1.30" notes="A note." after />);
+    expect(screen.queryByText('A note.')).toBeNull();
+    cleanup();
+    wrap(<ReleaseNotes version="0.1.31" notes="A note." />);
+    expect(screen.queryByRole('button', { name: /^hide$/i })).toBeNull();
+    expect(screen.getByText('A note.')).toBeTruthy();
+  });
+  it('sits in the Updates card only when a version is offered', () => {
+    wrap(
+      <UpdatesCard
+        policy="ask_first"
+        state="available"
+        current="1.0.0"
+        available="1.1.0"
+        notes="Live progress."
+      />,
+    );
+    expect(screen.getByText('Live progress.')).toBeTruthy();
+    cleanup();
+    wrap(
+      <UpdatesCard
+        policy="ask_first"
+        state="idle"
+        current="1.0.0"
+        notes="Live progress."
+      />,
+    );
+    expect(screen.queryByText('Live progress.')).toBeNull();
   });
 });

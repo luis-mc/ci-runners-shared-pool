@@ -194,7 +194,7 @@ The body scrolls when the content is taller than the space. The overlay never gr
 ## 16. Progress bar
 
 - **Used for:** a wait. Filled when the total is known, animated when it is not. It always names what is happening. With `phases` (weighted) it shows the real percent of the whole job; a phase with no percent shows an indeterminate bar, the reason and the time elapsed (UX-88).
-- **Looks:** a thin bar that fills from the start, with a line of text that names the work.
+- **Looks:** a thin bar that fills from the start, with a line of text that names the work. In the Terminal themes (Blocks and Dots alike) it is a row of 20 shared segments in the primary colour, filled in steps of 5 %; an unknown total is the same row with its segments pulsing (UX-91, CRSP369). A progress bar never sits inside a Note: where a Note would carry one, the Note is one short line and the bar is drawn by the pane that owns the work (CRSP364).
 - **Source:** `src/ui/progress`
 - **Rules:** UX-29, UX-88, UX-17, UX-19.
 - **Guard:** `packages/ui/src/components/LiveProgress.test.tsx` (weighted phases, indeterminate with reason).
@@ -487,7 +487,7 @@ A `Tag` is the small outlined label that names a kind next to a word, such as `i
 ## 42. Theme choice
 
 - **Used for:** the Theme choice in Settings, Appearance (UX-60): a one-choice list (component 13) of the six themes.
-- **Looks:** each row shows the theme name and, under it, a small row of that theme's colours (surface, primary, Done, Note, Needs you, Problem) in a box in the theme's page colour. The swatches are drawn from the theme's own tokens; the row is decoration and the name carries the meaning. The theme row may show a `ThemePreview` of that theme in dark and one in light (`Choice.preview`) instead of the swatch row; Settings, Appearance does. A choice with previews is drawn as cards in a grid, 3 per row on a desktop, 2 on a tablet and 1 on a phone; each card holds the radio, the theme name and the dark and light previews side by side, the whole card is the choice, and the selected card has a 2 px primary border. The mode (system, dark, light) is a second one-choice list beside it. `ThemePreview` is a small live sample of a theme in dark or light: a pane with its title in the border, a selected row in reverse video and a primary button, all from that theme's tokens. It is a picture with one label, not a control.
+- **Looks:** each row shows the theme name and, under it, a small row of that theme's colours (surface, primary, Done, Note, Needs you, Problem) in a box in the theme's page colour. The swatches are drawn from the theme's own tokens; the row is decoration and the name carries the meaning. The theme row may show a `ThemePreview` of that theme in dark and one in light (`Choice.preview`) instead of the swatch row; Settings, Appearance does. A choice with previews is drawn as cards at any count (never a drop-down, UX-22) in a grid, 3 per row on a desktop, 2 on a tablet and 1 on a phone; each card holds the radio, the theme name and the dark and light previews side by side (every card, a Terminal one too, holds both, CRSP371), the whole card is the choice, and the selected card has a 2 px primary border. The mode (system, dark, light) is a second one-choice list beside it. `ThemePreview` is a small live sample of a theme in dark or light: a pane with its title in the border, a selected row in reverse video and a primary button, all from that theme's tokens. It is a picture with one label, not a control.
 - **Source:** `packages/ui/src/components/Fields.tsx` (`Choice.swatch`), `packages/ui/src/components/ThemePreview.tsx`, `packages/ui/src/themes.ts`
 - **Rules:** UX-22, UX-55, UX-60.
 - **Guard:** `scripts/design/themes.test.ts` (tokens and contrast); `apps/controller-console/src/screens/settings/Settings.test.tsx` (picking and keeping a theme).
@@ -540,7 +540,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 ## 48. Action bar
 
 - **Used for:** the main action of a screen, always in the same place and the same order (UX-71, UX-4). Selection screens, edit screens, list screens with one main action, and every wizard.
-- **Looks:** one bar, sticky at the foot of the main content, above the key-hint bar (component 41), with a thin top border and the page fill. It never scrolls away: `Frame` draws it as a direct child of the main column, whatever wrapper the page puts it in, so it sticks to the window, the last row of the page ends above it, and it sits above the key-hint bar at its real height (no bar: no gap). Left to right: the status line in muted text ("2 selected", "Unsaved changes (3)"; none when there is nothing to say), the secondary actions (Cancel, Back, Stop), the one primary action. A disabled primary says why next to it (UX-38). From 600 px down the bar is full width and the buttons stack at equal width, the primary on top, the secondary actions under it. A wizard draws its Back, Stop and primary through this part; a wizard inside a screen that has its own bar sits in the flow (not sticky) and draws default buttons. An edit screen draws its bar through `EditBar`: the status "Unsaved changes (n)" from the number of changes, Cancel (puts every field back to what is saved) and Save, both disabled until something changed, and the leave guard: leaving by a link, a tab, browser Back or by closing the browser tab asks "Discard changes?" with Keep editing and Discard (the tab close shows the browser's own question). The page passes the number and what Save and Cancel do. A tab of many sections (Settings) has one bar: each section registers what it changed with the tab, the status counts them all, and Save sends each changed section in turn.
+- **Looks:** one bar, sticky at the foot of the main content, above the key-hint bar (component 41), with a thin top border and the page fill. It never scrolls away: `Frame` draws it right after the main column, as a child of the frame and at the edges of the main column's content, whatever wrapper the page puts it in, so it sticks to the window (a sticky box never leaves its parent, so a header, menu or banner above the main column can never hold it over the key-hint bar at the top of the page), the last row of the page ends above it, and it sits above the key-hint bar at its real height (no bar: no gap). Left to right: the status line in muted text ("2 selected", "Unsaved changes (3)"; none when there is nothing to say), the secondary actions (Cancel, Back, Stop), the one primary action. A disabled primary says why next to it (UX-38). From 600 px down the bar is full width and the buttons stack at equal width, the primary on top, the secondary actions under it. A wizard draws its Back, Stop and primary through this part; a wizard inside a screen that has its own bar sits in the flow (not sticky) and draws default buttons. An edit screen draws its bar through `EditBar`: the status "Unsaved changes (n)" from the number of changes, Cancel (puts every field back to what is saved) and Save, both disabled until something changed, and the leave guard: leaving by a link, a tab, browser Back or by closing the browser tab asks "Discard changes?" with Keep editing and Discard (the tab close shows the browser's own question). The page passes the number and what Save and Cancel do. A tab of many sections (Settings) has one bar: each section registers what it changed with the tab, the status counts them all, and Save sends each changed section in turn.
 - **Source:** `packages/ui/src/components/ActionBar.tsx` (`ActionBar`, `selectedStatus`, `unsavedStatus`), `packages/ui/src/components/EditBar.tsx` (`EditBar`, `LeaveGuard`), `packages/ui/src/components/Wizard.tsx`, `packages/ui/src/components.css`
 - **Rules:** UX-4, UX-13, UX-38, UX-71.
 - **Guard:** `scripts/design/action-bar.test.ts` (a primary button outside the bar, or two in it, fails; `action-bar.known.json` only shrinks); `e2e/tests/web-console/ux-routes.spec.ts` (`stickyWalk`: the bar never scrolls away and never covers the last row or the key-hint bar).
@@ -574,6 +574,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** one to four series over time or over categories, as lines or columns, with an optional range band.
 - **Looks:** inline SVG to scale with the top and bottom value and the first and last time named; lines differ by dash as well as colour, and a legend names them. A table under "Show as table" lists every point. A `stacked` mode stacks the parts of one total (component 63).
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, a line is a line of solid round filled dots, evenly spaced (each series has its own colour; the legend swatch is a short line of dots), a band or an area is a grid of filled dots, a column covers the same box as the filled bar (same x, width and top) with a grid of filled dots of fixed size and gap (`--ds-dot-r`, `--ds-dot-gap`; a wide bar has several dots across, a narrow one at least one) whose top row is partly lit by the remainder, with no track and no empty dots. A line follows the path of the standard line and an area fills the standard area. The part draws the dots itself (`dots.tsx`; circles in a layer over the plot, so a stretched chart never squashes one), never an outline over a wash and never a page. The grid follows. The words, the legend and the table do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`TrendChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-11, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -582,6 +583,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a small trend in a table cell or a facts row.
 - **Looks:** one line with no axes; the last value can be marked with a dot. It always has its label and the last, lowest and highest value as text. No values say "no data yet".
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the line is a line of solid round filled dots; the last-value dot stays. The text alternative does not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Sparkline`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-11.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -590,6 +592,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** a weekday by hour grid of counts or seconds ("busiest hours").
 - **Looks:** seven rows of 24 cells in five steps of one colour; the highest step has an outline. It fits 360 px without scrolling. A table under "Show as table" gives each day's total and busiest hour.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, each cell keeps its footprint and is filled with a grid of round dots (`--ds-dot-r`, `--ds-dot-gap`) tinted by the level, like the filled square it replaces. The table and the cell hover text do not change.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`Heatmap`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-49, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -598,6 +601,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 
 - **Used for:** how good a forecast was: one dot per finished job, forecast across and actual up.
 - **Looks:** a dashed diagonal for "forecast = actual"; a bracket with end caps at the height of each dot for its range. A dot inside its range is round, one outside is a diamond. A table under "Show as table" says each job in words.
+- **Dotted form:** in the Terminal themes with Graphs set to Dots, the diagonal is a line of solid round filled dots. The dots, brackets and diamonds keep their shapes, so inside and outside stay readable without colour.
 - **Source:** `packages/ui/src/components/Charts.tsx` (`ForecastChart`), `packages/ui/src/components.css`
 - **Rules:** UX-41, UX-17, UX-18, UX-58.
 - **Guard:** `packages/ui/src/components/Viz.test.tsx`.
@@ -654,6 +658,7 @@ A field's width caps its box, never its name and help: a lone field's name and h
 - **Keyboard and screen reader:** each row is one tab stop; Down and Up move through the rows (UX-57); Enter opens the list. A row reads _repo-a: 212 minutes, 124 jobs. Open the 124 jobs._ The bars are hidden from assistive technology; the table under _Show as table_ is the text equivalent.
 - **Phone (360, 393 px):** the label sits above its bar (the bar fills the row width), the value to the right of the label; the label wraps and never cuts (UX-72); rows are at least `--ds-target-min` high.
 - **Looks:** a card body, never a bordered box inside a box.
+- **Terminal form (CRSP369, owner 27 Nov):** a bar list is a bar, not a chart: in the Terminal themes it is a row of 10 shared segments (`Segments`, steps of 5 %) in the note colour, in Blocks and in Dots alike. Graphs set to Dots never draws a dot here. The value as text does not change.
 - **Source:** `packages/ui/src/components/BarList.tsx` (`BarList`), `packages/ui/src/components.css` (built in LOOK41; one value a row, the two-segment bar and _Show as table_ come with the stacked mode).
 - **Rules:** UX-41, UX-17, UX-52, UX-57, UX-58, UX-72, UX-16, CORE-2, CORE-4.
 - **Guard:** `packages/ui/src/components/overview-parts.test.tsx`.
@@ -780,7 +785,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 
 ## 73. Lifecycle parts
 
-- **Used for:** install, update and remove in the web console and on a phone: `UpdateBanner` (ready, running, done, failed), `UpdatesCard` (policy, time window, wait for running work, last check, admin lock), `UpdateHistory` (audit events with actor and result), `RemoteUpdate` (phone, 360 to 393 px), `RemoveDialog` (Remove disabled until Keep my data or Delete my data too is chosen) and `FleetRows` (Up to date, Waiting, Needs you). Words come from the lifecycle words table.
+- **Used for:** install, update and remove in the web console and on a phone: `UpdateBanner` (ready, running, done, failed), `UpdatesCard` (policy, time window, wait for running work, last check, admin lock), `UpdateHistory` (audit events with actor and result), `RemoteUpdate` (phone, 360 to 393 px), `RemoveDialog` (Remove disabled until Keep my data or Delete my data too is chosen) and `FleetRows` (Up to date, Waiting, Needs you) and `ReleaseNotes` (the note of a release under *What is new in version X*, inside `UpdatesCard` while a version is on offer and once after an update; nothing is drawn for a release without a note, CRSP354). Words come from the lifecycle words table.
 - **Looks:** cards on the shared part class `ds-part`. Tokens only. Every state is a word, never colour alone.
 - **Source:** `packages/ui/src/components/lifecycle` (LOOK53 builds it from `parts/react-typescript/` of the starter)
 - **Rules:** UX-82, UX-4, UX-26, UX-16, CORE-1, CORE-2, CORE-4, CORE-5.
@@ -904,8 +909,80 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 ## 85. Segment meter
 
 - **Used for:** a level against a limit (CPU, memory, disk, a pool's busy share) as a row of segments with the level in words beside it. `LevelBar` (component 16) draws the same segments in the Cool Terminal themes.
-- **Looks:** 10 segments by default (`segments`, 3 to 20; a narrow place passes fewer, a wide one more). The level is rounded to a step of 5 %; each segment covers `100 / segments` per cent and is empty, partly filled or full, so at 10 segments a level of 55 % shows five full segments and one half-filled. Blocks in the Cool Terminal theme; round dots in *Cool Terminal (dotted graphs)* (`data-graphs=dotted`). Filled segments are the done colour, from `warnAt` (75 %) the needs-you colour, from `badAt` (90 %) the problem colour. The segments are `aria-hidden`; the element is a `meter` with `aria-valuetext` of the words (CORE-5). A value is clamped between 0 and 100 %. The gap between segments is `--ds-seg-gap`.
+- **Looks:** 10 segments by default (`segments`, 3 to 20; a narrow place passes fewer, a wide one more). The level is rounded to a step of 5 %; each segment covers `100 / segments` per cent and is empty, partly filled or full, so at 10 segments a level of 55 % shows five full segments and one half-filled. Blocks in the Cool Terminal theme, whatever the Graphs setting: Dots changes charts only, never a meter. Filled segments are the done colour, from `warnAt` (75 %) the needs-you colour, from `badAt` (90 %) the problem colour. The segments are `aria-hidden`; the element is a `meter` with `aria-valuetext` of the words (CORE-5). A value is clamped between 0 and 100 %. The gap between segments is `--ds-seg-gap`.
 - **States:** _ok_, _warn_, _bad_ (by level); _empty_ (0 %); _full_ (100 %).
 - **Source:** `packages/ui/src/components/SegMeter.tsx` (`SegMeter`: `label`, `value`, `max`, `segments`, `warnAt`, `badAt`, `text`; `segmentFills`), `packages/ui/src/components.css` (`ds-segs`, `ds-segmeter`).
 - **Rules:** UX-17, UX-58, UX-91, CORE-1, CORE-5.
 - **Guard:** `packages/ui/src/components/segmeter.test.tsx`.
+
+## 86. Site frame
+
+- **Used for:** the frame of a public, signed-out page: a public website. A page of the console never uses it; the console has its own shell (UX-69).
+- **Anatomy:** a skip link, the top menu, one `main`, a footer. All three sit in one column of `--ds-frame-marketing` with the page gutter at each side.
+- **States:** normal. The skip link shows on focus.
+- **Tokens:** `--ds-page-gutter`, `--ds-page-padding`, `--ds-frame-marketing`, `--ds-space-2`, `--ds-space-5`, `--ds-space-6`.
+- **Keyboard and screen reader:** the skip link is the first stop and leads to `#main`; the menu is a navigation landmark named by the page.
+- **Phone (360, 393 px):** one column; the gutter is `--ds-page-gutter` (16 px); nothing scrolls sideways.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`SiteFrame`: `menu`, `footer`), `packages/ui/src/components.css` (`ds-site`).
+- **Rules:** UX-2, UX-69, CORE-1, CORE-5, CORE-7.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx` and the DOM layout checks of `apps/web/browser/layout.spec.ts` at 360, 393 and 1300 px.
+
+## 87. Hero
+
+- **Used for:** the top of a landing page: what the product is, in one headline and one line, with the page's one primary action and one picture.
+- **Anatomy:** the page's only `h1`, a lead line, the primary action, and an optional picture (a `Shot`). The picture sits beside the text from `--ds-bp-md` and under it on a phone.
+- **States:** with and without a picture.
+- **Tokens:** `--ds-size-6`, `--ds-size-4`, `--ds-space-4`, `--ds-space-6`, `--ds-color-text-muted`.
+- **Keyboard and screen reader:** a region named by its title; the action is the first stop after the menu.
+- **Phone (360, 393 px):** text first, then the picture; the title wraps and never widens the page.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`Hero`: `title`, `lead`, `action`, `media`), `packages/ui/src/components.css` (`ds-hero`).
+- **Rules:** UX-3 (one primary action), CORE-1, CORE-3, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 88. Feature band
+
+- **Used for:** one band of a landing page: a level-2 heading, a line, the content (cards, a list, steps) and, optionally, a picture.
+- **Anatomy:** heading, lead line, body; a picture beside the text from `--ds-bp-md`, under it on a phone.
+- **States:** with and without a picture.
+- **Tokens:** `--ds-size-5`, `--ds-space-3`, `--ds-space-5`, `--ds-color-text-muted`.
+- **Keyboard and screen reader:** a region named by its heading.
+- **Phone (360, 393 px):** one column.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`FeatureBand`: `title`, `lead`, `media`), `packages/ui/src/components.css` (`ds-band-feature`).
+- **Rules:** UX-10, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 89. Screenshot
+
+- **Used for:** a real picture of the product on a public page. Never a mock-up (website R5.4).
+- **Anatomy:** an image with a border, its width and height stated, alt text that says what the picture shows, and an optional caption.
+- **States:** normal.
+- **Tokens:** `--ds-border-thin`, `--ds-color-divider`, `--ds-radius-2`, `--ds-size-2`.
+- **Keyboard and screen reader:** the alt text is required by the part's type (CORE-5).
+- **Phone (360, 393 px):** the picture scales down to the column; the stated size keeps the page from jumping while it loads.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`Shot`: `src`, `alt`, `width`, `height`, `caption`, `priority`), `packages/ui/src/components.css` (`ds-shot`).
+- **Rules:** CORE-5, UX-17.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 90. Prose
+
+- **Used for:** running text written in a document (a doc page): headings, paragraphs, lists, tables, code and links, drawn with the design system's type and colours.
+- **Anatomy:** one column no wider than `--ds-measure-prose`. A table and a diagram scroll inside their own box (a diagram is drawn at build time with the theme's colours, as an image with a text name); a code block scrolls inside its own box and is a tab stop.
+- **States:** normal; a link is normal, visited, hover or focus-visible and takes its colour from a token (UX-85).
+- **Tokens:** `--ds-measure-prose`, `--ds-color-primary`, `--ds-color-text`, `--ds-color-divider`, `--ds-color-focus`, `--ds-font-mono`, `--ds-size-2` to `--ds-size-5`, `--ds-space-1`, `--ds-space-3`.
+- **Keyboard and screen reader:** headings keep the document's order; a code block is focusable so it can be scrolled by keyboard.
+- **Phone (360, 393 px):** one column; wide code, tables and diagrams scroll inside their box, never the page.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`Prose`: `html`), `packages/ui/src/components.css` (`ds-prose`).
+- **Rules:** UX-85, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx`.
+
+## 91. Doc search
+
+- **Used for:** finding a page in a static list of pages. The box and its status line are drawn by this part; the site's one script fills the status and hides what does not match. Without script the box is hidden and the full list stays.
+- **Anatomy:** a search box, one status line announced politely ("3 pages match"), the list of pages in groups, each a link with its short line.
+- **States:** hidden (no script), empty, filtered, no match.
+- **Tokens:** `--ds-width-field-full`, `--ds-space-3`, `--ds-space-5`, `--ds-color-text-muted`.
+- **Keyboard and screen reader:** a search landmark named by its label; the status line is a polite live region.
+- **Phone (360, 393 px):** the box takes the full width.
+- **Source:** `packages/ui/src/components/Marketing.tsx` (`DocSearch`: `label`, `hint`, `groups`), `packages/ui/src/components.css` (`ds-docsearch`).
+- **Rules:** UX-31, UX-57, CORE-1, CORE-5.
+- **Guard:** `packages/ui/src/components/marketing.test.tsx` and `apps/web/browser/docs.spec.ts`.

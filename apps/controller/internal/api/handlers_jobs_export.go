@@ -1,11 +1,14 @@
 package api
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/csv"
 	"encoding/json"
 	"fmt"
+	"io"
+	"log/slog"
 	"net/http"
 	"strconv"
 	"strings"
@@ -18,8 +21,8 @@ import (
 // first), never only one page. Text that looks like a formula is neutralised in the CSV. The file is named for
 // what it holds, then the date and time.
 
-// exportPage is the page size the export reads with; it walks every page of the filter.
-const exportPage = 200
+// exportPage is the page size the export reads with; it walks every page of the filter, one page in memory at a time.
+const exportPage = 500
 
 // jobsExportColumns are the CSV columns, in order.
 var jobsExportColumns = []string{
@@ -28,20 +31,31 @@ var jobsExportColumns = []string{
 	"run_seconds", "url", "job_ident", "branch", "runner_kind",
 }
 
-// jobsExportFile is an export answer: the bytes, their type and the file name.
-type jobsExportFile struct {
+// jobsExportStream is an export answer written as it is read: the head goes out, then each page of rows as it is
+// read, so the memory of an export is one page however many rows the filter holds (audit F4). A read that fails after
+// the head is out cannot change the status, so it ends the connection (http.ErrAbortHandler): the download fails
+// instead of ending as a file that looks whole.
+type jobsExportStream struct {
 	contentType string
 	filename    string
-	body        []byte
+	write       func(w io.Writer) error
+	logger      *slog.Logger
 }
 
-func (e jobsExportFile) VisitExportJobsResponse(w http.ResponseWriter) error {
+func (e jobsExportStream) VisitExportJobsResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", e.contentType)
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%q", e.filename))
-	w.Header().Set("Content-Length", strconv.Itoa(len(e.body)))
 	w.WriteHeader(http.StatusOK)
-	_, err := w.Write(e.body)
-	return err
+	bw := bufio.NewWriterSize(w, 64<<10)
+	err := e.write(bw)
+	if err == nil {
+		err = bw.Flush()
+	}
+	if err != nil {
+		e.logger.Error("export jobs: stream ended early", "err", err)
+		panic(http.ErrAbortHandler)
+	}
+	return nil
 }
 
 // neutralise stops a spreadsheet from running a cell as a formula (UX-39).
@@ -92,55 +106,55 @@ func jobRow(j gen.Job) []string {
 	}
 }
 
-// exportJobsAll reads every job of the filter, newest first, from the Jobs section data when it is wired and
-// else from the scheduler's table.
-func (s *server) exportJobsAll(ctx context.Context, q jobQuery) ([]gen.Job, error) {
+// jobPager reads the jobs of a filter a page at a time, newest first, from the Jobs section data when it is wired and
+// else from the scheduler's table. It never asks for the total.
+type jobPager struct {
+	next func() ([]gen.Job, bool, error) // the next page and whether more follow
+}
+
+func (s *server) exportPager(ctx context.Context, q jobQuery) jobPager {
 	if s.opts.JobsData == nil {
-		return s.exportJobsLegacy(ctx, q)
+		f, _ := q.legacy()
+		f.Limit = exportPage
+		return jobPager{next: func() ([]gen.Job, bool, error) {
+			rows, err := s.opts.Jobs.ListJobs(ctx, f)
+			if err != nil {
+				return nil, false, err
+			}
+			more := len(rows) > f.Limit
+			if more {
+				rows = rows[:f.Limit]
+			}
+			out := make([]gen.Job, 0, len(rows))
+			for _, r := range rows {
+				out = append(out, toJob(r))
+			}
+			if more {
+				f.After = rows[len(rows)-1].ID
+			}
+			return out, more, nil
+		}}
 	}
 	f, _ := q.jobFilter()
-	f.Limit = exportPage
-	var out []gen.Job
-	for {
+	f.Limit, f.NoCount = exportPage, true
+	return jobPager{next: func() ([]gen.Job, bool, error) {
 		rows, _, err := s.opts.JobsData.ListJobs(ctx, f)
 		if err != nil {
-			return nil, err
+			return nil, false, err
 		}
 		more := len(rows) > f.Limit
 		if more {
 			rows = rows[:f.Limit]
 		}
+		out := make([]gen.Job, 0, len(rows))
 		for _, r := range rows {
 			out = append(out, toJobItem(r))
 		}
-		if !more {
-			return out, nil
-		}
-		f.After = rows[len(rows)-1].ID
-	}
-}
-
-func (s *server) exportJobsLegacy(ctx context.Context, q jobQuery) ([]gen.Job, error) {
-	f, _ := q.legacy()
-	f.Limit = exportPage
-	var out []gen.Job
-	for {
-		rows, err := s.opts.Jobs.ListJobs(ctx, f)
-		if err != nil {
-			return nil, err
-		}
-		more := len(rows) > f.Limit
 		if more {
-			rows = rows[:f.Limit]
+			f.After = rows[len(rows)-1].ID
 		}
-		for _, r := range rows {
-			out = append(out, toJob(r))
-		}
-		if !more {
-			return out, nil
-		}
-		f.After = rows[len(rows)-1].ID
-	}
+		return out, more, nil
+	}}
 }
 
 // ExportJobs implements GET /api/v1/exports/jobs.
@@ -173,37 +187,77 @@ func (s *server) ExportJobs(ctx context.Context, req gen.ExportJobsRequestObject
 	if format != "csv" && format != "json" {
 		return bad("format must be csv or json")
 	}
-	jobs, err := s.exportJobsAll(ctx, q)
+	// The first page is read before the head goes out, so a store that is down answers 500, not a broken file.
+	pager := s.exportPager(ctx, q)
+	first, more, err := pager.next()
 	if err != nil {
 		s.opts.Logger.Error("export jobs", "err", err)
 		return gen.ExportJobsdefaultJSONResponse{StatusCode: http.StatusInternalServerError, Body: errBody(CodeInternal, "internal error")}, nil
 	}
 	name := "crsp-jobs-" + s.now().Format(fileStamp) + "." + string(format)
+	// walk gives each page to emit, the first one already read.
+	walk := func(emit func([]gen.Job) error) error {
+		page := first
+		for {
+			if err := emit(page); err != nil {
+				return err
+			}
+			if !more {
+				return nil
+			}
+			var err error
+			if page, more, err = pager.next(); err != nil {
+				return err
+			}
+		}
+	}
 	if format == "json" {
-		if jobs == nil {
-			jobs = []gen.Job{}
-		}
-		b, err := json.Marshal(jobs)
-		if err != nil {
-			return nil, err
-		}
-		return jobsExportFile{contentType: "application/json", filename: name, body: b}, nil
+		return jobsExportStream{contentType: "application/json", filename: name, logger: s.opts.Logger, write: func(w io.Writer) error {
+			if _, err := io.WriteString(w, "["); err != nil {
+				return err
+			}
+			n := 0
+			if err := walk(func(page []gen.Job) error {
+				for _, j := range page {
+					b, err := json.Marshal(j)
+					if err != nil {
+						return err
+					}
+					if n > 0 {
+						b = append([]byte{','}, b...)
+					}
+					n++
+					if _, err := w.Write(b); err != nil {
+						return err
+					}
+				}
+				return nil
+			}); err != nil {
+				return err
+			}
+			_, err := io.WriteString(w, "]")
+			return err
+		}}, nil
 	}
-	var buf bytes.Buffer
-	w := csv.NewWriter(&buf)
-	_ = w.Write(jobsExportColumns)
-	for _, j := range jobs {
-		row := jobRow(j)
-		for i := range row {
-			row[i] = neutralise(row[i])
+	return jobsExportStream{contentType: "text/csv", filename: name, logger: s.opts.Logger, write: func(w io.Writer) error {
+		cw := csv.NewWriter(w)
+		_ = cw.Write(jobsExportColumns)
+		if err := walk(func(page []gen.Job) error {
+			for _, j := range page {
+				row := jobRow(j)
+				for i := range row {
+					row[i] = neutralise(row[i])
+				}
+				_ = cw.Write(row)
+			}
+			cw.Flush()
+			return cw.Error()
+		}); err != nil {
+			return err
 		}
-		_ = w.Write(row)
-	}
-	w.Flush()
-	if err := w.Error(); err != nil {
-		return nil, err
-	}
-	return jobsExportFile{contentType: "text/csv", filename: name, body: buf.Bytes()}, nil
+		cw.Flush()
+		return cw.Error()
+	}}, nil
 }
 
 // jobSummaryColumns are the CSV columns of the daily summaries, in order.

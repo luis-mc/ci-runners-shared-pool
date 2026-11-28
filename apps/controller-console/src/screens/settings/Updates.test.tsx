@@ -38,13 +38,16 @@ describe('Review step', () => {
     expect(
       a.calls.find((c) => c.path === '/api/v1/update/apply')?.query.get('confirmed'),
     ).toBe('true');
+    // The step line, the status line and the terminal all say it (UX-88).
     expect(
-      await screen.findByText(
-        /Waiting for running jobs to end/,
-        { selector: 'p' },
-        { timeout: 5000 },
-      ),
-    ).toBeTruthy();
+      (
+        await screen.findAllByText(
+          /Waiting for running jobs to end/,
+          { selector: 'p' },
+          { timeout: 5000 },
+        )
+      ).length,
+    ).toBeGreaterThan(0);
   });
 
   it('Restart the service also asks on the Review step and sends confirmed=true', async () => {

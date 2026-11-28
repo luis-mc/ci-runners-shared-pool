@@ -21,7 +21,7 @@ const ev = (over: Partial<LiveEvent> = {}): LiveEvent => ({
   ...over,
 });
 
-describe('weighted bar (UX-88)', () => {
+describe('weighted bar (UX-89)', () => {
   const phases = [
     { name: 'Download', weight: 6, pct: 50 },
     { name: 'Install', weight: 3, pct: 0 },

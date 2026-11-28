@@ -1,14 +1,14 @@
-// Where each old Settings address lives now (six tabs, owner decision D8; Updates is its own tab, LOOK43).
+// Where each old Settings address lives now (seven tabs, owner decision D8; Updates is its own tab, LOOK43).
 export const SECTIONS: Record<string, { tab: string; section?: string }> = {
   users: { tab: 'access', section: 'users' },
   app: { tab: 'access', section: 'github-app' },
   webhooks: { tab: 'access', section: 'webhooks' },
   repositories: { tab: 'repositories', section: 'public-repositories' },
   budgets: { tab: 'repositories', section: 'budgets' },
-  appearance: { tab: 'console', section: 'appearance' },
-  notifications: { tab: 'console', section: 'notifications' },
-  network: { tab: 'console', section: 'network' },
-  metrics: { tab: 'console', section: 'metrics' },
+  appearance: { tab: 'themes', section: 'appearance' },
+  notifications: { tab: 'networking', section: 'notifications' },
+  network: { tab: 'networking', section: 'network' },
+  metrics: { tab: 'networking', section: 'metrics' },
   updates: { tab: 'updates' },
   retention: { tab: 'data', section: 'retention' },
   backups: { tab: 'data', section: 'backups' },
@@ -17,7 +17,15 @@ export const SECTIONS: Record<string, { tab: string; section?: string }> = {
 };
 
 /** The old one-page addresses that now redirect (an address named like a tab is that tab). */
-const TAB_IDS = ['access', 'repositories', 'console', 'updates', 'data', 'audit'];
+const TAB_IDS = [
+  'access',
+  'repositories',
+  'themes',
+  'networking',
+  'updates',
+  'data',
+  'audit',
+];
 
 export const OLD_SETTINGS = Object.keys(SECTIONS).filter((k) => !TAB_IDS.includes(k));
 

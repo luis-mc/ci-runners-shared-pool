@@ -9,7 +9,7 @@ type: explanation
 ---
 # A fresh VM per job through one VM core, with the hypervisor each host OS ships
 
-Proposed by CRSP275 for owner review. Requirements: runners R5.28, R5.152 to R5.160.
+Proposed by CRSP275 for owner review. Requirements: runners R5.28, R5.156 to R5.164.
 
 ## Context and problem
 

@@ -13,6 +13,7 @@ import (
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/lancache"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runnercache"
 )
 
@@ -35,6 +36,9 @@ type Service struct {
 	// NoSharedTools keeps every runner's own folders (the CRSP_NO_SHARED_TOOLS
 	// environment value, caches R5.57).
 	NoSharedTools bool
+	// PackageProxy gives a persistent runner of one repository the package
+	// proxy key and token while the proxy is on (caches R5.76); nil gives none.
+	PackageProxy func(ctx context.Context, githubURL string) lancache.ProxyGrant
 	// CacheQuota is the declared cache sizing every new runner gets (runners
 	// R5.39); a zero value takes the defaults.
 	CacheQuota runnercache.Quota
@@ -75,6 +79,11 @@ type Service struct {
 	// AutoUpdate reads the owner setting for automatic updates (operations
 	// R5.15); nil means on.
 	AutoUpdate func(ctx context.Context) bool
+
+	// Release is the crsp version this controller runs. The recovery writes it
+	// into a failed reason, so each release tries a failed runner once by
+	// itself (CRSP385). Empty reads as "dev".
+	Release string
 
 	// LogInfo writes one INFO line; nil writes nothing.
 	LogInfo func(line string)
@@ -704,9 +713,7 @@ func (s *Service) addRunner(ctx context.Context, a AddSpec, actor string) error 
 	if err != nil {
 		return fail(fmt.Errorf("registration token: %w", err))
 	}
-	spec := backend.RunnerSpec{ID: id, Name: a.Name, OS: a.OS, Arch: a.Arch, Labels: a.Labels, GitHubURL: t.URL, Group: t.Group,
-		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, WindowsSymlinkRight: a.OS == "windows" && a.Symlink, CacheQuota: s.CacheQuota, MaxParallel: a.MaxParallel, KeepDependencies: a.KeepDependencies,
-		Container: a.Backend == string(backend.Docker), SharedTools: s.sharedTools(a, t)}
+	spec := s.runnerSpec(ctx, id, a, t, pin)
 	// Names GitHub already knows before the add: only a registration that the
 	// add itself made is removed when it fails.
 	before, listErr := s.GitHub.ListRunners(ctx, t.InstallationID, t.Scope)
@@ -731,6 +738,20 @@ func (s *Service) addRunner(ctx context.Context, a AddSpec, actor string) error 
 	}
 	s.audit(ctx, actor, "runner.add", a.MachineID, id, a.Name)
 	return nil
+}
+
+// runnerSpec is the runner the agent starts for an add spec: the same for a
+// new runner and for one that registers again in place.
+func (s *Service) runnerSpec(ctx context.Context, id string, a AddSpec, t Target, pin Pin) backend.RunnerSpec {
+	spec := backend.RunnerSpec{ID: id, Name: a.Name, OS: a.OS, Arch: a.Arch, Labels: a.Labels, GitHubURL: t.URL, Group: t.Group,
+		RunnerVersion: pin.Version, RunnerSHA256: pin.SHA256, WindowsSymlinkRight: a.OS == "windows" && a.Symlink, CacheQuota: s.CacheQuota, MaxParallel: a.MaxParallel, KeepDependencies: a.KeepDependencies,
+		Container: a.Backend == string(backend.Docker), SharedTools: s.sharedTools(a, t)}
+	// Container runners cannot read the controller CA from the host yet, so
+	// only the other persistent runners get the package proxy (caches section 11).
+	if s.PackageProxy != nil && !spec.Container {
+		spec.PackageProxy = s.PackageProxy(ctx, t.URL)
+	}
+	return spec
 }
 
 // rollbackRegistered undoes a registration whose local record could not be

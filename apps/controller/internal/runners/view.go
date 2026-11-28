@@ -48,6 +48,11 @@ func Truth(r Record, f Facts) (State, string) {
 		}
 		return Failed, r.Reason
 	}
+	if f.Service != nil && f.Service.RegistrationLost && f.GitHubKnown && f.GitHub == nil {
+		// The listener says GitHub deleted the registration and GitHub does not
+		// list the runner: it is not idle, however its service looks (R5.152).
+		return NotRegistered, RegistrationLostReason
+	}
 	if f.ServiceKnown {
 		switch {
 		case f.Service == nil:
@@ -72,6 +77,9 @@ func Truth(r Record, f Facts) (State, string) {
 	case f.GitHub.Busy:
 		return Busy, ""
 	}
+	if r.Reason == ReregisteredReason {
+		return Idle, ReregisteredReason
+	}
 	return Idle, ""
 }
 
@@ -87,6 +95,10 @@ type View struct {
 	// Both are empty on a runner that is not a pool runner.
 	Serving       string
 	Registrations int
+	// CanReregister is true when the Runners page offers Register again: the
+	// registration is lost and could not be made again, or GitHub does not list
+	// the runner (runners R5.153).
+	CanReregister bool
 }
 
 // ListView lists runners with the state each one really has, from GitHub's
@@ -224,7 +236,8 @@ func (s *Service) views(ctx context.Context, recs []Record) []View {
 			// An unclean runner takes no new job until its clean-up works (R5.91).
 			why = "needs clean-up, takes no new job: " + r.UncleanReason
 		}
-		out = append(out, View{Record: r, State: state, Reason: why, MachineName: names[r.MachineID]})
+		out = append(out, View{Record: r, State: state, Reason: why, MachineName: names[r.MachineID],
+			CanReregister: CanReregister(r, state, why)})
 	}
 	sort.SliceStable(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out

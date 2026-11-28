@@ -101,11 +101,13 @@ describe('Appearance (UX-60)', () => {
 });
 
 describe('Colour themes (UX-60)', () => {
-  it('offers the six themes with a live preview in dark and light each, and Phosphor by default', async () => {
+  it('has one Theme group of nine cards, with no Look and no Palette, and Phosphor by default', async () => {
     window.localStorage.clear();
     document.documentElement.removeAttribute('data-theme-name');
     renderApp(signedIn(), '/settings/appearance');
     const group = await screen.findByRole('group', { name: 'Theme' });
+    expect(screen.queryByRole('group', { name: 'Look' })).toBeNull();
+    expect(screen.queryByRole('group', { name: 'Palette' })).toBeNull();
     const names = within(group)
       .getAllByRole('radio')
       .map((r) => (r as HTMLInputElement).value);
@@ -116,46 +118,76 @@ describe('Colour themes (UX-60)', () => {
       'gruvbox',
       'solarized',
       'nord',
+      'terminal-green',
+      'terminal-amber',
+      'terminal-ice',
     ]);
-    expect(group.querySelectorAll('.ds-theme-preview')).toHaveLength(12);
+    // Every card, the three Terminal ones too, shows a dark and a light sample (CRSP371).
+    expect(group.querySelectorAll('.ds-theme-preview')).toHaveLength(18);
     expect(within(group).getByRole('img', { name: 'Nord, light' })).toBeTruthy();
+    const amberLight = within(group).getByRole('img', { name: 'Terminal Amber, light' });
+    expect(amberLight.getAttribute('data-pal')).toBe('amber');
+    expect(amberLight.getAttribute('data-theme')).toBe('light');
+    const amber = within(group).getByRole('img', { name: 'Terminal Amber, dark' });
+    expect(amber.getAttribute('data-theme-name')).toBe('terminal');
+    expect(amber.getAttribute('data-pal')).toBe('amber');
     expect(
       within(group).getByRole<HTMLInputElement>('radio', { name: /^Phosphor/ }).checked,
     ).toBe(true);
   });
 
-  it('offers the Terminal palettes only for the Terminal theme and applies one at once', async () => {
+  it('applies a Terminal card at once: theme terminal and its palette', async () => {
     window.localStorage.clear();
     document.documentElement.removeAttribute('data-pal');
     renderApp(signedIn(), '/settings/appearance');
-    expect(screen.queryByRole('group', { name: 'Palette' })).toBeNull();
-    fireEvent.click(await screen.findByRole('radio', { name: /^Cool Terminal$/ }));
+    fireEvent.click(await screen.findByRole('radio', { name: /^Terminal Amber/ }));
     expect(document.documentElement.getAttribute('data-theme-name')).toBe('terminal');
-    expect(screen.queryByRole('group', { name: 'Theme' })).toBeNull();
-    fireEvent.click(await screen.findByRole('radio', { name: /^Amber/ }));
     expect(document.documentElement.getAttribute('data-pal')).toBe('amber');
     expect(window.localStorage.getItem('crsp.theme-palette')).toBe('amber');
-    fireEvent.click(screen.getByRole('radio', { name: /^Green/ }));
+    fireEvent.click(screen.getByRole('radio', { name: /^Terminal Green/ }));
     expect(document.documentElement.hasAttribute('data-pal')).toBe(false);
-    fireEvent.click(screen.getByRole('radio', { name: /^Colour themes/ }));
-    expect(document.documentElement.getAttribute('data-theme-name')).toBe('phosphor');
+    expect(document.documentElement.getAttribute('data-theme-name')).toBe('terminal');
+    fireEvent.click(screen.getByRole('radio', { name: /^Gruvbox/ }));
+    expect(document.documentElement.getAttribute('data-theme-name')).toBe('gruvbox');
   });
 
-  it('offers Cool Terminal with dotted graphs as a second Look and keeps it in this browser', async () => {
+  it('migrates the old Look and Palette: terminal with a palette selects that Terminal card', async () => {
+    window.localStorage.clear();
+    window.localStorage.setItem('crsp.theme-name', 'terminal');
+    window.localStorage.setItem('crsp.theme-palette', 'ice');
+    renderApp(signedIn(), '/settings/appearance');
+    expect(
+      (await screen.findByRole<HTMLInputElement>('radio', { name: /^Terminal Ice/ }))
+        .checked,
+    ).toBe(true);
+    expect(document.documentElement.getAttribute('data-pal')).toBe('ice');
+  });
+
+  it('keeps a saved colour theme as it was', async () => {
+    window.localStorage.clear();
+    window.localStorage.setItem('crsp.theme-name', 'nord');
+    window.localStorage.setItem('crsp.theme-palette', 'amber');
+    renderApp(signedIn(), '/settings/appearance');
+    expect(
+      (await screen.findByRole<HTMLInputElement>('radio', { name: /^Nord/ })).checked,
+    ).toBe(true);
+  });
+
+  it('offers the graph style as its own setting for Terminal only and keeps it in this browser', async () => {
     window.localStorage.clear();
     document.documentElement.removeAttribute('data-graphs');
     renderApp(signedIn(), '/settings/appearance');
-    fireEvent.click(
-      await screen.findByRole('radio', { name: /^Cool Terminal \(dotted graphs\)/ }),
-    );
-    expect(document.documentElement.getAttribute('data-theme-name')).toBe('terminal');
+    await screen.findByRole('group', { name: 'Theme' });
+    expect(screen.queryByRole('group', { name: 'Graphs' })).toBeNull();
+    fireEvent.click(screen.getByRole('radio', { name: /^Terminal Green/ }));
+    const graphs = screen.getByRole('group', { name: 'Graphs' });
+    fireEvent.click(within(graphs).getByRole('radio', { name: /^Dots/ }));
     expect(document.documentElement.getAttribute('data-graphs')).toBe('dotted');
     expect(window.localStorage.getItem('crsp.theme-graphs')).toBe('dotted');
-    expect(screen.getByRole('group', { name: 'Palette' })).toBeTruthy();
-    fireEvent.click(screen.getByRole('radio', { name: /^Cool Terminal$/ }));
+    fireEvent.click(within(graphs).getByRole('radio', { name: /^Blocks/ }));
     expect(document.documentElement.hasAttribute('data-graphs')).toBe(false);
-    fireEvent.click(screen.getByRole('radio', { name: /^Colour themes/ }));
-    expect(document.documentElement.hasAttribute('data-graphs')).toBe(false);
+    fireEvent.click(screen.getByRole('radio', { name: /^Nord/ }));
+    expect(screen.queryByRole('group', { name: 'Graphs' })).toBeNull();
   });
 
   it('picks a theme, applies it at once and keeps it in this browser', async () => {

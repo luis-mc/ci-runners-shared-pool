@@ -161,6 +161,7 @@ func (s *Store) inTx(ctx context.Context, fn func(ctx context.Context, tx *sql.T
 	if err := tx.Commit(); err != nil {
 		return fmt.Errorf("commit: %w", err)
 	}
+	s.touchJobs()
 	return nil
 }
 
@@ -242,6 +243,13 @@ func (s *JobsStore) UpsertJob(ctx context.Context, j jobsdata.Job) error {
 		out := jobToRow(merged, now)
 		if err := q.UpsertJobsRow(ctx, sqlcgen.UpsertJobsRowParams(out)); err != nil {
 			return fmt.Errorf("upsert job: %w", err)
+		}
+		if j.HeadRepository != "" {
+			// Only a source that named the head repository writes it; later updates that do not leave it alone.
+			if _, err := tx.ExecContext(ctx, `INSERT INTO job_head_repository (job_id, head_repository) VALUES (?, ?)
+				ON CONFLICT (job_id) DO UPDATE SET head_repository = excluded.head_repository`, j.ID, j.HeadRepository); err != nil {
+				return fmt.Errorf("job head repository: %w", err)
+			}
 		}
 		if out.State == string(jobsdata.Done) {
 			// a finished job can finish its run, and with it the parent of a follow-up that arrived first
@@ -384,6 +392,7 @@ func (s *JobsStore) SetForecast(ctx context.Context, jobID int64, f jobsdata.For
 	if err != nil {
 		return fmt.Errorf("set forecast: %w", err)
 	}
+	s.touchJobs()
 	return nil
 }
 
@@ -398,10 +407,15 @@ func (s *JobsStore) GetGraph(ctx context.Context, repositoryID int64, workflow, 
 	if err != nil {
 		return jobsdata.Graph{}, false, fmt.Errorf("get graph: %w", err)
 	}
-	g := jobsdata.Graph{RepositoryID: repositoryID, Workflow: workflow, HeadSHA: headSHA, OK: row.Ok != 0, FetchedAt: parseTimeOpt(row.FetchedAt)}
+	return graphOf(row), true, nil
+}
+
+// graphOf maps a stored workflow graph.
+func graphOf(row sqlcgen.WorkflowGraph) jobsdata.Graph {
+	g := jobsdata.Graph{RepositoryID: row.RepositoryID, Workflow: row.Workflow, HeadSHA: row.HeadSha, OK: row.Ok != 0, FetchedAt: parseTimeOpt(row.FetchedAt)}
 	_ = json.Unmarshal([]byte(row.Needs), &g.Needs)
 	_ = json.Unmarshal([]byte(row.Dynamic), &g.Dynamic)
-	return g, true, nil
+	return g
 }
 
 // PutGraph stores a workflow graph.

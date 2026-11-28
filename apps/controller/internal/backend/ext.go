@@ -24,6 +24,11 @@ type Found struct {
 	// is over (runners R5.95).
 	SessionRefused   bool
 	SessionWaitUntil time.Time
+	// RegistrationLost is true when the listener's newest log says GitHub
+	// deleted the runner's registration ("Registration was not found", "the
+	// runner registration has been deleted from the server"). The runner can
+	// never connect again until it registers again (runners R5.152).
+	RegistrationLost bool
 }
 
 // Finder lists runners from the OS service list, not only from folders.
