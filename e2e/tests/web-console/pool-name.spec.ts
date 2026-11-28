@@ -60,7 +60,7 @@ test('first setup asks for the pool name with crsp-home filled in', async ({ pag
     .on('GET', '/api/v1/pool/name', info);
   await mock.install(page);
   await page.goto('/setup?wizard=1');
-  await expect(page.getByLabel('Pool name')).toHaveValue('crsp-home');
+  await expect(page.getByRole('textbox', { name: 'Pool name' })).toHaveValue('crsp-home');
   await layoutAtAllWidths(page, 'pool name, first setup name');
 });
 
@@ -74,7 +74,7 @@ test('rename: name, review, done', async ({ page }) => {
   await mock.install(page);
   await page.goto(PATH);
   await layoutAtAllWidths(page, 'pool rename, name');
-  await page.getByLabel('Pool name').fill('crsp-lab');
+  await page.getByRole('textbox', { name: 'Pool name' }).fill('crsp-lab');
   await page.getByRole('button', { name: 'Next' }).click();
   await expect(page.getByText(/still finds a runner until the last step/)).toBeVisible();
   expect(mock.count('POST', '/api/v1/pool/renames/pr1/apply')).toBe(0);
@@ -98,7 +98,7 @@ test('rename: running shows Stop; stopped and failed show what is left', async (
     .on('GET', '/api/v1/pool/renames/:id', running);
   await mock.install(page);
   await page.goto(PATH);
-  await page.getByLabel('Pool name').fill('crsp-lab');
+  await page.getByRole('textbox', { name: 'Pool name' }).fill('crsp-lab');
   await page.getByRole('button', { name: 'Next' }).click();
   await page.getByRole('button', { name: 'Rename the pool' }).click();
   await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
