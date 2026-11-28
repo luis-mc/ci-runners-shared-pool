@@ -62,6 +62,7 @@ func TestPoolJobGroupsUseTheDoneAtIndex(t *testing.T) {
 		must(t, rows.Scan(&id, &parent, &unused, &detail))
 		plan += detail + "\n"
 	}
+	must(t, rows.Err())
 	if !strings.Contains(plan, "jobs_done_at") {
 		t.Fatalf("the window should use the index jobs_done_at:\n%s", plan)
 	}
