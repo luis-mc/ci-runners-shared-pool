@@ -148,12 +148,33 @@ func (b *Backend) HealServices(ctx context.Context) ([]backend.ServiceHealth, er
 					b.log("acl", lerr.Error())
 				}
 			}
+			now := b.clock()
+			if prob, waiting := b.heal.wait(f.ServiceName, now); waiting {
+				// Still in the backoff of an earlier failed start: say why, do not try.
+				h.Problem = prob
+				out = append(out, h)
+				continue
+			}
+			why := b.whyStopped(ctx, f.ServiceName)
 			env := map[string]string{"CRSP_SERVICE": f.ServiceName, "CRSP_RUNNER": f.Name}
 			if serr := b.startServiceAfter(ctx, env, acct, gerr == nil); serr != nil {
 				h.Problem = b.redact(serr.Error())
+				if why != "" {
+					h.Problem += " (it stopped because: " + why + ")"
+				}
+				wait := b.heal.failed(f.ServiceName, now, h.Problem)
+				b.log("service", "could not start "+f.ServiceName+" again, next try in "+wait.String()+": "+h.Problem)
 				errs = append(errs, serr)
 			} else {
 				h.Running = true
+				b.heal.ok(f.ServiceName)
+				// A running service with a Problem is the one-time note of a
+				// restart: the controller records it and shows no failure.
+				h.Problem = "started again after it stopped"
+				if why != "" {
+					h.Problem += ": " + why
+				}
+				b.log("service", f.ServiceName+" "+h.Problem)
 			}
 		}
 		out = append(out, h)

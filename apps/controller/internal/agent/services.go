@@ -19,6 +19,9 @@ import (
 
 // serviceHealer is the runner backend's heal step, when it has one.
 func (c Config) serviceHealer() backend.ServiceHealer {
+	if c.Healer != nil {
+		return c.Healer
+	}
 	h, _ := c.Runners.(backend.ServiceHealer)
 	return h
 }

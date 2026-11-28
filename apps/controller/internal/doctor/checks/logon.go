@@ -44,7 +44,7 @@ func runnerLogon(ctx context.Context, env doctor.Env) []doctor.Finding {
 			f.Fix = fix
 		case !p.Running:
 			f.Severity, f.Title = doctor.Fail, "The service "+p.Service+" of "+r.Name+" is not running"
-			f.Detail = p.Account + " holds the right to log on as a service, but the service is stopped."
+			f.Detail = p.Account + " holds the right to log on as a service, but the service is stopped. crsp starts it again by itself, and waits longer between tries when it keeps failing."
 			if p.Problem != "" {
 				f.Detail += " Windows said: " + p.Problem
 			}
