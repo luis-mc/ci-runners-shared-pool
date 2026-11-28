@@ -3,7 +3,12 @@
 # runner for every file in $STATE/runners.d, each in its own session, and starts
 # a dead runner again with back-off (2, 4, 8 ... 60 seconds; the count starts
 # over after the runner stayed up for five minutes). A runner whose file is gone
-# or has a `.stopped` marker is ended. The runners register with
+# or has a `.stopped` marker is ended. A runner whose listener log says GitHub
+# deleted its registration ("Registration was not found", "the runner
+# registration has been deleted") can never connect again, so it is not started
+# again: a `.lost` marker holds the reason, list.sh reports it to the controller
+# and add-runner.sh registers the runner again and removes the marker (R5.140).
+# The runners register with
 # `config.sh --unattended --replace` (never --ephemeral) when they are added by
 # add-runner.sh, so a restart only runs them.
 STATE=${CRSP_STATE_DIR:-/state}
@@ -37,6 +42,18 @@ start_runner() {
   now >"$RUN/$n.since"
 }
 
+# registration_lost succeeds when the newest listener log of runner $1 says
+# GitHub deleted the registration, and the log is newer than the `.runner` file
+# (config.sh writes it when the runner registers, so a log from before a new
+# registration never counts). list.sh reads the same way.
+registration_lost() {
+  d=$STATE/$1
+  f=$(ls -1 "$d/_diag"/Runner_*.log 2>/dev/null | sort | tail -n 1)
+  [ -n "$f" ] || return 1
+  [ ! -f "$d/.runner" ] || [ "$f" -nt "$d/.runner" ] || return 1
+  grep -qi -e 'registration has been deleted' -e 'registration was not found' "$f"
+}
+
 alive() { [ -f "$RUN/$1.pid" ] && kill -0 "$(cat "$RUN/$1.pid")" 2>/dev/null; }
 
 end_runner() {
@@ -65,6 +82,10 @@ tick() {
       end_runner "$n"
       continue
     fi
+    if [ -e "$STATE/runners.d/$n.lost" ]; then
+      end_runner "$n"
+      continue
+    fi
     if alive "$n"; then
       since=$(cat "$RUN/$n.since" 2>/dev/null || now)
       [ $(($(now) - since)) -ge 300 ] && rm -f "$RUN/$n.fails"
@@ -72,6 +93,13 @@ tick() {
     fi
     # dead, or never started: wait out the back-off, then start it again
     if [ -f "$RUN/$n.next" ] && [ "$(now)" -lt "$(cat "$RUN/$n.next")" ]; then
+      continue
+    fi
+    if [ -f "$RUN/$n.pid" ] && registration_lost "$n"; then
+      # a deleted registration never comes back by restarting: stop here and say why
+      echo "the registration of this runner was deleted at GitHub" >"$STATE/runners.d/$n.lost"
+      echo "crsp supervisor: runner $n: its registration was deleted at GitHub; not starting it again until it registers again"
+      rm -f "$RUN/$n.pid" "$RUN/$n.since" "$RUN/$n.next" "$RUN/$n.fails"
       continue
     fi
     if [ -f "$RUN/$n.pid" ]; then

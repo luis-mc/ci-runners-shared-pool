@@ -224,7 +224,7 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	if e, err := b.d.FS.ReadFile(folder + "/.env"); err == nil {
 		haveEnv = string(e)
 	}
-	action := persistent.Decide(have, haveEnv, wantMeta, wantEnv)
+	action := persistent.WithLost(persistent.Decide(have, haveEnv, wantMeta, wantEnv), have != nil && persistent.RegistrationLost(folder))
 	b.log("register", fmt.Sprintf("runner %s: %s", r.Name, action))
 	unit := wantMeta.Service + ".service"
 
@@ -241,6 +241,27 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 		// Stop, wait for the listener itself to end, then start: never a
 		// second listener beside one that is still alive (runners R5.46).
 		return h, b.restartUnit(ctx, unit, folder)
+	case persistent.RegisterLost:
+		// GitHub deleted the registration: nothing is left to remove. Stop the
+		// unit, drop the stale files, register again in place, start (R5.140).
+		if err := b.stopUnit(ctx, unit, folder); err != nil {
+			return h, err
+		}
+		if err := persistent.CleanStale(b.d.FS, folder, path.Join); err != nil {
+			return h, err
+		}
+		if err := b.configure(ctx, "register again", folder, user,
+			persistent.ConfigArgs(r.GitHubURL, r.Name, r.Group, r.Labels), cfg.Registration); err != nil {
+			return h, err
+		}
+		if err := b.writeFiles(ctx, folder, user, wantEnv, r.KeepDependencies); err != nil {
+			return h, err
+		}
+		if err := persistent.WriteMeta(b.d.FS, folder+"/"+persistent.MetaFile, wantMeta); err != nil {
+			return h, err
+		}
+		_, err := b.run(ctx, "start", sys.Command{Name: "systemctl", Args: []string{"start", unit}})
+		return h, err
 	case persistent.Reregister:
 		if cfg.Removal == "" {
 			return h, errors.New("registering again in place needs a remove token for the old runner")

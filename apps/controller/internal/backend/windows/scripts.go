@@ -142,21 +142,45 @@ try {
 
 	// scriptListeners prints the process id of every Runner.Listener that runs
 	// from CRSP_FOLDER, one per line. The service wrapper is not counted: the
-	// listener holds the runner's session with GitHub (runners R5.46).
+	// listener holds the runner's session with GitHub (runners R5.46). No
+	// listener is not an error: it prints nothing and exits 0. A process whose
+	// path cannot be read (another account, a 32 bit script host reading a 64
+	// bit process: Process.Path throws) is asked of Windows by its id, and one
+	// that cannot be asked is skipped, never a failure of the whole script. The
+	// path is built as text: Join-Path throws for a folder on a drive that is
+	// not there and for an empty folder, which made "list listeners" fail with
+	// exit 1 (runners R5.141).
 	scriptListeners = scriptHeader + `
-$want = (Join-Path (Join-Path $env:CRSP_FOLDER 'bin') 'Runner.Listener') + '.exe'
-Get-Process -Name 'Runner.Listener' -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -and ($_.Path -ieq $want) } |
-    ForEach-Object { $_.Id }
+$want = ([string]$env:CRSP_FOLDER).TrimEnd('\') + '\bin\Runner.Listener' + '.exe'
+$ids = @()
+foreach ($p in @(Get-Process -Name 'Runner.Listener' -ErrorAction SilentlyContinue)) {
+    if (-not $env:CRSP_FOLDER) { break }
+    $path = $null
+    try { $path = $p.Path } catch { $path = $null }
+    if (-not $path) {
+        try { $path = (Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId=' + $p.Id) -ErrorAction Stop).ExecutablePath } catch { $path = $null }
+    }
+    if ($path -and ($path -ieq $want)) { $ids += $p.Id }
+}
+$ids | ForEach-Object { $_ }
 `
 
 	// scriptWorkers prints the process id of every Runner.Worker that runs from
-	// CRSP_FOLDER: a job is running, so the listener must not be stopped.
+	// CRSP_FOLDER: a job is running, so the listener must not be stopped. Read
+	// like scriptListeners.
 	scriptWorkers = scriptHeader + `
-$want = (Join-Path (Join-Path $env:CRSP_FOLDER 'bin') 'Runner.Worker') + '.exe'
-Get-Process -Name 'Runner.Worker' -ErrorAction SilentlyContinue |
-    Where-Object { $_.Path -and ($_.Path -ieq $want) } |
-    ForEach-Object { $_.Id }
+$want = ([string]$env:CRSP_FOLDER).TrimEnd('\') + '\bin\Runner.Worker' + '.exe'
+$ids = @()
+foreach ($p in @(Get-Process -Name 'Runner.Worker' -ErrorAction SilentlyContinue)) {
+    if (-not $env:CRSP_FOLDER) { break }
+    $path = $null
+    try { $path = $p.Path } catch { $path = $null }
+    if (-not $path) {
+        try { $path = (Get-CimInstance -ClassName Win32_Process -Filter ('ProcessId=' + $p.Id) -ErrorAction Stop).ExecutablePath } catch { $path = $null }
+    }
+    if ($path -and ($path -ieq $want)) { $ids += $p.Id }
+}
+$ids | ForEach-Object { $_ }
 `
 
 	// scriptEndListeners ends each process in CRSP_PIDS (comma separated) with

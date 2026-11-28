@@ -56,6 +56,7 @@ func (b *Backend) parseShow(svc, out string) backend.Found {
 		Name:    svc[strings.LastIndex(svc, ".")+1:],
 	}
 	f.SessionRefused, f.SessionWaitUntil = persistent.SessionWait(folder, time.Now(), 0)
+	f.RegistrationLost = persistent.RegistrationLost(folder)
 	meta, err := persistent.ReadMeta(b.d.FS, folder+"/"+persistent.MetaFile)
 	switch {
 	case err != nil:

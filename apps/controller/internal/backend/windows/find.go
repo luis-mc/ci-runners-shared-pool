@@ -61,6 +61,7 @@ func (b *Backend) parseFind(out string) ([]backend.Found, error) {
 			Name:        r.Name[strings.LastIndex(r.Name, ".")+1:],
 		}
 		f.SessionRefused, f.SessionWaitUntil = persistent.SessionWait(f.Folder, time.Now(), 0)
+		f.RegistrationLost = persistent.RegistrationLost(f.Folder)
 		meta, err := persistent.ReadMeta(b.d.FS, Join(f.Folder, persistent.MetaFile))
 		switch {
 		case err != nil:

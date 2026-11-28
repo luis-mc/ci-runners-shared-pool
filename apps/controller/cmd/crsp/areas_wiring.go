@@ -357,6 +357,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	// crsp's own facts about each job: wait reason, slot, machine, runner (observability R5.7).
 	jobsIngest.attach(d.Queue, runnerSvc, d.Machines)
 	startSweep(ctx, logger, runnerSvc, d.Cfg.RunnerSweepDays)
+	startRecovery(ctx, logger, runnerSvc)
 	c.closers = append(c.closers, stopDemand)
 
 	// Runner leftovers (doctor R5.48): the machines service asks the agents, and
