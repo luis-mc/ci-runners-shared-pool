@@ -36,6 +36,11 @@ const repos = (n: number) => count(n, 'repository', 'repositories');
 const stepsOf = (plan: Plan | undefined, r: Pick<Repository, 'id' | 'full_name'>) =>
   (plan?.steps ?? []).filter((s) => s.repository_id === r.id || s.target === r.full_name);
 
+/** Throw what a failed request left, as an Error. */
+const raise = (e: unknown): never => {
+  throw e instanceof Error ? e : new Error(errorText(e));
+};
+
 const finished = (st: { state: string }) => st.state === 'done' || st.state === 'skipped';
 
 /** What the repository's card says about the step in hand: the running one, else the one that failed, else the next. */
@@ -134,31 +139,29 @@ function Work({
   plan: Plan | undefined;
   verb: string;
 }) {
-  // A pane clears the bar above it and holds one full-width card per repository: a long name stays on one line.
+  // One full-width card per repository: a long name stays on one line, and the card grid's row gap clears the bar above.
   return (
-    <Pane title="Repositories" count={list.length}>
-      <CardGrid columns={1}>
-        {list.map((r) => {
-          const st = stepsOf(plan, r);
-          const done = st.filter(finished).length;
-          const s = repoState(plan, r);
-          const now = stepText(plan, r);
-          return (
-            <Card key={r.id} title={r.full_name}>
-              <Stack gap="tight">
-                <Status kind={s.kind} word={s.word} />
-                {now && s.word !== 'done' ? <Text tone="muted">{now}</Text> : null}
-                <Progress
-                  label={`${verb} ${r.full_name}: ${done} of ${st.length} steps`}
-                  value={done}
-                  max={Math.max(st.length, 1)}
-                />
-              </Stack>
-            </Card>
-          );
-        })}
-      </CardGrid>
-    </Pane>
+    <CardGrid columns={1}>
+      {list.map((r) => {
+        const st = stepsOf(plan, r);
+        const done = st.filter(finished).length;
+        const s = repoState(plan, r);
+        const now = stepText(plan, r);
+        return (
+          <Card key={r.id} title={r.full_name}>
+            <Stack gap="tight">
+              <Status kind={s.kind} word={s.word} />
+              {now && s.word !== 'done' ? <Text tone="muted">{now}</Text> : null}
+              <Progress
+                label={`${verb} ${r.full_name}: ${done} of ${st.length} steps`}
+                value={done}
+                max={Math.max(st.length, 1)}
+              />
+            </Stack>
+          </Card>
+        );
+      })}
+    </CardGrid>
   );
 }
 
@@ -288,7 +291,7 @@ export function ChangePoolWizard() {
         const failed = posted
           ? await Promise.race([posted, Promise.resolve(undefined)])
           : undefined;
-        if (failed?.error) throw failed.error;
+        if (failed?.error) raise(failed.error);
         p = await unwrap(
           client.GET('/api/v1/repository-plans/{planId}', {
             params: { path: { planId: p.id } },
@@ -300,7 +303,7 @@ export function ChangePoolWizard() {
       }
       // A refused request (a stale plan, a missing right) says so; the plan it left is not the story.
       const sent = posted ? await posted : undefined;
-      if (sent?.error) throw sent.error;
+      if (sent?.error) raise(sent.error);
       settle(sent?.plan && sent.plan.state !== 'applying' ? sent.plan : p, false, repos);
     } catch (e) {
       setProblem(errorText(e));

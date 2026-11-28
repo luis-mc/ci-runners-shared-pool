@@ -85,7 +85,8 @@ async function shot(page: Page, name: string, width: number) {
   await page.screenshot({ path: `${dir}/${name}-${width}.png`, fullPage: true });
 }
 
-async function judge(page: Page, name: string) {
+/** The judge measures at 360, 393 and 1300 px and leaves the page at the last: the page is put back to this test's width. */
+async function judge(page: Page, name: string, size: { width: number; height: number }) {
   const problems = await measureDomLayout(page, {
     known: [],
     spaceVar: '--ds-space-',
@@ -97,20 +98,23 @@ async function judge(page: Page, name: string) {
     },
     ready: () => frames(page),
   });
+  await page.setViewportSize(size);
   expect(judgeLayout(name, problems, []).unknown).toEqual([]);
 }
 
-/** Each card's title is one line and sits clear of the bar above it. */
-async function titlesClear(page: Page) {
+/** Each card's title sits clear of the bar above it. The owner's name (32 characters) is one line from 393 px up and the
+ * longer one at 1300 px; where a name cannot fit the width it takes two lines (UX-51), never a cut. */
+async function titlesClear(page: Page, width: number) {
   const titles = page.locator('.ds-card-grid .ds-pane__title');
   await expect(titles).toHaveCount(2);
   const bar = await page
     .locator('.ds-wizard__body [role="progressbar"]')
     .first()
     .boundingBox();
+  const oneLine = [width >= 393, width >= 1300];
   for (let i = 0; i < 2; i += 1) {
     const box = (await titles.nth(i).boundingBox())!;
-    expect(box.height, `title ${i} is one line`).toBeLessThan(34);
+    expect(box.height, `title ${i} lines`).toBeLessThan(oneLine[i] ? 34 : 48);
     if (bar)
       expect(box.y, `title ${i} clears the bar`).toBeGreaterThanOrEqual(
         bar.y + bar.height + 8,
@@ -157,8 +161,8 @@ for (const size of [
     await expect(page.getByText(`Turn the pool off for ${LONG}`).first()).toBeVisible();
     // Only the repository whose turn has not started says waiting.
     await expect(page.getByText('waiting', { exact: true })).toHaveCount(1);
-    await titlesClear(page);
-    await judge(page, `pool change, started ${size.width}`);
+    await titlesClear(page, size.width);
+    await judge(page, `pool change, started ${size.width}`, size);
     await shot(page, 'started', size.width);
 
     current = FRAMES.half;
@@ -169,8 +173,8 @@ for (const size of [
     await expect(
       page.getByText(`Adjust the pool runners for ${LONG}`).first(),
     ).toBeVisible();
-    await titlesClear(page);
-    await judge(page, `pool change, half ${size.width}`);
+    await titlesClear(page, size.width);
+    await judge(page, `pool change, half ${size.width}`, size);
     await shot(page, 'halfway', size.width);
 
     // The page closes and opens again: the run goes on, and the step in hand is shown, never lost.
@@ -181,7 +185,7 @@ for (const size of [
     });
     await expect(cardBar(LONG)).toHaveAttribute('aria-valuenow', '2');
     await expect(page.getByRole('button', { name: 'Stop' })).toBeVisible();
-    await titlesClear(page);
+    await titlesClear(page, size.width);
     await shot(page, 'reloaded', size.width);
 
     current = FRAMES.done;
@@ -189,7 +193,7 @@ for (const size of [
     await expect(page.getByText('2 repositories no longer use the pool.')).toBeVisible({
       timeout: 10_000,
     });
-    await judge(page, `pool change, done ${size.width}`);
+    await judge(page, `pool change, done ${size.width}`, size);
     await shot(page, 'done', size.width);
   });
 
@@ -208,7 +212,7 @@ for (const size of [
     await expect(
       page.getByText('Nothing more was changed. GitHub refused: a permission is missing'),
     ).toBeVisible();
-    await judge(page, `pool change, failed ${size.width}`);
+    await judge(page, `pool change, failed ${size.width}`, size);
     await shot(page, 'failed', size.width);
   });
 }
