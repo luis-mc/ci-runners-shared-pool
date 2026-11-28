@@ -23,7 +23,7 @@ func lostRig(t *testing.T) (*rig, Record) {
 	return r, rec
 }
 
-// CRSP382, R5.140: the truth of a runner GitHub does not list while its
+// CRSP382, R5.152: the truth of a runner GitHub does not list while its
 // listener says the registration was deleted is not idle, and not "stopped".
 func TestTruthRegistrationLostIsNotIdle(t *testing.T) {
 	lost := &backend.Found{Running: false, RegistrationLost: true}
@@ -44,7 +44,7 @@ func TestTruthRegistrationLostIsNotIdle(t *testing.T) {
 	}
 }
 
-// CRSP382, R5.140: a lost registration is registered again once, with a fresh
+// CRSP382, R5.152: a lost registration is registered again once, with a fresh
 // token, and recorded.
 func TestRecoverRegistersAgainOnce(t *testing.T) {
 	r, rec := lostRig(t)
@@ -83,7 +83,7 @@ func TestRecoverRegistersAgainOnce(t *testing.T) {
 	}
 }
 
-// CRSP382, R5.140: when the add fails, the runner is failed with the reason,
+// CRSP382, R5.152: when the add fails, the runner is failed with the reason,
 // and the button registers it again.
 func TestRecoverGivesUpWithTheReasonThenTheButtonWorks(t *testing.T) {
 	r, rec := lostRig(t)

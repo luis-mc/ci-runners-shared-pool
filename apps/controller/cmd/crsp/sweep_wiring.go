@@ -53,7 +53,7 @@ const recoverEvery = time.Minute
 const creatingAfter = 45 * time.Minute
 
 // startRecovery registers again, once, the runners whose registration GitHub
-// deleted and settles runners stuck in creating (runners R5.140, R5.141). It
+// deleted and settles runners stuck in creating (runners R5.152, R5.153). It
 // returns when ctx ends.
 func startRecovery(ctx context.Context, logger *slog.Logger, svc *runners.Service) {
 	go func() {

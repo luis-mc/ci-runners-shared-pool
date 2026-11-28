@@ -249,7 +249,7 @@ func (b *Backend) Start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 		}
 		return h, b.restart(ctx, label, folder)
 	case persistent.RegisterLost:
-		// GitHub deleted the registration: nothing is left to remove (R5.140).
+		// GitHub deleted the registration: nothing is left to remove (R5.152).
 		if err := b.stopDaemon(ctx, label, folder); err != nil {
 			return h, err
 		}

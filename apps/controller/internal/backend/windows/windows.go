@@ -334,7 +334,7 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 	case persistent.RegisterLost:
 		// GitHub deleted the registration: nothing is left to remove. The
 		// account and service stay; the registration is made again in place
-		// (runners R5.140).
+		// (runners R5.152).
 		if err := b.stopService(ctx, env, folder); err != nil {
 			return h, err
 		}

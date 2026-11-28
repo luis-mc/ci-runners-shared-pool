@@ -597,7 +597,7 @@ func TestEnvCarriesThePackageProxy(t *testing.T) {
 	}
 }
 
-// CRSP382, runners R5.140: a runner whose registration GitHub deleted, with an
+// CRSP382, runners R5.152: a runner whose registration GitHub deleted, with an
 // unchanged config, is registered again in place: the unit stops, the stale
 // files go, config.sh runs with --replace and the fresh token, no remove step,
 // and the unit starts again.

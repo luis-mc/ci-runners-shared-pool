@@ -149,7 +149,7 @@ try {
 	// that cannot be asked is skipped, never a failure of the whole script. The
 	// path is built as text: Join-Path throws for a folder on a drive that is
 	// not there and for an empty folder, which made "list listeners" fail with
-	// exit 1 (runners R5.141).
+	// exit 1 (runners R5.153).
 	scriptListeners = scriptHeader + `
 $want = ([string]$env:CRSP_FOLDER).TrimEnd('\') + '\bin\Runner.Listener' + '.exe'
 $ids = @()

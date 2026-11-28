@@ -51,7 +51,7 @@ const (
 	RewriteEnv   Action = "rewrite-env"
 	// RegisterLost is a runner whose registration GitHub deleted: the folder is
 	// right but its listener log says the registration is gone. It registers
-	// again in place with the fresh token, with no remove token (runners R5.140).
+	// again in place with the fresh token, with no remove token (runners R5.152).
 	RegisterLost Action = "register-lost"
 )
 

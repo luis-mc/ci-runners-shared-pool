@@ -15,7 +15,7 @@ import (
 // restarting. The controller registers it again by itself, once, with a fresh
 // token, then says so on the Runners page. When that fails, or the registration
 // is lost again at once, the runner shows failed with the reason and a button to
-// register it again (runners R5.140, R5.141).
+// register it again (runners R5.152, R5.153).
 const (
 	// ReregisteredReason is the reason of a runner that was registered again
 	// after GitHub deleted its registration. It stays until the runner changes
@@ -281,7 +281,7 @@ const StuckCreatingReason = "its set-up did not finish; remove it and add it aga
 // running any more (the controller stopped in the middle of it): a runner whose
 // service runs and that GitHub lists is idle, any other one is failed with the
 // reason. A runner younger than after, or any runner while a plan runs, is left
-// alone. Run it in the reconcile loop (runners R5.141).
+// alone. Run it in the reconcile loop (runners R5.153).
 func (s *Service) SettleStuckCreating(ctx context.Context, after time.Duration, actor string) ([]string, error) {
 	s.stopMu.Lock()
 	busy := len(s.running) > 0

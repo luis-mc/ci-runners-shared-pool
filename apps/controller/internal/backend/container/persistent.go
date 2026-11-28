@@ -333,7 +333,7 @@ func (b *Backend) FindPersistent(ctx context.Context) ([]backend.Found, error) {
 
 // ParsePersistentFound reads the lines of list.sh: NAME|RUNNING|LOST. LOST is
 // the supervisor's reason when GitHub deleted the runner's registration; an
-// older list.sh prints no third field (runners R5.140).
+// older list.sh prints no third field (runners R5.152).
 func ParsePersistentFound(out string) []backend.Found {
 	var res []backend.Found
 	for _, ln := range strings.Split(strings.ReplaceAll(out, "\r\n", "\n"), "\n") {

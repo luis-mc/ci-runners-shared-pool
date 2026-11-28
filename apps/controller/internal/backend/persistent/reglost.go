@@ -11,7 +11,7 @@ import (
 // for too long, or somebody deleted it) starts, then its listener log says so
 // and it ends: the supervisor, service or unit starts it again for ever. These
 // helpers read the listener logs the same way SessionWait does, so the agent
-// can tell the controller (runners R5.140).
+// can tell the controller (runners R5.152).
 
 // LostTexts are the pieces of the listener's own words that say the
 // registration is gone, matched without case.
