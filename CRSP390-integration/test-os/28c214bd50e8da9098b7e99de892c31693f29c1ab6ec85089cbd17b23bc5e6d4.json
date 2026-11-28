@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "shard": "test-os",
+  "key": "28c214bd50e8da9098b7e99de892c31693f29c1ab6ec85089cbd17b23bc5e6d4",
+  "state": "success",
+  "sha": "a68ea2c0a948d9123ff2404d32b3c759a5794a4a",
+  "branch": "CRSP390-integration",
+  "seconds": 0.0,
+  "at": "2026-11-28T16:48:57Z"
+}
