@@ -23,7 +23,7 @@ Every rule has an ID. A feature spec and the code cite the ID (`design system UX
 <!-- rule-table:start -->
 | ID | Rule | Guard |
 |---|---|---|
-| UX-1 | **Consistent everywhere.** The same thing looks, reads and behaves the same on every screen. | none yet (2026-11-21) |
+| UX-1 | **Consistent everywhere.** The same thing looks, reads and behaves the same on every screen. | `scripts/design/raw-inputs.test.ts`: no native date, time or number input, and no TextField whose label or placeholder asks for a time (hh:mm or "time"); the known list is empty (LOOK72) |
 | UX-2 | **Reuse shared components.** A part that nearly fits is extended, never copied. | none yet (2026-11-21) |
 | UX-3 | **One headline says where you are.** Use plain words. Never show a raw path or code as the main text. | none yet (2026-11-21) |
 | UX-4 | **One primary action per screen.** It is labelled by what it does, and its reason is next to it. An action on a choice names the work and its count ("Rename 12 files"). With nothing chosen it is disabled and says what to do ("Tick the files to rename"). | `e2e/tests/web-console/ux-routes.spec.ts` |
