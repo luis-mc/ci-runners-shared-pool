@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "kind": "branch-gate",
+  "branch": "CRSP381-ci-fixes",
+  "head": "526ebe917bba21191dae5beb66c981fb55ba7f1b",
+  "base": "f64913dc3703474addf5c72807072bc943d40d4b",
+  "base_ref": "origin/main",
+  "base_fetched": true,
+  "widened": true,
+  "changed_dirs": [
+    "."
+  ],
+  "steps": [
+    {
+      "name": "setup",
+      "outcome": "pass",
+      "seconds": 23.0,
+      "command": "go mod download && go mod verify && go list -mod=readonly -m all && go list -mod=readonly -deps -test ./...",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/setup.log"
+    },
+    {
+      "name": "secret-scan",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "change-notes",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "guards",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "lint",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "typecheck",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "unit",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "e2e",
+      "outcome": "pass",
+      "seconds": 1445.3,
+      "command": "{ [ -n \"${E2E_CHROMIUM_PATH:-}\" ] && [ -x \"$E2E_CHROMIUM_PATH\" ]; } || pnpm exec playwright install chromium && pnpm exec playwright test",
+      "reason": null,
+      "exit_code": 0,
+      "log": ".delivery/logs/e2e.log",
+      "selection": "full",
+      "specs": []
+    }
+  ],
+  "required_steps": [
+    "typecheck",
+    "lint"
+  ],
+  "pass": true,
+  "timed_out": false,
+  "partial": true,
+  "e2e_only": true,
+  "ui_changed": true,
+  "e2e": {
+    "required": true,
+    "step": "e2e",
+    "outcome": "pass",
+    "selection": "full",
+    "specs": [],
+    "changed_specs": [
+      "e2e/tests/design-layout.spec.ts",
+      "e2e/tests/web-console/repositories-panes.spec.ts",
+      "e2e/tests/web-console/runners-images-doctor.spec.ts",
+      "e2e/tests/web-console/updates-lifecycle.spec.ts"
+    ]
+  },
+  "started_at": "2026-11-28T01:57:53Z",
+  "finished_at": "2026-11-28T02:22:21Z",
+  "tool": "branch_gate.py 2"
+}
