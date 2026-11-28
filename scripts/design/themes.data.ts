@@ -71,7 +71,7 @@ function terminal(p: {
 }
 
 /** The three palettes of the concept page (tokens --bg --panel --fg --dim --g --y --r --c --m --o --sel). */
-export const TERMINAL: Record<'green' | 'amber' | 'ice', Palette> = {
+export const TERMINAL: Record<TerminalPalette, Palette> = {
   green: terminal({
     bg: '#0b0e0d',
     panel: '#0f1413',
@@ -114,6 +114,51 @@ export const TERMINAL: Record<'green' | 'amber' | 'ice', Palette> = {
     o: '#f0a060',
     sel: '#112a3d',
   }),
+  // LOOK73 study: the btop palette of abtop (btop's own Default theme; text and outlines lifted to the contrast rules).
+  btop: terminal({
+    bg: '#191919',
+    panel: '#1e1e1e',
+    fg: '#cccccc',
+    dim: '#707070',
+    muted: '#b0b0b0',
+    g: '#77ca9b',
+    y: '#dca032',
+    r: '#e0605a',
+    c: '#5fb8e8',
+    m: '#dcafde',
+    o: '#ffb814',
+    sel: '#5a2828',
+  }),
+  // LOOK73 study: Dracula as abtop has it.
+  dracula: terminal({
+    bg: '#282a36',
+    panel: '#2c2e3c',
+    fg: '#f8f8f2',
+    dim: '#6c7cb0',
+    muted: '#b4bce0',
+    g: '#50fa7b',
+    y: '#f1fa8c',
+    r: '#ff5555',
+    c: '#8be9fd',
+    m: '#bd93f9',
+    o: '#ffb86c',
+    sel: '#44475a',
+  }),
+  // LOOK73 study: Catppuccin Mocha as abtop has it.
+  catppuccin: terminal({
+    bg: '#181825',
+    panel: '#1e1e2e',
+    fg: '#cdd6f4',
+    dim: '#6c7086',
+    muted: '#a6adc8',
+    g: '#a6e3a1',
+    y: '#f9e2af',
+    r: '#f38ba8',
+    c: '#89b4fa',
+    m: '#cba6f7',
+    o: '#fab387',
+    sel: '#313244',
+  }),
 };
 
 /**
@@ -121,7 +166,7 @@ export const TERMINAL: Record<'green' | 'amber' | 'ice', Palette> = {
  * flat look. Every text pair meets 4.5:1 and the border 3:1 on the page and the panel (UX-17); the divider and the
  * empty segments are the panel mixed 30% toward the border, as in every theme.
  */
-export const TERMINAL_LIGHT: Record<'green' | 'amber' | 'ice', Palette> = {
+const LIGHT_BASE: Record<'green' | 'amber' | 'ice', Palette> = {
   green: terminal({
     bg: '#e9efe5',
     panel: '#f4f8f1',
@@ -164,6 +209,13 @@ export const TERMINAL_LIGHT: Record<'green' | 'amber' | 'ice', Palette> = {
     o: '#9a4710',
     sel: '#c9dcec',
   }),
+};
+// LOOK73 study: no light form is designed for the three new palettes; they borrow the existing light forms.
+export const TERMINAL_LIGHT: Record<TerminalPalette, Palette> = {
+  ...LIGHT_BASE,
+  btop: LIGHT_BASE.green,
+  dracula: LIGHT_BASE.ice,
+  catppuccin: LIGHT_BASE.ice,
 };
 
 export const THEME_DATA: readonly ThemeData[] = [
@@ -391,7 +443,14 @@ export const THEME_DATA: readonly ThemeData[] = [
 ];
 
 /** The palettes of the terminal theme, picked with `data-pal` (green is the default and has no attribute). */
-export const TERMINAL_PALETTES = ['green', 'amber', 'ice'] as const;
+export const TERMINAL_PALETTES = [
+  'green',
+  'amber',
+  'ice',
+  'btop',
+  'dracula',
+  'catppuccin',
+] as const;
 export type TerminalPalette = (typeof TERMINAL_PALETTES)[number];
 
 export const DEFAULT_THEME = 'phosphor';

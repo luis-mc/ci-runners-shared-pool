@@ -181,7 +181,7 @@ export function renderThemeCss(): string {
  */
 export function renderPaletteCss(): string[] {
   const t = THEME_DATA.find((x) => x.id === 'terminal') as ThemeData;
-  return (['amber', 'ice'] as const).map((pal) => {
+  return (['amber', 'ice', 'btop', 'dracula', 'catppuccin'] as const).map((pal) => {
     const base = `[data-theme-name='terminal'][data-pal='${pal}']`;
     const preview = `.ds-theme-preview${base}`;
     const both = { ...t, dark: TERMINAL[pal], light: TERMINAL_LIGHT[pal] };

@@ -47,7 +47,7 @@ describe('theme choice with a preview', () => {
       />,
     );
     expect(document.querySelectorAll('.ds-theme-preview')).toHaveLength(
-      THEMES.length * 2 + 6,
+      THEMES.length * 2 + 12,
     );
     const iceLight = screen.getByRole('img', { name: 'Terminal Ice, light' });
     expect(iceLight.getAttribute('data-pal')).toBe('ice');

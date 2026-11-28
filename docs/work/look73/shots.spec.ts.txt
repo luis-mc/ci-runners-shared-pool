@@ -1,0 +1,81 @@
+// LOOK73 theme study: screenshots of real console screens in three candidate palettes. Not part of the suite.
+import { test } from '@playwright/test';
+import { machine, runner, overview, signedIn, machineHealth } from './fixtures';
+import { insightsApi } from './insights-fixtures';
+
+const OUT = process.env.LOOK_OUT ?? 'docs/work/look73';
+const THEMES = [
+  { id: 'phosphor', name: null, pal: null },
+  { id: 'btop', name: 'terminal', pal: 'btop' },
+  { id: 'dracula', name: 'terminal', pal: 'dracula' },
+  { id: 'catppuccin', name: 'terminal', pal: 'catppuccin' },
+];
+const only = process.env.LOOK_ONLY;
+
+const m = (id: string, name: string, mem: number, cpu: number, over: Record<string, unknown> = {}) =>
+  machine({
+    id,
+    name,
+    load: { memory_pct: mem, cpu_pct: cpu, memory_known: true, cpu_known: true, sampled_at: '2026-11-14T10:00:00Z', stale: false },
+    ...over,
+  });
+const machines = [
+  m('m1', 'build-1', 38, 22),
+  m('m2', 'build-2', 71, 64, { slots_used: 3 }),
+  m('m3', 'gpu-box', 93, 88, { slots_used: 4 }),
+  m('m4', 'win-runner', 55, 47, { os: 'windows' }),
+];
+const runners = [
+  runner(),
+  runner({ id: 'r2', name: 'crsp-linux-2', machine_id: 'm2', machine_name: 'build-2', state: 'busy' }),
+  runner({ id: 'r3', name: 'crsp-linux-3', machine_id: 'm3', machine_name: 'gpu-box', state: 'busy' }),
+  runner({ id: 'r4', name: 'crsp-win-1', machine_id: 'm4', machine_name: 'win-runner', os: 'windows', state: 'idle' }),
+  runner({ id: 'r5', name: 'crsp-linux-4', machine_id: 'm2', machine_name: 'build-2', state: 'offline' }),
+];
+
+function api() {
+  const mock = insightsApi(signedIn())
+    .on('GET', '/api/v1/overview', { ...overview(machines), queued_count: 5 })
+    .on('GET', '/api/v1/machines', { items: machines })
+    .on('GET', '/api/v1/runners', { items: runners })
+    .on('GET', '/api/v1/machines/:id/health', machineHealth());
+  return mock;
+}
+
+for (const t of THEMES) {
+  if (only && only !== t.id) continue;
+  for (const [w, h, shots] of [
+    [1300, 900, t.id === 'phosphor' ? ['overview'] : ['overview', 'runners', 'analytics', 'appearance']],
+    [393, 852, ['overview']],
+  ] as [number, number, string[]][]) {
+    test.describe(`${t.id} ${w}`, () => {
+      test.use({ viewport: { width: w, height: h } });
+      for (const s of shots) {
+        test(s, async ({ page }) => {
+          const dotted = t.id !== 'phosphor';
+          await page.addInitScript(
+            ([name, pal, dot]) => {
+              try {
+                if (name) localStorage.setItem('crsp.theme-name', name as string);
+                if (pal) localStorage.setItem('crsp.theme-palette', pal as string);
+                if (dot) localStorage.setItem('crsp.theme-graphs', 'dotted');
+              } catch {}
+            },
+            [t.name, t.pal, dotted],
+          );
+          await api().install(page);
+          const url: Record<string, string> = {
+            overview: '/',
+            runners: '/setup/runners',
+            analytics: '/analytics/charts',
+            appearance: '/settings/appearance',
+          };
+          await page.goto(url[s]!);
+          await page.waitForLoadState('networkidle');
+          await page.waitForTimeout(600);
+          await page.screenshot({ path: `${OUT}/${t.id}-${s}-${w}.png`, fullPage: true });
+        });
+      }
+    });
+  }
+}

@@ -1807,6 +1807,40 @@ legend > .ds-field__changed {
 }
 
 /* theme preview: a sample drawn from the tokens of its own theme and mode (data-theme-name and data-theme sit on it) */
+/* Colours of the btop, Dracula and Catppuccin palettes' extra rules (LOOK73 study): values live here, before the preview rules. */
+[data-theme-name='terminal'][data-pal='btop'] {
+  --look-box-1: #5f7a64;
+  --look-box-2: #7a7a54;
+  --look-box-3: #6e69a8;
+  --look-box-4: #94605f;
+  --look-grad-start: #77ca9b;
+  --look-grad-mid: #cbc06c;
+  --look-grad-end: #dc4c4c;
+  --look-hi: #dc4c4c;
+  --look-title: #eeeeee;
+}
+[data-theme-name='terminal'][data-pal='dracula'] {
+  --look-box-1: #8be9fd;
+  --look-box-2: #bd93f9;
+  --look-box-3: #ff79c6;
+  --look-box-4: #ff5555;
+  --look-grad-start: #50fa7b;
+  --look-grad-mid: #f1fa8c;
+  --look-grad-end: #ff5555;
+  --look-hi: #ff79c6;
+  --look-title: #f8f8f2;
+}
+[data-theme-name='terminal'][data-pal='catppuccin'] {
+  --look-box-1: #89b4fa;
+  --look-box-2: #cba6f7;
+  --look-box-3: #f5c2e7;
+  --look-box-4: #f2cdcd;
+  --look-grad-start: #a6e3a1;
+  --look-grad-mid: #f9e2af;
+  --look-grad-end: #f38ba8;
+  --look-hi: #f38ba8;
+  --look-title: #cdd6f4;
+}
 .ds-theme-preview {
   display: grid;
   gap: var(--ds-space-2);
@@ -4426,4 +4460,210 @@ a.ds-stat:focus-visible {
   .ds-band-feature[data-media] {
     grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
   }
+}
+
+/* ---------------------------------------------------------------------------------------------------------------
+   Terminal palettes btop, Dracula and Catppuccin (LOOK73 study, owner review only). Colour comes from the palette
+   tokens; these rules add what btop and abtop draw on top: a different outline per pane, a number in each pane
+   title, meters that run green to yellow to red along their length, and a hi-colour edge on the selected row.
+   --------------------------------------------------------------------------------------------------------------- */
+[data-theme-name='terminal']:is(
+  [data-pal='btop'],
+  [data-pal='dracula'],
+  [data-pal='catppuccin']
+) {
+  counter-reset: look-pane;
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel:not([data-tone])):nth-child(4n + 1) {
+  --look-box: var(--look-box-1);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel:not([data-tone])):nth-child(4n + 2) {
+  --look-box: var(--look-box-2);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel:not([data-tone])):nth-child(4n + 3) {
+  --look-box: var(--look-box-3);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel:not([data-tone])):nth-child(4n + 4) {
+  --look-box: var(--look-box-4);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel:not([data-tone])) {
+  border-color: var(--look-box, var(--ds-color-border));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  :is(.ds-pane, .ds-panel):focus-within {
+  border-color: var(--ds-color-focus);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__title {
+  color: var(--look-title);
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-pane__title::before {
+  content: counter(look-pane) ' ' / '';
+  counter-increment: look-pane;
+  color: var(--look-box, var(--ds-color-border));
+  font-size: 0.75em;
+  font-weight: 700;
+  vertical-align: super;
+}
+/* A meter's segments run along the gradient, left to right (btop's green to yellow to red); the value is the length. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(1) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-start) 100%, var(--look-grad-mid));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(2) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-start) 78%, var(--look-grad-mid));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(3) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-start) 56%, var(--look-grad-mid));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(4) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-start) 33%, var(--look-grad-mid));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(5) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-start) 11%, var(--look-grad-mid));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(6) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-mid) 89%, var(--look-grad-end));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(7) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-mid) 67%, var(--look-grad-end));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(8) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-mid) 44%, var(--look-grad-end));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(9) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-mid) 22%, var(--look-grad-end));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(10) {
+  --ds-seg-on: color-mix(in srgb, var(--look-grad-mid) 0%, var(--look-grad-end));
+}
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-segs__cell:nth-child(n + 11) {
+  --ds-seg-on: var(--look-grad-end);
+}
+/* The selected row: the selection band, with the hi colour as its edge. */
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-selected]
+  > :first-child,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-list-row]:focus
+  > :first-child,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-list-row]:focus-within
+  > :first-child,
+[data-theme-name='terminal']:is(
+    [data-pal='btop'],
+    [data-pal='dracula'],
+    [data-pal='catppuccin']
+  )
+  .ds-table
+  tr[data-active]
+  > :first-child {
+  box-shadow: inset 3px 0 var(--look-hi);
 }

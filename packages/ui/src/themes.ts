@@ -20,6 +20,9 @@ export const TERMINAL_PALETTE_CHOICES: readonly ThemeInfo[] = [
   { id: 'green', name: 'Green' },
   { id: 'amber', name: 'Amber' },
   { id: 'ice', name: 'Ice' },
+  { id: 'btop', name: 'btop' },
+  { id: 'dracula', name: 'Dracula' },
+  { id: 'catppuccin', name: 'Catppuccin' },
 ];
 export const PALETTE_STORAGE = 'crsp.theme-palette';
 /** How the Cool Terminal themes draw graphs: blocks, or dots (`data-graphs=dotted` on the page root; blocks sets none). */
