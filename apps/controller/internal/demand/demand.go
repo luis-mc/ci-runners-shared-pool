@@ -89,8 +89,8 @@ type Loop struct {
 	PoolName string
 	// Pools, when set, gives every name that means the pool now (the one in force
 	// first, the old one while a rename runs). It wins over PoolName.
-	Pools func() []string
-	Logger   *slog.Logger
+	Pools  func() []string
+	Logger *slog.Logger
 	// Every is how often waiting jobs are tried again (default 5 s). Now is a
 	// seam for tests.
 	Every time.Duration

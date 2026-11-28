@@ -8,8 +8,8 @@ import (
 
 func renameJSON(state string) map[string]any {
 	return map[string]any{"id": "pr1", "old": "crsp-home", "new": "crsp-lab", "state": state,
-		"steps":  []map[string]any{{"id": "add_label:r1", "kind": "add_label", "text": "Add the label crsp-lab to runner box-1", "state": "pending"}},
-		"counts": map[string]any{"runners": 1, "registered": 1, "ephemeral": 0, "repositories": 2, "scale_set": false},
+		"steps":      []map[string]any{{"id": "add_label:r1", "kind": "add_label", "text": "Add the label crsp-lab to runner box-1", "state": "pending"}},
+		"counts":     map[string]any{"runners": 1, "registered": 1, "ephemeral": 0, "repositories": 2, "scale_set": false},
 		"created_at": "2026-11-28T10:00:00Z", "updated_at": "2026-11-28T10:00:00Z"}
 }
 
