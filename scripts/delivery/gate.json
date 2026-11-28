@@ -30,7 +30,7 @@
     ],
     "full_on": ["playwright.config.ts", "e2e/tests/web-console/fixtures.ts", "e2e/tests/web-console/ux-guards.ts", "packages/ui/", "apps/controller-console/src/shell/", "apps/controller-console/src/App.tsx", "apps/controller-console/src/main.tsx"]
   },
-  "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "lint-windows", "lint-web", "typecheck", "unit"],
+  "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "typecheck", "lint-windows", "lint-web", "unit"],
   "steps": [
     {
       "name": "secret-scan",
@@ -57,6 +57,12 @@
       "run": "golangci-lint run --timeout=5m ./..."
     },
     {
+      "name": "typecheck",
+      "scope": "changed+dependents",
+      "pre_push": true,
+      "run": "go vet ./..."
+    },
+    {
       "name": "lint-windows",
       "scope": "changed+dependents",
       "env": {"GOOS": "windows"},
@@ -66,12 +72,6 @@
       "name": "lint-web",
       "scope": "ui-changed",
       "run": "pnpm -r lint"
-    },
-    {
-      "name": "typecheck",
-      "scope": "changed+dependents",
-      "pre_push": true,
-      "run": "go vet ./..."
     },
     {
       "name": "unit",
