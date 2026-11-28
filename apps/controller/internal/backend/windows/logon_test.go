@@ -5,6 +5,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend/persistent"
@@ -85,7 +86,7 @@ func TestHealGivesRightBeforeStart(t *testing.T) {
 		t.Fatalf("got %+v", got)
 	}
 	h := got[0]
-	if h.Service != svc || h.Account != `.\crsp-box-1` || !h.Running || !h.Regranted || !h.LogonHeld || h.Problem != "" {
+	if h.Service != svc || h.Account != `.\crsp-box-1` || !h.Running || !h.Regranted || !h.LogonHeld || h.Problem != restartedNote {
 		t.Errorf("health = %+v", h)
 	}
 	var grant, startAt = -1, -1
@@ -121,7 +122,7 @@ func TestStartRetriesOnceOnLogonFailure(t *testing.T) {
 	if err != nil {
 		t.Fatalf("a retry that works is not an error: %v", err)
 	}
-	if !got[0].Running || got[0].Problem != "" {
+	if !got[0].Running || !strings.HasPrefix(got[0].Problem, restartedNote) {
 		t.Errorf("health = %+v", got[0])
 	}
 	if sc.starts != 2 {
@@ -252,5 +253,67 @@ func TestHealGivesTheListRightBeforeStart(t *testing.T) {
 	}
 	if n != 2 || list < 0 || startAt < list {
 		t.Errorf("list rights %d (first at %d), start at %d", n, list, startAt)
+	}
+}
+
+const restartedNote = "started again after it stopped"
+
+// R5.178: a service that stopped (a boot before crsp gave the runner group its
+// list right) is started again, with the reason it gave.
+func TestHealStartsStoppedServiceAndSaysWhy(t *testing.T) {
+	why := "An error occurred: Permission to read the directory contents is required"
+	r, _, _ := stoppedRig(t, func(_ int, c sys.Command) sys.Result {
+		if strings.Contains(c.Stdin, "ActionsRunnerService") {
+			return sys.Result{Stdout: why + "\r\n"}
+		}
+		return sys.Result{}
+	})
+	got, err := r.b.HealServices(context.Background())
+	if err != nil || len(got) != 1 || !got[0].Running {
+		t.Fatalf("got %+v err %v", got, err)
+	}
+	if got[0].Problem != restartedNote+": "+why {
+		t.Errorf("note = %q", got[0].Problem)
+	}
+}
+
+// R5.178: a service that keeps failing is tried again after a wait that
+// doubles, from one pass to an hour, and the wait answers with the last reason.
+func TestHealBacksOffAFailingService(t *testing.T) {
+	r, sc, _ := stoppedRig(t, func(_ int, c sys.Command) sys.Result {
+		if strings.Contains(c.Stdin, "Start-Service") {
+			return sys.Result{ExitCode: 1, Stderr: errMarker + "The service cannot be started, because it is disabled\r\n"}
+		}
+		return sys.Result{}
+	})
+	at := time.Date(2026, 11, 28, 17, 0, 0, 0, time.UTC)
+	r.b.now = func() time.Time { return at }
+	heal := func() []backend.ServiceHealth {
+		got, _ := r.b.HealServices(context.Background())
+		return got
+	}
+	heal() // fails: next try in 10 min
+	if sc.starts != 1 {
+		t.Fatalf("starts = %d", sc.starts)
+	}
+	at = at.Add(5 * time.Minute)
+	got := heal()
+	if sc.starts != 1 || !strings.Contains(got[0].Problem, "disabled") {
+		t.Fatalf("inside the wait: starts %d, %+v", sc.starts, got)
+	}
+	at = at.Add(6 * time.Minute) // 11 min: due; fails again, wait 20 min
+	heal()
+	if sc.starts != 2 {
+		t.Fatalf("after the wait: starts = %d", sc.starts)
+	}
+	at = at.Add(15 * time.Minute)
+	heal()
+	if sc.starts != 2 {
+		t.Errorf("the second wait is 20 min, starts = %d", sc.starts)
+	}
+	at = at.Add(6 * time.Minute)
+	heal()
+	if sc.starts != 3 {
+		t.Errorf("after 21 min starts = %d, want 3", sc.starts)
 	}
 }

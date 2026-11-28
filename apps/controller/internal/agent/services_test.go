@@ -99,3 +99,20 @@ func TestProblemClearsWhenTheServiceRuns(t *testing.T) {
 		return len(vs) == 1 && len(vs[0].RunnerServices) == 1 && vs[0].RunnerServices[0].Running && len(vs[0].RunnerProblems()) == 0
 	})
 }
+
+// R5.178: the controller's own agent carries no Runners, only a Healer; the
+// heal still runs at start, so a runner service that stopped at boot starts again.
+func TestAgentHealsWithAHealerAndNoRunners(t *testing.T) {
+	c := startController(t)
+	code, _ := c.Svc.CreateJoinCode(context.Background(), "owner", 0)
+	cfg := fastConfig(t, c, code.Code)
+	cfg.Logger = slog.New(slog.DiscardHandler)
+	cfg.Redactor = redact.New()
+	hr := &healingRunners{answer: func(int) ([]backend.ServiceHealth, error) {
+		return []backend.ServiceHealth{{Runner: "crsp-gameroompc-1", Service: "actions.runner.o-r.crsp-gameroompc-1", Account: `.\crsp-gameroompc-1`,
+			Running: true, LogonKnown: true, LogonHeld: true, Problem: "started again after it stopped"}}, nil
+	}}
+	cfg.Healer = hr
+	runAgent(t, cfg)
+	waitFor(t, "the heal at start", func() bool { return hr.count() >= 1 })
+}

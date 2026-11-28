@@ -69,6 +69,10 @@ type Backend struct {
 	d      sys.Deps
 	cfg    Config
 	rights RightsGranter
+	// heal remembers the failed restarts of stopped services, for the backoff.
+	heal healBackoff
+	// now is the clock of the backoff; nil is time.Now (tests set it).
+	now func() time.Time
 }
 
 var (

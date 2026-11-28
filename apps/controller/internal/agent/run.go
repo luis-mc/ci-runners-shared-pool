@@ -67,6 +67,11 @@ type Config struct {
 	// Runners carries out the runner commands of the controller (runners R5.1);
 	// nil answers each with a failure that says the agent has no backend.
 	Runners runners.Agent
+	// Healer is the heal step for the runner services of this machine
+	// (runners R5.89, R5.178). Nil takes Runners when it can heal. The
+	// controller's own agent sets it: it carries no Runners, because the
+	// controller runs its own machine's runner commands itself.
+	Healer backend.ServiceHealer
 	// PreparePool makes the runner image and, when persistent is set, the
 	// persistent pool container, for dependency setup (DEP9). Nil: they are
 	// made when the first runner starts.

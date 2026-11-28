@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backend"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machinehealth"
 	"log/slog"
 	"net"
@@ -259,6 +260,11 @@ func startMachines(ctx context.Context, cfg config.Config, logger *slog.Logger, 
 				Controller: loop, Pin: ca.Fingerprint(), LocalCredentialFile: credFile, Secrets: agentStore, DataDir: agentDir,
 				Version: version, Logger: logger.With("component", "local-agent"), Caches: agentCacheSource(), DiskFloorGiB: diskFloorFor(cfg),
 				Images: agentImageSource(), Redactor: secretRedactor,
+			}
+			// The controller's own machine heals its runner services too: a stopped
+			// one (a boot before crsp could give the list right) starts again (R5.178).
+			if h, ok := agentRunners().(backend.ServiceHealer); ok {
+				acfg.Healer = h
 			}
 			if err := agent.Run(runCtx, acfg); err != nil {
 				if strings.Contains(err.Error(), machines.LocalDuplicateMarker) {

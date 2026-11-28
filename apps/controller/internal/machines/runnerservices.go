@@ -1,6 +1,7 @@
 package machines
 
 import (
+	"context"
 	"slices"
 
 	agentv1 "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/gen/agent/v1"
@@ -37,6 +38,18 @@ func (s *Service) HandleRunnerServices(machineID string, rs []*agentv1.RunnerSer
 			LogonKnown: r.GetLogonKnown(), LogonHeld: r.GetLogonHeld(), Regranted: r.GetRegranted(), Problem: r.GetProblem(),
 		})
 	}
+	// A service that runs with a Problem is the one-time note of a restart; the
+	// stored copy shows it as running with no problem (R5.178).
+	var restarted, failed []RunnerService
+	for i, r := range next {
+		switch {
+		case r.Running && r.Problem != "":
+			restarted = append(restarted, r)
+			next[i].Problem = ""
+		case r.Failed():
+			failed = append(failed, r)
+		}
+	}
 	s.mu.Lock()
 	old := s.rsvcs[machineID]
 	if len(next) == 0 {
@@ -48,6 +61,7 @@ func (s *Service) HandleRunnerServices(machineID string, rs []*agentv1.RunnerSer
 	if !slices.Equal(old, next) {
 		s.notifyMachine(machineID)
 	}
+	s.auditRunnerServices(machineID, old, restarted, failed)
 }
 
 // RunnerServices returns the newest runner service report of a machine.
@@ -66,4 +80,29 @@ func (v View) RunnerProblems() []RunnerService {
 		}
 	}
 	return out
+}
+
+// auditRunnerServices records a runner service the agent started again after
+// it stopped, and one that stopped and could not be started (a failure is
+// recorded when it first appears or its reason changes), so the owner can see
+// what crsp did on their machine (runners R5.178).
+func (s *Service) auditRunnerServices(machineID string, old, restarted, failed []RunnerService) {
+	if s.o.Repo == nil {
+		return
+	}
+	ctx := context.Background()
+	for _, r := range restarted {
+		_ = s.o.Repo.Audit(ctx, "agent", "runner_service.restarted", machineID, r.Service+" "+r.Problem)
+	}
+	for _, r := range failed {
+		seen := false
+		for _, o := range old {
+			if o.Service == r.Service && o.Problem == r.Problem && !o.Running {
+				seen = true
+			}
+		}
+		if !seen {
+			_ = s.o.Repo.Audit(ctx, "agent", "runner_service.start_failed", machineID, r.Service+": "+r.Problem)
+		}
+	}
 }
