@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "kind": "branch-gate",
+  "branch": "LOOK72-update-window-time-picker",
+  "head": "227848aa45fe1c9d59bb5025f9b993d11040d164",
+  "base": "f7c78216b41eeb428cce58f5ac963f02bb841aa4",
+  "base_ref": "origin/CRSP383-integration",
+  "base_fetched": true,
+  "widened": false,
+  "changed_dirs": [
+    "."
+  ],
+  "steps": [
+    {
+      "name": "setup",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "--no-setup"
+    },
+    {
+      "name": "secret-scan",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "change-notes",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "guards",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "lint",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "typecheck",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "unit",
+      "outcome": "skip",
+      "seconds": 0.0,
+      "command": null,
+      "reason": "not selected"
+    },
+    {
+      "name": "e2e",
+      "outcome": "fail",
+      "seconds": 59.3,
+      "command": "{ [ -n \"${E2E_CHROMIUM_PATH:-}\" ] && [ -x \"$E2E_CHROMIUM_PATH\" ]; } || pnpm exec playwright install chromium && pnpm exec playwright test ",
+      "reason": "command failed",
+      "exit_code": 1,
+      "log": ".delivery/logs/e2e.log",
+      "selection": "full",
+      "specs": []
+    }
+  ],
+  "required_steps": [
+    "typecheck",
+    "lint"
+  ],
+  "pass": false,
+  "timed_out": false,
+  "partial": true,
+  "e2e_only": true,
+  "ui_changed": true,
+  "e2e": {
+    "required": true,
+    "step": "e2e",
+    "outcome": "fail",
+    "selection": "full",
+    "specs": [],
+    "changed_specs": [
+      "e2e/tests/web-console/updates-lifecycle.spec.ts"
+    ]
+  },
+  "started_at": "2026-11-28T08:03:44Z",
+  "finished_at": "2026-11-28T08:04:43Z",
+  "tool": "branch_gate.py 2"
+}
