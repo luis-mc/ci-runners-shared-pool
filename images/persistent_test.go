@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -606,5 +607,71 @@ func TestListReportsALostRegistrationAndAddRunnerRepairsIt(t *testing.T) {
 	// the new registration is newer than the old log: not lost any more
 	if got := list(); got != "r1|0|" {
 		t.Errorf("after the repair: %q", got)
+	}
+}
+
+// TestSupervisorLoadsItsNewCopyOnlyWhileNoRunnerHasAJob (runners R5.154): the
+// controller rewrites pool-supervisor.sh in place; the running supervisor
+// waits for the idle moment, then execs the new copy in the same process.
+func TestSupervisorLoadsItsNewCopyOnlyWhileNoRunnerHasAJob(t *testing.T) {
+	if runtime.GOOS != "linux" {
+		t.Skip("Linux scripts")
+	}
+	root := t.TempDir()
+	state, run, logf := filepath.Join(root, "state"), filepath.Join(root, "run"), filepath.Join(root, "sup.log")
+	if err := os.MkdirAll(filepath.Join(state, "busy"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	sup := script(t, "pool-supervisor.sh")
+	out, err := os.Create(logf)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = out.Close() }()
+	cmd := exec.CommandContext(t.Context(), "sh", sup)
+	cmd.Env = append(os.Environ(), "CRSP_STATE_DIR="+state, "CRSP_DEPS_DIR="+filepath.Join(root, "deps"), "CRSP_SUPERVISOR_RUN="+run, "CRSP_SUPERVISOR_TICK=1")
+	cmd.Stdout, cmd.Stderr = out, out
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = cmd.Process.Kill(); _ = cmd.Wait() }()
+	logText := func() string { b, _ := os.ReadFile(logf); return string(b) }
+	waitFor := func(what string, ok func() bool) {
+		t.Helper()
+		for i := 0; i < 100; i++ {
+			if ok() {
+				return
+			}
+			time.Sleep(100 * time.Millisecond)
+		}
+		t.Fatalf("waited for %s\n%s", what, logText())
+	}
+	waitFor("the checksum file", func() bool { return exists(filepath.Join(run, "supervisor.sum")) })
+	first, _ := os.ReadFile(filepath.Join(run, "supervisor.sum"))
+	// a runner has a job, the controller rewrites the script
+	if err := os.WriteFile(filepath.Join(state, "busy", "r1"), nil, 0o644); err != nil {
+		t.Fatal(err)
+	}
+	b, _ := os.ReadFile(sup)
+	if err := os.WriteFile(sup+".new", append(b, []byte("\n# a newer release\n")...), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Rename(sup+".new", sup); err != nil {
+		t.Fatal(err)
+	}
+	time.Sleep(2500 * time.Millisecond)
+	if strings.Contains(logText(), "loading it") {
+		t.Fatalf("it loaded the new copy while a runner had a job\n%s", logText())
+	}
+	if err := os.Remove(filepath.Join(state, "busy", "r1")); err != nil {
+		t.Fatal(err)
+	}
+	waitFor("the new copy to load", func() bool { return strings.Contains(logText(), "loading it") })
+	waitFor("the new checksum", func() bool {
+		n, _ := os.ReadFile(filepath.Join(run, "supervisor.sum"))
+		return len(n) > 0 && string(n) != string(first)
+	})
+	if err := cmd.Process.Signal(syscall.Signal(0)); err != nil {
+		t.Fatalf("the supervisor process ended on reload (the runners would go with it): %v", err)
 	}
 }
