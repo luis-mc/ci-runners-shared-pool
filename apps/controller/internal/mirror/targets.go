@@ -80,6 +80,53 @@ func (g GitTarget) Plan(_ context.Context, name string) ([]Item, error) {
 func (g GitTarget) Delete(_ context.Context, name string) (int64, error) { return g.Git.Drop(name) }
 func (GitTarget) Warm() []string                                         { return []string{WarmGit} }
 
+// PackagesTarget wipes every package proxy entry (R5.73).
+type PackagesTarget struct{ Store *lancache.Store }
+
+func (p PackagesTarget) Plan(_ context.Context, _ string) ([]Item, error) {
+	es := p.Store.Entries(lancache.NSPackages + "/")
+	var total int64
+	for _, e := range es {
+		total += e.Size
+	}
+	if len(es) == 0 {
+		return nil, nil
+	}
+	return []Item{{Text: fmt.Sprintf("%d package proxy entries", len(es)), Size: total}}, nil
+}
+
+func (p PackagesTarget) Delete(_ context.Context, _ string) (int64, error) {
+	freed, _, err := p.Store.RemovePrefix(lancache.NSPackages + "/")
+	return freed, err
+}
+
+func (PackagesTarget) Warm() []string { return nil }
+
+// GitAllTarget wipes every git mirror (R5.73).
+type GitAllTarget struct{ Git *Git }
+
+func (g GitAllTarget) Plan(_ context.Context, _ string) ([]Item, error) {
+	var out []Item
+	for _, m := range g.Git.OnDisk() {
+		out = append(out, Item{Text: "git mirror of " + m.Repo, Size: m.Size})
+	}
+	return out, nil
+}
+
+func (g GitAllTarget) Delete(_ context.Context, _ string) (int64, error) {
+	var n int64
+	for _, m := range g.Git.OnDisk() {
+		freed, err := g.Git.Drop(m.Repo)
+		if err != nil {
+			return n, err
+		}
+		n += freed
+	}
+	return n, nil
+}
+
+func (GitAllTarget) Warm() []string { return []string{WarmGit} }
+
 // ToolTarget wipes the machine's tool cache (the whole of it).
 type ToolTarget struct{ Store *toolcache.Store }
 
@@ -151,8 +198,12 @@ func TargetsFor(srv *lancache.Server, st *lancache.Store, git *Git, tool *toolca
 			t[k] = ActionsTarget{Server: srv, Store: st, Kind: k}
 		}
 	}
+	if st != nil {
+		t[ScopePackages] = PackagesTarget{Store: st}
+	}
 	if git != nil {
 		t[ScopeGitMirror] = GitTarget{Git: git}
+		t[ScopeGitAll] = GitAllTarget{Git: git}
 	}
 	if tool != nil {
 		t[ScopeToolCache] = ToolTarget{Store: tool}

@@ -97,6 +97,44 @@ describe('live store (R5.6)', () => {
   });
 });
 
+describe('live store job bursts (CRSP290, audit F6)', () => {
+  const job = (id: string) => ({
+    id,
+    repository: 'o/r',
+    name: 'build',
+    labels: [],
+    state: 'queued' as const,
+  });
+
+  it('moves the jobs version once for a burst, and keeps the overview current at once', () => {
+    const store = started();
+    const es = FakeEventSource.latest();
+    es.emit({ id: '1', type: 'snapshot', at: 'x', snapshot: overview() });
+    for (let i = 0; i < 60; i++)
+      es.emit({ id: `q${i}`, type: 'job.queued', at: 'x', job: job(`j${i}`) as never });
+    expect(store.getState().overview?.queued_count).toBe(60);
+    expect(store.getState().versions.jobs ?? 0).toBe(0);
+    vi.advanceTimersByTime(399);
+    expect(store.getState().versions.jobs ?? 0).toBe(0);
+    vi.advanceTimersByTime(1);
+    expect(store.getState().versions.jobs).toBe(1);
+    es.emit({ id: 'f', type: 'job.finished', at: 'x', job: job('j1') as never });
+    vi.advanceTimersByTime(400);
+    expect(store.getState().versions.jobs).toBe(2);
+  });
+
+  it('does not wait for kinds that do not come in bursts', () => {
+    const store = started();
+    FakeEventSource.latest().emit({
+      id: '1',
+      type: 'machine.state',
+      at: 'x',
+      machine: machine(),
+    });
+    expect(store.getState().versions.machines).toBe(1);
+  });
+});
+
 describe('live store reconnect (R5.7)', () => {
   it('keeps the last data, says paused, and reconnects with backoff', () => {
     const store = started();
@@ -208,5 +246,44 @@ describe('live store reconnect (R5.7)', () => {
     expect(screen.getByTestId('strip').textContent).toBe('build-1,build-2');
     expect(FakeEventSource.instances).toHaveLength(1);
     cleanup();
+  });
+});
+
+describe('job events keep open lists current (observability R5.78)', () => {
+  const job = (id: number, state: 'queued' | 'running' | 'done') => ({
+    id,
+    repository: 'octo/app',
+    run_id: 100 + id,
+    run_attempt: 1,
+    github_job_id: id,
+    job_name: 'test',
+    labels: [],
+    state,
+  });
+
+  it('job.queued, job.started and job.finished move the jobs version, a burst once', () => {
+    const store = started();
+    const es = FakeEventSource.latest();
+    es.emit({ id: '1', type: 'snapshot', at: 'x', snapshot: overview() });
+    const before = store.getState().versions.jobs ?? 0;
+    for (let i = 0; i < 40; i++)
+      es.emit({ id: String(10 + i), type: 'job.queued', at: 'x', job: job(i, 'queued') });
+    es.emit({ id: '60', type: 'job.started', at: 'x', job: job(1, 'running') });
+    es.emit({ id: '61', type: 'job.finished', at: 'x', job: job(1, 'done') });
+    act(() => {
+      vi.advanceTimersByTime(5000);
+    });
+    expect(store.getState().versions.jobs).toBe(before + 1);
+  });
+
+  it('a finished job leaves the queued strip even when started was missed', () => {
+    const store = started();
+    const es = FakeEventSource.latest();
+    es.emit({ id: '1', type: 'snapshot', at: 'x', snapshot: overview() });
+    es.emit({ id: '2', type: 'job.queued', at: 'x', job: job(9, 'queued') });
+    expect(store.getState().overview?.queued_count).toBe(1);
+    es.emit({ id: '3', type: 'job.finished', at: 'x', job: job(9, 'done') });
+    expect(store.getState().overview?.queued_count).toBe(0);
+    expect(store.getState().overview?.queued ?? []).toHaveLength(0);
   });
 });

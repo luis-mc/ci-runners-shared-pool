@@ -36,7 +36,7 @@ func (b *Backend) psPIDs(ctx context.Context, script, folder string) ([]int, err
 		return nil, fmt.Errorf("list processes: %w", err)
 	}
 	if res.ExitCode != 0 {
-		return nil, fmt.Errorf("list processes: powershell exited %d", res.ExitCode)
+		return nil, fmt.Errorf("list processes: powershell exited %d: %s", res.ExitCode, b.redact(plainError(res.Stderr, res.Stdout)))
 	}
 	return persistent.ParsePIDs(res.Stdout), nil
 }

@@ -74,6 +74,8 @@ func cmdRunner() *command {
 			{name: "clear-cache", summary: "remove a persistent runner's downloaded dependencies now", args: "NAME [--yes]",
 				flags: func(_ *call, fs *flag.FlagSet) { yesFlag(fs) },
 				run:   func(c *call, args []string) error { return c.runnerClearCache(args) }},
+			{name: "reregister", summary: "register a runner again when GitHub deleted its registration", args: "NAME",
+				run: func(c *call, args []string) error { return c.runnerReregister(args) }},
 			{name: "env", summary: "show the merged environment of a runner (sensitive values masked)", args: "NAME",
 				run: func(c *call, args []string) error { return c.runnerEnv(args) }},
 			{name: "remove", summary: "remove a runner after its job ends", args: "NAME [--yes]",
@@ -179,6 +181,34 @@ func (c *call) runnerUpdate(args []string) error {
 	} else {
 		_, _ = fmt.Fprintf(c.env.Stderr, "%s removes downloaded dependencies after each job, with the temporary files.\n", run.Name)
 	}
+	return nil
+}
+
+// runnerReregister registers a runner again in place when GitHub deleted its
+// registration (runners R5.153). The controller refuses a runner GitHub lists.
+func (c *call) runnerReregister(args []string) error {
+	if len(args) != 1 {
+		return fail(ExitUsage, "Usage: crsp runner reregister NAME")
+	}
+	s, err := c.open()
+	if err != nil {
+		return err
+	}
+	run, err := c.findRunner(s, args[0])
+	if err != nil {
+		return err
+	}
+	r, err := s.client.ReregisterRunnerWithResponse(c.env.Context, run.Id)
+	if err != nil {
+		return s.transport(err)
+	}
+	if err := apiError(r.StatusCode(), r.Body); err != nil {
+		return err
+	}
+	if c.g.json && r.JSON200 != nil {
+		return output.JSON(c.env.Stdout, r.JSON200)
+	}
+	_, _ = fmt.Fprintf(c.env.Stderr, "Runner %s is registered again.\n", run.Name)
 	return nil
 }
 

@@ -29,6 +29,10 @@ type AppState struct {
 	Gone bool
 	// Reason says why, when Gone.
 	Reason string
+	// DeviceFlowOff is true when GitHub answered that "Enable Device Flow" is off
+	// for the App, so `crsp login` cannot work (github-integration R5.14). It is
+	// not a reason to stop GitHub work.
+	DeviceFlowOff bool
 	// CheckedAt is the time of the last answer that settled the question; zero
 	// before the first.
 	CheckedAt time.Time
@@ -45,6 +49,9 @@ type AppHealth struct {
 	// AppID is the App in use now; 0 means none is set up. A verdict about an
 	// older App is dropped when a new one is made by the wizard.
 	AppID func() int64
+	// DeviceFlow asks GitHub to start a device sign-in and returns its error;
+	// nil skips the check. ErrDeviceFlowOff means the setting is off.
+	DeviceFlow func(ctx context.Context) error
 	// Now is a seam for tests.
 	Now func() time.Time
 
@@ -64,6 +71,7 @@ func (h *AppHealth) Check(ctx context.Context) (AppState, error) {
 	st := AppState{AppID: id, CheckedAt: h.now()}
 	switch {
 	case err == nil:
+		st.DeviceFlowOff = h.deviceFlowOff(ctx)
 	case errors.Is(err, ErrNotFound):
 		st.Gone, st.Reason = true, ReasonAppDeleted
 	case errors.Is(err, ErrForbidden):
@@ -77,6 +85,22 @@ func (h *AppHealth) Check(ctx context.Context) (AppState, error) {
 	h.st = st
 	h.mu.Unlock()
 	return st, nil
+}
+
+// deviceFlowOff asks about the one setting. An answer that is not clear (GitHub
+// down) keeps the last verdict, so a bad hour never shows or hides the warning.
+func (h *AppHealth) deviceFlowOff(ctx context.Context) bool {
+	if h.DeviceFlow == nil {
+		return false
+	}
+	switch err := h.DeviceFlow(Background(ctx)); {
+	case err == nil:
+		return false
+	case errors.Is(err, ErrDeviceFlowOff):
+		return true
+	default:
+		return h.State().DeviceFlowOff
+	}
 }
 
 func (h *AppHealth) now() time.Time {

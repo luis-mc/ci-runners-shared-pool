@@ -27,6 +27,17 @@ export const GRAPHS_STORAGE = 'crsp.theme-graphs';
 
 export const DEFAULT_THEME_ID = 'phosphor';
 
+/** The id of a Terminal choice: `terminal-green`, `terminal-amber` or `terminal-ice` (CRSP358). */
+export const TERMINAL_CHOICE_PREFIX = 'terminal-';
+/** The one Theme list of Settings, Appearance: the six colour themes, then the three Terminal palettes (CRSP358). */
+export const THEME_CHOICES: readonly ThemeInfo[] = [
+  ...THEMES,
+  ...TERMINAL_PALETTE_CHOICES.map((p) => ({
+    id: TERMINAL_CHOICE_PREFIX + p.id,
+    name: `Terminal ${p.name}`,
+  })),
+];
+
 /** Where the choice is kept in this browser, so the page paints in it before anything loads (public/theme-init.js). */
 export const THEME_NAME_STORAGE = 'crsp.theme-name';
 export const THEME_MODE_STORAGE = 'crsp.theme-mode';
@@ -34,7 +45,7 @@ export const THEME_MODE_STORAGE = 'crsp.theme-mode';
 /** The mode of a new install, until the user chooses system or light. */
 export const DEFAULT_THEME_MODE = 'dark';
 
-/** The terminal theme (CRSP300): not one of the six colour themes; Settings offers it as the Look "Terminal". */
+/** The terminal theme (CRSP300): not one of the six colour themes; Settings offers it as Terminal Green, Amber and Ice. */
 export const TERMINAL_THEME_ID = 'terminal';
 /** Where the last colour theme is kept, so leaving Terminal brings it back. */
 export const LAST_COLOUR_THEME_STORAGE = 'crsp.theme-last';
@@ -94,7 +105,7 @@ export function applyPalette(id: string): void {
   remember(PALETTE_STORAGE, id);
 }
 
-/** The colour theme to return to when the Look leaves Terminal: the last one used, or the default. */
+/** The colour theme to return to when the choice leaves Terminal: the last one used, or the default. */
 export function lastColourTheme(): string {
   try {
     const v = window.localStorage.getItem(LAST_COLOUR_THEME_STORAGE);
@@ -120,4 +131,41 @@ export function applyGraphs(style: 'blocks' | 'dotted'): void {
   if (style === 'dotted') document.documentElement.setAttribute('data-graphs', 'dotted');
   else document.documentElement.removeAttribute('data-graphs');
   remember(GRAPHS_STORAGE, style);
+}
+
+/** True for `terminal-green`, `terminal-amber` and `terminal-ice`. */
+export function isTerminalChoice(id: string): boolean {
+  return (
+    id.startsWith(TERMINAL_CHOICE_PREFIX) &&
+    TERMINAL_PALETTE_CHOICES.some((p) => TERMINAL_CHOICE_PREFIX + p.id === id)
+  );
+}
+
+/** The palette of a Terminal choice (`terminal-amber` gives `amber`); green for anything else. */
+export function terminalChoicePalette(id: string): string {
+  return isTerminalChoice(id) ? id.slice(TERMINAL_CHOICE_PREFIX.length) : 'green';
+}
+
+/**
+ * The one Theme choice of a saved name and palette. This is the migration of the old Look and Palette settings:
+ * name `terminal` with palette X is the choice `terminal-X`; any colour theme keeps its own id. The storage keys
+ * stay as they were, so nothing needs rewriting and the first paint (public/theme-init.js) is unchanged.
+ */
+export function themeChoiceOf(name: string, palette: string): string {
+  if (name !== TERMINAL_THEME_ID) return isThemeId(name) ? name : DEFAULT_THEME_ID;
+  const pal = TERMINAL_PALETTE_CHOICES.some((p) => p.id === palette) ? palette : 'green';
+  return TERMINAL_CHOICE_PREFIX + pal;
+}
+
+/** The saved Theme choice of this browser. */
+export function savedThemeChoice(): string {
+  return themeChoiceOf(savedThemeName(), savedPalette());
+}
+
+/** Applies one Theme choice: a colour theme, or Terminal with its palette; remembers it for the next first paint. */
+export function applyThemeChoice(id: string): void {
+  if (isTerminalChoice(id)) {
+    applyPalette(terminalChoicePalette(id));
+    applyThemeName(TERMINAL_THEME_ID);
+  } else applyThemeName(id);
 }

@@ -69,6 +69,16 @@ const KIND: Record<string, string> = {
   'cache.state': 'caches',
 };
 
+/**
+ * Kinds whose events come in bursts (a push queues dozens of jobs). Their version moves once per window, so the
+ * lists behind them reload once for the burst, not once per event (CRSP290, audit F6). The overview still follows
+ * each event at once.
+ */
+const COALESCED: ReadonlySet<string> = new Set(['jobs']);
+
+/** How long a burst of job events is held before the lists reload. */
+export const COALESCE_MS = 400;
+
 export class LiveStore {
   private state: LiveState = {
     status: 'connecting',
@@ -83,6 +93,8 @@ export class LiveStore {
   private timer: ReturnType<typeof setTimeout> | undefined;
   private attempt = 0;
   private stopped = true;
+  private held = new Set<string>();
+  private flushTimer: ReturnType<typeof setTimeout> | undefined;
 
   constructor(
     private readonly factory: EventSourceFactory,
@@ -91,6 +103,7 @@ export class LiveStore {
       1000, 2000, 4000, 8000, 16000, 30000,
     ],
     private readonly now: () => number = Date.now,
+    private readonly coalesceMs: number = COALESCE_MS,
   ) {}
 
   getState = (): LiveState => this.state;
@@ -115,6 +128,9 @@ export class LiveStore {
     this.stopped = true;
     if (this.timer) clearTimeout(this.timer);
     this.timer = undefined;
+    if (this.flushTimer) clearTimeout(this.flushTimer);
+    this.flushTimer = undefined;
+    this.held.clear();
     this.source?.close();
     this.source = undefined;
   }
@@ -169,13 +185,27 @@ export class LiveStore {
     this.set({ progress });
   }
 
+  /** Hold a version bump of a bursty kind until the window ends; the first event of a burst starts the window. */
+  private hold(kind: string): void {
+    this.held.add(kind);
+    if (this.flushTimer) return;
+    this.flushTimer = setTimeout(() => {
+      this.flushTimer = undefined;
+      const versions = { ...this.state.versions };
+      for (const k of this.held) versions[k] = (versions[k] ?? 0) + 1;
+      this.held.clear();
+      this.set({ versions });
+    }, this.coalesceMs);
+  }
+
   /** Apply one event to the store. */
   apply(ev: LiveEvent): void {
     const kind = KIND[ev.type] ?? ev.type;
-    const versions = {
-      ...this.state.versions,
-      [kind]: (this.state.versions[kind] ?? 0) + 1,
-    };
+    const hold = this.coalesceMs > 0 && COALESCED.has(kind);
+    const versions = hold
+      ? this.state.versions
+      : { ...this.state.versions, [kind]: (this.state.versions[kind] ?? 0) + 1 };
+    if (hold) this.hold(kind);
     let overview = this.state.overview;
     const progress = { ...this.state.progress };
     if (ev.type === 'snapshot' && ev.snapshot) {

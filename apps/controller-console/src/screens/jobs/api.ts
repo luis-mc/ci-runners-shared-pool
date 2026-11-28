@@ -4,7 +4,7 @@ import type { paths } from '@crsp/contract';
 import { useEffect, useMemo, useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad, type Loaded } from '../../api/hooks';
-import { useLiveState, useSettledVersion } from '../../live/LiveProvider';
+import { useLiveSelect, useVersion } from '../../live/LiveProvider';
 import { allRepositories } from '../repositories/plans';
 
 export type JobsQuery = NonNullable<paths['/api/v1/jobs']['get']['parameters']['query']>;
@@ -22,7 +22,7 @@ export const POLL_MS = 5000;
  */
 export function useTick(ms = POLL_MS): number {
   const [n, setN] = useState(0);
-  const status = useLiveState().status;
+  const status = useLiveSelect((s) => s.status);
   useEffect(() => {
     if (status === 'live') return;
     const t = setInterval(() => setN((x) => x + 1), ms);
@@ -40,14 +40,15 @@ export function useJobList(
   off = false,
 ): Hook<Schemas['JobPage']> {
   const client = useClient();
-  const v = useSettledVersion('jobs');
+  const v = useVersion('jobs');
   const tick = useTick();
   return useLoad(
     () =>
       off
         ? new Promise<Schemas['JobPage']>(() => undefined)
         : unwrap(client.GET('/api/v1/jobs', { params: { query } })),
-    [JSON.stringify(query), v, poll ? tick : 0, off],
+    [JSON.stringify(query), off],
+    [v, poll ? tick : 0],
   );
 }
 
@@ -58,14 +59,15 @@ export function useRunList(
   off = false,
 ): Hook<Schemas['RunPage']> {
   const client = useClient();
-  const v = useSettledVersion('jobs');
+  const v = useVersion('jobs');
   const tick = useTick();
   return useLoad(
     () =>
       off
         ? new Promise<Schemas['RunPage']>(() => undefined)
         : unwrap(client.GET('/api/v1/runs', { params: { query } })),
-    [JSON.stringify(query), v, poll ? tick : 0, off],
+    [JSON.stringify(query), off],
+    [v, poll ? tick : 0],
   );
 }
 
@@ -76,7 +78,7 @@ export function useRun(
   poll = true,
 ): Hook<Schemas['RunItem']> {
   const client = useClient();
-  const v = useSettledVersion('jobs');
+  const v = useVersion('jobs');
   const tick = useTick();
   return useLoad(
     () =>
@@ -85,37 +87,41 @@ export function useRun(
           params: { path: { runId }, query: attempt ? { attempt } : {} },
         }),
       ),
-    [runId, attempt, v, poll ? tick : 0],
+    [runId, attempt],
+    [v, poll ? tick : 0],
   );
 }
 
 /** One job with its steps, history and attempts. */
 export function useJobDetail(jobId: number): Hook<Schemas['JobDetail']> {
   const client = useClient();
-  const v = useSettledVersion('jobs');
+  const v = useVersion('jobs');
   const tick = useTick();
   return useLoad(
     () => unwrap(client.GET('/api/v1/jobs/{jobId}', { params: { path: { jobId } } })),
-    [jobId, v, tick],
+    [jobId],
+    [v, tick],
   );
 }
 
 export function useGroups(by: GroupBy): Hook<Schemas['JobGroupList']> {
   const client = useClient();
-  const v = useSettledVersion('jobs');
+  const v = useVersion('jobs');
   const tick = useTick();
   return useLoad(
     () => unwrap(client.GET('/api/v1/jobs/groups', { params: { query: { by } } })),
-    [by, v, tick],
+    [by],
+    [v, tick],
   );
 }
 
 export function useStats(days: 7 | 14 | 30): Hook<Schemas['JobStats']> {
   const client = useClient();
-  const v = useSettledVersion('jobs');
+  const v = useVersion('jobs');
   return useLoad(
     () => unwrap(client.GET('/api/v1/jobs/stats', { params: { query: { days } } })),
-    [days, v],
+    [days],
+    [v],
   );
 }
 

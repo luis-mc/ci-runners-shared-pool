@@ -4,11 +4,12 @@
 // A part never holds a word of its own (LC-22): every word comes from the lifecycle words table. A part never
 // writes a class or a style (LC-23). The page passes data only.
 import { useState, type ReactNode } from 'react';
-import { lw, type LifecycleWord } from '../lifecycleWords';
-import { Button } from './Button';
+import { lw } from '../lifecycleWords';
+import { Button, LinkButton, TextLink } from './Button';
 import { Dialog } from './Dialog';
 import { ChoiceField, TextField } from './Fields';
-import { Stack, Text } from './layout';
+import { Facts } from './Card';
+import { Stack, Strong, Text } from './layout';
 import { Message } from './Message';
 import { Pane } from './Pane';
 import { Progress } from './Progress';
@@ -23,10 +24,10 @@ export type UpdateStep = 'downloading' | 'verifying' | 'installing' | 'testing';
 export interface UpdateBannerProps {
   state: BannerState;
   version: string;
-  /** For `running`: the step in words. */
+  /** For `running`: the step in words (the card draws it; the banner is one short line, CRSP364). */
   step?: UpdateStep | undefined;
-  /** 0 to 100, for `running`. A step without a percent shows an unknown-length bar. */
-  percent?: number | undefined;
+  /** For `running`: where the one top line links to (Settings, Updates). Left out, the line has no link. */
+  to?: string | undefined;
   /** For `failed`: the one-line reason, already a sentence from the words table. */
   reason?: string | undefined;
   onUpdate?: (() => void) | undefined;
@@ -40,7 +41,7 @@ export interface UpdateBannerProps {
 export function UpdateBanner(p: UpdateBannerProps) {
   const tone = p.state === 'failed' ? 'problem' : p.state === 'done' ? 'done' : 'note';
   let body: ReactNode;
-  let action: ReactNode = null;
+  let action: ReactNode;
   if (p.state === 'ready') {
     body = lw('available.title', { version: p.version });
     action = (
@@ -52,13 +53,9 @@ export function UpdateBanner(p: UpdateBannerProps) {
       </>
     );
   } else if (p.state === 'running') {
-    const step = lw(`step.${p.step ?? 'downloading'}` as LifecycleWord);
-    body = (
-      <Stack gap="tight">
-        <Text>{`${lw('banner.running')}: ${step}${p.percent === undefined ? '' : ` ${p.percent}%`}`}</Text>
-        <Progress label={step} value={p.percent} max={100} />
-      </Stack>
-    );
+    // One short line, no bar: the progress lives only in the Updates pane (CRSP364).
+    body = lw('banner.running_line');
+    action = p.to ? <LinkButton to={p.to}>{lw('banner.open')}</LinkButton> : null;
   } else if (p.state === 'done') {
     body = lw('updated.title', { version: p.version });
     action = p.onWhatsNew ? (
@@ -84,6 +81,39 @@ export function UpdateBanner(p: UpdateBannerProps) {
         id={`update-${p.state}-${p.version}`}
       >
         {body}
+      </Message>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------- ReleaseNotes
+
+export interface ReleaseNotesProps {
+  /** The version the note is for. */
+  version: string;
+  /** The owner-facing note, already plain words. A release without a note passes nothing, and nothing is drawn. */
+  notes?: string | null | undefined;
+  /** The note of the version that now runs: a note the person can dismiss once. Otherwise it stays with the offer. */
+  after?: boolean | undefined;
+}
+
+/** The note of a release: shown with the offer before an update, and once after it. Empty note, no box. */
+export function ReleaseNotes(p: ReleaseNotesProps) {
+  const note = p.notes?.trim() ?? '';
+  if (note === '') return null;
+  return (
+    <div data-lifecycle="release-notes" data-when={p.after ? 'after' : 'before'}>
+      <Message
+        tone="note"
+        dismissible={p.after === true}
+        id={`release-notes-${p.version}`}
+      >
+        <Stack gap="tight">
+          <Strong>{lw('updated.notes', { version: p.version })}</Strong>
+          {note.split(/\n+/).map((line, i) => (
+            <Text key={i}>{line}</Text>
+          ))}
+        </Stack>
       </Message>
     </div>
   );
@@ -128,13 +158,30 @@ export interface UpdatesCardProps {
   nextCheck?: string | undefined;
   /** The Check request is open. */
   checking?: boolean | undefined;
+  /** The last check, already formatted (CRSP368): when, who asked and whether a person or crsp did. */
+  lastCheck?: { time: string; by: string; kind: 'manual' | 'automatic' } | undefined;
+  /** Where the full update history lives (the Audit log). */
+  historyTo?: string | undefined;
+  /** 0 to 100, while a step runs. A step without a percent shows an unknown-length bar. */
+  percent?: number | undefined;
+  /** The service is down for the install: one line in the pane, never a Note (CRSP364). */
+  restarting?: boolean | undefined;
   /** An admin locked the policy: who set it. The controls are then read only. */
   lockedBy?: string | undefined;
   onPolicy?: ((policy: UpdatePolicy) => void) | undefined;
   onWindow?: ((window: { start: string; end: string } | null) => void) | undefined;
   onCheck?: (() => void) | undefined;
   onInstall?: (() => void) | undefined;
+  /** The owner-facing note of the offered version, from the signed manifest. Nothing is drawn without one. */
+  notes?: string | null | undefined;
 }
+
+const RUNNING_STEPS: readonly UpdateState[] = [
+  'downloading',
+  'verifying',
+  'installing',
+  'testing',
+];
 
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -223,17 +270,53 @@ export function UpdatesCard(p: UpdatesCardProps) {
         }
       >
         <Stack>
-          <Status kind={STATE_KIND[p.state] ?? 'off'} word={lw(`state.${p.state}`)} />
-          {updateStateLine(p) === lw(`state.${p.state}`) ? null : (
-            <Text>{updateStateLine(p)}</Text>
+          {p.restarting ? (
+            <Status kind="waiting" word={lw('state.restarting')} />
+          ) : (
+            <>
+              <Status kind={STATE_KIND[p.state] ?? 'off'} word={lw(`state.${p.state}`)} />
+              {updateStateLine(p) === lw(`state.${p.state}`) ? null : (
+                <Text>{updateStateLine(p)}</Text>
+              )}
+              {RUNNING_STEPS.includes(p.state) ? (
+                <Progress
+                  label={lw(`step.${p.state as UpdateStep}`)}
+                  value={p.percent}
+                  max={100}
+                />
+              ) : null}
+            </>
           )}
           {p.required ? <Text>{lw('required')}</Text> : null}
+          {p.available === undefined ? null : (
+            <ReleaseNotes version={p.available} notes={p.notes} />
+          )}
           {p.state === 'available' && p.onInstall ? (
             <Button kind="primary" onPress={p.onInstall}>
               {lw('available.primary', { version: p.available ?? p.current })}
             </Button>
           ) : null}
-          <Text>{`${lw('updates.current')}: ${p.current}${p.nextCheck ? `. ${lw('updates.next_check')}: ${p.nextCheck}` : ''}`}</Text>
+          <Text>
+            {p.lastCheck
+              ? lw(`updates.last_check.${p.lastCheck.kind}`, {
+                  time: p.lastCheck.time,
+                  who: p.lastCheck.by,
+                })
+              : lw('not_looked')}
+          </Text>
+          {p.historyTo ? (
+            <Text>
+              <TextLink to={p.historyTo}>{lw('updates.audit_link')}</TextLink>
+            </Text>
+          ) : null}
+          <Facts
+            items={[
+              { name: lw('updates.current'), value: p.current },
+              ...(p.nextCheck
+                ? [{ name: lw('updates.next_check'), value: p.nextCheck }]
+                : []),
+            ]}
+          />
           <ChoiceField
             label={lw('policy.title')}
             value={p.policy}

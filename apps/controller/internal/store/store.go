@@ -15,6 +15,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"time"
 
 	"github.com/pressly/goose/v3"
@@ -43,6 +44,11 @@ type Store struct {
 	// rdb is the read pool: query_only connections, so list pages never queue behind the writers (audit P-4).
 	rdb *sql.DB
 	q   *sqlcgen.Queries
+
+	// jobsGen counts the writes of jobs and runs; agg keeps the slow aggregate answers for it (aggcache.go).
+	jobsGen atomic.Int64
+	agg     aggCache
+	samples sampleCache
 }
 
 // Open opens (creating if needed) the database in dataDir and applies pending
@@ -66,6 +72,10 @@ func OpenForTests(ctx context.Context, dataDir string) (*Store, error) {
 }
 
 func openPath(ctx context.Context, path string, extraPragmas ...string) (*Store, error) {
+	return openPathWith(ctx, path, func(dsn string) (*sql.DB, error) { return sql.Open("sqlite", dsn) }, extraPragmas...)
+}
+
+func openPathWith(ctx context.Context, path string, open func(dsn string) (*sql.DB, error), extraPragmas ...string) (*Store, error) {
 	dsnFor := func(readOnly bool, pragmas ...string) string {
 		q := url.Values{}
 		for _, p := range pragmas {
@@ -83,7 +93,7 @@ func openPath(ctx context.Context, path string, extraPragmas ...string) (*Store,
 	}
 	dsn := dsnFor(false, extraPragmas...)
 
-	db, err := sql.Open("sqlite", dsn)
+	db, err := open(dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
@@ -91,7 +101,7 @@ func openPath(ctx context.Context, path string, extraPragmas ...string) (*Store,
 	db.SetMaxOpenConns(4)
 
 	// WAL lets readers run beside the writer: the list queries use their own, larger, query_only pool.
-	rdb, err := sql.Open("sqlite", dsnFor(true))
+	rdb, err := open(dsnFor(true))
 	if err != nil {
 		_ = db.Close()
 		return nil, fmt.Errorf("open read pool: %w", err)

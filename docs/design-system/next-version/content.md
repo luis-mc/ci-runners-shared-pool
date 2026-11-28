@@ -201,6 +201,16 @@ The words of the images and caches screen (web-console 4.7).
 | No cap | {size}, no cap |
 | Over the cap | {size} of {cap} ({percent}), over the cap |
 | Wipe failed | Could not wipe {cache}. {why} |
+| Shared cache section | Shared cache; One shared cache on the controller, used by every runner of the pool. |
+| Hub summary line | {n} caches — {n} on, {n} off |
+| Hub tiles | Hit rate, Served, Used ({size} of {budget}), Warm machines |
+| Budget section | One budget; All caches share this space. When it is full, the least recently used entries go first. Cache budget: {used} of {budget} used |
+| Budget field | Budget; 1 to 4096 GiB. A smaller budget frees space at once. (a viewer reads Budget {n} GiB.) |
+| Hub cards | Actions cache, Repository mirrors, Registry mirror, Package proxy; the switch Package proxy (npm, PyPI) |
+| Hub card facts | Entries, Size, Last hit, Repositories, Refreshed, Covers: npm, PyPI, Apt and crates: not yet |
+| Receiver waiting | the receiver does not listen on the LAN yet (amber) |
+| Warmth table | Warmth by repository: Repository, Hits, Misses, Warmth, Size; empty: No repository has used the cache yet. |
+| Per-machine list title | Caches per machine |
 | Rebuild failed | Could not rebuild. {why} The old image keeps serving. |
 | Image state, before the first build | not built yet |
 | Images list title and line | Images; Each machine has one Linux image. Its repositories' jobs run from it. |
@@ -431,15 +441,13 @@ The words of Settings, Appearance (UX-60).
 
 | Place | Word |
 |---|---|
-| Look label | Look |
-| Look help | Colour themes keep the console's own look. Cool Terminal is the dark, flat look of a system monitor; its dotted form draws graphs with dots. The choice is saved at once. |
-| Look choices | Colour themes, Cool Terminal, Cool Terminal (dotted graphs) |
-| Palette label | Palette |
-| Palette help | The colours of the Cool Terminal themes. The choice is saved at once. |
-| Palette choices | Green, Amber, Ice |
 | Choice label | Theme |
 | Choice help | The colours of the console. The choice is saved at once. |
-| Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord |
+| Theme choices | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
+| Graphs label | Graphs |
+| Graphs help | How the Terminal themes draw charts; bars keep their blocks. The choice is saved at once. |
+| Graphs choices | Blocks, Dots |
+| Theme names | Phosphor, Tokyo Night, Catppuccin, Gruvbox, Solarized, Nord, Terminal Green, Terminal Amber, Terminal Ice |
 | Mode label | Mode |
 | Mode help | System follows your device. The choice is saved at once. |
 | Mode choices | System, Dark, Light |
@@ -541,6 +549,32 @@ The words of the action that deletes the registration of an offline runner whose
 | Delete {runner}? | The title of the question card. |
 | The registration of offline runner {runner} on GitHub. | First line of the card: what goes. |
 | Its record here, and its folder if its machine answers. | Second line of the card. |
+
+## Registration lost words
+
+The words of a runner whose registration GitHub deleted (runners R5.152, R5.153). crsp registers such a runner again once by itself; when that fails it shows the reason and the button.
+
+| Word | Where and meaning |
+|---|---|
+| registration lost, registered again | The reason on the State of an idle runner that crsp registered again by itself. A note, not a problem. |
+| GitHub deleted the registration of this runner | The reason on the State not registered of a runner whose listener says its registration is gone and that GitHub does not list. |
+| registration lost, could not register again: {reason} | The reason on the State failed when crsp could not register the runner again, or GitHub deleted the registration again at once. {reason} is the plain reason of the step that failed. |
+| its set-up did not finish; remove it and add it again | The reason on the State failed of a runner that stayed in creating with no set-up running. |
+| could not be set up again: {reason} | The reason on the State failed when a new release tried once more to set up a runner whose set-up failed or did not finish, and that failed too (runners R5.155). |
+| (crsp {version}) | Ends a failed reason that crsp wrote when it tried by itself: the release that tried. That release does not try again by itself; a newer one tries once. |
+| registering this runner again failed | The reason the pool container keeps for a runner whose register again failed after its old files were removed; it shows as not registered until it is registered again. |
+| Register again | The button in the Managed column of a managed runner that is not registered, failed with a lost registration or a set-up that did not finish, or whose pool registration failed, and on its page. Admin only (busy word: Registering). |
+| Could not register again. {why} | Problem message under the list or the page when the press is refused or fails. |
+
+## Device Flow words
+
+The words of the one GitHub App setting that `crsp login` needs (github-integration R5.116).
+
+| Word | Where and meaning |
+|---|---|
+| Device Flow is off for the GitHub App, so crsp login cannot sign anyone in. Turn on "Enable Device Flow" in the App settings on GitHub. | Needs-you message on the Overview while GitHub says the setting is off. |
+| Open the App settings | The button of that message. It opens the App's settings page on GitHub in a new tab. Absent while the App's slug is unknown. |
+| Device Flow is off for this controller's GitHub App. Turn on "Enable Device Flow" at {url}, then run crsp login again. | The CLI error of `crsp login` (exit 1). Without a link, {url} is replaced by: in the App's settings on GitHub (Settings, Developer settings, GitHub Apps). |
 
 ## GitHub App key words
 
@@ -924,7 +958,7 @@ The words of the small update page the tray opens (tray R5.43, web-console R5.96
 
 | Words | Used for |
 |---|---|
-| Updates | The Settings tab after Console (LOOK43). It holds the Updates pane; Console no longer does. |
+| Updates | The Settings tab after Networking (LOOK43). It holds the Updates pane. |
 | Update | Title of the page and name of the wizard. |
 | Version {version} is ready. Running jobs finish first; the service restarts (about 1 min). | The Review line. It is also the text of the native fallback box. |
 | Update to {version} | The primary on Review. Busy word: Updating. |
@@ -1608,6 +1642,7 @@ The words of install, update and remove (UX-79 to UX-83, components 70 to 74). T
 | Downloading, Checking the download, Installing, Testing | The step names, in this order. |
 | Waiting for {n} running jobs to finish. The update starts when they end. | Title while the machine waits for its jobs, up to 60 minutes. |
 | Updated to version {version}. What's new | Title and link on Done. |
+| What is new in version {version} | Heading of the release note (CRSP354): above the note in the Updates card while a version is on offer, in the note shown once after an update (console banner slot) and in the update window on Review and Done. A release without a note shows no heading and no box. |
 | The update to {version} failed its test. Version {previous} is running again. We try again at {time}. | Title after a rollback. |
 | The download for {version} did not pass its signature check. Nothing changed. | Title when the signed manifest or the checksum fails. |
 | Crsp is up to date. Version {version}. | Title when nothing newer is out. |
@@ -1991,3 +2026,124 @@ What a screen reader is told when live numbers change. Not drawn on the page. On
 | Where | Word |
 |---|---|
 | Pool, the four counts | {n} running, {n} starting, {n} queued, {n} with no runner that fits |
+
+## Live run words of the update, restart and add-runners wizards (CRSP336, UX-88 to UX-90)
+
+The rows the console writes into the Terminal and the phases of the weighted bar for the three wizards that have no event stream. Component words stay in Live progress words.
+
+| Where | Words |
+|---|---|
+| Restart (machine), phases | Waiting for running jobs to end; Restarting the service; Connecting again |
+| Restart (machine), command | Restart the service of {machine} |
+| Restart (machine), lines | Accepted. No new jobs are taken.; Waiting for {n} running jobs to end; Restarting the service; The service is connected again.; Waiting for the service to connect again; The service could not restart. |
+| Restart (machine), reasons | {n} running {job or jobs} left; the time it takes is theirs.; The running jobs are ending.; The service reports no percent.; The service has not connected yet.; Asking the console to restart the service. |
+| Update, phases | Waiting for running jobs to end; Downloading the release; Installing; Restarting the service |
+| Restart (service), phases | Waiting for running jobs to end; Restarting the service; Connecting again |
+| Update and restart (service), command | Update to {version}; Restart the service |
+| Update and restart (service), lines | Starting; Waiting for running jobs to end; Downloading and checking the release; Installing; Restarting the service; The service is restarting. Waiting for it to answer.; Version {version} answers.; The service answers again. |
+| Update and restart (service), reasons | Asking the service to begin.; The service reports no percent here.; The service reports no percent while it restarts. |
+| Update and restart (service), State while it works and the service says idle | Starting the update; Restarting the service |
+| Console side of a row | This console, controller; The service, controller |
+| Add runners, phases | one per plan step, in the step's own words |
+| Add runners, lines | Done; Skipped, nothing to do; Waiting for {step}; Failed: {reason}; The step does not report a percent.; Waiting for the step before it |
+
+### Pool setup words (CRSP340)
+
+| Where | Words |
+|---|---|
+| Groups | Needs you; Using the pool; Not using the pool |
+| Group lines | Nothing here. |
+| Page note | {n} public repositories are not listed: the pool serves private repositories only.; Open the setting; left the installation; {n} selected; Add a repository |
+| Group actions | Repair; Repair {n}; Turn off; Turn off {n}; Turn on; Turn on {n} |
+| Locked reasons | Tick at least one repository.; You need admin rights on this repository in GitHub.; Public repositories are off. Turn them on in Settings first. |
+| Health tiles | Machines; Runners; GitHub App; Repositories; {n} online; {n} ready; Installed; {n} of {m} use the pool; {n} needs you; all well; webhooks delivering |
+| Change wizard | Turn on the pool; Turn off the pool; Repair the pool; These will start using the pool; These will stop using the pool; These will be repaired; Their runners are removed and their settings are kept.; The missing variable is written again.; Technical steps ({n}); Turning on; Turning off; Repairing; using the pool; not using the pool; Back to the repositories; No repository was chosen. Go back to Pool setup and tick the repositories first. |
+## Runners filter words (CRSP339, the owner's pick of option 3)
+
+The filter bar of Setup > Runners. One row: search, Filters, the selection words. A wide screen opens the four joined-choice rows in the page; a phone opens a bottom sheet.
+
+| Where | Words |
+|---|---|
+| Toolbar, search | Search runners |
+| Toolbar, filter button | Filters; Filters ({n}) when n are set |
+| Rows, names above the joined choices | System; Isolation; Kind; Size |
+| Rows, first choice of each | All |
+| Active filters, one tag each, when the rows are folded | System: Linux; Isolation: VM; Kind: persistent; Size: xl |
+| Active filters, button | Clear filters |
+| Phone sheet, title | Filter runners |
+| Phone sheet, drop-down first choices | Any system; Any isolation; Any kind; Any size |
+| Phone sheet, buttons | Clear filters; Show {n} runners (Show 1 runner for one) |
+
+## Debug access words (CRSP331)
+
+The words of the Debug access card on a job page and of the debug session API answers (debug-access R5.2, R5.3, R5.14, R5.24, R5.34). Disabled-with-reason, ask first (UX-9) and the busy word rule apply.
+
+| Word | Where and meaning |
+|---|---|
+| Debug access | The section title on a job page (not shown for a queued job). |
+| Open debug session | The one action of the card and the title and action of the reason dialog. Admin only (busy word: Opening the session...). Disabled with the server's reason beside it. |
+| Reason | The field of the reason dialog. Help: One line, 3 to 200 characters. It goes into the audit log. Mistake: Write a reason of 3 to 200 characters. |
+| Can see this job's files and its running processes' output, not its secrets. | What the shell sees: on the card, in the reason dialog and on the repository setting. |
+| A session ends after {limit} min, or after {idle} min with no key pressed. | Under the button when the repository allows sessions. |
+| Opened by, Reason, Opened, Time left | The facts of an open session (Time left uses the time-left words). |
+| Extend | Adds 15 min, once (busy word: Extending). Disabled reason: A session can be extended once. |
+| End | Ends the session; asks first (busy word: Ending). |
+| End this debug session? | Question card title. Intro: The terminal of {user} on job {job} closes at once. Item: Every process the session started is stopped. |
+| Past sessions of this job | Table title and caption. Columns: Who, From, To, Reason, How it ended. Long reason button: Full reason. |
+| open, time limit, idle limit, job ended, ended by the user, ended by an admin, debug sessions switched off, connection lost, error | How it ended, a status word. |
+| No debug sessions yet. Open one from a running job. | Empty state of the table. |
+| Could not open the session. {why} / Could not extend the session. {why} | Problem messages. |
+| Debug sessions are off for this pool. | Refusal: the pool switch is off. |
+| Debug access is off for this repository. | Refusal: the repository setting is off (the default). |
+| Only admins can open a session. | Refusal for a viewer. |
+| Only the owner can open a session on this repository. | Refusal: the repository is set to Owner only. |
+| This repository is not in the pool's GitHub App installation. | Refusal: an unknown or archived repository. |
+| Not available for public repositories. | Refusal and the disabled reason of the repository setting. |
+| This job runs for a pull request, which may come from a fork. | Refusal: a pull request whose head repository differs from the repository or is not known; a same-repository pull request is allowed. |
+| crsp does not know this job's environment, so it cannot be entered safely. | Refusal: an isolation crsp cannot enter safely, or a container shared with another running job. |
+| This job runs on a persistent runner. Turn on Allow on persistent runners for this repository first. | Refusal: a persistent runner while the repository does not allow it. |
+| You have 2 sessions open. End one first. | Refusal: the per-user cap. |
+| The job is not running. | Refusal: queued or finished. |
+| This machine cannot open debug sessions yet. | Refusal while no agent can enter a job's environment. |
+| This runner keeps files between jobs. | Warning on a persistent runner (allowed only when the repository allows it). |
+| Not run on a real Mac yet. | Warning on a macOS target (R5.34). |
+## Settings tab words
+
+The tabs of Settings (CRSP365): Access, Repositories, Themes, Networking, Updates, Data, Audit log. The old Console tab is Themes (Appearance) and Networking (Notification channels, Network, Metrics).
+
+| Words | Used for |
+|---|---|
+| Themes | The Settings tab that holds Appearance (was Console). |
+| Networking | The Settings tab after Themes that holds Notification channels, Network and Metrics. |
+
+## Update progress words
+
+Where an update shows (CRSP364, CRSP368). The progress lives only in the Updates pane; other pages carry one short line.
+
+| Words | Used for |
+|---|---|
+| An update is running. | The one top line on every page except Updates (no bar). |
+| See the update | The link in that line; it goes to Settings > Updates. |
+| Restarting, back in a moment. | The one restart line inside the Updates pane (no Note). |
+| Last checked {time}, by {who} (manual). | The Updates pane line after a check a person asked for. |
+| Last checked {time} (automatic). | The Updates pane line after crsp's own check. |
+| See all in the Audit log | The link under that line; it opens the Audit log. |
+## Cloud overflow words (CRSP281)
+
+| Where | Words |
+|---|---|
+| Settings, Repositories, section | Cloud overflow |
+| Settings, Repositories, intro | When no crsp machine can take the jobs of a repository that turned its fallback on, they go to the first target below that is on, serves the system and has minutes and budget left. A target with no minutes or budget left is skipped. This can cost money. |
+| Order list | Overflow order; targets GitHub-hosted runners, AWS EC2 runners |
+| Target pane | Title: the target name. Checkbox: Use {target}. Field: Label of {target}. Help for GitHub-hosted runners: Leave it empty for ubuntu-latest, windows-latest and macos-latest. Help for AWS EC2 runners: The label your EC2 runners carry in the workflow. |
+| Minutes field | Minutes of {target} per repository and month ({n} min, 0 to 1000000). Help: 0 means no limit. When a repository has used them, the next target is tried. |
+| Total minutes field | Total minutes of {target} per month ({n} min, 0 to 1000000). Help: 0 means no limit. Counted over all repositories together. When they are used, the next target is tried. |
+| Budget field | Monthly budget of {target} ({n} USD, 0 to 1000000, two decimals). Help for GitHub-hosted runners: In dollars. 0 means no budget. Counted over all repositories together, at the price per minute below. When it is used, the next target is tried. Help for AWS EC2 runners: In dollars. 0 means no budget. The budget is enforced only when you set a price per minute for AWS EC2 runners. |
+| Price field | Price per minute of {target} (USD) ({n} USD, 0 to 1000, four decimals). Help for GitHub-hosted runners: In dollars. 0 means the rate of Savings for the system of the job, at the standard size. Help for AWS EC2 runners: In dollars. 0 means no price, so the budget is not enforced. Set what a minute of your EC2 runners costs. |
+| Minutes help, both limits | 0 means no limit. When a repository has used them, the next target is tried. A target is used only while both limits have minutes left. |
+| Where jobs go now | Pane: Where jobs go now. Table: Repository, Jobs go to, Why. Jobs go to: {target}, Cloud runners, Waiting, minutes used up, Waiting for a machine. Why: No crsp machine is up. / Every target has used its minutes. / Overflow has not started for this repository. Empty: No repository is on cloud overflow now. |
+| Minutes used | Pane: Minutes and money used this month. Table: Target, Used this month ({n} min), Money used this month (${n.nn}, or No rate), Monthly budget (${n.nn}, or No budget, or ${n.nn}, no rate, budget not enforced), Total limit, Limit per repository ({n} min or No limit). Empty: No cloud target is on. |
+| System checkboxes | {target} serve Linux, {target} serve Windows, {target} serve macOS |
+| Saved | Cloud overflow saved. |
+| Save failed | Could not save. {reason} |
+| Refused | AWS EC2 runners need a label while they are on. The label of {target} must be one label of up to 100 characters, without spaces, commas or quotes. Minutes of {target} must be from 0 to 1000000. Total minutes of {target} must be from 0 to 1000000. Budget of {target} must be from 0 to 1000000 dollars. Price per minute of {target} must be from 0 to 1000 dollars. |

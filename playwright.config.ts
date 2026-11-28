@@ -83,6 +83,8 @@ export default defineConfig({
     timeout: 30_000,
     env: {
       CRSP_LISTEN_ADDR: `127.0.0.1:${port}`,
+      // CRSP329: the agent link has its own port, so e2e never collides with an installed crsp (8461).
+      CRSP_AGENT_ADDR: `127.0.0.1:${port + 1}`,
       CRSP_DATA_DIR: resolve('test-results', 'e2e-data'),
       CRSP_LOG_LEVEL: 'warn',
     },

@@ -1,7 +1,7 @@
 // R5.23: runners listed live with their isolation word (UX-61), added only where the OS fits, and deleted
 // after a question that names the runner and its job.
 import { act, cleanup, fireEvent, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   apiError,
   FakeEventSource,
@@ -158,18 +158,21 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
+    // CRSP339: the rows are folded until Filters is pressed.
+    expect(screen.queryByRole('group', { name: 'System' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     const system = screen.getByRole('group', { name: 'System' });
     expect(
       within(system)
         .getAllByRole('button')
         .map((b) => b.textContent),
-    ).toEqual(['Linux', 'Windows', 'macOS']);
+    ).toEqual(['All', 'Linux', 'Windows', 'macOS']);
     const iso = screen.getByRole('group', { name: 'Isolation' });
     expect(
       within(iso)
         .getAllByRole('button')
         .map((b) => b.textContent),
-    ).toEqual(['container', 'VM', 'microVM']);
+    ).toEqual(['All', 'container', 'VM', 'microVM']);
     expect(screen.getByRole('group', { name: 'Kind' })).toBeTruthy();
     fireEvent.click(within(system).getByRole('button', { name: 'Linux' }));
     expect(screen.queryByText('win-ephem')).toBeNull();
@@ -180,6 +183,46 @@ describe('Runners list', () => {
     );
     expect(screen.getByText('lx-ephem')).toBeTruthy();
     expect(screen.queryByText('lx-persist')).toBeNull();
+    // Folded again, the button says how many are set and the tags name them.
+    expect(screen.getByRole('button', { name: 'Filters (2)' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Filters (2)' }));
+    expect(screen.queryByRole('group', { name: 'System' })).toBeNull();
+    expect(screen.getByText('System: Linux')).toBeTruthy();
+    expect(screen.getByText('Kind: ephemeral')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Clear filters' }));
+    expect(screen.getByText('lx-persist')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Filters' })).toBeTruthy();
+  });
+
+  it('opens the filters as a bottom sheet on a phone and shows the count (CRSP339)', async () => {
+    vi.stubGlobal('matchMedia', (query: string) => ({
+      matches: query.includes('max-width: 600px'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+    }));
+    try {
+      const api = signedIn().on('GET', '/api/v1/runners', {
+        items: [
+          runner({ id: 'a', name: 'lx-persist', os: 'linux' }),
+          runner({ id: 'c', name: 'win-persist', os: 'windows' }),
+        ],
+      });
+      renderApp(api, '/setup/runners');
+      await screen.findByRole('table', { name: /^Runners on/ });
+      fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
+      const sheet = screen.getByRole('dialog', { name: 'Filter runners' });
+      expect(within(sheet).getByRole('button', { name: 'Show 2 runners' })).toBeTruthy();
+      fireEvent.change(within(sheet).getByRole('combobox', { name: 'System' }), {
+        target: { value: 'windows' },
+      });
+      fireEvent.click(within(sheet).getByRole('button', { name: 'Show 1 runner' }));
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(screen.queryByText('lx-persist')).toBeNull();
+      expect(screen.getByRole('button', { name: 'Filters (1)' })).toBeTruthy();
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('reloads when a runner event arrives (live)', async () => {
@@ -217,6 +260,7 @@ describe('Runners list', () => {
     });
     renderApp(api, '/setup/runners');
     await screen.findByRole('table', { name: /^Runners on/ });
+    fireEvent.click(screen.getByRole('button', { name: 'Filters' }));
     fireEvent.click(screen.getByRole('button', { name: 'container' }));
     expect(screen.queryByText('crsp-linux-1')).toBeNull();
     expect(screen.getByText('crsp-lx-2')).toBeTruthy();
@@ -371,6 +415,63 @@ describe('Runners list', () => {
     await waitFor(() =>
       expect(api.count('DELETE', '/api/v1/runners/r9/registration')).toBe(1),
     );
+  });
+
+  // runners R5.141: a runner GitHub does not list is not idle, shows why, and offers Register again.
+  it('shows a runner whose registration is lost as not registered with the reason and a Register again button (R5.141)', async () => {
+    const api = signedIn()
+      .on('GET', '/api/v1/runners', {
+        items: [
+          runner({
+            id: 'r7',
+            name: 'gameroompc-pool-1-r1',
+            state: 'not_registered',
+            managed: true,
+            can_reregister: true,
+            reason: 'GitHub deleted the registration of this runner',
+          }),
+          runner({
+            id: 'r8',
+            name: 'gameroompc-pool-1-r2',
+            state: 'idle',
+            managed: true,
+            reason: 'registration lost, registered again',
+          }),
+        ],
+      })
+      .on('POST', '/api/v1/runners/:id/reregister', runner({ id: 'r7' }));
+    renderApp(api, '/setup/runners');
+    await screen.findByRole('table', { name: /^Runners on/ });
+    expect(screen.getByText('not registered')).toBeTruthy();
+    expect(screen.queryAllByRole('button', { name: 'Register again' })).toHaveLength(1);
+    expect(api.count('POST', '/api/v1/runners/r7/reregister')).toBe(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Register again' }));
+    await waitFor(() =>
+      expect(api.count('POST', '/api/v1/runners/r7/reregister')).toBe(1),
+    );
+  });
+
+  it('says why a Register again press failed (R5.141)', async () => {
+    const api = signedIn()
+      .on('GET', '/api/v1/runners', {
+        items: [
+          runner({
+            id: 'r7',
+            name: 'gameroompc-pool-1-r1',
+            state: 'failed',
+            managed: true,
+            can_reregister: true,
+            reason: 'registration lost, could not register again: config.sh exited 1',
+          }),
+        ],
+      })
+      .on('POST', '/api/v1/runners/:id/reregister', () =>
+        apiError(409, 'conflict', 'GitHub lists runner gameroompc-pool-1-r1'),
+      );
+    renderApp(api, '/setup/runners');
+    await screen.findByRole('table', { name: /^Runners on/ });
+    fireEvent.click(screen.getByRole('button', { name: 'Register again' }));
+    await screen.findByText(/Could not register again\./);
   });
 
   it('keeps a viewer from adding or deleting, and says why', async () => {

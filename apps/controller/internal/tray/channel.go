@@ -75,6 +75,11 @@ type Response struct {
 	UpdateState     string `json:"update_state,omitempty"`
 	ReleaseURL      string `json:"release_url,omitempty"` // the release page of LatestVersion (What changed)
 
+	// Notes is the owner-facing note of LatestVersion, from the signed manifest; UpdatedNotes is the note
+	// of the version that runs now (shown once after an update). Older services leave both out.
+	Notes        string `json:"notes,omitempty"`
+	UpdatedNotes string `json:"updated_notes,omitempty"`
+
 	// Stage is the live update stage; nil when no update ran.
 	Stage *StageInfo `json:"stage,omitempty"`
 
@@ -183,7 +188,7 @@ func statusFrom(r Response) Status {
 	}
 	out := Status{
 		State: st, Running: r.Running, Waiting: r.Waiting, Runners: r.Runners, Fault: r.Fault, Version: r.Version,
-		Update: UpdateInfo{Latest: r.LatestVersion, Available: r.UpdateAvailable, State: r.UpdateState, ReleaseURL: r.ReleaseURL, Jobs: r.Running, AutoOff: r.AutoUpdate != nil && !*r.AutoUpdate},
+		Update: UpdateInfo{Latest: r.LatestVersion, Available: r.UpdateAvailable, State: r.UpdateState, ReleaseURL: r.ReleaseURL, Notes: r.Notes, UpdatedNotes: r.UpdatedNotes, Jobs: r.Running, AutoOff: r.AutoUpdate != nil && !*r.AutoUpdate},
 	}
 	out.Update.Stage = r.Stage
 	out.RunnerProblems = r.RunnerProblems

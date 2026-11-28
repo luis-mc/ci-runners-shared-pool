@@ -27,6 +27,11 @@ func (s *Server) route(w http.ResponseWriter, r *http.Request) {
 	case r.Method == "POST" && p == "/login/device/code":
 		var in map[string]string
 		_ = json.NewDecoder(r.Body).Decode(&in)
+		if s.DeviceFlowOff {
+			writeJSON(w, 200, map[string]any{"error": "device_flow_disabled",
+				"error_description": "Device flow must be explicitly enabled for this App", "error_uri": "https://docs.github.com/"})
+			return
+		}
 		s.nextID++
 		code := fmt.Sprintf("FAKEDEVICE%d", s.nextID)
 		s.DeviceCodes[code] = 0

@@ -22,6 +22,7 @@ import json
 import os
 import posixpath
 import re
+import shutil
 import signal
 import subprocess
 import threading
@@ -1095,6 +1096,19 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     return True, cmd, why
 
 
+def shell_popen_args(cmd: str, env: dict | None = None, which=shutil.which) -> dict:
+    """subprocess keyword arguments that run `cmd` through a shell. On Windows the default
+    shell is cmd.exe, which rejects POSIX steps such as `{ ...; } || ...`; with
+    DELIVERY_SHELL=bash (in `env` or the environment) and bash on PATH the step runs under bash
+    instead. Every other case keeps `shell=True`."""
+    want = (env or {}).get("DELIVERY_SHELL") or os.environ.get("DELIVERY_SHELL")
+    if os.name == "nt" and want == "bash":
+        bash = which("bash")
+        if bash:
+            return {"args": [bash, "-c", cmd]}
+    return {"args": cmd, "shell": True}
+
+
 def run_command(cmd: str, cwd: Path, env: dict[str, str] | None = None) -> tuple[int, float]:
     """Run a command through the shell, output inherited, no log and no limit
     (join.py's lockfile re-setup). `env` is added to the environment (a step's
@@ -1104,7 +1118,7 @@ def run_command(cmd: str, cwd: Path, env: dict[str, str] | None = None) -> tuple
     sys.stderr.flush()
     start = time.monotonic()
     full_env = {**os.environ, **env} if env else None
-    code = subprocess.run(cmd, shell=True, cwd=cwd, env=full_env).returncode
+    code = subprocess.run(cwd=cwd, env=full_env, **shell_popen_args(cmd, env)).returncode
     return code, round(time.monotonic() - start, 1)
 
 
@@ -1167,13 +1181,12 @@ def run_logged(
     full_env = {**os.environ, **env} if env else None
     kw = {} if os.name == "nt" else {"start_new_session": True}
     proc = subprocess.Popen(
-        cmd,
-        shell=True,
         cwd=cwd,
         env=full_env,
         stdin=subprocess.DEVNULL,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
+        **shell_popen_args(cmd, env),
         **kw,
     )
     pump = threading.Thread(target=_pump, args=(proc.stdout, log), daemon=True)

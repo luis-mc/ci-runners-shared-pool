@@ -24,7 +24,13 @@ type Manifest struct {
 	// Assets is one package per target, keyed <os>-<arch> (win-x64, win-arm64). URL and SHA256 are
 	// the contract's default package. Empty for a manifest that lists one package only.
 	Assets map[string]Asset
+	// Notes is the owner-facing note of the release, signed with the rest of the manifest. Empty
+	// when the release has none (an older manifest has no such key).
+	Notes string
 }
+
+// MaxNotes is the longest note a manifest may carry, in characters; a longer one is cut.
+const MaxNotes = 600
 
 // Asset is a package of the manifest.
 type Asset struct{ URL, SHA256 string }
@@ -113,6 +119,7 @@ func ParseManifest(raw []byte, pub ed25519.PublicKey, product string, now float6
 	exp, _ := env.Manifest["expires_at"].(json.Number).Float64()
 	req, _ := env.Manifest["required"].(bool)
 	m := &Manifest{Product: str("product"), Channel: str("channel"), Version: str("version"), Required: req, ExpiresAt: exp, URL: str("url"), SHA256: str("sha256")}
+	m.Notes = cleanNotes(str("notes"))
 	if as, ok := env.Manifest["assets"].(map[string]interface{}); ok {
 		m.Assets = map[string]Asset{}
 		for k, v := range as {
@@ -133,4 +140,13 @@ func ParseManifest(raw []byte, pub ed25519.PublicKey, product string, now float6
 		return nil, OlderVersion
 	}
 	return m, ""
+}
+
+// cleanNotes trims the note and cuts it to MaxNotes characters.
+func cleanNotes(s string) string {
+	s = strings.TrimSpace(s)
+	if r := []rune(s); len(r) > MaxNotes {
+		s = strings.TrimSpace(string(r[:MaxNotes]))
+	}
+	return s
 }

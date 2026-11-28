@@ -4,7 +4,7 @@ import {
   useEffect,
   useMemo,
   useRef,
-  useState,
+  useSyncExternalStore,
   type ReactNode,
 } from 'react';
 import { LiveStore, useLive, type EventSourceFactory, type LiveState } from './store';
@@ -45,38 +45,41 @@ export function useLiveState(): LiveState {
   return useLive(useLiveStore());
 }
 
-/** A number that changes when events of one kind arrive: use it as a reload key (never as a data source). */
-export function useVersion(kind: string): number {
-  const s = useLiveState();
-  return (s.versions[kind] ?? 0) + s.reconnects * 1000;
+/**
+ * Reads one value out of the live state and re-renders only when that value changes (shallow compare), so a screen
+ * that needs the status or a version does not render again for every machine load event (CRSP290, audit F6).
+ */
+export function useLiveSelect<T>(select: (s: LiveState) => T): T {
+  const store = useLiveStore();
+  const last = useRef<{ state: LiveState; value: T } | undefined>(undefined);
+  const snapshot = (): T => {
+    const state = store.getState();
+    if (last.current?.state === state) return last.current.value;
+    const value = select(state);
+    if (last.current && shallowEqual(last.current.value, value)) {
+      last.current = { state, value: last.current.value };
+    } else {
+      last.current = { state, value };
+    }
+    return last.current.value;
+  };
+  return useSyncExternalStore(store.subscribe, snapshot, snapshot);
 }
 
-/** How long a list waits to gather a burst of job events into one reload. */
-export const SETTLE_MS = 500;
-
-/**
- * Like useVersion, but a burst of events moves it once per `ms`, not once per event: with dozens of builds
- * running a list reloads a few times a second at most, and the last event of a burst always gets its reload.
- */
-export function useSettledVersion(kind: string, ms = SETTLE_MS): number {
-  const latest = useVersion(kind);
-  const [settled, setSettled] = useState(latest);
-  const seen = useRef(latest);
-  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  seen.current = latest;
-  useEffect(() => {
-    if (latest === settled || timer.current) return;
-    timer.current = setTimeout(() => {
-      timer.current = undefined;
-      setSettled(seen.current);
-    }, ms);
-  }, [latest, settled, ms]);
-  useEffect(
-    () => () => {
-      if (timer.current) clearTimeout(timer.current);
-      timer.current = undefined;
-    },
-    [],
+function shallowEqual(a: unknown, b: unknown): boolean {
+  if (Object.is(a, b)) return true;
+  if (typeof a !== 'object' || typeof b !== 'object' || !a || !b) return false;
+  const ka = Object.keys(a);
+  const kb = Object.keys(b);
+  return (
+    ka.length === kb.length &&
+    ka.every((k) =>
+      Object.is((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]),
+    )
   );
-  return settled;
+}
+
+/** A number that changes when events of one kind arrive: use it as a reload key (never as a data source). */
+export function useVersion(kind: string): number {
+  return useLiveSelect((s) => (s.versions[kind] ?? 0) + s.reconnects * 1000);
 }

@@ -7,6 +7,7 @@ import (
 	"unicode/utf8"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/tray"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/update/lifecycle"
 )
 
 // The layout is computed from the content, in units of the font height (the "unit", one text
@@ -273,6 +274,7 @@ func SampleViews() []View {
 		switch s {
 		case StateReview:
 			m.Mode = ModeReview
+			snap.Notes = sampleNote
 		case StateVerifying:
 			snap.Stage = sampleStage("verifying", -1)
 		case StateTesting:
@@ -303,6 +305,7 @@ func SampleViews() []View {
 		case StateDone:
 			snap.ServiceVersion = "0.1.13"
 			snap.Stage = sampleStage("done", 100)
+			snap.UpdatedNotes = sampleNote
 		case StateFailed:
 			snap.Stage = sampleStage("failed", -1)
 			snap.Stage.Error = "The new build did not report healthy within 3 minutes, so Windows Installer put the old version back."
@@ -321,6 +324,9 @@ func SampleViews() []View {
 	r.Choose(ChoicePurge)
 	return append(out, r.View())
 }
+
+// sampleNote is a release note of the longest size a manifest may carry.
+var sampleNote = strings.Repeat("Update steps show live progress and the runners list has a filter bar. ", 9)[:lifecycle.MaxNotes]
 
 func sampleStage(name string, pc int) *tray.StageInfo {
 	return &tray.StageInfo{Name: name, Percent: pc, Version: "0.1.13", StartedBy: "tray"}
