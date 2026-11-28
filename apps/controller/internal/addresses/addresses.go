@@ -48,6 +48,10 @@ const (
 	DefaultPypiUpstream  = "https://pypi.org"
 	DefaultFilesUpstream = "https://files.pythonhosted.org"
 
+	// The upstreams of the crates.io sparse-index proxy (caches R5.81, R5.83).
+	DefaultCratesIndexUpstream = "https://index.crates.io"
+	DefaultCratesFilesUpstream = "https://static.crates.io/crates"
+
 	// DockerAptURL is the base of Docker's signed apt repository and its signing keys (dependency-setup DEP5);
 	// the family (ubuntu, debian) is appended.
 	DockerAptURL = "https://download.docker.com/linux"

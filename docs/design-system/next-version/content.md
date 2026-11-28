@@ -206,8 +206,8 @@ The words of the images and caches screen (web-console 4.7).
 | Hub tiles | Hit rate, Served, Used ({size} of {budget}), Warm machines |
 | Budget section | One budget; All caches share this space. When it is full, the least recently used entries go first. Cache budget: {used} of {budget} used |
 | Budget field | Budget; 1 to 4096 GiB. A smaller budget frees space at once. (a viewer reads Budget {n} GiB.) |
-| Hub cards | Actions cache, Repository mirrors, Registry mirror, Package proxy; the switch Package proxy (npm, PyPI) |
-| Hub card facts | Entries, Size, Last hit, Repositories, Refreshed, Covers: npm, PyPI, Apt and crates: not yet |
+| Hub cards | Actions cache, Repository mirrors, Registry mirror, Package proxy; the switch Package proxy (npm, PyPI, crates, apt) |
+| Hub card facts | Entries, Size, Last hit, Repositories, Refreshed, Covers: npm, PyPI, crates, apt |
 | Receiver waiting | the receiver does not listen on the LAN yet (amber) |
 | Warmth table | Warmth by repository: Repository, Hits, Misses, Warmth, Size; empty: No repository has used the cache yet. |
 | Per-machine list title | Caches per machine |

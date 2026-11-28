@@ -84,8 +84,7 @@ describe('Cache hub', () => {
       within(actions).getByText('the receiver does not listen on the LAN yet'),
     ).toBeTruthy();
     const pkg = screen.getByRole('region', { name: 'Package proxy' });
-    expect(within(pkg).getByText('npm, PyPI')).toBeTruthy();
-    expect(within(pkg).getByText('not yet')).toBeTruthy();
+    expect(within(pkg).getByText('npm, PyPI, crates, apt')).toBeTruthy();
     expect(screen.getByRole('table', { name: 'Warmth by repository' })).toBeTruthy();
     expect(screen.getByText('luis-mc/site')).toBeTruthy();
     expect(screen.getAllByRole('switch')).toHaveLength(4);
