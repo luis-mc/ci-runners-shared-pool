@@ -385,7 +385,17 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | research | D71 | Perf: remove cold groups/stats scan | Background refresh of the cache | decided | 2026-11-27 |
 | research | D72 | Comiclex has no runners (deleted registrations): unblock tonight by hand or wait for the product fix? | Wait for the product fix | decided | 2026-11-28 |
 | research | D73 | Which release carries the re-register fix? | RELEASE-72 | decided | 2026-11-28 |
+| research | D74 | AWS connect method | Owner: must also work on Linux and macOS controllers (key store per OS); Roles Anywhere kept pending cross-platform check | decided | 2026-11-28 |
+| research | D75 | Where the CloudFormation template lives | Owner: whatever makes setup simplest and intuitive for every user, all UX rules; applies to AWS and future integrations | decided | 2026-11-28 |
+| research | D76 | Overnight tags | v0.1.30 and v0.1.31 when green | decided | 2026-11-28 |
+| research | D77 | Update crsp on this PC overnight | Yes, when tagged | decided | 2026-11-28 |
+| research | D78 | Cloud agents for the rest of the work | Cloud when the test passes | decided | 2026-11-28 |
+| research | D79 | RELEASE-72 scope | Runner fix first (RELEASE-72), rest RELEASE-73 | decided | 2026-11-28 |
 | research | D8 | RES15: Forecast with under 5 runs | Fallback, labelled | decided | 2026-11-18 |
+| research | D80 | UI work overnight | Build and merge on green | decided | 2026-11-28 |
+| research | D81 | Deleted runner registration | Automatic once, then Register again button | decided | 2026-11-28 |
+| research | D82 | crsp CLI sign-in for the overnight PC update | Owner signs in now | decided | 2026-11-28 |
+| research | D83 | Public CloudFormation template hosting | Another way, no owner AWS account: spec compares options | decided | 2026-11-28 |
 | research | D9 | RES15: Queue start ETA | Yes, start range | decided | 2026-11-18 |
 | scheduling | D1 | [Where do slots, tickets and the slot log live?](../features/scheduling/spec.md) | In the controller's SQLite tables, not lock files in a shared folder. A take is one transaction (decision 0001). | decided | 2026-11-14 |
 | scheduling | D2 | [Who judges whether a holder is dead?](../features/scheduling/spec.md) | The agent of the holder's machine judges the process; the controller judges ages on its own clock. This replaces "same host only" (learning 2). | decided | 2026-11-14 |

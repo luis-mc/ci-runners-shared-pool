@@ -98,7 +98,7 @@
 */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+html { font-size: 90%; scroll-behavior: smooth; scroll-padding-top: 4rem; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -106,7 +106,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14.4px;
+  font-size: 12.96px;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -184,7 +184,7 @@ h1 {
   font-family: var(--font-display);
   font-stretch: var(--font-display-stretch);
   font-weight: 800;
-  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-size: clamp(2rem, 4.05vw, 3rem);
   line-height: 1.05;
   text-wrap: balance;
   margin: .2em 0 .4em;
@@ -195,7 +195,7 @@ header.artifact-header { position: relative; }
 .gen-latest { color: var(--live); }
 .gen-update { color: var(--running-mark); }
 .gen-unknown { color: var(--ink-muted); }
-header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+header.artifact-header p { max-width: none; font-size: 1.08rem; }  /* DS291: the description fills the header width */
 .artifact-meta {
   font-family: var(--font-mono);
   font-size: .8rem;
@@ -890,11 +890,11 @@ details.status-fold > summary strong { min-width: 0; }
 }
 .timeline-scroll { overflow-x: auto; }
 .release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
-.release-timeline .rt-axis { font-size: 9.9px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-axis { font-size: 8.91px; fill: var(--ink-muted); text-anchor: middle; }
 .release-timeline .rt-grid { stroke: var(--rule); }
 .release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
-.release-timeline .rt-name { font-size: 11.7px; font-weight: 600; fill: var(--ink); }
-.release-timeline .rt-sub { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-name { font-size: 10.53px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
@@ -904,13 +904,13 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
 .release-timeline .rt-expected { fill: var(--ink); }
 .release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.release-timeline .rt-day-label { font-size: 10.8px; fill: var(--ink); }
-.release-timeline .rt-live-label { font-size: 10.8px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
-.release-timeline .rt-risk-label { font-size: 9.45px; fill: var(--ink-muted); }
+.release-timeline .rt-day-label { font-size: 9.72px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 9.72px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 8.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
-.release-timeline .rt-now-label { font-size: 9.9px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
-.release-timeline .rt-strip-title { font-size: 10.8px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
-.release-timeline .rt-other-label { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-now-label { font-size: 8.91px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 9.72px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-other.status-running { fill: var(--running-mark); }
 .release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
 .release-timeline .rt-other.status-needs-you { fill: var(--signal); }
@@ -938,7 +938,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
 .release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
 .release-timeline .rt-arrow-head { fill: var(--ink-muted); }
-.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 8.91px; fill: var(--ink-muted); }
 .release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
 .release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
 .release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
@@ -950,15 +950,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-tree tr.ch td:first-child::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; border-left: 2px solid var(--ink-muted); }
 .release-tree tr.ch.last td:first-child::before { bottom: 50%; }
 .release-tree tr.ch td:first-child::after { content: ""; position: absolute; left: 20px; top: 50%; width: 16px; border-top: 2px solid var(--ink-muted); }
+
+/* DS295: live CI runs in the release table and task rows (R5.39 to R5.41). Existing .ci-chip look and status colours. */
+.ci-live, .ci-live-cell { --ci-teal: color-mix(in srgb, var(--live) 70%, var(--signal)); }
+.ci-live { list-style: none; margin: .2em 0 0; padding: 0; display: flex; flex-direction: column; gap: .2em; }
+.ci-live li { margin: 0; }
+.ci-live a.ci-chip { color: inherit; text-decoration: none; }
+.ci-live a.ci-chip:hover, .ci-live a.ci-chip:focus-visible { text-decoration: underline; }
+.ci-live-passed { background: var(--done-bg); }
+.ci-live-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
+.ci-live-running { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
+.ci-live-queued { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
+.ci-live-cancelled { background: var(--surface-2); color: var(--ink); }
+.ci-live-fetched { display: block; font-size: .75rem; color: var(--muted, var(--ink)); }
+.ci-live-cell { display: block; margin-top: .25em; }
 </style>
 <style id="extra-css">.rs-wrap{overflow-x:auto}.rs{width:100%;border-collapse:collapse;margin:8px 0 20px}.rs th,.rs td{border:1px solid var(--color-border,#8886);padding:6px 8px;text-align:left;vertical-align:top}.rs td:nth-child(n+2){white-space:nowrap}.rs td:first-child{min-width:260px}</style>
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Findings</a><a href="#s3"><b>3</b>Rules the findings follow</a><a href="#s4"><b>4</b>Decisions</a><a href="#s5"><b>5</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.29.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: CRSP Features Research</h1><p>What other runner pools do, checked, and what crsp takes from it.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.31.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; CI Runners Shared Pool</div><h1>Feature: CRSP Features Research</h1><p>What other runner pools do, checked, and what crsp takes from it.</p><div class="artifact-meta">CI Runners Shared Pool &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T11:45+00:00">27 Nov 11:45</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">27 Nov 11:04</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T15:40+00:00">27 Nov 15:40</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/XQbWU86Mtt6zmDpHaHVeC7">27 Nov 15:56</a> (Lisbon)</p>
 <p class="lede">52 findings. Several are being built now; the rest are written into the specs for their milestone.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -1019,6 +1033,235 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D56">
+<h3 class="decision-head"><span class="decision-id">D56</span> <span class="decision-question">Sessions open at controller start (Q13)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP331</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep ending them</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Keep ending them</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Resume if agent kept it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Resume if agent kept it</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D55">
+<h3 class="decision-head"><span class="decision-id">D55</span> <span class="decision-question">Unknown repository visibility (Q12)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP331</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep, treat as public</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Keep, treat as public</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Treat as private</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Treat as private</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D54">
+<h3 class="decision-head"><span class="decision-id">D54</span> <span class="decision-question">Debug extension cap (Q11)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP331</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Repository&#x27;s limit</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Repository&#x27;s limit</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">120 min from open</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">120 min from open</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D53">
+<h3 class="decision-head"><span class="decision-id">D53</span> <span class="decision-question">Debug access on pull-request jobs (Q10)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP331</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Allow same-repo PRs</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Allow same-repo PRs</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Refuse all PR jobs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Refuse all PR jobs</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D52">
+<h3 class="decision-head"><span class="decision-id">D52</span> <span class="decision-question">What does the Dots graph style change?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP358</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Charts only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">charts dotted; bars stay blocks</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Charts and bars</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">as built in v0.1.29</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Bars only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">bars dotted; charts blocks</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D51">
+<h3 class="decision-head"><span class="decision-id">D51</span> <span class="decision-question">What does the Dots graph style change?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP358</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Charts only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">charts dotted; bars stay blocks</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Charts and bars</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">as built in v0.1.29</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Bars only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">bars dotted; charts blocks</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D50">
+<h3 class="decision-head"><span class="decision-id">D50</span> <span class="decision-question">Release without a note</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP354</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">OK, show nothing</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">OK, show nothing</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fail without a note</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Fail without a note</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D49">
+<h3 class="decision-head"><span class="decision-id">D49</span> <span class="decision-question">Dotted graphs setting</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP358</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Only for Terminal</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Only for Terminal</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always shown</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Always shown</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop dotted graphs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Drop dotted graphs</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D48">
+<h3 class="decision-head"><span class="decision-id">D48</span> <span class="decision-question">AWS EC2 overflow runners</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP361</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, crsp starts them</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Yes, crsp starts them</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Label only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Label only</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Later</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D47">
+<h3 class="decision-head"><span class="decision-id">D47</span> <span class="decision-question">Overflow cap scope</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP360</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One total per target</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One total per target</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Per repository</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Per repository</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Both</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D46">
+<h3 class="decision-head"><span class="decision-id">D46</span> <span class="decision-question">Pool setup primary button</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP359</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, action bar</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Yes, action bar</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, plain is fine</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No, plain is fine</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D45">
+<h3 class="decision-head"><span class="decision-id">D45</span> <span class="decision-question">Pool setup page content (CRSP340)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP359</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Option 5 exactly as shown</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Option 5 exactly as shown</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Option 5 + old table features</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Option 5 + old table features</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Another option</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Another option</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D44">
+<h3 class="decision-head"><span class="decision-id">D44</span> <span class="decision-question">Installers and release notes (row K)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP343</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Option 1 Sign and notarize</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Windows code-signing + Apple Developer ID, notarization, signature checks, trust per installer; ~8 d + cert lead time.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Option 2 Package repositories</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">apt, yum, Homebrew tap, winget; per-machine update switch; ~14 d, after option 1.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Option 3 Release notes first</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Owner-facing note per release in the signed manifest, shown in console and tray; ~5 d.</p>
+<blockquote class="decision-words">&ldquo;Option 3 then 1: release notes now; I buy the certificates; signing after&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D43">
+<h3 class="decision-head"><span class="decision-id">D43</span> <span class="decision-question">Caches and package proxy (rows V/W)</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task CRSP342</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Option 1 One hub in the controller</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Receiver, mirrors, registry mirror and native npm/PyPI proxy in the controller, one byte budget; spike apt-cacher-ng; ~17.5 d.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Option 2 Dedicated cache-holder machines</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Any machine can hold caches; controller only records who holds what; ~29 d.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Option 3 Off-the-shelf services</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Verdaccio, devpi, apt-cacher-ng as pinned containers; Actions cache and mirrors native; ~18 d.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D42">
 <h3 class="decision-head"><span class="decision-id">D42</span> <span class="decision-question">Registry wave start (phases 1 to 3 in one go; replaces D40)</span></h3>
 <p class="decision-meta">Asked 19 Nov · Decided 19 Nov · Task RES20</p>

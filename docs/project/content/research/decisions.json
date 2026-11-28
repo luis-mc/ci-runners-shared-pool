@@ -951,6 +951,826 @@
       "asked": "2026-11-19",
       "status": "decided",
       "decided": "2026-11-19"
+    },
+    {
+      "id": "D43",
+      "question": "Caches and package proxy (rows V/W)",
+      "options": [
+        {
+          "label": "Option 1 One hub in the controller",
+          "summary": "Receiver, mirrors, registry mirror and native npm/PyPI proxy in the controller, one byte budget; spike apt-cacher-ng; ~17.5 d."
+        },
+        {
+          "label": "Option 2 Dedicated cache-holder machines",
+          "summary": "Any machine can hold caches; controller only records who holds what; ~29 d."
+        },
+        {
+          "label": "Option 3 Off-the-shelf services",
+          "summary": "Verdaccio, devpi, apt-cacher-ng as pinned containers; Actions cache and mirrors native; ~18 d."
+        }
+      ],
+      "chosen": "Option 1 One hub in the controller",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP342"
+    },
+    {
+      "id": "D44",
+      "question": "Installers and release notes (row K)",
+      "options": [
+        {
+          "label": "Option 1 Sign and notarize",
+          "summary": "Windows code-signing + Apple Developer ID, notarization, signature checks, trust per installer; ~8 d + cert lead time."
+        },
+        {
+          "label": "Option 2 Package repositories",
+          "summary": "apt, yum, Homebrew tap, winget; per-machine update switch; ~14 d, after option 1."
+        },
+        {
+          "label": "Option 3 Release notes first",
+          "summary": "Owner-facing note per release in the signed manifest, shown in console and tray; ~5 d."
+        }
+      ],
+      "status": "decided",
+      "asked": "2026-11-27",
+      "task": "CRSP343",
+      "owner_words": "Option 3 then 1: release notes now; I buy the certificates; signing after",
+      "chosen": "Option 3 Release notes first",
+      "decided": "2026-11-27"
+    },
+    {
+      "id": "D45",
+      "question": "Pool setup page content (CRSP340)",
+      "options": [
+        {
+          "label": "Option 5 exactly as shown",
+          "summary": "Option 5 exactly as shown"
+        },
+        {
+          "label": "Option 5 + old table features",
+          "summary": "Option 5 + old table features"
+        },
+        {
+          "label": "Another option",
+          "summary": "Another option"
+        }
+      ],
+      "chosen": "Option 5 exactly as shown",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP359"
+    },
+    {
+      "id": "D46",
+      "question": "Pool setup primary button",
+      "options": [
+        {
+          "label": "Yes, action bar",
+          "summary": "Yes, action bar"
+        },
+        {
+          "label": "No, plain is fine",
+          "summary": "No, plain is fine"
+        }
+      ],
+      "chosen": "Yes, action bar",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP359"
+    },
+    {
+      "id": "D47",
+      "question": "Overflow cap scope",
+      "options": [
+        {
+          "label": "One total per target",
+          "summary": "One total per target"
+        },
+        {
+          "label": "Per repository",
+          "summary": "Per repository"
+        },
+        {
+          "label": "Both",
+          "summary": "Both"
+        }
+      ],
+      "chosen": "Both",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP360"
+    },
+    {
+      "id": "D48",
+      "question": "AWS EC2 overflow runners",
+      "options": [
+        {
+          "label": "Yes, crsp starts them",
+          "summary": "Yes, crsp starts them"
+        },
+        {
+          "label": "Label only",
+          "summary": "Label only"
+        },
+        {
+          "label": "Later",
+          "summary": "Later"
+        }
+      ],
+      "chosen": "Yes, crsp starts them",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP361"
+    },
+    {
+      "id": "D49",
+      "question": "Dotted graphs setting",
+      "options": [
+        {
+          "label": "Only for Terminal",
+          "summary": "Only for Terminal"
+        },
+        {
+          "label": "Always shown",
+          "summary": "Always shown"
+        },
+        {
+          "label": "Drop dotted graphs",
+          "summary": "Drop dotted graphs"
+        }
+      ],
+      "chosen": "Only for Terminal",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP358"
+    },
+    {
+      "id": "D50",
+      "question": "Release without a note",
+      "options": [
+        {
+          "label": "OK, show nothing",
+          "summary": "OK, show nothing"
+        },
+        {
+          "label": "Fail without a note",
+          "summary": "Fail without a note"
+        }
+      ],
+      "chosen": "OK, show nothing",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP354"
+    },
+    {
+      "id": "D51",
+      "question": "What does the Dots graph style change?",
+      "options": [
+        {
+          "label": "Charts only",
+          "summary": "charts dotted; bars stay blocks"
+        },
+        {
+          "label": "Charts and bars",
+          "summary": "as built in v0.1.29"
+        },
+        {
+          "label": "Bars only",
+          "summary": "bars dotted; charts blocks"
+        }
+      ],
+      "chosen": "Charts only",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP358"
+    },
+    {
+      "id": "D52",
+      "question": "What does the Dots graph style change?",
+      "options": [
+        {
+          "label": "Charts only",
+          "summary": "charts dotted; bars stay blocks"
+        },
+        {
+          "label": "Charts and bars",
+          "summary": "as built in v0.1.29"
+        },
+        {
+          "label": "Bars only",
+          "summary": "bars dotted; charts blocks"
+        }
+      ],
+      "chosen": "Charts only",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP358"
+    },
+    {
+      "id": "D53",
+      "question": "Debug access on pull-request jobs (Q10)",
+      "options": [
+        {
+          "label": "Allow same-repo PRs",
+          "summary": "Allow same-repo PRs"
+        },
+        {
+          "label": "Refuse all PR jobs",
+          "summary": "Refuse all PR jobs"
+        }
+      ],
+      "chosen": "Allow same-repo PRs",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP331"
+    },
+    {
+      "id": "D54",
+      "question": "Debug extension cap (Q11)",
+      "options": [
+        {
+          "label": "Repository's limit",
+          "summary": "Repository's limit"
+        },
+        {
+          "label": "120 min from open",
+          "summary": "120 min from open"
+        }
+      ],
+      "chosen": "Repository's limit",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP331"
+    },
+    {
+      "id": "D55",
+      "question": "Unknown repository visibility (Q12)",
+      "options": [
+        {
+          "label": "Keep, treat as public",
+          "summary": "Keep, treat as public"
+        },
+        {
+          "label": "Treat as private",
+          "summary": "Treat as private"
+        }
+      ],
+      "chosen": "Keep, treat as public",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP331"
+    },
+    {
+      "id": "D56",
+      "question": "Sessions open at controller start (Q13)",
+      "options": [
+        {
+          "label": "Keep ending them",
+          "summary": "Keep ending them"
+        },
+        {
+          "label": "Resume if agent kept it",
+          "summary": "Resume if agent kept it"
+        }
+      ],
+      "chosen": "Keep ending them",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP331"
+    },
+    {
+      "id": "D57",
+      "question": "Where update progress lives",
+      "options": [
+        {
+          "label": "Panel + one top line",
+          "summary": "Panel + one top line"
+        },
+        {
+          "label": "Top banner only",
+          "summary": "Top banner only"
+        },
+        {
+          "label": "Panel only",
+          "summary": "Panel only"
+        }
+      ],
+      "chosen": "Panel + one top line",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP364"
+    },
+    {
+      "id": "D58",
+      "question": "Settings tabs",
+      "options": [
+        {
+          "label": "Console renamed Themes + Networking tab",
+          "summary": "Console renamed Themes + Networking tab"
+        }
+      ],
+      "chosen": "Console renamed Themes + Networking tab",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP365"
+    },
+    {
+      "id": "D59",
+      "question": "Debug extension cap (Q11 revisited)",
+      "options": [
+        {
+          "label": "Up to the max a repo may set",
+          "summary": "Up to the max a repo may set"
+        },
+        {
+          "label": "Repo limit, as built",
+          "summary": "Repo limit, as built"
+        },
+        {
+          "label": "No extension",
+          "summary": "No extension"
+        }
+      ],
+      "chosen": "Up to the max a repo may set",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP331"
+    },
+    {
+      "id": "D60",
+      "question": "Overflow money budget (Q24)",
+      "options": [
+        {
+          "label": "Minutes only for now",
+          "summary": "Minutes only for now"
+        },
+        {
+          "label": "Add a money budget",
+          "summary": "Add a money budget"
+        },
+        {
+          "label": "Money + size rule",
+          "summary": "Money + size rule"
+        }
+      ],
+      "chosen": "Add a money budget",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP360"
+    },
+    {
+      "id": "D61",
+      "question": "How the website picks up a new release",
+      "options": [
+        {
+          "label": "Rebuild after each release",
+          "summary": "Rebuild after each release"
+        },
+        {
+          "label": "Deploy hook secret",
+          "summary": "Deploy hook secret"
+        },
+        {
+          "label": "Like comiclex",
+          "summary": "Like comiclex"
+        }
+      ],
+      "chosen": "Rebuild after each release",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP332"
+    },
+    {
+      "id": "D62",
+      "question": "Bars vs charts in Cool Terminal",
+      "options": [
+        {
+          "label": "Every horizontal bar = blocks in both styles; Dots changes real charts only",
+          "summary": "BarList counts as a bar"
+        }
+      ],
+      "chosen": "Every horizontal bar = blocks in both styles; Dots changes real charts only",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP369"
+    },
+    {
+      "id": "D63",
+      "question": "EC2 overflow price",
+      "options": [
+        {
+          "label": "Yes, price per target",
+          "summary": "Yes, price per target"
+        },
+        {
+          "label": "Wait for CRSP361",
+          "summary": "Wait for CRSP361"
+        },
+        {
+          "label": "No",
+          "summary": "No"
+        }
+      ],
+      "chosen": "Yes, price per target",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP372"
+    },
+    {
+      "id": "D64",
+      "question": "Price hosted runners by size",
+      "options": [
+        {
+          "label": "Standard for now",
+          "summary": "Standard for now"
+        },
+        {
+          "label": "Price by size now",
+          "summary": "Price by size now"
+        }
+      ],
+      "chosen": "Standard for now",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP372"
+    },
+    {
+      "id": "D65",
+      "question": "Overflow job OS for pricing",
+      "options": [
+        {
+          "label": "Use the runner's real OS",
+          "summary": "Use the runner's real OS"
+        },
+        {
+          "label": "Keep label guess",
+          "summary": "Keep label guess"
+        }
+      ],
+      "chosen": "Use the runner's real OS",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP372"
+    },
+    {
+      "id": "D66",
+      "question": "Agents-and-integration rule file",
+      "options": [
+        {
+          "label": "Merge, keep project lines",
+          "summary": "Merge, keep project lines"
+        },
+        {
+          "label": "Take the template",
+          "summary": "Take the template"
+        },
+        {
+          "label": "Keep as is",
+          "summary": "Keep as is"
+        }
+      ],
+      "chosen": "Take the template",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP353"
+    },
+    {
+      "id": "D67",
+      "question": "Light Terminal themes (CRSP371 review)",
+      "options": [
+        {
+          "label": "Approve",
+          "summary": "palettes and cards as reviewed"
+        },
+        {
+          "label": "Change",
+          "summary": "rework"
+        }
+      ],
+      "chosen": "Approve",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP371"
+    },
+    {
+      "id": "D68",
+      "question": "Leaner CI S16: update a behind PR with main before CI counts",
+      "options": [
+        {
+          "label": "Update PRs (watcher.merge_result update)",
+          "summary": "recommended"
+        }
+      ],
+      "chosen": "Update PRs (watcher.merge_result update)",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP375"
+    },
+    {
+      "id": "D69",
+      "question": "Leaner CI S19: retry a job failed on an infrastructure error",
+      "options": [
+        {
+          "label": "Retry once (watcher.infra_retry true)",
+          "summary": "recommended"
+        }
+      ],
+      "chosen": "Retry once (watcher.infra_retry true)",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP375"
+    },
+    {
+      "id": "D70",
+      "question": "Perf R3-6: how open job lists get changes",
+      "options": [
+        {
+          "label": "Publish job events",
+          "summary": "recommended"
+        }
+      ],
+      "chosen": "Publish job events",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP292"
+    },
+    {
+      "id": "D71",
+      "question": "Perf: remove cold groups/stats scan",
+      "options": [
+        {
+          "label": "Background refresh of the cache",
+          "summary": "recommended"
+        }
+      ],
+      "chosen": "Background refresh of the cache",
+      "status": "decided",
+      "decided": "2026-11-27",
+      "asked": "2026-11-27",
+      "task": "CRSP292"
+    },
+    {
+      "id": "D72",
+      "question": "Comiclex has no runners (deleted registrations): unblock tonight by hand or wait for the product fix?",
+      "options": [
+        {
+          "label": "Re-register by hand now with gh",
+          "summary": "recommended"
+        },
+        {
+          "label": "Wait for the product fix",
+          "summary": ""
+        }
+      ],
+      "chosen": "Wait for the product fix",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP382"
+    },
+    {
+      "id": "D73",
+      "question": "Which release carries the re-register fix?",
+      "options": [
+        {
+          "label": "RELEASE-72",
+          "summary": "recommended"
+        },
+        {
+          "label": "RELEASE-71",
+          "summary": ""
+        }
+      ],
+      "chosen": "RELEASE-72",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP382"
+    },
+    {
+      "id": "D74",
+      "question": "AWS connect method",
+      "options": [
+        {
+          "label": "Roles Anywhere + quick-create",
+          "summary": "recommended"
+        },
+        {
+          "label": "IAM user access keys",
+          "summary": ""
+        },
+        {
+          "label": "Both, Roles Anywhere default",
+          "summary": ""
+        }
+      ],
+      "chosen": "Owner: must also work on Linux and macOS controllers (key store per OS); Roles Anywhere kept pending cross-platform check",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP361"
+    },
+    {
+      "id": "D75",
+      "question": "Where the CloudFormation template lives",
+      "options": [
+        {
+          "label": "Owner's AWS account, public S3",
+          "summary": "recommended"
+        },
+        {
+          "label": "No bucket: user uploads the file",
+          "summary": ""
+        }
+      ],
+      "chosen": "Owner: whatever makes setup simplest and intuitive for every user, all UX rules; applies to AWS and future integrations",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP361"
+    },
+    {
+      "id": "D76",
+      "question": "Overnight tags",
+      "options": [
+        {
+          "label": "v0.1.30 and v0.1.31 when green",
+          "summary": "recommended"
+        },
+        {
+          "label": "Only v0.1.30",
+          "summary": ""
+        },
+        {
+          "label": "No tags",
+          "summary": ""
+        }
+      ],
+      "chosen": "v0.1.30 and v0.1.31 when green",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP329"
+    },
+    {
+      "id": "D77",
+      "question": "Update crsp on this PC overnight",
+      "options": [
+        {
+          "label": "Yes, when tagged",
+          "summary": "recommended"
+        },
+        {
+          "label": "No",
+          "summary": ""
+        }
+      ],
+      "chosen": "Yes, when tagged",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP382"
+    },
+    {
+      "id": "D78",
+      "question": "Cloud agents for the rest of the work",
+      "options": [
+        {
+          "label": "Cloud when the test passes",
+          "summary": "recommended"
+        },
+        {
+          "label": "Stay local",
+          "summary": ""
+        }
+      ],
+      "chosen": "Cloud when the test passes",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP350"
+    },
+    {
+      "id": "D79",
+      "question": "RELEASE-72 scope",
+      "options": [
+        {
+          "label": "Runner fix first (RELEASE-72), rest RELEASE-73",
+          "summary": "recommended"
+        },
+        {
+          "label": "One RELEASE-72",
+          "summary": ""
+        }
+      ],
+      "chosen": "Runner fix first (RELEASE-72), rest RELEASE-73",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP330"
+    },
+    {
+      "id": "D80",
+      "question": "UI work overnight",
+      "options": [
+        {
+          "label": "Build, hold UI for review",
+          "summary": "recommended"
+        },
+        {
+          "label": "Build and merge on green",
+          "summary": ""
+        }
+      ],
+      "chosen": "Build and merge on green",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP330"
+    },
+    {
+      "id": "D81",
+      "question": "Deleted runner registration",
+      "options": [
+        {
+          "label": "Automatic once, then Register again button",
+          "summary": "recommended"
+        },
+        {
+          "label": "Always a button",
+          "summary": ""
+        }
+      ],
+      "chosen": "Automatic once, then Register again button",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP382"
+    },
+    {
+      "id": "D82",
+      "question": "crsp CLI sign-in for the overnight PC update",
+      "options": [
+        {
+          "label": "Owner signs in now",
+          "summary": "recommended"
+        },
+        {
+          "label": "Update in the morning",
+          "summary": ""
+        }
+      ],
+      "chosen": "Owner signs in now",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP382"
+    },
+    {
+      "id": "D83",
+      "question": "Public CloudFormation template hosting",
+      "options": [
+        {
+          "label": "Bucket in owner's AWS account",
+          "summary": "recommended"
+        },
+        {
+          "label": "Another way, no owner AWS account",
+          "summary": ""
+        }
+      ],
+      "chosen": "Another way, no owner AWS account: spec compares options",
+      "status": "decided",
+      "decided": "2026-11-28",
+      "asked": "2026-11-28",
+      "task": "CRSP361"
     }
   ]
 }
