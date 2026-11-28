@@ -7,7 +7,7 @@
 # deleted its registration ("Registration was not found", "the runner
 # registration has been deleted") can never connect again, so it is not started
 # again: a `.lost` marker holds the reason, list.sh reports it to the controller
-# and add-runner.sh registers the runner again and removes the marker (R5.140).
+# and add-runner.sh registers the runner again and removes the marker (R5.152).
 # The runners register with
 # `config.sh --unattended --replace` (never --ephemeral) when they are added by
 # add-runner.sh, so a restart only runs them.

@@ -457,7 +457,7 @@ func TestListScriptNamesEntriesAndWhetherTheyRun(t *testing.T) {
 }
 
 // The supervisor, list.sh and add-runner.sh with a runner whose registration
-// GitHub deleted (runners R5.140, CRSP382).
+// GitHub deleted (runners R5.152, CRSP382).
 
 const lostLog = "VssOAuthTokenRequestException: Registration was not found or is not medium trust\n" +
 	"Failed to create a session. The runner registration has been deleted from the server, please re-configure.\n"
