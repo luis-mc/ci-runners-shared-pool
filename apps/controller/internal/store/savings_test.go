@@ -53,7 +53,7 @@ func TestPoolJobGroupsRoundUpPerJobAndGroup(t *testing.T) {
 func TestPoolJobGroupsUseTheDoneAtIndex(t *testing.T) {
 	js := jobsDB(t)
 	var plan string
-	rows, err := js.db.QueryContext(context.Background(), `EXPLAIN QUERY PLAN SELECT j.id FROM jobs j WHERE j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?`, "a", "b")
+	rows, err := js.db.QueryContext(context.Background(), `EXPLAIN QUERY PLAN `+poolJobGroupsSQL, "a", "b")
 	must(t, err)
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {

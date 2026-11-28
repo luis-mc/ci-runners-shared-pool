@@ -19,22 +19,25 @@ type PoolJobGroup struct {
 	Jobs    int
 }
 
-// PoolJobGroups counts the jobs that completed in [from, to) on a machine of the pool: they have a machine and
-// a real start and end. The system is the machine's, the repository is public when GitHub says so (R5.15,
-// R5.18). The grouping and the round-up happen in SQL; the index `jobs_done_at` serves the window.
-func (s *Store) PoolJobGroups(ctx context.Context, from, to time.Time) ([]PoolJobGroup, error) {
-	rows, err := s.db.QueryContext(ctx, `SELECT repository, public, os, machine, mins, COUNT(*) FROM (
+// The planner would pick `jobs_stale` (state only) for this window, so the index is named.
+const poolJobGroupsSQL = `SELECT repository, public, os, machine, mins, COUNT(*) FROM (
  SELECT j.repository AS repository, COALESCE(r.visibility, 'private') = 'public' AS public,
   LOWER(COALESCE(m.os, '')) AS os,
   CASE WHEN j.machine_name != '' THEN j.machine_name ELSE COALESCE(m.name, j.machine_id) END AS machine,
   (CAST(ROUND((julianday(j.completed_at) - julianday(j.started_at)) * 86400000) AS INTEGER) + 59999) / 60000 AS mins
- FROM jobs j
+ FROM jobs j INDEXED BY jobs_done_at
  LEFT JOIN repositories r ON r.id = j.repository_id
  LEFT JOIN machines m ON m.id = j.machine_id
  WHERE j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?
  AND j.machine_id != '' AND j.started_at != '' AND j.completed_at != '')
  WHERE mins > 0
- GROUP BY repository, public, os, machine, mins`, fmtTime(from), fmtTime(to))
+ GROUP BY repository, public, os, machine, mins`
+
+// PoolJobGroups counts the jobs that completed in [from, to) on a machine of the pool: they have a machine and
+// a real start and end. The system is the machine's, the repository is public when GitHub says so (R5.15,
+// R5.18). The grouping and the round-up happen in SQL; the index `jobs_done_at` serves the window.
+func (s *Store) PoolJobGroups(ctx context.Context, from, to time.Time) ([]PoolJobGroup, error) {
+	rows, err := s.db.QueryContext(ctx, poolJobGroupsSQL, fmtTime(from), fmtTime(to))
 	if err != nil {
 		return nil, fmt.Errorf("pool job groups: %w", err)
 	}
