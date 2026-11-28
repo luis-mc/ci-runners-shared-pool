@@ -4,7 +4,7 @@ import type { paths } from '@crsp/contract';
 import { useEffect, useMemo, useState } from 'react';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useLoad, type Loaded } from '../../api/hooks';
-import { useLiveState, useVersion } from '../../live/LiveProvider';
+import { useLiveState, useSettledVersion } from '../../live/LiveProvider';
 import { allRepositories } from '../repositories/plans';
 
 export type JobsQuery = NonNullable<paths['/api/v1/jobs']['get']['parameters']['query']>;
@@ -40,7 +40,7 @@ export function useJobList(
   off = false,
 ): Hook<Schemas['JobPage']> {
   const client = useClient();
-  const v = useVersion('jobs');
+  const v = useSettledVersion('jobs');
   const tick = useTick();
   return useLoad(
     () =>
@@ -58,7 +58,7 @@ export function useRunList(
   off = false,
 ): Hook<Schemas['RunPage']> {
   const client = useClient();
-  const v = useVersion('jobs');
+  const v = useSettledVersion('jobs');
   const tick = useTick();
   return useLoad(
     () =>
@@ -76,7 +76,7 @@ export function useRun(
   poll = true,
 ): Hook<Schemas['RunItem']> {
   const client = useClient();
-  const v = useVersion('jobs');
+  const v = useSettledVersion('jobs');
   const tick = useTick();
   return useLoad(
     () =>
@@ -92,7 +92,7 @@ export function useRun(
 /** One job with its steps, history and attempts. */
 export function useJobDetail(jobId: number): Hook<Schemas['JobDetail']> {
   const client = useClient();
-  const v = useVersion('jobs');
+  const v = useSettledVersion('jobs');
   const tick = useTick();
   return useLoad(
     () => unwrap(client.GET('/api/v1/jobs/{jobId}', { params: { path: { jobId } } })),
@@ -102,7 +102,7 @@ export function useJobDetail(jobId: number): Hook<Schemas['JobDetail']> {
 
 export function useGroups(by: GroupBy): Hook<Schemas['JobGroupList']> {
   const client = useClient();
-  const v = useVersion('jobs');
+  const v = useSettledVersion('jobs');
   const tick = useTick();
   return useLoad(
     () => unwrap(client.GET('/api/v1/jobs/groups', { params: { query: { by } } })),
@@ -112,7 +112,7 @@ export function useGroups(by: GroupBy): Hook<Schemas['JobGroupList']> {
 
 export function useStats(days: 7 | 14 | 30): Hook<Schemas['JobStats']> {
   const client = useClient();
-  const v = useVersion('jobs');
+  const v = useSettledVersion('jobs');
   return useLoad(
     () => unwrap(client.GET('/api/v1/jobs/stats', { params: { query: { days } } })),
     [days, v],

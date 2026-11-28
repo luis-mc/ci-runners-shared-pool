@@ -29,6 +29,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/events"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/history"
+	joblive "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/jobsdata/live"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/notify"
@@ -179,7 +180,16 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	appHealth := &github.AppHealth{Client: gh, AppID: gh.AppID, Now: d.Now}
 	// The Jobs section: every job event ends in one recorder (observability R5.7 to R5.12).
-	jobsIngest := newJobsWiring(ctx, logger, d.DB.Jobs(), gh, repoStore, d.Now)
+	// Live view over an empty source until the store adapter is wired (CRSP23).
+	hub, live := wire.NewLive(poolOverviewSource{DB: d.DB}, events.Options{})
+	c.Hub = hub
+	c.closers = append(c.closers, hub.Stop)
+
+	// Job writes tell the live view (job.queued, job.started, job.finished) and rebuild the groups and
+	// stats cache in the background, so no page scans past jobs (observability R5.4, R6.2).
+	liveJobs := joblive.New(joblive.Options{Store: d.DB.Jobs(), Events: hub, Encode: api.JobEventJSON, Log: logger})
+	c.closers = append(c.closers, liveJobs.Close)
+	jobsIngest := newJobsWiring(ctx, logger, liveJobs, gh, repoStore, d.Now)
 	c.closers = append(c.closers, jobsIngest.Close)
 	sizes := newSizeTrigger(ctx, logger)
 	c.sizes = sizes
@@ -235,11 +245,6 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			func(err error) { logger.Warn("check the GitHub App", "err", err) })
 	}()
 	c.closers = append(c.closers, func() { stopHealth(); <-healthDone })
-
-	// Live view over an empty source until the store adapter is wired (CRSP23).
-	hub, live := wire.NewLive(poolOverviewSource{DB: d.DB}, events.Options{})
-	c.Hub = hub
-	c.closers = append(c.closers, hub.Stop)
 
 	// Runners: the controller's own OS through the backend registry; other
 	// machines wait for the runner messages on the agent link.
@@ -409,7 +414,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Listen = d.Listen
 	}
 	c.Options.Jobs, c.Options.Slots, c.Options.Live = d.DB, d.Queue, live
-	c.Options.JobsData = d.DB.Jobs()
+	c.Options.JobsData = liveJobs
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
 	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}

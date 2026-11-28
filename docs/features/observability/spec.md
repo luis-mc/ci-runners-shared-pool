@@ -19,7 +19,7 @@ code:
   - apps/controller/internal/compare/**
   - apps/controller/internal/metrics/**
 design_system: [UX-6, UX-13, UX-22, UX-24, UX-38, UX-17, UX-18, UX-19, UX-28, UX-29, UX-31, UX-33, UX-34, UX-39, UX-41, UX-52, UX-53, UX-58]
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.6.1
 ---
@@ -266,6 +266,8 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.77** — **Who and where.** The three routes (`getMetricsSettings`, `putMetricsSettings`, `makeMetricsToken`) are admin role; the owner is above admin. The settings live in the settings table under `metrics_export`. The package `apps/controller/internal/metrics` is pure Go and reads other areas only through the `Feeds` functions the controller gives it (`apps/controller/cmd/crsp/metrics_wiring.go`). **Platforms:** built for Windows, Linux and macOS. Tested on Windows and Linux. macOS is compiled and unit-tested in CI and has not been run on a real Mac.
 
+**R5.78** — (CRSP378) **Job lists follow the stream; pages never scan.** After a job write commits, the controller publishes `job.queued` (first seen queued), `job.started` (now running) and `job.finished` (now done) on the event stream of R5.1, once per state change of a job. The `job` field is the list's job row, so it carries the job id (`id`) and the run id (`run_id`, with `run_attempt`). A write that fails publishes nothing. In the console every list of jobs, runs, groups and charts reloads on a job event; a burst of events is gathered, so a list reloads at most once every 0.5 seconds and the last event of a burst always gets its reload. The groups table and the chart data are kept in memory: they are built when the controller starts and rebuilt in the background after job writes, at most once every 2 seconds however many builds write. A page reads memory, never the history; a failed rebuild keeps the last good answer, and only a read before the first build, or a chart filter outside the 64 kept, reads the store. Answers can be up to a few seconds old, the same as a reload on the stream.
+
 ### Retention
 
 **R5.32** — (M1) A retention job runs every hour and deletes data past the limits in R6.8. Owners change the limits in Settings, within the floor and ceiling. A value outside them is refused with the allowed range.
@@ -466,6 +468,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Pl
 | R5.75 | apps/controller/internal/metrics/persist_test.go TestSecretToken; apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsPutChecksAndKeeps |
 | R5.76 | apps/controller/internal/metrics/metrics_test.go TestScrapeConfig; apps/controller-console/src/screens/settings/MetricsSettings.test.tsx |
 | R5.77 | apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsAdminOnly; apps/controller/internal/api route and role tables |
+| R5.78 | apps/controller/internal/jobsdata/live/live_test.go (TestPublishesOneEventPerStateChange, TestNoEventWhenTheWriteFails, TestReadsDoNotWaitForARebuild, TestWritesCoalesceIntoFewRebuilds, TestFailedRebuildKeepsTheLastGoodAnswer); apps/controller/internal/api/job_event_test.go; apps/controller-console/src/live/settled.test.tsx |
 
 ## 10. Decisions
 
@@ -518,6 +521,7 @@ Built (CRSP18): `apps/controller/internal/audit/audit.go` (writer, reader, redac
 Built (CRSP23):
 
 - apps/controller/internal/events/ (hub, SSE writer)
+- apps/controller/internal/jobsdata/live/ (CRSP378: job.* publisher and the background groups and stats cache; `api.JobEventJSON`; `useSettledVersion` in the console)
 - apps/controller/internal/overview/ (overview and snapshot builder)
 - apps/controller/internal/api/handlers_live.go (overview and stream routes)
 

@@ -1,4 +1,12 @@
-import { createContext, useContext, useEffect, useMemo, type ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { LiveStore, useLive, type EventSourceFactory, type LiveState } from './store';
 
 const LiveContext = createContext<LiveStore | null>(null);
@@ -41,4 +49,34 @@ export function useLiveState(): LiveState {
 export function useVersion(kind: string): number {
   const s = useLiveState();
   return (s.versions[kind] ?? 0) + s.reconnects * 1000;
+}
+
+/** How long a list waits to gather a burst of job events into one reload. */
+export const SETTLE_MS = 500;
+
+/**
+ * Like useVersion, but a burst of events moves it once per `ms`, not once per event: with dozens of builds
+ * running a list reloads a few times a second at most, and the last event of a burst always gets its reload.
+ */
+export function useSettledVersion(kind: string, ms = SETTLE_MS): number {
+  const latest = useVersion(kind);
+  const [settled, setSettled] = useState(latest);
+  const seen = useRef(latest);
+  const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  seen.current = latest;
+  useEffect(() => {
+    if (latest === settled || timer.current) return;
+    timer.current = setTimeout(() => {
+      timer.current = undefined;
+      setSettled(seen.current);
+    }, ms);
+  }, [latest, settled, ms]);
+  useEffect(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = undefined;
+    },
+    [],
+  );
+  return settled;
 }

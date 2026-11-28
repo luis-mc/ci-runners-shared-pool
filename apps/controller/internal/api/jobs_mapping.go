@@ -2,6 +2,7 @@ package api
 
 import (
 	"context"
+	"encoding/json"
 	"sort"
 	"time"
 
@@ -447,4 +448,14 @@ func criticalPath(d jobsdata.RunDetail, nodes []forecast.Node) (path []string, e
 		eta = toEta(e)
 	}
 	return path, eta
+}
+
+// JobEventJSON is the `job` field of a job.queued, job.started or job.finished live event: the job as the
+// console reads it in a list, with its run id and job id (observability R5.4).
+func JobEventJSON(j jobsdata.Job) []byte {
+	b, err := json.Marshal(toJobItem(j))
+	if err != nil {
+		return nil
+	}
+	return b
 }
