@@ -44,7 +44,8 @@ func (s *server) GetTimeline(ctx context.Context, req gen.GetTimelineRequestObje
 	g, gctx := errgroup.WithContext(ctx)
 	g.SetLimit(4)
 	g.Go(func() (e error) { views, e = s.opts.Machines.List(gctx); return e })
-	g.Go(func() (e error) { in.Finished, in.OlderFinished, e = s.finishedJobs(gctx, in); return e })
+	q := in // finishedJobs reads a copy: the other reads write into in at the same time
+	g.Go(func() (e error) { in.Finished, in.OlderFinished, e = s.finishedJobs(gctx, q); return e })
 	g.Go(func() (e error) { in.Open, e = s.opts.JobsData.OpenJobs(gctx); return e })
 	if err = g.Wait(); err != nil {
 		return fail(err)
