@@ -448,6 +448,9 @@ func TestThirtyDayPrune(t *testing.T) { // R6.5
 }
 
 func TestQueueCeiling(t *testing.T) { // R6.9
+	old := queueCeiling
+	queueCeiling = 200 // the rule is the same at any ceiling; 10 000 rows cost seconds under -race
+	t.Cleanup(func() { queueCeiling = old })
 	e := newEnv(t, nil)
 	ctx := context.Background()
 	e.desktop(t, owner)
@@ -457,7 +460,7 @@ func TestQueueCeiling(t *testing.T) { // R6.9
 	setupCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
 	defer cancel()
 	err := e.db.WithTx(setupCtx, func(tx *store.Tx) error {
-		for i := 0; i < QueueCeiling+3; i++ {
+		for i := 0; i < queueCeiling+3; i++ {
 			tone := ToneNote
 			if i%2 == 1 {
 				tone = ToneNeedsYou
@@ -479,8 +482,8 @@ func TestQueueCeiling(t *testing.T) { // R6.9
 	e.svc.Tick(ctx)
 	n, _ := e.db.CountQueuedDeliveries(ctx)
 	// The finding that says what was dropped is itself one queued desktop notice.
-	if n != QueueCeiling+1 {
-		t.Fatalf("%d queued, want %d", n, QueueCeiling+1)
+	if n != queueCeiling+1 {
+		t.Fatalf("%d queued, want %d", n, queueCeiling+1)
 	}
 	var finding bool
 	for _, row := range e.notices(t) {
