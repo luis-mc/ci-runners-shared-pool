@@ -30,6 +30,7 @@ import { withFirstRepository } from '../../shell/Shell';
 import { AddMachineWizard } from '../machines/AddMachine';
 import { ReadyDoor, needsEngine } from '../dependencies/ReadyDoor';
 import { TurnOnPoolWizard } from '../repositories/TurnOnPool';
+import { PoolNameWizard } from './PoolName';
 
 type SetupState = Schemas['SetupState'];
 
@@ -425,6 +426,7 @@ function Checklist({
   signedIn: boolean;
   reload: () => void;
 }) {
+  const client = useClient();
   const [params] = useSearchParams();
   const link = state.setup_link_redeemed || params.has('code');
   if (!state.has_app && !link)
@@ -438,8 +440,23 @@ function Checklist({
       </Section>
     );
   const s = state.steps;
+  // The pool takes its name once GitHub is connected and before the first machine: crsp-home is prefilled. A pool
+  // that has a machine already, or a name chosen, has no such step (runners R5.141).
+  const naming = useLoad(
+    () =>
+      signedIn ? unwrap(client.GET('/api/v1/pool/name')) : Promise.resolve(undefined),
+    [signedIn],
+  );
+  const named =
+    s.first_machine === 'done' ||
+    naming.result.state !== 'ready' ||
+    naming.result.data === undefined ||
+    naming.result.data.source !== 'default';
   const order = [
     { id: 'connect', title: 'Connect GitHub', done: s.connect_github === 'done' },
+    ...(s.connect_github === 'done' && signedIn && !named
+      ? [{ id: 'name', title: 'Name the pool', done: false }]
+      : []),
     { id: 'machine', title: 'Add the first machine', done: s.first_machine === 'done' },
     {
       id: 'repo',
@@ -473,6 +490,14 @@ function Checklist({
                 Sign in with GitHub
               </Button>
             </Stack>
+          ) : o.id === 'name' ? (
+            <PoolNameWizard
+              mode="first"
+              onDone={() => {
+                naming.reload();
+                reload();
+              }}
+            />
           ) : o.id === 'machine' ? (
             <AddMachineWizard onDone={reload} />
           ) : (

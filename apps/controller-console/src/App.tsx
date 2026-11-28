@@ -100,6 +100,9 @@ const ConfigApplyPage = later(
 const ChangePoolPage = later(() =>
   import('./screens/repositories/ChangePool').then((m) => m.ChangePoolWizard),
 );
+const PoolRenamePage = later(() =>
+  import('./screens/setup/PoolName').then((m) => m.PoolRenamePage),
+);
 const TurnOnPoolPage = later(
   () => import('./screens/repositories/TurnOnPool').then((m) => m.TurnOnPoolPage),
   { heading: 'Turn on the pool' },
@@ -277,6 +280,7 @@ export function App({
                 </Route>
                 <Route path="config/apply" element={<ConfigApplyPage />} />
                 <Route path="setup/pool/turn-on" element={<TurnOnPoolPage />} />
+                <Route path="setup/pool/rename" element={<PoolRenamePage />} />
                 <Route path="setup/pool/:owner/:name" element={<RepositoryDetail />} />
                 <Route path="setup/machines/add" element={<AddMachinePage />} />
                 <Route path="setup/machines/:id" element={<MachineDetail />} />

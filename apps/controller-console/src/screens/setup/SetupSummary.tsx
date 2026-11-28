@@ -132,6 +132,41 @@ export function SetupSteps({ f, app }: { f: PoolFigures; app: boolean | undefine
   );
 }
 
+/** The pool name and the way to rename it (runners R5.141). */
+export function PoolNameSection() {
+  const client = useClient();
+  const session = useSession();
+  const info = useLoad(() => unwrap(client.GET('/api/v1/pool/name')), []);
+  const admin = session.can('admin');
+  return (
+    <Section title="Pool name">
+      <Facts
+        items={[
+          {
+            name: 'Name',
+            value:
+              info.result.state === 'ready' ? (
+                info.result.data.name
+              ) : (
+                <Text tone="muted">Not known yet.</Text>
+              ),
+          },
+          {
+            name: 'Rename',
+            value: admin ? (
+              <LinkButton to="/setup/pool/rename">Rename the pool</LinkButton>
+            ) : (
+              <Button disabled reason={session.whyNot('admin')}>
+                Rename the pool
+              </Button>
+            ),
+          },
+        ]}
+      />
+    </Section>
+  );
+}
+
 export function SetupSummary() {
   const client = useClient();
   const machines = useMachines();
@@ -189,6 +224,7 @@ export function SetupSummary() {
                 </Card>
               </CardGrid>
               {rp ? <SetupSteps f={f} app={app} /> : null}
+              <PoolNameSection />
             </Stack>
           );
         }}
