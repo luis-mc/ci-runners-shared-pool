@@ -1,7 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { expectDomLayout } from '../../scripts/design/dom-layout';
 import {
-  busyQueue,
   failure,
   machine,
   needingRecovery,
@@ -10,6 +9,7 @@ import {
   stoppedMachine,
 } from './web-console/fixtures';
 import { jobsAndDoctor } from './web-console/jobs-doctor-fixtures';
+import { busyQueue } from './web-console/queue-fixtures';
 
 // The DOM layout checker (design system, Enforcement kit) on the console's M1 screens, at 360, 393 and 1300 px.
 // It uses the DOM only. The known list (scripts/design/layout.known.json) is empty and only shrinks.

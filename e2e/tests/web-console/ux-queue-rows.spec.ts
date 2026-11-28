@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { expectDomLayout } from '../../../scripts/design/dom-layout';
-import { busyQueue, signedIn } from './fixtures';
+import { busyQueue } from './queue-fixtures';
+import { signedIn } from './fixtures';
 import { jobsAndDoctor } from './jobs-doctor-fixtures';
 
 // CRSP391: Pool > Queue Analysis with 16 waiting jobs. One row per job (about a third of the old card);
