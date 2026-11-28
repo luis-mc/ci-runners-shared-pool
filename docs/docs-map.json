@@ -238,11 +238,17 @@
     "apps/controller/internal/notify/**": [
       "docs/features/notifications/spec.md"
     ],
+    "apps/controller/internal/overflow/**": [
+      "docs/features/aws-overflow/spec.md"
+    ],
     "apps/controller/internal/overview/**": [
       "docs/features/observability/spec.md"
     ],
     "apps/controller/internal/power/**": [
       "docs/features/machines/spec.md"
+    ],
+    "apps/controller/internal/providers/aws/**": [
+      "docs/features/aws-overflow/spec.md"
     ],
     "apps/controller/internal/recovery/**": [
       "docs/features/operations/spec.md"
@@ -279,6 +285,7 @@
       "docs/features/scheduling/spec.md"
     ],
     "apps/controller/internal/secrets/**": [
+      "docs/features/aws-overflow/spec.md",
       "docs/features/github-integration/spec.md"
     ],
     "apps/controller/internal/store/imagebuilds.go": [
