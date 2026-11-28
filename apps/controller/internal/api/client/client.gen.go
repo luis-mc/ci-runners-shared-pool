@@ -2681,12 +2681,14 @@ func (e PlanRepositoryChangesRequestChangesPool) Valid() bool {
 // Defines values for PlanStepAction.
 const (
 	AddRunner       PlanStepAction = "add_runner"
+	CheckRunsOn     PlanStepAction = "check_runs_on"
 	DeleteOldFolder PlanStepAction = "delete_old_folder"
 	DeleteVariable  PlanStepAction = "delete_variable"
 	PoolOff         PlanStepAction = "pool_off"
 	PoolOn          PlanStepAction = "pool_on"
 	RemoveOldRunner PlanStepAction = "remove_old_runner"
 	StopOldService  PlanStepAction = "stop_old_service"
+	SyncRunners     PlanStepAction = "sync_runners"
 	WriteVariable   PlanStepAction = "write_variable"
 )
 
@@ -2694,6 +2696,8 @@ const (
 func (e PlanStepAction) Valid() bool {
 	switch e {
 	case AddRunner:
+		return true
+	case CheckRunsOn:
 		return true
 	case DeleteOldFolder:
 		return true
@@ -2706,6 +2710,8 @@ func (e PlanStepAction) Valid() bool {
 	case RemoveOldRunner:
 		return true
 	case StopOldService:
+		return true
+	case SyncRunners:
 		return true
 	case WriteVariable:
 		return true

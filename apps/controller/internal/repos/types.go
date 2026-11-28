@@ -172,6 +172,10 @@ const (
 	ActPoolOff        = "pool_off"
 	ActWriteVariable  = "write_variable"
 	ActDeleteVariable = "delete_variable"
+	// ActSyncRunners adjusts the runners of the pool to the pool switch of one repository (CRSP405).
+	ActSyncRunners = "sync_runners"
+	// ActCheckRunsOn reads the repository's variables back and records whether they are right (CRSP405).
+	ActCheckRunsOn = "check_runs_on"
 )
 
 // Step states.

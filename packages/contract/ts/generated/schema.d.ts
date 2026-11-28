@@ -5836,7 +5836,7 @@ export interface components {
         PlanStep: {
             id: string;
             /** @enum {string} */
-            action: "pool_on" | "pool_off" | "write_variable" | "delete_variable" | "add_runner" | "stop_old_service" | "remove_old_runner" | "delete_old_folder";
+            action: "pool_on" | "pool_off" | "write_variable" | "delete_variable" | "sync_runners" | "check_runs_on" | "add_runner" | "stop_old_service" | "remove_old_runner" | "delete_old_folder";
             text: string;
             target?: string;
             needs_yes: boolean;

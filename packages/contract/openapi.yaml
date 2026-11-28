@@ -9130,6 +9130,8 @@ components:
               pool_off,
               write_variable,
               delete_variable,
+              sync_runners,
+              check_runs_on,
               add_runner,
               stop_old_service,
               remove_old_runner,

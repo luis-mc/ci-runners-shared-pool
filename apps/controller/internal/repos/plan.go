@@ -130,7 +130,20 @@ func (s *Service) planOn(ctx context.Context, r Repository) ([]Step, error) {
 				Text: "Write variable " + name + " of " + r.FullName + " = " + val})
 		}
 	}
+	steps = append(steps, syncStep(r), checkStep(r))
 	return steps, nil
+}
+
+// syncStep adjusts the pool runners to a repository's pool switch (CRSP405).
+func syncStep(r Repository) Step {
+	return Step{Action: ActSyncRunners, Target: r.FullName, RepositoryID: r.ID,
+		Text: "Adjust the pool runners for " + r.FullName}
+}
+
+// checkStep reads a repository's variables back after the change (CRSP405).
+func checkStep(r Repository) Step {
+	return Step{Action: ActCheckRunsOn, Target: r.FullName, RepositoryID: r.ID,
+		Text: "Check the variables of " + r.FullName}
 }
 
 // planRepair plans the work that makes a pool-on repository's variables what
@@ -186,7 +199,8 @@ func (s *Service) planRepair(ctx context.Context, r Repository) ([]Step, error) 
 
 func (s *Service) planOff(ctx context.Context, r Repository) ([]Step, error) {
 	steps := []Step{{Action: ActPoolOff, Target: r.FullName, RepositoryID: r.ID, Pool: false,
-		Text: "Turn the pool off for " + r.FullName + ". Its runners are removed after their running jobs end."}}
+		Text: "Turn the pool off for " + r.FullName + ". Its runners are removed after their running jobs end."},
+		syncStep(r)}
 	// GitHub is read fresh: the question must name what is really there.
 	have, err := s.cfg.GitHub.ListVariables(ctx, r.InstallationID, r.Owner, r.Name)
 	if err != nil {
@@ -313,8 +327,11 @@ func (s *Service) ApplyPlan(ctx context.Context, p auth.Principal, id string, ap
 	for _, a := range approved {
 		yes[a] = true
 	}
+	// A page that closes or reloads mid-run drops its request; the plan still runs to its end (CRSP405).
+	ctx = context.WithoutCancel(ctx)
 	plan.State = PlanApplying
 	_ = s.cfg.Store.UpdatePlan(ctx, plan)
+	s.progress(plan)
 	s.beginRun(plan.ID)
 	defer s.endRun(plan.ID)
 
@@ -336,6 +353,10 @@ func (s *Service) ApplyPlan(ctx context.Context, p auth.Principal, id string, ap
 			continue
 		}
 		st.State = StepRunning
+		// The running step is saved and published before it starts, so a page reading the plan shows it (CRSP405).
+		plan.UpdatedAt = s.cfg.Now()
+		_ = s.cfg.Store.UpdatePlan(ctx, plan)
+		s.progress(plan)
 		if err := s.runStep(ctx, p, repos[st.RepositoryID], *st); err != nil {
 			st.State, st.Error = StepFailed, publicError(err)
 			plan.State = PlanFailed
@@ -358,7 +379,16 @@ func (s *Service) ApplyPlan(ctx context.Context, p auth.Principal, id string, ap
 		return plan, err
 	}
 	s.progress(plan)
+	checked := map[int64]bool{}
+	for _, st := range plan.Steps {
+		if st.Action == ActCheckRunsOn {
+			checked[st.RepositoryID] = true
+		}
+	}
 	for id := range repos {
+		if checked[id] {
+			continue
+		}
 		if r2, err := s.cfg.Store.GetRepository(ctx, id); err == nil && r2.PoolOn {
 			_ = s.CheckRunsOn(ctx, id)
 		}
@@ -421,7 +451,6 @@ func (s *Service) runStep(ctx context.Context, p auth.Principal, r Repository, s
 			return err
 		}
 		r.PoolOn = true
-		s.syncRegistrations(ctx, p, r) // the pool runners get a registration for this repository
 	case ActPoolOff:
 		if err := s.cfg.Store.SetRepositoryPool(ctx, r.ID, false, p.Login, s.cfg.Now()); err != nil {
 			return err
@@ -430,7 +459,12 @@ func (s *Service) runStep(ctx context.Context, p auth.Principal, r Repository, s
 		if err := s.SyncOrgGroup(ctx, r.InstallationID); err != nil {
 			s.cfg.Audit.Audit(ctx, p, "org_pool.sync_failed", "repository", r.FullName, err.Error())
 		}
-		s.syncRegistrations(ctx, p, r) // drain and remove this repository's registrations
+	case ActSyncRunners:
+		// The pool runners get a registration for the repository, or drain and lose it (CRSP405).
+		s.syncRegistrations(ctx, p, r)
+	case ActCheckRunsOn:
+		// The check only reports; a check that cannot read GitHub never fails the change (as before CRSP405).
+		_ = s.CheckRunsOn(ctx, r.ID)
 	case ActWriteVariable:
 		if err := s.cfg.GitHub.SetVariable(ctx, r.InstallationID, r.Owner, r.Name, github.Variable{Name: st.Target, Value: st.Value}); err != nil {
 			return err

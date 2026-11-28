@@ -22,7 +22,7 @@ func TestStopPlanWhileApplying(t *testing.T) {
 	asked := false
 	e.svc.cfg.OnProgress = func(p Plan) {
 		seen = append(seen, p.State)
-		if !asked && p.State == PlanApplying { // after the first step finished
+		if !asked && p.State == PlanApplying && p.Steps[0].State == StepDone { // after the first step finished
 			asked = true
 			got, err := e.svc.StopPlan(ctx, adminP, p.ID)
 			if err != nil || got.State != PlanApplying {
