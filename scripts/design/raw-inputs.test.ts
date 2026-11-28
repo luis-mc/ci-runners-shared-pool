@@ -5,6 +5,8 @@ import {
   countBreaches,
   judgeBreaches,
   scanText,
+  scanTimeTextFields,
+  scanTimeTextTree,
   scanTree,
   TYPES,
   type KnownEntry,
@@ -36,6 +38,41 @@ describe('no native date, time or number input (UX-56)', () => {
       'native date, time or number input: use the picker or the keypad',
     ).toEqual([]);
     expect(stale, 'fixed breach still listed: shrink the known list').toEqual([]);
+  });
+
+  it('no text field asks for a time: label or placeholder with hh:mm or "time" (LOOK72, the list is empty)', () => {
+    expect(
+      scanTimeTextTree(root).map((b) => `${b.file}: ${b.attr} "${b.text}"`),
+      'a time of day uses the time picker, never a text field',
+    ).toEqual([]);
+  });
+
+  describe('the time text field scan', () => {
+    const scan = (text: string) =>
+      scanTimeTextFields('apps/controller-console/a.tsx', text);
+    it('a text field labelled with a time fails', () => {
+      expect(
+        scan('<TextField label="From (hh:mm)" value={v} onChange={f} />'),
+      ).toHaveLength(1);
+      expect(scan('<TextField label="Until (HH:MM)" />')).toHaveLength(1);
+      expect(scan('<TextField label="Backup time" />')).toHaveLength(1);
+      expect(scan("<TextField label={'Name'} placeholder='hh:mm' />")).toHaveLength(1);
+    });
+    it('other text fields and a time picker pass', () => {
+      expect(scan('<TextField label="Name" placeholder="Timeout" />')).toEqual([]);
+      expect(scan('<TextField label="Runtime" />')).toEqual([]);
+      expect(
+        scan('<TimePicker label="From" value={v} onChange={f} units="hm" />'),
+      ).toEqual([]);
+    });
+    it('test files are not scanned', () => {
+      expect(
+        scanTimeTextFields(
+          'apps/controller-console/a.test.tsx',
+          '<TextField label="Time" />',
+        ),
+      ).toEqual([]);
+    });
   });
 
   describe('the scan itself', () => {

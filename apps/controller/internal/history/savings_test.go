@@ -114,3 +114,14 @@ func TestUnpricedOSAddsNoMoney(t *testing.T) {
 		t.Fatalf("%+v", rep)
 	}
 }
+
+func TestGroupedJobsCountLikeSingleJobs(t *testing.T) {
+	rep, err := svc(Job{Repository: "o/a", OS: "linux", Machine: "m1", Run: 2 * time.Minute, Count: 1000}).
+		Report(context.Background(), RangeToday, time.Time{}, time.Time{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if rep.Total.Jobs != 1000 || rep.Total.Minutes != 2000 || rep.Total.Money != 16 || rep.ByRepository[0].Jobs != 1000 {
+		t.Fatalf("%+v", rep.Total)
+	}
+}

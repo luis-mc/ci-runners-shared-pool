@@ -180,7 +180,8 @@ The body scrolls when the content is taller than the space. The overlay never gr
 - **Looks:** a name above a box, a help line below it and an error line in the Problem tone when needed. A switch is a button with On or Off and its name always beside it; pressing the name works the switch. A check box and a radio are drawn 16 px inside a 44 px hit area (UX-16).
 - **Source:** `src/ui/field`; `packages/ui/src/components/FileField.tsx`, `packages/ui/src/components/Fields.tsx`
 - **Rules:** UX-20, UX-21, UX-22, UX-23, UX-24, UX-10, UX-16.
-- **Guard:** `packages/ui/src/components/look6-8.test.tsx` (file field states, drop and accept).
+- **Guard:** `packages/ui/src/components/look6-8.test.tsx` (file field states, drop and accept; file list field).
+- **File list field (component 14c, CRSP347):** the file field for many files. One dashed drop zone takes several files at once (drop, or *Choose files*, then *Add more files*); each file is one row with its name, its size (`formatSize`) and *Remove {name}*; a file with the same name replaces the earlier one. It keeps the name, help and error places of the field family, never shows the content of a file, and takes `initial` for a wizard that comes back to its Files step. Source: `packages/ui/src/components/FileListField.tsx`, `packages/ui/src/components/Fields.tsx`, rows in `components.css` (`.ds-file__list`, `.ds-file__row`). Rules: UX-10, UX-20, UX-21, UX-23. Guard: `packages/ui/src/components/look6-8.test.tsx` (FileListField).
 
 ## 15. Tables and list rows
 
@@ -785,7 +786,7 @@ Removed in LOOK47 (owner decision 21 Nov 2026, D58): Help is no wizard, so nothi
 
 ## 73. Lifecycle parts
 
-- **Used for:** install, update and remove in the web console and on a phone: `UpdateBanner` (ready, running, done, failed), `UpdatesCard` (policy, time window, wait for running work, last check, admin lock), `UpdateHistory` (audit events with actor and result), `RemoteUpdate` (phone, 360 to 393 px), `RemoveDialog` (Remove disabled until Keep my data or Delete my data too is chosen) and `FleetRows` (Up to date, Waiting, Needs you) and `ReleaseNotes` (the note of a release under *What is new in version X*, inside `UpdatesCard` while a version is on offer and once after an update; nothing is drawn for a release without a note, CRSP354). Words come from the lifecycle words table.
+- **Used for:** install, update and remove in the web console and on a phone: `UpdateBanner` (ready, running, done, failed), `UpdatesCard` (policy, the time window of From and Until as two time pickers (component 36, units `hm`, UX-56) laid out like Backup time: the label above, the value shown, then the picker, each end with a Clear button back to Any time and read-only text when locked; one end set says which one is missing, never a text field, wait for running work, last check, admin lock), `UpdateHistory` (audit events with actor and result), `RemoteUpdate` (phone, 360 to 393 px), `RemoveDialog` (Remove disabled until Keep my data or Delete my data too is chosen) and `FleetRows` (Up to date, Waiting, Needs you) and `ReleaseNotes` (the note of a release under *What is new in version X*, inside `UpdatesCard` while a version is on offer and once after an update; nothing is drawn for a release without a note, CRSP354). Words come from the lifecycle words table.
 - **Looks:** cards on the shared part class `ds-part`. Tokens only. Every state is a word, never colour alone.
 - **Source:** `packages/ui/src/components/lifecycle` (LOOK53 builds it from `parts/react-typescript/` of the starter)
 - **Rules:** UX-82, UX-4, UX-26, UX-16, CORE-1, CORE-2, CORE-4, CORE-5.

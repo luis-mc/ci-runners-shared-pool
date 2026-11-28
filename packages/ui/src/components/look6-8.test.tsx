@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { NumberField } from './Controls';
-import { ChoiceField, FileField } from './Fields';
+import { ChoiceField, FileField, FileListField } from './Fields';
 import { fileSize } from './FileField';
 import { NumberKeypad } from '../pickers/NumberKeypad';
 
@@ -152,5 +152,59 @@ describe('FileField (LOOK8)', () => {
     expect(fileSize(12)).toBe('12 B');
     expect(fileSize(1536)).toBe('1.5 KB');
     expect(fileSize(3 * 1024 * 1024)).toBe('3 MB');
+  });
+});
+
+describe('FileListField (component 14c)', () => {
+  const file = (name: string, size = 2000) => new File(['x'.repeat(size)], name);
+
+  it('empty: a drop zone and a multiple file input', () => {
+    render(<FileListField label="Installers" onChange={() => {}} />);
+    expect(screen.getByText('Drop the files here, or')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Choose files' })).toBeTruthy();
+    expect(screen.getByLabelText<HTMLInputElement>('Installers').multiple).toBe(true);
+  });
+
+  it('chosen: one row per file with name and size; Remove drops one', () => {
+    const onChange = vi.fn<(files: File[]) => void>();
+    render(<FileListField label="Installers" onChange={onChange} />);
+    fireEvent.change(screen.getByLabelText('Installers'), {
+      target: { files: [file('a.exe'), file('b.exe', 3_000_000)] },
+    });
+    expect(screen.getByText('a.exe')).toBeTruthy();
+    expect(screen.getByText('2.0 KB')).toBeTruthy();
+    expect(screen.getByText('3.0 MB')).toBeTruthy();
+    expect(onChange).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: 'a.exe' }),
+      expect.objectContaining({ name: 'b.exe' }),
+    ]);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove a.exe' }));
+    expect(screen.queryByText('a.exe')).toBeNull();
+    expect(onChange).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: 'b.exe' }),
+    ]);
+  });
+
+  it('a drop adds files and a same-name file replaces the earlier one', () => {
+    const onChange = vi.fn<(files: File[]) => void>();
+    const { container } = render(
+      <FileListField label="Installers" onChange={onChange} />,
+    );
+    const zone = container.querySelector('.ds-file')!;
+    fireEvent.drop(zone, { dataTransfer: { files: [file('a.exe', 10)] } });
+    fireEvent.drop(zone, { dataTransfer: { files: [file('a.exe', 20), file('c.exe')] } });
+    expect(onChange).toHaveBeenLastCalledWith([
+      expect.objectContaining({ name: 'a.exe', size: 20 }),
+      expect.objectContaining({ name: 'c.exe' }),
+    ]);
+    expect(screen.getByRole('button', { name: 'Add more files' })).toBeTruthy();
+  });
+
+  it('disabled: no choose button', () => {
+    render(<FileListField label="Installers" disabled onChange={() => {}} />);
+    expect(screen.getByRole('button', { name: 'Choose files' })).toHaveProperty(
+      'disabled',
+      true,
+    );
   });
 });

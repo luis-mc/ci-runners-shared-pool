@@ -325,6 +325,9 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 		if err := b.stopService(ctx, env, folder); err != nil {
 			return h, err
 		}
+		if err := b.ensureListRight(ctx); err != nil {
+			return h, err
+		}
 		return h, b.startService(ctx, env, account)
 	case persistent.UpdateRights:
 		if err := b.rights.Grant(ctx, account, r.WindowsSymlinkRight); err != nil {
@@ -349,6 +352,9 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 			return h, err
 		}
 		if err := persistent.WriteMeta(b.d.FS, Join(folder, persistent.MetaFile), wantMeta); err != nil {
+			return h, err
+		}
+		if err := b.ensureListRight(ctx); err != nil {
 			return h, err
 		}
 		return h, b.startService(ctx, env, account)
@@ -406,6 +412,12 @@ func (b *Backend) start(ctx context.Context, r backend.RunnerSpec, cfg backend.S
 		return h, err
 	}
 	if err := b.rights.Grant(ctx, account, r.WindowsSymlinkRight); err != nil {
+		return h, err
+	}
+	// The runner reads every folder above its own; the data folder is closed to
+	// other accounts, so the group gets the right to list the two above the
+	// runner folder (runners R5.156).
+	if err := b.ensureListRight(ctx); err != nil {
 		return h, err
 	}
 	// The shared tool folders: every runner account is in crsp-runners, which

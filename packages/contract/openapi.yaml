@@ -1541,6 +1541,84 @@ paths:
                 $ref: '#/components/schemas/DependencyJob'
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/dependencies/store:
+    get:
+      operationId: listDependencyStore
+      tags: [machines]
+      summary: What the controller keeps for machines without internet
+      description: >-
+        dependency-setup DEP15. Every dependency this release may keep (pinned
+        installers, runner packages, agent packages) and whether the controller
+        holds a checked copy. A machine without internet installs from it.
+      x-auth: user
+      x-rate-limit: 60/minute/user
+      responses:
+        '200':
+          description: The dependencies and their state.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DependencyStoreEntry'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/dependencies/store/{dependencyId}/fetch:
+    post:
+      operationId: fetchDependency
+      tags: [machines]
+      summary: Download one dependency to the controller and check it
+      description: >-
+        dependency-setup DEP15. The controller downloads the file, compares its
+        SHA-256 with the one pinned in this release and keeps it only when they
+        match. A file that does not match is deleted. 409 when this release pins
+        no SHA-256 for it or has no address for it.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DependencyStoreId'
+      responses:
+        '200':
+          description: The entry after the fetch.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyStoreEntry'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/dependencies/store/{dependencyId}/file:
+    put:
+      operationId: importDependency
+      tags: [machines]
+      summary: Give the controller a file you downloaded yourself
+      description: >-
+        dependency-setup DEP15. For a controller that has no internet. The body
+        is the file. It is kept only when its SHA-256 equals the one pinned in
+        this release; otherwise it is deleted and the answer is 422.
+      x-auth: admin
+      x-rate-limit: 10/minute/user
+      parameters:
+        - $ref: '#/components/parameters/DependencyStoreId'
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: The entry after the import.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DependencyStoreEntry'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/doctor/registration-fixes:
     post:
       operationId: removeRegistration
@@ -2184,6 +2262,68 @@ paths:
                 format: binary
         default:
           $ref: '#/components/responses/Error'
+  /api/v1/agent-installers:
+    get:
+      operationId: listAgentInstallers
+      tags: [machines]
+      summary: The agent installers of this release, and which ones this controller has
+      description: >-
+        operations R5.132 (CRSP347). The version this controller serves, whether it has the
+        release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz
+        archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is
+        stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step
+        of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from
+        the release itself, so nothing needs importing for it.
+      x-auth: user
+      x-rate-limit: 120/minute/user
+      responses:
+        '200':
+          description: The agent installers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentInstallers'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/agent-installers/{name}:
+    put:
+      operationId: importAgentInstaller
+      tags: [machines]
+      summary: Store an agent installer, or SHA256SUMS, that the owner carried over
+      description: >-
+        operations R5.132 (CRSP347), the offline path. The body is the file. `name` is
+        `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the
+        extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos).
+        SHA256SUMS must list an installer of this controller's version and is refused (409
+        `conflict`) when the controller already read the release's own copy. An installer is
+        stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list
+        answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match
+        answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+      x-auth: admin
+      x-rate-limit: 60/minute/user
+      parameters:
+        - name: name
+          in: path
+          required: true
+          schema:
+            type: string
+            maxLength: 100
+      requestBody:
+        required: true
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary
+      responses:
+        '200':
+          description: Stored. The list after the import.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentInstallers'
+        default:
+          $ref: '#/components/responses/Error'
   /api/v1/join-codes/ssh:
     post:
       operationId: joinMachineOverSsh
@@ -2761,6 +2901,32 @@ paths:
       responses:
         '200':
           description: Registered again; the runner as it is now.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Runner'
+        default:
+          $ref: '#/components/responses/Error'
+  /api/v1/runners/{runnerId}/start:
+    post:
+      operationId: startRunner
+      tags: [runners]
+      summary: Start the service of a stopped runner
+      description: >-
+        runners R5.157. The Start button and `crsp runner start NAME`. For a
+        persistent runner CRSP made whose service is stopped: the machine starts
+        the service of the runner, or of each registration of a pool runner, and
+        does nothing for one that already runs. A service that starts and stops
+        again at once is answered with 409 and the reason the runner service gave
+        (runners R5.156). A runner CRSP did not make and an ephemeral runner are
+        refused with 409.
+      x-auth: admin
+      x-rate-limit: 30/minute/user
+      parameters:
+        - $ref: '#/components/parameters/RunnerId'
+      responses:
+        '200':
+          description: Started; the runner as it is now.
           content:
             application/json:
               schema:
@@ -4887,8 +5053,6 @@ paths:
   /api/v1/config/export:
     get:
       operationId: exportConfigFile
-      x-cli: none
-      x-cli-reason: 'Later: `crsp config export` follows in its own task; the API and the console are built (operations R5.28).'
       tags: [settings]
       summary: Export the setup as one config file
       description: >-
@@ -4907,8 +5071,6 @@ paths:
   /api/v1/config/plans:
     post:
       operationId: planConfig
-      x-cli: none
-      x-cli-reason: 'Later: `crsp config plan` follows in its own task; the API and the console are built (operations R5.29).'
       tags: [settings]
       summary: Plan a config file
       description: >-
@@ -4936,8 +5098,6 @@ paths:
   /api/v1/config/plans/{configPlanId}/apply:
     post:
       operationId: applyConfigPlan
-      x-cli: none
-      x-cli-reason: 'Later: `crsp config apply` follows in its own task; the API and the console are built (operations R5.30).'
       tags: [settings]
       summary: Apply a config plan
       description: >-
@@ -6521,6 +6681,13 @@ components:
       required: true
       schema:
         type: string
+    DependencyStoreId:
+      name: dependencyId
+      in: path
+      required: true
+      schema:
+        type: string
+        maxLength: 128
     DependencyJobId:
       name: jobId
       in: path
@@ -9916,6 +10083,48 @@ components:
           type: integer
           format: int64
           description: Unix milliseconds.
+    DependencyStoreEntry:
+      type: object
+      required: [id, name, kind, state, can_fetch, pinned]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        kind:
+          type: string
+          enum: [installer, runner, agent]
+        os:
+          type: string
+        arch:
+          type: string
+        version:
+          type: string
+        source:
+          type: string
+          description: The host it is fetched from, in words for the user.
+        state:
+          type: string
+          enum: [ready, missing, failed, not_pinned]
+        pinned:
+          type: boolean
+          description: This release lists a SHA-256 for it, so a file can be checked.
+        can_fetch:
+          type: boolean
+          description: The controller has an address to download it from.
+        sha256:
+          type: string
+        stored_bytes:
+          type: integer
+          format: int64
+        fetched_at:
+          type: string
+          format: date-time
+        origin:
+          type: string
+          enum: [fetched, imported]
+        error:
+          type: string
     DependencyJob:
       type: object
       required:
@@ -10277,6 +10486,11 @@ components:
             True when the Runners page offers Register again: GitHub deleted the
             registration and it was not made again, or GitHub does not list the
             runner (runners R5.153).
+        can_start:
+          type: boolean
+          description: >-
+            True when the Runners page offers Start: the service of a persistent
+            runner is stopped (runners R5.157).
         os:
           $ref: '#/components/schemas/OS'
         arch:
@@ -12275,6 +12489,45 @@ components:
         delete_data:
           type: [boolean, 'null']
           description: Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default.
+    AgentInstaller:
+      type: object
+      description: One agent installer that SHA256SUMS lists.
+      required: [name, os, arch, format, sha256, stored]
+      properties:
+        name:
+          type: string
+          example: CrspAgent-1.4.0-linux-x64.tar.gz
+        os:
+          type: string
+          enum: [windows, linux, macos]
+        arch:
+          type: string
+          enum: [amd64, arm64]
+        format:
+          type: string
+          enum: [zip, tar.gz, msi, pkg, deb]
+        sha256:
+          type: string
+          description: The SHA-256 SHA256SUMS lists.
+        stored:
+          type: boolean
+          description: The file is on this controller and has that SHA-256.
+    AgentInstallers:
+      type: object
+      description: operations R5.132 (CRSP347).
+      required: [version, have_sums, from_release, installers]
+      properties:
+        version:
+          type: string
+          example: 1.4.0
+        have_sums:
+          type: boolean
+        from_release:
+          type: boolean
+        installers:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentInstaller'
     UpdateStatus:
       type: object
       description: operations R5.11 to R5.18, tray R5.18.

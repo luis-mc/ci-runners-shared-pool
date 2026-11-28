@@ -11,6 +11,9 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | cross-cutting | 0003-isolation-backends | [Isolation backends as plugins behind one interface, chosen per machine and label](decisions/0003-isolation-backends.md) |  | accepted | 2026-11-13 |
 | cross-cutting | 0004-agent-link | [Agents connect outbound to the controller over gRPC with a per-machine key](decisions/0004-agent-link.md) |  | accepted | 2026-11-13 |
 | cross-cutting | 0005-product-boundary | [Self-hosted machines first, a tray per OS, no dependency on the delivery plugin](decisions/0005-product-boundary.md) |  | accepted | 2026-11-13 |
+| cross-cutting | 0006-vm-per-job | [A fresh VM per job through one VM core, with the hypervisor each host OS ships](decisions/0006-vm-per-job.md) |  | proposed | 2026-11-28 |
+| cross-cutting | 0007-macos-vm-bridge | [macOS VMs through a small signed helper on Virtualization.framework](decisions/0007-macos-vm-bridge.md) |  | proposed | 2026-11-28 |
+| cross-cutting | 0008-microvm-monitor | [Firecracker first for microVMs, behind the VM seam, with Cloud Hypervisor as the next option](decisions/0008-microvm-monitor.md) |  | proposed | 2026-11-28 |
 | caches | D1 | [Which cache protocol to serve](../features/caches/spec.md) | The v2 Twirp cache service only; v1 is not served (current toolkit uses v2 on github.com) | decided | 2026-11-14 (proposed) |
 | caches | D2 | [How to send `actions/cache` to the pool](../features/caches/spec.md) | A runner patched at install for the pinned runner version (section 7.2); owner to confirm (Q1) | decided | 2026-11-14 (proposed) |
 | caches | D3 | [Tool cache language](../features/caches/spec.md) | A Go port of `ci_tool.py` inside the one binary, with its tests ported | decided | 2026-11-14 (proposed) |
@@ -352,10 +355,51 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | research | D40 | When registry work starts | After RES21 fixes land | decided | 2026-11-19 |
 | research | D41 | REG-5 registry screens (RES20 review build) | Approve as shown | decided | 2026-11-19 |
 | research | D42 | Registry wave start (phases 1 to 3 in one go; replaces D40) | Now, contract first | decided | 2026-11-19 |
+| research | D43 | Caches and package proxy (rows V/W) | Option 1 One hub in the controller | decided | 2026-11-27 |
+| research | D44 | Installers and release notes (row K) | Option 3 Release notes first | decided | 2026-11-27 |
+| research | D45 | Pool setup page content (CRSP340) | Option 5 exactly as shown | decided | 2026-11-27 |
+| research | D46 | Pool setup primary button | Yes, action bar | decided | 2026-11-27 |
+| research | D47 | Overflow cap scope | Both | decided | 2026-11-27 |
+| research | D48 | AWS EC2 overflow runners | Yes, crsp starts them | decided | 2026-11-27 |
+| research | D49 | Dotted graphs setting | Only for Terminal | decided | 2026-11-27 |
 | research | D5 | RES15: Runs vs jobs in Queue, Running, Done | Rows per run, jobs inside | decided | 2026-11-18 |
+| research | D50 | Release without a note | OK, show nothing | decided | 2026-11-27 |
+| research | D51 | What does the Dots graph style change? | Charts only | decided | 2026-11-27 |
+| research | D52 | What does the Dots graph style change? | Charts only | decided | 2026-11-27 |
+| research | D53 | Debug access on pull-request jobs (Q10) | Allow same-repo PRs | decided | 2026-11-27 |
+| research | D54 | Debug extension cap (Q11) | Repository's limit | decided | 2026-11-27 |
+| research | D55 | Unknown repository visibility (Q12) | Keep, treat as public | decided | 2026-11-27 |
+| research | D56 | Sessions open at controller start (Q13) | Keep ending them | decided | 2026-11-27 |
+| research | D57 | Where update progress lives | Panel + one top line | decided | 2026-11-27 |
+| research | D58 | Settings tabs | Console renamed Themes + Networking tab | decided | 2026-11-27 |
+| research | D59 | Debug extension cap (Q11 revisited) | Up to the max a repo may set | decided | 2026-11-27 |
 | research | D6 | RES15: Where step times come from | GitHub now, both later | decided | 2026-11-18 |
+| research | D60 | Overflow money budget (Q24) | Add a money budget | decided | 2026-11-27 |
+| research | D61 | How the website picks up a new release | Rebuild after each release | decided | 2026-11-27 |
+| research | D62 | Bars vs charts in Cool Terminal | Every horizontal bar = blocks in both styles; Dots changes real charts only | decided | 2026-11-27 |
+| research | D63 | EC2 overflow price | Yes, price per target | decided | 2026-11-27 |
+| research | D64 | Price hosted runners by size | Standard for now | decided | 2026-11-27 |
+| research | D65 | Overflow job OS for pricing | Use the runner's real OS | decided | 2026-11-27 |
+| research | D66 | Agents-and-integration rule file | Take the template | decided | 2026-11-27 |
+| research | D67 | Light Terminal themes (CRSP371 review) | Approve | decided | 2026-11-27 |
+| research | D68 | Leaner CI S16: update a behind PR with main before CI counts | Update PRs (watcher.merge_result update) | decided | 2026-11-27 |
+| research | D69 | Leaner CI S19: retry a job failed on an infrastructure error | Retry once (watcher.infra_retry true) | decided | 2026-11-27 |
 | research | D7 | RES15: Branch and worktree display | Branch, task, worktree if told | decided | 2026-11-18 |
+| research | D70 | Perf R3-6: how open job lists get changes | Publish job events | decided | 2026-11-27 |
+| research | D71 | Perf: remove cold groups/stats scan | Background refresh of the cache | decided | 2026-11-27 |
+| research | D72 | Comiclex has no runners (deleted registrations): unblock tonight by hand or wait for the product fix? | Wait for the product fix | decided | 2026-11-28 |
+| research | D73 | Which release carries the re-register fix? | RELEASE-72 | decided | 2026-11-28 |
+| research | D74 | AWS connect method | Owner: must also work on Linux and macOS controllers (key store per OS); Roles Anywhere kept pending cross-platform check | decided | 2026-11-28 |
+| research | D75 | Where the CloudFormation template lives | Owner: whatever makes setup simplest and intuitive for every user, all UX rules; applies to AWS and future integrations | decided | 2026-11-28 |
+| research | D76 | Overnight tags | v0.1.30 and v0.1.31 when green | decided | 2026-11-28 |
+| research | D77 | Update crsp on this PC overnight | Yes, when tagged | decided | 2026-11-28 |
+| research | D78 | Cloud agents for the rest of the work | Cloud when the test passes | decided | 2026-11-28 |
+| research | D79 | RELEASE-72 scope | Runner fix first (RELEASE-72), rest RELEASE-73 | decided | 2026-11-28 |
 | research | D8 | RES15: Forecast with under 5 runs | Fallback, labelled | decided | 2026-11-18 |
+| research | D80 | UI work overnight | Build and merge on green | decided | 2026-11-28 |
+| research | D81 | Deleted runner registration | Automatic once, then Register again button | decided | 2026-11-28 |
+| research | D82 | crsp CLI sign-in for the overnight PC update | Owner signs in now | decided | 2026-11-28 |
+| research | D83 | Public CloudFormation template hosting | Another way, no owner AWS account: spec compares options | decided | 2026-11-28 |
 | research | D9 | RES15: Queue start ETA | Yes, start range | decided | 2026-11-18 |
 | scheduling | D1 | [Where do slots, tickets and the slot log live?](../features/scheduling/spec.md) | In the controller's SQLite tables, not lock files in a shared folder. A take is one transaction (decision 0001). | decided | 2026-11-14 |
 | scheduling | D2 | [Who judges whether a holder is dead?](../features/scheduling/spec.md) | The agent of the holder's machine judges the process; the controller judges ages on its own clock. This replaces "same host only" (learning 2). | decided | 2026-11-14 |

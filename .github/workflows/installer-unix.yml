@@ -14,6 +14,7 @@ on:
     paths:
       - 'installer/controller/linux/**'
       - 'installer/controller/macos/**'
+      - 'installer/agent/**'
       - 'apps/controller/cmd/crsp/**'
       - 'scripts/delivery/tools.json'
       - '.github/workflows/installer-unix.yml'
@@ -54,6 +55,9 @@ jobs:
           bash installer/controller/linux/build.sh amd64 bin/crsp edge-ci 1 pkgs/old
           bash installer/controller/linux/build.sh amd64 bin/crsp edge-ci 2 pkgs/new
           ls -l pkgs/old pkgs/new
+          # CRSP348: the agent .deb
+          bash installer/agent/linux/build.sh amd64 bin/crsp edge-ci 1 pkgs/agent
+          ls -l pkgs/agent
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: installer-linux-amd64
@@ -78,6 +82,27 @@ jobs:
           new=$(sudo dpkg-deb -f pkgs/new/crsp-linux-amd64.deb Version)
           sudo SMOKE_SYSTEMD=1 bash installer/controller/linux/smoke.sh deb \
             pkgs/old/crsp-linux-amd64.deb pkgs/new/crsp-linux-amd64.deb "${old%-*}" "${new%-*}"
+
+  # CRSP348: the agent .deb installs the binary only: no service, no tray, and it removes cleanly.
+  smoke-agent-deb:
+    name: smoke agent deb
+    needs: linux-packages
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: installer-linux-amd64
+          path: pkgs
+      - name: Install and remove
+        run: |
+          set -euo pipefail
+          sudo dpkg -i pkgs/agent/crspagent-linux-amd64.deb
+          test -x /usr/bin/crsp
+          /usr/bin/crsp version || /usr/bin/crsp --version
+          test ! -e /usr/lib/systemd/system/crsp.service
+          sudo dpkg -r crsp-agent
+          test ! -e /usr/bin/crsp
 
   smoke-rpm:
     name: smoke rpm (fedora container)
@@ -118,6 +143,16 @@ jobs:
           chmod +x bin/crsp
           bash installer/controller/macos/build.sh arm64 bin/crsp edge-ci 1 pkgs/old
           bash installer/controller/macos/build.sh arm64 bin/crsp edge-ci 2 pkgs/new
+      # CRSP348: the agent .pkg puts crsp in /usr/local/bin and nothing else.
+      - name: Agent pkg build, install and remove
+        run: |
+          set -euo pipefail
+          bash installer/agent/macos/build.sh arm64 bin/crsp edge-ci 1 pkgs/agent
+          sudo installer -pkg pkgs/agent/crspagent-darwin-arm64.pkg -target /
+          test -x /usr/local/bin/crsp
+          test ! -e /Library/LaunchDaemons/crsp.plist
+          sudo rm -f /usr/local/bin/crsp
+          sudo pkgutil --forget dev.luismc.crsp.agent
       - name: Install, upgrade, uninstall
         run: bash installer/controller/macos/smoke.sh pkgs/old/crsp-darwin-arm64.pkg pkgs/new/crsp-darwin-arm64.pkg
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4

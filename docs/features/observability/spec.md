@@ -225,7 +225,7 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 
 **R5.18** — (M8, Built by CRSP256) Jobs of public repositories count their minutes but save no money, because GitHub-hosted standard runners are free for public repositories. The report says so in its note and counts those minutes in `public_minutes`. A repository counts as public when GitHub says `public`; `internal` repositories are billed and save money.
 
-**R5.19** — (M8, Built by CRSP256) A minutes-saved report covers today, 7 days, 30 days and a chosen range, per repository, OS and machine. On screen: Analytics > Savings (range choice *Today*, *7 days*, *30 days*, *A range* with two date pickers; three tables by repository, system and machine). Route `GET /api/v1/savings?range=today|7d|30d|custom&from&to`; a custom range is at most 366 days and includes its last day. There is no CLI command yet (`x-cli: none`). Source: `apps/controller/internal/history/savings.go`.
+**R5.19** — (M8, Built by CRSP256) A minutes-saved report covers today, 7 days, 30 days and a chosen range, per repository, OS and machine. On screen: Analytics > Savings (range choice *Today*, *7 days*, *30 days*, *A range* with two date pickers; three tables by repository, system and machine). Route `GET /api/v1/savings?range=today|7d|30d|custom&from&to`; a custom range is at most 366 days and includes its last day. There is no CLI command yet (`x-cli: none`). Source: `apps/controller/internal/history/savings.go`. The report is aggregated in SQL (`store.PoolJobGroups`: the round-up per job, then the count per repository, system, machine and minute value), so thousands of past jobs read a few rows; the window is served by the index `jobs_state_completed` (state, completed_at).
 
 ### Runner setup and agent logs
 
@@ -274,6 +274,8 @@ Owner decisions of 2026-11-18 (RES15 review). Web screens: `web-console` section
 **R5.76** — **Scrape text.** The console gives a ready `prometheus.yml` block for the saved settings: the job name, `localhost` (or this PC's name when exposed), the port, and `YOUR-TOKEN` as a placeholder when a key is asked for. Copy changes nothing.
 
 **R5.77** — **Who and where.** The three routes (`getMetricsSettings`, `putMetricsSettings`, `makeMetricsToken`) are admin role; the owner is above admin. The settings live in the settings table under `metrics_export`. The package `apps/controller/internal/metrics` is pure Go and reads other areas only through the `Feeds` functions the controller gives it (`apps/controller/cmd/crsp/metrics_wiring.go`). **Platforms:** built for Windows, Linux and macOS. Tested on Windows and Linux. macOS is compiled and unit-tested in CI and has not been run on a real Mac.
+
+**R5.78** — (CRSP378) **Job lists follow the stream; pages never scan.** After a job write commits, the controller publishes `job.queued` (first seen queued), `job.started` (now running) and `job.finished` (now done) on the event stream of R5.1, once per state change of a job. The `job` field is the list's job row, so it carries the job id (`id`) and the run id (`run_id`, with `run_attempt`). A write that fails publishes nothing. In the console every list of jobs, runs, groups and charts reloads on a job event; a burst of events is gathered, so a list reloads at most once every 0.4 seconds and the last event of a burst always gets its reload. The groups table and the chart data are kept in memory: they are built when the controller starts and rebuilt in the background after job writes, at most once every 2 seconds however many builds write. A page reads memory, never the history; a failed rebuild keeps the last good answer, and only a read before the first build, or a chart filter outside the 64 kept, reads the store. Answers can be up to a few seconds old, the same as a reload on the stream.
 
 ### Retention
 
@@ -334,6 +336,12 @@ Whichever of a time or a size limit is reached first applies. The oldest data go
 **R6.14** — (M1) The audit log holds personal data (GitHub login and user id). It is listed in `docs/reference/data-inventory.md` and `docs/reference/data-retention.md` (stack profile, sections 7 and 10) and follows R6.8.
 
 **R6.15** — (CRSP341) The secret scan is never allowlisted. A pull request that adds a line to `.gitleaksignore` fails: the guard `scripts/ci/gitleaksignore_guard.py` runs in the pre-push hook (gate.json `always_on_guards`) and in the CI lint job; removing lines passes. Planted fake secrets in tests are built at run time, never written as literals (AGENTS.md, Secret scan).
+
+**R6.16** — (CRSP321, CRSP375, CRSP376, CRSP377) This repository's own delivery is lean: one full run per change, and a lane runs only when its inputs changed.
+- The local gate is a smoke. The pre-push hook runs `go test -short` on the touched packages, the secret scan, the guards, gofmt, `go vet`, golangci-lint (also `GOOS=windows` when Go files changed), `prettier --check`, `pnpm -r lint` when web files changed, and the web typecheck. CI is the one full run (gate.json `local_gate: smoke`; `CRSP_PREPUSH_FULL=1` runs the touched packages in full).
+- The watcher updates a ready pull request with the default branch before its run (`watcher.merge_result: update`), so the run tests what will merge and the push to the default branch skips by `scripts/delivery/ci_skip_check.py`. It re-runs a job once when it failed for an infrastructure reason, never a test failure (`watcher.infra_retry: true`).
+- The image, Go OS (Windows, macOS) and MSI lanes are skipped only when the default branch holds a pass record with the same inputs key (`scripts/delivery/ci-shards.json`, `pass_records.py to-result`). A lane with no inputs, no key, a failed record or a manual run always runs. A skipped default-branch push copies the merged pull request's records to the default branch.
+- A flaky Go test goes into `.delivery/quarantine.json` with a task and a review date. The blocking run leaves it out (`go test -skip`); a non-blocking CI step runs it. It is never retried until it passes. An entry with no task or a past date fails lint.
 
 ## 7. Design
 
@@ -496,6 +504,7 @@ Rows that name a file without "planned" are built (CRSP18, CRSP23, CRSP271c). Pl
 | R5.75 | apps/controller/internal/metrics/persist_test.go TestSecretToken; apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsPutChecksAndKeeps |
 | R5.76 | apps/controller/internal/metrics/metrics_test.go TestScrapeConfig; apps/controller-console/src/screens/settings/MetricsSettings.test.tsx |
 | R5.77 | apps/controller/internal/api/handlers_metrics_test.go TestMetricsSettingsAdminOnly; apps/controller/internal/api route and role tables |
+| R5.78 | apps/controller/internal/jobsdata/live/live_test.go (TestPublishesOneEventPerStateChange, TestNoEventWhenTheWriteFails, TestReadsDoNotWaitForARebuild, TestWritesCoalesceIntoFewRebuilds, TestFailedRebuildKeepsTheLastGoodAnswer); apps/controller/internal/api/job_event_test.go; apps/controller-console/src/live/store.test.ts "job events keep open lists current" |
 
 ## 10. Decisions
 
@@ -548,6 +557,7 @@ Built (CRSP18): `apps/controller/internal/audit/audit.go` (writer, reader, redac
 Built (CRSP23):
 
 - apps/controller/internal/events/ (hub, SSE writer)
+- apps/controller/internal/jobsdata/live/ (CRSP378: job.* publisher and the background groups and stats cache; `api.JobEventJSON`)
 - apps/controller/internal/overview/ (overview and snapshot builder)
 - apps/controller/internal/api/handlers_live.go (overview and stream routes)
 

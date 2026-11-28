@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The agent MSI for Windows (CRSP348), WiX v5. No user interface: it copies crsp.exe to
+  %ProgramFiles%\crsp and stops; joining the controller is the next command
+  (the command crsp.exe agent install, with the controller address and a join code). build.ps1 defines:
+
+    ProductVersion  a.b.c.d for the MSI
+    CrspExe         the crsp.exe to install
+
+  The Controller MSI (installer/controller/crsp.wxs) installs the same file, so the two do not
+  go on one machine. WiX v5 has no package-level product search that this build could use, so the
+  package does not check for it; the Controller already contains the agent.
+-->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs"
+     xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="CI Runners Shared Pool Agent"
+           Manufacturer="Luis Carvalho"
+           Version="$(var.ProductVersion)"
+           UpgradeCode="7B0E5C1A-3D52-4F6E-9A47-5E8C2F1D90B4"
+           Scope="perMachine"
+           InstallerVersion="500"
+           Compressed="yes">
+    <SummaryInformation Description="CI Runners Shared Pool agent (crsp)" />
+    <MajorUpgrade Schedule="afterInstallInitialize" DowngradeErrorMessage="A newer version of [ProductName] is already installed."
+                  AllowSameVersionUpgrades="yes" />
+    <MediaTemplate EmbedCab="yes" CompressionLevel="high" />
+
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="crsp" />
+    </StandardDirectory>
+
+    <Feature Id="CrspAgent" Title="crsp agent" Level="1">
+      <ComponentGroupRef Id="Program" />
+    </Feature>
+
+    <ComponentGroup Id="Program" Directory="INSTALLFOLDER">
+      <Component Id="CrspAgentProgram">
+        <File Id="CrspExe" Name="crsp.exe" Source="$(var.CrspExe)" KeyPath="yes" />
+      </Component>
+    </ComponentGroup>
+  </Package>
+</Wix>

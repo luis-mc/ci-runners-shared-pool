@@ -101,3 +101,27 @@ func TestRunnerCanReregisterIsInTheAnswer(t *testing.T) {
 		t.Fatal("absent when there is nothing to offer")
 	}
 }
+
+// CRSP387, runners R5.157: POST start answers 200 with the runner and asks the
+// service to start it; a refusal is a 4xx; can_start shows only when offered.
+func TestStartRunner(t *testing.T) {
+	f := sample()
+	mux := runnersMux(f)
+	rec := do(mux, http.MethodPost, "/api/v1/runners/r1/start", "")
+	if rec.Code != http.StatusOK || len(f.runnerStarted) != 1 || f.runnerStarted[0] != "r1" {
+		t.Fatalf("status %d started %v: %s", rec.Code, f.runnerStarted, rec.Body)
+	}
+	e := f.recs["r1"]
+	e.Kind = "ephemeral"
+	f.recs["r1"] = e
+	if rec := do(mux, http.MethodPost, "/api/v1/runners/r1/start", ""); rec.Code < 400 || rec.Code >= 500 {
+		t.Fatalf("ephemeral: %d", rec.Code)
+	}
+	r := toGenRunner(runners.View{Record: runners.Record{ID: "r1", Kind: "persistent"}, State: runners.Stopped, CanStart: true})
+	if r.CanStart == nil || !*r.CanStart {
+		t.Fatal("can_start is true")
+	}
+	if toGenRunner(runners.View{Record: runners.Record{ID: "r1"}, State: runners.Idle}).CanStart != nil {
+		t.Fatal("absent when there is nothing to offer")
+	}
+}

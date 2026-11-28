@@ -13,7 +13,7 @@ design_system:
   - v4 ux-rules one primary action, no dead ends, accessible, an overview only shows and links, status as word glyph and colour
   - v4 tokens themes, breakpoints, focus
   - v4 content dates times and numbers, message wording
-last_verified: 2026-11-27
+last_verified: 2026-11-28
 artifact:
 generator: luismc-docs 2.21.0
 ---

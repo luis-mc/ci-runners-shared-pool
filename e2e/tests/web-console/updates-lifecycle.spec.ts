@@ -132,16 +132,22 @@ test('Updates: a time window needs both times', async ({ page }) => {
   await signedIn().install(page);
   const st = await lifecycleApi(page);
   await page.goto('/settings/updates');
-  await page.getByLabel(/From/).fill('01:00');
+  await page.getByRole('button', { name: 'Choose the From time' }).click();
+  await expect(page.getByText('Choose an Until time too, or clear both.')).toBeVisible();
   expect(st.calls.filter((c) => c.path === '/api/v1/update/policy')).toHaveLength(0);
-  await page.getByLabel(/Until/).fill('05:00');
+  await page.getByRole('button', { name: 'Choose the Until time' }).click();
+  const hours = page.getByRole('spinbutton', { name: 'Hours' });
+  await hours.nth(0).focus();
+  await page.keyboard.press('ArrowUp');
+  await hours.nth(1).focus();
+  for (let i = 0; i < 5; i++) await page.keyboard.press('ArrowUp');
+  // Each step saves; wait for the save that carries the last step.
   await expect
-    .poll(() => st.calls.filter((c) => c.path === '/api/v1/update/policy').length)
-    .toBe(1);
-  expect(st.calls.find((c) => c.path === '/api/v1/update/policy')?.body).toEqual({
-    policy: 'automatic_when_idle',
-    window: { start: '01:00', end: '05:00' },
-  });
+    .poll(() => st.calls.filter((c) => c.path === '/api/v1/update/policy').at(-1)?.body)
+    .toEqual({
+      policy: 'automatic_when_idle',
+      window: { start: '01:00', end: '05:00' },
+    });
 });
 
 test('Updates: a failed test says when it tries again; the banner offers a retry', async ({
@@ -224,4 +230,20 @@ test('layout at 360, 393, 1300 and 1800 px: the page, the banner and the remove 
   await page.getByRole('button', { name: 'Remove crsp' }).click();
   await expect(page.getByRole('dialog', { name: 'Remove crsp' })).toBeVisible();
   await layoutAtAllWidths(page, 'remove dialog');
+});
+
+test('layout at 360, 393, 1300 and 1800 px: the update window as Any time, set and one end missing', async ({
+  page,
+}) => {
+  await signedIn().install(page);
+  await lifecycleApi(page);
+  await page.goto('/settings/updates');
+  await expect(page.getByText('Choose the From time')).toBeVisible();
+  await layoutAtAllWidths(page, 'update window any time');
+  await page.getByRole('button', { name: 'Choose the From time' }).click();
+  await expect(page.getByText('Choose an Until time too, or clear both.')).toBeVisible();
+  await layoutAtAllWidths(page, 'update window one end missing');
+  await page.getByRole('button', { name: 'Choose the Until time' }).click();
+  await expect(page.getByRole('button', { name: 'Clear Until' })).toBeVisible();
+  await layoutAtAllWidths(page, 'update window set');
 });

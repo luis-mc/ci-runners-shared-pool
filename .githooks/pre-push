@@ -149,6 +149,7 @@ fi
 project_gates() {
   fail=0
   step() { printf 'pre-push: %s\n' "$1" >&2; }
+  base_ref=$(git rev-parse --abbrev-ref --symbolic-full-name '@{upstream}' 2>/dev/null || echo origin/main)
 
   if command -v go >/dev/null 2>&1; then
     step "gofmt"
@@ -173,6 +174,13 @@ project_gates() {
     if command -v golangci-lint >/dev/null 2>&1; then
       step "golangci-lint"
       golangci-lint run ./... || fail=1
+      # CRSP377 (S8): *_windows.go files are invisible to the Linux pass; CI runs the same GOOS=windows pass.
+      # Only when this push changes a Go file, as CI does (the macOS pass needs cgo and stays out).
+      if git rev-parse --verify --quiet "${base_ref:-origin/main}" >/dev/null &&
+         git diff --name-only --diff-filter=d "${base_ref:-origin/main}"...HEAD -- '*.go' go.mod go.sum 2>/dev/null | grep -q .; then
+        step "golangci-lint (GOOS=windows)"
+        GOOS=windows golangci-lint run ./... || fail=1
+      fi
     else
       echo "pre-push: golangci-lint not installed; skipped (CI runs it)." >&2
     fi
@@ -183,16 +191,25 @@ project_gates() {
     else
       changed="all"
     fi
+    # CRSP321 (S11, DL-12): the local gate is a short smoke of the touched packages; CI is the one full run.
+    # A go.mod, go.sum or unknown-base change touches everything, so it runs no tests here. Set
+    # CRSP_PREPUSH_FULL=1 to run the touched packages in full.
     if [ -n "$changed" ]; then
       if [ "$changed" = "all" ] || echo "$changed" | grep -qE '^go\.(mod|sum)$'; then
-        pkgs='./...'
+        echo "pre-push: go.mod, go.sum or the base is unknown; go test skipped (CI runs the full suite)." >&2
       else
         # A testdata folder is not a package of the module (`./...` leaves it out), so it is left out here too.
         pkgs=$(echo "$changed" | xargs -n1 dirname | sort -u | grep -vE '(^|/)testdata(/|$)' | sed 's#^#./#' | tr '\n' ' ')
+        if [ -n "${CRSP_PREPUSH_FULL:-}" ]; then
+          smoke=""
+          step "go test $pkgs (full, CRSP_PREPUSH_FULL)"
+        else
+          smoke="-short -timeout 90s"
+          step "go test -short (smoke) $pkgs"
+        fi
+        # shellcheck disable=SC2086
+        go_clean test $smoke $pkgs || fail=1
       fi
-      step "go test $pkgs"
-      # shellcheck disable=SC2086
-      go_clean test $pkgs || fail=1
     fi
   else
     echo "pre-push: go not found; Go gates skipped." >&2
@@ -217,6 +234,13 @@ project_gates() {
     fi
     step "web typecheck"
     pnpm -r typecheck || fail=1
+    # CRSP377 (S8): the web lint CI runs (`pnpm -r lint`), when this push changes a web file.
+    if git rev-parse --verify --quiet "$pbase" >/dev/null &&
+       git diff --name-only --diff-filter=d "$pbase"...HEAD -- apps packages eslint.config.mjs pnpm-lock.yaml 2>/dev/null |
+         grep -qE '\.(ts|tsx|js|jsx|mjs|cjs|json)$'; then
+      step "web lint (pnpm -r lint)"
+      pnpm -r lint || fail=1
+    fi
   else
     echo "pre-push: node_modules missing; web typecheck skipped (CI runs it)." >&2
   fi

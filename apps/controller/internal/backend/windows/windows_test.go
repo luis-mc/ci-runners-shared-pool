@@ -477,9 +477,10 @@ func TestStaleEnvOnlyRewrites(t *testing.T) {
 		t.Fatal(err)
 	}
 	// Stop, wait for the listener, give the logon right again (R5.89), start.
-	if len(r.cmd.Calls) != 4 || !strings.Contains(r.cmd.Calls[0].Stdin, "Stop-Service") ||
-		!strings.Contains(r.cmd.Calls[1].Stdin, "Get-Process") || !strings.Contains(r.cmd.Calls[2].Stdin, "LsaAddAccountRights") ||
-		!strings.Contains(r.cmd.Calls[3].Stdin, "Start-Service") {
+	// The two list rights (R5.156) come before the logon right and the start.
+	if len(r.cmd.Calls) != 6 || !strings.Contains(r.cmd.Calls[0].Stdin, "Stop-Service") ||
+		!strings.Contains(r.cmd.Calls[1].Stdin, "Get-Process") || !isListRight(r.cmd.Calls[2]) || !isListRight(r.cmd.Calls[3]) ||
+		!strings.Contains(r.cmd.Calls[4].Stdin, "LsaAddAccountRights") || !strings.Contains(r.cmd.Calls[5].Stdin, "Start-Service") {
 		t.Fatalf("calls = %v", r.cmd.Texts())
 	}
 	if len(r.cmd.Calls[0].SecretEnv) != 0 {
@@ -662,7 +663,7 @@ func TestAccountSwitchResetsFolderACL(t *testing.T) {
 	}
 	var got []string
 	for i, c := range r.cmd.Calls {
-		if c.Name == "takeown" || c.Name == "icacls" {
+		if (c.Name == "takeown" || c.Name == "icacls") && !isListRight(c) {
 			got = append(got, c.String())
 			if i < idx(r, "New-LocalUser") || i > idx(r, "SetAccessRuleProtection") {
 				t.Errorf("%s runs outside account..lock", c.Name)
@@ -682,7 +683,7 @@ func TestAccountSwitchResetsFolderACL(t *testing.T) {
 
 func TestACLResetFailureStopsBeforeLock(t *testing.T) {
 	r := newRig(t)
-	r.cmd.Rules = append(r.cmd.Rules, sysfake.Rule{Match: "icacls", Result: sys.Result{ExitCode: 5, Stderr: "Access is denied."}})
+	r.cmd.Rules = append(r.cmd.Rules, sysfake.Rule{Match: "/setowner", Result: sys.Result{ExitCode: 5, Stderr: "Access is denied."}})
 	err := start(t, r, r.spec(), backend.StartConfig{Registration: "REGTOKEN"})
 	if err == nil || !strings.HasPrefix(err.Error(), ErrPrepareFolder) || !strings.Contains(err.Error(), "set owner") || !strings.Contains(err.Error(), "exited 5") || !strings.Contains(err.Error(), "Access is denied") {
 		t.Fatalf("err = %v, want the short line with the step, the exit code and the message", err)
@@ -742,7 +743,7 @@ func TestSIDReadAfterAccountBeforeICACLS(t *testing.T) {
 	acct, sid := idx(r, "New-LocalUser"), idx(r, "SID.Value")
 	first := -1
 	for i, c := range r.cmd.Calls {
-		if c.Name == "takeown" || c.Name == "icacls" {
+		if (c.Name == "takeown" || c.Name == "icacls") && !isListRight(c) {
 			first = i
 			break
 		}
@@ -765,7 +766,7 @@ func TestNoSIDStopsBeforeICACLS(t *testing.T) {
 		t.Fatalf("err = %v", err)
 	}
 	for _, c := range r.cmd.Calls {
-		if c.Name == "icacls" || c.Name == "takeown" {
+		if (c.Name == "icacls" || c.Name == "takeown") && !isListRight(c) {
 			t.Errorf("%s ran without a SID", c.Name)
 		}
 	}
@@ -900,5 +901,58 @@ func TestLostRegistrationRegistersAgainInPlace(t *testing.T) {
 	}
 	if r.fs.Exists(Join(folder, ".runner")) || r.fs.Exists(Join(folder, ".credentials_rsaparams")) {
 		t.Error("the stale registration files stay")
+	}
+}
+
+// isListRight is one of the icacls calls of ListRightPlan (runners R5.156).
+func isListRight(c sys.Command) bool {
+	return c.Name == "icacls" && strings.Contains(c.String(), "/grant "+runners.RunnersGroup+":(RX)")
+}
+
+// R5.156: the runner accounts may list the runners folder and the folder that
+// holds it, on those folders only, before the service starts. The listener
+// stops at once when one folder above its own cannot be read.
+func TestRunnerGroupListsTheFoldersAboveTheRunner(t *testing.T) {
+	r := newRig(t)
+	if err := start(t, r, r.spec(), backend.StartConfig{Registration: "REGTOKEN"}); err != nil {
+		t.Fatal(err)
+	}
+	var got []string
+	for _, c := range r.cmd.Calls {
+		if isListRight(c) {
+			got = append(got, c.String())
+		}
+	}
+	want := []string{
+		`icacls C:\ProgramData\crsp\runners /grant crsp-runners:(RX) /C`,
+		`icacls C:\ProgramData\crsp /grant crsp-runners:(RX) /C`,
+	}
+	if strings.Join(got, "\n") != strings.Join(want, "\n") {
+		t.Fatalf("calls = %q, want %q", got, want)
+	}
+	first := -1
+	for i, c := range r.cmd.Calls {
+		if isListRight(c) {
+			first = i
+			break
+		}
+	}
+	if first < idx(r, "New-LocalUser") || first > idx(r, "New-Service") {
+		t.Errorf("the right is given at %d, outside account..service", first)
+	}
+	for _, c := range r.cmd.Calls {
+		if isListRight(c) && strings.Contains(c.String(), "(OI)") {
+			t.Errorf("the right must not be inherited: %s", c)
+		}
+	}
+}
+
+// R5.156: a service that starts and stops at once is a failed start that says
+// why, not a start that looks good.
+func TestStartScriptsCheckTheServiceStaysUp(t *testing.T) {
+	for name, s := range map[string]string{"startService": scriptStartService, "registerService": scriptRegisterService} {
+		if !strings.Contains(s, "stopped again at once") || !strings.Contains(s, "ActionsRunnerService") {
+			t.Errorf("%s does not check that the service stays up", name)
+		}
 	}
 }

@@ -2,9 +2,9 @@
   "applied": {
     "luismc-agents": "1.0.1",
     "luismc-audits": "1.1.0",
-    "luismc-delivery": "1.74.0",
-    "luismc-docs": "2.31.0",
-    "luismc-project-setup": "1.21.0",
+    "luismc-delivery": "1.75.1",
+    "luismc-docs": "2.32.1",
+    "luismc-project-setup": "1.22.2",
     "luismc-transcript-folds": "1.2.0"
   }
 }

@@ -378,7 +378,12 @@ export class Mock {
       method: req.method(),
       path: url.pathname,
       query: url.searchParams,
-      body: text ? (JSON.parse(text) as unknown) : undefined,
+      // A file sent as octet-stream stays the text it is; everything else is JSON.
+      body: !text
+        ? undefined
+        : (req.headers()['content-type'] ?? '').startsWith('application/octet-stream')
+          ? text
+          : (JSON.parse(text) as unknown),
     };
     this.calls.push(call);
     const parts = url.pathname.split('/');
@@ -643,6 +648,36 @@ function signedInBase(user: unknown): Mock {
     .on('GET', '/api/v1/images', { items: [image()] })
     .on('GET', '/api/v1/images/:id', image())
     .on('GET', '/api/v1/caches', { items: [cache()] })
+    .on('GET', '/api/v1/dependencies/store', {
+      items: [
+        {
+          id: 'docker-desktop-windows',
+          name: 'Docker Desktop',
+          kind: 'installer',
+          os: 'windows',
+          version: 'pinned-per-release',
+          source: 'desktop.docker.com',
+          state: 'missing',
+          pinned: true,
+          can_fetch: true,
+        },
+        {
+          id: 'runner-linux-x64',
+          name: 'GitHub Actions runner',
+          kind: 'runner',
+          os: 'linux',
+          arch: 'x64',
+          version: '2.330.0',
+          source: 'github.com',
+          state: 'ready',
+          origin: 'fetched',
+          pinned: true,
+          can_fetch: true,
+          stored_bytes: 200000000,
+          fetched_at: '2026-11-14T10:00:00Z',
+        },
+      ],
+    })
     .on('GET', '/api/v1/github/org-pools', {
       items: [
         {

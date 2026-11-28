@@ -1017,6 +1017,66 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dependencies/store": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * What the controller keeps for machines without internet
+         * @description dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+         */
+        get: operations["listDependencyStore"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dependencies/store/{dependencyId}/fetch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Download one dependency to the controller and check it
+         * @description dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+         */
+        post: operations["fetchDependency"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/dependencies/store/{dependencyId}/file": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Give the controller a file you downloaded yourself
+         * @description dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+         */
+        put: operations["importDependency"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/doctor/registration-fixes": {
         parameters: {
             query?: never;
@@ -1465,6 +1525,46 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/agent-installers": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * The agent installers of this release, and which ones this controller has
+         * @description operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+         */
+        get: operations["listAgentInstallers"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/agent-installers/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Store an agent installer, or SHA256SUMS, that the owner carried over
+         * @description operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+         */
+        put: operations["importAgentInstaller"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/join-codes/ssh": {
         parameters: {
             query?: never;
@@ -1831,6 +1931,26 @@ export interface paths {
          * @description runners R5.153. The Register again button. For a persistent runner CRSP made that GitHub does not list: the controller makes a fresh registration token, the machine cleans the old registration files and registers the runner again in place (`config.sh --unattended --replace`), then starts it. A pool runner registers each of its registrations that GitHub does not list. A runner GitHub lists, one with a job and one CRSP did not make are refused with 409.
          */
         post: operations["reregisterRunner"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/runners/{runnerId}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start the service of a stopped runner
+         * @description runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+         */
+        post: operations["startRunner"];
         delete?: never;
         options?: never;
         head?: never;
@@ -6287,6 +6407,31 @@ export interface components {
              */
             ts: number;
         };
+        DependencyStoreEntry: {
+            id: string;
+            name: string;
+            /** @enum {string} */
+            kind: "installer" | "runner" | "agent";
+            os?: string;
+            arch?: string;
+            version?: string;
+            /** @description The host it is fetched from, in words for the user. */
+            source?: string;
+            /** @enum {string} */
+            state: "ready" | "missing" | "failed" | "not_pinned";
+            /** @description This release lists a SHA-256 for it, so a file can be checked. */
+            pinned: boolean;
+            /** @description The controller has an address to download it from. */
+            can_fetch: boolean;
+            sha256?: string;
+            /** Format: int64 */
+            stored_bytes?: number;
+            /** Format: date-time */
+            fetched_at?: string;
+            /** @enum {string} */
+            origin?: "fetched" | "imported";
+            error?: string;
+        };
         DependencyJob: {
             id: string;
             machine_id: string;
@@ -6467,6 +6612,8 @@ export interface components {
             reason?: string;
             /** @description True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153). */
             can_reregister?: boolean;
+            /** @description True when the Runners page offers Start: the service of a persistent runner is stopped (runners R5.157). */
+            can_start?: boolean;
             os: components["schemas"]["OS"];
             arch: components["schemas"]["Arch"];
             kind: components["schemas"]["RunnerKind"];
@@ -7556,6 +7703,29 @@ export interface components {
             machine_id?: string;
             /** @description Required; a missing or null value is refused. true deletes everything crsp made (Delete my data too); false keeps it (Keep my data). No default. */
             delete_data: boolean | null;
+        };
+        /** @description One agent installer that SHA256SUMS lists. */
+        AgentInstaller: {
+            /** @example CrspAgent-1.4.0-linux-x64.tar.gz */
+            name: string;
+            /** @enum {string} */
+            os: "windows" | "linux" | "macos";
+            /** @enum {string} */
+            arch: "amd64" | "arm64";
+            /** @enum {string} */
+            format: "zip" | "tar.gz" | "msi" | "pkg" | "deb";
+            /** @description The SHA-256 SHA256SUMS lists. */
+            sha256: string;
+            /** @description The file is on this controller and has that SHA-256. */
+            stored: boolean;
+        };
+        /** @description operations R5.132 (CRSP347). */
+        AgentInstallers: {
+            /** @example 1.4.0 */
+            version: string;
+            have_sums: boolean;
+            from_release: boolean;
+            installers: components["schemas"]["AgentInstaller"][];
         };
         /**
          * @description operations R5.11 to R5.18, tray R5.18.
@@ -9322,6 +9492,7 @@ export interface components {
         /** @description The window of the stats, 24h (default) or 7d. */
         StatsWindow: "24h" | "7d";
         MachineId: string;
+        DependencyStoreId: string;
         DependencyJobId: string;
         ChangeId: string;
         JoinCodeId: string;
@@ -10791,6 +10962,79 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    listDependencyStore: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The dependencies and their state. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        items: components["schemas"]["DependencyStoreEntry"][];
+                    };
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    fetchDependency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dependencyId: components["parameters"]["DependencyStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The entry after the fetch. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyStoreEntry"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    importDependency: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                dependencyId: components["parameters"]["DependencyStoreId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description The entry after the import. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DependencyStoreEntry"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     removeRegistration: {
         parameters: {
             query?: {
@@ -11393,6 +11637,54 @@ export interface operations {
             default: components["responses"]["Error"];
         };
     };
+    listAgentInstallers: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description The agent installers. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentInstallers"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    importAgentInstaller: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                name: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/octet-stream": string;
+            };
+        };
+        responses: {
+            /** @description Stored. The list after the import. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AgentInstallers"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
     joinMachineOverSsh: {
         parameters: {
             query?: never;
@@ -11946,6 +12238,29 @@ export interface operations {
         requestBody?: never;
         responses: {
             /** @description Registered again; the runner as it is now. */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Runner"];
+                };
+            };
+            default: components["responses"]["Error"];
+        };
+    };
+    startRunner: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                runnerId: components["parameters"]["RunnerId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Started; the runner as it is now. */
             200: {
                 headers: {
                     [name: string]: unknown;

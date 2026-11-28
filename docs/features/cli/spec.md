@@ -17,7 +17,7 @@ generator: luismc-docs 2.6.1
 
 The top half (sections 1 to 4) is for every reader. The bottom half (5 to 12) is for engineers.
 
-The binary is built in part. Built: `controller`, `agent` (`run`, `join`, `install`), `tray`, `version`, sign-in, contexts, repositories, machines, runners, jobs, `doctor`, `backup` and `restore`, `update`, `uninstall` and `completion`. Not built: `config export|import|apply` (M8, it says it is not built yet and exits 2) and the items in section 11. On a Mac, `crsp agent` also gives the agent a counter of macOS VMs for its machine report (machines R5.14, CRSP114); it adds no command.
+The binary is built in part. Built: `controller`, `agent` (`run`, `join`, `install`), `tray`, `version`, sign-in, contexts, repositories, machines, runners, jobs, `doctor`, `backup` and `restore`, `update`, `uninstall` and `completion`. Built by CRSP259: `config export|plan|apply` and `config import --dry-run`. Not built: the items in section 11. On a Mac, `crsp agent` also gives the agent a counter of macOS VMs for its machine report (machines R5.14, CRSP114); it adds no command.
 
 The controller and the agent write their logs through a redacting handler (`apps/controller/internal/logging`, github-integration R6.3), so no token, PEM block or stored secret value reaches a log line.
 
@@ -125,10 +125,13 @@ Milestones (M1 to M8) are those of the product brief (`docs/overview/product.md`
 | `machine leftovers MACHINE`, `machine leftovers remove MACHINE NAME...` | List the runner leftovers of the latest doctor finding, and remove named ones (OPS38) | built | this spec (R5.63), `doctor` (R5.48) |
 | `runner list\|create\|update\|clear-cache\|remove` | Runners on machines, with kind, dependency setting and cache clear (OPS28) | M1 | `runners` |
 | `runner reregister NAME` | Registers a runner again in place when GitHub deleted its registration; no question, nothing is removed (runners R5.152) | M1 | `runners` |
+| `runner start NAME` | Starts the service of a stopped runner, or of each registration of a pool runner; a runner that already runs is left alone, and a service that starts and stops again at once is answered with the reason (runners R5.156, R5.157) | M1 | `runners` |
 | `job list\|watch` | Queue and history; live view | M1 | `scheduling` |
 | `history` | Finished jobs, newest first, with `--repo`, `--machine`, `--backend`, `--result`, `--since`, `--limit`; `--json` prints the rows of `listJobs` (CRSP271c) | built | `observability` (R5.11) |
 | `doctor` | Run every check and print fixes | M2 | `doctor` |
-| `config export\|import --dry-run\|apply` | Configuration as a file | M8 | `config-as-code` |
+| `config export [--out FILE]` | Write the setup as one file without any secret; prints it without `--out` (admin; operations R5.28) | built | `operations` (R5.28) |
+| `config plan FILE`, `config import FILE --dry-run` | List each change of a file; change nothing; exit 8 when it has changes, 1 when it has problems (admin; operations R5.29) | built | `operations` (R5.29) |
+| `config apply FILE [--yes]` | Plan the file, print each change, ask for a yes (R5.14), apply exactly that plan; each removal is sent by name (owner; operations R5.30) | built | `operations` (R5.30) |
 | `backup\|restore` | Back up and restore the controller | M1 | `backup` |
 | `app rotate-key --file PATH\|-` | Replace the GitHub App private key (owner only; the controller checks it with GitHub first) | M8 | `github-integration` (R5.7) |
 | `update` | Update this machine's binary, with drain | M3 | `updates` |
@@ -209,7 +212,7 @@ With `--json`, a refusal prints the contract's `ErrorEnvelope` to stderr and use
 
 **R5.21** — `doctor` MUST print every finding with its fix. `--machine M` narrows it to one machine.
 
-**R5.22** — `config export [--out FILE]` MUST write the configuration file. `config import FILE --dry-run` MUST print the plan (each change: add, edit, remove) and change nothing; "Nothing has changed yet." ends the plan. `config import FILE` without `--dry-run` MUST exit 2 and point to `config apply`. `config apply FILE` MUST print the same plan, ask for a yes (R5.14), and apply it.
+**R5.22** — `config export [--out FILE]` MUST write the configuration file. `config import FILE --dry-run` MUST print the plan (each change: add, edit, remove) and change nothing; "Nothing has changed yet." ends the plan. `config import FILE` without `--dry-run` MUST exit 2 and point to `config apply`. `config apply FILE` MUST print the same plan, ask for a yes (R5.14), and apply it. `config plan FILE` is `config import FILE --dry-run`. Both exit 8 when the file has changes, 0 when it has none and 1 when it has problems. Built (CRSP259).
 
 **R5.23** — `backup --out FILE` MUST download a backup of the controller's configuration. `restore FILE` MUST show what it replaces, need a yes, and be allowed for the owner only.
 
@@ -243,6 +246,8 @@ A command that Ctrl-C cut off may still run on the machine until its own timeout
 **R5.63** (built, OPS38; owner decision D104; doctor R5.48) — `machine leftovers MACHINE` MUST list the runner services, folders, local accounts and downloads that no runner of this controller owns, taken from the items of the latest doctor finding `machine.runner_leftovers` of that machine (kind, name, size, why); with none it says so and exits 0; with `--json` it prints `{"items": [...]}`. `machine leftovers remove MACHINE NAME... [--yes]` MUST take each NAME from that list (a name not on it exits 4 and sends nothing), print what goes and ask "Type yes to go on:" (R5.14, R5.15), then call `POST /api/v1/machines/{machineId}/runner-leftovers/remove` once and print one line per item (`removed`, `already gone`, `refused` or `failed`, with the controller's reason). It exits 1 when any item was refused or failed. It changes nothing on a machine the scan did not list; the controller refuses anything owned or outside the crsp runners folders. The same rights as the console (admin).
 
 **R5.64** (built, OPS69; operations R5.32, R5.33) — `uninstall` (alias `remove`) `[--delete-data|--keep-data] [--yes]` removes crsp from this machine. It lists what goes and what stays, then needs a yes (R5.14). Data is kept unless `--delete-data` or `PURGE=1` says otherwise; `--delete-data` also deletes settings, database, logs, caches, runner images, containers and the `crsp` WSL distro. Both ways unregister the runners from GitHub and are audited with actor and result. In a terminal without either flag it asks "Keep my data or delete my data too", with no default, through the native window `crsp lifecycle-window remove` (exit 10 keep, 11 delete, 1 cancel) or, when no window can be shown, in the terminal. Installer-only flags: `--ask-to FILE`, `--choice-file FILE`, `--from-installer`, `--runners-only`.
+
+**R5.65** (built, CRSP347; operations R5.132) — `machine agent-installers list` MUST show the agent installers of the controller's release (name, system, CPU, `stored` or `missing`) and, with `--json`, the answer of `GET /api/v1/agent-installers`. `machine agent-installers import FILE|FOLDER...` MUST send `SHA256SUMS` first and then each `CrspAgent-*` file (a folder gives its `SHA256SUMS` and `CrspAgent-*` files) to `PUT /api/v1/agent-installers/{name}` as `application/octet-stream`, say for each file that it was stored, or name it and the reason it was refused, and print the list at the end. It exits 1 when a file was not stored and 2 with no argument; it needs the admin role. Without `SHA256SUMS` on the controller, `list` says which files to download.
 
 ## 6. Non-functional requirements
 
@@ -322,7 +327,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R5.19 | built: apps/controller/internal/cli/resources_test.go TestRunnerCreateRefusesUnsupported, TestRunnerListAndRemove |
 | R5.20 | built: apps/controller/internal/cli/resources_test.go TestJobListFilters, TestWatchReconnects |
 | R5.21 | built: apps/controller/internal/cli/resources_test.go TestFindingsAndExitCode |
-| R5.22 | planned (M8): apps/controller/internal/cli/config_test.go TestDryRunChangesNothing, TestApplyNeedsYes |
+| R5.22 | built (CRSP259): apps/controller/internal/cli/config_test.go TestConfigPlanAndDryRunChangeNothingAndExit8, TestConfigImportNeedsDryRun, TestConfigApplyAsksAndNoMeansNothingChanged, TestConfigApplySendsEachRemovalByName |
 | R5.23 | built: apps/controller/internal/cli/resources_test.go TestBackupRestoreOwnerOnly (backup --out is not built: no download operation in the contract) |
 | R5.24 | planned (M3): apps/controller/internal/cli/update_test.go TestChecksumAndDrain |
 | R5.25 | built: apps/controller/internal/cli/completion_test.go TestScriptsAndOfflineCompletion |
@@ -343,6 +348,7 @@ Tests are planned unless marked built. Planned paths are written in plain text u
 | R5.62 | planned in the OPS28 code branches (names reconciled when they land): `apps/controller/internal/cli` tests for `runner add --ephemeral`, the dependency flags, `runner update`, `runner clear-cache` and `repo policy --runner-kind` |
 | R5.63 | built: apps/controller/internal/cli/cmd_machine_leftovers_test.go TestMachineLeftoversLists, TestMachineLeftoversListEmpty, TestMachineLeftoversRemove, TestMachineLeftoversRemoveNeedsConfirmation, TestMachineLeftoversRemoveRefusedAndUnknown |
 | R5.64 | built: apps/controller/internal/cli/cmd_uninstall_test.go TestUninstallSilentKeepsDataAndUnregistersRunners, TestUninstallDeleteDataFlagAndPurge, TestUninstallWindowAnswers, TestUninstallWithoutWindowAsksInTheTerminalWithNoDefault |
+| R5.65 | built: apps/controller/internal/cli/cmd_agent_installers_test.go TestAgentInstallersImportSendsSumsFirstAndNamesRefusals, TestAgentInstallersListAndUsage |
 
 ## 10. Decisions
 
@@ -358,7 +364,7 @@ Open questions for the owner (not decided):
 
 1. `runner create`: the content rules say "Add", never "Create". Rename to `runner add`?
 2. Which milestone ships the `tray` mode? This spec says M8; the brief does not say.
-3. `config import` without `--dry-run`: refuse and point to `config apply` (this spec), or apply after a yes?
+3. `config import` without `--dry-run`: refuse and point to `config apply` (this spec), or apply after a yes? Built as refuse (CRSP259).
 4. Does `backup` include secrets (App private key, webhook secret), encrypted with a passphrase, or leave them out?
 5. Should scripts be able to pass a token in an environment variable (for example `CRSP_TOKEN`), or only through `login`?
 6. Command library: the standard `flag` package or `spf13/cobra` (built-in completion)?
@@ -371,7 +377,7 @@ Built in milestone 1 (CRSP25): `controller`, `agent` and `tray` dispatch, `versi
 
 NOT YET IMPLEMENTED:
 
-- `config export|import|apply` (M8). It says it is not built yet and exits 2. `update` and the `tray` mode are built.
+- `config`, `update` and the `tray` mode are built (`config` by CRSP259). `config plan` and `apply` take a file, or `-` for stdin with `--yes`; the plan lives in the controller until it restarts, so `apply` plans and applies in one run.
 - `backup --out FILE`: the contract has no download operation, so `backup` starts a backup on the controller and names its file. A download operation is needed first.
 - OS secret stores (Windows Credential Manager, macOS Keychain, Linux Secret Service): the CLI uses the 0600 file store behind `apps/controller/internal/secrets` until each store lands. The file is refused when its mode is wider than 0600.
 - `login` runs GitHub's device flow with the URLs from `getCliLoginConfig` (the contract's shape) and then calls `exchangeCliToken`. The sequence diagram in section 3 shows the controller doing the polling; the contract does not.

@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { join, relative } from 'node:path';
+import { join, relative, sep } from 'node:path';
 
 /**
  * The scanner behind `raw-inputs.test.ts` (design system UX-56, Enforcement kit): no native date, time or
@@ -132,4 +132,48 @@ export function judgeBreaches(
       );
   }
   return { added, stale };
+}
+
+// A text field that asks for a time of day: its label or placeholder says hh:mm, HH:MM or "time" (UX-56: times
+// use the time picker, never a text field). The label is read from a string literal on the TextField itself.
+const TEXT_FIELD = /<TextField\b[\s\S]*?\/>/g;
+const TIME_ATTR =
+  /\b(label|placeholder)\s*=\s*(?:\{\s*)?(["'`])((?:(?!\2).)*?(?:hh:mm|\btimes?\b)(?:(?!\2).)*?)\2/gi;
+
+export interface TimeTextField {
+  readonly file: string;
+  readonly attr: string;
+  readonly text: string;
+}
+
+/** The text fields in one source file whose label or placeholder asks for a time. Empty: there is no known list. */
+export function scanTimeTextFields(
+  file: string,
+  text: string,
+  config = CONFIG,
+): TimeTextField[] {
+  if (isTestPath(file)) return [];
+  if (
+    !config.fileGlobs.some((g) => globToRegExp(g).test(file.split('/').pop() as string))
+  )
+    return [];
+  const found: TimeTextField[] = [];
+  for (const field of text.matchAll(TEXT_FIELD))
+    for (const m of field[0].matchAll(TIME_ATTR))
+      found.push({ file, attr: m[1] as string, text: m[3] as string });
+  return found;
+}
+
+/** Every time-asking text field in the scanned folders. */
+export function scanTimeTextTree(root: string, config = CONFIG): TimeTextField[] {
+  const found: TimeTextField[] = [];
+  for (const base of config.paths) {
+    const files: string[] = [];
+    walk(join(root, base), files);
+    for (const file of files.sort()) {
+      const rel = relative(root, file).split(sep).join('/');
+      found.push(...scanTimeTextFields(rel, readFileSync(file, 'utf8'), config));
+    }
+  }
+  return found;
 }

@@ -126,6 +126,10 @@ const UpdateReviewPage = later(
       params.get('kind') === 'restart' ? 'Restart the service' : 'Update',
   },
 );
+const AgentInstallersImportPage = later(
+  () => import('./screens/settings/AgentInstallers').then((m) => m.AgentInstallersWizard),
+  { heading: 'Import agent installers' },
+);
 
 // Help is not a first screen: its pictures load with the page, so the first JavaScript stays within its budget (R6.12).
 const HelpScreen = lazy(() =>
@@ -316,6 +320,10 @@ export function App({
                   }
                 />
                 <Route path="settings/updates/review" element={<UpdateReviewPage />} />
+                <Route
+                  path="settings/updates/agent-installers/import"
+                  element={<AgentInstallersImportPage />}
+                />
                 <Route path="settings" element={<SettingsLayout />}>
                   <Route index element={<Navigate to="access" replace />} />
                   <Route path="access" element={<AccessTab />} />

@@ -21,18 +21,15 @@ func tree(env *Env) *command {
 		}
 		return cmd
 	}
-	unbuilt := func(name, summary, milestone, args string) *command {
-		return &command{name: name, summary: summary, milestone: milestone, args: args}
-	}
 	root.subs = []*command{
 		mode("controller", "run the controller: web console, API and scheduling", "M1"),
 		mode("agent", "run the agent on a runner machine", "M1"),
 		mode("tray", "run the tray in your session", "M8"),
 		cmdVersion(env),
 		cmdLogin(), cmdLogout(), cmdOpen(), cmdContext(),
-		cmdApp(), cmdRepo(), cmdRepos(), cmdOrgPool(), cmdSettings(), cmdTrial(), cmdMachine(), cmdRunner(), cmdJob(),
+		cmdApp(), cmdRepo(), cmdRepos(), cmdOrgPool(), cmdSettings(), cmdTrial(), cmdMachine(), cmdDependencies(), cmdRunner(), cmdJob(),
 		cmdDoctor(), cmdCompare(), cmdHistory(),
-		unbuilt("config", "configuration as a file (export, import, apply)", "M8", "export|import|apply"),
+		cmdConfig(),
 		cmdBackup(), cmdRestore(),
 		cmdUpdate(), cmdRestart(),
 		cmdUninstall("uninstall"), cmdUninstall("remove"),

@@ -39,6 +39,9 @@ type Env struct {
 	// RunnerPin is the pinned runner version against the newest release; nil
 	// makes runner.pin_age skip.
 	RunnerPin RunnerPinSource
+	// AgentPackages says what agent installers the release of this controller holds; nil makes
+	// install.agent_packages skip.
+	AgentPackages AgentPackageSource
 	// ListenerGate says whether the listener gate enforces; nil makes
 	// listener.gate skip.
 	ListenerGate GateSource
@@ -628,4 +631,18 @@ type RunnerPinStatus struct {
 // release (operations R5.20). A check only reads it.
 type RunnerPinSource interface {
 	RunnerPin() RunnerPinStatus
+}
+
+// AgentPackageStatus is what the release this controller was built from holds for the agents (operations R5.128,
+// R5.135). Version is the release; the lists name the targets (win-x64, linux-arm64.deb, ...) it lacks.
+type AgentPackageStatus struct {
+	Version         string
+	MissingArchives []string
+	MissingNative   []string
+}
+
+// AgentPackageSource reads the agent installers of the release. It returns an error when the release is not
+// known (offline, no cache): the check then skips.
+type AgentPackageSource interface {
+	AgentPackages(ctx context.Context) (AgentPackageStatus, error)
 }

@@ -7,48 +7,49 @@ import (
 	"time"
 )
 
-// PoolJobRow is one finished job that ran on a pool machine, with what the savings report needs.
-type PoolJobRow struct {
+// PoolJobGroup is a count of finished pool jobs that share a repository, system, machine and whole-minute
+// run time. The database groups them, so a report over thousands of jobs reads a few rows.
+type PoolJobGroup struct {
 	Repository string
 	Public     bool
 	OS         string
 	Machine    string
-	Run        time.Duration
+	// Minutes is each job's run time rounded up to the next whole minute (observability R5.15).
+	Minutes int
+	Jobs    int
 }
 
-// finishedPoolJobsSQL reads one completed-at window of done jobs on the (state, completed_at) index (audit R3-1).
-const finishedPoolJobsSQL = `SELECT j.repository, COALESCE(r.visibility, 'private') = 'public',
- COALESCE(m.os, ''), CASE WHEN j.machine_name != '' THEN j.machine_name ELSE COALESCE(m.name, j.machine_id) END,
- j.started_at, j.completed_at
- FROM jobs j
+// The planner would pick `jobs_stale` (state only) for this window, so the (state, completed_at) index of CRSP292 is named.
+const finishedPoolJobsSQL = `SELECT repository, public, os, machine, mins, COUNT(*) FROM (
+ SELECT j.repository AS repository, COALESCE(r.visibility, 'private') = 'public' AS public,
+  LOWER(COALESCE(m.os, '')) AS os,
+  CASE WHEN j.machine_name != '' THEN j.machine_name ELSE COALESCE(m.name, j.machine_id) END AS machine,
+  (CAST(ROUND((julianday(j.completed_at) - julianday(j.started_at)) * 86400000) AS INTEGER) + 59999) / 60000 AS mins
+ FROM jobs j INDEXED BY jobs_state_completed
  LEFT JOIN repositories r ON r.id = j.repository_id
  LEFT JOIN machines m ON m.id = j.machine_id
- WHERE j.state = 'done' AND j.machine_id != '' AND j.started_at != '' AND j.completed_at != ''
- AND j.completed_at >= ? AND j.completed_at < ?`
+ WHERE j.state = 'done' AND j.completed_at >= ? AND j.completed_at < ?
+ AND j.machine_id != '' AND j.started_at != '' AND j.completed_at != '')
+ WHERE mins > 0
+ GROUP BY repository, public, os, machine, mins`
 
-// FinishedPoolJobs lists the jobs that completed in [from, to) on a machine of the pool: they have a machine
-// and a real start and end. The system is the machine's, the repository is public when GitHub says so
-// (observability R5.15, R5.18).
-func (s *Store) FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]PoolJobRow, error) {
+// PoolJobGroups counts the jobs that completed in [from, to) on a machine of the pool: they have a machine and
+// a real start and end. The system is the machine's, the repository is public when GitHub says so (R5.15,
+// R5.18). The grouping and the round-up happen in SQL; the index `jobs_state_completed` serves the window.
+func (s *Store) PoolJobGroups(ctx context.Context, from, to time.Time) ([]PoolJobGroup, error) {
 	rows, err := s.rdb.QueryContext(ctx, finishedPoolJobsSQL, fmtTime(from), fmtTime(to))
 	if err != nil {
-		return nil, fmt.Errorf("finished pool jobs: %w", err)
+		return nil, fmt.Errorf("pool job groups: %w", err)
 	}
 	defer func() { _ = rows.Close() }()
-	var out []PoolJobRow
+	var out []PoolJobGroup
 	for rows.Next() {
-		var p PoolJobRow
-		var started, completed string
-		if err := rows.Scan(&p.Repository, &p.Public, &p.OS, &p.Machine, &started, &completed); err != nil {
+		var g PoolJobGroup
+		if err := rows.Scan(&g.Repository, &g.Public, &g.OS, &g.Machine, &g.Minutes, &g.Jobs); err != nil {
 			return nil, err
 		}
-		a, b := parseTime(started), parseTime(completed)
-		if a.IsZero() || b.IsZero() || !b.After(a) {
-			continue
-		}
-		p.Run = b.Sub(a)
-		p.OS = strings.ToLower(p.OS)
-		out = append(out, p)
+		g.OS = strings.ToLower(g.OS)
+		out = append(out, g)
 	}
 	return out, rows.Err()
 }

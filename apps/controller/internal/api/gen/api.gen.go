@@ -37,6 +37,72 @@ func (e AddUserRequestRole) Valid() bool {
 	}
 }
 
+// Defines values for AgentInstallerArch.
+const (
+	AgentInstallerArchAmd64 AgentInstallerArch = "amd64"
+	AgentInstallerArchArm64 AgentInstallerArch = "arm64"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerArch enum.
+func (e AgentInstallerArch) Valid() bool {
+	switch e {
+	case AgentInstallerArchAmd64:
+		return true
+	case AgentInstallerArchArm64:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerFormat.
+const (
+	Deb   AgentInstallerFormat = "deb"
+	Msi   AgentInstallerFormat = "msi"
+	Pkg   AgentInstallerFormat = "pkg"
+	TarGz AgentInstallerFormat = "tar.gz"
+	Zip   AgentInstallerFormat = "zip"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerFormat enum.
+func (e AgentInstallerFormat) Valid() bool {
+	switch e {
+	case Deb:
+		return true
+	case Msi:
+		return true
+	case Pkg:
+		return true
+	case TarGz:
+		return true
+	case Zip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerOs.
+const (
+	AgentInstallerOsLinux   AgentInstallerOs = "linux"
+	AgentInstallerOsMacos   AgentInstallerOs = "macos"
+	AgentInstallerOsWindows AgentInstallerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerOs enum.
+func (e AgentInstallerOs) Valid() bool {
+	switch e {
+	case AgentInstallerOsLinux:
+		return true
+	case AgentInstallerOsMacos:
+		return true
+	case AgentInstallerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AppWebhookLastResult.
 const (
 	AppWebhookLastResultFailed AppWebhookLastResult = "failed"
@@ -784,6 +850,69 @@ func (e DependencyJobRequestRunnerOs) Valid() bool {
 	case DependencyJobRequestRunnerOsMacos:
 		return true
 	case DependencyJobRequestRunnerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryKind.
+const (
+	DependencyStoreEntryKindAgent     DependencyStoreEntryKind = "agent"
+	DependencyStoreEntryKindInstaller DependencyStoreEntryKind = "installer"
+	DependencyStoreEntryKindRunner    DependencyStoreEntryKind = "runner"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryKind enum.
+func (e DependencyStoreEntryKind) Valid() bool {
+	switch e {
+	case DependencyStoreEntryKindAgent:
+		return true
+	case DependencyStoreEntryKindInstaller:
+		return true
+	case DependencyStoreEntryKindRunner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryOrigin.
+const (
+	Fetched  DependencyStoreEntryOrigin = "fetched"
+	Imported DependencyStoreEntryOrigin = "imported"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryOrigin enum.
+func (e DependencyStoreEntryOrigin) Valid() bool {
+	switch e {
+	case Fetched:
+		return true
+	case Imported:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryState.
+const (
+	DependencyStoreEntryStateFailed    DependencyStoreEntryState = "failed"
+	DependencyStoreEntryStateMissing   DependencyStoreEntryState = "missing"
+	DependencyStoreEntryStateNotPinned DependencyStoreEntryState = "not_pinned"
+	DependencyStoreEntryStateReady     DependencyStoreEntryState = "ready"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryState enum.
+func (e DependencyStoreEntryState) Valid() bool {
+	switch e {
+	case DependencyStoreEntryStateFailed:
+		return true
+	case DependencyStoreEntryStateMissing:
+		return true
+	case DependencyStoreEntryStateNotPinned:
+		return true
+	case DependencyStoreEntryStateReady:
 		return true
 	default:
 		return false
@@ -5188,6 +5317,37 @@ type AddUserRequest struct {
 // AddUserRequestRole defines model for AddUserRequest.Role.
 type AddUserRequestRole string
 
+// AgentInstaller One agent installer that SHA256SUMS lists.
+type AgentInstaller struct {
+	Arch   AgentInstallerArch   `json:"arch"`
+	Format AgentInstallerFormat `json:"format"`
+	Name   string               `json:"name"`
+	Os     AgentInstallerOs     `json:"os"`
+
+	// Sha256 The SHA-256 SHA256SUMS lists.
+	Sha256 string `json:"sha256"`
+
+	// Stored The file is on this controller and has that SHA-256.
+	Stored bool `json:"stored"`
+}
+
+// AgentInstallerArch defines model for AgentInstaller.Arch.
+type AgentInstallerArch string
+
+// AgentInstallerFormat defines model for AgentInstaller.Format.
+type AgentInstallerFormat string
+
+// AgentInstallerOs defines model for AgentInstaller.Os.
+type AgentInstallerOs string
+
+// AgentInstallers operations R5.132 (CRSP347).
+type AgentInstallers struct {
+	FromRelease bool             `json:"from_release"`
+	HaveSums    bool             `json:"have_sums"`
+	Installers  []AgentInstaller `json:"installers"`
+	Version     string           `json:"version"`
+}
+
 // AppHealth defines model for AppHealth.
 type AppHealth struct {
 	// CheckedAt When GitHub last answered. Absent before the first answer.
@@ -5973,6 +6133,40 @@ type DependencyJobRequestRunnerKind string
 
 // DependencyJobRequestRunnerOs defines model for DependencyJobRequest.RunnerOs.
 type DependencyJobRequestRunnerOs string
+
+// DependencyStoreEntry defines model for DependencyStoreEntry.
+type DependencyStoreEntry struct {
+	Arch *string `json:"arch,omitempty"`
+
+	// CanFetch The controller has an address to download it from.
+	CanFetch  bool                        `json:"can_fetch"`
+	Error     *string                     `json:"error,omitempty"`
+	FetchedAt *time.Time                  `json:"fetched_at,omitempty"`
+	Id        string                      `json:"id"`
+	Kind      DependencyStoreEntryKind    `json:"kind"`
+	Name      string                      `json:"name"`
+	Origin    *DependencyStoreEntryOrigin `json:"origin,omitempty"`
+	Os        *string                     `json:"os,omitempty"`
+
+	// Pinned This release lists a SHA-256 for it, so a file can be checked.
+	Pinned bool    `json:"pinned"`
+	Sha256 *string `json:"sha256,omitempty"`
+
+	// Source The host it is fetched from, in words for the user.
+	Source      *string                   `json:"source,omitempty"`
+	State       DependencyStoreEntryState `json:"state"`
+	StoredBytes *int64                    `json:"stored_bytes,omitempty"`
+	Version     *string                   `json:"version,omitempty"`
+}
+
+// DependencyStoreEntryKind defines model for DependencyStoreEntry.Kind.
+type DependencyStoreEntryKind string
+
+// DependencyStoreEntryOrigin defines model for DependencyStoreEntry.Origin.
+type DependencyStoreEntryOrigin string
+
+// DependencyStoreEntryState defines model for DependencyStoreEntry.State.
+type DependencyStoreEntryState string
 
 // DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
 type DiskFloorGib = int
@@ -9562,8 +9756,11 @@ type Runner struct {
 	Backend BackendName `json:"backend"`
 
 	// CanReregister True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153).
-	CanReregister *bool      `json:"can_reregister,omitempty"`
-	CreatedAt     *time.Time `json:"created_at,omitempty"`
+	CanReregister *bool `json:"can_reregister,omitempty"`
+
+	// CanStart True when the Runners page offers Start: the service of a persistent runner is stopped (runners R5.157).
+	CanStart  *bool      `json:"can_start,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// CurrentJob One job attempt (observability R5.7, R5.8).
 	CurrentJob *Job `json:"current_job,omitempty"`
@@ -10791,6 +10988,9 @@ type DebugSessionId = string
 // DependencyJobId defines model for DependencyJobId.
 type DependencyJobId = string
 
+// DependencyStoreId defines model for DependencyStoreId.
+type DependencyStoreId = string
+
 // FindingId defines model for FindingId.
 type FindingId = int64
 
@@ -11665,6 +11865,12 @@ type ReceiveGithubWebhookJSONRequestBody ReceiveGithubWebhookJSONBody
 
 // ServerInterface represents all server handlers.
 type ServerInterface interface {
+	// ListAgentInstallers The agent installers of this release, and which ones this controller has
+	// (GET /api/v1/agent-installers)
+	ListAgentInstallers(w http.ResponseWriter, r *http.Request)
+	// ImportAgentInstaller Store an agent installer, or SHA256SUMS, that the owner carried over
+	// (PUT /api/v1/agent-installers/{name})
+	ImportAgentInstaller(w http.ResponseWriter, r *http.Request, name string)
 	// ReplaceAppPrivateKey Replace the GitHub App private key
 	// (PUT /api/v1/app/private-key)
 	ReplaceAppPrivateKey(w http.ResponseWriter, r *http.Request)
@@ -11764,6 +11970,15 @@ type ServerInterface interface {
 	// GetDebugTranscript The redacted transcript of a session
 	// (GET /api/v1/debug-sessions/{sessionId}/transcript)
 	GetDebugTranscript(w http.ResponseWriter, r *http.Request, sessionId DebugSessionId)
+	// ListDependencyStore What the controller keeps for machines without internet
+	// (GET /api/v1/dependencies/store)
+	ListDependencyStore(w http.ResponseWriter, r *http.Request)
+	// FetchDependency Download one dependency to the controller and check it
+	// (POST /api/v1/dependencies/store/{dependencyId}/fetch)
+	FetchDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId)
+	// ImportDependency Give the controller a file you downloaded yourself
+	// (PUT /api/v1/dependencies/store/{dependencyId}/file)
+	ImportDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(w http.ResponseWriter, r *http.Request, params ListDoctorFindingsParams)
@@ -12244,6 +12459,9 @@ type ServerInterface interface {
 	// UpdateRunnerSettings Change a persistent runner's settings
 	// (PATCH /api/v1/runners/{runnerId}/settings)
 	UpdateRunnerSettings(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
+	// StartRunner Start the service of a stopped runner
+	// (POST /api/v1/runners/{runnerId}/start)
+	StartRunner(w http.ResponseWriter, r *http.Request, runnerId RunnerId)
 	// ListRuns Workflow runs, newest first
 	// (GET /api/v1/runs)
 	ListRuns(w http.ResponseWriter, r *http.Request, params ListRunsParams)
@@ -12416,6 +12634,46 @@ type ServerInterfaceWrapper struct {
 }
 
 type MiddlewareFunc func(http.Handler) http.Handler
+
+// ListAgentInstallers operation middleware
+func (siw *ServerInterfaceWrapper) ListAgentInstallers(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListAgentInstallers(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ImportAgentInstaller operation middleware
+func (siw *ServerInterfaceWrapper) ImportAgentInstaller(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "name" -------------
+	var name string
+
+	err = runtime.BindStyledParameterWithOptions("simple", "name", r.PathValue("name"), &name, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "name", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ImportAgentInstaller(w, r, name)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
 
 // ReplaceAppPrivateKey operation middleware
 func (siw *ServerInterfaceWrapper) ReplaceAppPrivateKey(w http.ResponseWriter, r *http.Request) {
@@ -13219,6 +13477,72 @@ func (siw *ServerInterfaceWrapper) GetDebugTranscript(w http.ResponseWriter, r *
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.GetDebugTranscript(w, r, sessionId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ListDependencyStore operation middleware
+func (siw *ServerInterfaceWrapper) ListDependencyStore(w http.ResponseWriter, r *http.Request) {
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ListDependencyStore(w, r)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// FetchDependency operation middleware
+func (siw *ServerInterfaceWrapper) FetchDependency(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "dependencyId" -------------
+	var dependencyId DependencyStoreId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "dependencyId", r.PathValue("dependencyId"), &dependencyId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dependencyId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.FetchDependency(w, r, dependencyId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
+// ImportDependency operation middleware
+func (siw *ServerInterfaceWrapper) ImportDependency(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "dependencyId" -------------
+	var dependencyId DependencyStoreId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "dependencyId", r.PathValue("dependencyId"), &dependencyId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "dependencyId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.ImportDependency(w, r, dependencyId)
 	}))
 
 	for _, middleware := range siw.HandlerMiddlewares {
@@ -18447,6 +18771,32 @@ func (siw *ServerInterfaceWrapper) UpdateRunnerSettings(w http.ResponseWriter, r
 	handler.ServeHTTP(w, r)
 }
 
+// StartRunner operation middleware
+func (siw *ServerInterfaceWrapper) StartRunner(w http.ResponseWriter, r *http.Request) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "runnerId" -------------
+	var runnerId RunnerId
+
+	err = runtime.BindStyledParameterWithOptions("simple", "runnerId", r.PathValue("runnerId"), &runnerId, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandlerFunc(w, r, &InvalidParamFormatError{ParamName: "runnerId", Err: err})
+		return
+	}
+
+	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		siw.Handler.StartRunner(w, r, runnerId)
+	}))
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		handler = middleware(handler)
+	}
+
+	handler.ServeHTTP(w, r)
+}
+
 // ListRuns operation middleware
 func (siw *ServerInterfaceWrapper) ListRuns(w http.ResponseWriter, r *http.Request) {
 
@@ -20029,6 +20379,9 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/stop", wrapper.StopMachineDependencyJob)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/undo", wrapper.UndoMachineDependencyJob)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/dependencies/jobs/{jobId}/restart-host", wrapper.RestartMachineForDependencyJob)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/dependencies/store", wrapper.ListDependencyStore)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/dependencies/store/{dependencyId}/fetch", wrapper.FetchDependency)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/dependencies/store/{dependencyId}/file", wrapper.ImportDependency)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/doctor/registration-fixes", wrapper.RemoveRegistration)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/docker-compact", wrapper.StartDockerCompact)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/machines/{machineId}/runner-leftovers/remove", wrapper.RemoveRunnerLeftovers)
@@ -20053,6 +20406,8 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/join-codes", wrapper.CreateJoinCode)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/join-files", wrapper.CreateJoinFile)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/packages/{name}", wrapper.GetPackage)
+	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/agent-installers", wrapper.ListAgentInstallers)
+	m.HandleFunc(http.MethodPut+" "+options.BaseURL+"/api/v1/agent-installers/{name}", wrapper.ImportAgentInstaller)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/join-codes/ssh", wrapper.JoinMachineOverSsh)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/join-codes/{joinCodeId}", wrapper.RevokeJoinCode)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/join-codes/{joinCodeId}", wrapper.GetJoinCode)
@@ -20077,6 +20432,7 @@ func HandlerWithOptions(si ServerInterface, options StdHTTPServerOptions) http.H
 	m.HandleFunc(http.MethodPatch+" "+options.BaseURL+"/api/v1/runners/{runnerId}/settings", wrapper.UpdateRunnerSettings)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/clear-cache", wrapper.ClearRunnerCache)
 	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/reregister", wrapper.ReregisterRunner)
+	m.HandleFunc(http.MethodPost+" "+options.BaseURL+"/api/v1/runners/{runnerId}/start", wrapper.StartRunner)
 	m.HandleFunc(http.MethodDelete+" "+options.BaseURL+"/api/v1/runners/{runnerId}/registration", wrapper.DeleteRunnerRegistration)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/runners/{runnerId}/env", wrapper.GetRunnerEnv)
 	m.HandleFunc(http.MethodGet+" "+options.BaseURL+"/api/v1/env-sets", wrapper.ListEnvSets)
@@ -20248,6 +20604,84 @@ type RedirectResponseHeaders struct {
 }
 type RedirectResponse struct {
 	Headers RedirectResponseHeaders
+}
+
+type ListAgentInstallersRequestObject struct {
+}
+
+type ListAgentInstallersResponseObject interface {
+	VisitListAgentInstallersResponse(w http.ResponseWriter) error
+}
+
+type ListAgentInstallers200JSONResponse AgentInstallers
+
+func (response ListAgentInstallers200JSONResponse) VisitListAgentInstallersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListAgentInstallersdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListAgentInstallersdefaultJSONResponse) VisitListAgentInstallersResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportAgentInstallerRequestObject struct {
+	Name string `json:"name"`
+	Body io.Reader
+}
+
+type ImportAgentInstallerResponseObject interface {
+	VisitImportAgentInstallerResponse(w http.ResponseWriter) error
+}
+
+type ImportAgentInstaller200JSONResponse AgentInstallers
+
+func (response ImportAgentInstaller200JSONResponse) VisitImportAgentInstallerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportAgentInstallerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ImportAgentInstallerdefaultJSONResponse) VisitImportAgentInstallerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
 }
 
 type ReplaceAppPrivateKeyRequestObject struct {
@@ -21543,6 +21977,125 @@ type GetDebugTranscriptdefaultJSONResponse struct {
 }
 
 func (response GetDebugTranscriptdefaultJSONResponse) VisitGetDebugTranscriptResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListDependencyStoreRequestObject struct {
+}
+
+type ListDependencyStoreResponseObject interface {
+	VisitListDependencyStoreResponse(w http.ResponseWriter) error
+}
+
+type ListDependencyStore200JSONResponse struct {
+	Items []DependencyStoreEntry `json:"items"`
+}
+
+func (response ListDependencyStore200JSONResponse) VisitListDependencyStoreResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ListDependencyStoredefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ListDependencyStoredefaultJSONResponse) VisitListDependencyStoreResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type FetchDependencyRequestObject struct {
+	DependencyId DependencyStoreId `json:"dependencyId"`
+}
+
+type FetchDependencyResponseObject interface {
+	VisitFetchDependencyResponse(w http.ResponseWriter) error
+}
+
+type FetchDependency200JSONResponse DependencyStoreEntry
+
+func (response FetchDependency200JSONResponse) VisitFetchDependencyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type FetchDependencydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response FetchDependencydefaultJSONResponse) VisitFetchDependencyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportDependencyRequestObject struct {
+	DependencyId DependencyStoreId `json:"dependencyId"`
+	Body         io.Reader
+}
+
+type ImportDependencyResponseObject interface {
+	VisitImportDependencyResponse(w http.ResponseWriter) error
+}
+
+type ImportDependency200JSONResponse DependencyStoreEntry
+
+func (response ImportDependency200JSONResponse) VisitImportDependencyResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type ImportDependencydefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response ImportDependencydefaultJSONResponse) VisitImportDependencyResponse(w http.ResponseWriter) error {
 
 	var buf bytes.Buffer
 	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
@@ -27981,6 +28534,45 @@ func (response UpdateRunnerSettingsdefaultJSONResponse) VisitUpdateRunnerSetting
 	return err
 }
 
+type StartRunnerRequestObject struct {
+	RunnerId RunnerId `json:"runnerId"`
+}
+
+type StartRunnerResponseObject interface {
+	VisitStartRunnerResponse(w http.ResponseWriter) error
+}
+
+type StartRunner200JSONResponse Runner
+
+func (response StartRunner200JSONResponse) VisitStartRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(200)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
+type StartRunnerdefaultJSONResponse struct {
+	Body       ErrorEnvelope
+	StatusCode int
+}
+
+func (response StartRunnerdefaultJSONResponse) VisitStartRunnerResponse(w http.ResponseWriter) error {
+
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(response.Body); err != nil {
+		return err
+	}
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(response.StatusCode)
+	_, err := buf.WriteTo(w)
+	return err
+}
+
 type ListRunsRequestObject struct {
 	Params ListRunsParams
 }
@@ -30057,6 +30649,12 @@ func (response ReceiveGithubWebhookdefaultJSONResponse) VisitReceiveGithubWebhoo
 
 // StrictServerInterface represents all server handlers.
 type StrictServerInterface interface {
+	// ListAgentInstallers The agent installers of this release, and which ones this controller has
+	// (GET /api/v1/agent-installers)
+	ListAgentInstallers(ctx context.Context, request ListAgentInstallersRequestObject) (ListAgentInstallersResponseObject, error)
+	// ImportAgentInstaller Store an agent installer, or SHA256SUMS, that the owner carried over
+	// (PUT /api/v1/agent-installers/{name})
+	ImportAgentInstaller(ctx context.Context, request ImportAgentInstallerRequestObject) (ImportAgentInstallerResponseObject, error)
 	// ReplaceAppPrivateKey Replace the GitHub App private key
 	// (PUT /api/v1/app/private-key)
 	ReplaceAppPrivateKey(ctx context.Context, request ReplaceAppPrivateKeyRequestObject) (ReplaceAppPrivateKeyResponseObject, error)
@@ -30156,6 +30754,15 @@ type StrictServerInterface interface {
 	// GetDebugTranscript The redacted transcript of a session
 	// (GET /api/v1/debug-sessions/{sessionId}/transcript)
 	GetDebugTranscript(ctx context.Context, request GetDebugTranscriptRequestObject) (GetDebugTranscriptResponseObject, error)
+	// ListDependencyStore What the controller keeps for machines without internet
+	// (GET /api/v1/dependencies/store)
+	ListDependencyStore(ctx context.Context, request ListDependencyStoreRequestObject) (ListDependencyStoreResponseObject, error)
+	// FetchDependency Download one dependency to the controller and check it
+	// (POST /api/v1/dependencies/store/{dependencyId}/fetch)
+	FetchDependency(ctx context.Context, request FetchDependencyRequestObject) (FetchDependencyResponseObject, error)
+	// ImportDependency Give the controller a file you downloaded yourself
+	// (PUT /api/v1/dependencies/store/{dependencyId}/file)
+	ImportDependency(ctx context.Context, request ImportDependencyRequestObject) (ImportDependencyResponseObject, error)
 	// ListDoctorFindings The latest finding per check and subject
 	// (GET /api/v1/doctor/findings)
 	ListDoctorFindings(ctx context.Context, request ListDoctorFindingsRequestObject) (ListDoctorFindingsResponseObject, error)
@@ -30636,6 +31243,9 @@ type StrictServerInterface interface {
 	// UpdateRunnerSettings Change a persistent runner's settings
 	// (PATCH /api/v1/runners/{runnerId}/settings)
 	UpdateRunnerSettings(ctx context.Context, request UpdateRunnerSettingsRequestObject) (UpdateRunnerSettingsResponseObject, error)
+	// StartRunner Start the service of a stopped runner
+	// (POST /api/v1/runners/{runnerId}/start)
+	StartRunner(ctx context.Context, request StartRunnerRequestObject) (StartRunnerResponseObject, error)
 	// ListRuns Workflow runs, newest first
 	// (GET /api/v1/runs)
 	ListRuns(ctx context.Context, request ListRunsRequestObject) (ListRunsResponseObject, error)
@@ -30837,6 +31447,58 @@ type strictHandler struct {
 	ssi         StrictServerInterface
 	middlewares []StrictMiddlewareFunc
 	options     StrictHTTPServerOptions
+}
+
+// ListAgentInstallers operation middleware
+func (sh *strictHandler) ListAgentInstallers(w http.ResponseWriter, r *http.Request) {
+	var request ListAgentInstallersRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListAgentInstallers(ctx, request.(ListAgentInstallersRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListAgentInstallers")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListAgentInstallersResponseObject); ok {
+		if err := validResponse.VisitListAgentInstallersResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ImportAgentInstaller operation middleware
+func (sh *strictHandler) ImportAgentInstaller(w http.ResponseWriter, r *http.Request, name string) {
+	var request ImportAgentInstallerRequestObject
+
+	request.Name = name
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ImportAgentInstaller(ctx, request.(ImportAgentInstallerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ImportAgentInstaller")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ImportAgentInstallerResponseObject); ok {
+		if err := validResponse.VisitImportAgentInstallerResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
 }
 
 // ReplaceAppPrivateKey operation middleware
@@ -31705,6 +32367,84 @@ func (sh *strictHandler) GetDebugTranscript(w http.ResponseWriter, r *http.Reque
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(GetDebugTranscriptResponseObject); ok {
 		if err := validResponse.VisitGetDebugTranscriptResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ListDependencyStore operation middleware
+func (sh *strictHandler) ListDependencyStore(w http.ResponseWriter, r *http.Request) {
+	var request ListDependencyStoreRequestObject
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ListDependencyStore(ctx, request.(ListDependencyStoreRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ListDependencyStore")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ListDependencyStoreResponseObject); ok {
+		if err := validResponse.VisitListDependencyStoreResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// FetchDependency operation middleware
+func (sh *strictHandler) FetchDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId) {
+	var request FetchDependencyRequestObject
+
+	request.DependencyId = dependencyId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.FetchDependency(ctx, request.(FetchDependencyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "FetchDependency")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(FetchDependencyResponseObject); ok {
+		if err := validResponse.VisitFetchDependencyResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// ImportDependency operation middleware
+func (sh *strictHandler) ImportDependency(w http.ResponseWriter, r *http.Request, dependencyId DependencyStoreId) {
+	var request ImportDependencyRequestObject
+
+	request.DependencyId = dependencyId
+
+	request.Body = r.Body
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.ImportDependency(ctx, request.(ImportDependencyRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "ImportDependency")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(ImportDependencyResponseObject); ok {
+		if err := validResponse.VisitImportDependencyResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {
@@ -36110,6 +36850,32 @@ func (sh *strictHandler) UpdateRunnerSettings(w http.ResponseWriter, r *http.Req
 		sh.options.ResponseErrorHandlerFunc(w, r, err)
 	} else if validResponse, ok := response.(UpdateRunnerSettingsResponseObject); ok {
 		if err := validResponse.VisitUpdateRunnerSettingsResponse(w); err != nil {
+			sh.options.ResponseErrorHandlerFunc(w, r, err)
+		}
+	} else if response != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, fmt.Errorf("unexpected response type: %T", response))
+	}
+}
+
+// StartRunner operation middleware
+func (sh *strictHandler) StartRunner(w http.ResponseWriter, r *http.Request, runnerId RunnerId) {
+	var request StartRunnerRequestObject
+
+	request.RunnerId = runnerId
+
+	handler := func(ctx context.Context, w http.ResponseWriter, r *http.Request, request interface{}) (interface{}, error) {
+		return sh.ssi.StartRunner(ctx, request.(StartRunnerRequestObject))
+	}
+	for _, middleware := range sh.middlewares {
+		handler = middleware(handler, "StartRunner")
+	}
+
+	response, err := handler(r.Context(), w, r, request)
+
+	if err != nil {
+		sh.options.ResponseErrorHandlerFunc(w, r, err)
+	} else if validResponse, ok := response.(StartRunnerResponseObject); ok {
+		if err := validResponse.VisitStartRunnerResponse(w); err != nil {
 			sh.options.ResponseErrorHandlerFunc(w, r, err)
 		}
 	} else if response != nil {

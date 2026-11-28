@@ -35,6 +35,7 @@ import { useSession } from '../../auth/session';
 import { useLiveStore, useVersion } from '../../live/LiveProvider';
 import { TIMING } from '../../timing';
 import { Ask, Load } from '../common';
+import { DownloadsTab } from '../dependencies/Downloads';
 import { RegistryTab } from '../registry/RegistryTab';
 import { useAskFirst } from './askFirst';
 import { CacheHub } from './CacheHub';
@@ -46,6 +47,7 @@ const TABS = [
   { id: 'images', label: 'Images' },
   { id: 'caches', label: 'Caches' },
   { id: 'registry', label: 'Registry' },
+  { id: 'downloads', label: 'Downloads' },
 ] as const;
 
 export function ImagesAndCaches() {
@@ -53,7 +55,8 @@ export function ImagesAndCaches() {
   const navigate = useNavigate();
   const session = useSession();
   const raw = params.get('tab');
-  const tab = raw === 'caches' || raw === 'registry' ? raw : 'images';
+  const tab =
+    raw === 'caches' || raw === 'registry' || raw === 'downloads' ? raw : 'images';
   const client = useClient();
   const mv = useVersion('machines');
   const { result: machines } = useLoad(
@@ -80,7 +83,8 @@ export function ImagesAndCaches() {
       {tab === 'images' ? <ImagesTab nameOf={nameOf} /> : null}
       {tab === 'caches' ? <CachesTab nameOf={nameOf} /> : null}
       {tab === 'registry' ? <RegistryTab /> : null}
-      {session.can('admin') && tab !== 'registry' ? (
+      {tab === 'downloads' ? <DownloadsTab /> : null}
+      {session.can('admin') && tab !== 'registry' && tab !== 'downloads' ? (
         <ActionBar
           primary={
             <Button kind="primary" onPress={() => void navigate('/setup/runners/add')}>

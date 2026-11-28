@@ -225,3 +225,32 @@ func TestIsLogonFailure(t *testing.T) {
 		}
 	}
 }
+
+// R5.156: a stopped service is started only after the runner group may list
+// the folders above the runner (once per pass).
+func TestHealGivesTheListRightBeforeStart(t *testing.T) {
+	r, sc, _ := stoppedRig(t, func(_ int, c sys.Command) sys.Result {
+		if strings.Contains(c.Stdin, "LsaAddAccountRights") {
+			return sys.Result{Stdout: "regranted=False\r\n"}
+		}
+		return sys.Result{}
+	})
+	if _, err := r.b.HealServices(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	list, startAt, n := -1, -1, 0
+	for i, c := range sc.calls {
+		if isListRight(c) {
+			n++
+			if list < 0 {
+				list = i
+			}
+		}
+		if strings.Contains(c.Stdin, "Start-Service") && startAt < 0 {
+			startAt = i
+		}
+	}
+	if n != 2 || list < 0 || startAt < list {
+		t.Errorf("list rights %d (first at %d), start at %d", n, list, startAt)
+	}
+}

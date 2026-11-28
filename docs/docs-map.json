@@ -28,6 +28,9 @@
     "apps/controller-console/src/screens/analytics/Savings.tsx": [
       "docs/features/observability/spec.md"
     ],
+    "apps/controller-console/src/screens/dependencies/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
     "apps/controller-console/src/screens/insights/**": [
       "docs/features/ci-run-insights/spec.md"
     ],
@@ -191,6 +194,12 @@
     "apps/controller/internal/debugaccess/**": [
       "docs/features/debug-access/spec.md"
     ],
+    "apps/controller/internal/depsetup/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
+    "apps/controller/internal/depstore/**": [
+      "docs/features/dependency-setup/spec.md"
+    ],
     "apps/controller/internal/dockercompact/**": [
       "docs/features/caches/spec.md",
       "docs/features/machines/spec.md"
@@ -271,11 +280,17 @@
     "apps/controller/internal/notify/**": [
       "docs/features/notifications/spec.md"
     ],
+    "apps/controller/internal/overflow/**": [
+      "docs/features/aws-overflow/spec.md"
+    ],
     "apps/controller/internal/overview/**": [
       "docs/features/observability/spec.md"
     ],
     "apps/controller/internal/power/**": [
       "docs/features/machines/spec.md"
+    ],
+    "apps/controller/internal/providers/aws/**": [
+      "docs/features/aws-overflow/spec.md"
     ],
     "apps/controller/internal/recovery/**": [
       "docs/features/operations/spec.md"
@@ -312,6 +327,7 @@
       "docs/features/scheduling/spec.md"
     ],
     "apps/controller/internal/secrets/**": [
+      "docs/features/aws-overflow/spec.md",
       "docs/features/github-integration/spec.md"
     ],
     "apps/controller/internal/store/debugaccess.go": [

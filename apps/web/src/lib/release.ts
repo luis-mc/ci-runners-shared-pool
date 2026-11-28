@@ -153,7 +153,8 @@ export function buildRelease(
   // CRSP304) are fetched by the Controller and are skipped here; any other asset named for an
   // agent is a mistake in the release.
   const agentPrefix = `CrspAgent-${version}-`;
-  const agentPackage = /^CrspAgent-[^-]+-(win|macos|linux)-(x64|arm64)\.(zip|tar\.gz)$/;
+  const agentPackage =
+    /^CrspAgent-[^-]+-(win|macos|linux)-(x64|arm64)\.(msi|pkg|deb|zip|tar\.gz)$/;
   for (const a of gh.assets) {
     if (a.name.startsWith(agentPrefix) && agentPackage.test(a.name)) continue;
     if (/agent/i.test(a.name)) problems.push(`unexpected agent asset ${a.name}`);

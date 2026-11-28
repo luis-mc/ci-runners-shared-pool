@@ -87,6 +87,24 @@ jobs:
             -FailingMsi installer/controller/out/v0.1.2/crsp-windows-amd64.msi `
             -LogDir installer/controller/out/logs
 
+      # CRSP348: the agent MSI (no screen): builds for both CPUs; on x64 it installs silently, puts
+      # crsp.exe in the program folder and uninstalls without a leftover.
+      - name: Build the agent MSI
+        run: ./installer/agent/windows/build.ps1 -Arch ${{ matrix.arch }} -Exe installer/controller/out/crsp.exe -Version 0.1.0 -Out installer/agent/windows/out
+
+      - name: Agent MSI install and uninstall
+        if: ${{ matrix.arch == 'x64' }}
+        run: |
+          $msi = (Resolve-Path installer/agent/windows/out/crspagent-windows-amd64.msi).Path
+          $p = Start-Process msiexec.exe -ArgumentList '/i', "`"$msi`"", '/qn', '/l*v', "`"$PWD\agent-install.log`"" -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "agent MSI install exit $($p.ExitCode)" }
+          $exe = Join-Path $env:ProgramFiles 'crsp\crsp.exe'
+          if (-not (Test-Path $exe)) { throw "$exe is missing after the agent MSI install" }
+          if (Get-Service crsp -ErrorAction SilentlyContinue) { throw 'the agent MSI must not install a service' }
+          $p = Start-Process msiexec.exe -ArgumentList '/x', "`"$msi`"", '/qn' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "agent MSI uninstall exit $($p.ExitCode)" }
+          if (Test-Path $exe) { throw "$exe is left after the agent MSI uninstall" }
+
       - name: Administrative extract (no install)
         if: ${{ !cancelled() }}
         run: |

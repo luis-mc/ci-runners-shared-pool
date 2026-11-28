@@ -1,5 +1,13 @@
 [
   {
+    "date": "27 Nov 13:50",
+    "change": "dropped: owner 27 Nov: dev-standards has no pool anymore"
+  },
+  {
+    "date": "27 Nov 13:50",
+    "change": "dropped: owner 27 Nov: dev-standards has no pool anymore"
+  },
+  {
     "date": "25 Nov 06:35",
     "change": "CI on head 3df86a7a"
   },

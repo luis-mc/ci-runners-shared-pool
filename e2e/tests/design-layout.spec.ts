@@ -193,6 +193,7 @@ const SCREENS: {
   { name: 'images', path: '/setup/images', ready: 'Setup' },
   { name: 'image detail', path: '/setup/images/img_m1_linux', ready: 'build-1' },
   { name: 'caches', path: '/setup/images?tab=caches', ready: 'Setup' },
+  { name: 'downloads', path: '/setup/images?tab=downloads', ready: 'Setup' },
   { name: 'settings access', path: '/settings/access', ready: 'Settings' },
   {
     name: 'settings repositories',

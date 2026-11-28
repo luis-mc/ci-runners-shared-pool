@@ -1908,9 +1908,9 @@ legend > .ds-field__changed {
   min-inline-size: 0;
 }
 .ds-file__name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* a long file name wraps; text is never hidden (layout judge: clipped-text) */
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
   font-weight: var(--ds-weight-semibold);
 }
 .ds-file__size {
@@ -1920,6 +1920,24 @@ legend > .ds-field__changed {
 .ds-file__actions {
   display: flex;
   gap: var(--ds-space-2);
+}
+
+/* file list field (component 14c) */
+.ds-file__list {
+  display: grid;
+  gap: var(--ds-space-2);
+  margin: var(--ds-space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ds-file__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ds-space-3);
+  padding: var(--ds-space-2) var(--ds-space-3);
+  border: var(--ds-border-thin) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-2);
 }
 
 /* ordered list (component 45, LOOK10) */

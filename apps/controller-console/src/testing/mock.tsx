@@ -44,7 +44,12 @@ export class MockApi {
       method: req.method,
       path: url.pathname,
       query: url.searchParams,
-      body: text ? (JSON.parse(text) as unknown) : undefined,
+      // A file sent as octet-stream stays the text it is; everything else is JSON.
+      body: !text
+        ? undefined
+        : (req.headers.get('content-type') ?? '').startsWith('application/octet-stream')
+          ? text
+          : (JSON.parse(text) as unknown),
     };
     this.calls.push(call);
     const parts = url.pathname.split('/');
@@ -59,7 +64,20 @@ export class MockApi {
         return p === parts[i];
       });
       if (!ok) continue;
-      const out = await (typeof r.reply === 'function' ? r.reply(call, params) : r.reply);
+      const answer = Promise.resolve(
+        typeof r.reply === 'function' ? r.reply(call, params) : r.reply,
+      );
+      // An aborted request ends the way fetch ends it: with an AbortError.
+      let onAbort = () => undefined as void;
+      const out = await Promise.race([
+        answer,
+        new Promise<never>((_, reject) => {
+          onAbort = () =>
+            reject(new DOMException('The operation was aborted.', 'AbortError'));
+          if (req.signal.aborted) onAbort();
+          else req.signal.addEventListener('abort', onAbort, { once: true });
+        }),
+      ]).finally(() => req.signal.removeEventListener('abort', onAbort));
       if (out instanceof Response) return out;
       if (out === undefined) return new Response(null, { status: 204 });
       return Response.json(out);

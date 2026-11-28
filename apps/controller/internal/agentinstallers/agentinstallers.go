@@ -38,11 +38,25 @@ var ErrNotListed = errors.New("no such agent installer")
 // ErrMismatch says a file does not have the SHA-256 SHA256SUMS lists.
 var ErrMismatch = errors.New("the file does not match SHA256SUMS")
 
-var nameRe = regexp.MustCompile(`^CrspAgent-([0-9A-Za-z][0-9A-Za-z._+~-]*)-(win|linux|macos)-(x64|arm64)\.(zip|tar\.gz)$`)
+// ErrSumsKnown says the release's own SHA256SUMS is already known, so a carried-over copy is not taken.
+var ErrSumsKnown = errors.New("this controller already has the checksums of its release")
+
+// nameRe reads both name patterns of an agent installer (CRSP347, CRSP348):
+// the archive (zip, tar.gz) and the native package (msi, pkg, deb).
+var nameRe = regexp.MustCompile(`^CrspAgent-([0-9A-Za-z][0-9A-Za-z._+~-]*)-(win|linux|macos)-(x64|arm64)\.(zip|tar\.gz|msi|pkg|deb)$`)
+
+// formats lists the file types an agent installer has on each system.
+var formats = map[string][]string{
+	"windows": {"zip", "msi"},
+	"linux":   {"tar.gz", "deb"},
+	"macos":   {"tar.gz", "pkg"},
+}
 
 // Info is what an agent installer name says.
 type Info struct {
 	Version, OS, Arch string // OS: windows, linux, macos. Arch: amd64, arm64.
+	// Format is the file type: zip, tar.gz, msi, pkg or deb.
+	Format string
 }
 
 // Name is CrspAgent-<version>-<os>-<arch>.<ext>: zip for Windows, tar.gz for the rest.
@@ -80,19 +94,21 @@ func ParseName(name string) (Info, bool) {
 	if m == nil {
 		return Info{}, false
 	}
-	in := Info{Version: m[1], OS: map[string]string{"win": "windows", "linux": "linux", "macos": "macos"}[m[2]], Arch: "amd64"}
+	in := Info{Version: m[1], OS: map[string]string{"win": "windows", "linux": "linux", "macos": "macos"}[m[2]], Arch: "amd64", Format: m[4]}
 	if m[3] == "arm64" {
 		in.Arch = "arm64"
 	}
-	if (in.OS == "windows") != (m[4] == "zip") {
-		return Info{}, false
+	for _, f := range formats[in.OS] {
+		if f == in.Format {
+			return in, true
+		}
 	}
-	return in, true
+	return Info{}, false
 }
 
 // Installer is one agent installer of the release.
 type Installer struct {
-	Name, SHA256, OS, Arch string
+	Name, SHA256, OS, Arch, Format string
 	// Cached says the file is in the data folder and has the listed SHA-256.
 	Cached bool
 }
@@ -218,7 +234,7 @@ var sumRe = regexp.MustCompile(`^([0-9a-f]{64})[ ]+\*?(\S+)$`)
 func listed(sums []byte) []sumLine {
 	var out []sumLine
 	for _, line := range strings.Split(string(sums), "\n") {
-		m := sumRe.FindStringSubmatch(strings.TrimRight(line, ""))
+		m := sumRe.FindStringSubmatch(strings.TrimRight(line, "\r"))
 		if m == nil {
 			continue
 		}
@@ -227,6 +243,51 @@ func listed(sums []byte) []sumLine {
 		}
 	}
 	return out
+}
+
+// NativeFormat is the native package format of an OS: msi, pkg or deb.
+var NativeFormat = map[string]string{"win": "msi", "macos": "pkg", "linux": "deb"}
+
+// Coverage says which of the six targets (win, linux, macos by x64, arm64) a SHA256SUMS lists an agent archive and
+// a native package for. A target is "<os>-<arch>" in the release names, e.g. "win-x64".
+type Coverage struct {
+	MissingArchives, MissingNative []string
+}
+
+// CoverageOf reads the SHA256SUMS text of a release.
+func CoverageOf(sums []byte) Coverage {
+	haveArchive, haveNative := map[string]bool{}, map[string]bool{}
+	for _, line := range strings.Split(string(sums), "\n") {
+		m := sumRe.FindStringSubmatch(line)
+		if m == nil {
+			continue
+		}
+		if in, ok := ParseName(m[2]); ok {
+			os := map[string]string{"windows": "win", "linux": "linux", "macos": "macos"}[in.OS]
+			arch := "x64"
+			if in.Arch == "arm64" {
+				arch = "arm64"
+			}
+			if in.Format == NativeFormat[os] {
+				haveNative[os+"-"+arch+"."+in.Format] = true
+			} else {
+				haveArchive[os+"-"+arch] = true
+			}
+		}
+	}
+	var c Coverage
+	for _, os := range []string{"win", "linux", "macos"} {
+		for _, arch := range []string{"x64", "arm64"} {
+			t := os + "-" + arch
+			if !haveArchive[t] {
+				c.MissingArchives = append(c.MissingArchives, t)
+			}
+			if !haveNative[t+"."+NativeFormat[os]] {
+				c.MissingNative = append(c.MissingNative, t+"."+NativeFormat[os])
+			}
+		}
+	}
+	return c
 }
 
 // Sums returns the SHA256SUMS text and the version.
@@ -252,7 +313,7 @@ func (s *Store) List(ctx context.Context) ([]Installer, error) {
 	for _, p := range listed(b) {
 		in, _ := ParseName(p.Name)
 		got, err := update.FileSHA256(filepath.Join(s.dir(), p.Name))
-		out = append(out, Installer{Name: p.Name, SHA256: p.SHA256, OS: in.OS, Arch: in.Arch, Cached: err == nil && got == p.SHA256})
+		out = append(out, Installer{Name: p.Name, SHA256: p.SHA256, OS: in.OS, Arch: in.Arch, Format: in.Format, Cached: err == nil && got == p.SHA256})
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	return out, nil
@@ -371,6 +432,9 @@ func (s *Store) ImportSums(r io.Reader) error {
 	if err != nil {
 		return err
 	}
+	if len(b) == 1<<20 {
+		return fmt.Errorf("%w: SHA256SUMS is too large", ErrNotListed)
+	}
 	ok := false
 	for _, p := range listed(b) {
 		if in, _ := ParseName(p.Name); strings.TrimPrefix(s.Version, "v") == in.Version {
@@ -382,6 +446,9 @@ func (s *Store) ImportSums(r io.Reader) error {
 	}
 	s.mu.Lock()
 	defer s.mu.Unlock()
+	if s.sumsMem != nil {
+		return ErrSumsKnown
+	}
 	if err := os.MkdirAll(s.dir(), 0o750); err != nil {
 		return err
 	}
@@ -431,6 +498,37 @@ func (s *Store) Import(ctx context.Context, name string, r io.Reader) error {
 	}
 	s.verified[name] = true
 	return nil
+}
+
+// State is what the console and the CLI show before an import.
+type State struct {
+	Version string
+	// HaveSums says SHA256SUMS of the release is here (fetched or imported).
+	HaveSums bool
+	// FromRelease says SHA256SUMS was read from the release itself, so an imported copy is not needed.
+	FromRelease bool
+	Installers  []Installer
+}
+
+// State reports the version, whether SHA256SUMS is here, and every listed installer.
+// A controller without SHA256SUMS is not an error: it is the first step of an import.
+func (s *Store) State(ctx context.Context) (State, error) {
+	if s.Version == "" || s.Dir == "" {
+		return State{}, ErrUnavailable
+	}
+	st := State{Version: strings.TrimPrefix(s.Version, "v")}
+	list, err := s.List(ctx)
+	switch {
+	case err == nil:
+		st.HaveSums, st.Installers = true, list
+	case errors.Is(err, ErrUnavailable):
+	default:
+		return State{}, err
+	}
+	s.mu.Lock()
+	st.FromRelease = s.sumsMem != nil
+	s.mu.Unlock()
+	return st, nil
 }
 
 // Ref says where one installer is and the SHA-256 it must have.

@@ -201,6 +201,8 @@ one_pass() {
   # The dependencies: kept while the setting is on.
   if [ "$keep" = 0 ]; then
     empty_dir "$deps"
+    # the runner's HOME and XDG folders are set once at its start: put them back
+    for h in home cache config share corepack; do mkdir -p "$deps/$h" 2>/dev/null; done
     rm_path "$work/_actions"
     rm_path "$work/_tool"
   fi

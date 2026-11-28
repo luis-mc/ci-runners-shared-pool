@@ -18,9 +18,11 @@ type Job struct {
 	OS      string
 	Machine string
 	Run     time.Duration
+	// Count is how many jobs this line stands for; zero means one. The store groups equal jobs in SQL.
+	Count int
 }
 
-// Source lists the jobs that finished in [from, to) on the pool.
+// Source lists the jobs that finished in [from, to) on the pool, grouped by what they share.
 type Source interface {
 	FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]Job, error)
 }
@@ -139,7 +141,7 @@ func (s *Service) Report(ctx context.Context, name string, from, to time.Time) (
 	rep := Report{Range: name, From: f, To: t, SourceURL: tab.SourceURL, CopiedOn: tab.CopiedOn, Changed: tab.Changed,
 		Note: "Estimate. Jobs of public repositories count their minutes but save no money: GitHub-hosted standard runners are free there."}
 	repo, osr, mach := map[string]*Row{}, map[string]*Row{}, map[string]*Row{}
-	add := func(m map[string]*Row, key string, minutes int, money float64, public bool) {
+	add := func(m map[string]*Row, key string, jobs, minutes int, money float64, public bool) {
 		if key == "" {
 			key = "unknown"
 		}
@@ -148,7 +150,7 @@ func (s *Service) Report(ctx context.Context, name string, from, to time.Time) (
 			r = &Row{Key: key}
 			m[key] = r
 		}
-		r.Jobs++
+		r.Jobs += jobs
 		r.Minutes += minutes
 		r.Money += money
 		if public {
@@ -156,7 +158,11 @@ func (s *Service) Report(ctx context.Context, name string, from, to time.Time) (
 		}
 	}
 	for _, j := range jobs {
-		min := RoundUpMinutes(j.Run)
+		n := j.Count
+		if n == 0 {
+			n = 1
+		}
+		min := RoundUpMinutes(j.Run) * n
 		if min == 0 {
 			continue
 		}
@@ -165,13 +171,13 @@ func (s *Service) Report(ctx context.Context, name string, from, to time.Time) (
 			if rate, ok := tab.PerMinute(strings.ToLower(j.OS), j.Machine); ok {
 				money = float64(min) * rate
 			} else {
-				rep.NotPriced++
+				rep.NotPriced += n
 			}
 		}
-		add(repo, j.Repository, min, money, j.Public)
-		add(osr, strings.ToLower(j.OS), min, money, j.Public)
-		add(mach, j.Machine, min, money, j.Public)
-		rep.Total.Jobs++
+		add(repo, j.Repository, n, min, money, j.Public)
+		add(osr, strings.ToLower(j.OS), n, min, money, j.Public)
+		add(mach, j.Machine, n, min, money, j.Public)
+		rep.Total.Jobs += n
 		rep.Total.Minutes += min
 		rep.Total.Money = roundCents(rep.Total.Money + money)
 		if j.Public {
@@ -200,22 +206,23 @@ func rows(m map[string]*Row) []Row {
 
 func roundCents(v float64) float64 { return float64(int64(v*10000+0.5)) / 10000 }
 
-// DBSource reads the finished jobs of the pool from the store.
+// DBSource reads the finished jobs of the pool from the store, already grouped and rounded up in SQL.
 type DBSource struct {
 	DB interface {
-		FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]store.PoolJobRow, error)
+		PoolJobGroups(ctx context.Context, from, to time.Time) ([]store.PoolJobGroup, error)
 	}
 }
 
 // FinishedPoolJobs implements Source.
 func (d DBSource) FinishedPoolJobs(ctx context.Context, from, to time.Time) ([]Job, error) {
-	rows, err := d.DB.FinishedPoolJobs(ctx, from, to)
+	rows, err := d.DB.PoolJobGroups(ctx, from, to)
 	if err != nil {
 		return nil, err
 	}
 	out := make([]Job, 0, len(rows))
 	for _, r := range rows {
-		out = append(out, Job{Repository: r.Repository, Public: r.Public, OS: r.OS, Machine: r.Machine, Run: r.Run})
+		out = append(out, Job{Repository: r.Repository, Public: r.Public, OS: r.OS, Machine: r.Machine,
+			Run: time.Duration(r.Minutes) * time.Minute, Count: r.Jobs})
 	}
 	return out, nil
 }

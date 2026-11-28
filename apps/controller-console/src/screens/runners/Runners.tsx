@@ -238,6 +238,22 @@ export function RunnersList() {
     }
   });
 
+  // runners R5.157: Start, for a runner whose service is stopped.
+  const [startId, setStartId] = useState<string | undefined>(undefined);
+  const start = useCommand(async (id: string) => {
+    setStartId(id);
+    try {
+      await unwrap(
+        client.POST('/api/v1/runners/{runnerId}/start', {
+          params: { path: { runnerId: id } },
+        }),
+      );
+      reload();
+    } finally {
+      setStartId(undefined);
+    }
+  });
+
   const columns: Column<Runner>[] = [
     {
       id: 'name',
@@ -317,6 +333,16 @@ export function RunnersList() {
             >
               Register again
             </Button>
+          ) : r.can_start ? (
+            <Button
+              onPress={() => void start.run(r.id)}
+              busy={start.busy && startId === r.id}
+              busyLabel="Starting"
+              disabled={!admin || start.busy}
+              reason={why}
+            >
+              Start
+            </Button>
           ) : r.state === 'offline' ? (
             <Button
               onPress={() => {
@@ -395,6 +421,9 @@ export function RunnersList() {
               <SummaryLine {...runnerSummary(data.items)} />
               {again.error ? (
                 <Message tone="problem">{`Could not register again. ${again.error}`}</Message>
+              ) : null}
+              {start.error ? (
+                <Message tone="problem">{`Could not start. ${start.error}`}</Message>
               ) : null}
               {data.items.some((r) => r.state === 'failed') ? (
                 <Message

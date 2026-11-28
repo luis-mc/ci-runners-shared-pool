@@ -295,6 +295,20 @@ func (a linkAgent) StopService(ctx context.Context, id, service string) error {
 	return l.StopService(ctx, id, service)
 }
 
+// StartService starts the service of a persistent runner through the agent's
+// listener command (runners R5.157).
+func (a linkAgent) StartService(ctx context.Context, id, service string) error {
+	l, err := a.forMachine(ctx, id)
+	if err != nil {
+		return err
+	}
+	st, ok := l.(runners.ServiceStarter)
+	if !ok {
+		return errRemoteRunners
+	}
+	return st.StartService(ctx, id, service)
+}
+
 func (a linkAgent) RemoveRunner(ctx context.Context, id string, req runners.RemoveRequest) error {
 	l, err := a.forMachine(ctx, id)
 	if err != nil {

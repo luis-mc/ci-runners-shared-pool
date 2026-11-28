@@ -13,6 +13,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentinstallers"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/agentlink"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/auth"
@@ -23,12 +24,14 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/config"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/configexport"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/depsetup"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/depstore"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor/checks"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/doctor/wire"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/events"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/github"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/history"
+	joblive "github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/jobsdata/live"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/mirror"
@@ -71,7 +74,9 @@ type controllerDeps struct {
 	PublicHost string
 	// Packages serves the release packages to new machines (machines R5.65); nil for a development build.
 	Packages api.PackageServer
-	Updates  api.UpdateService
+	// AgentInstallers lists and imports agent installers (operations R5.132); nil for a development build.
+	AgentInstallers api.AgentInstallerService
+	Updates         api.UpdateService
 	// Lifecycle is the update state machine; Fleet lists the machines for it.
 	Lifecycle *update.Service
 	// Listen is the listen address service of the console (operations R5.90).
@@ -81,8 +86,12 @@ type controllerDeps struct {
 	Caches *caches.Service
 	// Link carries runner commands to remote machines and reports (CRSP63); nil keeps remote machines unreachable.
 	Link *agentlink.Link
+	// AgentStore holds the agent installers of the release (CRSP304); nil for a development build.
+	AgentStore *agentinstallers.Store
 	// Deps runs the dependency setup jobs (CRSP248); nil leaves the routes at 501.
 	Deps *depsetup.Service
+	// DepStore is the controller's own copy of the dependencies (DEP15); nil leaves the routes at 501.
+	DepStore *depstore.Service
 	// Health is the machine health service (OPS83); nil leaves the health routes and checks off.
 	Health *machinehealth.Service
 	// MachineSecrets is the secret source the config export reads (mr.Secrets).
@@ -184,7 +193,16 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		// The one setting a sign-in from the CLI needs (github-integration R5.14).
 		DeviceFlow: func(ctx context.Context) error { _, err := gh.StartDevice(ctx); return err }}
 	// The Jobs section: every job event ends in one recorder (observability R5.7 to R5.12).
-	jobsIngest := newJobsWiring(ctx, logger, d.DB.Jobs(), gh, repoStore, d.Now)
+	// Live view over the store: machines, queue, running jobs and minutes saved (audit R3-7).
+	hub, live := wire.NewLive(&poolOverviewSource{DB: d.DB, MachineSvc: d.Machines, Timers: func() api.TimerService { return c.Options.Timers }}, events.Options{})
+	c.Hub = hub
+	c.closers = append(c.closers, hub.Stop)
+
+	// Job writes tell the live view (job.queued, job.started, job.finished) and rebuild the groups and
+	// stats cache in the background, so no page scans past jobs (observability R5.4, R6.2).
+	liveJobs := joblive.New(joblive.Options{Store: d.DB.Jobs(), Events: hub, Encode: api.JobEventJSON, Log: logger})
+	c.closers = append(c.closers, liveJobs.Close)
+	jobsIngest := newJobsWiring(ctx, logger, liveJobs, gh, repoStore, d.Now)
 	c.closers = append(c.closers, jobsIngest.Close)
 	sizes := newSizeTrigger(ctx, logger)
 	c.sizes = sizes
@@ -240,11 +258,6 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			func(err error) { logger.Warn("check the GitHub App", "err", err) })
 	}()
 	c.closers = append(c.closers, func() { stopHealth(); <-healthDone })
-
-	// Live view over the store: machines, queue, running jobs and minutes saved (audit R3-7).
-	hub, live := wire.NewLive(&poolOverviewSource{DB: d.DB, MachineSvc: d.Machines, Timers: func() api.TimerService { return c.Options.Timers }}, events.Options{})
-	c.Hub = hub
-	c.closers = append(c.closers, hub.Stop)
 
 	// Runners: the controller's own OS through the backend registry; other
 	// machines wait for the runner messages on the agent link.
@@ -388,14 +401,15 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 			return gh, nil
 		},
 		Store: doctor.NewMemStore(), Events: hub, Logger: logger, PoolName: pool,
-		KVM:          reportSources{fleet: fleet, link: d.Link},
-		Engines:      reportSources{fleet: fleet, link: d.Link},
-		Extra:        append(checks.KVMReportedChecks(), checks.HealthChecks()...),
-		Demand:       quietSource{wd: quietDemand},
-		Ephemeral:    runnerSvc,
-		Timers:       timerSvc,
-		ListenerGate: gateSvc,
-		RunnerPin:    pinStatus{m: pinMgr},
+		KVM:           reportSources{fleet: fleet, link: d.Link},
+		Engines:       reportSources{fleet: fleet, link: d.Link},
+		Extra:         append(checks.KVMReportedChecks(), checks.HealthChecks()...),
+		Demand:        quietSource{wd: quietDemand},
+		Ephemeral:     runnerSvc,
+		Timers:        timerSvc,
+		ListenerGate:  gateSvc,
+		RunnerPin:     pinStatus{m: pinMgr},
+		AgentPackages: agentPackageStatus(d.AgentStore),
 	})
 
 	c.Options.Version, c.Options.DB, c.Options.Logger = version, d.DB, logger
@@ -410,6 +424,10 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Health = d.Health
 	}
 	c.Options.Packages = d.Packages
+	if d.DepStore != nil {
+		c.Options.DepStore = d.DepStore
+	}
+	c.Options.AgentInstallers = d.AgentInstallers
 	if d.Deps != nil {
 		c.Options.Deps = d.Deps
 	}
@@ -417,7 +435,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		c.Options.Listen = d.Listen
 	}
 	c.Options.Jobs, c.Options.Slots, c.Options.Live = d.DB, d.Queue, live
-	c.Options.JobsData = d.DB.Jobs()
+	c.Options.JobsData = liveJobs
 	// Debug access to a running job (CRSP331): off for every repository until an admin switches it on.
 	wireDebugAccess(ctx, d.DB, logger, c, d.DB.Jobs(), repoStore)
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc

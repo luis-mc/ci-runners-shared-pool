@@ -38,6 +38,72 @@ func (e AddUserRequestRole) Valid() bool {
 	}
 }
 
+// Defines values for AgentInstallerArch.
+const (
+	AgentInstallerArchAmd64 AgentInstallerArch = "amd64"
+	AgentInstallerArchArm64 AgentInstallerArch = "arm64"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerArch enum.
+func (e AgentInstallerArch) Valid() bool {
+	switch e {
+	case AgentInstallerArchAmd64:
+		return true
+	case AgentInstallerArchArm64:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerFormat.
+const (
+	Deb   AgentInstallerFormat = "deb"
+	Msi   AgentInstallerFormat = "msi"
+	Pkg   AgentInstallerFormat = "pkg"
+	TarGz AgentInstallerFormat = "tar.gz"
+	Zip   AgentInstallerFormat = "zip"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerFormat enum.
+func (e AgentInstallerFormat) Valid() bool {
+	switch e {
+	case Deb:
+		return true
+	case Msi:
+		return true
+	case Pkg:
+		return true
+	case TarGz:
+		return true
+	case Zip:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for AgentInstallerOs.
+const (
+	AgentInstallerOsLinux   AgentInstallerOs = "linux"
+	AgentInstallerOsMacos   AgentInstallerOs = "macos"
+	AgentInstallerOsWindows AgentInstallerOs = "windows"
+)
+
+// Valid indicates whether the value is a known member of the AgentInstallerOs enum.
+func (e AgentInstallerOs) Valid() bool {
+	switch e {
+	case AgentInstallerOsLinux:
+		return true
+	case AgentInstallerOsMacos:
+		return true
+	case AgentInstallerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
 // Defines values for AppWebhookLastResult.
 const (
 	AppWebhookLastResultFailed AppWebhookLastResult = "failed"
@@ -785,6 +851,69 @@ func (e DependencyJobRequestRunnerOs) Valid() bool {
 	case DependencyJobRequestRunnerOsMacos:
 		return true
 	case DependencyJobRequestRunnerOsWindows:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryKind.
+const (
+	DependencyStoreEntryKindAgent     DependencyStoreEntryKind = "agent"
+	DependencyStoreEntryKindInstaller DependencyStoreEntryKind = "installer"
+	DependencyStoreEntryKindRunner    DependencyStoreEntryKind = "runner"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryKind enum.
+func (e DependencyStoreEntryKind) Valid() bool {
+	switch e {
+	case DependencyStoreEntryKindAgent:
+		return true
+	case DependencyStoreEntryKindInstaller:
+		return true
+	case DependencyStoreEntryKindRunner:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryOrigin.
+const (
+	Fetched  DependencyStoreEntryOrigin = "fetched"
+	Imported DependencyStoreEntryOrigin = "imported"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryOrigin enum.
+func (e DependencyStoreEntryOrigin) Valid() bool {
+	switch e {
+	case Fetched:
+		return true
+	case Imported:
+		return true
+	default:
+		return false
+	}
+}
+
+// Defines values for DependencyStoreEntryState.
+const (
+	DependencyStoreEntryStateFailed    DependencyStoreEntryState = "failed"
+	DependencyStoreEntryStateMissing   DependencyStoreEntryState = "missing"
+	DependencyStoreEntryStateNotPinned DependencyStoreEntryState = "not_pinned"
+	DependencyStoreEntryStateReady     DependencyStoreEntryState = "ready"
+)
+
+// Valid indicates whether the value is a known member of the DependencyStoreEntryState enum.
+func (e DependencyStoreEntryState) Valid() bool {
+	switch e {
+	case DependencyStoreEntryStateFailed:
+		return true
+	case DependencyStoreEntryStateMissing:
+		return true
+	case DependencyStoreEntryStateNotPinned:
+		return true
+	case DependencyStoreEntryStateReady:
 		return true
 	default:
 		return false
@@ -5189,6 +5318,37 @@ type AddUserRequest struct {
 // AddUserRequestRole defines model for AddUserRequest.Role.
 type AddUserRequestRole string
 
+// AgentInstaller One agent installer that SHA256SUMS lists.
+type AgentInstaller struct {
+	Arch   AgentInstallerArch   `json:"arch"`
+	Format AgentInstallerFormat `json:"format"`
+	Name   string               `json:"name"`
+	Os     AgentInstallerOs     `json:"os"`
+
+	// Sha256 The SHA-256 SHA256SUMS lists.
+	Sha256 string `json:"sha256"`
+
+	// Stored The file is on this controller and has that SHA-256.
+	Stored bool `json:"stored"`
+}
+
+// AgentInstallerArch defines model for AgentInstaller.Arch.
+type AgentInstallerArch string
+
+// AgentInstallerFormat defines model for AgentInstaller.Format.
+type AgentInstallerFormat string
+
+// AgentInstallerOs defines model for AgentInstaller.Os.
+type AgentInstallerOs string
+
+// AgentInstallers operations R5.132 (CRSP347).
+type AgentInstallers struct {
+	FromRelease bool             `json:"from_release"`
+	HaveSums    bool             `json:"have_sums"`
+	Installers  []AgentInstaller `json:"installers"`
+	Version     string           `json:"version"`
+}
+
 // AppHealth defines model for AppHealth.
 type AppHealth struct {
 	// CheckedAt When GitHub last answered. Absent before the first answer.
@@ -5974,6 +6134,40 @@ type DependencyJobRequestRunnerKind string
 
 // DependencyJobRequestRunnerOs defines model for DependencyJobRequest.RunnerOs.
 type DependencyJobRequestRunnerOs string
+
+// DependencyStoreEntry defines model for DependencyStoreEntry.
+type DependencyStoreEntry struct {
+	Arch *string `json:"arch,omitempty"`
+
+	// CanFetch The controller has an address to download it from.
+	CanFetch  bool                        `json:"can_fetch"`
+	Error     *string                     `json:"error,omitempty"`
+	FetchedAt *time.Time                  `json:"fetched_at,omitempty"`
+	Id        string                      `json:"id"`
+	Kind      DependencyStoreEntryKind    `json:"kind"`
+	Name      string                      `json:"name"`
+	Origin    *DependencyStoreEntryOrigin `json:"origin,omitempty"`
+	Os        *string                     `json:"os,omitempty"`
+
+	// Pinned This release lists a SHA-256 for it, so a file can be checked.
+	Pinned bool    `json:"pinned"`
+	Sha256 *string `json:"sha256,omitempty"`
+
+	// Source The host it is fetched from, in words for the user.
+	Source      *string                   `json:"source,omitempty"`
+	State       DependencyStoreEntryState `json:"state"`
+	StoredBytes *int64                    `json:"stored_bytes,omitempty"`
+	Version     *string                   `json:"version,omitempty"`
+}
+
+// DependencyStoreEntryKind defines model for DependencyStoreEntry.Kind.
+type DependencyStoreEntryKind string
+
+// DependencyStoreEntryOrigin defines model for DependencyStoreEntry.Origin.
+type DependencyStoreEntryOrigin string
+
+// DependencyStoreEntryState defines model for DependencyStoreEntry.State.
+type DependencyStoreEntryState string
 
 // DiskFloorGib The free disk in GiB the machine keeps before it starts a job or a VM, set in the console (runners R5.83, OPS86). The console value wins over config.toml and the agent flag, which stay the first value. 1 to 2000 on a change; 0 in an answer means the console set none. Refused while the floor is off in config.
 type DiskFloorGib = int
@@ -9563,8 +9757,11 @@ type Runner struct {
 	Backend BackendName `json:"backend"`
 
 	// CanReregister True when the Runners page offers Register again: GitHub deleted the registration and it was not made again, or GitHub does not list the runner (runners R5.153).
-	CanReregister *bool      `json:"can_reregister,omitempty"`
-	CreatedAt     *time.Time `json:"created_at,omitempty"`
+	CanReregister *bool `json:"can_reregister,omitempty"`
+
+	// CanStart True when the Runners page offers Start: the service of a persistent runner is stopped (runners R5.157).
+	CanStart  *bool      `json:"can_start,omitempty"`
+	CreatedAt *time.Time `json:"created_at,omitempty"`
 
 	// CurrentJob One job attempt (observability R5.7, R5.8).
 	CurrentJob *Job `json:"current_job,omitempty"`
@@ -10792,6 +10989,9 @@ type DebugSessionId = string
 // DependencyJobId defines model for DependencyJobId.
 type DependencyJobId = string
 
+// DependencyStoreId defines model for DependencyStoreId.
+type DependencyStoreId = string
+
 // FindingId defines model for FindingId.
 type FindingId = int64
 
@@ -11738,6 +11938,22 @@ func WithRequestEditorFn(fn RequestEditorFn) ClientOption {
 // The interface specification for the client above.
 type ClientInterface interface {
 
+	// ListAgentInstallers The agent installers of this release, and which ones this controller has
+	//
+	// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+	//
+	// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+	ListAgentInstallers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportAgentInstallerWithBody Store an agent installer, or SHA256SUMS, that the owner carried over
+	//
+	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+	ImportAgentInstallerWithBody(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -12043,6 +12259,29 @@ type ClientInterface interface {
 	//
 	// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
 	GetDebugTranscript(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ListDependencyStore What the controller keeps for machines without internet
+	//
+	// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+	//
+	// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+	ListDependencyStore(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// FetchDependency Download one dependency to the controller and check it
+	//
+	// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+	//
+	// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+	FetchDependency(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
+	// ImportDependencyWithBody Give the controller a file you downloaded yourself
+	//
+	// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+	//
+	// Takes any type of body and a specified content type.
+	//
+	// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+	ImportDependencyWithBody(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error)
 
 	// ListDoctorFindings The latest finding per check and subject
 	//
@@ -13605,6 +13844,13 @@ type ClientInterface interface {
 	// Corresponds with PATCH /api/v1/runners/{runnerId}/settings (the `UpdateRunnerSettings` operationId).
 	UpdateRunnerSettings(ctx context.Context, runnerId RunnerId, body UpdateRunnerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
 
+	// StartRunner Start the service of a stopped runner
+	//
+	// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+	//
+	// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+	StartRunner(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error)
+
 	// ListRuns Workflow runs, newest first
 	//
 	// OPS34 D3, D6. One row per run attempt with its job counts, total time and, for an open run, the ETA of the run.
@@ -14166,6 +14412,42 @@ type ClientInterface interface {
 	//
 	// Corresponds with POST /webhooks/github (the `ReceiveGithubWebhook` operationId).
 	ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*http.Response, error)
+}
+
+// ListAgentInstallers The agent installers of this release, and which ones this controller has
+//
+// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+//
+// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+func (c *Client) ListAgentInstallers(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListAgentInstallersRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ImportAgentInstallerWithBody Store an agent installer, or SHA256SUMS, that the owner carried over
+//
+// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+func (c *Client) ImportAgentInstallerWithBody(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportAgentInstallerRequestWithBody(c.Server, name, contentType, body)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
 }
 
 // ReplaceAppPrivateKeyWithBody Replace the GitHub App private key
@@ -14864,6 +15146,59 @@ func (c *Client) ExtendDebugSession(ctx context.Context, sessionId DebugSessionI
 // Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
 func (c *Client) GetDebugTranscript(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*http.Response, error) {
 	req, err := NewGetDebugTranscriptRequest(c.Server, sessionId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ListDependencyStore What the controller keeps for machines without internet
+//
+// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+//
+// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+func (c *Client) ListDependencyStore(ctx context.Context, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewListDependencyStoreRequest(c.Server)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// FetchDependency Download one dependency to the controller and check it
+//
+// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+//
+// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+func (c *Client) FetchDependency(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewFetchDependencyRequest(c.Server, dependencyId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
+// ImportDependencyWithBody Give the controller a file you downloaded yourself
+//
+// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+//
+// Takes any type of body and a specified content type.
+//
+// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+func (c *Client) ImportDependencyWithBody(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewImportDependencyRequestWithBody(c.Server, dependencyId, contentType, body)
 	if err != nil {
 		return nil, err
 	}
@@ -18465,6 +18800,23 @@ func (c *Client) UpdateRunnerSettings(ctx context.Context, runnerId RunnerId, bo
 	return c.Client.Do(req)
 }
 
+// StartRunner Start the service of a stopped runner
+//
+// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+//
+// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+func (c *Client) StartRunner(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*http.Response, error) {
+	req, err := NewStartRunnerRequest(c.Server, runnerId)
+	if err != nil {
+		return nil, err
+	}
+	req = req.WithContext(ctx)
+	if err := c.applyEditors(ctx, req, reqEditors); err != nil {
+		return nil, err
+	}
+	return c.Client.Do(req)
+}
+
 // ListRuns Workflow runs, newest first
 //
 // OPS34 D3, D6. One row per run attempt with its job counts, total time and, for an open run, the ETA of the run.
@@ -19745,6 +20097,69 @@ func (c *Client) ReceiveGithubWebhook(ctx context.Context, params *ReceiveGithub
 		return nil, err
 	}
 	return c.Client.Do(req)
+}
+
+// NewListAgentInstallersRequest constructs an http.Request for the ListAgentInstallers method
+func NewListAgentInstallersRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/agent-installers")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewImportAgentInstallerRequestWithBody constructs an http.Request for the ImportAgentInstaller method, with any body, and a specified content type
+func NewImportAgentInstallerRequestWithBody(server string, name string, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "name", name, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/agent-installers/%s", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
+
+	return req, nil
 }
 
 // NewReplaceAppPrivateKeyRequest calls the generic ReplaceAppPrivateKey builder with application/json body
@@ -21085,6 +21500,103 @@ func NewGetDebugTranscriptRequest(server string, sessionId DebugSessionId) (*htt
 	if err != nil {
 		return nil, err
 	}
+
+	return req, nil
+}
+
+// NewListDependencyStoreRequest constructs an http.Request for the ListDependencyStore method
+func NewListDependencyStoreRequest(server string) (*http.Request, error) {
+	var err error
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/dependencies/store")
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewFetchDependencyRequest constructs an http.Request for the FetchDependency method
+func NewFetchDependencyRequest(server string, dependencyId DependencyStoreId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "dependencyId", dependencyId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/dependencies/store/%s/fetch", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
+// NewImportDependencyRequestWithBody constructs an http.Request for the ImportDependency method, with any body, and a specified content type
+func NewImportDependencyRequestWithBody(server string, dependencyId DependencyStoreId, contentType string, body io.Reader) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "dependencyId", dependencyId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/dependencies/store/%s/file", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPut, queryURL.String(), body)
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Add("Content-Type", contentType)
 
 	return req, nil
 }
@@ -28783,6 +29295,40 @@ func NewUpdateRunnerSettingsRequestWithBody(server string, runnerId RunnerId, co
 	return req, nil
 }
 
+// NewStartRunnerRequest constructs an http.Request for the StartRunner method
+func NewStartRunnerRequest(server string, runnerId RunnerId) (*http.Request, error) {
+	var err error
+
+	var pathParam0 string
+
+	pathParam0, err = runtime.StyleParamWithOptions("simple", false, "runnerId", runnerId, runtime.StyleParamOptions{ParamLocation: runtime.ParamLocationPath, Type: "string", Format: ""})
+	if err != nil {
+		return nil, err
+	}
+
+	serverURL, err := url.Parse(server)
+	if err != nil {
+		return nil, err
+	}
+
+	operationPath := fmt.Sprintf("/api/v1/runners/%s/start", pathParam0)
+	if operationPath[0] == '/' {
+		operationPath = "." + operationPath
+	}
+
+	queryURL, err := serverURL.Parse(operationPath)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest(http.MethodPost, queryURL.String(), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return req, nil
+}
+
 // NewListRunsRequest constructs an http.Request for the ListRuns method
 func NewListRunsRequest(server string, params *ListRunsParams) (*http.Request, error) {
 	var err error
@@ -31183,6 +31729,24 @@ func WithBaseURL(baseURL string) ClientOption {
 // ClientWithResponsesInterface is the interface specification for the client with responses above.
 type ClientWithResponsesInterface interface {
 
+	// ListAgentInstallersWithResponse The agent installers of this release, and which ones this controller has
+	//
+	// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+	ListAgentInstallersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAgentInstallersResponse, error)
+
+	// ImportAgentInstallerWithBodyWithResponse Store an agent installer, or SHA256SUMS, that the owner carried over
+	//
+	// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+	ImportAgentInstallerWithBodyWithResponse(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportAgentInstallerResponse, error)
+
 	// ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 	//
 	// github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -31540,6 +32104,33 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with GET /api/v1/debug-sessions/{sessionId}/transcript (the `GetDebugTranscript` operationId).
 	GetDebugTranscriptWithResponse(ctx context.Context, sessionId DebugSessionId, reqEditors ...RequestEditorFn) (*GetDebugTranscriptResponse, error)
+
+	// ListDependencyStoreWithResponse What the controller keeps for machines without internet
+	//
+	// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+	ListDependencyStoreWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListDependencyStoreResponse, error)
+
+	// FetchDependencyWithResponse Download one dependency to the controller and check it
+	//
+	// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+	FetchDependencyWithResponse(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*FetchDependencyResponse, error)
+
+	// ImportDependencyWithBodyWithResponse Give the controller a file you downloaded yourself
+	//
+	// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+	//
+	// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+	ImportDependencyWithBodyWithResponse(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportDependencyResponse, error)
 
 	// ListDoctorFindingsWithResponse The latest finding per check and subject
 	//
@@ -33336,6 +33927,15 @@ type ClientWithResponsesInterface interface {
 	// Corresponds with PATCH /api/v1/runners/{runnerId}/settings (the `UpdateRunnerSettings` operationId).
 	UpdateRunnerSettingsWithResponse(ctx context.Context, runnerId RunnerId, body UpdateRunnerSettingsJSONRequestBody, reqEditors ...RequestEditorFn) (*UpdateRunnerSettingsResponse, error)
 
+	// StartRunnerWithResponse Start the service of a stopped runner
+	//
+	// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+	//
+	// Returns a wrapper object for the known response body format(s).
+	//
+	// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+	StartRunnerWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*StartRunnerResponse, error)
+
 	// ListRunsWithResponse Workflow runs, newest first
 	//
 	// OPS34 D3, D6. One row per run attempt with its job counts, total time and, for an open run, the ETA of the run.
@@ -33969,6 +34569,102 @@ type ClientWithResponsesInterface interface {
 	//
 	// Corresponds with POST /webhooks/github (the `ReceiveGithubWebhook` operationId).
 	ReceiveGithubWebhookWithResponse(ctx context.Context, params *ReceiveGithubWebhookParams, body ReceiveGithubWebhookJSONRequestBody, reqEditors ...RequestEditorFn) (*ReceiveGithubWebhookResponse, error)
+}
+
+type ListAgentInstallersResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AgentInstallers
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListAgentInstallersResponse) GetJSON200() *AgentInstallers {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListAgentInstallersResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListAgentInstallersResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListAgentInstallersResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListAgentInstallersResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListAgentInstallersResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ImportAgentInstallerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *AgentInstallers
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ImportAgentInstallerResponse) GetJSON200() *AgentInstallers {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ImportAgentInstallerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ImportAgentInstallerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportAgentInstallerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportAgentInstallerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ImportAgentInstallerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
 }
 
 type ReplaceAppPrivateKeyResponse struct {
@@ -35535,6 +36231,154 @@ func (r GetDebugTranscriptResponse) StatusCode() int {
 
 // ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
 func (r GetDebugTranscriptResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ListDependencyStoreResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *struct {
+		Items []DependencyStoreEntry `json:"items"`
+	}
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ListDependencyStoreResponse) GetJSON200() *struct {
+	Items []DependencyStoreEntry `json:"items"`
+} {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ListDependencyStoreResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ListDependencyStoreResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ListDependencyStoreResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ListDependencyStoreResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ListDependencyStoreResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type FetchDependencyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyStoreEntry
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r FetchDependencyResponse) GetJSON200() *DependencyStoreEntry {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r FetchDependencyResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r FetchDependencyResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r FetchDependencyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r FetchDependencyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r FetchDependencyResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
+type ImportDependencyResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *DependencyStoreEntry
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r ImportDependencyResponse) GetJSON200() *DependencyStoreEntry {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r ImportDependencyResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r ImportDependencyResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r ImportDependencyResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r ImportDependencyResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r ImportDependencyResponse) ContentType() string {
 	if r.HTTPResponse != nil {
 		return r.HTTPResponse.Header.Get("Content-Type")
 	}
@@ -43212,6 +44056,54 @@ func (r UpdateRunnerSettingsResponse) ContentType() string {
 	return ""
 }
 
+type StartRunnerResponse struct {
+	Body         []byte
+	HTTPResponse *http.Response
+	// JSON200 the response for an HTTP 200 `application/json` response
+	JSON200 *Runner
+	// JSONDefault the response for an HTTP default `application/json` response
+	JSONDefault *Error
+}
+
+// GetJSON200 returns the response for an HTTP 200 `application/json` response
+func (r StartRunnerResponse) GetJSON200() *Runner {
+	return r.JSON200
+}
+
+// GetJSONDefault returns the response for an HTTP default `application/json` response
+func (r StartRunnerResponse) GetJSONDefault() *Error {
+	return r.JSONDefault
+}
+
+// GetBody returns the raw response body bytes
+func (r StartRunnerResponse) GetBody() []byte {
+	return r.Body
+}
+
+// Status returns HTTPResponse.Status
+func (r StartRunnerResponse) Status() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Status
+	}
+	return http.StatusText(0)
+}
+
+// StatusCode returns HTTPResponse.StatusCode
+func (r StartRunnerResponse) StatusCode() int {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.StatusCode
+	}
+	return 0
+}
+
+// ContentType is a convenience method to retrieve the Content-Type value from the HTTP response headers
+func (r StartRunnerResponse) ContentType() string {
+	if r.HTTPResponse != nil {
+		return r.HTTPResponse.Header.Get("Content-Type")
+	}
+	return ""
+}
+
 type ListRunsResponse struct {
 	Body         []byte
 	HTTPResponse *http.Response
@@ -45802,6 +46694,36 @@ func (r ReceiveGithubWebhookResponse) ContentType() string {
 	return ""
 }
 
+// ListAgentInstallersWithResponse The agent installers of this release, and which ones this controller has
+//
+// operations R5.132 (CRSP347). The version this controller serves, whether it has the release's SHA256SUMS, and every agent installer SHA256SUMS lists (zip and tar.gz archives, msi, pkg and deb packages) with its SHA-256 and whether the checked file is stored. Without SHA256SUMS the list is empty and `have_sums` is false: the first step of an import is to give it SHA256SUMS. `from_release` says SHA256SUMS was read from the release itself, so nothing needs importing for it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/agent-installers (the `ListAgentInstallers` operationId).
+func (c *ClientWithResponses) ListAgentInstallersWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListAgentInstallersResponse, error) {
+	rsp, err := c.ListAgentInstallers(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListAgentInstallersResponse(rsp)
+}
+
+// ImportAgentInstallerWithBodyWithResponse Store an agent installer, or SHA256SUMS, that the owner carried over
+//
+// operations R5.132 (CRSP347), the offline path. The body is the file. `name` is `SHA256SUMS` or an installer name, `CrspAgent-<version>-<os>-<arch>.<ext>`, where the extension is `zip` or `msi` (win), `tar.gz` or `deb` (linux), `tar.gz` or `pkg` (macos). SHA256SUMS must list an installer of this controller's version and is refused (409 `conflict`) when the controller already read the release's own copy. An installer is stored only when its SHA-256 equals its SHA256SUMS line: a name SHA256SUMS does not list answers 404, an installer sent before SHA256SUMS answers 409, a file that does not match answers 400 and nothing is kept. A file is at most 512 MB. The audit log gets the name and the actor.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/agent-installers/{name} (the `ImportAgentInstaller` operationId).
+func (c *ClientWithResponses) ImportAgentInstallerWithBodyWithResponse(ctx context.Context, name string, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportAgentInstallerResponse, error) {
+	rsp, err := c.ImportAgentInstallerWithBody(ctx, name, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportAgentInstallerResponse(rsp)
+}
+
 // ReplaceAppPrivateKeyWithBodyWithResponse Replace the GitHub App private key
 //
 // github-integration R5.7. The owner sends a new private key once. The controller signs an App JWT with it and reads `GET /app`; only when GitHub accepts it for the same App does the key replace the old one in the OS secret store. A refused key leaves the old one in place. The key is never returned, logged or written to the audit log.
@@ -46398,6 +47320,51 @@ func (c *ClientWithResponses) GetDebugTranscriptWithResponse(ctx context.Context
 		return nil, err
 	}
 	return ParseGetDebugTranscriptResponse(rsp)
+}
+
+// ListDependencyStoreWithResponse What the controller keeps for machines without internet
+//
+// dependency-setup DEP15. Every dependency this release may keep (pinned installers, runner packages, agent packages) and whether the controller holds a checked copy. A machine without internet installs from it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with GET /api/v1/dependencies/store (the `ListDependencyStore` operationId).
+func (c *ClientWithResponses) ListDependencyStoreWithResponse(ctx context.Context, reqEditors ...RequestEditorFn) (*ListDependencyStoreResponse, error) {
+	rsp, err := c.ListDependencyStore(ctx, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseListDependencyStoreResponse(rsp)
+}
+
+// FetchDependencyWithResponse Download one dependency to the controller and check it
+//
+// dependency-setup DEP15. The controller downloads the file, compares its SHA-256 with the one pinned in this release and keeps it only when they match. A file that does not match is deleted. 409 when this release pins no SHA-256 for it or has no address for it.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/dependencies/store/{dependencyId}/fetch (the `FetchDependency` operationId).
+func (c *ClientWithResponses) FetchDependencyWithResponse(ctx context.Context, dependencyId DependencyStoreId, reqEditors ...RequestEditorFn) (*FetchDependencyResponse, error) {
+	rsp, err := c.FetchDependency(ctx, dependencyId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseFetchDependencyResponse(rsp)
+}
+
+// ImportDependencyWithBodyWithResponse Give the controller a file you downloaded yourself
+//
+// dependency-setup DEP15. For a controller that has no internet. The body is the file. It is kept only when its SHA-256 equals the one pinned in this release; otherwise it is deleted and the answer is 422.
+//
+// Takes any type of body and a specified content type, and returns a wrapper object for the known response body format(s).
+//
+// Corresponds with PUT /api/v1/dependencies/store/{dependencyId}/file (the `ImportDependency` operationId).
+func (c *ClientWithResponses) ImportDependencyWithBodyWithResponse(ctx context.Context, dependencyId DependencyStoreId, contentType string, body io.Reader, reqEditors ...RequestEditorFn) (*ImportDependencyResponse, error) {
+	rsp, err := c.ImportDependencyWithBody(ctx, dependencyId, contentType, body, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseImportDependencyResponse(rsp)
 }
 
 // ListDoctorFindingsWithResponse The latest finding per check and subject
@@ -49413,6 +50380,21 @@ func (c *ClientWithResponses) UpdateRunnerSettingsWithResponse(ctx context.Conte
 	return ParseUpdateRunnerSettingsResponse(rsp)
 }
 
+// StartRunnerWithResponse Start the service of a stopped runner
+//
+// runners R5.157. The Start button and `crsp runner start NAME`. For a persistent runner CRSP made whose service is stopped: the machine starts the service of the runner, or of each registration of a pool runner, and does nothing for one that already runs. A service that starts and stops again at once is answered with 409 and the reason the runner service gave (runners R5.156). A runner CRSP did not make and an ephemeral runner are refused with 409.
+//
+// Returns a wrapper object for the known response body format(s).
+//
+// Corresponds with POST /api/v1/runners/{runnerId}/start (the `StartRunner` operationId).
+func (c *ClientWithResponses) StartRunnerWithResponse(ctx context.Context, runnerId RunnerId, reqEditors ...RequestEditorFn) (*StartRunnerResponse, error) {
+	rsp, err := c.StartRunner(ctx, runnerId, reqEditors...)
+	if err != nil {
+		return nil, err
+	}
+	return ParseStartRunnerResponse(rsp)
+}
+
 // ListRunsWithResponse Workflow runs, newest first
 //
 // OPS34 D3, D6. One row per run attempt with its job counts, total time and, for an open run, the ETA of the run.
@@ -50477,6 +51459,72 @@ func (c *ClientWithResponses) ReceiveGithubWebhookWithResponse(ctx context.Conte
 		return nil, err
 	}
 	return ParseReceiveGithubWebhookResponse(rsp)
+}
+
+// ParseListAgentInstallersResponse parses an HTTP response from a ListAgentInstallersWithResponse call
+func ParseListAgentInstallersResponse(rsp *http.Response) (*ListAgentInstallersResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListAgentInstallersResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgentInstallers
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseImportAgentInstallerResponse parses an HTTP response from a ImportAgentInstallerWithResponse call
+func ParseImportAgentInstallerResponse(rsp *http.Response) (*ImportAgentInstallerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportAgentInstallerResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest AgentInstallers
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
 }
 
 // ParseReplaceAppPrivateKeyResponse parses an HTTP response from a ReplaceAppPrivateKeyWithResponse call
@@ -51555,6 +52603,107 @@ func ParseGetDebugTranscriptResponse(rsp *http.Response) (*GetDebugTranscriptRes
 	switch {
 	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
 		var dest DebugTranscript
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseListDependencyStoreResponse parses an HTTP response from a ListDependencyStoreWithResponse call
+func ParseListDependencyStoreResponse(rsp *http.Response) (*ListDependencyStoreResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ListDependencyStoreResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest struct {
+			Items []DependencyStoreEntry `json:"items"`
+		}
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseFetchDependencyResponse parses an HTTP response from a FetchDependencyWithResponse call
+func ParseFetchDependencyResponse(rsp *http.Response) (*FetchDependencyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &FetchDependencyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyStoreEntry
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseImportDependencyResponse parses an HTTP response from a ImportDependencyWithResponse call
+func ParseImportDependencyResponse(rsp *http.Response) (*ImportDependencyResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &ImportDependencyResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest DependencyStoreEntry
 		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
 			return nil, err
 		}
@@ -56892,6 +58041,39 @@ func ParseUpdateRunnerSettingsResponse(rsp *http.Response) (*UpdateRunnerSetting
 	}
 
 	response := &UpdateRunnerSettingsResponse{
+		Body:         bodyBytes,
+		HTTPResponse: rsp,
+	}
+
+	switch {
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && rsp.StatusCode == 200:
+		var dest Runner
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSON200 = &dest
+
+	case strings.Contains(rsp.Header.Get("Content-Type"), "json") && true:
+		var dest Error
+		if err := json.Unmarshal(bodyBytes, &dest); err != nil {
+			return nil, err
+		}
+		response.JSONDefault = &dest
+
+	}
+
+	return response, nil
+}
+
+// ParseStartRunnerResponse parses an HTTP response from a StartRunnerWithResponse call
+func ParseStartRunnerResponse(rsp *http.Response) (*StartRunnerResponse, error) {
+	bodyBytes, err := io.ReadAll(rsp.Body)
+	defer func() { _ = rsp.Body.Close() }()
+	if err != nil {
+		return nil, err
+	}
+
+	response := &StartRunnerResponse{
 		Body:         bodyBytes,
 		HTTPResponse: rsp,
 	}

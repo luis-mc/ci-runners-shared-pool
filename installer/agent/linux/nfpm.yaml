@@ -1,0 +1,27 @@
+# nfpm config for the agent .deb (CRSP348). build.sh sets ARCH (amd64|arm64), VERSION (deb form),
+# RELEASE and BIN (the crsp binary). No service, no tray: joining the controller is the next command.
+name: crsp-agent
+arch: ${ARCH}
+platform: linux
+version: ${VERSION}
+version_schema: none
+release: ${RELEASE}
+section: admin
+priority: optional
+maintainer: luis-mc <noreply@users.noreply.github.com>
+description: |
+  CI Runners Shared Pool agent: the crsp binary for a machine the controller manages.
+  Join the controller with: crsp agent install --controller <url> --join-code <code>
+vendor: luis-mc
+homepage: https://github.com/luis-mc/ci-runners-shared-pool
+license: MIT
+# The controller package ships the same /usr/bin/crsp.
+conflicts:
+  - crsp
+contents:
+  - src: ${BIN}
+    dst: /usr/bin/crsp
+    file_info: { mode: 0755 }
+  - src: LICENSE
+    dst: /usr/share/doc/crsp-agent/LICENSE
+    file_info: { mode: 0644 }

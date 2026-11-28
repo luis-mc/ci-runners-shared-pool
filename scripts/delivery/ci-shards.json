@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "root_files": ["go.mod", "go.sum", "pnpm-lock.yaml"],
+  "_note": "CRSP376 (S21, S2, DL-118, DL-20): the costly lanes of .github/workflows/ci.yml and lifecycle.yml. A lane is skipped only when main holds a pass record with the same inputs key (scripts/delivery/pass_records.py to-result); a lane with no inputs, a path that matches nothing or an uncommitted change under its inputs has no key and always runs. Keep the inputs wide: a missing path costs a skip that should not happen. The commands are part of the key; change them when the lane's steps change.",
+  "shards": [
+    {
+      "id": "image",
+      "os": "linux",
+      "context": "base image (build only)",
+      "inputs": ["images", "apps", "packages", "scripts/ci", "scripts/delivery/tools.json", ".github/workflows/ci.yml", ".github/workflows/build.yml", ".github/workflows/base-image.yml"],
+      "commands": ["ci.yml image: buildx amd64 and arm64, self-checks"]
+    },
+    {
+      "id": "test-os",
+      "os": "windows-macos",
+      "context": "Go tests (windows-latest, macos-latest)",
+      "inputs": ["apps", "guards", "images", "installer", "packaging", "tools", "scripts/design", "scripts/ci", "scripts/delivery/tools.json", "docs/design-system", ".github/workflows/ci.yml", ".github/actions/go-cache"],
+      "commands": ["ci.yml test-os: bash scripts/ci/go-test.sh"]
+    },
+    {
+      "id": "msi",
+      "os": "windows",
+      "context": "MSI lifecycle (x64, arm64)",
+      "inputs": ["apps", "packages", "images", "installer", "packaging", "scripts/lifecycle", "scripts/delivery/lifecycle_release_check.py", "docs/design-system/next-version/lifecycle.json", ".github/workflows/lifecycle.yml", ".github/workflows/build.yml", ".github/actions/go-cache"],
+      "commands": ["lifecycle.yml windows: scripts/lifecycle/windows.ps1 -Check all"]
+    }
+  ]
+}

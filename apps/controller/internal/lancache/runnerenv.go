@@ -15,6 +15,15 @@ const (
 	EnvPipExtraIndex = "PIP_EXTRA_INDEX_URL"
 	EnvPipCert       = "PIP_CERT"
 	EnvNodeExtraCA   = "NODE_EXTRA_CA_CERTS"
+	// Crates and apt (R5.81, R5.82). Cargo reads the protocol and the CA from
+	// its own variables; its source replacement can only come from a config
+	// file, so the job-started hook writes that from EnvCargoIndex. The same
+	// hook points apt at EnvAptMirror and trusts the hub CA in EnvHubCA.
+	EnvCargoProtocol = "CARGO_REGISTRIES_CRATES_IO_PROTOCOL"
+	EnvCargoCAInfo   = "CARGO_HTTP_CAINFO"
+	EnvCargoIndex    = "CRSP_HUB_CARGO_INDEX"
+	EnvAptMirror     = "CRSP_HUB_APT_MIRROR"
+	EnvHubCA         = "CRSP_HUB_CA"
 )
 
 // ProxyGrant is what the controller gives a runner of one repository: the
@@ -29,9 +38,10 @@ func (g ProxyGrant) On() bool { return ValidRepoKey(g.Repo) && g.Token != "" }
 
 // RunnerEnv is the environment of a runner that uses the hub at base (like
 // https://192.168.1.20:8460). caFile is the controller CA; bundleFile is the
-// host's public bundle plus that CA. npm gets the hub only; pip gets the hub
-// with the public index as its fallback, and only when a bundle file exists,
-// since PIP_CERT replaces pip's whole trust list. Without a CA file the runner
+// host's public bundle plus that CA. npm and apt get the hub only; pip gets the hub
+// with the public index as its fallback, and cargo gets the sparse index; both
+// only when a bundle file exists, since PIP_CERT and CARGO_HTTP_CAINFO replace
+// the whole trust list. Without a CA file the runner
 // could not trust the hub, so it gets nothing.
 func RunnerEnv(base string, g ProxyGrant, caFile, bundleFile string) map[string]string {
 	if !g.On() || caFile == "" || base == "" {
@@ -41,11 +51,17 @@ func RunnerEnv(base string, g ProxyGrant, caFile, bundleFile string) map[string]
 	env := map[string]string{
 		EnvNpmRegistry: root + "npm/" + g.Repo + "/" + g.Token + "/",
 		EnvNodeExtraCA: caFile,
+		EnvAptMirror:   root + "apt/" + g.Repo + "/" + g.Token,
+		EnvHubCA:       caFile,
 	}
 	if bundleFile != "" {
 		env[EnvPipIndex] = root + "pypi/" + g.Repo + "/" + g.Token + "/simple/"
 		env[EnvPipExtraIndex] = PublicPypiIndex
 		env[EnvPipCert] = bundleFile
+		// Cargo's CA setting replaces its whole trust list, like pip's.
+		env[EnvCargoProtocol] = "sparse"
+		env[EnvCargoCAInfo] = bundleFile
+		env[EnvCargoIndex] = root + "crates/" + g.Repo + "/" + g.Token + "/"
 	}
 	return env
 }
