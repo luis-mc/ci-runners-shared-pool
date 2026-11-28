@@ -79,7 +79,7 @@ describe('Queue Analysis table', () => {
   it('opens the details of a row: start estimate, machine and the whole reason', async () => {
     renderApp(ov(), '/pool/queue');
     await screen.findByText('nofit');
-    fireEvent.click(screen.getAllByRole('button', { name: /Details/ })[2]!);
+    fireEvent.click(screen.getByText('nofit').closest('tr') as HTMLElement);
     expect(
       screen.getAllByText(/No runner has the label pool-main\./).length,
     ).toBeGreaterThan(0);

@@ -44,6 +44,8 @@ export interface Column<T> {
   grow?: number | undefined;
   /** A grow column whose text is cut in the middle (a branch): the start and the last characters stay. */
   middle?: ((row: T) => string) | undefined;
+  /** With the table's `fold="lines"`: the line of the phone row this cell is on (1 or 2); the cells of a line sit side by side. */
+  line?: 1 | 2 | undefined;
 }
 
 export type ColumnKind = 'fit' | 'grow';
@@ -178,6 +180,8 @@ export function Table<T>({
   expandLabel = 'Details',
   rowLabel,
   detail,
+  fold,
+  compact = false,
   action,
   oneLine = false,
   current,
@@ -205,7 +209,27 @@ export function Table<T>({
    * A row that opens in place to more than text: a last column holds a button (`label`) that opens a full-width row
    * under it with `render(row)` (a run opens to its jobs). The button's name carries `rowLabel`.
    */
-  detail?: { label: string; render: (row: T) => ReactNode } | undefined;
+  detail?:
+    | {
+        label: string;
+        render: (row: T) => ReactNode;
+        /**
+         * The row itself opens it, with a click or Enter, and there is no button column: a dense list of one-line rows
+         * (the queue). The row is announced as expandable (`aria-expanded`) and stays reachable by keyboard.
+         */
+        rowOpen?: boolean | undefined;
+      }
+    | undefined;
+  /**
+   * `lines`: at phone width a row is two lines, not a stack of "name value" pairs: the cells with `line: 1` side by
+   * side on the first line, the cells with `line: 2` (muted) on the second. Other tables keep the stack.
+   */
+  fold?: 'lines' | undefined;
+  /**
+   * With `oneLine`: a dense list (the queue). A row is one line of text high, not a button high; a value that does not
+   * fit wraps and its row grows. Other tables keep the button-high row.
+   */
+  compact?: boolean | undefined;
   /** A last column with the row action (component 57). */
   action?: RowActionSpec<T> | undefined;
   /** Every cell is one line, cut with an ellipsis, and every row has one height (UX-72). */
@@ -229,7 +253,7 @@ export function Table<T>({
     rows.length > 0
       ? [
           { keys: 'j / k', does: 'Move' },
-          ...(onOpen ? [{ keys: 'Enter', does: 'Open' }] : []),
+          ...(onOpen || detail?.rowOpen ? [{ keys: 'Enter', does: 'Open' }] : []),
         ]
       : [],
   );
@@ -246,7 +270,12 @@ export function Table<T>({
   }, [rows, columns, sortBy]);
   const table = (
     <div className="ds-table-frame">
-      <table className="ds-table" data-one-line={oneLine || undefined}>
+      <table
+        className="ds-table"
+        data-one-line={oneLine || undefined}
+        data-fold={fold}
+        data-compact={(oneLine && compact) || undefined}
+      >
         <caption className="ds-visually-hidden">{caption}</caption>
         <thead>
           <tr>
@@ -285,7 +314,7 @@ export function Table<T>({
                 )}
               </th>
             ))}
-            {detail || action ? (
+            {(detail && !detail.rowOpen) || action ? (
               <th scope="col" className="ds-table__action">
                 <span className="ds-visually-hidden">
                   {detail?.label ?? action?.label}
@@ -308,13 +337,26 @@ export function Table<T>({
                   data-inactive={inactive?.(row) || undefined}
                   aria-current={current === key ? 'true' : undefined}
                   tabIndex={0}
-                  onClick={
-                    onSelect || onPick
-                      ? () => {
-                          onSelect?.(row);
-                          onPick?.(row);
-                        }
+                  aria-expanded={detail?.rowOpen ? isOpen : undefined}
+                  aria-controls={detail?.rowOpen ? regionId : undefined}
+                  aria-label={
+                    detail?.rowOpen && rowLabel
+                      ? `${detail.label}: ${rowLabel(row)}`
                       : undefined
+                  }
+                  onClick={
+                    detail?.rowOpen
+                      ? (e) => {
+                          // a link or button inside the row does its own thing
+                          if (!(e.target as HTMLElement).closest('a, button'))
+                            toggleOpen(key);
+                        }
+                      : onSelect || onPick
+                        ? () => {
+                            onSelect?.(row);
+                            onPick?.(row);
+                          }
+                        : undefined
                   }
                   onFocus={
                     onSelect
@@ -325,12 +367,22 @@ export function Table<T>({
                   }
                   onDoubleClick={onOpen ? () => onOpen(row) : undefined}
                   onKeyDown={
-                    onOpen
+                    detail?.rowOpen
                       ? (e) => {
-                          if (e.key === 'Enter' && e.target === e.currentTarget)
-                            onOpen(row);
+                          if (
+                            (e.key === 'Enter' || e.key === ' ') &&
+                            e.target === e.currentTarget
+                          ) {
+                            e.preventDefault();
+                            toggleOpen(key);
+                          }
                         }
-                      : undefined
+                      : onOpen
+                        ? (e) => {
+                            if (e.key === 'Enter' && e.target === e.currentTarget)
+                              onOpen(row);
+                          }
+                        : undefined
                   }
                 >
                   {onToggle ? (
@@ -350,7 +402,8 @@ export function Table<T>({
                       data-label={c.header}
                       data-kind={oneLine ? columnKind(c) : undefined}
                       style={weightStyle(c, oneLine)}
-                      data-lead={i === 0 || undefined}
+                      data-lead={(i === 0 && fold !== 'lines') || undefined}
+                      data-line={fold === 'lines' ? (c.line ?? 1) : undefined}
                       data-secondary={(i > 0 && c.secondary) || undefined}
                     >
                       <span className="ds-table__value">
@@ -395,7 +448,7 @@ export function Table<T>({
                       </span>
                     </td>
                   ))}
-                  {detail ? (
+                  {detail && !detail.rowOpen ? (
                     <td data-label={detail.label} className="ds-table__action">
                       <Button
                         onPress={() => toggleOpen(key)}
@@ -435,7 +488,9 @@ export function Table<T>({
                   <tr className="ds-table__expanded">
                     <td
                       colSpan={
-                        columns.length + (detail || action ? 1 : 0) + (onToggle ? 1 : 0)
+                        columns.length +
+                        ((detail && !detail.rowOpen) || action ? 1 : 0) +
+                        (onToggle ? 1 : 0)
                       }
                     >
                       <div

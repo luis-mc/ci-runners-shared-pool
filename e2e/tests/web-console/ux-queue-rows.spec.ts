@@ -42,11 +42,20 @@ for (const size of [
     const title = runPane.locator('.ds-pane__title').first();
     expect((await title.boundingBox())!.height).toBeLessThan(48);
 
-    // One row is about 69 px at 1300 px (the Details button sets the height); a card per job was about 210 px.
-    // The rows hold 16 jobs in 16 x 69 = 1104 px: the page chrome above the table is about 480 px, so all 16 jobs
-    // do not fit one 900 px screen without scrolling (report CRSP391).
+    // One row is one line of text high (about 38 px) at 1300 px; at phone width it is two lines (about 63 px), not the
+    // 165 px stack of "name value" pairs. The page chrome above the table is about 640 px, so all 16 jobs do not fit one
+    // 900 px screen without scrolling (report CRSP391).
     const first = (await rows.nth(0).boundingBox())!;
-    expect(first.height).toBeLessThanOrEqual(size.width === 1300 ? 72 : 180);
+    expect(first.height).toBeLessThanOrEqual(size.width === 1300 ? 48 : 72);
+    // No Details button: the row opens its own details, by click and by Enter, and is announced as expandable.
+    await expect(table.getByRole('button', { name: /^Details/ })).toHaveCount(0);
+    await expect(rows.nth(0)).toHaveAttribute('aria-expanded', 'false');
+    await rows.nth(0).focus();
+    await page.keyboard.press('Enter');
+    await expect(rows.nth(0)).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('region', { name: /^Details: / })).toBeVisible();
+    await page.keyboard.press('Enter');
+    await expect(rows.nth(0)).toHaveAttribute('aria-expanded', 'false');
     await expectDomLayout(page, `queue rows ${size.width}`, { spaceVar: '--ds-space-' });
   });
 }

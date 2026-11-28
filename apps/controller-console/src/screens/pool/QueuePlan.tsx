@@ -111,14 +111,23 @@ function QueueTable({
       grow: 3,
       cell: (j) => (
         <>
-          {queue.indexOf(j) + 1}. <Strong>{j.job_name}</Strong> {j.repository} #{j.run_id}
+          {queue.indexOf(j) + 1}. <Strong>{j.job_name}</Strong>
         </>
       ),
       title: (j) => `${queue.indexOf(j) + 1}. ${j.job_name} ${j.repository} #${j.run_id}`,
+      line: 1,
+    },
+    {
+      id: 'repo',
+      header: 'Repository',
+      line: 2,
+      cell: (j) => shortRepo(j.repository),
+      title: (j) => `${j.repository} #${j.run_id}`,
     },
     {
       id: 'why',
       header: 'Why it waits',
+      line: 1,
       cell: (j) => <Status kind={KIND[queueReason(j)]} word={stateWord(j)} />,
       title: (j) => stateWord(j),
     },
@@ -133,6 +142,7 @@ function QueueTable({
     {
       id: 'waited',
       header: 'Waiting',
+      line: 2,
       cell: (j) => waitedWords(j, now),
       title: (j) => startsAbout(j.queue_eta, readAt),
     },
@@ -144,7 +154,13 @@ function QueueTable({
       rows={shown}
       rowKey={(j) => String(j.id)}
       oneLine
-      detail={{ label: 'Details', render: (j) => <QueueDetail j={j} readAt={readAt} /> }}
+      compact
+      fold="lines"
+      detail={{
+        label: 'Details',
+        rowOpen: true,
+        render: (j) => <QueueDetail j={j} readAt={readAt} />,
+      }}
       rowLabel={(j) => j.job_name}
     />
   );
@@ -155,7 +171,10 @@ function LabelLine({ j }: { j: Job }) {
   const missing = queueReason(j) === 'none' ? missingOf(j) : [];
   return (
     <>
-      {j.labels.map((l, i) => (
+      {[
+        ...j.labels.filter((l) => missing.includes(l)),
+        ...j.labels.filter((l) => !missing.includes(l)),
+      ].map((l, i) => (
         <span key={l}>
           {i > 0 ? ', ' : ''}
           {missing.includes(l) ? (
@@ -223,4 +242,9 @@ function ReservationPane({ queue, readAt }: { queue: readonly Job[]; readAt: num
 
 function stateWord(j: Job): string {
   return QUEUE_WORDS[queueReason(j)];
+}
+
+/** The repository without its owner: the owner is the same for every job of the pool. The full name is the cell's title. */
+function shortRepo(repository: string): string {
+  return repository.slice(repository.indexOf('/') + 1);
 }

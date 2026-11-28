@@ -1071,6 +1071,51 @@ body {
     display: none;
   }
 }
+/* compact (CRSP391): a one-line table of many short rows (the queue). A row is at least one line of text high, not a
+   button high; a value that does not fit wraps and its row grows (no clipped text). */
+@media (min-width: 600px) {
+  .ds-table[data-one-line][data-compact] tbody tr:not(.ds-table__expanded) {
+    block-size: calc(1lh + 2 * var(--ds-space-2) + var(--ds-border-thin));
+  }
+  .ds-table[data-one-line][data-compact] td {
+    padding-block: var(--ds-space-2);
+  }
+}
+/* fold="lines" (CRSP391): at phone width a row is two lines, not a stack of "name value" pairs. The cells marked line 1
+   sit side by side on the first line (the name takes the free width, the status its own width), the cells marked line 2
+   on the second, muted. A long value wraps; nothing is cut. A column marked secondary is left out, as in every table. */
+@media (max-width: 599px) {
+  .ds-table[data-fold='lines'] tbody tr {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--ds-space-3);
+    row-gap: var(--ds-space-1);
+  }
+  .ds-table[data-fold='lines'] td {
+    display: block;
+  }
+  .ds-table[data-fold='lines'] td::before {
+    content: none;
+  }
+  .ds-table[data-fold='lines'] td[data-line='1']:first-of-type {
+    font-weight: var(--ds-weight-bold);
+  }
+  .ds-table[data-fold='lines'] td[data-secondary] {
+    display: none;
+  }
+  .ds-table[data-fold='lines'] td[data-line='1'] {
+    grid-row: 1;
+  }
+  .ds-table[data-fold='lines'] td[data-line='2'] {
+    grid-row: 2;
+    font-size: var(--ds-size-1);
+    color: var(--ds-color-text-muted);
+  }
+}
+/* A row that opens its details by itself (detail.rowOpen) shows it can be pressed. */
+.ds-table tr[aria-expanded] {
+  cursor: pointer;
+}
 .ds-pager {
   display: flex;
   align-items: center;
