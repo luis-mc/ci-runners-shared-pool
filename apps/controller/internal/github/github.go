@@ -173,7 +173,9 @@ type Job struct {
 	HeadSHA      string
 	HeadBranch   string
 	Event        string
-	FromFork     bool
+	// HeadRepository is the run's head repository (owner/name); "" when the source did not say.
+	HeadRepository string
+	FromFork       bool
 	// Partial is true for a job read from a webhook: the event that started its
 	// run and whether it came from a fork are not known yet (CRSP82). A partial
 	// job never gets a runner until the poller reads the run.

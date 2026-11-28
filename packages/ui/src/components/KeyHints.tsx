@@ -89,16 +89,29 @@ export function useKeyHints(items: readonly KeyHint[]): void {
 function measureHeight(el: HTMLElement | null): (() => void) | void {
   const frame = el?.closest<HTMLElement>('.ds-frame');
   if (!el || !frame || typeof ResizeObserver === 'undefined') return;
-  const write = () =>
-    frame.style.setProperty(
-      '--ds-keyhints-height',
-      `${el.getBoundingClientRect().height}px`,
-    );
+  let live = true;
+  const write = () => {
+    if (live)
+      frame.style.setProperty(
+        '--ds-keyhints-height',
+        `${el.getBoundingClientRect().height}px`,
+      );
+  };
   write();
+  // The observer reports a size change after the frame's layout. A change that lands between frames (a window
+  // resize, a font that finishes loading) is read at once by anything that forces layout, so the same writes also
+  // run on `resize` and when fonts load: the offset the action bar keeps never lags the bar by a frame (UX-71).
   const ro = new ResizeObserver(write);
-  ro.observe(el);
+  ro.observe(el, { box: 'border-box' });
+  window.addEventListener('resize', write);
+  const fonts = document.fonts;
+  fonts?.addEventListener?.('loadingdone', write);
+  void fonts?.ready?.then(write);
   return () => {
+    live = false;
     ro.disconnect();
+    window.removeEventListener('resize', write);
+    fonts?.removeEventListener?.('loadingdone', write);
     frame.style.removeProperty('--ds-keyhints-height');
   };
 }

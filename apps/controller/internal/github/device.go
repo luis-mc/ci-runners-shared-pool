@@ -18,6 +18,10 @@ type DeviceCode struct {
 	ExpiresIn       time.Duration
 }
 
+// ErrDeviceFlowOff: GitHub answered device_flow_disabled: "Enable Device Flow"
+// is off in the App's settings (github-integration R5.14).
+var ErrDeviceFlowOff = errors.New("github: Device Flow is off for this App")
+
 // ErrDeviceDenied: the person said no on GitHub, or the code ran out.
 var ErrDeviceDenied = errors.New("github: device sign-in was not approved")
 
@@ -33,11 +37,15 @@ func (c *REST) StartDevice(ctx context.Context) (DeviceCode, error) {
 		VerificationURI string `json:"verification_uri"`
 		ExpiresIn       int    `json:"expires_in"`
 		Interval        int    `json:"interval"`
+		Error           string `json:"error"`
 	}
 	_, err := c.do(ctx, req{method: "POST", path: c.cfg.WebBase + "/login/device/code", abs: true,
 		body: map[string]string{"client_id": clientID}}, &out)
 	if err != nil {
 		return DeviceCode{}, err
+	}
+	if out.Error == "device_flow_disabled" {
+		return DeviceCode{}, ErrDeviceFlowOff
 	}
 	if out.DeviceCode == "" {
 		return DeviceCode{}, errors.New("github: device flow refused; turn on device flow in the App settings")

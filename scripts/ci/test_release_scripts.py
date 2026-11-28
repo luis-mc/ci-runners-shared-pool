@@ -262,6 +262,33 @@ class Manifest(unittest.TestCase):
         self.assertEqual(m["sha256"], hashlib.sha256(b"x64").hexdigest())
         self.assertEqual(sorted(m["assets"]), ["win-arm64", "win-x64"])
 
+    def notes_dir(self, text, version="0.1.22"):
+        d = tempfile.mkdtemp(dir=self.d)
+        if text is not None:
+            with open(os.path.join(d, version + ".txt"), "w", encoding="utf-8") as f:
+                f.write(text)
+        return d
+
+    def test_note_is_carried_when_the_release_has_one(self):
+        text = "Updates show live progress.  \n\nRunners have a filter bar.\n"
+        r, out = self.build(extra=("--notes-dir", self.notes_dir(text)))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        raw = open(out, "rb").read()
+        m = json.loads(raw)
+        self.assertEqual(m["notes"], "Updates show live progress.\n\nRunners have a filter bar.")
+        self.assertEqual(raw, json.dumps(m, sort_keys=True, separators=(",", ":")).encode())
+
+    def test_no_note_leaves_the_key_out(self):
+        for text in (None, "  \n"):
+            r, out = self.build(extra=("--notes-dir", self.notes_dir(text)))
+            self.assertEqual(r.returncode, 0, r.stderr)
+            self.assertNotIn("notes", json.load(open(out)))
+
+    def test_a_note_that_would_not_verify_fails_the_release(self):
+        for text in ("Caf\u00e9 rules", "x" * 601):
+            r, _ = self.build(extra=("--notes-dir", self.notes_dir(text)))
+            self.assertNotEqual(r.returncode, 0, text[:20])
+
     def test_required_flag(self):
         r, out = self.build(extra=("--required",))
         self.assertEqual(r.returncode, 0, r.stderr)

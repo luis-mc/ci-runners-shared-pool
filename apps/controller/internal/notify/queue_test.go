@@ -453,7 +453,10 @@ func TestQueueCeiling(t *testing.T) { // R6.9
 	e.desktop(t, owner)
 	// Put 10 003 queued deliveries in directly: 3 more than the ceiling, the oldest are Note notices.
 	now := e.now.Format(store.TimeFormat)
-	err := e.db.WithTx(ctx, func(tx *store.Tx) error {
+	// 20 000 rows in one transaction outlast the store's default deadline under -race: give the setup its own.
+	setupCtx, cancel := context.WithTimeout(ctx, 2*time.Minute)
+	defer cancel()
+	err := e.db.WithTx(setupCtx, func(tx *store.Tx) error {
 		for i := 0; i < QueueCeiling+3; i++ {
 			tone := ToneNote
 			if i%2 == 1 {

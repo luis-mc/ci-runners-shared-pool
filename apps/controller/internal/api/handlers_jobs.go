@@ -304,6 +304,9 @@ func (s *server) ListJobs(ctx context.Context, req gen.ListJobsRequestObject) (g
 // jobItems maps jobs with their forecast and queue place.
 func (s *server) jobItems(ctx context.Context, rows []jobsdata.Job) ([]gen.Job, error) {
 	fc := newForecaster(s.opts.JobsData, s.now())
+	if err := fc.prepare(ctx, rows); err != nil {
+		return nil, err
+	}
 	fcs, err := fc.forJobs(ctx, rows)
 	if err != nil {
 		return nil, err

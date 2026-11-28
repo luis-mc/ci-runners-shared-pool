@@ -71,14 +71,14 @@ set +e
   # OPS82 (G1): the timeout flag limits one package binary, so a package over 60 s runs in chunks:
   # each chunk runs a share of its tests, with the integration limit of 60 s.
   # The chunk count per package is in go-tiers.json; the packages run one at a time (-p 1).
-  while read -r pkg count; do
+  # `chunks` prints one line per chunk: package, chunk count, chunk index.
+  while read -r pkg count k; do
     [ -n "$pkg" ] || continue
     names=$(go test -timeout 10s -list '.' "$pkg" | grep -E '^(Test|Example|Fuzz)' || true)
-    for ((k = 0; k < count; k++)); do
-      integration_run=$(printf '%s\n' "$names" | awk -v n="$count" -v k="$k" 'NF && (NR - 1) % n == k { a = a (a ? "|" : "") $0 } END { if (a) print "^(" a ")$" }')
-      [ -n "$integration_run" ] || continue
-      go test -json -timeout 60s -p 1 "$@" -run "$integration_run" "$pkg" || echo "$?" >> "$rc_file"
-    done
+    integration_run=$(printf '%s
+' "$names" | awk -v n="$count" -v k="$k" 'NF && (NR - 1) % n == k { a = a (a ? "|" : "") $0 } END { if (a) print "^(" a ")$" }')
+    [ -n "$integration_run" ] || continue
+    go test -json -timeout 60s -p 1 "$@" -run "$integration_run" "$pkg" || echo "$?" >> "$rc_file"
   done <<< "$chunked_pkgs"
 } | node scripts/ci/go-test-summary.mjs "$json"
 sum_rc=${PIPESTATUS[1]}

@@ -22,6 +22,7 @@ type fakeLifecycle struct {
 	installed []string
 	remote    []bool
 	checkedBy []string
+	rows      []update.HistoryRow
 }
 
 func (f *fakeLifecycle) Status(context.Context) update.LifecycleStatus { return f.status }
@@ -41,6 +42,9 @@ func (f *fakeLifecycle) SetPolicy(_ context.Context, p string, w *lifecycle.Wind
 	return f.status, nil
 }
 func (f *fakeLifecycle) History(context.Context) ([]update.HistoryRow, error) {
+	if f.rows != nil {
+		return f.rows, nil
+	}
 	return []update.HistoryRow{{At: time.Unix(1, 0).UTC(), Actor: "luis", Action: "install", Version: "1.5.0", Result: "ok"}}, nil
 }
 
@@ -136,5 +140,18 @@ func TestRemoveNeedsAChoice(t *testing.T) {
 	}
 	if rec := post(mux, "/api/v1/remove", `{"delete_data":true}`); rec.Code != 202 || !rm.got[1] {
 		t.Fatalf("delete my data too: %d %v", rec.Code, rm.got)
+	}
+}
+
+// CRSP368: the status carries the last check, by the newest check row; the updater's own is automatic.
+func TestLifecycleStatusLastCheck(t *testing.T) {
+	l := &fakeLifecycle{status: update.LifecycleStatus{State: "up_to_date", Current: "1.4.0"}, rows: []update.HistoryRow{
+		{At: time.Unix(20, 0).UTC(), Actor: "updater", Action: "check", Version: "1.5.0", Result: "ok"},
+		{At: time.Unix(10, 0).UTC(), Actor: "luis-mc", Action: "check", Version: "1.5.0", Result: "ok"},
+	}}
+	mux := lifecycleMux(l, &fakeFleet{}, &fakeRemove{})
+	rec := doReq(mux, "GET", "/api/v1/update/status")
+	if rec.Code != 200 || !strings.Contains(rec.Body.String(), `"kind":"automatic"`) || !strings.Contains(rec.Body.String(), `"by":"updater"`) {
+		t.Fatalf("last check: %d %s", rec.Code, rec.Body)
 	}
 }

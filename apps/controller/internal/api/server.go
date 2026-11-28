@@ -88,6 +88,8 @@ type Options struct {
 	RegistryMirror RegistryMirrorService
 	// Caches serves the caches routes (handlers_caches.go). Nil answers 501.
 	Caches CachesService
+	// CacheHub serves the one hub's routes (handlers_caches_hub.go, caches R5.77). Nil answers 501.
+	CacheHub CacheHubService
 	// Notify serves the notification channel routes (handlers_notify.go). Nil answers 501.
 	Notify NotifyService
 	// EnvSets serves the environment set routes and the merged runner
@@ -132,6 +134,8 @@ type Options struct {
 	JobRunners JobRunnerReader
 	// Listen serves the listen address routes (handlers_listen.go). Nil answers 501.
 	Listen ListenService
+	// Debug serves debug access to a running job (handlers_debug.go, debug-access R5.1 to R5.30). Nil answers 501.
+	Debug DebugService
 	// Metrics serves the metrics export settings (handlers_metrics.go, observability R5.40). Nil answers 501.
 	Metrics MetricsService
 	// Authn says who a request acts as. Nil uses the GitHub area's sessions and
@@ -154,7 +158,7 @@ func Register(mux *http.ServeMux, opts Options) {
 	if opts.Logger == nil {
 		opts.Logger = slog.Default()
 	}
-	var httpMW []gen.MiddlewareFunc
+	httpMW := []gen.MiddlewareFunc{transportMW}
 	authn := opts.Authn
 	if opts.GitHub != nil {
 		httpMW = append(httpMW, opts.GitHub.HTTPMiddleware())
@@ -193,6 +197,9 @@ func Recover(logger *slog.Logger, next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if v := recover(); v != nil {
+				if v == http.ErrAbortHandler {
+					panic(v) // a stream that must end the connection (an export that failed half way)
+				}
 				logger.Error("panic in handler", "panic", v, "path", r.URL.Path)
 				WriteError(w, http.StatusInternalServerError, CodeInternal, "internal error")
 			}

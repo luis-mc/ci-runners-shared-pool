@@ -4,10 +4,12 @@ import (
 	"context"
 	"errors"
 	"net/http"
+	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/api/gen"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/audit"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/backup"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/settings"
 )
 
@@ -84,6 +86,7 @@ func toGenSettings(st settings.Settings) gen.Settings {
 		MaxEventStreams:            intPtr(st.MaxEventStreams),
 		FallbackGraceMinutes:       intPtr(st.FallbackGraceMinutes),
 		OverflowLabel:              &st.OverflowLabel,
+		OverflowTargets:            toGenTargets(st.OverflowTargets),
 		AutoUpdate:                 &st.AutoUpdate,
 
 		InsightsUpdatePeriod:     (*gen.SettingsInsightsUpdatePeriod)(&st.InsightsUpdatePeriod),
@@ -102,7 +105,25 @@ func (s *server) GetSettings(ctx context.Context, _ gen.GetSettingsRequestObject
 		f := s.opsError(err)
 		return gen.GetSettingsdefaultJSONResponse{StatusCode: f.status, Body: f.body}, nil
 	}
-	return gen.GetSettings200JSONResponse(toGenSettings(st)), nil
+	out := toGenSettings(st)
+	if a := s.ghArea(); a != nil && a.Repos != nil {
+		out.OverflowUsage = s.overflowUsage(ctx, a.Repos)
+	}
+	return gen.GetSettings200JSONResponse(out), nil
+}
+
+// overflowUsage is the minutes each overflow target took this month, all repositories together (R5.115).
+func (s *server) overflowUsage(ctx context.Context, svc *repos.Service) *[]gen.OverflowUsage {
+	us, err := svc.OverflowUsage(ctx, time.Now())
+	if err != nil {
+		s.opts.Logger.Warn("overflow usage failed", "err", err)
+		return nil
+	}
+	out := make([]gen.OverflowUsage, 0, len(us))
+	for _, u := range us {
+		out = append(out, gen.OverflowUsage{Kind: gen.OverflowUsageKind(u.Kind), UsedMinutes: u.UsedMinutes, UsedUsd: &u.UsedUSD, Priced: &u.Priced})
+	}
+	return &out
 }
 
 // UpdateSettings implements PATCH /api/v1/settings.
@@ -128,6 +149,7 @@ func (s *server) UpdateSettings(ctx context.Context, req gen.UpdateSettingsReque
 		MaxEventStreams:            b.MaxEventStreams,
 		FallbackGraceMinutes:       b.FallbackGraceMinutes,
 		OverflowLabel:              b.OverflowLabel,
+		OverflowTargets:            fromGenTargets(b.OverflowTargets),
 		AutoUpdate:                 b.AutoUpdate,
 
 		InsightsUpdatePeriod:       (*string)(b.InsightsUpdatePeriod),
@@ -298,4 +320,51 @@ func (s *server) RestoreBackup(ctx context.Context, req gen.RestoreBackupRequest
 		return fail(s.opsError(err))
 	}
 	return gen.RestoreBackup202JSONResponse(toGenBackup(b)), nil
+}
+
+// toGenTargets maps the saved overflow priority list to the API (R5.114).
+func toGenTargets(in []settings.OverflowTarget) *[]gen.OverflowTarget {
+	out := make([]gen.OverflowTarget, 0, len(in))
+	for _, t := range in {
+		g := gen.OverflowTarget{Kind: gen.OverflowTargetKind(t.Kind), Enabled: t.Enabled, Label: &t.Label, CapMinutes: &t.CapMinutes, TotalCapMinutes: &t.TotalCapMinutes, BudgetUsd: &t.BudgetUSD, PriceUsdPerMinute: &t.PriceUSDPerMinute}
+		systems := make([]gen.OverflowTargetSystems, 0, len(t.Systems))
+		for _, s := range t.Systems {
+			systems = append(systems, gen.OverflowTargetSystems(s))
+		}
+		g.Systems = &systems
+		out = append(out, g)
+	}
+	return &out
+}
+
+func fromGenTargets(in *[]gen.OverflowTarget) *[]settings.OverflowTarget {
+	if in == nil {
+		return nil
+	}
+	out := make([]settings.OverflowTarget, 0, len(*in))
+	for _, g := range *in {
+		t := settings.OverflowTarget{Kind: string(g.Kind), Enabled: g.Enabled}
+		if g.Label != nil {
+			t.Label = *g.Label
+		}
+		if g.CapMinutes != nil {
+			t.CapMinutes = *g.CapMinutes
+		}
+		if g.TotalCapMinutes != nil {
+			t.TotalCapMinutes = *g.TotalCapMinutes
+		}
+		if g.BudgetUsd != nil {
+			t.BudgetUSD = *g.BudgetUsd
+		}
+		if g.PriceUsdPerMinute != nil {
+			t.PriceUSDPerMinute = *g.PriceUsdPerMinute
+		}
+		if g.Systems != nil {
+			for _, s := range *g.Systems {
+				t.Systems = append(t.Systems, string(s))
+			}
+		}
+		out = append(out, t)
+	}
+	return &out
 }

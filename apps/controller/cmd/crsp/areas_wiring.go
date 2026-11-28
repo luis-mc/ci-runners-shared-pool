@@ -31,6 +31,7 @@ import (
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/history"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/listenaddr"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/machines"
+	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/mirror"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/notify"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/repos"
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/runners"
@@ -88,7 +89,9 @@ type controllerDeps struct {
 	MachineSecrets secrets.Store
 	// Backends are the runner backends of the controller's own OS; nil means none.
 	Backends backend.Registry
-	Now      func() time.Time
+	// Hub is the one cache hub (caches R5.73 to R5.80); nil leaves its routes at 501.
+	Hub *mirror.Service
+	Now func() time.Time
 }
 
 // controller is the built controller: the API options, the setup link printed
@@ -163,7 +166,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	rsvc := repos.New(repos.Config{Addresses: d.Cfg.Addresses, Store: repoStore, GitHub: gh, Tokens: asvc, Audit: asvc, PoolName: pool,
 		Capacity: machineCapacity{svc: d.Machines, pool: pool}, Sizes: machineCapacity{svc: d.Machines, pool: pool}, Up: machineUp{svc: d.Machines},
-		FallbackGrace: fallbackGrace(d), OverflowLabel: overflowLabel(d), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
+		FallbackGrace: fallbackGrace(d), OverflowLabel: overflowLabel(d), OverflowTargets: overflowTargets(d), Rate: overflowRate(&history.Rates{DB: d.DB}), FactsReported: factsReported(d, d.Now()), PublicRepositories: publicRepositories(d), Now: d.Now})
 	// The runs-on pull request (R5.113): built and opened only by the owner's
 	// explicit call; no loop or webhook of this wiring opens one.
 	rsvc.SetRunsOnPullRequests(&routing.Service{Store: d.DB.Routing(), Files: workflowFileReader{gh: gh}, PRs: gh, Now: d.Now})
@@ -177,7 +180,9 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 		b, err := d.Secrets.Get(context.Background(), github.SecretKey(app, github.SecretWebhookSecret))
 		return err == nil && len(b) > 0
 	}
-	appHealth := &github.AppHealth{Client: gh, AppID: gh.AppID, Now: d.Now}
+	appHealth := &github.AppHealth{Client: gh, AppID: gh.AppID, Now: d.Now,
+		// The one setting a sign-in from the CLI needs (github-integration R5.14).
+		DeviceFlow: func(ctx context.Context) error { _, err := gh.StartDevice(ctx); return err }}
 	// The Jobs section: every job event ends in one recorder (observability R5.7 to R5.12).
 	jobsIngest := newJobsWiring(ctx, logger, d.DB.Jobs(), gh, repoStore, d.Now)
 	c.closers = append(c.closers, jobsIngest.Close)
@@ -236,8 +241,8 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}()
 	c.closers = append(c.closers, func() { stopHealth(); <-healthDone })
 
-	// Live view over an empty source until the store adapter is wired (CRSP23).
-	hub, live := wire.NewLive(poolOverviewSource{DB: d.DB}, events.Options{})
+	// Live view over the store: machines, queue, running jobs and minutes saved (audit R3-7).
+	hub, live := wire.NewLive(&poolOverviewSource{DB: d.DB, MachineSvc: d.Machines, Timers: func() api.TimerService { return c.Options.Timers }}, events.Options{})
 	c.Hub = hub
 	c.closers = append(c.closers, hub.Stop)
 
@@ -261,9 +266,11 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	runnerSvc := &runners.Service{
 		Store: rstore, Machines: machineLookup{svc: d.Machines}, Resolver: scopeResolver{repos: repoStore, auth: asvc, addr: d.Cfg.Addresses},
 		GitHub: gh, Agent: agent, Audit: runnerAudit{auth: asvc},
-		PoolName: pool, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services,
+		PoolName: pool, CacheQuota: d.Cfg.Cache, Now: d.Now, Services: agent.Services, Release: version,
 		// Shared tool folders with group access, one build folder per runner (caches R5.57).
 		SharedToolsRoot: os.Getenv("CRSP_SHARED_TOOLS_ROOT"), NoSharedTools: os.Getenv("CRSP_NO_SHARED_TOOLS") != "",
+		// The package proxy key and token of the runner's repository (caches R5.76).
+		PackageProxy: hubGrant(d.Hub),
 		// A public repository gets no new runner while the setting is off (github-integration R5.55).
 		// A plan with no scope takes the first repository with the pool on (D31, until OPS23).
 		DefaultScope: func(ctx context.Context) (runners.Scope, error) {
@@ -352,6 +359,7 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	// crsp's own facts about each job: wait reason, slot, machine, runner (observability R5.7).
 	jobsIngest.attach(d.Queue, runnerSvc, d.Machines)
 	startSweep(ctx, logger, runnerSvc, d.Cfg.RunnerSweepDays)
+	startRecovery(ctx, logger, runnerSvc)
 	c.closers = append(c.closers, stopDemand)
 
 	// Runner leftovers (doctor R5.48): the machines service asks the agents, and
@@ -410,8 +418,13 @@ func buildController(ctx context.Context, d controllerDeps) (*controller, error)
 	}
 	c.Options.Jobs, c.Options.Slots, c.Options.Live = d.DB, d.Queue, live
 	c.Options.JobsData = d.DB.Jobs()
+	// Debug access to a running job (CRSP331): off for every repository until an admin switches it on.
+	wireDebugAccess(ctx, d.DB, logger, c, d.DB.Jobs(), repoStore)
 	c.Options.Runners, c.Options.Doctor = runnerSvc, docSvc
 	c.Options.Caches, c.Options.Events = d.Caches, hub
+	if d.Hub != nil {
+		c.Options.CacheHub = d.Hub
+	}
 	c.Options.SizeLabels = machineCapacity{svc: d.Machines, pool: pool}
 	c.Options.Trial = newTrial(d.DB, rsvc, gh, machineCapacity{svc: d.Machines, pool: pool})
 	nsvc := notify.New(notify.Config{DB: d.DB, Secrets: d.Secrets, Logger: logger, Now: d.Now, ConsoleURL: console})
@@ -582,6 +595,43 @@ func overflowLabel(d controllerDeps) func() string {
 			return ""
 		}
 		return st.OverflowLabel
+	}
+}
+
+// overflowTargets reads the owner's enabled overflow priority rules from the
+// settings (github-integration R5.114); none keeps the single overflow label.
+func overflowTargets(d controllerDeps) func() []repos.OverflowTarget {
+	return func() []repos.OverflowTarget {
+		if d.Ops == nil || d.Ops.Settings == nil {
+			return nil
+		}
+		st, err := d.Ops.Settings.Get(context.Background())
+		if err != nil {
+			return nil
+		}
+		var out []repos.OverflowTarget
+		for _, t := range st.OverflowTargets {
+			if t.Enabled {
+				out = append(out, repos.OverflowTarget{Kind: t.Kind, Label: t.Label, CapMinutes: t.CapMinutes, TotalCapMinutes: t.TotalCapMinutes, BudgetUSD: t.BudgetUSD, PriceUSDPerMinute: t.PriceUSDPerMinute, Systems: t.Systems})
+			}
+		}
+		return out
+	}
+}
+
+// overflowRate gives the repos service the per-minute price savings keeps
+// (R5.115): the GitHub-hosted rate of the OS at the standard size. aws_ec2 has
+// no configured rate, so its budget is not enforced.
+func overflowRate(rates *history.Rates) func(ctx context.Context, kind, os string) (float64, bool) {
+	return func(ctx context.Context, kind, os string) (float64, bool) {
+		if kind != "github_hosted" {
+			return 0, false
+		}
+		t, err := rates.Get(ctx)
+		if err != nil {
+			return 0, false
+		}
+		return t.PerMinute(os, "")
 	}
 }
 

@@ -4,8 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"net/url"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/luis-mc/ci-runners-shared-pool/apps/controller/internal/audit"
@@ -45,16 +47,57 @@ func newMirrorService(cfg config.Config, db *store.Store, rec audit.Recorder, sv
 	m := &mirror.Service{Settings: settings.New(db), Layout: layout, Warmth: &mirror.Warmth{}, Machine: cachesHolder}
 	m.Git = &mirror.Git{Dir: layout.Git(), Run: sys.ExecCommands{}}
 	m.Tool = &toolcache.Store{Root: toolcache.DefaultRoot(runtime.GOOS)}
-	st, err := lancache.Open(layout.Actions(), 20<<30, nil)
+	// One budget for every kind of the hub (caches R5.73): the content store's
+	// cap is the budget, and the budget pass weighs the store and the mirrors.
+	budget := func() int64 {
+		set, _ := m.Get(context.Background())
+		return set.BudgetBytes()
+	}
+	capBytes := budget()
+	st, err := lancache.Open(layout.Actions(), capBytes, nil)
 	if err != nil {
-		logger.Warn("the Actions cache store did not open", "err", err)
+		logger.Warn("the cache store did not open", "err", err)
 	} else {
-		m.ActStore, m.ActCap = st, 20<<30
+		m.ActStore, m.ActCap = st, capBytes
 		m.Actions, _ = lancache.NewServer(st, nil, "", nil)
+		m.Budget = &mirror.Budget{Store: st, Git: m.Git, Bytes: budget}
+		// The npm and PyPI proxy (caches R5.74 to R5.76, R5.80), on the controller listener.
+		if secret, err := lancache.LoadSecret(filepath.Join(layout.Base, "packages.key")); err != nil {
+			logger.Warn("the package proxy did not start", "err", err)
+		} else {
+			m.Proxy = &lancache.Proxy{Store: st, Secret: secret, AfterPut: m.Budget.Kick, On: func() bool {
+				set, err := m.Get(context.Background())
+				return err == nil && set.PackageProxy
+			}}
+		}
 	}
 	m.Wiper = &mirror.Wiper{Targets: mirror.TargetsFor(m.Actions, m.ActStore, m.Git, m.Tool, layout.Registry()),
 		Jobs: runningJobs{svc: svc}, Warmth: m.Warmth, Audit: rec, Machine: cachesHolder, Poll: 5 * time.Second, Wait: time.Hour}
 	return m
+}
+
+// hubGrant gives a runner of one repository its package proxy key and token
+// while the package proxy is on (caches R5.76). An org-wide runner (no
+// repository in its address) gets none.
+func hubGrant(m *mirror.Service) func(ctx context.Context, githubURL string) lancache.ProxyGrant {
+	return func(ctx context.Context, githubURL string) lancache.ProxyGrant {
+		if m == nil || m.Proxy == nil {
+			return lancache.ProxyGrant{}
+		}
+		set, err := m.Get(ctx)
+		if err != nil || !set.PackageProxy {
+			return lancache.ProxyGrant{}
+		}
+		u, err := url.Parse(githubURL)
+		if err != nil {
+			return lancache.ProxyGrant{}
+		}
+		key, ok := lancache.RepoKey(strings.Trim(u.Path, "/"))
+		if !ok {
+			return lancache.ProxyGrant{}
+		}
+		return lancache.ProxyGrant{Repo: key, Token: lancache.Token(m.Proxy.Secret, key)}
+	}
 }
 
 const cachesHolder = "controller"

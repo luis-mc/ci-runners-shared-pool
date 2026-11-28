@@ -1,6 +1,10 @@
 // Component 60: a bar list, a ranking of named things by one value. Every row is a link to the list behind it
 // (UX-52); the bar never replaces the number, and the bars are hidden from assistive technology (UX-17).
 import { Link } from 'react-router-dom';
+import { Segments } from './SegMeter';
+
+/** Segments in a bar list row in the Cool Terminal themes (UX-91). */
+export const BAR_SEGMENTS = 10;
 
 export interface BarItem {
   key: string;
@@ -33,6 +37,12 @@ export function BarList({
             <span className="ds-bars__label">{i.label}</span>{' '}
             <span className="ds-bars__value">{i.text}</span>
             <span className="ds-visually-hidden">. {i.linkName}</span>
+            <span className="ds-bars__segs" aria-hidden="true">
+              <Segments
+                pct={Math.max(2, (i.value / top) * 100)}
+                segments={BAR_SEGMENTS}
+              />
+            </span>
             <span className="ds-bars__track" aria-hidden="true">
               <span
                 className="ds-bars__bar"

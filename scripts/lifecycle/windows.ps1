@@ -117,6 +117,10 @@ $script:RuntimeFiles = @('agent\local-join', 'agent\hostuse.json')
 # SHA256SUMS the controller fetches from the release and checks (apps/controller/internal/agentinstallers, CRSP304):
 # regenerable, and filled in the background after each start, so an upgrade adds files without any user data changing.
 $script:CacheDirs = @('agent-installers')
+# Files the new build creates on its first start when the previous release did not have them. An upgrade may ADD
+# them (the secret is made once, caches R5.80); it may never change or remove one that was there.
+#   mirrors\packages.key  the package proxy secret (apps/controller/internal/lancache/pkgproxy.go LoadSecret keeps an existing one)
+$script:MayBeAdded = @('mirrors\packages.key')
 function Test-VolatilePath($full) {
   $name = Split-Path -Leaf $full
   if ($script:VolatileNames -contains $name) { return $true }
@@ -194,6 +198,14 @@ function Compare-Snapshots($before, $after) {
   # Returns $null when config and data are the same, else the text that says where they differ.
   $problems = @()
   $b = @('#') + @($before.Files); $a = @('#') + @($after.Files)  # a sentinel: Compare-Object refuses an empty list
+  if ($script:Data) {
+    $root = $script:Data.TrimEnd('\') + '\'
+    foreach ($m in $script:MayBeAdded) {
+      $full = $root + $m
+      $had = @($b | Where-Object { $_ -like "* $full" }).Count -gt 0
+      if (-not $had) { $a = @($a | Where-Object { $_ -notlike "* $full" }) }  # added by the upgrade: allowed
+    }
+  }
   $d = @(Compare-Object -ReferenceObject $b -DifferenceObject $a)
   if ($d.Count -gt 0) {
     $paths = @($d | ForEach-Object { ($_.InputObject -replace '^\S+ ', '') } | Select-Object -Unique)

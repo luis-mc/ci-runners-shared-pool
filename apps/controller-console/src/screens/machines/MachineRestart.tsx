@@ -19,6 +19,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { unwrap, useClient, type Schemas } from '../../api/api';
 import { useSession } from '../../auth/session';
 import { TIMING } from '../../timing';
+import { useLiveLog, type Note } from '../liveLog';
 
 type Machine = Schemas['Machine'];
 
@@ -26,6 +27,13 @@ const STEPS = ['Review', 'Restarting', 'Done'] as const;
 
 const restartOf = (m: Machine) =>
   m.pending_change?.kind === 'service_restart' ? m.pending_change : undefined;
+
+// The weighted bar of the work step (UX-88): the drain, the restart, the reconnect.
+const PHASES = [
+  { name: 'Waiting for running jobs to end', weight: 2 },
+  { name: 'Restarting the service', weight: 1 },
+  { name: 'Connecting again', weight: 1 },
+] as const;
 
 const jobWords = (m: Machine): string[] =>
   (m.running_jobs ?? []).map((j) => `${j.repository} ${j.job_name}`);
@@ -57,6 +65,52 @@ export function MachineRestartPage() {
   const [machine, setMachine] = useState<Machine | undefined>(undefined);
   const [problem, setProblem] = useState<string | undefined>(undefined);
   const [lost, setLost] = useState(false);
+  const live = useLiveLog(PHASES);
+  const on = (m: Machine | undefined) =>
+    m
+      ? {
+          name: m.name,
+          role: m.is_controller ? ('controller' as const) : ('agent' as const),
+          os: m.os,
+        }
+      : undefined;
+  /** One row per change of what the console sees on the machine; nothing is added when nothing changed. */
+  const observe = (m: Machine) => {
+    const c = restartOf(m);
+    const machineSide = on(m);
+    const note = (n: Note) =>
+      live.say(
+        n.machine ? n : { ...n, ...(machineSide ? { machine: machineSide } : {}) },
+      );
+    if (c?.state === 'needs_you')
+      note({ at: 1, pct: null, line: 'The service could not restart.', error: true });
+    else if (c?.state === 'waiting') {
+      const n = c.waiting_for.length;
+      note({
+        at: 0,
+        pct: null,
+        reason:
+          n > 0
+            ? `${n} running ${n === 1 ? 'job' : 'jobs'} left; the time it takes is theirs.`
+            : 'The running jobs are ending.',
+        line: restartLine(m),
+      });
+    } else if (c)
+      note({
+        at: 1,
+        pct: null,
+        reason: 'The service reports no percent.',
+        line: restartLine(m),
+      });
+    else if (m.online) note({ at: 2, pct: 100, line: 'The service is connected again.' });
+    else
+      note({
+        at: 2,
+        pct: null,
+        reason: 'The service has not connected yet.',
+        line: 'Waiting for the service to connect again',
+      });
+  };
   const admin = session.can('admin');
   const why = session.whyNot('admin');
   useEffect(() => {
@@ -116,6 +170,7 @@ export function MachineRestartPage() {
       try {
         const m = await read();
         setMachine(m);
+        observe(m);
         setLost(false);
         const c = restartOf(m);
         if (c?.state === 'needs_you') {
@@ -146,13 +201,21 @@ export function MachineRestartPage() {
 
   const start = async () => {
     setPhase('running');
+    live.clear();
     try {
+      live.say({
+        at: 0,
+        pct: null,
+        reason: 'Asking the console to restart the service.',
+        command: `Restart the service of ${machine?.name ?? 'the machine'}`,
+      });
       await unwrap(
         client.POST('/api/v1/machines/{machineId}/restart', {
           params: { path: { machineId: id }, query: { confirmed: true } },
         }),
       );
       startedHere.current = true;
+      live.say({ at: 0, pct: null, line: 'Accepted. No new jobs are taken.' });
       const next = new URLSearchParams(params);
       next.set('started', '1');
       setParams(next, { replace: true });
@@ -312,6 +375,7 @@ export function MachineRestartPage() {
         firstStep={0}
         phase={phase}
         reading="Reading the machine"
+        live={live.events}
         progress={
           phase === 'running'
             ? {

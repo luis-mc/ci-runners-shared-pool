@@ -60,7 +60,7 @@ func getExport(t *testing.T, mux *http.ServeMux, query string) *httptest.Respons
 
 func TestExportJobsHoldsEveryRowNewestFirst(t *testing.T) {
 	fj := &fakeJobs{}
-	for id := int64(450); id >= 1; id-- { // more than two pages of 200
+	for id := int64(1100); id >= 1; id-- { // more than two pages of 500
 		fj.all = append(fj.all, slots.JobRecord{ID: id, Repository: "o/r", RunID: id, RunAttempt: 1, JobName: "test",
 			State: slots.JobDone, Conclusion: "success", Labels: []string{"linux"}})
 	}
@@ -78,11 +78,11 @@ func TestExportJobsHoldsEveryRowNewestFirst(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(rows) != 451 { // header + every job
-		t.Fatalf("rows %d, want 451", len(rows))
+	if len(rows) != 1101 { // header + every job
+		t.Fatalf("rows %d, want 1101", len(rows))
 	}
-	if rows[1][0] != "450" || rows[451-1][0] != "1" {
-		t.Fatalf("not newest first: first %s last %s", rows[1][0], rows[450][0])
+	if rows[1][0] != "1100" || rows[1101-1][0] != "1" {
+		t.Fatalf("not newest first: first %s last %s", rows[1][0], rows[1100][0])
 	}
 	if len(fj.filter) != 3 {
 		t.Fatalf("pages read %d, want 3", len(fj.filter))
@@ -154,4 +154,39 @@ func TestListJobsPassesTheBackendFilterAndSendsBackendAndIsolation(t *testing.T)
 	if err := json.Unmarshal(rec.Body.Bytes(), &out); err != nil || out.Items[0]["backend"] != "docker" || out.Items[0]["isolation"] != "container" {
 		t.Fatalf("body %s (%v)", rec.Body, err)
 	}
+}
+
+// failingJobs serves one page, then fails: the head of the export is out by then.
+type failingJobs struct{ fakeJobs }
+
+func (f *failingJobs) ListJobs(ctx context.Context, fl slots.JobFilter) ([]slots.JobRecord, error) {
+	if fl.After != 0 {
+		return nil, io.ErrUnexpectedEOF
+	}
+	return f.fakeJobs.ListJobs(ctx, fl)
+}
+
+func TestExportJobsStreamsJSONAndAbortsWhenALaterPageFails(t *testing.T) {
+	fj := &fakeJobs{}
+	for id := int64(1100); id >= 1; id-- {
+		fj.all = append(fj.all, slots.JobRecord{ID: id, Repository: "o/r", RunID: id, RunAttempt: 1, JobName: "test", State: slots.JobDone, Conclusion: "success"})
+	}
+	rec := getExport(t, jobsMux(fj), "?format=json")
+	var list []map[string]any
+	if err := json.Unmarshal(rec.Body.Bytes(), &list); err != nil || len(list) != 1100 {
+		t.Fatalf("json: %d rows, %v", len(list), err)
+	}
+	if rec.Header().Get("Content-Length") != "" {
+		t.Error("a streamed answer has no length")
+	}
+	if rec := getExport(t, jobsMux(&fakeJobs{}), "?format=json"); strings.TrimSpace(rec.Body.String()) != "[]" {
+		t.Errorf("empty export %q", rec.Body)
+	}
+	defer func() {
+		if v := recover(); v != http.ErrAbortHandler {
+			t.Fatalf("a failed later page must end the connection, got %v", v)
+		}
+	}()
+	getExport(t, jobsMux(&failingJobs{fakeJobs{all: fj.all}}), "")
+	t.Fatal("the export finished although a page failed")
 }
