@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: luis-mc/dev-standards
-          ref: 8819e869d351f6c3a46b5fc41040cebec58df9c9
+          ref: 7f582c822c263bbb104a303b452ab506d5368488
           path: .dev-standards-tools
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
